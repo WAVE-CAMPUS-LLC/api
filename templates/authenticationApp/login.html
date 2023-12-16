@@ -1,0 +1,45 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}
+WAVE — Welcome back!
+{% endblock title %}
+
+{% block app_page_style %}
+<link rel="stylesheet" type="text/css" href="{% static "/styles/authenticationApp/login.css" %}" />
+{% endblock app_page_style %}
+
+{% block script %}
+{% endblock script %}
+
+{% block body %}
+<section class="mPB-one">
+    <div class="wrapper">
+        <div class="form-box login">
+            <h1>Log in</h1>
+            <h3>Welcome back!</h3>
+            <form action="">
+                <div class="input-box">
+                    <span class="icon"><i class='bx bxs-envelope'></i></span>
+                    <input type="email" required autocomplete="off">
+                    <label>Email</label>
+                </div>
+                <div class="input-box">
+                    <span class="icon"><i class='bx bxs-lock'></i></span>
+                    <input type="password" required autocomplete="off">
+                    <label>Password</label>
+                </div>
+                <div class="remember-forgot">
+                    <label><input type="checkbox">Remember me</label>
+                    <a href="../templates/forgot.html">Forgot your password?</a>
+                </div>
+                <button type="submit" class="btn">Login</button>
+                <div class="login-register">
+                    <p>Don't have an account?<a href="{% url "authentication:join" %}" 
+                    class="register-link"> Register</a></p>
+                </div>
+            </form>
+        </div> 
+    </div>
+</section>
+{% endblock body %}

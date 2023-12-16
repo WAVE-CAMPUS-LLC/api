@@ -1,0 +1,197 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+@font-face {
+    font-family: "Easy-Grotesk-Black";
+    src: url("../../../static/fonts/EasyGrotesk/Easy-Grotesk-Black-Demo-BF653883937b855.otf") format("opentype");
+}
+
+@font-face {
+    font-family: "Easy-Grotesk-ExtraBold";
+    src: url("../../../static/fonts/EasyGrotesk/Easy-Grotesk-ExtraBold-Demo-BF6538839346ccc.otf") format("opentype");
+}
+
+@font-face {
+    font-family: "Easy-Grotesk-Bold";
+    src: url("../../../static/fonts/EasyGrotesk/Easy-Grotesk-Bold-Demo-BF653883938aebb.otf") format("opentype");
+}
+
+@font-face {
+    font-family: "Easy-Grotesk-Medium";
+    src: url("../../../static/fonts/EasyGrotesk/Easy-Grotesk-Medium-Demo-BF65388392b6582.otf") format("opentype");
+}
+
+@font-face {
+    font-family: "Easy-Grotesk-Regular";
+    src: url("../../../static/fonts/EasyGrotesk/Easy-Grotesk-Regular-Demo-BF65388388a48c7.otf") format("opentype");
+}
+
+@font-face {
+    font-family: "Easy-Grotesk-Light";
+    src: url("../../../static/fonts/EasyGrotesk/Easy-Grotesk-Light-Demo-BF6538839349826.otf") format("opentype");
+}
+
+@font-face {
+    font-family: "Easy-Grotesk-ExtraLight";
+    src: url("../../../static/fonts/EasyGrotesk/Easy-Grotesk-ExtraLight-Demo-BF653883932e6d1.otf") format("opentype");
+}
+
+
+body{
+    width: 100%;
+    display: flex;
+}
+
+.mPB-two {
+    display: inline-block;
+    width: 40%;
+    background-color: #081b29;
+    height: 100vh;
+}
+
+.mPB-one {
+    display: inline-block;
+    width: 60%;
+    height: 100vh;
+    color: black;
+    background-color: #e2fdff;
+}
+
+.wrapper {
+    position: relative;
+    width: 400px;
+    height: 440px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    min-height: 100vh;
+    margin-left: 23.5%;
+}
+
+.wrapper .form-box {
+    width: 100%;
+    padding: 40px;
+}
+
+.form-box h1{
+    font-family: Easy-Grotesk-Bold;
+    font-size: 2em;
+    color: #1B4965;
+    text-align: center;
+}
+.form-box h3 {
+    font-family: Easy-Grotesk-Light;
+    font-size: 1em;
+    color: #1B4965;
+    text-align: center;
+}
+.input-box {
+    font-family: Easy-Grotesk-extralight;
+    position: relative;
+    width: 100%;
+    height: 50px;
+    border-bottom: 2px solid #25567b;
+    margin: 30px 0;
+}
+
+.input-box label {
+    position: absolute;
+    top: 50%;
+    left: 5px;
+    translate: translateY(-50%);
+    font-size: 1em;
+    color: #25567b;
+    font-weight: 500;
+    pointer-events: none;
+    transition: .5s;
+}
+
+.input-box input:focus~label,
+.input-box input:valid~label{
+    top: -5px;
+}
+
+
+.input-box input {
+    font-family: Easy-Grotesk-extralight;
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    border: none;
+    outline: none;
+    font-size: 1em;
+    color: #162938;
+    font-weight: 600;
+    padding: 0 25px 0 6px;
+    margin-top: 10px;
+}
+
+.input-box .icon{
+    position: absolute;
+    right: 8px;
+    font-size: 1.2em;
+    color: #25567b;
+    line-height: 67px;
+}
+
+.remember-forgot {
+    font-family: Easy-Grotesk-regular;
+    font-size: .9em;
+    color: #25567b;
+    font-weight: 500;
+    margin: -15px 0 15px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.remember-forgot label input {
+    accent-color: #25567b;
+    margin-right: 3px;
+}
+
+.remember-forgot a {
+    color: #25567b;
+    text-decoration: none;
+}
+
+.remember-forgot a:hover {
+    text-decoration: underline;
+}
+
+.btn {
+    font-family: Easy-Grotesk-regular;
+    width: 100%;
+    height: 45px;
+    background: #25567b;
+    border: none;
+    outline: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1.2em;
+    color: #fff;
+    font-weight: 500;
+
+}
+
+.login-register {
+    font-family: Easy-Grotesk-regular;
+    font-size: .9em;
+    color: #25567b;
+    text-align: center;
+    font-weight: 500;
+    margin: 20px 0 10px;
+}
+
+.login-register p a {
+    color: #25567b;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.login-register p a:hover {
+    text-decoration: underline;
+}

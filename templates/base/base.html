@@ -1,0 +1,25 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en"> 
+
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <title>
+            {% block title %}{% endblock title %}
+        </title>
+        <link rel="stylesheet" type="text/css" href="{% static "/styles/base/base.css" %}" />
+        {% block app_page_style %}{% endblock app_page_style %}
+        {% block script %}{% endblock script %}
+        <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    </head>
+
+    <header>
+        {% block header %}{% endblock header %}
+    </header>
+
+    <body>
+        {% block body %}{% endblock body %}
+    </body>
+</html>

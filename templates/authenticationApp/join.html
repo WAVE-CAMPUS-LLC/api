@@ -1,0 +1,147 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}
+WAVE — Join Us!
+{% endblock title %}
+
+{% block app_page_style %}
+<link rel="stylesheet" type="text/css" href="{% static "/styles/authenticationApp/join.css" %}" />
+{% endblock app_page_style %}
+
+{% block script %}
+<script type="text/javascript" src="{% static "/scripts/authenticationApp/join/signupNext.js" %}" defer></script>
+{% endblock script %}
+
+
+{% block body %}
+<div id="mainPageBody">
+    <section class="mPB-one"></section>
+    <section class="mPB-two">
+        <div id="join-header">
+            <h1>Create an Account</h1>
+        </div>
+
+        <div class="wrapper-body">
+            <form autocomplete="off">
+                <div class="wb-sectionOne section active">
+                    <div class="sctn-header">
+                        <div class="sh-headerOne active sectionh">
+                            <div>
+                                <h2 class="sh-num">1.</h2>
+                            </div>
+                            <div>
+                                <h2 class="sh-heading">
+                                    Personal Information
+                                </h2>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="wb-inputs">
+                        <div class="input-box">
+                            <input type="text" autocomplete="off" required />
+                            <label>First Name <span>*</span></label>
+                        </div>
+                        <div class="input-box">
+                            <input type="text" autocomplete="off" required />
+                            <label>Last Name <span>*</span></label>
+                        </div>
+                    </div>
+                    <div class="wb-input">
+                        <div class="input-box">
+                            <input type="email" autocomplete="off" required />
+                            <label>Email Address <span>*</span></label>
+                        </div>
+                    </div>
+                    <div class="wb-inputs">
+                        <div class="input-box">
+                            <input type="date" autocomplete="off" required />
+                            <label>Birthday</label>
+                        </div>
+                        <div class="input-box">
+                            <input type="text" autocomplete="off" required />
+                            <label>Gender</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="wb-sectionTwo section">
+                    <div class="sctn-header">
+                        <div class="sh-headerTwo sectionh">
+                            <div>
+                                <h2 class="sh-num">2.</h2>
+                            </div>
+                            <div>
+                                <h2 class="sh-heading">Account Security</h2>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="wb-input">
+                        <div class="input-box">
+                            <input type="password" autocomplete="off" required />
+                            <label>Password <span>*</span></label>
+                        </div>
+                    </div>
+                    <div class="wb-input">
+                        <div class="input-box">
+                            <input type="password" autocomplete="off" required />
+                            <label>Confirm Password <span>*</span></label>
+                        </div>
+                    </div>
+                    <div class="wb-input">
+                        <div class="input-box">
+                            <input type="text" autocomplete="off" required />
+                            <label>Phone Number</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="wb-sectionThree section">
+                    <div class="sctn-header">
+                        <div class="sh-headerThree sectionh">
+                            <div>
+                                <h2 class="sh-num">3.</h2>
+                            </div>
+                            <div>
+                                <h2 class="sh-heading">
+                                    Extra Information
+                                </h2>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="wb-input">
+                        <div class="input-box">
+                            <input type="text" autocomplete="off" required />
+                            <label>Country <span>*</span></label>
+                        </div>
+                    </div>
+                    <div class="wb-input">
+                        <div class="input-box">
+                            <input type="text" autocomplete="off" required />
+                            <label>State <span>*</span></label>
+                        </div>
+                    </div>
+                    <div class="wb-inputs">
+                        <div class="input-box">
+                            <input type="text" autocomplete="off" required />
+                            <label>University <span>*</span></label>
+                        </div>
+                        <div class="input-box">
+                            <input type="text" autocomplete="off" required />
+                            <label>Organization Email Address <span>*</span></label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="wrapper-submit">
+                    <button id="backButton">Back</button>
+                    <button id="nextButton">Next</button>
+                    <button id="submitButton" style="display: none">
+                        Submit
+                    </button>
+                </div>
+            </form>
+        </div>
+    </section>
+</div>
+{% endblock body %}
