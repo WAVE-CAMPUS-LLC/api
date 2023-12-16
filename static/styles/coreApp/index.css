@@ -1,0 +1,238 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+@font-face {
+    font-family: "Easy-Grotesk-Black";
+    src: url("../../../static/fonts/EasyGrotesk/Easy-Grotesk-Black-Demo-BF653883937b855.otf") format("opentype");
+}
+
+@font-face {
+    font-family: "Easy-Grotesk-ExtraBold";
+    src: url("../../../static/fonts/EasyGrotesk/Easy-Grotesk-ExtraBold-Demo-BF6538839346ccc.otf") format("opentype");
+}
+
+@font-face {
+    font-family: "Easy-Grotesk-Bold";
+    src: url("../../../static/fonts/EasyGrotesk/Easy-Grotesk-Bold-Demo-BF653883938aebb.otf") format("opentype");
+}
+
+@font-face {
+    font-family: "Easy-Grotesk-Medium";
+    src: url("../../../static/fonts/EasyGrotesk/Easy-Grotesk-Medium-Demo-BF65388392b6582.otf") format("opentype");
+}
+
+@font-face {
+    font-family: "Easy-Grotesk-Regular";
+    src: url("../../../static/fonts/EasyGrotesk/Easy-Grotesk-Regular-Demo-BF65388388a48c7.otf") format("opentype");
+}
+
+@font-face {
+    font-family: "Easy-Grotesk-Light";
+    src: url("../../../static/fonts/EasyGrotesk/Easy-Grotesk-Light-Demo-BF6538839349826.otf") format("opentype");
+}
+
+@font-face {
+    font-family: "Easy-Grotesk-ExtraLight";
+    src: url("../../../static/fonts/EasyGrotesk/Easy-Grotesk-ExtraLight-Demo-BF653883932e6d1.otf") format("opentype");
+}
+
+
+
+#mainPageBody {
+    color: white;
+    width: 100%;
+    display: flex;
+}
+
+.nav-container {
+    top: 0;
+    position: relative;
+}
+
+.nav-container nav {
+    position: absolute;
+    top: 15px;
+    right: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1010;
+    display: flex;
+    justify-content: center;
+}
+
+.nav-elements {
+    background: #2a2b384e;
+    -webkit-backdrop-filter: blur(20px) saturate(1.7);
+    backdrop-filter: blur(20px) saturate(1.7);
+    pointer-events: auto;
+    box-shadow: 2px 5px 5px 2px rgba(0, 0, 0, 0.045);
+    width: 60%;
+    padding-top: 15px;
+    padding-bottom: 15px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 20px;
+}
+
+.nav-elements ul{
+    list-style: none;
+    display: flex;
+    gap: 20px;
+}
+
+.nav-elements ul li{
+    display: inline-block;
+    font-family: Easy-Grotesk-Light;
+}
+
+.nav-elements ul li a {
+    font-family: Easy-Grotesk-ExtraLight;
+    letter-spacing: 1px;
+    font-size: 17px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+}
+
+#nav-brand a {
+    font-family: Easy-Grotesk-ExtraBold;
+    font-size: 20px;
+}
+
+.nav-elements ul li a,
+#nav-brand a{
+    text-decoration: none;
+    color: aliceblue;
+}
+
+#nav-brand {
+    margin-left: 12.5px;
+    margin-right: 12.5px;
+}
+
+#brand-logo a {
+    font-size: 20px;
+    text-decoration: none;
+    color: skyblue;
+    font-family: Easy-Grotesk-ExtraBold;
+}
+
+#nav-bar-menu {
+    display: flex;
+    justify-content: space-around;
+    list-style-type: none;
+}
+
+.menu {
+    display: inline-block;
+    padding-left: 25px;
+}
+
+.menu a {
+    color: rgb(133, 126, 126);
+    text-decoration: none;
+    font-family: Easy-Grotesk-Light;
+    text-transform: capitalize;
+}
+
+.mPB-one {
+    display: inline-block;
+    width: 65%;
+    background-color: #081b29;
+    height: 100vh;
+    overflow-y: scroll;
+    overflow-x: hidden;
+}
+
+.mPB-two {
+    display: inline-block;
+    width: 35%;
+    background-color: #e2fdff;
+    height: 100vh;
+    color: black;
+}
+
+.pbTwoContainer {
+    width: 100%;
+    display: flex;
+    text-align: center;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    height: 100%;
+    row-gap: 1rem;
+}
+
+#starting-cont {
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.heading {
+    font-size: 35px;
+    color: #081b29;
+    font-family: Easy-Grotesk-ExtraBold;
+}
+
+.gSPieces {
+    margin-top: 15px;
+}
+
+.gSPieces a {
+    color: #e2fdff;
+    margin-right: 10px;
+    font-size: 20px;
+    padding: 10px;
+    background-color: #162938;
+    border-radius: 20px;
+    text-decoration: none;
+    border: #1c5f8e73 solid 2px;
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
+#joinBtn:hover,
+#loginBtn:hover {
+    color: rgb(133, 126, 126);
+}
+
+.bottom-cont {
+    display: flex;
+    justify-content: end;
+    padding-bottom: 20px;
+    flex-direction: column;
+    row-gap: 10px;
+}
+
+.footer-logo {
+    width: 100%;
+    justify-content: center;
+}
+
+.footer-logo h3 {
+    font-family: Easy-Grotesk-ExtraLight;
+    font-size: 22.5px;
+}
+
+.bottom-cont a {
+    font-family: Easy-Grotesk-Light;
+    font-size: 14.5px;
+    color: #081b29;
+    text-decoration: none;
+}
+
+.bottom-cont a:hover {
+    color: aqua;
+}
+
+.bottom-cont span {
+    font-family: Easy-Grotesk-ExtraBold;
+    margin-left: 10px;
+    margin-right: 10px;
+}

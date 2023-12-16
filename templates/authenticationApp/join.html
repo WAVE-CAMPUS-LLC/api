@@ -23,7 +23,8 @@ WAVE — Join Us!
         </div>
 
         <div class="wrapper-body">
-            <form autocomplete="off">
+            <form method="post" autocomplete="off">
+                {% csrf_token %}
                 <div class="wb-sectionOne section active">
                     <div class="sctn-header">
                         <div class="sh-headerOne active sectionh">
@@ -134,9 +135,9 @@ WAVE — Join Us!
                 </div>
 
                 <div class="wrapper-submit">
-                    <button id="backButton">Back</button>
-                    <button id="nextButton">Next</button>
-                    <button id="submitButton" style="display: none">
+                    <button type="button" id="backButton">Back</button>
+                    <button type="button" id="nextButton">Next</button>
+                    <button type="submit" id="submitButton" style="display: none">
                         Submit
                     </button>
                 </div>

@@ -1,0 +1,67 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}
+Home
+{% endblock title %}
+
+{% block app_page_style %}
+<link rel="stylesheet" type="text/css" href="{% static "/styles/coreApp/index.css" %}" />
+{% endblock app_page_style %}
+
+{% block body %}
+<div id="mainPageBody">
+    <div class="mPB-one">
+        <div class="nav-container">
+            <nav>
+                <div class="nav-elements">
+                    <ul>
+                        <li>
+                            <a href="#">Home</a>
+                        </li>
+                        <li>
+                            <a href="#" rel="noopener noreferrer">Events</a>
+                        </li>
+                        <div id="nav-brand">
+                            <a href="{% url "core:index" %}"><h3>WAVE</h3></a>
+                        </div>
+                        <li>
+                            <a href="#">Map</a>
+                        </li>
+                        <li>
+                            <a href="#">Safety</a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+        </div>
+    </div>
+    <div class="mPB-two">
+        <div class="pbTwoContainer">
+            <div id="starting-cont">
+                <div>
+                    <div id="containerHead">
+                        <h3 class="heading">Get Started</h3>
+                    </div>
+                    <div class="gSPieces">
+                        <a href="{% url "authentication:join" %}" id="joinBtn">Sign up</a>
+                        <a href="{% url "authentication:login" %}" id="loginBtn">Log in</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bottom-cont">
+                <div class="footer-logo">
+                    <h3>OAK</h3>
+                </div>
+                <div>
+                    <a href="#">Terms & conditions</a>
+                    <span>•</span>
+                    <a href="#">Privacy policy</a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock body %}
