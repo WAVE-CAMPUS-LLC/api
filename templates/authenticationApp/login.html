@@ -13,33 +13,38 @@ WAVE — Welcome back!
 {% endblock script %}
 
 {% block body %}
-<section class="mPB-one">
-    <div class="wrapper">
-        <div class="form-box login">
-            <h1>Log in</h1>
-            <h3>Welcome back!</h3>
-            <form action="">
+<main id="loginCardContainer">
+    <div id="loginCard">
+        <div id="heading">
+            <h3>Log in</h3>
+            <div id="sectionName">
+                <h3>Welcome back!</h3>
+            </div>
+        </div>
+
+        <form action="" method="post">
+            <div id="contentElements">
                 <div class="input-box">
                     <span class="icon"><i class='bx bxs-envelope'></i></span>
-                    <input type="email" required autocomplete="off">
+                    <input type="email" autofocus required>
                     <label>Email</label>
                 </div>
                 <div class="input-box">
                     <span class="icon"><i class='bx bxs-lock'></i></span>
-                    <input type="password" required autocomplete="off">
+                    <input type="password" required>
                     <label>Password</label>
                 </div>
-                <div class="remember-forgot">
-                    <label><input type="checkbox">Remember me</label>
-                    <a href="../templates/forgot.html">Forgot your password?</a>
+                <div id="forgot">
+                    <h6><a href="./forgot.html">Forgot password?</a></h6>
                 </div>
-                <button type="submit" class="btn">Login</button>
-                <div class="login-register">
-                    <p>Don't have an account?<a href="{% url "authentication:join" %}" 
-                    class="register-link"> Register</a></p>
-                </div>
-            </form>
-        </div> 
+            </div>
+            <div id="controlledElements">
+                <button type="submit" role="button">Login</button>
+            </div>
+        </form>
     </div>
-</section>
+    <div id="joinLink">
+        <h6>Not on the new Wave?<a href="{% url "authentication:join" %}"> Join Us!</a></h6>
+    </div>
+</main>
 {% endblock body %}

@@ -39,6 +39,11 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "authenticationApp",
+    "adminDashboardApp",
+    "accountManagementApp",
+    "coreApp", 
+    "eventManagementApp", 
+    "supportCenterApp"
 ]
 
 MIDDLEWARE = [

@@ -40,92 +40,115 @@
 }
 
 
-#mainPageBody {
-    width: 100%;
+body {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    background-color: #e2fdff57;
+}
+
+#joinCardContainer {
+    /** Centering the card in the middle of the page **/
     display: flex;
-}
-
-.mPB-one {
-    display: inline-block;
-    width: 40%;
-    background-color: #081b29;
-    height: 100vh;
-}
-
-.mPB-two {
-    display: inline-block;
-    width: 60%;
-    height: 100vh;
-    color: black;
+    justify-content: center;
     align-items: center;
-    padding-left: 5rem;
-    padding-right: 5rem;
-    padding-top: 5rem;
-    overflow-y: scroll;
-    background-color: #e2fdff;
+
+    flex-direction: column; /** Making elements be displayed in rows. **/
+    row-gap: 20px; /** Adding a gap between elements horizontally. **/
+
+    /** Taking up full page width and height. **/
+    max-width: 100vw;
+    max-height: 100vh;
+    width: 100%;
+    height: 100%;
+
+    overflow-y: auto;
 }
 
-#join-header h1 {
-    font-family: Easy-Grotesk-Bold;
-    font-size: 2em;
-    color: #1B4965;
-    text-align: center;
-}
 
-#join-header h3 {
-    font-family: Easy-Grotesk-Light;
-    font-size: 1em;
-    color: #1B4965;
-    text-align: center;
-}
-
-.sctn-header div {
+/** Join Card Elements **/
+#joinCard {
     display: flex;
-    gap: 10px;
+    flex-direction: column;
+    row-gap: 20px;
+
+    width: 60%;
+
+    /** Card Padding **/
+    padding-top: 20px;
+    padding-bottom: 30px;
+    padding-left: 50px;
+    padding-right: 50px;
+
+    /** Card Border Elements **/
+    border: 1px solid rgba(130, 130, 130, 0.094);
+    border-radius: 20px;
+
+    /** Card Shadowing **/
+    box-shadow: rgba(17, 17, 26, 0.05) 0px 1px 0px, rgba(17, 17, 26, 0.1) 0px 0px 8px;
+    -webkit-box-shadow: rgba(17, 17, 26, 0.05) 0px 1px 0px, rgba(17, 17, 26, 0.1) 0px 0px 8px;
+    -moz-box-shadow: rgba(17, 17, 26, 0.05) 0px 1px 0px, rgba(17, 17, 26, 0.1) 0px 0px 8px;
+}
+
+#joinCard #heading {
+    color: #1B4965;
+
+    font-family: Easy-Grotesk-Bold;
+    font-size: 25px;
+
+    display: flex;
     justify-content: center;
 }
 
-.sctn-header h2 {
-    display: inline-block;
-    color: #1B4965;
+#sectionName {
+    color:#1b4965b1;
 }
 
-.sh-heading {
-    font-family: Easy-Grotesk-Light;
-    font-size: 20px;
-}
-
-.sctn-header div {
-    align-items: center;
+/* The CSS code `#joinCard form` is targeting the form element inside the element with the ID
+"joinCard". */
+#joinCard form {
     display: flex;
+    flex-direction: column;
+    row-gap: 30px;
 }
 
-.sh-num {
-    font-family: Easy-Grotesk-Medium;
-    font-size: 17px;
+
+/** Form Inputs and Labels **/
+#contentElements {
+    display: flex;
+    flex-direction: column;
+    row-gap: 30px;
 }
 
-.wb-inputs {
+#sectionName {
     width: 100%;
     display: flex;
-    gap: 35px;
+    justify-content: center;
 }
 
-.wb-input {
-    padding-right: 35px;
+#sectionName h2 {
+    font-family: Easy-Grotesk-Regular; 
+    font-size: 15px;
 }
 
-.input-box {
-    font-family: Easy-Grotesk-extralight;
+#row {
+    display: flex;
+    width: 100%;
+    gap: 30px;
+}
+
+#rowElement {
+    font-family: Easy-Grotesk-ExtraLight;
     position: relative;
-    width: 50%;
     height: 50px;
     border-bottom: 2px solid #25567b;
-    margin: 30px 0;
-    display: inline-block;
+    width: 50%;
+    margin: 10px 0;
 }
 
-.input-box label {
+
+
+#rowElement label {
     position: absolute;
     top: 50%;
     left: 5px;
@@ -137,28 +160,14 @@
     transition: .5s;
 }
 
-.input-box label span {
+#rowElement label span,
+.input-group label span {
     color: red;
 }
 
-.input-box input:focus~label,
-.input-box input:valid~label {
+#rowElement input:focus~label,
+#rowElement input:valid~label {
     top: -5px;
-}
-
-
-.input-box input {
-    font-family: Easy-Grotesk-extralight;
-    width: 100%;
-    height: 100%;
-    background: transparent;
-    border: none;
-    outline: none;
-    font-size: 1em;
-    color: #162938;
-    font-weight: 600;
-    padding: 0 25px 0 6px;
-    margin-top: 10px;
 }
 
 input[type=date]:required:invalid::-webkit-datetime-edit {
@@ -166,48 +175,179 @@ input[type=date]:required:invalid::-webkit-datetime-edit {
 }
 
 input[type=date]:focus::-webkit-datetime-edit {
-    color: black !important;
+    color: #005387 !important;
 }
 
-
-.wrapper-submit {
-    display: flex;
-    margin-top: 50px;
-    justify-content: center;
-}
-
-.wrapper-submit {
+#rowElement input,
+#birthdayRowElement input {
+    font-family: Easy-Grotesk-ExtraLight;
     width: 100%;
-    justify-content: space-between;
+    height: 100%;
+    background: transparent;
+    border: none;
+    outline: none;
+    font-size: 1em;
+    color: #005387;
+    font-weight: 600;
+    padding: 0 25px 0 6px;
+    margin-top: 10px;
+}
+
+#birthdayRowElement {
     display: flex;
+    justify-content: space-evenly;
+    font-family: Easy-Grotesk-ExtraLight;
+    width: 50%;
+    gap: 10px;
+    margin: 10px 0;
+}
+
+.input-group {
+    position: relative;
+    height: 50px;
+    border-bottom: 2px solid #25567b;
+    margin-bottom: 10px; /* Adjust spacing between input groups */
+}
+
+.input-group input {
+    width: calc(100%/3);
+    border: none;
+    outline: none;
+    font-size: 1em;
+    padding-left: 5px;
+}
+
+.birthday-label {
+    position: absolute;
+    top: 50%;
+    left: 5px;
+    translate: translateY(-50%);
+    font-size: 1em;
+    color: #25567b;
+    font-weight: 500;
+    pointer-events: none;
+    transition: .5s;
+}
+
+.input-group input:focus ~ .birthday-label,
+.input-group input:valid ~ .birthday-label {
+    top: -5px;
+}
+
+
+/** Section Two Elements **/
+#rowTwo {
+    display: flex;
+    width: 100%;
     gap: 30px;
 }
 
-#backButton,
-#nextButton,
-#submitButton {
-    font-family: Easy-Grotesk-regular;
-    width: 50%;
-    height: 45px;
+#rowTwoElement {
+    font-family: Easy-Grotesk-ExtraLight;
+    position: relative;
+    height: 50px;
+    border-bottom: 2px solid #25567b;
+    width: 100%;
+    margin: 10px 0;
+}
+
+#rowTwoElement input {
+    font-family: Easy-Grotesk-ExtraLight;
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    border: none;
+    outline: none;
+    font-size: 1em;
+    color: #005387;
+    font-weight: 600;
+    padding: 0 25px 0 6px;
+    margin-top: 10px;
+}
+
+#rowTwoElement label {
+    position: absolute;
+    top: 50%;
+    left: 5px;
+    translate: translateY(-50%);
+    font-size: 1em;
+    color: #25567b;
+    font-weight: 500;
+    pointer-events: none;
+    transition: .5s;
+}
+
+#rowTwoElement label span{
+    color: red;
+}
+
+#rowTwoElement input:focus~label,
+#rowTwoElement input:valid~label {
+    top: -5px;
+}
+
+
+/** Submit or Return **/
+#controlledElements { 
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+#controlledElements #returnContainer h5,
+#nextContainer button {
+    cursor: pointer;
+}
+
+#returnContainer h5 {
+    display: flex;
+    align-items: center;
+
+    font-family: Easy-Grotesk-Regular;
+    font-size: 14px;
+    color: #005387;
+}
+
+#returnContainer h5:hover {
+    text-decoration: solid underline 1px;
+}
+
+#nextContainer button{
     background: #25567b;
     border: none;
     outline: none;
     border-radius: 6px;
-    cursor: pointer;
-    font-size: 1.2em;
+
+    padding-top: 10px;
+    padding-bottom: 10px;
+    padding-left: 10px;
+    padding-right: 10px;
+
+    font-size: 14px;
     color: #fff;
     font-weight: 500;
 }
 
-#nextButton.centered {
-    margin: 0 auto;
+
+
+/** Already have an account? **/
+#signInLink h6{
+    color: #1b4965b7;
+
+    text-align: center;
+    width: 100%;
+
+    /** Font Settings **/
+    font-family: Easy-Grotesk-Regular;
+    font-size: 15px;
 }
 
-
-.section {
-    display: none;
+#signInLink a {
+    color: #005387;
+    text-decoration: none;
 }
 
-.active {
-    display: block;
+#signInLink a:hover {
+    text-decoration: solid underline 1px;
 }
