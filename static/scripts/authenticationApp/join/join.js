@@ -17,6 +17,9 @@ function showSection(index) {
     if (index === sections.length - 1) {
         nextButton.style.display = 'none'; // Hide next button on the last section
         submitButton.style.display = 'block'; // Display submit button on the last section
+        submitButton.addEventListener('click', () => {
+            document.querySelector('form').submit();
+        });
     } else {
         nextButton.style.display = 'block';
         submitButton.style.display = 'none';

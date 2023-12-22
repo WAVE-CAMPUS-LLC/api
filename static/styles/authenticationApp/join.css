@@ -158,11 +158,13 @@ body {
     font-weight: 500;
     pointer-events: none;
     transition: .5s;
+    display: flex;
 }
 
 #rowElement label span,
-.input-group label span {
+.input-group legend span {
     color: red;
+    display: inline-block;
 }
 
 #rowElement input:focus~label,
@@ -200,6 +202,8 @@ input[type=date]:focus::-webkit-datetime-edit {
     width: 50%;
     gap: 10px;
     margin: 10px 0;
+    border: none;
+    padding: 0;
 }
 
 .input-group {
@@ -275,10 +279,14 @@ input[type=date]:focus::-webkit-datetime-edit {
     font-weight: 500;
     pointer-events: none;
     transition: .5s;
+
+    display: flex;
+    gap: 5px;
 }
 
 #rowTwoElement label span{
     color: red;
+    display: inline-block;
 }
 
 #rowTwoElement input:focus~label,
@@ -350,4 +358,24 @@ input[type=date]:focus::-webkit-datetime-edit {
 
 #signInLink a:hover {
     text-decoration: solid underline 1px;
+}
+
+
+/**Include in the base html - Error displaying.**/
+#errorContainer {
+    color: red;
+    display: inline-block;
+    font-style: italic;
+    font-size: 12px;
+    font-family: Easy-Grotesk-Medium;
+    margin-left: 2px;
+}
+
+#errorContainer div {
+    display: flex;
+    gap: 5px;
+}
+
+#errorContainer div p {
+    display: inline-block;
 }

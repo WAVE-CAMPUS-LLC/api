@@ -21,7 +21,8 @@ WAVE — Join Us!
             <h3>Let's Get Started</h3>
         </div>
 
-        <form action="" method="post">
+        <form action="{% url 'authentication:join' %}" method="post">
+            {% csrf_token %}
             <div id="contentElements" class="section-one">
                 <div id="sectionName">
                     <h2>1. Personal Information</h2>
@@ -32,6 +33,16 @@ WAVE — Join Us!
                         <label for="{{ form.first_name.id_for_label}}">
                             {{ form.first_name.label }} 
                             <span>*</span>
+                            <span id="errorContainer">
+                                {% if form.first_name.errors %}
+                                    {% for error in form.first_name.errors %}
+                                    <div>
+                                        <p>-</p>
+                                        <p>{{ error }}</p>
+                                    </div>
+                                    {% endfor %}
+                                {% endif %}
+                            </span>
                         </label>
                     </div>
                     <div id="rowElement">
@@ -39,6 +50,16 @@ WAVE — Join Us!
                         <label for="{{ form.last_name.id_for_label }}">
                             {{ form.last_name.label }} 
                             <span>*</span>
+                            <span id="errorContainer">
+                                {% if form.last_name.errors %}
+                                    {% for error in form.last_name.errors %}
+                                    <div>
+                                        <p>-</p>
+                                        <p>{{ error }}</p>
+                                    </div>
+                                    {% endfor %}
+                                {% endif %}
+                            </span>
                         </label>
                     </div>
                 </div>
@@ -49,35 +70,72 @@ WAVE — Join Us!
                         <label for="{{ form.email.id_for_label }}">
                             {{ form.email.label }} 
                             <span>*</span>
+                            <span id="errorContainer">
+                                {% if form.email.errors %}
+                                    {% for error in form.email.errors %}
+                                    <div>
+                                        <p>-</p>
+                                        <p>{{ error }}</p>
+                                    </div>
+                                    {% endfor %}
+                                {% endif %}
+                            </span>
                         </label>
                     </div>
                     <div id="rowElement">
                         <input type="{{ form.phone_number.field.widget.input_type }}" name="{{ form.phone_number.html_name }}" value="{{ form.phone_number.value | default_if_none:"" }}" id="{{ form.phone_number.auto_id }}" class="" autocomplete="off" required />
                         <label for="{{ form.phone_number.id_for_label }}">
                             {{ form.phone_number.label }}
+                            <span>*</span>
+                            <span id="errorContainer">
+                                {% if form.phone_number.errors %}
+                                    {% for error in form.phone_number.errors %}
+                                    <div>
+                                        <p>-</p>
+                                        <p>{{ error }}</p>
+                                    </div>
+                                    {% endfor %}
+                                {% endif %}
+                            </span>
                         </label>
                     </div>
                 </div>
 
                 <div id="row">
-                    <div id="birthdayRowElement">
-                        <div class="input-group">
-                            <input type="{{ form.birthday.field.widget.input_type }}" name="{{ form.birthday.html_name }}" value="{{ form.birthday.value | default_if_none:"" }}" id="{{ form.birthday.auto_id }}" class="" autocomplete="off" required />
-                            <label for="{{ form.birthday.id_for_label }}" class="birthday-label">
-                                {{ form.birthday.label }}
-                                <span>*</span>
-                            </label>
-                        </div>
-                        <div class="input-group">
-                            <input placeholder="Month" type="{{ form.birthday.field.widget.input_type }}" name="{{ form.birthday.html_name }}" value="{{ form.birthday.value | default_if_none:"" }}" id="{{ form.birthday.auto_id }}" class="" autocomplete="off" required />
-                        </div>
-                        <div class="input-group">
-                            <input placeholder="Date" type="{{ form.birthday.field.widget.input_type }}" name="{{ form.birthday.html_name }}" value="{{ form.birthday.value | default_if_none:"" }}" id="{{ form.birthday.auto_id }}" class="" autocomplete="off" required />
-                        </div>
-                    </div>
                     <div id="rowElement">
-                        <input type="{{ form.gender.field.widget.input_type }}" name="{{ form.gender.html_name }}" value="{{ form.gender.value | default_if_none:"" }}" id="{{ form.gender.auto_id }}" class="" autocomplete="off" required />
-                        <label for="{{ form.gender.id_for_label }}">{{ form.gender.label }}</label>
+                        <input type="{{ form.birthday.field.widget.input_type }}" name="{{ form.birthday.html_name }}" value="{{ form.birthday.value | default_if_none:"" }}" id="{{ form.birthday.auto_id }}" class="" autocomplete="off" required />
+                        <label for="{{ form.birthday.id_for_label }}" class="birthday-label">
+                            {{ form.birthday.label }}
+                            <span>*</span>
+                            <span id="errorContainer">
+                                {% if form.birthday.errors %}
+                                    {% for error in form.birthday.errors %}
+                                    <div>
+                                        <p>-</p>
+                                        <p>{{ error }}</p>
+                                    </div>
+                                    {% endfor %}
+                                {% endif %}
+                            </span>
+                        </label>
+                    </div>
+                    
+                    <div id="rowElement">
+                        <input type="{{ form.gender.field.widget.input_type }}" name="{{ form.gender.html_name }}" value="{{ form.gender.value | default_if_none:"" }}" id="{{ form.gender.auto_id }}" class="" autocomplete="off" />
+                        <label for="{{ form.gender.id_for_label }}">
+                            {{ form.gender.label }}
+
+                            <span id="errorContainer">
+                                {% if form.gender.errors %}
+                                    {% for error in form.gender.errors %}
+                                    <div>
+                                        <p>-</p>
+                                        <p>{{ error }}</p>
+                                    </div>
+                                    {% endfor %}
+                                {% endif %}
+                            </span>
+                        </label>
                     </div>
                 </div>
             </div>
@@ -88,17 +146,37 @@ WAVE — Join Us!
                 </div>
                 <div id="rowTwo">
                     <div id="rowTwoElement">
-                        <input type="{{ form.password.field.widget.input_type }}" name="{{ form.password.html_name }}" value="{{ form.password.value | default_if_none:"" }}" id="{{ form.password.auto_id }}" class="" autocomplete="off" required />
-                        <label for="{{ form.password.id_for_label }}">
-                            {{ form.password.label }} 
+                        <input type="{{ form.password1.field.widget.input_type }}" name="{{ form.password1.html_name }}" value="{{ form.password1.value | default_if_none:"" }}" id="{{ form.password1.auto_id }}" class="" autocomplete="off" required />
+                        <label for="{{ form.password1.id_for_label }}">
+                            {{ form.password1.label }} 
                             <span>*</span>
+                            <span id="errorContainer">
+                                {% if form.password1.errors %}
+                                    {% for error in form.password1.errors %}
+                                    <div>
+                                        <p>-</p>
+                                        <p>{{ error }}</p>
+                                    </div>
+                                    {% endfor %}
+                                {% endif %}
+                            </span>
                         </label>
                     </div>
                     <div id="rowTwoElement">
-                        <input type="{{ form.confirm_password.field.widget.input_type }}" name="{{ form.confirm_password.html_name }}" value="{{ form.confirm_password.value | default_if_none:"" }}" id="{{ form.confirm_password.auto_id }}" class="" autocomplete="off" required />
-                        <label for="{{ form.confirm_password.id_for_label }}">
-                            {{ form.confirm_password.label }} 
+                        <input type="{{ form.password2.field.widget.input_type }}" name="{{ form.password2.html_name }}" value="{{ form.password2.value | default_if_none:"" }}" id="{{ form.password2.auto_id }}" class="" autocomplete="off" required />
+                        <label for="{{ form.password2.id_for_label }}">
+                            {{ form.password2.label }} 
                             <span>*</span>
+                            <span id="errorContainer">
+                                {% if form.password2.errors %}
+                                    {% for error in form.password2.errors %}
+                                    <div>
+                                        <p>-</p>
+                                        <p>{{ error }}</p>
+                                    </div>
+                                    {% endfor %}
+                                {% endif %}
+                            </span>
                         </label>
                     </div>
                 </div>
@@ -108,16 +186,15 @@ WAVE — Join Us!
                 <div role="button" id="returnContainer">
                     <h5>
                         <img
-                            src="../static/images/join/return.svg"
-                            alt=""
+                            src="{% static "/images/join/return.svg" %}"
+                            alt="Return"
                         />Return
                     </h5>
                 </div>
 
                 <div id="nextContainer">
-                    <button role="button" type="button">Next</button>
+                    <button role="button">Next</button>
                     <button
-                        role="button"
                         type="submit"
                         style="display: none"
                     >

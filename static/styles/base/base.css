@@ -1,0 +1,17 @@
+/**Include in the base html - Error displaying.**/
+#errorContainer {
+    color: red;
+    display: inline-block;
+    font-style: italic;
+    font-size: 13px;
+    font-family: Easy-Grotesk-Medium;
+}
+
+#errorContainer div {
+    display: flex;
+    gap: 10px;
+}
+
+#errorContainer div p {
+    display: inline-block;
+}
