@@ -1,11 +1,12 @@
 from django import forms
 from .models import CustomUser
+from django.core.exceptions import ValidationError
 from django.contrib.auth.forms import (
     UserCreationForm,
     UserChangeForm,
     AuthenticationForm,
 )
-from django.core.exceptions import ValidationError
+
 
 
 class CustomUserJoinForm(UserCreationForm):
@@ -39,7 +40,31 @@ class CustomUserJoinForm(UserCreationForm):
         if CustomUser.objects.filter(email=email).exists():
             raise ValidationError("Email already in use.")
         return email
+    
+    # def clean(self):
+    #     cleaned_data = super().clean()
+    #     password2 = cleaned_data.get("password2")
+    #     email = cleaned_data.get("email")
 
+    #     if email and (email.lower() in password2.lower() or password2.lower() in email.lower()):
+    #         raise ValidationError("Password similar to email.")
+
+    #     return cleaned_data
+    
+    #In the defined function below, we loop through the first_name to see if it meets the set criteria.
+    def clean_first_name(self):
+        first_name = self.cleaned_data.get("first_name")
+        if not all(char.isalpha() or char.isspace() or char == '-' for char in first_name):
+            raise ValidationError("Can contain only letters, spaces, or hyphens.")
+        return first_name.strip()
+    
+    #In the defined function below, we loop through the first_name to see if it meets the set criteria.
+    def clean_last_name(self):
+        last_name = self.cleaned_data.get("last_name")
+        if not all(char.isalpha() or char.isspace() or char == '-' for char in last_name):
+            raise ValidationError("Can contain only letters, spaces, or hyphens.")
+        return last_name.strip()
+    
     def save(self, commit=True):
         user = super().save(commit=False)
         if commit:

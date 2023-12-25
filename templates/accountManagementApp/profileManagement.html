@@ -52,7 +52,7 @@ Account Management
                 <img src="../static/images/account/E.L3.png" />
             </div>
             <div class="pfp-info">
-                <h4>Enosh Lartey</h4>
+                <h4>{{ profile_form.email }} {{ user.last_name }}</h4>
             </div>
         </div>
     </div>
@@ -205,23 +205,59 @@ Account Management
                         </div>
 
                         <div class="profile-tab-content" id="personal">
-                            <div class="namePfp-row">
-                                <div class="nP-img-container">
-                                    <img
-                                        src="../static/images/account/E.L3.png"
-                                        alt=""
-                                        srcset=""
-                                    />
+                            <form method="post" enctype="multipart/form-data">
+                                <div class="namePfp-row">
+                                    <div class="nP-img-container">
+                                        <img
+                                            src="../static/images/account/E.L3.png"
+                                            alt=""
+                                            srcset=""
+                                        />
+                                    </div>
                                 </div>
-                            </div>
-
-                            <div class="bc-mainContent">
-                                <div id="name-container">
-                                    <div class="nc-first">
-                                        <div class="firstname-row">
+    
+                                <div class="bc-mainContent">
+                                    <div id="name-container">
+                                        <div class="nc-first">
+                                            <div class="firstname-row">
+                                                <div>
+                                                    <label for="first-name"
+                                                        >First Name</label
+                                                    >
+                                                </div>
+                                                <div>
+                                                    <input type="text"  name="first-name" id="first-name" value="{{ user.first_name }}" />
+                                                </div>
+                                            </div>
+                                            <div class="lastname-row">
+                                                <div>
+                                                    <label for="last-name"
+                                                        >Last Name</label
+                                                    >
+                                                </div>
+                                                <div>
+                                                    <input
+                                                        type="text"
+                                                        name="last-name"
+                                                        id="last-name"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="nc-second">
+                                            <button
+                                                type="button"
+                                                role="button"
+                                            >
+                                                Edit
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div id="email-container">
+                                        <div class="email-row">
                                             <div>
                                                 <label for="first-name"
-                                                    >First Name</label
+                                                    >Email Address</label
                                                 >
                                             </div>
                                             <div>
@@ -229,149 +265,113 @@ Account Management
                                                     type="text"
                                                     name="first-name"
                                                     id="first-name"
-                                                    readonly
+                                                    value="{{ user.email }}"
                                                 />
                                             </div>
                                         </div>
-                                        <div class="lastname-row">
+                                        <div class="ec-second">
+                                            <button
+                                                type="button"
+                                                role="button"
+                                            >
+                                                Edit
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div id="dob-container">
+                                        <div class="dob-row">
                                             <div>
-                                                <label for="last-name"
-                                                    >Last Name</label
+                                                <label for="birthday"
+                                                    >Date of Birth</label
                                                 >
                                             </div>
                                             <div>
                                                 <input
                                                     type="text"
-                                                    name="last-name"
-                                                    id="last-name"
+                                                    name="birthday"
+                                                    id="birthday"
+                                                    value="{{ user.birthday }}"
                                                 />
                                             </div>
                                         </div>
-                                    </div>
-                                    <div class="nc-second">
-                                        <button
-                                            type="button"
-                                            role="button"
-                                        >
-                                            Edit
-                                        </button>
-                                    </div>
-                                </div>
-                                <div id="email-container">
-                                    <div class="email-row">
-                                        <div>
-                                            <label for="first-name"
-                                                >Email Address</label
+                                        <div class="ec-second">
+                                            <button
+                                                type="button"
+                                                role="button"
                                             >
-                                        </div>
-                                        <div>
-                                            <input
-                                                type="text"
-                                                name="first-name"
-                                                id="first-name"
-                                            />
+                                                Edit
+                                            </button>
                                         </div>
                                     </div>
-                                    <div class="ec-second">
-                                        <button
-                                            type="button"
-                                            role="button"
-                                        >
-                                            Edit
-                                        </button>
-                                    </div>
-                                </div>
-                                <div id="dob-container">
-                                    <div class="dob-row">
-                                        <div>
-                                            <label for="birthday"
-                                                >Date of Birth</label
+    
+                                    <div id="dob-container">
+                                        <div class="nc-first">
+                                            <div class="firstname-row">
+                                                <div>
+                                                    <label for="first-name"
+                                                        >State</label
+                                                    >
+                                                </div>
+                                                <div>
+                                                    <input
+                                                        type="text"
+                                                        name="first-name"
+                                                        id="first-name"
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div class="lastname-row">
+                                                <div>
+                                                    <label for="last-name"
+                                                        >ZIP Code</label
+                                                    >
+                                                </div>
+                                                <div>
+                                                    <input
+                                                        type="text"
+                                                        name="last-name"
+                                                        id="last-name"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="nc-second">
+                                            <button
+                                                type="button"
+                                                role="button"
                                             >
-                                        </div>
-                                        <div>
-                                            <input
-                                                type="text"
-                                                name="birthday"
-                                                id="birthday"
-                                            />
+                                                Edit
+                                            </button>
                                         </div>
                                     </div>
-                                    <div class="ec-second">
-                                        <button
-                                            type="button"
-                                            role="button"
-                                        >
-                                            Edit
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div id="dob-container">
-                                    <div class="nc-first">
-                                        <div class="firstname-row">
+    
+                                    <div id="dob-container">
+                                        <div class="dob-row">
                                             <div>
-                                                <label for="first-name"
-                                                    >State</label
+                                                <label for="birthday"
+                                                    >Country</label
                                                 >
                                             </div>
                                             <div>
                                                 <input
                                                     type="text"
-                                                    name="first-name"
-                                                    id="first-name"
+                                                    name="country"
+                                                    id="country"
                                                 />
                                             </div>
                                         </div>
-                                        <div class="lastname-row">
-                                            <div>
-                                                <label for="last-name"
-                                                    >ZIP Code</label
-                                                >
-                                            </div>
-                                            <div>
-                                                <input
-                                                    type="text"
-                                                    name="last-name"
-                                                    id="last-name"
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="nc-second">
-                                        <button
-                                            type="button"
-                                            role="button"
-                                        >
-                                            Edit
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div id="dob-container">
-                                    <div class="dob-row">
-                                        <div>
-                                            <label for="birthday"
-                                                >Country</label
+                                        <div class="ec-second">
+                                            <button
+                                                type="button"
+                                                role="button"
                                             >
+                                                Edit
+                                            </button>
                                         </div>
-                                        <div>
-                                            <input
-                                                type="text"
-                                                name="country"
-                                                id="country"
-                                            />
-                                        </div>
-                                    </div>
-                                    <div class="ec-second">
-                                        <button
-                                            type="button"
-                                            role="button"
-                                        >
-                                            Edit
-                                        </button>
                                     </div>
                                 </div>
-                            </div>
+                            </form>
+                            
                         </div>
                         <div
                             class="profile-tab-content"

@@ -1,7 +1,9 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 
+
 # Create your views here.
+# views.py
 @login_required
-def userAccountView(request):
-    return render(request, 'accountManagementApp/profileManagement.html')
+def profileView(request):
+    return render(request, "accountManagementApp/profileManagement.html")

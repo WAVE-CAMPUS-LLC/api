@@ -23,6 +23,7 @@ WAVE — Join Us!
 
         <form action="{% url 'authentication:join' %}" method="post">
             {% csrf_token %}
+            <input type="hidden" id="currentSectionIndex" name="current_section_index" value="0">
             <div id="contentElements" class="section-one">
                 <div id="sectionName">
                     <h2>1. Personal Information</h2>
@@ -193,7 +194,7 @@ WAVE — Join Us!
                 </div>
 
                 <div id="nextContainer">
-                    <button role="button">Next</button>
+                    <button role="button" id="nextButton">Next</button>
                     <button
                         type="submit"
                         style="display: none"
