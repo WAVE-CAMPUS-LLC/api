@@ -6,6 +6,3 @@ class AccountmanagementappConfig(AppConfig):
     name = "accountManagementApp"
     verbose_name = "Profile Management"
     
-    
-    def ready(self):
-        from accountManagementApp import signals
