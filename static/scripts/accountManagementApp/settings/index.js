@@ -26,10 +26,8 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // Initialize tab systems for each body section
-    initializeTabSystem('profile-body', 'profile-tab', 'profile-tab-content');
-    initializeTabSystem('billing-body', 'billing-tab', 'billing-tab-content');
-    initializeTabSystem('security-body', 'security-tab', 'security-tab-content');
-    initializeTabSystem('activity-body', 'activity-tab', 'activity-tab-content');
+    initializeTabSystem('body', 'settings-tab', 'settings-tab-content');
+    
 
     // Function to initialize tab system for a specific body section
     function initializeTabSystem(bodyId, tabClass, contentClass) {
@@ -54,4 +52,3 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 });
-

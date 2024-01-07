@@ -5,5 +5,6 @@ from . import views
 app_name = "accountManagement"
 
 urlpatterns = [
-    path("profile/", views.profileView, name="userAccount"), 
+    path("profile/", views.profileView, name="userAccount"),
+    path("settings/", views.settingsView, name="userSettings"),
 ]

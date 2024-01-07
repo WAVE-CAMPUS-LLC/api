@@ -7,3 +7,7 @@ from django.contrib.auth.decorators import login_required
 @login_required
 def profileView(request):
     return render(request, "accountManagementApp/profileManagement.html")
+
+@login_required
+def settingsView(request):
+    return render(request, 'accountManagementApp/profileSettings.html')

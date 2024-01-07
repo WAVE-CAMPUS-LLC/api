@@ -40,3 +40,9 @@ def loginView(request):
 def logoutView(request):
     logout(request)
     return redirect("core:index")
+
+def forgotPasswordView(request):
+    return render(request, 'authenticationApp/forgot_password.html')
+
+def passwordChangeView(request):
+    return render(request, 'authenticationApp/password_change.html')

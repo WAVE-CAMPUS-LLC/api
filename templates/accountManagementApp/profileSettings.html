@@ -1,0 +1,192 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}
+Settings
+{% endblock title %}
+
+{% block app_page_style %}
+<link rel="stylesheet" type="text/css" href="{% static "/styles/accountManagementApp/profileSettings.css" %}" />
+{% endblock app_page_style %}
+
+{% block script %}
+<script type="text/javascript" src="{% static "/scripts/accountManagementApp/settings/index.js" %}" defer></script>
+{% endblock script %}
+
+{% block body %}
+<div id="header">
+    <div id="navigation-bar">
+        <div id="logo-menu">
+            <div id="logo">
+                <a href="#">WAVE</a>
+            </div>
+            <div id="menu">
+                <ul>
+                    <li><a href="">Discover</a></li>
+                    <li><a href="">Host Event</a></li>
+                    <li><a href="#">Safety</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div id="support-links">
+            <a id="support-nav" href="{% url "support:home" %}">Support</a>
+            <div id="join">
+                <a class="account" href="#">
+                    <img
+                        src="../static/images/home/profile.svg"
+                        alt=""
+                    />
+                    <p>Enosh</p>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div id="body">
+    <div id="body-header">
+        <h3>Profile Settings</h3>
+    </div>
+    <div class="content-control">
+        <div
+            class="settings-tab tab-active"
+            data-tab="profile-information"
+        >
+            Profile
+        </div>
+        <div class="settings-tab" data-tab="preferences-information">
+            Interests
+        </div>
+    </div>
+    <div id="content-container">
+        <div class="settings-tab-content" id="profile-information">
+            <section id="personal-change" class="info-container">
+                <h6 class="ic-headers">Personal Information</h6>
+                <div class="input-div">
+                    <div class="input-box">
+                        <label for="first-name">First Name</label>
+                        <input
+                            name="first-name"
+                            id="first-name"
+                            type="text"
+                            value="Enosh"
+                            required
+                        />
+                    </div>
+
+                    <div class="input-box">
+                        <label for="last-name">Last Name</label>
+                        <input
+                            name="last-name"
+                            id="last-name"
+                            type="text"
+                            value="{{ user.last_name }}"
+                            required
+                        />
+                    </div>
+                </div>
+                <button type="submit">Confirm Changes</button>
+            </section>
+
+            <hr class="cc-divider" />
+
+            <section id="email-change" class="info-container">
+                <h6 class="ic-headers">Email Address</h6>
+                <div class="input-div">
+                    <div class="input-box">
+                        <label for="email-address">Email Address</label>
+                        <input
+                            id="email-address"
+                            name="email-address"
+                            type="email"
+                            value="{{ user.email }}"
+                            required
+                        />
+                    </div>
+                </div>
+                <button type="submit">Confirm Change</button>
+            </section>
+
+            <hr class="cc-divider" />
+
+            <section id="phone-change" class="info-container">
+                <h6 class="ic-headers">Phone Number</h6>
+                <div class="input-div">
+                    <div class="input-box">
+                        <label for="phone-number">Phone Number</label>
+                        <input
+                            id="phone-number"
+                            name="phone-number"
+                            type="tel"
+                            value="*** - *** - 9206"
+                            readonly
+                            required
+                        />
+                    </div>
+                </div>
+                <button type="submit">Request Change</button>
+            </section>
+
+            <hr class="cc-divider" />
+
+            <section id="location-change" class="info-container">
+                <h6 class="ic-headers">Location</h6>
+                <div class="input-div">
+                    <div class="input-box">
+                        <label for="country">Country</label>
+                        <select
+                            id="country"
+                            name="country"
+                            type="text"
+                            value="United States"
+                            required
+                        >
+                            <option value="usa">United States</option>
+                        </select>
+                    </div>
+
+                    <div class="input-box">
+                        <label for="zip-code"
+                            >ZIP Code / PostCode</label
+                        >
+                        <input
+                            id="zip-code"
+                            name="zip-code"
+                            type="text"
+                            value="28167"
+                            required
+                        />
+                    </div>
+                </div>
+                <button type="submit">Confirm Changes</button>
+            </section>
+
+            <hr class="cc-divider" />
+
+            <section id="password-change" class="info-container">
+                <h6 class="ic-headers">Change Password</h6>
+                <div class="input-div">
+                    <div class="input-box">
+                        <label for="password">New Password</label>
+                        <input
+                            id="password"
+                            name="password"
+                            type="password"
+                            value="******"
+                            readonly
+                            required
+                        />
+                    </div>
+                </div>
+                <button type="submit">Update Password</button>
+            </section>
+        </div>
+
+        <div class="settings-tab-content" id="preferences-information">
+
+        </div>
+    </div>
+</div>
+{% endblock body %}

@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block title %}
-Account Management
+Profile Overview
 {% endblock title %}
 
 {% block app_page_style %}
@@ -10,706 +10,139 @@ Account Management
 {% endblock app_page_style %}
 
 {% block script %}
-<script type="text/javascript" src="{% static "/scripts/accountManagementApp/account/account.js" %}" defer></script>
-<script type="text/javascript" src="{% static "/scripts/accountManagementApp/account/s&p.js" %}" defer></script>
 {% endblock script %}
 
+
 {% block body %}
-<div class="header">
-    <div class="logo-section">
-        <div class="logo">
-            <a href="#">WAVE</a>
-        </div>
-        <nav>
-            <ul>
-                <li>
-                    <a href="#">
-                        <h6>Home</h6>
-                    </a>
-                </li>
-                <li>
-                    <a href="#" rel="noopener noreferrer">
-                        <h6>Events</h6>
-                    </a>
-                </li>
-                <li>
-                    <a href="#">
-                        <h6>Map</h6>
-                    </a>
-                </li>
-                <li>
-                    <a href="#">
-                        <h6>Safety</h6>
-                    </a>
-                </li>
-            </ul>
-        </nav>
+
+{% block nav %}
+{% include "partials/account/accountnav.html" %}
+{% endblock nav %}
+
+<div id="body">
+    <div id="body-header">
+        <h3>Profile Overview</h3>
     </div>
-
-    <div class="menu-container">
-        <div role="button" class="profile">
-            <div class="img-container">
-                <img src="../static/images/account/E.L3.png" />
-            </div>
-            <div class="pfp-info">
-                <h4>{{ profile_form.email }} {{ user.last_name }}</h4>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div id="container">
-    <div class="left-container">
-        <div class="container-elements">
-            <div class="menu-heading">
-                <h3>My Account</h3>
-            </div>
-            <div class="menu-body">
-                <ul id="left-navigation">
-                    <li
-                        data-content="profile"
-                        role="button"
-                        class="active"
-                        type="button"
-                    >
-                        <div>
-                            <img
-                                src="../static/images/account/personal-info.svg"
-                                alt=""
-                                srcset=""
-                            />
-                        </div>
-                        <div>
-                            <h4>Profile</h4>
-                        </div>
-                    </li>
-                    <li
-                        data-content="billing"
-                        role="button"
-                        type="button"
-                    >
-                        <div>
-                            <img
-                                src="../static/images/account/credit.svg"
-                                alt=""
-                                srcset=""
-                            />
-                        </div>
-                        <div>
-                            <h4>Billing</h4>
-                        </div>
-                    </li>
-                    <li
-                        data-content="activity"
-                        role="button"
-                        type="button"
-                    >
-                        <div>
-                            <img
-                                src="../static/images/account/history.svg"
-                                alt=""
-                                srcset=""
-                            />
-                        </div>
-                        <div>
-                            <h4>Activity</h4>
-                        </div>
-                    </li>
-                    <li
-                        data-content="preferences"
-                        role="button"
-                        type="button"
-                    >
-                        <div>
-                            <img
-                                src="../static/images/account/control.svg"
-                                alt=""
-                                srcset=""
-                            />
-                        </div>
-                        <div>
-                            <h4>Preferences</h4>
-                        </div>
-                    </li>
-                    <li
-                        data-content="security"
-                        role="button"
-                        type="button"
-                    >
-                        <div>
-                            <img
-                                src="../static/images/account/privacy.svg"
-                                alt=""
-                                srcset=""
-                            />
-                        </div>
-                        <div>
-                            <h4>Security & Privacy</h4>
-                        </div>
-                    </li>
-                </ul>
-
-                <div class="mb-hr">
-                    <hr />
+    <div id="content-container">
+        <div class="cc-user-card">
+            <div id="heading">
+                <div>
+                    <h4>{{ user.first_name }} {{ user.last_name }}</h4>
+                    <p>Joined {{ user.date_joined }}</p>
                 </div>
-
-                <div class="sub-menu">
-                    <div>
-                        <a href="#"> Report Feedback </a>
+                <div id="edit">
+                    <a href="{% url "accountManagement:userSettings" %}#personal-change">Edit</a>
+                </div>
+            </div>
+            <div id="summary">
+                <div class="summary-main">
+                    <div class="email">
+                        <h6>Email Address</h6>
+                        <p> {{ user.email }}</p>
                     </div>
-                    <div>
-                        <a href="./support.html"> Support </a>
+                    <div class="phone">
+                        <h6>Phone Number</h6>
+                        <p>***-***-9206</p>
                     </div>
                 </div>
-
-                <div class="mb-hr-two">
-                    <hr />
+                <div id="edit">
+                    <a href="{% url "accountManagement:userSettings" %}#email-change">Edit</a>
+                </div>
+            </div>
+            <div id="status">
+                <div>
+                    <h3>
+                        Your Account Status:
+                        <span>All Good</span>
+                    </h3>
                 </div>
 
-                <div class="mb-logout">
-                    <a href="{% url "authentication:logout" %}">
-                        <p>Log Out</p>
-                        <img
-                            src="../static/images/account/signout.svg"
-                            alt=""
-                            srcset=""
-                        />
-                    </a>
+                <div>
+                    <p>
+                        Thank you for upholding our
+                        <a href="#">Terms of Service</a>
+                        and
+                        <a href="#"> Community Guidelines</a>!
+                    </p>
                 </div>
             </div>
         </div>
-    </div>
+        <!--User Card | End-->
 
-    <div class="right-container">
-        <div id="content-container" class="body">
-            <div id="profile-body">
-                <div class="body-heading">
-                    <h3>Profile Management</h3>
+        <div class="cc-sub-body">
+            <div id="side-nav">
+                <div id="settings">
+                    <ul>
+                        <li>
+                            <a href="#">My Purchases</a>
+                        </li>
+                        <li>
+                            <a href="#">My Listings</a>
+                        </li>
+                        <li>
+                            <a href="{% url "accountManagement:userSettings" %}">Settings</a>
+                        </li>
+                        <li>
+                            <a href="#">My Preferences</a>
+                        </li>
+                        <li>
+                            <a href="#">Payment Methods</a>
+                        </li>
+                        <li>
+                            <a href="#">Promo Codes & Gifting</a>
+                        </li>
+                        <li>
+                            <a href="#">Account Activity</a>
+                        </li>
+                    </ul>
                 </div>
-
-                <div class="body-content">
-                    <div class="bc-main">
-                        <div class="profile-control">
-                            <div
-                                class="profile-tab tab-active"
-                                data-tab="personal"
-                            >
-                                My Information
-                            </div>
-                            <div
-                                class="profile-tab"
-                                data-tab="organization"
-                            >
-                                Organization Information
-                            </div>
+                <div id="support">
+                    <div class="support-heading">
+                        <h6>We've got your back!</h6>
+                    </div>
+                    <div class="support-body">
+                        <p>
+                            Can't find what you're looking for?
+                            <br />
+                            <a href="{% url "support:home" %}">Visit our Support Center</a>
+                        </p>
+                        <p>
+                            Having issues with any purchases?
+                            <br />
+                            Go to
+                            <a href="#">My Purchases</a>, click the
+                            event summary, and hit the "Request Help"
+                            button.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="main-content">
+                <div class="host-info">
+                    <div class="mchi-heading">
+                        <h5>Host Your Event</h5>
+                    </div>
+                    <div class="host-container">
+                        <div class="hc-info">
+                            <h6>
+                                The most exciting way to host your
+                                events! Use Wave.
+                            </h6>
+                            <p>
+                                Sell tickets to your events in a quick
+                                and simple way. Tap into thousands of
+                                fans who are looking to tick events off
+                                their bucket lists.
+                            </p>
                         </div>
-
-                        <div class="profile-tab-content" id="personal">
-                            <form method="post" enctype="multipart/form-data">
-                                <div class="namePfp-row">
-                                    <div class="nP-img-container">
-                                        <img
-                                            src="../static/images/account/E.L3.png"
-                                            alt=""
-                                            srcset=""
-                                        />
-                                    </div>
-                                </div>
-    
-                                <div class="bc-mainContent">
-                                    <div id="name-container">
-                                        <div class="nc-first">
-                                            <div class="firstname-row">
-                                                <div>
-                                                    <label for="first-name"
-                                                        >First Name</label
-                                                    >
-                                                </div>
-                                                <div>
-                                                    <input type="text"  name="first-name" id="first-name" value="{{ user.first_name }}" />
-                                                </div>
-                                            </div>
-                                            <div class="lastname-row">
-                                                <div>
-                                                    <label for="last-name"
-                                                        >Last Name</label
-                                                    >
-                                                </div>
-                                                <div>
-                                                    <input
-                                                        type="text"
-                                                        name="last-name"
-                                                        id="last-name"
-                                                    />
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="nc-second">
-                                            <button
-                                                type="button"
-                                                role="button"
-                                            >
-                                                Edit
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <div id="email-container">
-                                        <div class="email-row">
-                                            <div>
-                                                <label for="first-name"
-                                                    >Email Address</label
-                                                >
-                                            </div>
-                                            <div>
-                                                <input
-                                                    type="text"
-                                                    name="first-name"
-                                                    id="first-name"
-                                                    value="{{ user.email }}"
-                                                />
-                                            </div>
-                                        </div>
-                                        <div class="ec-second">
-                                            <button
-                                                type="button"
-                                                role="button"
-                                            >
-                                                Edit
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <div id="dob-container">
-                                        <div class="dob-row">
-                                            <div>
-                                                <label for="birthday"
-                                                    >Date of Birth</label
-                                                >
-                                            </div>
-                                            <div>
-                                                <input
-                                                    type="text"
-                                                    name="birthday"
-                                                    id="birthday"
-                                                    value="{{ user.birthday }}"
-                                                />
-                                            </div>
-                                        </div>
-                                        <div class="ec-second">
-                                            <button
-                                                type="button"
-                                                role="button"
-                                            >
-                                                Edit
-                                            </button>
-                                        </div>
-                                    </div>
-    
-                                    <div id="dob-container">
-                                        <div class="nc-first">
-                                            <div class="firstname-row">
-                                                <div>
-                                                    <label for="first-name"
-                                                        >State</label
-                                                    >
-                                                </div>
-                                                <div>
-                                                    <input
-                                                        type="text"
-                                                        name="first-name"
-                                                        id="first-name"
-                                                    />
-                                                </div>
-                                            </div>
-                                            <div class="lastname-row">
-                                                <div>
-                                                    <label for="last-name"
-                                                        >ZIP Code</label
-                                                    >
-                                                </div>
-                                                <div>
-                                                    <input
-                                                        type="text"
-                                                        name="last-name"
-                                                        id="last-name"
-                                                    />
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="nc-second">
-                                            <button
-                                                type="button"
-                                                role="button"
-                                            >
-                                                Edit
-                                            </button>
-                                        </div>
-                                    </div>
-    
-                                    <div id="dob-container">
-                                        <div class="dob-row">
-                                            <div>
-                                                <label for="birthday"
-                                                    >Country</label
-                                                >
-                                            </div>
-                                            <div>
-                                                <input
-                                                    type="text"
-                                                    name="country"
-                                                    id="country"
-                                                />
-                                            </div>
-                                        </div>
-                                        <div class="ec-second">
-                                            <button
-                                                type="button"
-                                                role="button"
-                                            >
-                                                Edit
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </form>
-                            
-                        </div>
-                        <div
-                            class="profile-tab-content"
-                            id="organization"
-                        >
-                            <div class="mini-heading">
-                                <h3>Organization Information</h3>
-                                <p class="mh-subheading">
-                                    Manage billing information and check
-                                    out faster by saving a payment
-                                    method.
-                                </p>
-                            </div>
-                            <div class="org-info-container">
-                                <div class="org-firstRow">
-                                    <div class="org-name">
-                                        <div>
-                                            <label
-                                                for="organization-name"
-                                                >Name of
-                                                Organization</label
-                                            >
-                                        </div>
-                                        <div>
-                                            <input
-                                                type="text"
-                                                name="organization-name"
-                                                id="organization-name"
-                                            />
-                                        </div>
-                                    </div>
-                                    <div class="org-btn">
-                                        <button
-                                            type="button"
-                                            role="button"
-                                        >
-                                            Edit
-                                        </button>
-                                    </div>
-                                </div>
-                                <div class="org-secondRow">
-                                    <div class="org-email">
-                                        <div>
-                                            <label
-                                                for="organization-email"
-                                                >Organization
-                                                Email</label
-                                            >
-                                        </div>
-                                        <div>
-                                            <input
-                                                type="text"
-                                                name="organization-email"
-                                                id="organization-email"
-                                            />
-                                        </div>
-                                    </div>
-                                    <div class="org-btn">
-                                        <button
-                                            type="button"
-                                            role="button"
-                                        >
-                                            Edit
-                                        </button>
-                                    </div>
-                                </div>
+                        <div class="hc-link">
+                            <div>
+                                <a href="#">Learn More</a>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <!--Break Between-->
-            <div id="billing-body" style="display: none">
-                <div class="body-heading">
-                    <h3>Billing</h3>
-                </div>
-
-                <div class="body-content">
-                    <div class="bc-main">
-                        <div class="billing-control">
-                            <div
-                                class="billing-tab tab-active"
-                                data-tab="payment"
-                            >
-                                Payment Information
-                            </div>
-                            <div
-                                class="billing-tab"
-                                data-tab="billing-history"
-                            >
-                                Transaction History
-                            </div>
-                        </div>
-
-                        <div class="billing-tab-content" id="payment">
-                            <div class="mini-heading">
-                                <h3>Payment Methods</h3>
-                            </div>
-                            <div class="mini-body">
-                                <p>
-                                    Manage billing information and check
-                                    out faster by saving a payment
-                                    method.
-                                </p>
-                            </div>
-                            <div class="btc-container">
-                                <div>
-                                    <h4>
-                                        No payment method saved. Add a
-                                        payment method.
-                                    </h4>
-                                </div>
-                                <div>
-                                    <button type="button" role="button">
-                                        Add Payment Method
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                        <div
-                            class="billing-tab-content"
-                            id="billing-history"
-                        >
-                            <div class="transaction-container">
-                                <div class="total-tc">
-                                    <div class="ytc-heading">
-                                        <h6>Total Expense</h6>
-                                    </div>
-                                    <div>
-                                        <h2>
-                                            $ <span>18,522.00</span>
-                                        </h2>
-                                    </div>
-                                </div>
-                                <div class="yearly-tc">
-                                    <div class="ytc-heading">
-                                        <h6>Annual Expenses</h6>
-                                    </div>
-                                    <div>
-                                        <h2>$ <span>8,522.00</span></h2>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="transaction-history">
-                                <div class="th-heading">
-                                    <h6>Transactions</h6>
-                                    <button role="button" type="button">
-                                        <p>Recent</p>
-                                        <img
-                                            src="../static/images/account/down.svg"
-                                            alt=""
-                                            srcset=""
-                                        />
-                                    </button>
-                                </div>
-                                <div class="th-body">
-                                    <p>No past transaction</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!--Break Between-->
-            <div id="activity-body" style="display: none">
-                <div class="body-heading">
-                    <h3>Account Activity</h3>
-                </div>
-
-                <div class="body-content">
-                    <div class="bc-main">
-                        <div class="activity-control">
-                            <div class="activity-tab tab-active" data-tab="account-activity">
-                                Account Activity
-                            </div>
-                            <div class="activity-tab" data-tab="event-activity">
-                                Event Activity
-                            </div>
-                            <div class="activity-tab" data-tab="login-activity">
-                                Login Activity
-                            </div>
-                        </div>
-                        <div class="activity-tab-content" id="account-activity">
-                            <div class="mini-heading">
-                                <h3>Activity Privacy</h3>
-                            </div>
-                            <div class="atc-subheading">
-                                <h6>ACTIVITY STATUS</h6>
-                            </div>
-                            <div class="atc-toggle">
-                                <div>
-                                    <div><h5>Display activity relating to events you attend.</h5></div>
-                                    <div><p>Events you attend will be shown to your friends. They may join you!</p></div>
-                                </div>
-                                <div>
-                                    <label class="atc-togglebtn">
-                                        <input type="checkbox" name="account-activity" id="account-activity">
-                                        <span class="slider round"></span>
-                                    </label>
-                                </div>
-                            </div>
-                            <div class="atc-divider">
-                                <hr>
-                            </div>
-                            <div class="terms-container">
-                                <p>View our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy.</a></p>
-                            </div>
-                            
-                        </div>
-                        <div class="activity-tab-content" id="event-activity">
-                            <div class="mini-heading">
-                                <h3>Activity regarding upcoming and past events.</h3>
-                            </div>
-                        </div>
-                        <div class="activity-tab-content" id="login-activity">
-                            <div class="mini-heading">
-                                <h3>Activity regarding purchases.</h3>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!--Break Between-->
-            <div id="preferences-body" style="display: none">
-                <div class="body-heading">
-                    <h3>User Preferences</h3>
-                </div>
-            </div>
-            <!--Break Between-->
-            <div id="security-body" style="display: none">
-                <div class="body-heading">
-                    <h3>Security & Privacy</h3>
-                </div>
-
-                <div class="body-content">
-                    <div class="bc-main">
-                        <div class="bcm-control">
-                            <div
-                                class="security-tab tab-active"
-                                data-tab="security"
-                            >
-                                Account Security
-                            </div>
-                            <div
-                                class="security-tab"
-                                data-tab="standing"
-                            >
-                                Account Standing
-                            </div>
-                        </div>
-                        <div class="security-tab-content" id="security">
-                            <div class="mini-heading">
-                                <h3>Password and Authentication</h3>
-                            </div>
-                            <div class="bcm-btn">
-                                <button type="button" role="button">
-                                    Change Password
-                                </button>
-                            </div>
-                            <div class="two-fa">
-                                <h6>2-FA Authentication</h6>
-                                <p>
-                                    Protect your Wave account with an
-                                    extra layer of security. Once
-                                    configured, you'll be required to
-                                    enter your password and complete one
-                                    additional step in order to log in.
-                                </p>
-                                <button type="button" role="button">
-                                    Enable 2-FA Authentication
-                                </button>
-                            </div>
-                            <div class="bcm-hr">
-                                <hr />
-                            </div>
-
-                            <div class="delete">
-                                <h6>Account Removal</h6>
-                                <p>
-                                    Deleting your account means you
-                                    cannot recover it at any point after
-                                    taking this action.
-                                </p>
-                                <div class="delete-btn">
-                                    <button
-                                        id="disable"
-                                        type="button"
-                                        role="button"
-                                    >
-                                        Disable Account
-                                    </button>
-                                    <button
-                                        id="delete"
-                                        type="button"
-                                        role="button"
-                                    >
-                                        Delete Account
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="security-tab-content" id="standing">
-                            <div class="standing-status">
-                                <div class="as-pfp">
-                                    <img
-                                        src="../static/images/account/E.L3.png"
-                                        alt=""
-                                    />
-                                </div>
-                                <div class="stats">
-                                    <div class="mini-heading">
-                                        <h3>
-                                            Your Account Status:
-                                            <span>All Good</span>
-                                        </h3>
-                                        <div>
-                                            <p>
-                                                Thank you for upholding
-                                                our
-                                                <a href="#"
-                                                    >Terms of Service</a
-                                                >
-                                                and
-                                                <a href="#">
-                                                    Community
-                                                    Guidelines</a
-                                                >!
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!--Break Between-->
         </div>
     </div>
 </div>
