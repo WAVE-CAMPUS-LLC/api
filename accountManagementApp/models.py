@@ -11,8 +11,8 @@ class UserProfile(models.Model):
     country = models.CharField(max_length=100,blank=True)
     
     class Meta:
-        verbose_name = "Waver Profile"
-        verbose_name_plural = "Waver Profiles"
+        verbose_name = "User Profile"
+        verbose_name_plural = "User Profiles"
     
     def __str__(self):
         return self.user.email    

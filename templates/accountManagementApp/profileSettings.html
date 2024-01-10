@@ -64,103 +64,118 @@ Settings
         <div class="settings-tab-content" id="profile-information">
             <section id="personal-change" class="info-container">
                 <h6 class="ic-headers">Personal Information</h6>
-                <div class="input-div">
-                    <div class="input-box">
-                        <label for="first-name">First Name</label>
-                        <input
-                            name="first-name"
-                            id="first-name"
-                            type="text"
-                            value="Enosh"
-                            required
-                        />
+                <form method="post" action="{% url "accountManagement:userSettings" %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="form_type" value"personal-info" />
+                    <div class="input-div">
+                        <div class="input-box">
+                            <label for="{{ user_form.first_name.id_for_label }}">{{ user_form.first_name.label_tag }}</label>
+                            <input
+                                name="{{ user_form.first_name.html_name }}"
+                                id="{{ user_form.first_name.auto_id }}"
+                                type="{{ user_form.first_name.field.widget.input_type }}"
+                                value="{{ user.first_name }}"
+                                
+                            />
+                        </div>
+    
+                        <div class="input-box">
+                            <label for="{{ user_form.last_name.id_for_label }}">{{ user_form.last_name.label_tag }}</label>
+                            <input
+                                name="{{ user_form.last_name.html_name }}"
+                                id="{{ user_form.last_name.auto_id }}"
+                                type="{{ user_form.last_name.field.widget.input_type }}"
+                                value="{{ user.last_name }}"
+                                
+                            />
+                        </div>
                     </div>
-
-                    <div class="input-box">
-                        <label for="last-name">Last Name</label>
-                        <input
-                            name="last-name"
-                            id="last-name"
-                            type="text"
-                            value="{{ user.last_name }}"
-                            required
-                        />
-                    </div>
-                </div>
-                <button type="submit">Confirm Changes</button>
+                    <button type="submit" role="button">Confirm Changes</button>
+                </form>
             </section>
 
             <hr class="cc-divider" />
 
             <section id="email-change" class="info-container">
                 <h6 class="ic-headers">Email Address</h6>
-                <div class="input-div">
-                    <div class="input-box">
-                        <label for="email-address">Email Address</label>
-                        <input
-                            id="email-address"
-                            name="email-address"
-                            type="email"
-                            value="{{ user.email }}"
-                            required
-                        />
+                <form method="post" action="{% url "accountManagement:userSettings" %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="form_type" value"email-info" />
+                    <div class="input-div">
+                        <div class="input-box">
+                            <label for="{{ user_form.email.id_for_label }}">{{ user_form.email.label_tag }}</label>
+                            <input
+                                name="{{ user_form.email.html_name }}"
+                                id="{{ user_form.email.auto_id }}"
+                                type="{{ user_form.email.field.widget.input_type }}"
+                                value="{{ user.email }}"
+                            />
+                        </div>
                     </div>
-                </div>
-                <button type="submit">Confirm Change</button>
+                    <button type="submit" role="button">Confirm Change</button>
+                </form>
             </section>
 
             <hr class="cc-divider" />
 
             <section id="phone-change" class="info-container">
                 <h6 class="ic-headers">Phone Number</h6>
-                <div class="input-div">
-                    <div class="input-box">
-                        <label for="phone-number">Phone Number</label>
-                        <input
-                            id="phone-number"
-                            name="phone-number"
-                            type="tel"
-                            value="*** - *** - 9206"
-                            readonly
-                            required
-                        />
+                <form method="post" action="{% url "accountManagement:userSettings" %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="form_type" value"phone-info" />
+                    <div class="input-div">
+                        <div class="input-box">
+                            <label for="{{ user_form.phone_number.id_for_label }}">{{ user_form.phone_number.label_tag }}</label>
+                            <input
+                                name="{{ user_form.phone_number.html_name }}"
+                                id="{{ user_form.phone_number.auto_id }}"
+                                type="{{ user_form.phone_number.field.widget.input_type }}"
+                                value="*** - *** - 9206"
+                                readonly
+                                
+                            />
+                        </div>
                     </div>
-                </div>
-                <button type="submit">Request Change</button>
+                    <button type="submit" role="button">Request Change</button>
+                </form>
             </section>
 
             <hr class="cc-divider" />
 
             <section id="location-change" class="info-container">
                 <h6 class="ic-headers">Location</h6>
-                <div class="input-div">
-                    <div class="input-box">
-                        <label for="country">Country</label>
-                        <select
-                            id="country"
-                            name="country"
-                            type="text"
-                            value="United States"
-                            required
-                        >
-                            <option value="usa">United States</option>
-                        </select>
+                <form method="post" action="{% url "accountManagement:userSettings" %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="form_type" value"location-info" />
+                    <div class="input-div">
+                        <div class="input-box">
+                            <label for="{{ profile_form.country.id_for_label }}">{{ profile_form.country.label_tag }}</label>
+                            <select
+                                name="{{ profile_form.country.html_name }}"
+                                id="{{ profile_form.country.auto_id }}"
+                                type="{{ profile_form.country.field.widget.input_type }}"
+                                value="United States"
+                                
+                            >
+                                <option value="usa">United States</option>
+                            </select>
+                        </div>
+    
+                        <div class="input-box">
+                            <label for="zip-code"
+                                >ZIP Code / PostCode</label
+                            >
+                            <input
+                                id="zip-code"
+                                name="zip-code"
+                                type="text"
+                                value="28167"
+                                
+                            />
+                        </div>
                     </div>
-
-                    <div class="input-box">
-                        <label for="zip-code"
-                            >ZIP Code / PostCode</label
-                        >
-                        <input
-                            id="zip-code"
-                            name="zip-code"
-                            type="text"
-                            value="28167"
-                            required
-                        />
-                    </div>
-                </div>
-                <button type="submit">Confirm Changes</button>
+                    <button type="submit" role="button">Confirm Changes</button>
+                </form>
             </section>
 
             <hr class="cc-divider" />
@@ -176,7 +191,7 @@ Settings
                             type="password"
                             value="******"
                             readonly
-                            required
+                            
                         />
                     </div>
                 </div>
