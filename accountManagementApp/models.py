@@ -1,7 +1,6 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as translate
 from django.conf import settings
-from authenticationApp.models import CustomUser
 
 
 # Create your models here.

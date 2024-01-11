@@ -1,6 +1,7 @@
 {% extends "base/base.html" %}
 {% load static %}
 
+
 {% block title %}
 Settings
 {% endblock title %}
@@ -32,12 +33,8 @@ Settings
         <div id="support-links">
             <a id="support-nav" href="{% url "support:home" %}">Support</a>
             <div id="join">
-                <a class="account" href="#">
-                    <img
-                        src="../static/images/home/profile.svg"
-                        alt=""
-                    />
-                    <p>Enosh</p>
+                <a class="account" href="{% url "authentication:logout" %}">
+                    <p>Logout</p>
                 </a>
             </div>
         </div>
@@ -66,25 +63,25 @@ Settings
                 <h6 class="ic-headers">Personal Information</h6>
                 <form method="post" action="{% url "accountManagement:userSettings" %}">
                     {% csrf_token %}
-                    <input type="hidden" name="form_type" value"personal-info" />
+                    <input type="hidden" name="form_type" value="personal-info" />
                     <div class="input-div">
                         <div class="input-box">
-                            <label for="{{ user_form.first_name.id_for_label }}">{{ user_form.first_name.label_tag }}</label>
+                            <label for="{{ personal_form.first_name.id_for_label }}">{{ personal_form.first_name.label_tag }}</label>
                             <input
-                                name="{{ user_form.first_name.html_name }}"
-                                id="{{ user_form.first_name.auto_id }}"
-                                type="{{ user_form.first_name.field.widget.input_type }}"
+                                name="{{ personal_form.first_name.html_name }}"
+                                id="{{ personal_form.first_name.auto_id }}"
+                                type="{{ personal_form.first_name.field.widget.input_type }}"
                                 value="{{ user.first_name }}"
                                 
                             />
                         </div>
     
                         <div class="input-box">
-                            <label for="{{ user_form.last_name.id_for_label }}">{{ user_form.last_name.label_tag }}</label>
+                            <label for="{{ personal_form.last_name.id_for_label }}">{{ personal_form.last_name.label_tag }}</label>
                             <input
-                                name="{{ user_form.last_name.html_name }}"
-                                id="{{ user_form.last_name.auto_id }}"
-                                type="{{ user_form.last_name.field.widget.input_type }}"
+                                name="{{ personal_form.last_name.html_name }}"
+                                id="{{ personal_form.last_name.auto_id }}"
+                                type="{{ personal_form.last_name.field.widget.input_type }}"
                                 value="{{ user.last_name }}"
                                 
                             />
@@ -100,14 +97,14 @@ Settings
                 <h6 class="ic-headers">Email Address</h6>
                 <form method="post" action="{% url "accountManagement:userSettings" %}">
                     {% csrf_token %}
-                    <input type="hidden" name="form_type" value"email-info" />
+                    <input type="hidden" name="form_type" value="email-info" />
                     <div class="input-div">
                         <div class="input-box">
-                            <label for="{{ user_form.email.id_for_label }}">{{ user_form.email.label_tag }}</label>
+                            <label for="{{ contact_form.email.id_for_label }}">{{ contact_form.email.label_tag }}</label>
                             <input
-                                name="{{ user_form.email.html_name }}"
-                                id="{{ user_form.email.auto_id }}"
-                                type="{{ user_form.email.field.widget.input_type }}"
+                                name="{{ contact_form.email.html_name }}"
+                                id="{{ contact_form.email.auto_id }}"
+                                type="{{ contact_form.email.field.widget.input_type }}"
                                 value="{{ user.email }}"
                             />
                         </div>
@@ -122,15 +119,15 @@ Settings
                 <h6 class="ic-headers">Phone Number</h6>
                 <form method="post" action="{% url "accountManagement:userSettings" %}">
                     {% csrf_token %}
-                    <input type="hidden" name="form_type" value"phone-info" />
+                    <input type="hidden" name="form_type" value="phone-info" />
                     <div class="input-div">
                         <div class="input-box">
-                            <label for="{{ user_form.phone_number.id_for_label }}">{{ user_form.phone_number.label_tag }}</label>
+                            <label for="{{ contact_form.phone_number.id_for_label }}">{{ contact_form.phone_number.label_tag }}</label>
                             <input
-                                name="{{ user_form.phone_number.html_name }}"
-                                id="{{ user_form.phone_number.auto_id }}"
-                                type="{{ user_form.phone_number.field.widget.input_type }}"
-                                value="*** - *** - 9206"
+                                name="{{ contact_form.phone_number.html_name }}"
+                                id="{{ contact_form.phone_number.auto_id }}"
+                                type="{{ contact_form.phone_number.field.widget.input_type }}"
+                                value="{{ user.phone_number }}"
                                 readonly
                                 
                             />
@@ -146,7 +143,7 @@ Settings
                 <h6 class="ic-headers">Location</h6>
                 <form method="post" action="{% url "accountManagement:userSettings" %}">
                     {% csrf_token %}
-                    <input type="hidden" name="form_type" value"location-info" />
+                    <input type="hidden" name="form_type" value="location-info" />
                     <div class="input-div">
                         <div class="input-box">
                             <label for="{{ profile_form.country.id_for_label }}">{{ profile_form.country.label_tag }}</label>

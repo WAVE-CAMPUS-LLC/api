@@ -7,7 +7,20 @@ from .models import UserProfile
 from django.utils.translation import gettext_lazy as _
 
 
-class UpdateUserForm(forms.ModelForm):
+# The class UpdateContactInfo is a form that allows users to update their email and phone number information. Used in the accountManagementApp/views.py
+class UpdateContactInfo(forms.ModelForm):
+    
+    email = forms.EmailField(required=False)
+    phone_number = forms.CharField(required=False)
+    
+    
+    class Meta:
+        model = CustomUser
+        fields = ['email', 'phone_number']
+        
+
+# The class `UpdatePersonalInfo` is a form that allows users to update their first name and last name. Used in the accountManagementApp/views.py
+class UpdatePersonalInfo(forms.ModelForm):
     first_name = forms.CharField(
         required=False,
         max_length=50,
@@ -18,15 +31,13 @@ class UpdateUserForm(forms.ModelForm):
         max_length=50,
         help_text=(_("Last Name")),
     )
-    email = forms.EmailField(required=False)
-    phone_number = forms.CharField(required=False)
-    
     
     class Meta:
         model = CustomUser
-        fields = ['first_name', 'last_name', 'email', 'phone_number']
+        fields = ['first_name', 'last_name']
         
 
+# The class `UpdateProfileForm` is a form that allows users to update their profile information, including their status and country.
 class UpdateProfileForm(forms.ModelForm):
     status = forms.CharField(required=False,min_length=1)
     country = forms.CharField(required=False)

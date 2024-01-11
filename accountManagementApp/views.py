@@ -1,6 +1,8 @@
+from http.client import HTTPResponse
+from django.http import HttpResponseBadRequest
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
-from .forms import UpdateUserForm, UpdateProfileForm
+from .forms import UpdateContactInfo, UpdatePersonalInfo, UpdateProfileForm
 from authenticationApp.models import CustomUser
 from .models import UserProfile
 
@@ -14,62 +16,43 @@ def profileView(request):
 @login_required(login_url="authentication:login")
 def settingsView(request):
     user = request.user
-    if "form_type" in request.POST:
-        user_form = UpdateUserForm(request.POST, instance=request.user)
-        profile_form = UpdateProfileForm(request.POST, instance=request.user)
+    personal_form = UpdatePersonalInfo(instance=user)
+    profile = UserProfile.objects.get(user=user)
+    contact_form = UpdateContactInfo(instance=user)
+    profile_form = UpdateProfileForm(instance=profile)
+
+    if request.method == "POST":
         form_type = request.POST.get("form_type")
 
         if form_type == "personal-info":
-            form = user_form
+            form = UpdatePersonalInfo(request.POST, instance=user)
             if form.is_valid():
-                print(form.errors)
-                print("Personal Info form is valid.")
                 form.save()
-                return redirect("accountManagement:userSettings")
         elif form_type == "email-info":
-            form = user_form
+            form = UpdateContactInfo(request.POST, instance=user)
             if form.is_valid():
-                print("Email Info form is valid.")
                 form.save()
-                return redirect("accountManagement:userSettings")
-        elif form_type in "phone-info":
-            form = user_form
+        elif form_type == "phone-info":
+            form = UpdateContactInfo(request.POST, instance=user)
             if form.is_valid():
-                print("Phone Info form is valid.")
                 form.save()
-                return redirect("accountManagement:userSettings")
-        elif form_type in "location-info":
-            form = profile_form
+        elif form_type == "location-info":
+            form = UpdateProfileForm(request.POST, instance=profile)
             if form.is_valid():
-                print("Location Info form is valid.")
                 form.save()
-                return redirect("accountManagement:userSettings")
+        else:
+            return HttpResponseBadRequest("Invalid form type")
 
-    else:
-        user = request.user
-        profile = UserProfile.objects.get(user=user)
-        user_form = UpdateUserForm(
-            instance=user,
-            initial={
-                "first_name": user.first_name,
-                "last_name": user.last_name,
-                "email": user.email,
-                "phone_number": user.phone_number,
-            },
-        )
-        profile_form = UpdateProfileForm(
-            instance=profile,
-            initial={
-                "status": profile.status,
-                "country": profile.country,
-            },
-        )
+        return redirect("accountManagement:userSettings")
+
     return render(
         request,
         "accountManagementApp/profileSettings.html",
         {
-            "user_form": user_form,
+            "personal_form": personal_form,
+            "contact_form": contact_form,
             "profile_form": profile_form,
             "user": user,
+            "phone_number": user.phone_number,
         },
     )

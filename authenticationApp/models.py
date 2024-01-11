@@ -3,8 +3,10 @@ from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.utils import timezone
 import uuid
 from django.dispatch import receiver
-from django.db.models.signals import pre_save
+from django.db.models.signals import pre_save, post_save
 from django.utils.translation import gettext_lazy as _
+
+from accountManagementApp.models import UserProfile
 
 
 from .managers import CustomUserManager
@@ -76,3 +78,9 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 def generate_user_id(sender, instance, **kwargs):
     if not instance.user_id:
         instance.user_id = uuid.uuid4()
+        
+
+@receiver(post_save, sender=CustomUser)
+def create_user_profile(sender, instance, created, **kwargs):
+    if created:
+        UserProfile.objects.create(user=instance)
