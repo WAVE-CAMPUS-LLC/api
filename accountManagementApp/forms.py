@@ -1,9 +1,11 @@
+from ast import Pass
 from dataclasses import fields
 from enum import unique
 from pyexpat import model
 from django import forms
 from authenticationApp.models import CustomUser
 from .models import UserProfile
+from django.contrib.auth.forms import PasswordChangeForm
 from django.utils.translation import gettext_lazy as _
 
 
@@ -45,4 +47,4 @@ class UpdateProfileForm(forms.ModelForm):
     class Meta:
         model = UserProfile
         fields = ['status', 'country']
-    
+        

@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as translate
 from django.conf import settings
+from django.utils import timezone
 
 
 # Create your models here.
@@ -15,4 +16,3 @@ class UserProfile(models.Model):
     
     def __str__(self):
         return self.user.email    
-    

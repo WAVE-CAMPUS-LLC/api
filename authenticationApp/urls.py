@@ -9,5 +9,4 @@ urlpatterns = [
     path("login/", views.loginView, name="login"),
     path("logout/", views.logoutView, name="logout"),
     path("forgot/", views.forgotPasswordView, name="forgot"),
-    path("change-password/", views.passwordChangeView, name="change")
 ]

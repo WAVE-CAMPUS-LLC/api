@@ -56,3 +56,27 @@ def settingsView(request):
             "phone_number": user.phone_number,
         },
     )
+
+
+from django.urls import reverse_lazy
+from django.contrib.auth.views import PasswordChangeView
+from django.contrib. messages.views import SuccessMessageMixin
+from django.contrib.auth import update_session_auth_hash
+
+
+class ChangePasswordView(SuccessMessageMixin, PasswordChangeView):
+    template_name = 'accountManagementApp/partials/passwordChange.html'
+    success_message = "Password successfully changed!"
+    
+    def post(self, request, *args, **kwargs):
+        # Call the original post method to handle password change logic
+        result = super().post(request, *args, **kwargs)
+
+        # If password change is successful, update the session
+        if result.status_code == 302:  # Redirection status code
+            update_session_auth_hash(request, request.user)
+
+        return result
+    
+    
+    success_url = reverse_lazy('accountManagement:userAccount')

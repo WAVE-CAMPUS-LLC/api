@@ -43,6 +43,3 @@ def logoutView(request):
 
 def forgotPasswordView(request):
     return render(request, 'authenticationApp/forgot_password.html')
-
-def passwordChangeView(request):
-    return render(request, 'authenticationApp/password_change.html')
