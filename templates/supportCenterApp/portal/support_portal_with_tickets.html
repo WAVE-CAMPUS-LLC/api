@@ -1,0 +1,119 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}
+Support Portal — Wave.
+{% endblock title %}
+
+{% block app_page_style %}
+<link rel="stylesheet" type="text/css" href="{% static "/styles/supportCenterApp/portal/support_portal_with_tickets.css" %}" />
+{% endblock app_page_style %}
+
+{% block script %}
+{% endblock script %}
+
+
+{% block header %}
+<header>
+    <nav>
+        <div id="logo-menu">
+            <div id="logo">
+                <a href="{% url "core:index" %}">WAVE<span>.</span></a>
+            </div>
+        </div>
+        <ul>
+            <li>
+                <a href="{% url "support:feedback" %}"> Feedback </a>
+            </li>
+            <li>
+                <a href="{% url "support:newTicket" %}"> Open a ticket </a>
+            </li>
+            <li>
+                <p id="support-portal-id">Enosh Lartey</p>
+            </li>
+        </ul>
+    </nav>
+    
+    <div id="container-art">
+        <div class="ticket-heading">
+            <div class="ticket-header">
+                <h3>My Support Tickets</h3>
+            </div>
+        </div>
+    </div>
+</header>
+{% endblock header %}
+
+
+{% block body %}
+<div class="ticket-containers">
+    <div id="live-row">
+        <div id="row-heading">Active Tickets</div>
+        <div id="tickets">
+            {% for ticket in current_tickets %}
+            <div id="ticket-card">
+                <div id="ticket-summary-card">
+                    <div id="card-img">
+                        <canvas id="canvas-basic-5"></canvas>
+                    </div>
+                    <div id="card-info">
+                        <div id="row-one">
+                            <h6>Last Updated: <span>30 mins ago</span></h6>
+                            <p id="ticket-id">#{{ ticket.ticket_id }}</p>
+                        </div>
+                        <div id="row-two">
+                            <div class="status">Status: <span> {{ ticket.status }}</span></div>
+                            <div class="priority">Priority Level: <span>High</span></div>
+                            <div class="created">Date Created: <span>{{ ticket.created_at|date:"Y-m-d" }}</span></div>
+                        </div>
+                        <div id="row-three">
+                            <p>Expand</p>
+                            <button type="button">
+                                <img src="{% static "images/support/portals/expand-card.svg" %}" alt="See More Details">
+                            </button>
+                            
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}  
+        </div>
+    </div>
+
+
+    {% if previous_tickets %}
+    <div id="previous-row">
+        <div id="row-heading">Previous Tickets</div>
+        <div id="tickets">
+            {% for closed_ticket in  previous_tickets %}
+            <div id="ticket-card">
+                <div id="ticket-summary-card">
+                    <div id="card-img">
+                        <canvas id="canvas-basic-6"></canvas>
+                    </div>
+                    <div id="card-info">
+                        <div id="row-one">
+                            <h6>Last Updated: <span>30 mins ago</span></h6>
+                            <p id="ticket-id">{{ closed_ticket.ticket_id }}</p>
+                        </div>
+                        <div id="row-two">
+                            <div class="status">Status: <span>{{ closed_ticket.status }}</span></div>
+                            <div class="priority">Priority Level: <span>Closed</span></div>
+                            <div class="created">Date Created: <span>{{ closed_ticket.created_at|date:"Y-m-d" }}</span></div>
+                        </div>
+                        <div id="row-three">
+                            <p>Expand</p>
+                            <button type="button">
+                                <img src="{% static "images/support/portals/expand-card.svg" %}" alt="See More Details">
+                            </button>
+                            
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock body %}

@@ -1,0 +1,55 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}
+Support Portal — Wave.
+{% endblock title %}
+
+{% block app_page_style %}
+<link rel="stylesheet" type="text/css" href="{% static "/styles/supportCenterApp/portal/support_portal_without_tickets.css" %}" />
+{% endblock app_page_style %}
+
+{% block script %}
+{% endblock script %}
+
+
+{% block header %}
+<header>
+    <nav>
+        <div id="logo-menu">
+            <div id="logo">
+                <a href="../index.html">WAVE<span>.</span></a>
+            </div>
+        </div>
+        <ul>
+            <li>
+                <a href="{% url "support:feedback" %}"> Feedback </a>
+            </li>
+            <li>
+                <a href="{% url "support:newTicket" %}"> Open a ticket </a>
+            </li>
+            <li>
+                <p id="support-portal-id">Enosh Lartey</p>
+            </li>
+        </ul>
+    </nav>
+    
+    <div id="container-art">
+        <div class="ticket-heading">
+            <div class="ticket-header">
+                <h3>My Support Tickets</h3>
+            </div>
+        </div>
+    </div>
+</header>
+{% endblock header %}
+
+
+{% block body %}
+<div id="portal-body">
+    <div id="portal-container">
+        <img src="{% static "images/support/portals/no_current_tickets.svg" %}" alt="" srcset="">
+        <h3>No Pending Tickets</h3>
+    </div>
+</div>
+{% endblock body %}

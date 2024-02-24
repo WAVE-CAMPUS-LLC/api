@@ -1,0 +1,98 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}
+Submit support ticket — Wave.
+{% endblock title %}
+
+{% block app_page_style %}
+<link rel="stylesheet" type="text/css" href="{% static "/styles/supportCenterApp/ticket/createTicket.css" %}" />
+{% endblock app_page_style %}
+
+{% block script %}
+<script type="text/javascript" src="{% static "/scripts/supportCenterApp/index.js" %}" defer></script>
+{% endblock script %}
+
+
+
+{% block header %}
+<header>
+    <nav>
+        <div id="logo-menu">
+            <div id="logo">
+                <a href="{% url "core:index" %}">WAVE<span>.</span></a>
+            </div>
+        </div>
+        <ul>
+            <li>
+                <a href="{% url "support:feedback" %}"> Feedback </a>
+            </li>
+            <li>
+                <a href="{% url "support:newTicket" %}"> Open a ticket </a>
+            </li>
+            <li>
+                {% if user.is_authenticated %}
+                <a href="{% url "support:supportPortal" %}">Support Portal</a>
+                {% else %}
+                <a href="{% url "authentication:login" %}">Sign in</a>
+                {% endif %}
+            </li>
+        </ul>
+    </nav>
+    
+    <div id="container-art">
+        <div class="ticket-heading">
+            <div class="ticket-header">
+                <h3>Request Support</h3>
+            </div>
+        </div>
+    </div>
+</header>
+{% endblock header %}
+
+{% block body %}
+<div id="container">
+    <div id="ticket-card">
+        <div class="ticket-class-body">
+            <form method="POST">
+                {% csrf_token %}
+                <div class="options">
+                    <label for="{{ form.title.id_for_label }}">
+                        {{ form.title.label }}
+                        <select name="{{ form.title.html_name }}" id="{{ form.title.auto_id }}" autofocus>
+                            <option value="select" selected>Select an option...</option>
+                            <option value="help">Help & Support</option>
+                            <option value="account">Hacked Account</option>
+                            <option value="appeals">Appeals and Account Updates</option>
+                            <option value="billing">Account Billing</option>
+                            <option value="bugs">Bug Reports</option>
+                            <option value="creators">Creators Support</option>
+                            <option value="privacy">Contact Privacy Support</option>
+                            <option value="community">Community Programs</option>
+                        </select>
+                    </label>
+                </div>
+
+                <div class="options">
+                    <label for="{{ form.email.id_for_label }}">{{ form.email.label }}</label>
+                    <input type="{{ form.email.field.widget.input_type }}" name="{{ form.email.html_name }}" value="" id="{{ form.email.auto_id }}" required>
+                </div>
+                
+                <div class="options">
+                    <label for="{{ form.subject.id_for_label }}">{{ form.subject.label }}</label>
+                    <input type="{{ form.subject.field.widget.input_type }}" name="{{ form.subject.html_name }}" id="{{ form.subject.auto_id }}" required>
+                </div>
+
+                <div class="options">
+                    <label for="{{ form.description.id_for_label }}">{{ form.description.label }}</label>
+                    <textarea name="{{ form.description.html_name }}" id="{{ form.description.auto_id }}" cols="30" rows="10" required></textarea>
+                </div>
+
+                <div class="submit-form">
+                    <button type="submit">Submit</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock body %}

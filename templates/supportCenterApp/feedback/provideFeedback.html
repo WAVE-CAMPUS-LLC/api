@@ -1,0 +1,83 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}
+Provide Feedback — Wave.
+{% endblock title %}
+
+{% block app_page_style %}
+<link rel="stylesheet" type="text/css" href="{% static "/styles/supportCenterApp/feedback/provideFeedback.css" %}" />
+{% endblock app_page_style %}
+
+{% block script %}
+<script type="text/javascript" src="{% static "/scripts/supportCenterApp/index.js" %}" defer></script>
+{% endblock script %}
+
+
+
+{% block header %}
+<header>
+    <nav>
+        <div id="logo-menu">
+            <div id="logo">
+                <a href="{% url "core:index" %}">WAVE<span>.</span></a>
+            </div>
+        </div>
+        <ul>
+            <li>
+                <a href="{% url "support:feedback" %}"> Feedback </a>
+            </li>
+            <li>
+                <a href="{% url "support:newTicket" %}"> Open a ticket </a>
+            </li>
+            <li>
+                {% if user.is_authenticated %}
+                <p id="support-portal-id">Enosh Lartey</p>
+                {% else %}
+                <a href="{% url "authentication:login" %}">Sign in</a>
+                {% endif %}
+            </li>
+        </ul>
+    </nav>
+    
+    <div id="container-art">
+        <div class="ticket-heading">
+            <div class="ticket-header">
+                <h3>We Listen!</h3>
+            </div>
+        </div>
+    </div>
+</header>
+{% endblock header %}
+
+{% block body %}
+<div id="container">
+    <div id="feedback-form">
+        <div id="feedback-form-heading">
+            <p>We greatly appreciate your feedback!</p>
+        </div>
+        <form action="">
+            <div class="form-input">
+                <label for="fullname">Full Name <span>*</span></label>
+                <input type="text" name="fullname" id="fullname" required autofocus>
+            </div>
+            <div class="form-input">
+                <label for="subject">Email <span>*</span></label>
+                <input type="text" name="email" id="email" value="user.email" readonly required>
+            </div>
+            <div class="form-input">
+                <label for="subject">Subject <span>*</span></label>
+                <input type="text" name="subject" id="subject" required>
+            </div>
+            <div class="form-input">
+                <label for="feedback-body">Body <span>*</span></label>
+                <textarea name="feedback-body" id="feedback-body" cols="30" rows="10" required></textarea>
+            </div>
+
+            <div class="submit-row">
+                <button type="submit" role="button">Submit</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock body %}

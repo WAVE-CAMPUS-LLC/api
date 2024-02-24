@@ -3,46 +3,63 @@
     padding: 0;
     box-sizing: border-box;
 }
-
 @font-face {
     font-family: "Easy-Grotesk-Black";
-    src: url("../../../static/fonts/EasyGrotesk/Easy-Grotesk-Black-Demo-BF653883937b855.otf") format("opentype");
+    src: url("../../fonts/EasyGrotesk/Easy-Grotesk-Black-Demo-BF653883937b855.otf") format("opentype");
 }
 
 @font-face {
-    font-family: "Easy-Grotesk-ExtraBold";
-    src: url("../../../static/fonts/EasyGrotesk/Easy-Grotesk-ExtraBold-Demo-BF6538839346ccc.otf") format("opentype");
+    font-family: "Wanted-SemiBold";
+    src: url("../../fonts/EasyGrotesk/Wanted-SemiBold-Demo-BF653883937b855.otf") format("opentype");
+}
+
+
+@font-face {
+    font-family: "Wanted-ExtraBlack";
+    src: url("../../fonts/Wanted/WantedSans-ExtraBlack-BF65baf133c4859.otf") format("opentype");
 }
 
 @font-face {
-    font-family: "Easy-Grotesk-Bold";
-    src: url("../../../static/fonts/EasyGrotesk/Easy-Grotesk-Bold-Demo-BF653883938aebb.otf") format("opentype");
+    font-family: "Wanted-Black";
+    src: url("../../fonts/Wanted/WantedSans-Black-BF65baf1369b817.otf") format("opentype");
 }
 
 @font-face {
-    font-family: "Easy-Grotesk-Medium";
-    src: url("../../../static/fonts/EasyGrotesk/Easy-Grotesk-Medium-Demo-BF65388392b6582.otf") format("opentype");
+    font-family: "Wanted-ExtraBold";
+    src: url("../../fonts/Wanted/WantedSans-ExtraBold-BF65baf137317a5.otf");
 }
 
 @font-face {
-    font-family: "Easy-Grotesk-Regular";
-    src: url("../../../static/fonts/EasyGrotesk/Easy-Grotesk-Regular-Demo-BF65388388a48c7.otf") format("opentype");
+    font-family: "Wanted-SemiBold";
+    src: url("../../fonts/Wanted/WantedSans-SemiBold-BF65baf13722853.otf") format("opentype");
 }
 
 @font-face {
-    font-family: "Easy-Grotesk-Light";
-    src: url("../../../static/fonts/EasyGrotesk/Easy-Grotesk-Light-Demo-BF6538839349826.otf") format("opentype");
+    font-family: "Wanted-Bold";
+    src: url("../../fonts/Wanted/WantedSans-Bold-BF65baf135d5a25.otf") format("opentype");
 }
 
 @font-face {
-    font-family: "Easy-Grotesk-ExtraLight";
-    src: url("../../../static/fonts/EasyGrotesk/Easy-Grotesk-ExtraLight-Demo-BF653883932e6d1.otf") format("opentype");
+    font-family: "Wanted-Medium";
+    src: url("../../fonts/Wanted/WantedSans-Medium-BF65baf1388963b.otf") format("opentype");
 }
+
+@font-face {
+    font-family: "Wanted-Regular";
+    src: url("../../fonts/Wanted/WantedSans-Regular-BF65baf13579965.otf") format("opentype");
+}
+
+@font-face {
+    font-family: "Wanted-Variable";
+    src: url("../../fonts/Wanted/WantedSansVariable-BF65baf13a24667.ttf") format("truetype");
+}
+
 
 
 body {
-    background-color: #ffffff;
+    background-color: black;
     overflow-y: auto;
+    overflow-x: hidden;
 }
 
 
@@ -68,6 +85,20 @@ body {
     font-size: 30px;
 }
 
+#logo {
+    font-family: Wanted-SemiBold;
+    font-size: 30px;
+}
+
+#logo a {
+    color: white;
+    text-decoration: none;
+}
+
+#logo a span {
+    color: #008d95;
+}
+
 nav {
     display: flex;
     align-items: center;
@@ -80,9 +111,9 @@ nav ul {
 }
 
 nav ul li a {
-    font-family: Easy-Grotesk-Light;
+    font-family: Wanted-Medium;
     text-decoration: none;
-    color: #1b4965b1;
+    color: white;
     font-size: 16px;
 }
 
@@ -92,11 +123,13 @@ nav ul li a:hover {
 
 
 /** Body Container **/
+.blackBackground {
+    padding-bottom: 100px;
+}
+
 #container {
     width: 100%;
     max-height: 100vh;
-    padding-left: 100px;
-    padding-right: 100px;
 }
 
 .search-bar {
@@ -111,8 +144,8 @@ nav ul li a:hover {
 }
 
 .sb-heading h3 {
-    color: #1b4965f1;
-    font-family: Easy-Grotesk-Bold;
+    color: white;
+    font-family: Wanted-Bold;
     font-size: 40px;
 }
 
@@ -137,8 +170,8 @@ nav ul li a:hover {
     width: 100%;
     background: transparent;
     border: none;
-    border-bottom: 2px solid #25567b;
-    font-family: Easy-Grotesk-Light;
+    border-bottom: 2px solid white;
+    font-family: Wanted-Regular;
     padding-top: 10px;
     padding-bottom: 5px;
     padding-left: 28px;
@@ -147,20 +180,20 @@ nav ul li a:hover {
     margin-left: 10px;
     outline: none;
     font-size: 1em;
-    color: #162938;
+    color: white;
     font-weight: 600;
 }
 
 /** Sub Heading **/
 .sub-heading {
     display: flex;
+    color: white;
     margin-top: 150px;
     justify-content: center;
 }
 
 .sub-heading h2 {
-    color: #1b4965f1;
-    font-family: Easy-Grotesk-Regular;
+    font-family: Wanted-SemiBold;
     font-size: 30px;
 }
 
@@ -171,15 +204,17 @@ nav ul li a:hover {
 }
 
 .sub-body p {
-    font-family: Easy-Grotesk-Light;
+    font-family: Wanted-Variable;
     font-size: 19px;
-    color: #1b4965c3;
+    color: white;
     text-align: center;
+    font-weight: 100;
 }
 
 .sub-body p a {
-    text-decoration: none;
-    color: #00a29f;
+    font-size: 24px;
+    text-decoration: underline;
+    color: white;
 }
 
 .sub-body p a:hover {
@@ -199,22 +234,77 @@ nav ul li a:hover {
     width: 70%;
 }
 
+/** Request Panel Card **/
+.request-help{
+    width: 100%;
+
+    display: flex;
+    justify-content: center;
+}
+
+.request-panel {
+    font-family: Wanted-Bold;
+    border: 2px solid white;
+    color: white;
+    font-size: 20.5px;
+    border-radius: 15px;
+    width: 60%;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    padding-left: 30px;
+    padding-right: 30px;
+
+    display: flex;
+    justify-content: space-between;
+
+    -webkit-box-shadow: 0px 7px 19px 0px rgba(61, 61, 61, 0.338);
+    box-shadow: 0px 7px 19px 0px rgba(61, 61, 61, 0.338);
+    -moz-box-shadow: 0px 7px 19px 0px rgba(61, 61, 61, 0.338);
+}
+
+.request-button a {
+    font-family: Wanted-Regular;
+    background-color: white;
+    
+    border-radius: 10px;
+    border-color: #004b5f17;
+    color: black;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    padding-left: 10px;
+    padding-right: 10px;
+
+    text-decoration: none;
+}
+
+.request-button a:hover {
+    text-decoration: underline;
+}
+
+
 /** Support Control **/
 #support-body {
     padding-top: 70px;
+    background-color: white;
+}
+
+#whiteBody {
+    background-color: white;
+    width: 100vw;
 }
 
 .support-control {
-    border-bottom: 1px solid #1b496536;
-    color: #1b4965b7;
-    font-family: Easy-Grotesk-Regular;
+    border-bottom: 1px solid black;
+    color: blacklack;
+    font-family: Wanted-Bold;
     display: flex;
     gap: 20px;
     margin-bottom: 15px;
     justify-content: center;
     margin-left: 50px;
     margin-right: 50px;
-    font-weight: 900;
+    font-size: 23.5px;
+    border-bottom-width: 50%;
 }
 
 .support-control div {
@@ -225,18 +315,18 @@ nav ul li a:hover {
 
 .supportc-tab:hover {
     cursor: pointer;
-    border-bottom: 4px solid #1c4a67a6;
+    border-bottom: 4px solid black;
     padding-bottom: 15px;
 }
 
 .tab-active {
-    border-bottom: 4px solid #25567b;
+    border-bottom: 4px solid black;
     padding-bottom: 15px;
-    color: #25567b;
+    color: black;
 }
 
 .supportc-tab.tab-active:hover {
-    border-bottom: 4px solid #25567b;
+    border-bottom: 4px solid black;
 }
 
 
@@ -245,8 +335,9 @@ nav ul li a:hover {
 .content-tabs {
     margin-top: 50px;
 }
+
 .cr-tab {
-    border: 2px solid #25567b98;
+    border: 2px solid black;
     border-top-left-radius: 25px;
     border-top-right-radius: 25px;
     padding-top: 25px;
@@ -263,10 +354,10 @@ nav ul li a:hover {
 }
 
 .cr-tab:hover {
-    -webkit-box-shadow: 0px 7px 19px 0px rgba(0, 162, 159, 0.338);
-    box-shadow: 0px 7px 19px 0px rgba(0, 162, 159, 0.338);
-    -moz-box-shadow: 0px 7px 19px 0px rgba(0, 162, 159, 0.338);
-    border-color: #00a29f18;
+    -webkit-box-shadow: 0px 7px 19px 0px rgba(35, 41, 41, 0.338);
+    box-shadow: 0px 7px 19px 0px rgba(35, 41, 41, 0.338);
+    -moz-box-shadow: 0px 7px 19px 0px rgba(35, 41, 41, 0.338);
+    border-color: #00000018;
     -webkit-transition: all 0.2s ease-in;
     -moz-transition: all 0.2s ease-in;
     -ms-transition: all 0.2s ease-in;
@@ -277,7 +368,7 @@ nav ul li a:hover {
 
 .cr-tab:hover::after {
     content: '';
-    background: #00a29f;
+    background: black;
     height: 4px;
     width: 100%;
     position: absolute;
@@ -323,8 +414,8 @@ nav ul li a:hover {
 }
 
 .crt-heading h5 {
-    color: #1b4965f1;
-    font-family: Easy-Grotesk-Regular;
+    color: black;
+    font-family: Wanted-Regular;
     font-size: 22.5px;
 }
 
@@ -338,7 +429,7 @@ nav ul li a:hover {
 
 .crt-hr hr {
     width: 40%;
-    border: 0.5px solid #1b49653e;
+    border: 0.5px solid black;
 }
 
 .crt-body {
@@ -351,8 +442,7 @@ nav ul li a:hover {
 }
 
 .crt-body p {
-    color: #004a5f;
-    font-family: Easy-Grotesk-Light;
+    color: black;
+    font-family: Wanted-Regular;
     font-size: 15px;
-    font-weight: 600;
 }

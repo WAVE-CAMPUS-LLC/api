@@ -1,0 +1,255 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+@font-face {
+    font-family: "Easy-Grotesk-Black";
+    src: url("../../../fonts/EasyGrotesk/Easy-Grotesk-Black-Demo-BF653883937b855.otf") format("opentype");
+}
+
+@font-face {
+    font-family: "Wanted-SemiBold";
+    src: url("../../../fonts/EasyGrotesk/Wanted-SemiBold-Demo-BF653883937b855.otf") format("opentype");
+}
+
+
+@font-face {
+    font-family: "Wanted-ExtraBlack";
+    src: url("../../../fonts/Wanted/WantedSans-ExtraBlack-BF65baf133c4859.otf") format("opentype");
+}
+
+@font-face {
+    font-family: "Wanted-Black";
+    src: url("../../../fonts/Wanted/WantedSans-Black-BF65baf1369b817.otf") format("opentype");
+}
+
+@font-face {
+    font-family: "Wanted-ExtraBold";
+    src: url("../../../fonts/Wanted/WantedSans-ExtraBold-BF65baf137317a5.otf");
+}
+
+@font-face {
+    font-family: "Wanted-SemiBold";
+    src: url("../../../fonts/Wanted/WantedSans-SemiBold-BF65baf13722853.otf") format("opentype");
+}
+
+@font-face {
+    font-family: "Wanted-Bold";
+    src: url("../../../fonts/Wanted/WantedSans-Bold-BF65baf135d5a25.otf") format("opentype");
+}
+
+@font-face {
+    font-family: "Wanted-Medium";
+    src: url("../../../fonts/Wanted/WantedSans-Medium-BF65baf1388963b.otf") format("opentype");
+}
+
+@font-face {
+    font-family: "Wanted-Regular";
+    src: url("../../../fonts/Wanted/WantedSans-Regular-BF65baf13579965.otf") format("opentype");
+}
+
+@font-face {
+    font-family: "Wanted-Variable";
+    src: url("../../../fonts/Wanted/WantedSansVariable-BF65baf13a24667.ttf") format("truetype");
+}
+
+
+body {
+    background-color: white;
+}
+
+header {
+    background-color: black;
+    top: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    width: 100%;
+
+    padding-left: 70px;
+    padding-right: 70px;
+    padding-top: 10px;
+    padding-bottom: 40px;
+    
+    z-index: 1001;
+}
+
+.logo-section a {
+    font-family: Easy-Grotesk-Black;
+    text-decoration: none;
+    color: black;
+    text-transform: capitalize;
+    font-size: 30px;
+}
+
+#logo {
+    font-family: Easy-Grotesk-Black;
+    font-size: 30px;
+}
+
+#logo a {
+    color: white;
+    text-decoration: none;
+}
+
+#logo a span {
+    color: #008d95;
+}
+
+nav {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+}
+
+nav ul {
+    list-style-type: none;
+    display: flex;
+    gap: 40px;
+    align-items: center;
+}
+
+nav ul li a {
+    font-family: Wanted-Regular;
+    text-decoration: none;
+    color: white;
+    font-size: 16px;
+}
+
+nav ul li a:hover {
+    text-decoration: solid underline 1px;
+}
+
+#container {
+    width: 100%;
+    padding-top: 50px;
+}
+
+/** Container Art **/
+#container-art {
+    width: 100%;
+    max-width: 100vw;
+    background-color: black;
+    color: white;
+    padding-top: 150px;
+    padding-bottom: 150px;
+}
+
+
+
+.ticket-heading {
+    display: flex;
+    flex-direction: column;
+    gap: 70px;
+}
+
+.ticket-header {
+    font-family: Wanted-ExtraBold;
+    font-size: 32px;
+    width: 100%;
+    text-align: center;
+    text-decoration: underline;
+    text-underline-offset: 30px;
+}
+
+#ticket-card {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+
+    
+}
+
+.ticket-class-body {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    width: 45%;
+
+
+    padding-top: 40px;
+    padding-bottom: 20px;
+    padding-left: 50px;
+    padding-right: 50px;
+
+    border-radius: 20px;
+    border: 1px solid rgba(0, 0, 0, 0.038);
+
+    
+    -webkit-box-shadow: 2px 3px 21px 4px rgba(0,0,0,0.56);
+    -moz-box-shadow: 2px 3px 21px 4px rgba(0,0,0,0.56);
+    box-shadow: 2px 3px 21px 4px rgba(0,0,0,0.56);
+}
+
+.options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+}
+
+label {
+    font-family: Wanted-Medium;
+    font-size: 17px;
+    color: black;
+}
+
+.options select,
+.options input {
+    width: 90%;
+    border: 1px solid black;
+    border-radius: 10px;
+
+    background-color: transparent;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    padding-left: 20px;
+    padding-right: 20px;
+    font-family: Wanted-Regular;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    color: black;
+}
+
+.options textarea {
+    width: 90%;
+    min-height: 80px;
+    max-width: 90%;
+    min-width: 90%;
+
+    border-radius: 10px;
+
+    padding-top: 10px;
+    padding-bottom: 10px;
+    padding-left: 20px;
+    padding-right: 20px;
+
+    font-family: Wanted-Regular;
+    font-size: 16px;
+    background-color: transparent;
+    color: black;
+}
+
+.submit-form {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.submit-form button {
+    width: 25%;
+    padding-top: 15px;
+    padding-bottom: 15px;
+    display: flex;
+    justify-content: center;
+    border-radius: 10px;
+    background-color: black;
+    border: transparent;
+    font-family: Wanted-Medium;
+    font-size: 17px;
+    color: white;
+}

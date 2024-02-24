@@ -4,5 +4,8 @@ from . import views
 app_name = "support"
 
 urlpatterns = [
-    path('support/', views.mainSupportView, name="home")
+    path('support/', views.mainSupportView, name="home"),
+    path('support/portal/', views.supportPortal, name="supportPortal"),
+    path('support/ticket/new/', views.supportTicket, name="newTicket"), 
+    path('feedback/', views.userFeedback, name="feedback"),
 ]

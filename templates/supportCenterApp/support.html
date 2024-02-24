@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block title %}
-Support Center — Wave
+Support Center — Wave.
 {% endblock title %}
 
 {% block app_page_style %}
@@ -14,337 +14,384 @@ Support Center — Wave
 {% endblock script %}
 
 {% block body %}
+<div class="header">
+    <div class="logo-section">
+        <div id="logo">
+            <a href="{% url 'core:index' %}">WAVE<span>.</span></a>
+        </div>
+    </div>
+    <nav>
+        <ul>
+            <li>
+                <a href="{% url 'support:feedback' %}"> Feedback </a>
+            </li>
+            <li>
+                <a href="{% url 'support:newTicket' %}"> Open a ticket </a>
+            </li>
+            <li>
+                {% if user.is_authenticated %}
+                <a href="{% url 'support:supportPortal' %}">Support Portal</a>
+                {% else %}
+                <a href="{% url 'authentication:login' %}">Sign in</a>
+                {% endif %}
+            </li>
+        </ul>
+    </nav>
+</div>
+
 <div id="container">
-    <div class="search-bar">
-        <div class="sb-heading">
-            <h3>Support Center</h3>
-        </div>
-        <div class="sb-search">
-            <div class="sb-search-wrapper">
-                <img
-                    src="{% static "/images/account/search.svg" %}"
-                    alt=""
-                    srcset=""
-                    class="search-icon"
-                />
-                <input
-                    type="search"
-                    name=""
-                    id=""
-                    class="search-input"
-                />
+    <div class="blackBackground">
+        <div class="search-bar">
+            <div class="sb-heading">
+                <h3>Support Center</h3>
             </div>
-        </div>
-    </div>
-
-    <div class="sub-heading">
-        <h2>Need assistance? We've got your back!</h2>
-    </div>
-    <div class="sub-body">
-        <p>
-            Purchases, account management, find support for everything
-            related.
-            <br />
-            If you're new around here and looking for guidance, check
-            out our <a href="#" class="guide-link">Starter's Guide</a>.
-        </p>
-    </div>
-
-    <div id="support-body">
-        <div class="support-control">
-            <div class="supportc-tab tab-active" data-tab="attendee">
-                Attending Events
-            </div>
-            <div class="supportc-tab" data-tab="organizers">
-                Organizing Events
+            <div class="sb-search">
+                <div class="sb-search-wrapper">
+                    <img
+                        src="{% static 'images/account/search.svg' %}"
+                        alt="Magnifying glass: Search Support Center"
+                        srcset=""
+                        class="search-icon"
+                    />
+                    <input
+                        type="search"
+                        name=""
+                        id=""
+                        class="search-input"
+                        placeholder="Search Support Center..."
+                    />
+                </div>
             </div>
         </div>
 
-        <div class="content-tabs" id="attendee">
-            <section class="content-rows">
-                <div class="cr-tab">
-                    <a href="#">
-                        <div class="heading-img">
-                            <img
-                                src="{% static "/images/support/announcements.svg" %}"
-                                alt="Announcements"
-                            />
-                        </div>
-                        <div class="crt-heading">
-                            <h5>Event Notifications</h5>
-                        </div>
-                        <div class="crt-hr">
-                            <hr />
-                        </div>
-                        <div class="crt-body">
-                            <p>
-                                Stay updated with important alerts sent
-                                directly to your inbox.
-                            </p>
-                        </div>
-                    </a>
-                </div>
-                <div class="cr-tab">
-                    <a href="#">
-                        <div class="heading-img">
-                            <img
-                                src="{% static "/images/support/account.svg" %}"
-                                alt=""
-                            />
-                        </div>
-                        <div class="crt-heading">
-                            <h5>Account Settings</h5>
-                        </div>
-                        <div class="crt-hr">
-                            <hr />
-                        </div>
-                        <div class="crt-body">
-                            <p>
-                                Customize your preferences, from
-                                personal information to notification
-                                settings, tailored just for you.
-                            </p>
-                        </div>
-                    </a>
-                </div>
-                <div class="cr-tab">
-                    <a href="#">
-                        <div class="heading-img">
-                            <img
-                                src="{% static "/images/support/billing.svg" %}"
-                                alt="Billing Card"
-                            />
-                        </div>
-                        <div class="crt-heading">
-                            <h5>Billing & Purchases</h5>
-                        </div>
-                        <div class="crt-hr">
-                            <hr />
-                        </div>
-                        <div class="crt-body">
-                            <p>
-                                Streamline your transactions
-                                effortlessly. No hidden charges!!!
-                            </p>
-                        </div>
-                    </a>
-                </div>
-            </section>
-
-            <section class="content-rows">
-                <div class="cr-tab">
-                    <a href="#">
-                        <div class="heading-img">
-                            <img
-                                src="{% static "/images/support/forum.svg" %}"
-                                alt="Forum"
-                            />
-                        </div>
-                        <div class="crt-heading">
-                            <h5>Community Forums</h5>
-                        </div>
-                        <div class="crt-hr">
-                            <hr />
-                        </div>
-                        <div class="crt-body">
-                            <p>
-                                Engage with other attendees, share
-                                insights, and participate in discussions
-                                about the event.
-                            </p>
-                        </div>
-                    </a>
-                </div>
-                <div class="cr-tab">
-                    <a href="#">
-                        <div class="heading-img">
-                            <img
-                                src="{% static "/images/support/refunds.svg" %}"
-                                alt="Refunds"
-                            />
-                        </div>
-                        <div class="crt-heading">
-                            <h5>Refunds & Resales</h5>
-                        </div>
-                        <div class="crt-hr">
-                            <hr />
-                        </div>
-                        <div class="crt-body">
-                            <p>
-                                Get support for refund inquiries or
-                                reselling tickets, ensuring a
-                                hassle-free process when needed.
-                            </p>
-                        </div>
-                    </a>
-                </div>
-                <div class="cr-tab">
-                    <a href="#">
-                        <div class="heading-img">
-                            <img
-                                src="{% static "/images/support/faq.svg" %}"
-                                alt="Frequently Asked"
-                            />
-                        </div>
-                        <div class="crt-heading">
-                            <h5>Frequently Asked</h5>
-                        </div>
-                        <div class="crt-hr">
-                            <hr />
-                        </div>
-                        <div class="crt-body">
-                            <p>
-                                Find quick answers to common questions.
-                            </p>
-                        </div>
-                    </a>
-                </div>
-            </section>
+        <div class="sub-heading">
+            <h2>Need assistance? We've got your back!</h2>
+        </div>
+        <div class="sub-body">
+            <p>
+                If you're new around here and looking for guidance, check
+                out our <a href="" class="guide-link">Starter's Guide</a>.
+            </p>
         </div>
 
-        <div class="content-tabs" id="organizers">
-            <section class="content-rows">
-                <div class="cr-tab">
-                    <a href="#">
-                        <div class="heading-img">
-                            <img
-                                src="../static/images/support/event-management.svg"
-                                alt=""
-                            />
-                        </div>
-                        <div class="crt-heading">
-                            <h5>Event Management</h5>
-                        </div>
-                        <div class="crt-hr">
-                            <hr />
-                        </div>
-                        <div class="crt-body">
-                            <p>
-                                Efficiently plan, organize, and execute
-                                events with comprehensive tools and
-                                strategies for success.
-                            </p>
-                        </div>
-                    </a>
+        <div class="request-help">
+            {% if user.is_authenticated %}
+            <div class="request-panel">
+                <div>Request support in portal</div>
+                <div class="request-button">
+                    <a href="{% url 'support:supportPortal' %}">Support Portal</a>
                 </div>
-                <div class="cr-tab">
-                    <a href="#">
-                        <div class="heading-img">
-                            <img
-                                src="../static/images/support/contacting-attendees.svg"
-                                alt=""
-                            />
-                        </div>
-                        <div class="crt-heading">
-                            <h5>Contacting Attendees</h5>
-                        </div>
-                        <div class="crt-hr">
-                            <hr />
-                        </div>
-                        <div class="crt-body">
-                            <p>
-                                Communicate effectively, send updates,
-                                gather feedback, and address their
-                                inquiries promptly.
-                            </p>
-                        </div>
-                    </a>
+            </div>
+            {% else %}
+            <div class="request-panel">
+                <div>Login to request help</div>
+                <div class="request-button">
+                    <a href="{% url 'authentication:login' %}">Log in</a>
                 </div>
-                <div class="cr-tab">
-                    <a href="#">
-                        <div class="heading-img">
-                            <img
-                                src="../static/images/support/credit.svg"
-                                alt=""
-                            />
-                        </div>
-                        <div class="crt-heading">
-                            <h5>Issuing Refunds</h5>
-                        </div>
-                        <div class="crt-hr">
-                            <hr />
-                        </div>
-                        <div class="crt-body">
-                            <p>
-                                Manage refund requests promptly and
-                                efficiently, ensuring a positive
-                                experience for attendees.
-                            </p>
-                        </div>
-                    </a>
-                </div>
-            </section>
-
-            <section class="content-rows">
-                <div class="cr-tab">
-                    <a href="#">
-                        <div class="heading-img">
-                            <img
-                                src="../static/images/support/promotion.svg"
-                                alt=""
-                            />
-                        </div>
-                        <div class="crt-heading">
-                            <h5>Marketing & Promotion</h5>
-                        </div>
-                        <div class="crt-hr">
-                            <hr />
-                        </div>
-                        <div class="crt-body">
-                            <p>
-                                Explore various marketing techniques to
-                                reach a wider audience.
-                            </p>
-                        </div>
-                    </a>
-                </div>
-                <div class="cr-tab">
-                    <a href="#">
-                        <div class="heading-img">
-                            <img
-                                src="../static/images/support/partnerships.svg"
-                                alt=""
-                            />
-                        </div>
-                        <div class="crt-heading">
-                            <h5>Partnerships</h5>
-                        </div>
-                        <div class="crt-hr">
-                            <hr />
-                        </div>
-                        <div class="crt-body">
-                            <p>
-                                Develop strategic partnerships and
-                                collaborations to enhance event quality
-                                and reach.
-                            </p>
-                        </div>
-                    </a>
-                </div>
-                <div class="cr-tab">
-                    <a href="#">
-                        <div class="heading-img">
-                            <img
-                                src="../static/images/support/faq.svg"
-                                alt=""
-                            />
-                        </div>
-                        <div class="crt-heading">
-                            <h5>Frequently Asked</h5>
-                        </div>
-                        <div class="crt-hr">
-                            <hr />
-                        </div>
-                        <div class="crt-body">
-                            <p>
-                                Address common questions and challenges
-                                faced by event organizers.
-                            </p>
-                        </div>
-                    </a>
-                </div>
-            </section>
+            </div>
+            {% endif %}
+            
         </div>
     </div>
+
+    <div id="whiteBody">
+        <div id="support-body">
+            <div class="support-control">
+                <div class="supportc-tab tab-active" data-tab="attendee">
+                    Attending Events
+                </div>
+                <div class="supportc-tab" data-tab="organizers">
+                    Organizing Events
+                </div>
+            </div>
+
+            <div class="content-tabs" id="attendee">
+                <section class="content-rows">
+                    <div class="cr-tab">
+                        <a href="#">
+                            <div class="heading-img">
+                                <img
+                                    src="{% static '/images/support/announcements.svg' %}"
+                                    alt=""
+                                />
+                            </div>
+                            <div class="crt-heading">
+                                <h5>Event Notifications</h5>
+                            </div>
+                            <div class="crt-hr">
+                                <hr />
+                            </div>
+                            <div class="crt-body">
+                                <p>
+                                    Stay updated with important alerts sent
+                                    directly to your inbox.
+                                </p>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="cr-tab">
+                        <a href="#">
+                            <div class="heading-img">
+                                <img
+                                    src="{% static '/images/support/account.svg' %}"
+                                    alt=""
+                                />
+                            </div>
+                            <div class="crt-heading">
+                                <h5>Account Settings</h5>
+                            </div>
+                            <div class="crt-hr">
+                                <hr />
+                            </div>
+                            <div class="crt-body">
+                                <p>
+                                    Customize your preferences, from
+                                    personal information to notification
+                                    settings, tailored just for you.
+                                </p>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="cr-tab">
+                        <a href="#">
+                            <div class="heading-img">
+                                <img
+                                    src="{% static '/images/support/billing&purchases.svg' %}"
+                                    alt=""
+                                />
+                            </div>
+                            <div class="crt-heading">
+                                <h5>Billing & Purchases</h5>
+                            </div>
+                            <div class="crt-hr">
+                                <hr />
+                            </div>
+                            <div class="crt-body">
+                                <p>
+                                    Streamline your transactions
+                                    effortlessly. No hidden charges!!!
+                                </p>
+                            </div>
+                        </a>
+                    </div>
+                </section>
+
+                <section class="content-rows">
+                    <div class="cr-tab">
+                        <a href="#">
+                            <div class="heading-img">
+                                <img
+                                    src="{% static '/images/support/forum.svg' %}"
+                                    alt=""
+                                />
+                            </div>
+                            <div class="crt-heading">
+                                <h5>Community Forums</h5>
+                            </div>
+                            <div class="crt-hr">
+                                <hr />
+                            </div>
+                            <div class="crt-body">
+                                <p>
+                                    Engage with other attendees, share
+                                    insights, and participate in discussions
+                                    about the event.
+                                </p>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="cr-tab">
+                        <a href="#">
+                            <div class="heading-img">
+                                <img
+                                    src="{% static '/images/support/refunds.svg' %}"
+                                    alt=""
+                                />
+                            </div>
+                            <div class="crt-heading">
+                                <h5>Refunds & Resales</h5>
+                            </div>
+                            <div class="crt-hr">
+                                <hr />
+                            </div>
+                            <div class="crt-body">
+                                <p>
+                                    Get support for refund inquiries or
+                                    reselling tickets, ensuring a
+                                    hassle-free process when needed.
+                                </p>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="cr-tab">
+                        <a href="#">
+                            <div class="heading-img">
+                                <img
+                                    src="{% static '/images/support/faq.svg' %}"
+                                    alt=""
+                                />
+                            </div>
+                            <div class="crt-heading">
+                                <h5>Frequently Asked</h5>
+                            </div>
+                            <div class="crt-hr">
+                                <hr />
+                            </div>
+                            <div class="crt-body">
+                                <p>
+                                    Find quick answers to common questions.
+                                </p>
+                            </div>
+                        </a>
+                    </div>
+                </section>
+            </div>
+
+            <div class="content-tabs" id="organizers">
+                <section class="content-rows">
+                    <div class="cr-tab">
+                        <a href="#">
+                            <div class="heading-img">
+                                <img
+                                    src="{% static '/images/support/event-management.svg' %}"
+                                    alt=""
+                                />
+                            </div>
+                            <div class="crt-heading">
+                                <h5>Event Management</h5>
+                            </div>
+                            <div class="crt-hr">
+                                <hr />
+                            </div>
+                            <div class="crt-body">
+                                <p>
+                                    Efficiently plan, organize, and execute
+                                    events with comprehensive tools and
+                                    strategies for success.
+                                </p>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="cr-tab">
+                        <a href="#">
+                            <div class="heading-img">
+                                <img
+                                    src="{% static '/images/support/contacting-attendees.svg' %}"
+                                    alt=""
+                                />
+                            </div>
+                            <div class="crt-heading">
+                                <h5>Contacting Attendees</h5>
+                            </div>
+                            <div class="crt-hr">
+                                <hr />
+                            </div>
+                            <div class="crt-body">
+                                <p>
+                                    Communicate effectively, send updates,
+                                    gather feedback, and address their
+                                    inquiries promptly.
+                                </p>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="cr-tab">
+                        <a href="#">
+                            <div class="heading-img">
+                                <img
+                                    src="{% static '/images/support/credit.svg' %}"
+                                    alt=""
+                                />
+                            </div>
+                            <div class="crt-heading">
+                                <h5>Issuing Refunds</h5>
+                            </div>
+                            <div class="crt-hr">
+                                <hr />
+                            </div>
+                            <div class="crt-body">
+                                <p>
+                                    Manage refund requests promptly and
+                                    efficiently, ensuring a positive
+                                    experience for attendees.
+                                </p>
+                            </div>
+                        </a>
+                    </div>
+                </section>
+
+                <section class="content-rows">
+                    <div class="cr-tab">
+                        <a href="#">
+                            <div class="heading-img">
+                                <img
+                                    src="{% static '/images/support/promotion.svg' %}"
+                                    alt=""
+                                />
+                            </div>
+                            <div class="crt-heading">
+                                <h5>Marketing & Promotion</h5>
+                            </div>
+                            <div class="crt-hr">
+                                <hr />
+                            </div>
+                            <div class="crt-body">
+                                <p>
+                                    Explore various marketing techniques to
+                                    reach a wider audience.
+                                </p>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="cr-tab">
+                        <a href="#">
+                            <div class="heading-img">
+                                <img
+                                    src="{% static '/images/support/partnerships.svg' %}"
+                                    alt=""
+                                />
+                            </div>
+                            <div class="crt-heading">
+                                <h5>Partnerships</h5>
+                            </div>
+                            <div class="crt-hr">
+                                <hr />
+                            </div>
+                            <div class="crt-body">
+                                <p>
+                                    Develop strategic partnerships and
+                                    collaborations to enhance event quality
+                                    and reach.
+                                </p>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="cr-tab">
+                        <a href="#">
+                            <div class="heading-img">
+                                <img
+                                    src="{% static '/images/support/faq.svg' %}"
+                                    alt=""
+                                />
+                            </div>
+                            <div class="crt-heading">
+                                <h5>Frequently Asked</h5>
+                            </div>
+                            <div class="crt-hr">
+                                <hr />
+                            </div>
+                            <div class="crt-body">
+                                <p>
+                                    Address common questions and challenges
+                                    faced by event organizers.
+                                </p>
+                            </div>
+                        </a>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+    
 </div>
 {% endblock body %}
