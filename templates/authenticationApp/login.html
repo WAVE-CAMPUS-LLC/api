@@ -14,6 +14,11 @@ WAVE — Welcome back!
 
 {% block body %}
 <main id="loginCardContainer">
+    <header id="navHeader">
+        <div id="logo">
+            <a href="#">WAVE<span>.</span></a>
+        </div>
+    </header>
     <div id="loginCard">
         <div id="heading">
             <h3>Log in</h3>
@@ -27,39 +32,39 @@ WAVE — Welcome back!
             <div id="contentElements">
                 <div class="input-box">
                     <span class="icon"><i class='bx bxs-envelope'></i></span>
-                    <input type="{{ form.email.field.widget.input_type }}" name="{{ form.email.html_name }}" value="{{ form.email.value | default_if_none:"" }}" id="{{ form.email.auto_id }}" class="" autocomplete="off" required />
-                        <label for="{{ form.email.id_for_label }}">
-                            {{ form.email.label }} 
-                            <span>*</span>
-                            <span id="errorContainer">
-                                {% if form.email.errors %}
-                                    {% for error in form.email.errors %}
-                                    <div>
-                                        <p>-</p>
-                                        <p>{{ error }}</p>
-                                    </div>
-                                    {% endfor %}
-                                {% endif %}
-                            </span>
-                        </label>
+                    <input type="{{ form.email.field.widget.input_type }}" name="{{ form.email.html_name }}" id="{{ form.email.auto_id }}" class="" autocomplete="off" autofocus required>
+                    <label for="{{ form.email.id_for_label }}">
+                        {{ form.email.label }} 
+                        <span>*</span>
+                        <span id="errorContainer">
+                            {% if form.email.errors %}
+                                {% for error in form.email.errors %}
+                                <div>
+                                    <p>-</p>
+                                    <p>{{ error }}</p>
+                                </div>
+                                {% endfor %}
+                            {% endif %}
+                        </span>
+                    </label>
                 </div>
                 <div class="input-box">
                     <span class="icon"><i class='bx bxs-lock'></i></span>
-                    <input type="{{ form.password.field.widget.input_type }}" name="{{ form.password.html_name }}" value="{{ form.password.value | default_if_none:"" }}" id="{{ form.password.auto_id }}" class="" autocomplete="off" required />
-                        <label for="{{ form.password.id_for_label }}">
-                            {{ form.password.label }} 
-                            <span>*</span>
-                            <span id="errorContainer">
-                                {% if form.password.errors %}
-                                    {% for error in form.password.errors %}
-                                    <div>
-                                        <p>-</p>
-                                        <p>{{ error }}</p>
-                                    </div>
-                                    {% endfor %}
-                                {% endif %}
-                            </span>
-                        </label>
+                    <input type="{{ form.password.field.widget.input_type }}" name="{{ form.password.html_name }}" id="{{ form.password.auto_id }}" class="" autocomplete="off" required >
+                    <label for="{{ form.password.id_for_label }}">
+                        {{ form.password.label }} 
+                        <span>*</span>
+                        <span id="errorContainer">
+                            {% if form.password.errors %}
+                                {% for error in form.password.errors %}
+                                <div>
+                                    <p>-</p>
+                                    <p>{{ error }}</p>
+                                </div>
+                                {% endfor %}
+                            {% endif %}
+                        </span>
+                    </label>
                 </div>
                 <div id="forgot">
                     <h6><a href="">Forgot password?</a></h6>

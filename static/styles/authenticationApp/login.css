@@ -40,14 +40,80 @@
 }
 
 
+@font-face {
+    font-family: "Wanted-ExtraBlack";
+    src: url("../../../static/fonts/Wanted/WantedSans-ExtraBlack-BF65baf133c4859.otf") format("opentype");
+}
+
+@font-face {
+    font-family: "Wanted-Black";
+    src: url("../../../static/fonts/Wanted/WantedSans-Black-BF65baf1369b817.otf") format("opentype");
+}
+
+@font-face {
+    font-family: "Wanted-ExtraBold";
+    src: url("../../../static/fonts/Wanted/WantedSans-ExtraBold-BF65baf137317a5.otf");
+}
+
+@font-face {
+    font-family: "Wanted-SemiBold";
+    src: url("../../../static/fonts/Wanted/WantedSans-SemiBold-BF65baf13722853.otf") format("opentype");
+}
+
+@font-face {
+    font-family: "Wanted-Bold";
+    src: url("../../../static/fonts/Wanted/WantedSans-Bold-BF65baf135d5a25.otf") format("opentype");
+}
+
+@font-face {
+    font-family: "Wanted-Medium";
+    src: url("../../../static/fonts/Wanted/WantedSans-Medium-BF65baf1388963b.otf") format("opentype");
+}
+
+@font-face {
+    font-family: "Wanted-Regular";
+    src: url("../../../static/fonts/Wanted/WantedSans-Regular-BF65baf13579965.otf") format("opentype");
+}
+
+@font-face {
+    font-family: "Wanted-Variable";
+    src: url("../../../static/fonts/Wanted/WantedSansVariable-BF65baf13a24667.ttf") format("truetype");
+}
+
+
+
 body {
     width: 100vw;
     height: 100vh;
     overflow: hidden;
-    background-color: #e2fdff57;
+    background-color: black;
+}
+
+#navHeader {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    padding-top: 50px;
+}
+
+#logo {
+    font-family: Easy-Grotesk-Black;
+    font-size: 40px;
+}
+
+#logo a {
+    color: white;
+    text-decoration: none;
+}
+
+#logo a span {
+    color: #008d95;
 }
 
 
+
+
+/** Login Container **/
 #loginCardContainer {
     /** Centering the card in the middle of the page **/
     display: flex;
@@ -73,6 +139,7 @@ body {
     display: flex;
     flex-direction: column;
     row-gap: 20px;
+    background-color: white;
 
     width: 30%;
 
@@ -93,9 +160,9 @@ body {
 }
 
 #loginCard #heading {
-    color: #1B4965;
+    color: black;
 
-    font-family: Easy-Grotesk-Bold;
+    font-family: Wanted-ExtraBold;
     font-size: 25px;
 
     display: flex;
@@ -115,7 +182,7 @@ body {
 }
 
 #sectionName {
-    font-family: Easy-Grotesk-Light;
+    font-family: Wanted-Regular;
     font-size: 14px;
 }
 
@@ -128,11 +195,11 @@ body {
     row-gap: 0px;
 }
 .input-box {
-    font-family: Easy-Grotesk-extralight;
+    font-family: Wanted-Regular;
     position: relative;
     width: 100%;
     height: 50px;
-    border-bottom: 2px solid #25567b;
+    border-bottom: 2px solid black;
     margin: 15px 0;
 }
 
@@ -142,7 +209,7 @@ body {
     left: 5px;
     translate: translateY(-50%);
     font-size: 1em;
-    color: #25567b;
+    color: black;
     font-weight: 500;
     pointer-events: none;
     transition: .5s;
@@ -155,14 +222,14 @@ body {
 
 
 .input-box input {
-    font-family: Easy-Grotesk-extralight;
+    font-family: Wanted-Regular;
     width: 100%;
     height: 100%;
     background: transparent;
     border: none;
     outline: none;
     font-size: 1em;
-    color: #162938;
+    color: black;
     font-weight: 600;
     padding: 0 25px 0 6px;
     margin-top: 10px;
@@ -172,7 +239,7 @@ body {
     position: absolute;
     right: 8px;
     font-size: 1.2em;
-    color: #25567b;
+    color: black;
     line-height: 67px;
 }
 
@@ -183,10 +250,14 @@ body {
 }
 
 #forgot h6, #forgot a {
-    font-family: Easy-Grotesk-Light;
+    font-family: Wanted-Variable;
     font-size: 14px;
-    color: #1b4965b7;
+    color: black;
     text-decoration: none;
+}
+
+#forgot a:hover {
+    color:rgb(86, 85, 85);
 }
 
 
@@ -199,11 +270,11 @@ body {
 }
 
 #controlledElements button {
-    font-family: Easy-Grotesk-regular;
+    font-family: Wanted-Regular;
     width: 100%;
     padding-top: 10px;
     padding-bottom: 10px;
-    background: #25567b;
+    background: black;
     border: none;
     outline: none;
     border-radius: 6px;
@@ -217,18 +288,19 @@ body {
 
 /** Don't have an account? **/
 #joinLink {
-    border: 1px solid #00538744;
+    border: 1px solid white;
     border-radius: 20px;
     padding-top: 15px;
     padding-bottom: 15px;
     width: 30%;
+    
 
     display: flex;
 
 }
 
 #joinLink h6 {
-    color: #1b4965b7;
+    color: white;
 
     text-align: center;
     width: 100%;
@@ -239,10 +311,10 @@ body {
 }
 
 #joinLink a {
-    color: #005387;
-    text-decoration: none;
+    color: white;
+    text-decoration: solid underline 1px;
 }
 
 #joinLink a:hover {
-    text-decoration: solid underline 1px;
+    text-decoration: double underline 1px;
 }

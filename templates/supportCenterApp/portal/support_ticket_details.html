@@ -1,0 +1,248 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+
+{% block title %}
+WAVE. — Ticket #{{ticket.ticket_id}}
+{% endblock title %}
+
+
+{% block app_page_style %}
+<link rel="stylesheet" type="text/css" href="{% static "/styles/supportCenterApp/portal/support_ticket_details.css" %}" />
+{% endblock app_page_style %}
+
+
+{% block script %}
+{% endblock script %}
+
+
+{% block header %}
+<header>
+	<nav>
+		<div id="logo-menu">
+			<div id="logo">
+				<a href="{% url "core:index" %}">WAVE<span>.</span></a>
+			</div>
+		</div>
+		<ul>
+			<li>
+				<a href="{% url "support:newTicket" %}"> Open a ticket </a>
+			</li>
+			<li>
+				<a href="{% url "support:supportPortal" %}"> Support Portal </a>
+			</li>
+			<li>
+				<p id="support-portal-id">Enosh Lartey</p>
+			</li>
+		</ul>
+	</nav>
+
+	<div id="container-art">
+		<div class="ticket-heading">
+			<div class="ticket-header">
+                <h3>Ticket ID: #{{ ticket.ticket_id }} </h3>
+            </div>
+		</div>
+	</div>
+</header>
+{% endblock header %}
+
+
+{% block body %}
+<div id="ticket-info-container">
+    <div id="tic-canvas-container">
+        <canvas id="canvas-basic-testing"></canvas>
+    </div>
+    <div id="tic-progress-bar">
+        <div id="progress-bar">
+            <div class="circle-container">
+                <div class="circle filled" data-label="Created"></div>
+            </div>
+            <div class="circle-container">
+                <div class="circle" data-label="Reviewing"></div>
+            </div>
+            <div class="circle-container">
+                <div class="circle" data-label="Updated"></div>
+            </div>
+            <div class="circle-container">
+                <div class="circle" data-label="Complete"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="tic-body-information">
+        <div id="tic-bi-left-side">
+            <div class="tbls-id">
+                <div class="id-header">
+                    <h4>Ticket ID#</h4>
+                    <div class="id-header-menu-btn" role="button">
+                        <img src="{% static "images/support/portals/ticket-details/ticket-menu-dots.svg" %}"
+                            alt="More Information Button" srcset="">
+                    </div>
+                </div>
+                <span id="id-number">{{ ticket.ticket_id }}</span>
+            </div>
+
+            <div class="tbls-created">
+                <div class="id-header">
+                    <h4>Date Created</h4>
+                    <div class="id-header-menu-btn" role="button">
+                        <img src="{% static "images/support/portals/ticket-details/ticket-menu-dots.svg" %}"
+                            alt="More Information Button" srcset="">
+                    </div>
+                </div>
+                <div id="created-body">
+                    <span id="created-date">{{ ticket.created_at|date:"Y-m-d" }}</span>
+                    <span>|</span>
+                    <span id="created-time">10:27 PM</span>
+                </div>
+            </div>
+
+            <div class="tbls-status">
+                <div class="id-header">
+                    <h4>Status</h4>
+                    <div class="id-header-menu-btn" role="button">
+                        <img src="{% static "images/support/portals/ticket-details/ticket-menu-dots.svg" %}"
+                            alt="More Information Button" srcset="">
+                    </div>
+                </div>
+                <div id="status-body">
+                    <span id="status-update">In Progress</span>
+                    <span id="status-background"></span>
+                </div>
+            </div>
+        </div>
+
+
+        <div id="tic-bi-right-side">
+            <div id="ticket-details">
+                <div id="ticket-details-heading">
+                    <h4>Ticket Details</h4>
+                    <div class="id-header-menu-btn" role="button">
+                        <img src="{% static "images/support/portals/ticket-details/ticket-menu-dots.svg" %}"
+                            alt="More Information Button" srcset="">
+                    </div>
+                </div>
+                <div id="topic">
+                    <div id="topic-details-header">Topic:</div>
+                    <div id="topic-details-body">
+                        <span>{{ ticket.return_title }}</span>
+                    </div>
+                </div>
+                <div id="email">
+                    <div id="topic-details-header">Email Address:</div>
+                    <div id="topic-details-body">
+                        <span>{{ ticket.email }}</span>
+                    </div>
+                </div>
+                <div id="subject">
+                    <div id="topic-details-header">Subject:</div>
+                    <div id="topic-details-body">
+                        <span>{{ ticket.subject }}</span>
+                    </div>
+                </div>
+                <div id="description">
+                    <div id="topic-details-header">Description: </div>
+                    <div id="topic-details-body">
+                        <span>
+                            {{ ticket.description }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="conversation-container">
+        <div id="convo-container-elements">
+            <div id="cce-heading">
+                <h4>Admin Reply</h4>
+                <div class="id-header-menu-btn" role="button">
+                    <img src="{% static "images/support/portals/ticket-details/ticket-menu-dots.svg" %}"
+                        alt="More Information Button" srcset="">
+                </div>
+            </div>
+            <div id="cce-body">
+                <div id="conversation-bubble">
+                    <div id="convo-body">
+                        Refresh your page and click the Lorem ipsum dolor sit amet consectetur adipisicing
+                        elit. Ipsa tenetur reiciendis, qui sunt nemo culpa. Neque, veniam? Officia dolor velit
+                        aliquid architecto accusamus vel dicta minus, inventore alias saepe obcaecati?
+                        Refresh your page and click the Lorem ipsum dolor sit amet consectetur adipisicing elit.
+                        Ipsa tenetur reiciendis, qui sunt nemo culpa. Neque, veniam? Officia dolor velit aliquid
+                        architecto accusamus vel dicta minus, inventore alias saepe obcaecati?
+                    </div>
+
+                    <div id="admin-timestamp">
+                        <div id="admin-info">
+                            <h6 id="name">Edmund</h6>
+                            <div id="role-info">
+                                <img src="{% static "images/support/portals/ticket-details/admin-verified.svg" %}"
+                                        alt="Verified User">
+                                <p class="role">Admin</p>
+                            </div>
+                        </div>
+                        <div id="time-info">4:34 PM</div>
+                    </div>
+                </div>
+
+                <div id="convo-divider">
+                    <hr>
+                </div>
+
+                <div id="conversation-bubble">
+                    <div id="convo-body">
+                        Refresh your page and click the Lorem ipsum dolor sit amet consectetur adipisicing
+                        elit. Ipsa tenetur reiciendis, qui sunt nemo culpa. Neque, veniam? Officia dolor velit
+                        aliquid architecto accusamus vel dicta minus, inventore alias saepe obcaecati?
+                        Refresh your page and click the Lorem ipsum dolor sit amet consectetur adipisicing elit.
+                        Ipsa tenetur reiciendis, qui sunt nemo culpa. Neque, veniam? Officia dolor velit aliquid
+                        architecto accusamus vel dicta minus, inventore alias saepe obcaecati?
+                    </div>
+
+                    <div id="admin-timestamp">
+                        <div id="admin-info">
+                            <h6 id="name">Me</h6>
+                        </div>
+                        <div id="time-info">5:00 PM</div>
+                    </div>
+                </div>
+            </div>
+            <div id="cce-reply-end">
+                <div id="conversation-input">
+                    <div class="button-one">
+                        <button role="button">
+                            <img src="{% static "images/support/portals/ticket-details/paper-clip.svg" %}" alt="" srcset="">
+                        </button>
+                    </div>
+                    
+                    
+                    <input type="text" name="chat-reply" id="chat-reply" placeholder="Send a reply">
+
+                    <div class="button-two">
+                        <button role="button">
+                            <img src="{% static "images/support/portals/ticket-details/send-plane.svg" %}" alt="Send Reply" srcset="">
+                        </button>
+                    </div>
+                    
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="ticket-control">
+        <div id="ticket-control-container">
+            <div id="complete-ticket" role="button">
+                <img src="{% static "images/support/portals/ticket-details/completed-ticket.svg" %}" alt="Complete Ticket">
+                <p>Complete</p>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div id="appreciation-div">
+    <h3>We appreciate your patience!</h3>
+</div>
+{% endblock body %}

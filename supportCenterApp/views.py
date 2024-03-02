@@ -40,3 +40,15 @@ def supportTicket(request):
 
 def userFeedback(request):
     return render(request, "supportCenterApp/feedback/provideFeedback.html")
+
+
+# Views to allow users to view and update their tickets.
+def viewTicket(request, ticket_id):
+    # Try to retrieve the ticket object by using the ticket_id
+    try:
+        ticket = SupportTicket.objects.get(ticket_id=ticket_id)
+    # If ticket object not found, return an exception error. 
+    except:
+        return render(request, "supportCenterApp/doesNotExist.html", status=404)
+    
+    return render(request, "supportCenterApp/portal/support_ticket_details.html", {"ticket": ticket})

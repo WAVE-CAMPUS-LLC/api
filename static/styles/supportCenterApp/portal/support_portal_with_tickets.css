@@ -64,8 +64,8 @@ header {
 
     width: 100%;
 
-    padding-left: 100px;
-    padding-right: 100px;
+    padding-left: 50px;
+    padding-right: 50px;
     padding-top: 20px;
     padding-bottom: 40px;
     
@@ -229,16 +229,21 @@ body {
 
 #card-info #row-one {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    flex-direction:column;
+    gap: 10px;
+
+    margin-bottom: 10px;
 }
 
 #card-info #row-one h6 {
-    font-family: Wanted-Bold;
+    font-family: Wanted-SemiBold;
     font-size: 12px;
 }
 
 #card-info #row-one p {
+    width: 100%;
+    display: flex;
+    justify-content: end;
     font-size: 17px;
     font-family: Wanted-Bold;
 }
@@ -268,14 +273,37 @@ body {
 
 #row-three {
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
+
+    margin-top: 20px;
 }
 
-#row-three p {
+#rw-btn-container {
+    width: 100%;
+}
+
+.rbc-btn {
+    padding-top: 10px;
+    padding-bottom: 10px;
+    border-radius: 15px;
+
+    text-decoration: none;
     font-family: Wanted-Medium;
+    color: white;
+    background-color: black;
+    
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    text-align: center;
 }
 
+.rbc-btn:hover{
+    -webkit-box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.234);
+    -moz-box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.234);
+    box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.234);
+}
 #row-three button {
     background-color: transparent;
     border: 1px solid black;

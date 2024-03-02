@@ -50,7 +50,7 @@ Support Portal — Wave.
     <div id="live-row">
         <div id="row-heading">Active Tickets</div>
         <div id="tickets">
-            {% for ticket in current_tickets %}
+            {% for support_ticket in current_tickets %}
             <div id="ticket-card">
                 <div id="ticket-summary-card">
                     <div id="card-img">
@@ -58,20 +58,23 @@ Support Portal — Wave.
                     </div>
                     <div id="card-info">
                         <div id="row-one">
-                            <h6>Last Updated: <span>30 mins ago</span></h6>
-                            <p id="ticket-id">#{{ ticket.ticket_id }}</p>
+                            <p id="ticket-id">#{{ support_ticket.ticket_id }}</p>
+                            <h6>Last Updated: <span>{{ support_ticket.time_elapsed_since_created }}</span></h6>
                         </div>
                         <div id="row-two">
-                            <div class="status">Status: <span> {{ ticket.status }}</span></div>
+                            <div class="status">Status: <span> {{ support_ticket.status }}</span></div>
                             <div class="priority">Priority Level: <span>High</span></div>
-                            <div class="created">Date Created: <span>{{ ticket.created_at|date:"Y-m-d" }}</span></div>
+                            <div class="created">Date Created: <span>{{ support_ticket.created_at|date:"Y-m-d" }}</span></div>
                         </div>
                         <div id="row-three">
-                            <p>Expand</p>
-                            <button type="button">
-                                <img src="{% static "images/support/portals/expand-card.svg" %}" alt="See More Details">
-                            </button>
-                            
+                            <div id="rw-btn-container">
+                                {% comment %} 
+                                    We use the ticket ID which is generated as part of the ticket creation process to generate the links below
+                                {% endcomment %}
+                                <a href="{% url "support:viewTicket" ticket_id=support_ticket.ticket_id %}" class="rbc-btn">
+                                    <h3>View</h3>
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -102,11 +105,9 @@ Support Portal — Wave.
                             <div class="created">Date Created: <span>{{ closed_ticket.created_at|date:"Y-m-d" }}</span></div>
                         </div>
                         <div id="row-three">
-                            <p>Expand</p>
-                            <button type="button">
-                                <img src="{% static "images/support/portals/expand-card.svg" %}" alt="See More Details">
-                            </button>
-                            
+                            <div id="rw-btn-container">
+                                <a href="" class="rbc-btn">View</a>
+                            </div>
                         </div>
                     </div>
                 </div>
