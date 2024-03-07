@@ -14,6 +14,12 @@ from .managers import CustomUserManager
 
 # Create your models here.
 class CustomUser(AbstractBaseUser, PermissionsMixin):
+    GENDER_OPTIONS = [
+        ('male', 'Male'),
+        ('female', 'Female'),
+        ('other', 'Other')
+    ]
+    
     first_name = models.CharField(
         _("First Name"),
         max_length=50,
@@ -35,7 +41,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         _("Birthday"), null=True, blank=False, help_text=(_("Birthday"))
     )
     gender = models.CharField(
-        _("Gender"), max_length=10, null=True, blank=True, help_text=(_("Gender"))
+        _("Select a gender"), max_length=10, null=True, blank=True, help_text=(_("Gender")), choices=GENDER_OPTIONS
     )
     phone_number = models.CharField(
         _("Phone Number"),
@@ -53,7 +59,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     is_superuser = models.BooleanField(default=False)
     
     # The generation of a random user id for every user that signs up. 
-    user_id = models.UUIDField(_("User ID"), default=uuid.uuid4, editable=False)
+    user_id = models.UUIDField(_("User ID"), default=uuid.uuid4, editable=False, unique=True)
     
 
     objects = CustomUserManager()

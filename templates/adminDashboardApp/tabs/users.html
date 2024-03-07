@@ -1,0 +1,418 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}
+WAVE. — Management Dashboard
+{% endblock title %}
+
+{% block app_page_style %}
+<link rel="stylesheet" type="text/css" href="{% static "/styles/partials/tabs/users.css" %}" />
+{% endblock app_page_style %}
+
+
+{% block script %}
+<script src="{% static "scripts/adminDashboardApp/admin.js" %}"></script>
+{% endblock script %}
+
+
+{% block header %}
+<nav>
+    <div id="logo-menu">
+        <div id="logo">
+            <a href="{% url "core:index" %}">WAVE<span>.</span></a>
+        </div>
+    </div>
+    <div>
+        <div id="userId">
+            <a href="">E. Lartey</a>
+        </div>
+    </div>
+</nav>
+
+<div id="container-art">
+    <div class="ticket-heading">
+        <div class="ticket-header">
+            <h3><a href="{% url 'waveAdmin:adminDashboard' %}">Management</a> > Users</h3>
+        </div>
+    </div>
+</div>
+{% endblock header %}
+
+
+{% block body %}
+<div id="information-container">
+    <!-- The control container. Allows you to search for users and sort data out. Also allows you to invite new members. -->
+    <div id="information-container-header">
+        <div id="search-and-invite">
+            <div id="adminSearch-users">
+                <input type="search" name="users-Search" id="users-Search"
+                    placeholder="Find user with email...">
+            </div>
+            <div id="adminInvite-users">
+                <button>Invite Member</button>
+            </div>
+        </div>
+
+        <div id="adminSort-users">
+            <div role="button" id="text-description">
+                <p>Sort By</p>
+                <img src="../../static/images/admin/filter.svg" alt="">
+                :
+            </div>
+            <div id="adminSort-users-section">
+                <select title="support-filters" name="support-filters" id="support-filters">
+                    <option value="latest" selected>Latest</option>
+                    <option value="year">Year</option>
+                    <option value="month">Month</option>
+                    <option value="date">Date</option>
+                    <option value="day">Day</option>
+                    <option value="time">Time</option>
+                    <option value="a-z">A-Z</option>
+                    <option value="z-a">Z-A</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- The main content of the body. All the details will be in this container. -->
+    <div id="information-container-body">
+        <div id="icb-heading">
+            <div id="icbh-personal-info">
+                <h5>Member</h5>
+            </div>
+
+            <div id="icbh-role-info">
+                <h5>Role</h5>
+                <h5>Last Login</h5>
+                <h5>Date Joined</h5>
+            </div>
+        </div>
+
+        <div id="ich-body-container"> 
+            <div id="ichbc-userSummaryCard">
+                <div id="icbh-personal-info">
+                    <div class="icbh-pi-container">
+                        <div id="icbhpi-name">
+                            Enosh Lartey
+                        </div>
+                        <div id="icbhpi-email">
+                            enoshlartey3@gmail.com
+                        </div>
+                    </div>
+                </div>
+
+                <div id="icbh-role-info">
+                    <div id="role-name">
+                        <h5>Admin</h5>
+                    </div>
+
+                    <h5 id="last-active">
+                        <span id="indicator" class="active"></span>
+                        <p>5 mins ago</p>
+                    </h5>
+
+                    <div id="datejoined-expand">
+                        <h5>December 30, 2023</h5>
+                        <div id="expandUserCard">
+                            <button type="button">
+                                <img src="../../static/images/admin/users/expand-user.svg" alt="">
+                            </button>
+                        </div>
+                    </div>
+                    
+                </div>
+
+                
+            </div>
+
+            <div id="ichbc-userSummaryCard">
+                <div id="icbh-personal-info">
+                    <div class="icbh-pi-container">
+                        <div id="icbhpi-name">
+                            Enosh Lartey
+                        </div>
+                        <div id="icbhpi-email">
+                            enoshlartey3@gmail.com
+                        </div>
+                    </div>
+                </div>
+
+                <div id="icbh-role-info">
+                    <div id="role-name">
+                        <h5>Admin</h5>
+                    </div>
+                    
+                    <h5 id="last-active">
+                        <span id="indicator" class="active"></span>
+                        <p>5 mins ago</p>
+                    </h5>
+
+                    <div id="datejoined-expand">
+                        <h5>December 30, 2023</h5>
+                        <div id="expandUserCard">
+                            <button type="button">
+                                <img src="../../static/images/admin/users/expand-user.svg" alt="">
+                            </button>
+                        </div>
+                    </div>
+                    
+                </div>
+
+                
+            </div>
+
+            <div id="ichbc-userSummaryCard">
+                <div id="icbh-personal-info">
+                    <div class="icbh-pi-container">
+                        <div id="icbhpi-name">
+                            Enosh Lartey
+                        </div>
+                        <div id="icbhpi-email">
+                            enoshlartey3@gmail.com
+                        </div>
+                    </div>
+                </div>
+
+                <div id="icbh-role-info">
+                    <div id="role-name">
+                        <h5>Admin</h5>
+                    </div>
+                    
+                    <h5 id="last-active">
+                        <span id="indicator" class="active"></span>
+                        <p>5 mins ago</p>
+                    </h5>
+
+                    <div id="datejoined-expand">
+                        <h5>December 30, 2023</h5>
+                        <div id="expandUserCard">
+                            <button type="button">
+                                <img src="../../static/images/admin/users/expand-user.svg" alt="">
+                            </button>
+                        </div>
+                    </div>
+                    
+                </div>
+
+                
+            </div>
+
+            <div id="ichbc-userSummaryCard">
+                <div id="icbh-personal-info">
+                    <div class="icbh-pi-container">
+                        <div id="icbhpi-name">
+                            Enosh Lartey
+                        </div>
+                        <div id="icbhpi-email">
+                            enoshlartey3@gmail.com
+                        </div>
+                    </div>
+                </div>
+
+                <div id="icbh-role-info">
+                    <div id="role-name">
+                        <h5>Admin</h5>
+                    </div>
+                    
+                    <h5 id="last-active">
+                        <span id="indicator" class="active"></span>
+                        <p>5 mins ago</p>
+                    </h5>
+
+                    <div id="datejoined-expand">
+                        <h5>December 30, 2023</h5>
+                        <div id="expandUserCard">
+                            <button type="button">
+                                <img src="../../static/images/admin/users/expand-user.svg" alt="">
+                            </button>
+                        </div>
+                    </div>
+                    
+                </div>
+
+                
+            </div>
+
+            <div id="ichbc-userSummaryCard">
+                <div id="icbh-personal-info">
+                    <div class="icbh-pi-container">
+                        <div id="icbhpi-name">
+                            Enosh Lartey
+                        </div>
+                        <div id="icbhpi-email">
+                            enoshlartey3@gmail.com
+                        </div>
+                    </div>
+                </div>
+
+                <div id="icbh-role-info">
+                    <div id="role-name">
+                        <h5>Admin</h5>
+                    </div>
+                    
+                    <h5 id="last-active">
+                        <span id="indicator" class="active"></span>
+                        <p>5 mins ago</p>
+                    </h5>
+
+                    <div id="datejoined-expand">
+                        <h5>December 30, 2023</h5>
+                        <div id="expandUserCard">
+                            <button type="button">
+                                <img src="../../static/images/admin/users/expand-user.svg" alt="">
+                            </button>
+                        </div>
+                    </div>
+                    
+                </div>
+
+                
+            </div>
+
+            <div id="ichbc-userSummaryCard">
+                <div id="icbh-personal-info">
+                    <div class="icbh-pi-container">
+                        <div id="icbhpi-name">
+                            Enosh Lartey
+                        </div>
+                        <div id="icbhpi-email">
+                            enoshlartey3@gmail.com
+                        </div>
+                    </div>
+                </div>
+
+                <div id="icbh-role-info">
+                    <div id="role-name">
+                        <h5>Admin</h5>
+                    </div>
+                    
+                    <h5 id="last-active">
+                        <span id="indicator" class="active"></span>
+                        <p>5 mins ago</p>
+                    </h5>
+
+                    <div id="datejoined-expand">
+                        <h5>December 30, 2023</h5>
+                        <div id="expandUserCard">
+                            <button type="button">
+                                <img src="../../static/images/admin/users/expand-user.svg" alt="">
+                            </button>
+                        </div>
+                    </div>
+                    
+                </div>
+
+                
+            </div>
+
+            <div id="ichbc-userSummaryCard">
+                <div id="icbh-personal-info">
+                    <div class="icbh-pi-container">
+                        <div id="icbhpi-name">
+                            Enosh Lartey
+                        </div>
+                        <div id="icbhpi-email">
+                            enoshlartey3@gmail.com
+                        </div>
+                    </div>
+                </div>
+
+                <div id="icbh-role-info">
+                    <div id="role-name">
+                        <h5>Admin</h5>
+                    </div>
+                    
+                    <h5 id="last-active">
+                        <span id="indicator" class="active"></span>
+                        <p>5 mins ago</p>
+                    </h5>
+
+                    <div id="datejoined-expand">
+                        <h5>December 30, 2023</h5>
+                        <div id="expandUserCard">
+                            <button type="button">
+                                <img src="../../static/images/admin/users/expand-user.svg" alt="">
+                            </button>
+                        </div>
+                    </div>
+                    
+                </div>
+
+                
+            </div>
+
+            <div id="ichbc-userSummaryCard">
+                <div id="icbh-personal-info">
+                    <div class="icbh-pi-container">
+                        <div id="icbhpi-name">
+                            Enosh Lartey
+                        </div>
+                        <div id="icbhpi-email">
+                            enoshlartey3@gmail.com
+                        </div>
+                    </div>
+                </div>
+
+                <div id="icbh-role-info">
+                    <div id="role-name">
+                        <h5>Admin</h5>
+                    </div>
+                    
+                    <h5 id="last-active">
+                        <span id="indicator" class="active"></span>
+                        <p>5 mins ago</p>
+                    </h5>
+
+                    <div id="datejoined-expand">
+                        <h5>December 30, 2023</h5>
+                        <div id="expandUserCard">
+                            <button type="button">
+                                <img src="../../static/images/admin/users/expand-user.svg" alt="">
+                            </button>
+                        </div>
+                    </div>
+                    
+                </div>
+
+                
+            </div>
+
+            <div id="ichbc-userSummaryCard">
+                <div id="icbh-personal-info">
+                    <div class="icbh-pi-container">
+                        <div id="icbhpi-name">
+                            Enosh Lartey
+                        </div>
+                        <div id="icbhpi-email">
+                            enoshlartey3@gmail.com
+                        </div>
+                    </div>
+                </div>
+
+                <div id="icbh-role-info">
+                    <div id="role-name">
+                        <h5>Admin</h5>
+                    </div>
+                    
+                    <h5 id="last-active">
+                        <span id="indicator" class="active"></span>
+                        <p>5 mins ago</p>
+                    </h5>
+
+                    <div id="datejoined-expand">
+                        <h5>December 30, 2023</h5>
+                        <div id="expandUserCard">
+                            <button type="button">
+                                <img src="../../static/images/admin/users/expand-user.svg" alt="">
+                            </button>
+                        </div>
+                    </div>
+                    
+                </div>
+
+                
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock body %}

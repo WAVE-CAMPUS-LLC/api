@@ -14,13 +14,20 @@
         <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     </head>
 
-    <header>
-        {% block header %}{% endblock header %}
-    </header>
+    <div id="html-content">
+        <header>
+            {% block header %}{% endblock header %}
+        </header>
+    
+        <body>
+            {% block body %}
+                {% block nav %}{% endblock nav %}
+            {% endblock body %}
+        </body>
 
-    <body>
-        {% block body %}
-            {% block nav %}{% endblock nav %}
-        {% endblock body %}
-    </body>
+        <footer id="footer">
+            {% include "partials/footer.html" %}
+        </footer>
+    </div>
+    
 </html>

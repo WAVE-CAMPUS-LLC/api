@@ -1,0 +1,109 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}
+WAVE. — Management Dashboard
+{% endblock title %}
+
+{% block app_page_style %}
+<link rel="stylesheet" type="text/css" href="{% static "/styles/partials/tabs/feedback.css" %}" />
+{% endblock app_page_style %}
+
+
+{% block script %}
+{% endblock script %}
+
+
+{% block header %}
+<nav>
+    <div id="logo-menu">
+        <div id="logo">
+            <a href="{% url "core:index" %}">WAVE<span>.</span></a>
+        </div>
+    </div>
+    <div>
+        <div id="userId">
+            <a href="">E. Lartey</a>
+        </div>
+    </div>
+</nav>
+
+<div id="container-art">
+    <div class="ticket-heading">
+        <div class="ticket-header">
+            <h3><a href="{% url 'waveAdmin:adminDashboard' %}">Management</a> > Feedback</h3>
+        </div>
+    </div>
+</div>
+{% endblock header %}
+
+
+{% block body %}
+<div id="information-container">
+    <div id="information-container-header">
+        <h4>Total Number of Feedback: 192</h4>
+    </div>
+    <div id="information-container-body">
+        <div id="feedbackCard">
+            <div id="fC-header">
+                <h3>Enosh Lartey</h3>
+                <img role="button" src="{% static '/images/admin/feedback/bookmark.svg' %}" alt="Bookmark Feedback">
+            </div>
+            <h5>Ticket Creation Bug</h5>
+            <p>
+                Lorem ipsum dolor sit amet consectetur, adipisicing elit. Placeat blanditiis perferendis incidunt
+                iure dolor eum aliquid a eaque, nulla sint voluptatem debitis numquam, ipsum neque nihil quis
+                aut corrupti beatae.
+            </p>
+        </div>
+        <div id="feedbackCard">
+            <div id="fC-header">
+                <h3>Enosh Lartey</h3>
+                <img role="button" src="{% static '/images/admin/feedback/bookmark.svg' %}" alt="Bookmark Feedback">
+            </div>
+            <h5>Ticket Creation Bug</h5>
+            <p>
+                Lorem ipsum dolor sit amet consectetur, adipisicing elit. Placeat blanditiis perferendis incidunt
+                iure dolor eum aliquid a eaque, nulla sint voluptatem debitis numquam, ipsum neque nihil quis
+                aut corrupti beatae.
+            </p>
+        </div>
+        <div id="feedbackCard">
+            <div id="fC-header">
+                <h3>Enosh Lartey</h3>
+                <img role="button" src="{% static '/images/admin/feedback/bookmark.svg' %}" alt="Bookmark Feedback">
+            </div>
+            <h5>Ticket Creation Bug</h5>
+            <p>
+                Lorem ipsum dolor sit amet consectetur, adipisicing elit. Placeat blanditiis perferendis incidunt
+                iure dolor eum aliquid a eaque, nulla sint voluptatem debitis numquam, ipsum neque nihil quis
+                aut corrupti beatae.
+            </p>
+        </div>
+        <div id="feedbackCard">
+            <div id="fC-header">
+                <h3>Enosh Lartey</h3>
+                <img role="button" src="{% static '/images/admin/feedback/bookmark.svg' %}" alt="Bookmark Feedback">
+            </div>
+            <h5>Ticket Creation Bug</h5>
+            <p>
+                Lorem ipsum dolor sit amet consectetur, adipisicing elit. Placeat blanditiis perferendis incidunt
+                iure dolor eum aliquid a eaque, nulla sint voluptatem debitis numquam, ipsum neque nihil quis
+                aut corrupti beatae.
+            </p>
+        </div>
+        <div id="feedbackCard">
+            <div id="fC-header">
+                <h3>Enosh Lartey</h3>
+                <img role="button" src="{% static '/images/admin/feedback/bookmark.svg' %}" alt="Bookmark Feedback">
+            </div>
+            <h5>Ticket Creation Bug</h5>
+            <p>
+                Lorem ipsum dolor sit amet consectetur, adipisicing elit. Placeat blanditiis perferendis incidunt
+                iure dolor eum aliquid a eaque, nulla sint voluptatem debitis numquam, ipsum neque nihil quis
+                aut corrupti beatae.
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock body %}

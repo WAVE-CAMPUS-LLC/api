@@ -106,7 +106,7 @@ body {
 }
 
 #support-links {
-    gap: 15px;
+    gap: 30px;
 }
 
 #support {
@@ -121,7 +121,7 @@ body {
 }
 
 /** Support Links **/
-#join a {
+#join {
     background-color: #25567b;
 
     font-family: Easy-Grotesk-Medium;
@@ -129,17 +129,29 @@ body {
     text-decoration: none;
 
     color: #ffffff;
-    padding-top: 10px;
-    padding-bottom: 10px;
+    padding-top: 8.5px;
+    padding-bottom: 8.5px;
     padding-left: 15px;
     padding-right: 15px;
-    border-radius: 10px;
-
-    
+    border-radius: 30px;
 }
 
 #join .account {
     display: flex;
     align-items: center;
     gap: 7px;
+}
+
+#auth-links {
+    display: flex;
+    flex-direction: row;
+    gap: 15px;
+
+    align-items: center;
+}
+
+#auth-links #login {
+    font-family: Easy-Grotesk-Medium;
+    color: #25567b;
+    text-decoration: none;
 }

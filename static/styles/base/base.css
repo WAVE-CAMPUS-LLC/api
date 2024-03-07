@@ -40,12 +40,27 @@
 }
 
 
+#html-content {
+    display: flex;
+    flex-direction: column;
+    gap: 70px;
+}
+
+header {
+    flex: none;
+}
+
 body {
     width: 100vw;
     height: 100vh;
     overflow: hidden;
     overflow-y: auto;
-    background-color: #fdfdfd;
+    background-color: white;
+    flex-grow: 1;
+}
+
+footer {
+    flex: none;
 }
 
 

@@ -245,7 +245,8 @@ input[type=date]:focus::-webkit-datetime-edit {
 }
 
 #rowElement input,
-#birthdayRowElement input {
+#birthdayRowElement input,
+#rowElement select {
     font-family: Wanted-Regular;
     width: 100%;
     height: 100%;

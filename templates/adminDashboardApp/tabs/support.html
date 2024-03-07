@@ -1,0 +1,165 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}
+WAVE. — Management Dashboard
+{% endblock title %}
+
+{% block app_page_style %}
+<link rel="stylesheet" type="text/css" href="{% static "/styles/partials/tabs/support.css" %}" />
+{% endblock app_page_style %}
+
+
+{% block script %}
+{% endblock script %}
+
+
+{% block header %}
+<nav>
+    <div id="logo-menu">
+        <div id="logo">
+            <a href="{% url "core:index" %}">WAVE<span>.</span></a>
+        </div>
+    </div>
+    <div>
+        <div id="userId">
+            <a href="">{{ user.first_name|slice:"0:1"}}<span>.</span> {{ user.last_name }}</a>
+        </div>
+    </div>
+</nav>
+
+<div id="container-art">
+    <div class="ticket-heading">
+        <div class="ticket-header">
+            <h3><a href="{% url 'waveAdmin:adminDashboard' %}">Management</a> > Support</h3>
+        </div>
+    </div>
+</div>
+{% endblock header %}
+
+
+{% block body %}
+<div id="information-container">
+    <div id="information-container-header">
+        <div id="ich-search-filter">
+            <div id="ich-search">
+                <form action="" method="GET">
+                    <input type="search" name="support-ticket-search" id="support-ticket-search" placeholder="Search tickets with ID#">
+                    <button type="submit">Search</button>
+                </form>
+            </div>
+            <div id="ich-filter">
+                <div role="button" id="text-description">
+                    <p>Sort By</p>
+                    <img src="{% static '/images/admin/support/filter.svg' %}" alt="Sort Tickets">
+                    :
+                </div>
+                <div id="ich-filter-options">
+                    <select title="support-filters" name="support-filters" id="support-filters">
+                        <option value="latest" selected>Latest</option>
+                        <option value="year">Year</option>
+                        <option value="month">Month</option>
+                        <option value="date">Date</option>
+                        <option value="day">Day</option>
+                        <option value="time">Time</option>
+                        <option value="a-z">A-Z</option>
+                        <option value="z-a">Z-A</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="information-container-body">
+        <div id="active-tickets">
+            <div id="active-tickets-heading">
+                <h5>Active Support Tickets</h5>
+            </div>
+
+            <div id="active-tickets-body">
+                {% for active__tickets in active_tickets %}
+                <div id="tickets">
+                    <div id="priority" class="high"></div>
+                    <div id="body">
+                        <div id="ticket-id-status">
+                            <div id="tis-id">
+                                <div id="title">Ticket ID</div>  
+                                <div id="tid-body">#<span>{{ active__tickets.ticket_id }}</span> </div>
+                            </div>
+                            <div id="tis-status">
+                                <div id="title">Status</div>  
+                                <div id="tid-body"><span>Active</span> </div>
+                            </div>
+                        </div>
+                        <div id="user-name">
+                            <div id="title">Full Name</div>
+                            <div id="tid-body"><span>{{ active__tickets.user.first_name }} {{ active__tickets.user.last_name }}</span></div>  
+                        </div>
+                        <div id="user-id">
+                            <div id="title">User ID</div>
+                            <div id="tid-body"><span>{{ active__tickets.user.user_id }}</span></div> 
+                        </div>
+                        <div id="user-email">
+                            <div id="title">Email Address</div>
+                            <div id="tid-body"><span>{{ active__tickets.email }}</span></div>
+                        </div>
+                        <div id="time-created">
+                            <div>Created <span>{{ active__tickets.time_elapsed_since_created }}</span></div>
+                        </div>
+                    </div>
+                    <div id="goto">
+                        <button title="Expand Ticket">
+                            <img src="{% static '/images/admin/support/expand-card.svg' %}" alt="Expand Support Ticket">
+                        </button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        <div id="inactive-tickets">
+            <div id="inactive-tickets-heading">
+                <h5>Inactive Support Tickets</h5>
+            </div>
+
+            <div id="inactive-tickets-body">
+                {% for inactive__tickets in inactive_tickets %}
+                <div id="tickets">
+                    <div id="priority" class="high"></div>
+                    <div id="body">
+                        <div id="ticket-id-status">
+                            <div id="tis-id">
+                                <div id="title">Ticket ID</div>  
+                                <div id="tid-body">#<span>{{ inactive__tickets.ticket_id }}</span> </div>
+                            </div>
+                            <div id="tis-status">
+                                <div id="title">Status</div>  
+                                <div id="tid-body"><span>Active</span> </div>
+                            </div>
+                        </div>
+                        <div id="user-name">
+                            <div id="title">Full Name</div>
+                            <div id="tid-body"><span>{{ inactive__tickets.user.first_name }} {{ inactive__tickets.user.last_name }}</span></div>  
+                        </div>
+                        <div id="user-id">
+                            <div id="title">User ID</div>
+                            <div id="tid-body"><span>{{ inactive__tickets.user.user_id }}</span></div> 
+                        </div>
+                        <div id="user-email">
+                            <div id="title">Email Address</div>
+                            <div id="tid-body"><span>{{ inactive__tickets.email }}</span></div>
+                        </div>
+                        <div id="time-created">
+                            <div>Created <span>{{ inactive__tickets.time_elapsed_since_created }}</span></div>
+                        </div>
+                    </div>
+                    <div id="goto">
+                        <button title="Expand Ticket">
+                            <img src="{% static '/images/admin/support/expand-card.svg' %}" alt="Expand Support Ticket">
+                        </button>
+                    </div>
+                </div>
+            {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock body %}

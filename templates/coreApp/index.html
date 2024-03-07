@@ -27,14 +27,17 @@ Wave — Explore a new wave of events. Tick them off your bucketlist!
 
         <div id="support-links">
             <a id="support" href="{% url "support:home" %}">Support</a>
-            <div id="join" >
+            <div>
                 {% if user.is_authenticated %}
                 <a class="account" href="{% url "accountManagement:userAccount" %}">
                     <img src="{% static "/images/home/account.svg" %}" alt="My Account">
                     <p>My Account</p>
                 </a>
                 {% else %}
-                <a href="{% url "authentication:join" %}">Join Us</a>
+                <div id="auth-links">
+                    <a id="login" href="{% url "authentication:login" %}">Login</a>
+                    <a id="join" href="{% url "authentication:join" %}">Join</a>
+                </div>
                 {% endif %}
             </div>
         </div>

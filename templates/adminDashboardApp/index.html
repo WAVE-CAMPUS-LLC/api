@@ -1,0 +1,128 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}
+WAVE. — Management Dashboard
+{% endblock title %}
+
+{% block app_page_style %}
+<link rel="stylesheet" type="text/css" href="{% static "/styles/adminDashboardApp/index.css" %}" />
+{% endblock app_page_style %}
+
+
+{% block script %}
+<script src="{% static "scripts/adminDashboardApp/admin.js" %}"></script>
+{% endblock script %}
+
+
+{% block header %}
+<nav>
+    <div id="logo-menu">
+        <div id="logo">
+            <a href="{% url "core:index" %}">WAVE<span>.</span></a>
+        </div>
+    </div>
+    <div>
+        <div id="userId">
+            <a href="">E. Lartey</a>
+        </div>
+    </div>
+</nav>
+
+<div id="container-art">
+    <div class="ticket-heading">
+        <div class="ticket-header">
+            <h3>Management</h3>
+        </div>
+    </div>
+</div>
+{% endblock header %}
+
+
+{% block body %}
+<div id="content-container">
+    <a id="optionCard" href="{% url 'waveAdmin:dashboard' %}">
+        <div id="oC-img">
+            <img src="{% static "/images/admin/dashboard/optionDashboard.svg" %}" alt="Support Management Dashboard">
+        </div>
+        <div id="oC-info">
+            <div class="oci-content">
+                <h3>Dashboard</h3>
+                <p>Last Update: 5th March, 2024</p>
+            </div>
+        </div>
+    </a>
+
+    <a id="optionCard" href="{% url 'waveAdmin:events' %}">
+        <div id="oC-img">
+            <img src="{% static "/images/admin/events/optionEvent.svg" %}" alt="Support Management Events">
+        </div>
+        <div id="oC-info">
+            <div class="oci-content">
+                <h3>Events</h3>
+                <p>Last Update: 5th March, 2024</p>
+            </div>
+        </div>
+    </a>
+
+    <a id="optionCard" href="{% url 'waveAdmin:users' %}">
+        <div id="oC-img">
+            <img src="{% static "/images/admin/users/optionUsers.svg" %}" alt="Support Management Users">
+        </div>
+        <div id="oC-info">
+            <div class="oci-content">
+                <h3>Users</h3>
+                <p>Last Update: 5th March, 2024</p>
+            </div>
+        </div>
+    </a>
+
+    <a id="optionCard" href="{% url 'waveAdmin:jobs' %}">
+        <div id="oC-img">
+            <img src="{% static "/images/admin/jobs/optionJobs.svg" %}" alt="Support Management Jobs">
+        </div>
+        <div id="oC-info">
+            <div class="oci-content">
+                <h3>Jobs</h3>
+                <p>Last Update: 5th March, 2024</p>
+            </div>
+        </div>
+    </a>
+
+    <a id="optionCard" href="{% url 'waveAdmin:finances' %}">
+        <div id="oC-img">
+            <img src="{% static "/images/admin/finance/optionFinance.svg" %}" alt="Support Management [Finance]">
+        </div>
+        <div id="oC-info">
+            <div class="oci-content">
+                <h3>Financial</h3>
+                <p>Last Update: 5th March, 2024</p>
+            </div>
+        </div>
+    </a>
+
+    <a id="optionCard" href="{% url 'waveAdmin:support' %}">
+        <div id="oC-img">
+            <img src="{% static "/images/admin/support/optionSupport.svg" %}" alt="Support Management [Support]">
+        </div>
+        <div id="oC-info">
+            <div class="oci-content">
+                <h3>Support</h3>
+                <p>Last Update: 5th March, 2024</p>
+            </div>
+        </div>
+    </a>
+
+    <a id="optionCard" href="{% url 'waveAdmin:feedback' %}">
+        <div id="oC-img">
+            <img src="{% static "/images/admin/feedback/optionFeedback.svg" %}" alt="Support Management [Feedback]">
+        </div>
+        <div id="oC-info">
+            <div class="oci-content">
+                <h3>Feedback</h3>
+                <p>Last Update: 5th March, 2024</p>
+            </div>
+        </div>
+    </a>
+</div>
+{% endblock body %}

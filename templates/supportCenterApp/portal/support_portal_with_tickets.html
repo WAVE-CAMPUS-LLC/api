@@ -29,7 +29,7 @@ Support Portal — Wave.
                 <a href="{% url "support:newTicket" %}"> Open a ticket </a>
             </li>
             <li>
-                <p id="support-portal-id">Enosh Lartey</p>
+                <p id="support-portal-id">{{ user.first_name }} {{ user.last_name }}</p>
             </li>
         </ul>
     </nav>

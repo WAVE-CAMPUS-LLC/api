@@ -128,9 +128,15 @@ WAVE — Join Us!
                         </div>
                     </div>
                     <div id="rowElement">
-                        <input type="{{ form.gender.field.widget.input_type }}" name="{{ form.gender.html_name }}" id="{{ form.gender.auto_id }}" class="" autocomplete="off"/>
+                        <select name="{{ form.gender.html_name }}" id="{{ form.gender.auto_id }}" autocomplete="off">
+                            <option value="select" selected>{{ form.gender.label }}</option>
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
+                            <option value="other">Other</option>
+                        </select>
                         <label for="{{ form.gender.id_for_label }}">
-                            {{ form.gender.label }}
+                            
+                            
 
                             <span id="errorContainer">
                                 {% if form.gender.errors %}
