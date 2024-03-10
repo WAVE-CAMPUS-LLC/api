@@ -1,0 +1,29 @@
+{% load static %}
+
+<link rel="stylesheet" type="text/css" href="{% static "/styles/partials/nav-footer/nav/support_nav.css" %}" />
+
+
+<nav>
+    <div id="logo-menu">
+        <div id="logo">
+            <a href="{% url "core:index" %}">WAVE<span>.</span></a>
+        </div>
+    </div>
+    <div id="menu-options">
+        <ul>
+            <li>
+                <a href="{% url "support:feedback" %}"> Feedback </a>
+            </li>
+            <li>
+                <a href="{% url "support:newTicket" %}"> Open a ticket </a>
+            </li>
+            <li>
+                {% if user.is_authenticated %}
+                <a href="{% url "support:supportPortal" %}">Support Portal</a>
+                {% else %}
+                <a href="{% url "authentication:login" %}">Sign in</a>
+                {% endif %}
+            </li>
+        </ul>
+    </div>
+</nav>

@@ -8,6 +8,7 @@ urlpatterns = [
     path('management/admin/dashboard/', views.adminDashboardView, name="dashboard"),
     path('management/admin/events', views.adminEventsView, name="events"),
     path('management/admin/users', views.adminUsersView, name="users"),
+    path('management/admin/users/<str:user_id>/', views.adminUserDetailedView, name="user-detailed"), 
     path('management/admin/jobs', views.adminJobsView, name="jobs"), 
     path('management/admin/finances', views.adminFinanceView, name="finances"), 
     path('management/admin/support', views.adminSupportView, name="support"),

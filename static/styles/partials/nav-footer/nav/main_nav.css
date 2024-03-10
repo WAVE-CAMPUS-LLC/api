@@ -1,0 +1,121 @@
+header {
+    top: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: none;
+
+    width: 100%;
+
+    padding-left: 100px;
+    padding-right: 100px;
+    padding-top: 20px;
+    padding-bottom: 40px;
+}
+
+
+
+/** Header Container **/
+
+#navigation-bar {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+}
+
+/**- Navigation Bar Contents -**/
+#logo-menu {
+    display: flex;
+    gap: 30px;
+}
+
+#logo {
+    font-family: Easy-Grotesk-Black;
+    font-size: 30px;
+}
+
+#logo a {
+    color: #000000;
+    text-decoration: none;
+}
+
+#logo a span {
+    color: #008d95;
+}
+
+#menu {
+    display: flex;
+    align-items: center;
+}
+
+#menu ul {
+    display: flex;
+    gap: 15px;
+    list-style: none;
+}
+
+#menu ul li a {
+    color: black;
+    font-family: Wanted-Medium;
+    font-size: 16.5px;
+    font-weight: 900;
+
+    text-decoration: none;
+}
+
+#menu ul li a:hover {
+    text-decoration: solid underline 1px;
+}
+
+
+
+/** Support Links **/
+.support-links ul {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 20px;
+
+    list-style-type: none;
+}
+
+.support-links ul li a {
+    font-family: Wanted-Medium;
+    text-decoration: none;
+
+    color: #000000;
+
+}
+
+.support-links #auth {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+}
+
+#auth #login,
+.support-links #support {
+    padding: 12.5px 15px;
+    border-radius: 15px;
+}
+
+#auth #login:hover,
+.support-links #support:hover {
+    background-color: #00000043;
+}
+
+
+
+#auth #join,
+#auth #account {
+    background-color: #000000;
+    color: white;
+    padding: 12.5px 15px;
+    border-radius: 15px;
+}
+
+#auth #join:hover,
+#auth #account:hover {
+    background-color: #282828;
+}

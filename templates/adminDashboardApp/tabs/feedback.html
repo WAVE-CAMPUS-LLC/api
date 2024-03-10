@@ -6,7 +6,7 @@ WAVE. — Management Dashboard
 {% endblock title %}
 
 {% block app_page_style %}
-<link rel="stylesheet" type="text/css" href="{% static "/styles/partials/tabs/feedback.css" %}" />
+<link rel="stylesheet" type="text/css" href="{% static "/styles/adminDashboardApp/tabs/feedback.css" %}" />
 {% endblock app_page_style %}
 
 
@@ -15,19 +15,10 @@ WAVE. — Management Dashboard
 
 
 {% block header %}
-<nav>
-    <div id="logo-menu">
-        <div id="logo">
-            <a href="{% url "core:index" %}">WAVE<span>.</span></a>
-        </div>
-    </div>
-    <div>
-        <div id="userId">
-            <a href="">E. Lartey</a>
-        </div>
-    </div>
-</nav>
+{% include "partials/nav-footer/nav/admin_nav.html" %}
+{% endblock header %}
 
+{% block container_art %}
 <div id="container-art">
     <div class="ticket-heading">
         <div class="ticket-header">
@@ -35,75 +26,28 @@ WAVE. — Management Dashboard
         </div>
     </div>
 </div>
-{% endblock header %}
+{% endblock container_art %}
+
 
 
 {% block body %}
 <div id="information-container">
     <div id="information-container-header">
-        <h4>Total Number of Feedback: 192</h4>
+        <h4>Total Number of Feedback: {{ feedback_count }}</h4>
     </div>
     <div id="information-container-body">
+        {% for feedback in feedback_offers %}
         <div id="feedbackCard">
             <div id="fC-header">
-                <h3>Enosh Lartey</h3>
+                <h3>{{ feedback.full_name }}</h3>
                 <img role="button" src="{% static '/images/admin/feedback/bookmark.svg' %}" alt="Bookmark Feedback">
             </div>
-            <h5>Ticket Creation Bug</h5>
+            <h5>{{ feedback.subject }}</h5>
             <p>
-                Lorem ipsum dolor sit amet consectetur, adipisicing elit. Placeat blanditiis perferendis incidunt
-                iure dolor eum aliquid a eaque, nulla sint voluptatem debitis numquam, ipsum neque nihil quis
-                aut corrupti beatae.
+                {{ feedback.body }}
             </p>
         </div>
-        <div id="feedbackCard">
-            <div id="fC-header">
-                <h3>Enosh Lartey</h3>
-                <img role="button" src="{% static '/images/admin/feedback/bookmark.svg' %}" alt="Bookmark Feedback">
-            </div>
-            <h5>Ticket Creation Bug</h5>
-            <p>
-                Lorem ipsum dolor sit amet consectetur, adipisicing elit. Placeat blanditiis perferendis incidunt
-                iure dolor eum aliquid a eaque, nulla sint voluptatem debitis numquam, ipsum neque nihil quis
-                aut corrupti beatae.
-            </p>
-        </div>
-        <div id="feedbackCard">
-            <div id="fC-header">
-                <h3>Enosh Lartey</h3>
-                <img role="button" src="{% static '/images/admin/feedback/bookmark.svg' %}" alt="Bookmark Feedback">
-            </div>
-            <h5>Ticket Creation Bug</h5>
-            <p>
-                Lorem ipsum dolor sit amet consectetur, adipisicing elit. Placeat blanditiis perferendis incidunt
-                iure dolor eum aliquid a eaque, nulla sint voluptatem debitis numquam, ipsum neque nihil quis
-                aut corrupti beatae.
-            </p>
-        </div>
-        <div id="feedbackCard">
-            <div id="fC-header">
-                <h3>Enosh Lartey</h3>
-                <img role="button" src="{% static '/images/admin/feedback/bookmark.svg' %}" alt="Bookmark Feedback">
-            </div>
-            <h5>Ticket Creation Bug</h5>
-            <p>
-                Lorem ipsum dolor sit amet consectetur, adipisicing elit. Placeat blanditiis perferendis incidunt
-                iure dolor eum aliquid a eaque, nulla sint voluptatem debitis numquam, ipsum neque nihil quis
-                aut corrupti beatae.
-            </p>
-        </div>
-        <div id="feedbackCard">
-            <div id="fC-header">
-                <h3>Enosh Lartey</h3>
-                <img role="button" src="{% static '/images/admin/feedback/bookmark.svg' %}" alt="Bookmark Feedback">
-            </div>
-            <h5>Ticket Creation Bug</h5>
-            <p>
-                Lorem ipsum dolor sit amet consectetur, adipisicing elit. Placeat blanditiis perferendis incidunt
-                iure dolor eum aliquid a eaque, nulla sint voluptatem debitis numquam, ipsum neque nihil quis
-                aut corrupti beatae.
-            </p>
-        </div>
+        {% endfor %}
     </div>
 </div>
 {% endblock body %}

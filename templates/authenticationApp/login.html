@@ -12,7 +12,7 @@ WAVE — Welcome back!
 {% block script %}
 {% endblock script %}
 
-{% block body %}
+{% block auth_body %}
 <main id="loginCardContainer">
     <header id="navHeader">
         <div id="logo">
@@ -79,4 +79,4 @@ WAVE — Welcome back!
         <h6>Not on the new Wave?<a href="{% url "authentication:join" %}"> Join Us!</a></h6>
     </div>
 </main>
-{% endblock body %}
+{% endblock auth_body %}

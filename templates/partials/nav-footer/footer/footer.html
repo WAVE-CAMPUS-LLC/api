@@ -1,0 +1,75 @@
+{% load static %}
+
+<link rel="stylesheet" href="{% static "/styles/partials/footer.css" %}" />
+
+
+<div id="footer-logo">
+    <a href="{% url "core:index" %}">WAVE<span>.</span></a>
+</div>
+<div id="footer-body">
+    <div id="the-company">
+        <ul>
+            <li>
+                <h5>The Company</h5>
+            </li>
+            <li><a href="{% url "extras:about" %}">About <span id="footer-btm-logo">WAVE<span id="dot">.</span></span></a>
+            </li>
+            <li><a href="{% url "extras:teams" %}">Our Team</a></li>
+            <li><a href="{% url "extras:newsroom" %}">Newsroom</a></li>
+            <li><a href="{% url "extras:jobs" %}">Join The Team!</a></li>
+        </ul>
+    </div>
+    <div id="the-terms">
+        <ul>
+            <li>
+                <h5>Policies</h5>
+            </li>
+            <li><a href="{% url "extras:privacy" %}">Privacy</a></li>
+            <li><a href="{% url "extras:terms" %}">Terms</a></li>
+            <li><a href="{% url "extras:safety" %}">Safety</a></li>
+            <li><a href="{% url "extras:faq" %}">Frequently Asked</a></li>
+        </ul>
+    </div>
+    <div id="the-partners">
+        <ul>
+            <li>
+                <h5>Resources</h5>
+            </li>
+            <li><a href="{% url "extras:partners" %}">Partners</a></li>
+            <li><a href="{% url "extras:colleges" %}">Colleges</a></li>
+            <li><a href="{% url "extras:creators" %}">Creators</a></li>
+            <li><a href="{% url "extras:organizers" %}">Hosts</a></li>
+        </ul>
+    </div>
+</div>
+<div id="footer-bottom">
+    <div id="social-icons">
+        <div>
+            <a href="">
+                <img src="{% static "/images/footer/socials/instagram.svg" %}" alt="WAVE. - Instagram">
+            </a>
+        </div>
+        <div>
+            <a href="">
+                <img src="{% static "/images/footer/socials/youtube.svg" %}" alt="WAVE. - YouTube">
+            </a>
+        </div>
+        <div>
+            <a href="">
+                <img src="{% static "/images/footer/socials/twitter.svg" %}" alt="WAVE. - Twitter/X">
+            </a>
+        </div>
+        <div>
+            <a href="">
+                <img src="{% static "/images/footer/socials/tiktok.svg" %}" alt="WAVE. - TikTok">
+            </a>
+        </div>
+    </div>
+    <div id="copyright-section">
+        <p>
+            Copyright 2024 <span id="footer-btm-logo">WAVE<span id="dot">.</span></span>
+            <br>
+            <a href="#">OAK Brothers Inc.</a>
+        </p>
+    </div>
+</div>

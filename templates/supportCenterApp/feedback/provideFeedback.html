@@ -16,39 +16,20 @@ Provide Feedback — Wave.
 
 
 {% block header %}
-<header>
-    <nav>
-        <div id="logo-menu">
-            <div id="logo">
-                <a href="{% url "core:index" %}">WAVE<span>.</span></a>
-            </div>
-        </div>
-        <ul>
-            <li>
-                <a href="{% url "support:feedback" %}"> Feedback </a>
-            </li>
-            <li>
-                <a href="{% url "support:newTicket" %}"> Open a ticket </a>
-            </li>
-            <li>
-                {% if user.is_authenticated %}
-                <p id="support-portal-id">Enosh Lartey</p>
-                {% else %}
-                <a href="{% url "authentication:login" %}">Sign in</a>
-                {% endif %}
-            </li>
-        </ul>
-    </nav>
-    
-    <div id="container-art">
-        <div class="ticket-heading">
-            <div class="ticket-header">
-                <h3>We Listen!</h3>
-            </div>
+{% include "partials/nav-footer/nav/support_nav.html" %}
+{% endblock header %}
+
+{% block container_art %}
+<div id="container-art">
+    <div class="ticket-heading">
+        <div class="ticket-header">
+            <h3>We Listen!</h3>
         </div>
     </div>
-</header>
-{% endblock header %}
+</div>
+{% endblock container_art %}
+
+
 
 {% block body %}
 <div id="container">
@@ -56,22 +37,30 @@ Provide Feedback — Wave.
         <div id="feedback-form-heading">
             <p>We greatly appreciate your feedback!</p>
         </div>
-        <form action="">
+        <form action="{% url "support:feedback" %}" method="POST">
+            {% csrf_token %}
+            {% if support_form.errors %}
+            <ul>
+                {% for error in support_form.errors %}
+                <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
             <div class="form-input">
-                <label for="fullname">Full Name <span>*</span></label>
-                <input type="text" name="fullname" id="fullname" required autofocus>
+                <label for="{{ support_form.full_name.id_for_label}}">{{ support_form.full_name.label }}<span>*</span></label>
+                <input type="{{ support_form.full_name.field.widget.input_type }}" name="{{ support_form.full_name.html_name }}" id="{{ support_form.full_name.auto_id }}" required autofocus>
             </div>
             <div class="form-input">
-                <label for="subject">Email <span>*</span></label>
-                <input type="text" name="email" id="email" value="user.email" readonly required>
+                <label for="{{ support_form.email.id_for_label }}">{{ support_form.email.label }} <span>*</span></label>
+                <input type="{{ support_form.email.field.widget.input_type }}" name="{{ support_form.email.html_name }}" id="{{ support_form.email.auto_id }}" required>
             </div>
             <div class="form-input">
-                <label for="subject">Subject <span>*</span></label>
-                <input type="text" name="subject" id="subject" required>
+                <label for="{{ support_form.subject.id_for_label }}">{{ support_form.subject.label }} <span>*</span></label>
+                <input type="{{ support_form.subject.widget.input_type }}" name="{{ support_form.subject.html_name }}" id="{{ support_form.subject.auto_id }}" required>
             </div>
             <div class="form-input">
-                <label for="feedback-body">Body <span>*</span></label>
-                <textarea name="feedback-body" id="feedback-body" cols="30" rows="10" required></textarea>
+                <label for="{{ support_form.body.id_for_label }}">{{ support_form.body.label }} <span>*</span></label>
+                <textarea type="{{ support_form.body.widget.input_type }}" id="{{ support_form.body.auto_id }}" name="{{ support_form.body.html_name }}" cols="30" rows="10" required></textarea>
             </div>
 
             <div class="submit-row">

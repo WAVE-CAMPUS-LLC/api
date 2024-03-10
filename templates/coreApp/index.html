@@ -9,41 +9,79 @@ Wave — Explore a new wave of events. Tick them off your bucketlist!
 <link rel="stylesheet" type="text/css" href="{% static "/styles/coreApp/index.css" %}" />
 {% endblock app_page_style %}
 
+{% block header %}
+{% include "partials/nav-footer/nav/main_nav.html" %}
+{% endblock header %}
+
 {% block body %}
-<div id="header">
-    <div id="navigation-bar">
-        <div id="logo-menu">
-            <div id="logo">
-                <a href="#">WAVE</a>
-            </div>
-            <div id="menu">
-                <ul>
-                    <li><a href="">Discover</a></li>
-                    <li><a href="">Host</a></li>
-                    <li><a href="#">Safety</a></li>
-                </ul>
-            </div>
-        </div>
-
-        <div id="support-links">
-            <a id="support" href="{% url "support:home" %}">Support</a>
-            <div>
-                {% if user.is_authenticated %}
-                <a class="account" href="{% url "accountManagement:userAccount" %}">
-                    <img src="{% static "/images/home/account.svg" %}" alt="My Account">
-                    <p>My Account</p>
-                </a>
-                {% else %}
-                <div id="auth-links">
-                    <a id="login" href="{% url "authentication:login" %}">Login</a>
-                    <a id="join" href="{% url "authentication:join" %}">Join</a>
+<div id="content-container">
+    <section id="cc-hime1">
+        <div id="cc-hime1-info">
+            <div id="cc-hime1-info-cont">
+                <div id="cch1i-header">
+                    <h1>Create lasting memories with <span id="body-logo">WAVE<span class="spot">.</span></span>
+                    </h1>
+                    <p>Purchase ticket, be there, live in the moment.</p>
                 </div>
-                {% endif %}
+
+                <div id="cch1i-body">
+                    <div class="cch1i-body-search-container">
+                        <input type="text" name="" id="" placeholder="Enter event category">
+                        <div class="cch1ibsc-img">
+                            <img src="{% static "/images/home/home-explore-icon.svg" %}" alt="Explore Events">
+                        </div>
+                    </div>
+                    <button type="button" role="button">View Events</button>
+                </div>
             </div>
         </div>
-    </div>
+        <div id="cc-hime1-img">
+            <canvas></canvas>
+        </div>
+    </section>
+
+    <section id="cc-hime2">
+        <div id="cc-hime2-img">
+            <canvas></canvas>
+        </div>
+        <div id="cc-hime1-info">
+            <div id="cc-hime2-info-cont">
+                <div id="cch2i-header">
+                    <h1>Become a partner, host events</h1>
+                    <p>With us, you have the freedom to curate unforgettable experiences, leveraging your unique
+                        venue or resources.</p>
+                </div>
+
+                <div id="cch2i-body">
+                    <a id="partnerships" href="#">Partnerships</a>
+                    <a id="joining" href="{% url "authentication:join" %}">Not a member? Join Us</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 3 -->
+    <section id="cc-hime3">
+        <div id="cc-hime3-info">
+            <div id="cc-hime3-info-cont">
+                <div id="cch3i-header">
+                    <h1>Discover a world of possibilities with <span id="body-logo">WAVE<span class="spot">.</span></h1>
+                    <p>Experience seamless event management and unforgettable moments.</p>
+                </div>
+                <div id="cch3i-body">
+                    <ul>
+                        <li>Effortlessly create and manage events</li>
+                        <li>Access real-time analytics and insights</li>
+                        <li>Receive dedicated support and assistance</li>
+                    </ul>
+                    <a href="#" type="button" role="button">Get Started</a>
+                    <!-- Host events information page -->
+                </div>
+            </div>
+        </div>
+        <div id="cc-hime1-img">
+            <canvas></canvas>
+        </div>
+    </section>
 </div>
-
-
-
 {% endblock body %}

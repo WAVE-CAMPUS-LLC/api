@@ -1,0 +1,188 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}
+WAVE. — Member Details
+{% endblock title %}
+
+{% block app_page_style %}
+<link rel="stylesheet" type="text/css" href="{% static "/styles/partials/tabs/users/user.css" %}" />
+{% endblock app_page_style %}
+
+
+{% block script %}
+
+{% endblock script %}
+
+
+{% block header %}
+<nav>
+    <div id="logo-menu">
+        <div id="logo">
+            <a href="{% url "core:index" %}">WAVE<span>.</span></a>
+        </div>
+    </div>
+    <div>
+        <div id="userId">
+            <a href="">E. Lartey</a>
+        </div>
+    </div>
+</nav>
+
+<div id="container-art">
+    <div class="ticket-heading">
+        <div class="ticket-header">
+            <h3><a href="{% url 'waveAdmin:adminDashboard' %}">Management</a> > <a href="{% url "waveAdmin:users" %}">Users</a> > {{ user.first_name }} {{ user.last_name }}</h3>
+        </div>
+    </div>
+</div>
+{% endblock header %}
+
+
+{% block body %}
+<div id="content-container">
+    <div id="body-content-heading">
+        <input type="search" name="find-user" id="find-user" placeholder="Search using member e-mail...">
+    </div>
+
+    <div id="body-content-body">
+        <div id="user-details-login-history">
+            <div id="user-details">
+                <div id="user-full_name">
+                    <h3>{{ user.first_name }} {{ user.last_name }}</h3>
+                    <p>#TXMF1-9</p>
+                </div>
+
+                <div id="user-detailed_view">
+                    <div>
+                        <h6>Member ID</h6>
+                        <p>{{ user.user_id }}</p>
+                    </div>
+
+                    <div>
+                        <h6>Email</h6>
+                        <p>{{ user.email }}</p>
+                    </div>
+
+                    <div>
+                        <h6>Phone Number</h6>
+                        <p>{{ user.phone_number }}</p>
+                    </div>
+
+                    <div>
+                        <h6>Birthday</h6>
+                        <p>{{ user.birthday }}</p>
+                    </div>
+
+                    <div>
+                        <h6>Gender</h6>
+                        <p>{{ user.gender }}</p>
+                    </div>
+
+                    <div>
+                        <h6>Role</h6>
+                        {% if user.is_superuser %}
+                        <p>Super Admin</p>
+                        {% elif user.is_staff %}
+                        <p>Staff</p>
+                        {% else %}
+                        <p>Member</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div id="user-download_data">
+                    <button>Download Member Data</button>
+                </div>
+            </div>
+
+            <div id="login-history">
+                <div id="login-history-heading">
+                    <div class="lhh-header-cont">
+                        <div class="lhh-head">
+                            <h3>Login History</h3>
+                            <p>All information about user's login history</p>
+                        </div>
+                        
+                        <div role="tablist" class="lhh-filtering">
+                            <div role="tab" class="selected">All</div>
+                            <div role="tab">Today</div>
+                            <div role="tab">Month</div>
+                        </div>
+                    </div>
+                    
+                    <div id="lhb-header">
+                        <div>
+                            <h4>Login Period</h4>
+                        </div>
+                        <div>
+                            <h4>Logout Period</h4>
+                        </div>
+                        <div>
+                            <h4>Session Duration</h4>
+                        </div>
+                        <div>
+                            <h4>IP Address</h4>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="login-history-body">
+                    <div id="lhb-body">
+                        {% for login_entry in login_history %}
+                        <div id="lhb-body-element">
+                            <div>
+                                <h4>{{ login_entry.login_time }}</h4>
+                            </div>
+                            <div>
+                                <h4>
+                                    {% if login_entry.logout_time == None %}
+                                    Session Ongoing
+                                    {% else %}
+                                    {{  login_entry.logout_time }}
+                                    {% endif %}
+                                </h4>
+                            </div>
+                            <div>
+                                <h4>
+                                    {% if login_entry.logout_time %}
+                                        {{ login_entry.session_duration_minutes }} minutes and {{ login_entry.session_duration_seconds }} seconds
+                                    {% else %}
+                                        Session Ongoing
+                                    {% endif %}
+                                </h4>
+                            </div>
+                            <div>
+                                <h4>{{ login_entry.ip_address }}</h4>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="admin-user-control">
+            <div id="ban-btn">
+                <button id="ban">
+                    <img src="{% static "/images/admin/users/red-flag.svg" %}" alt="Ban User Account" title="Ban Member Account">
+                </button>
+                <p>Ban</p>
+            </div>
+            
+            <div id="pause-btn">
+                <button id="pause">
+                    <img src="{% static "/images/admin/users/yellow-flag.svg" %}" alt="Pause User Account" title="Pause Member Account">
+                </button>
+                <p>Pause</p>
+            </div>
+            
+            <div id="resume-btn">
+                <button id="allow">
+                    <img src="{% static "/images/admin/users/green-flag.svg" %}" alt="Allow User Account" title="Resume Member Account">
+                </button>
+                <p>Resume</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock body %}

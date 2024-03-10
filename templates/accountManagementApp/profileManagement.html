@@ -13,12 +13,12 @@ Profile Overview
 {% endblock script %}
 
 
+{% block header %}
+{% include "partials/nav-footer/nav/accountnav.html" %}
+{% endblock header %}
+
+
 {% block body %}
-
-{% block nav %}
-{% include "partials/account/accountnav.html" %}
-{% endblock nav %}
-
 <div id="body">
     <div id="body-header">
         <h3>Profile Overview</h3>

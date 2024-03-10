@@ -1,0 +1,72 @@
+/** Body Container **/
+#information-container {
+    width: 100%;
+    padding-left: 100px;
+    padding-right: 100px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 100px;
+}
+
+#information-container-header {
+    width: 100%;
+    display: flex;
+    justify-content: end;
+
+    font-family: Wanted-Bold;
+    font-size: 20px;
+}
+
+#information-container-body {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 30px;
+}
+
+#feedbackCard{
+    border: 2px solid rgba(0, 0, 0, 0.038);
+    border-radius: 20px;
+
+    padding-top: 40px;
+    padding-bottom: 40px;
+    padding-left: 20px;
+    padding-right: 20px;
+
+    display: flex;
+    gap: 15px;
+    width: 100%;
+
+    -webkit-box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.061);
+    -moz-box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.061);
+    box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.061);
+
+    display: flex;
+    flex-direction: column;
+}
+
+#fC-header {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+}
+
+#fC-header img {
+    width: 25px;
+    cursor: pointer;
+}
+
+#feedbackCard h3 {
+    font-family: Wanted-SemiBold;
+    font-size: 22px;
+}
+
+#feedbackCard h5{
+    font-family: Wanted-Bold;
+    font-size: 18px;
+}
+
+#feedbackCard p {
+    font-family: Wanted-Regular;
+    font-size: 16px;
+}

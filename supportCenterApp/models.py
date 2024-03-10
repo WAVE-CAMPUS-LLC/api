@@ -3,8 +3,7 @@ from django.utils import timezone
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.conf import settings
-
-from wave_v1 import settings
+from django.core.validators import validate_email
 
 # Create your models here.
 def generate_unique_ticket_id():
@@ -32,6 +31,10 @@ class SupportTicket(models.Model):
     status = models.CharField(max_length=20, default="Open")
     created_at = models.DateTimeField(auto_now_add=True)
     ticket_id = models.CharField(max_length=10, unique=True, default=generate_unique_ticket_id)
+    
+    class Meta:
+        verbose_name = "Member Support Ticket"
+        verbose_name_plural = "Member Support Tickets"
     
     def save(self, *args, **kwargs):
         # We generate a unique Identifier(ID) before saving the form to create the ticket. 
@@ -93,3 +96,20 @@ class SupportTicket(models.Model):
                 return f'{days} day ago'
             else:
                 return f'{days} days ago'
+            
+            
+            
+# A model for the feedback page. 
+class FeedbackModel(models.Model):
+    full_name = models.CharField(_("Full Name"), max_length=100, blank=False)
+    email = models.EmailField(_("Email"), max_length=254, blank=False, validators=[validate_email])
+    subject = models.CharField(_("Subject"), max_length=200, blank=False)
+    body = models.TextField(_("Body"), blank=False, max_length=1000)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        verbose_name = "User Feedback"
+        verbose_name_plural = "User Feedbacks"
+        
+    def __str__(self):
+        return self.subject

@@ -16,34 +16,13 @@ Settings
 <script type="text/javascript" src="{% static "/scripts/accountManagementApp/settings/showPasswordFields.js" %}" defer></script>
 {% endblock script %}
 
+
+{% block header %}
+{% include "partials/nav-footer/nav/accountnav.html" %}
+{% endblock header %}
+
+
 {% block body %}
-<div id="header">
-    <div id="navigation-bar">
-        <div id="logo-menu">
-            <div id="logo">
-                <a href="#">WAVE</a>
-            </div>
-            <div id="menu">
-                <ul>
-                    <li><a href="">Discover</a></li>
-                    <li><a href="">Host Event</a></li>
-                    <li><a href="#">Safety</a></li>
-                </ul>
-            </div>
-        </div>
-
-        <div id="support-links">
-            <a id="support-nav" href="{% url "support:home" %}">Support</a>
-            <div id="join">
-                <a class="account" href="{% url "authentication:logout" %}">
-                    <p>Logout</p>
-                </a>
-            </div>
-        </div>
-    </div>
-</div>
-
-
 <div id="body">
     <div id="body-header">
         <h3>Profile Settings</h3>

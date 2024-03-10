@@ -14,7 +14,7 @@ WAVE — Join Us!
 {% endblock script %}
 
 
-{% block body %}
+{% block auth_body %}
 <main id="joinCardContainer">
     <header id="navHeader">
         <div id="logo">
@@ -130,9 +130,9 @@ WAVE — Join Us!
                     <div id="rowElement">
                         <select name="{{ form.gender.html_name }}" id="{{ form.gender.auto_id }}" autocomplete="off">
                             <option value="select" selected>{{ form.gender.label }}</option>
-                            <option value="male">Male</option>
-                            <option value="female">Female</option>
-                            <option value="other">Other</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Other">Other</option>
                         </select>
                         <label for="{{ form.gender.id_for_label }}">
                             
@@ -223,4 +223,4 @@ WAVE — Join Us!
         <h6>Already have an account?<a href="{% url "authentication:login" %}"> Sign in</a></h6>
     </div>
 </main>
-{% endblock body %}
+{% endblock auth_body %}

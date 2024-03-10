@@ -1,448 +1,136 @@
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-@font-face {
-    font-family: "Easy-Grotesk-Black";
-    src: url("../../fonts/EasyGrotesk/Easy-Grotesk-Black-Demo-BF653883937b855.otf") format("opentype");
-}
-
-@font-face {
-    font-family: "Wanted-SemiBold";
-    src: url("../../fonts/EasyGrotesk/Wanted-SemiBold-Demo-BF653883937b855.otf") format("opentype");
-}
-
-
-@font-face {
-    font-family: "Wanted-ExtraBlack";
-    src: url("../../fonts/Wanted/WantedSans-ExtraBlack-BF65baf133c4859.otf") format("opentype");
-}
-
-@font-face {
-    font-family: "Wanted-Black";
-    src: url("../../fonts/Wanted/WantedSans-Black-BF65baf1369b817.otf") format("opentype");
-}
-
-@font-face {
-    font-family: "Wanted-ExtraBold";
-    src: url("../../fonts/Wanted/WantedSans-ExtraBold-BF65baf137317a5.otf");
-}
-
-@font-face {
-    font-family: "Wanted-SemiBold";
-    src: url("../../fonts/Wanted/WantedSans-SemiBold-BF65baf13722853.otf") format("opentype");
-}
-
-@font-face {
-    font-family: "Wanted-Bold";
-    src: url("../../fonts/Wanted/WantedSans-Bold-BF65baf135d5a25.otf") format("opentype");
-}
-
-@font-face {
-    font-family: "Wanted-Medium";
-    src: url("../../fonts/Wanted/WantedSans-Medium-BF65baf1388963b.otf") format("opentype");
-}
-
-@font-face {
-    font-family: "Wanted-Regular";
-    src: url("../../fonts/Wanted/WantedSans-Regular-BF65baf13579965.otf") format("opentype");
-}
-
-@font-face {
-    font-family: "Wanted-Variable";
-    src: url("../../fonts/Wanted/WantedSansVariable-BF65baf13a24667.ttf") format("truetype");
-}
-
-
-
-body {
-    background-color: black;
-    overflow-y: auto;
-    overflow-x: hidden;
-}
-
-
-/** Header Styling **/
-.header {
-    top: 0;
-    position: relative;
-    display: flex;
-    width: 100%;
-
-    padding-left: 50px;
-    padding-right: 50px;
-    padding-top: 20px;
-    padding-bottom: 40px;
-    justify-content: space-between;
-}
-
-.logo-section a {
-    font-family: Easy-Grotesk-Black;
-    text-decoration: none;
-    color: #1b4965b1;
-    text-transform: capitalize;
-    font-size: 30px;
-}
-
-#logo {
-    font-family: Wanted-SemiBold;
-    font-size: 30px;
-}
-
-#logo a {
-    color: white;
-    text-decoration: none;
-}
-
-#logo a span {
-    color: #008d95;
-}
-
-nav {
-    display: flex;
-    align-items: center;
-}
-
-nav ul {
-    list-style-type: none;
-    display: flex;
-    gap: 40px;
-}
-
-nav ul li a {
-    font-family: Wanted-Medium;
-    text-decoration: none;
-    color: white;
-    font-size: 16px;
-}
-
-nav ul li a:hover {
-    text-decoration: solid underline 1px;
-}
-
-
 /** Body Container **/
-.blackBackground {
-    padding-bottom: 100px;
-}
+#content-container {
+    padding-left: 150px;
+    padding-right: 150px;
 
-#container {
     width: 100%;
-    max-height: 100vh;
-}
 
-.search-bar {
-    margin-top: 100px;
-}
-
-.sb-heading {
-    width: 100%;
     display: flex;
-    justify-content: center;
-    margin-bottom: 25px;
+    flex-direction: column;
+    gap: 50px;
 }
 
-.sb-heading h3 {
-    color: white;
-    font-family: Wanted-Bold;
-    font-size: 40px;
-}
-
-.sb-search {
-    width: 100%;
+#support-faq {
     display: flex;
-    justify-content: center;
-}
+    flex-direction: column;
+    justify-content: start;
+    gap: 10px;
 
-.sb-search-wrapper {
-    position: relative;
-    width: 45%;
-}
-
-.sb-search-wrapper img {
-    position: absolute;
-    bottom: 10px;
-    left: 10px;
-}
-
-.sb-search input {
-    width: 100%;
-    background: transparent;
-    border: none;
-    border-bottom: 2px solid white;
-    font-family: Wanted-Regular;
-    padding-top: 10px;
-    padding-bottom: 5px;
-    padding-left: 28px;
-    /* Adjust the left padding to accommodate the icon */
-    padding-right: 20px;
-    margin-left: 10px;
-    outline: none;
-    font-size: 1em;
-    color: white;
-    font-weight: 600;
-}
-
-/** Sub Heading **/
-.sub-heading {
-    display: flex;
-    color: white;
-    margin-top: 150px;
-    justify-content: center;
-}
-
-.sub-heading h2 {
     font-family: Wanted-SemiBold;
-    font-size: 30px;
-}
-
-.sub-body {
-    display: flex;
-    justify-content: center;
-    margin-bottom: 50px;
-}
-
-.sub-body p {
-    font-family: Wanted-Variable;
-    font-size: 19px;
-    color: white;
-    text-align: center;
-    font-weight: 100;
-}
-
-.sub-body p a {
-    font-size: 24px;
-    text-decoration: underline;
-    color: white;
-}
-
-.sub-body p a:hover {
-    text-decoration: solid underline;
-}
-
-.support-hr {
-    display: flex;
-    margin-top: 50px;
-    margin-bottom: 50px;
-    width: 100%;
-    justify-content: center;
-}
-
-.support-hr hr{
-    border: 0.5px solid #1b49653e;
-    width: 70%;
-}
-
-/** Request Panel Card **/
-.request-help{
-    width: 100%;
-
-    display: flex;
-    justify-content: center;
-}
-
-.request-panel {
-    font-family: Wanted-Bold;
-    border: 2px solid white;
-    color: white;
-    font-size: 20.5px;
-    border-radius: 15px;
-    width: 60%;
-    padding-top: 10px;
-    padding-bottom: 10px;
-    padding-left: 30px;
-    padding-right: 30px;
-
-    display: flex;
-    justify-content: space-between;
-
-    -webkit-box-shadow: 0px 7px 19px 0px rgba(61, 61, 61, 0.338);
-    box-shadow: 0px 7px 19px 0px rgba(61, 61, 61, 0.338);
-    -moz-box-shadow: 0px 7px 19px 0px rgba(61, 61, 61, 0.338);
-}
-
-.request-button a {
-    font-family: Wanted-Regular;
-    background-color: white;
+    font-size: 20px;
     
-    border-radius: 10px;
-    border-color: #004b5f17;
-    color: black;
-    padding-top: 5px;
-    padding-bottom: 5px;
-    padding-left: 10px;
-    padding-right: 10px;
-
-    text-decoration: none;
+    padding-left: 150px;
+    padding-right: 150px;
 }
 
-.request-button a:hover {
-    text-decoration: underline;
-}
+#support-faq-body {
+    font-family: Wanted-Regular;
+    font-size: 18px;
 
-
-/** Support Control **/
-#support-body {
-    padding-top: 70px;
-    background-color: white;
-}
-
-#whiteBody {
-    background-color: white;
-    width: 100vw;
-}
-
-.support-control {
-    border-bottom: 1px solid black;
-    color: blacklack;
-    font-family: Wanted-Bold;
     display: flex;
-    gap: 20px;
-    margin-bottom: 15px;
-    justify-content: center;
-    margin-left: 50px;
-    margin-right: 50px;
-    font-size: 23.5px;
-    border-bottom-width: 50%;
+    flex-direction: column;
 }
 
-.support-control div {
-    display: inline-block;
-    padding-left: 20px;
-    padding-right: 20px;
-}
-
-.supportc-tab:hover {
-    cursor: pointer;
-    border-bottom: 4px solid black;
-    padding-bottom: 15px;
-}
-
-.tab-active {
-    border-bottom: 4px solid black;
-    padding-bottom: 15px;
-    color: black;
-}
-
-.supportc-tab.tab-active:hover {
-    border-bottom: 4px solid black;
-}
-
-
-
-/** Content Tabs **/
-.content-tabs {
-    margin-top: 50px;
-}
-
-.cr-tab {
-    border: 2px solid black;
-    border-top-left-radius: 25px;
-    border-top-right-radius: 25px;
+#support-faq-body a {
+    border-bottom: 1px solid black;
     padding-top: 25px;
     padding-bottom: 25px;
-    max-width: 500px;
-    width: 300px;
-    position: relative;
-    overflow: hidden;
+
+    text-decoration: none;
+    color: black;
+
+    display: flex;
+    justify-content: space-between;
+
+}
+
+/** Support Categories **/
+#support-categories {
+    width: 100%;
+
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+#support-categories-header {
+    width: 100%;
+
+    display: flex;
+    justify-content: start;
+}
+
+#support-categories-header h6 {
+    font-family: Wanted-Regular;
+    font-size: 15px;
+
+    padding: 10px;
+
+    background-color: black;
+    color: white;
+
+    border-radius: 10px;
+}
+
+#support-categories-body {
+    width: 100%;
+
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 20px;
+}
+
+#support-categories-body #scb-card {
+    border: 2px solid rgba(0, 0, 0, 0.038);
+    border-radius: 15px;
+
+    -webkit-box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.061);
+    -moz-box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.061);
+    box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.061);
+
+    padding: 30px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    
     cursor: pointer;
 }
 
-.cr-tab a {
-    text-decoration: none;
-}
-
-.cr-tab:hover {
-    -webkit-box-shadow: 0px 7px 19px 0px rgba(35, 41, 41, 0.338);
-    box-shadow: 0px 7px 19px 0px rgba(35, 41, 41, 0.338);
-    -moz-box-shadow: 0px 7px 19px 0px rgba(35, 41, 41, 0.338);
-    border-color: #00000018;
-    -webkit-transition: all 0.2s ease-in;
-    -moz-transition: all 0.2s ease-in;
-    -ms-transition: all 0.2s ease-in;
-    -o-transition: all 0.2s ease-in;
-    transition: all 0.2s ease-in;
-    
-}
-
-.cr-tab:hover::after {
-    content: '';
-    background: black;
-    height: 4px;
+#scbc-img {
     width: 100%;
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    animation: centerExpand 0.5s;
-}
 
-@keyframes centerExpand {
-  0% {
-    width: 0;
-    margin: 0 auto;
-  }
-  50% {
-    width: 100%;
-  }
-}
-
-.content-rows {
     display: flex;
-    gap: 30px;
-    width: 100%;
-    justify-content: center;
-    margin-bottom: 50px;
+    justify-content: end;
 }
 
-.heading-img {
-    width: 100%;
+#scbc-img h3 {
+    color: #b0b0b0c1;
+    font-family: Easy-Grotesk-Black;
+    font-size: 25px;
+}
+
+#scbc-body {
+    font-family: Wanted-SemiBold;
+    font-size: 30px;
+
     display: flex;
-    justify-content: center;
-    margin-bottom: 5px;
+    flex-direction: column;
+    gap: 15px;
 }
 
-.heading-img img {
-    width: 50px;
-}
-
-.crt-heading {
-    width: 100%;
+#scbcb-header {
     display: flex;
-    justify-content: center;
+    width: 100%;
+
+    justify-content: space-between;
 }
 
-.crt-heading h5 {
-    color: black;
+#scbcb-header img {
+    width: 30px;
+}
+
+#scbcb-body {
     font-family: Wanted-Regular;
-    font-size: 22.5px;
-}
-
-.crt-hr {
-    display: flex;
-    justify-content: center;
-    width: 100%;
-    margin-top: 20px;
-    margin-bottom: 20px;
-}
-
-.crt-hr hr {
-    width: 40%;
-    border: 0.5px solid black;
-}
-
-.crt-body {
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    text-align: center;
-    padding-left: 20px;
-    padding-right: 20px;
-}
-
-.crt-body p {
-    color: black;
-    font-family: Wanted-Regular;
-    font-size: 15px;
+    font-size: 15.5px;
 }

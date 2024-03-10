@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 
-from .forms import SupportTicketForm
+from .forms import SupportTicketForm, FeedbackForm
 from .models import SupportTicket
 
 
@@ -39,7 +39,14 @@ def supportTicket(request):
 
 
 def userFeedback(request):
-    return render(request, "supportCenterApp/feedback/provideFeedback.html")
+    if request.method == "POST":
+        support_form = FeedbackForm(request.POST)
+        if support_form.is_valid():
+            support_form.save()
+            return redirect("support:home")
+    else:
+        support_form = FeedbackForm()
+    return render(request, "supportCenterApp/feedback/provideFeedback.html", {'support_form': support_form})
 
 
 # Views to allow users to view and update their tickets.

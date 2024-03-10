@@ -1,0 +1,35 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}
+WAVE. — Management Dashboard
+{% endblock title %}
+
+{% block app_page_style %}
+<link rel="stylesheet" type="text/css" href="{% static "/styles/adminDashboardApp/tabs/dashboard.css" %}" />
+{% endblock app_page_style %}
+
+{% block script %}
+{% endblock script %}
+
+
+{% block header %}
+{% include "partials/nav-footer/nav/admin_nav.html" %}
+{% endblock header %}
+
+{% block container_art %}
+<div id="container-art">
+    <div class="ticket-heading">
+        <div class="ticket-header">
+            <h3><a href="{% url 'waveAdmin:adminDashboard' %}">Management</a> > Jobs</h3>
+        </div>
+    </div>
+</div>
+{% endblock container_art %}
+
+
+
+
+{% block body %}
+
+{% endblock body %}

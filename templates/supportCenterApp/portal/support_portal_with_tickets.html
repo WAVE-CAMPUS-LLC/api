@@ -13,36 +13,21 @@ Support Portal — Wave.
 {% endblock script %}
 
 
+
 {% block header %}
-<header>
-    <nav>
-        <div id="logo-menu">
-            <div id="logo">
-                <a href="{% url "core:index" %}">WAVE<span>.</span></a>
-            </div>
-        </div>
-        <ul>
-            <li>
-                <a href="{% url "support:feedback" %}"> Feedback </a>
-            </li>
-            <li>
-                <a href="{% url "support:newTicket" %}"> Open a ticket </a>
-            </li>
-            <li>
-                <p id="support-portal-id">{{ user.first_name }} {{ user.last_name }}</p>
-            </li>
-        </ul>
-    </nav>
-    
-    <div id="container-art">
-        <div class="ticket-heading">
-            <div class="ticket-header">
-                <h3>My Support Tickets</h3>
-            </div>
+{% include "partials/nav-footer/nav/support_nav.html" %}
+{% endblock header %}
+
+{% block container_art %}
+<div id="container-art">
+    <div class="ticket-heading">
+        <div class="ticket-header">
+            <h3>My Support Portal</h3>
         </div>
     </div>
-</header>
-{% endblock header %}
+</div>
+{% endblock container_art %}
+
 
 
 {% block body %}

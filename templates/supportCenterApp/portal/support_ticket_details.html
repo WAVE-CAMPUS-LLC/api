@@ -16,36 +16,20 @@ WAVE. — Ticket #{{ticket.ticket_id}}
 {% endblock script %}
 
 
-{% block header %}
-<header>
-	<nav>
-		<div id="logo-menu">
-			<div id="logo">
-				<a href="{% url "core:index" %}">WAVE<span>.</span></a>
-			</div>
-		</div>
-		<ul>
-			<li>
-				<a href="{% url "support:newTicket" %}"> Open a ticket </a>
-			</li>
-			<li>
-				<a href="{% url "support:supportPortal" %}"> Support Portal </a>
-			</li>
-			<li>
-				<p id="support-portal-id">Enosh Lartey</p>
-			</li>
-		</ul>
-	</nav>
 
-	<div id="container-art">
-		<div class="ticket-heading">
-			<div class="ticket-header">
-                <h3>Ticket ID: #{{ ticket.ticket_id }} </h3>
-            </div>
-		</div>
-	</div>
-</header>
+{% block header %}
+{% include "partials/nav-footer/nav/support_nav.html" %}
 {% endblock header %}
+
+{% block container_art %}
+<div id="container-art">
+    <div class="ticket-heading">
+        <div class="ticket-header">
+            <h3>Support Ticket ID: #{{ ticket.ticket_id }} </h3>
+        </div>
+    </div>
+</div>
+{% endblock container_art %}
 
 
 {% block body %}

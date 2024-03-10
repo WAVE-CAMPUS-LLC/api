@@ -40,6 +40,47 @@
 }
 
 
+@font-face {
+    font-family: "Wanted-ExtraBlack";
+    src: url("../../../static/fonts/Wanted/WantedSans-ExtraBlack-BF65baf133c4859.otf") format("opentype");
+}
+
+@font-face {
+    font-family: "Wanted-Black";
+    src: url("../../../static/fonts/Wanted/WantedSans-Black-BF65baf1369b817.otf") format("opentype");
+}
+
+@font-face {
+    font-family: "Wanted-ExtraBold";
+    src: url("../../../static/fonts/Wanted/WantedSans-ExtraBold-BF65baf137317a5.otf");
+}
+
+@font-face {
+    font-family: "Wanted-SemiBold";
+    src: url("../../../static/fonts/Wanted/WantedSans-SemiBold-BF65baf13722853.otf") format("opentype");
+}
+
+@font-face {
+    font-family: "Wanted-Bold";
+    src: url("../../../static/fonts/Wanted/WantedSans-Bold-BF65baf135d5a25.otf") format("opentype");
+}
+
+@font-face {
+    font-family: "Wanted-Medium";
+    src: url("../../../static/fonts/Wanted/WantedSans-Medium-BF65baf1388963b.otf") format("opentype");
+}
+
+@font-face {
+    font-family: "Wanted-Regular";
+    src: url("../../../static/fonts/Wanted/WantedSans-Regular-BF65baf13579965.otf") format("opentype");
+}
+
+@font-face {
+    font-family: "Wanted-Variable";
+    src: url("../../../static/fonts/Wanted/WantedSansVariable-BF65baf13a24667.ttf") format("truetype");
+}
+
+
 #html-content {
     display: flex;
     flex-direction: column;
@@ -61,6 +102,49 @@ body {
 
 footer {
     flex: none;
+}
+
+/** Container Art **/
+#container-art {
+    width: 100%;
+    max-width: 100vw;
+    background-color: black;
+    color: white;
+    padding-top: 150px;
+    padding-bottom: 150px;
+}
+
+.ticket-heading {
+    display: flex;
+    flex-direction: column;
+    gap: 70px;
+}
+
+.ticket-header {
+    font-family: Wanted-ExtraBold;
+    font-size: 32px;
+    width: 100%;
+    text-align: center;
+    text-decoration: underline;
+    text-underline-offset: 20px;
+}
+
+#support-search {
+    width: 100%;
+
+    display: flex;
+    justify-content: center;
+}
+
+#support-search input {
+    width: 60%;
+    padding: 15px;
+
+    border-radius: 15px;
+    border: 1px solid transparent;
+
+    font-family: Wanted-Regular;
+    font-size: 17px;
 }
 
 

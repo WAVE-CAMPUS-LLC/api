@@ -1,0 +1,35 @@
+{% load static %}
+
+<link rel="stylesheet" type="text/css" href="{% static "/styles/partials/nav-footer/nav/main_nav.css" %}" />
+
+
+<div id="navigation-bar">
+    <div id="logo-menu">
+        <div id="logo">
+            <a href="{% url "core:index" %}">WAVE<span>.</span></a>
+        </div>
+        <div id="menu">
+            <ul>
+                <li><a href="">Explore</a></li>
+                <li><a href="">Partner</a></li>
+                <li><a href="">Safety</a></li>
+                <li><a href="">Careers</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="support-links">
+        <ul>
+            <li><a id="support" href="{% url "support:home" %}">Support</a></li>
+            <li><span>|</span></li>
+            <li id="auth">
+                {% if user.is_authenticated %}
+                <a id="account" href="{% url "accountManagement:userAccount" %}">My Account</a>
+                {% else %}
+                <a id="login" href="{% url "authentication:login" %}">Login</a>
+                <a id="join" href="{% url "authentication:join" %}">Join</a>
+                {% endif %}
+            </li>
+        </ul>
+    </div>
+</div>

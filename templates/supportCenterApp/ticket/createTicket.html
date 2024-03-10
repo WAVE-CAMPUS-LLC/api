@@ -16,95 +16,77 @@ Submit support ticket — Wave.
 
 
 {% block header %}
-<header>
-    <nav>
-        <div id="logo-menu">
-            <div id="logo">
-                <a href="{% url "core:index" %}">WAVE<span>.</span></a>
-            </div>
-        </div>
-        <ul>
-            <li>
-                <a href="{% url "support:feedback" %}"> Feedback </a>
-            </li>
-            <li>
-                <a href="{% url "support:newTicket" %}"> Open a ticket </a>
-            </li>
-            <li>
-                {% if user.is_authenticated %}
-                <a href="{% url "support:supportPortal" %}">Support Portal</a>
-                {% else %}
-                <a href="{% url "authentication:login" %}">Sign in</a>
-                {% endif %}
-            </li>
-        </ul>
-    </nav>
-    
-    <div id="container-art">
-        <div class="ticket-heading">
-            <div class="ticket-header">
-                <h3>Request Support</h3>
-            </div>
+{% include "partials/nav-footer/nav/support_nav.html" %}
+{% endblock header %}
+
+{% block container_art %}
+<div id="container-art">
+    <div class="ticket-heading">
+        <div class="ticket-header">
+            <h3>Submit Support Ticket</h3>
         </div>
     </div>
-</header>
-{% endblock header %}
+</div>
+{% endblock container_art %}
+    
+    
 
 {% block body %}
 <div id="container">
-    <div id="ticket-card">
-        <div class="ticket-class-body">
-            <form method="POST">
-                {% csrf_token %}
-                {% if form.errors %}
-                <div class="alert alert-danger">
-                    <ul>
-                        {% for error in form.errors %}
-                        <li>{{ error }}</li>
-                        {% endfor %}
-                    </ul>
-                </div>
-                {% endif %}
-                <div class="options">
-                    <label for="{{ form.title.id_for_label }}">
-                        {{ form.title.label }}
-                        <select name="{{ form.title.html_name }}" id="{{ form.title.auto_id }}" autofocus>
-                            {% comment %} 
-                            Each option's value has to correlate with the TITLE_CHOICES in the models.py file of this app. 
-                            {% endcomment %}
-                            <option value="select" selected>Select an option...</option>
-                            <option value="help">Help & Support</option>
-                            <option value="hacked_account">Hacked Account</option>
-                            <option value="appeals">Appeals and Account Updates</option>
-                            <option value="billing">Account Billing</option>
-                            <option value="bugs">Bug Reports</option>
-                            <option value="creators_support">Creators Support</option>
-                            <option value="privacy_support">Contact Privacy Support</option>
-                            <option value="community_support">Community Programs</option>
-                        </select>
-                    </label>
-                </div>
-
-                <div class="options">
-                    <label for="{{ form.email.id_for_label }}">{{ form.email.label }}</label>
-                    <input type="{{ form.email.field.widget.input_type }}" name="{{ form.email.html_name }}" value="" id="{{ form.email.auto_id }}" required>
-                </div>
-                
-                <div class="options">
-                    <label for="{{ form.subject.id_for_label }}">{{ form.subject.label }}</label>
-                    <input type="{{ form.subject.field.widget.input_type }}" name="{{ form.subject.html_name }}" id="{{ form.subject.auto_id }}" required>
-                </div>
-
-                <div class="options">
-                    <label for="{{ form.description.id_for_label }}">{{ form.description.label }}</label>
-                    <textarea name="{{ form.description.html_name }}" id="{{ form.description.auto_id }}" cols="30" rows="10" required></textarea>
-                </div>
-
-                <div class="submit-form">
-                    <button type="submit">Submit</button>
-                </div>
-            </form>
+    <div id="ticket-form">
+        <div id="support-form-heading">
+            <p>We will get back to you soon!</p>
         </div>
+        <form action="{% url "support:newTicket" %}" method="POST">
+            {% csrf_token %}
+            {% if form.errors %}
+            <div class="alert alert-danger">
+                <ul>
+                    {% for error in form.errors %}
+                    <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+            <div class="form-input">
+                <label for="{{ form.title.id_for_label }}">
+                    {{ form.title.label }} <span>*</span>
+                </label>
+                <select name="{{ form.title.html_name }}" id="{{ form.title.auto_id }}" autofocus>
+                    {% comment %} 
+                    Each option's value has to correlate with the TITLE_CHOICES in the models.py file of this app. 
+                    {% endcomment %}
+                    <option value="select" selected>Select an option...</option>
+                    <option value="help">Help & Support</option>
+                    <option value="hacked_account">Hacked Account</option>
+                    <option value="appeals">Appeals and Account Updates</option>
+                    <option value="billing">Account Billing</option>
+                    <option value="bugs">Bug Reports</option>
+                    <option value="creators_support">Creators Support</option>
+                    <option value="privacy_support">Contact Privacy Support</option>
+                    <option value="community_support">Community Programs</option>
+                </select>
+            </div>
+
+            <div class="form-input">
+                <label for="{{ form.email.id_for_label }}">{{ form.email.label }} <span>*</span></label>
+                <input type="{{ form.email.field.widget.input_type }}" name="{{ form.email.html_name }}" value="" id="{{ form.email.auto_id }}" required>
+            </div>
+            
+            <div class="form-input">
+                <label for="{{ form.subject.id_for_label }}">{{ form.subject.label }} <span>*</span></label>
+                <input type="{{ form.subject.field.widget.input_type }}" name="{{ form.subject.html_name }}" id="{{ form.subject.auto_id }}" required>
+            </div>
+
+            <div class="form-input">
+                <label for="{{ form.description.id_for_label }}">{{ form.description.label }} <span>*</span></label>
+                <textarea name="{{ form.description.html_name }}" id="{{ form.description.auto_id }}" cols="30" rows="10" required></textarea>
+            </div>
+
+            <div class="submit-row">
+                <button type="submit" role="button">Submit</button>
+            </div>
+        </form>
     </div>
 </div>
 {% endblock body %}

@@ -6,28 +6,18 @@ WAVE. — Management Dashboard
 {% endblock title %}
 
 {% block app_page_style %}
-<link rel="stylesheet" type="text/css" href="{% static "/styles/partials/tabs/support.css" %}" />
+<link rel="stylesheet" type="text/css" href="{% static "/styles/adminDashboardApp/tabs/support.css" %}" />
 {% endblock app_page_style %}
-
 
 {% block script %}
 {% endblock script %}
 
 
 {% block header %}
-<nav>
-    <div id="logo-menu">
-        <div id="logo">
-            <a href="{% url "core:index" %}">WAVE<span>.</span></a>
-        </div>
-    </div>
-    <div>
-        <div id="userId">
-            <a href="">{{ user.first_name|slice:"0:1"}}<span>.</span> {{ user.last_name }}</a>
-        </div>
-    </div>
-</nav>
+{% include "partials/nav-footer/nav/admin_nav.html" %}
+{% endblock header %}
 
+{% block container_art %}
 <div id="container-art">
     <div class="ticket-heading">
         <div class="ticket-header">
@@ -35,7 +25,9 @@ WAVE. — Management Dashboard
         </div>
     </div>
 </div>
-{% endblock header %}
+{% endblock container_art %}
+
+
 
 
 {% block body %}
