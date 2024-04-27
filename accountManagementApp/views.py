@@ -74,7 +74,7 @@ class ChangePasswordView(SuccessMessageMixin, PasswordChangeView):
 
         # If password change is successful, update the session
         if result.status_code == 302:  # Redirection status code
-            update_session_auth_hash(request, request.user)
+            update_session_auth_hash(request, request.user) # type: ignore
 
         return result
     

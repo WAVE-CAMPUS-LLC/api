@@ -7,6 +7,7 @@ from django.utils import timezone
 # Create your models here.
 class UserProfile(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    user_tag = models.CharField(max_length=50, blank=True)
     status = models.TextField(blank=True)
     country = models.CharField(max_length=100,blank=True)
     
