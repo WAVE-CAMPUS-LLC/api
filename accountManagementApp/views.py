@@ -57,6 +57,12 @@ def settingsView(request):
         },
     )
 
+@login_required(login_url="authentication:login")
+def showUserTag(request):
+    user = request.user
+    profile = UserProfile.objects.get(user=user)
+    return render(request, "accountManagementApp/partials/userTag.html", {"profile": profile})
+
 
 from django.urls import reverse_lazy
 from django.contrib.auth.views import PasswordChangeView

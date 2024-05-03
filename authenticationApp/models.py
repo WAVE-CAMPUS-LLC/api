@@ -58,9 +58,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     is_staff = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
     
-    # The generation of a random user id for every user that signs up. 
-    user_id = models.UUIDField(_("User ID"), default=uuid.uuid4, editable=False, unique=True)
-    
+    # The generation of a random user id for every user that signs up.     
 
     objects = CustomUserManager()
 
