@@ -11,12 +11,12 @@ class CustomUserAdmin(UserAdmin):
     add_form = CustomUserJoinForm
     form = CustomUserChangeForm
     model = CustomUser
-    list_display = ("first_name", "last_name", "email", "is_active",)
+    list_display = ("first_name", "last_name", "email", "username", "is_active",)
     list_filter = ("email", "last_name", )
-    readonly_fields = ("date_joined", "user_id", "birthday")
+    readonly_fields = ("date_joined", "user_id")
     
     fieldsets = (
-        ("Account Information", {"fields": (("first_name", "last_name"), "email", "password", "user_id", "birthday", "gender")}),
+        ("Account Information", {"fields": (("first_name", "last_name"), ("email", "username"), ("birthday_day", "birthday_month", "birthday_year"), "password", "user_id")}),
         ("Access Data", {"fields": ("date_joined","last_login",)}),
         ("Permissions", {"fields": ("is_staff", "is_active", "groups", "user_permissions")}),
     )
@@ -25,14 +25,14 @@ class CustomUserAdmin(UserAdmin):
         (None, {
             "classes": ("wide",),
             "fields": (
-                "email", "password1", "password2", "is_staff","first_name", "last_name",  "phone_number",
+                "email", "password1", "password2", "is_staff","first_name", "last_name", "username",  "phone_number",
                 "is_active", "groups", "user_permissions"
             )}
         ),
     )
     
-    search_fields = ("email", )
-    ordering = ("email", )
+    search_fields = ("email", "username")
+    ordering = ("email", "username")
     
     
 admin.site.register(CustomUser, CustomUserAdmin)

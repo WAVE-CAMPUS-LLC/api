@@ -14,12 +14,6 @@ from .managers import CustomUserManager
 
 # Create your models here.
 class CustomUser(AbstractBaseUser, PermissionsMixin):
-    GENDER_OPTIONS = [
-        ('Male', 'Male'),
-        ('Female', 'Female'),
-        ('Other', 'Other')
-    ]
-    
     first_name = models.CharField(
         _("First Name"),
         max_length=50,
@@ -37,11 +31,13 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(
         _("Email"), unique=True, blank=False, null=False, help_text=(_("Email"))
     )
-    birthday = models.DateField(
-        _("Birthday"), null=True, blank=False, help_text=(_("Birthday"))
-    )
-    gender = models.CharField(
-        _("Select a gender"), max_length=10, null=True, blank=True, help_text=(_("Gender")), choices=GENDER_OPTIONS
+    username = models.CharField(
+        _("Username"),
+        max_length=15,
+        blank=False,
+        null=False,
+        unique=True,
+        help_text=(_("Username")),
     )
     phone_number = models.CharField(
         _("Phone Number"),
@@ -51,16 +47,22 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         unique=False,
         help_text=(_("Phone Number")),
     )
+    
+    # Birthday Information
+    birthday_day = models.PositiveIntegerField(_("Day"), null=True, blank=True)
+    birthday_month = models.PositiveIntegerField(_("Month"), null=True, blank=True)
+    birthday_year = models.PositiveIntegerField(_("Year"), null=True, blank=True)
 
     date_joined = models.DateField(auto_now_add=True)
 
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
-    
-    # The generation of a random user id for every user that signs up. 
-    user_id = models.UUIDField(_("User ID"), default=uuid.uuid4, editable=False, unique=True)
-    
+
+    # The generation of a random user id for every user that signs up.
+    user_id = models.UUIDField(
+        _("User ID"), default=uuid.uuid4, editable=False, unique=True
+    )
 
     objects = CustomUserManager()
 
@@ -68,8 +70,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     REQUIRED_FIELDS = [
         "first_name",
         "last_name",
-        "birthday",
-        "gender",
+        "username",
         "phone_number",
     ]
 
@@ -80,11 +81,12 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return self.email
 
+
 @receiver(pre_save, sender=CustomUser)
 def generate_user_id(sender, instance, **kwargs):
     if not instance.user_id:
         instance.user_id = uuid.uuid4()
-        
+
 
 @receiver(post_save, sender=CustomUser)
 def create_user_profile(sender, instance, created, **kwargs):

@@ -12,6 +12,10 @@ from django.contrib.auth.forms import (
 class CustomUserJoinForm(UserCreationForm):
     password1 = forms.CharField(label="Password", widget=forms.PasswordInput)
     password2 = forms.CharField(label="Confirm Password", widget=forms.PasswordInput)
+    
+    birthday_day =forms.IntegerField(label="Day", min_value=1, max_value=31, required=False)
+    birthday_month = forms.IntegerField(label="Month", min_value=1, max_value=12, required=False)
+    birthday_year = forms.IntegerField(label="Year", min_value=1950, max_value=2010, required=False)
 
     class Meta:
         model = CustomUser
@@ -19,9 +23,11 @@ class CustomUserJoinForm(UserCreationForm):
             "first_name",
             "last_name",
             "email",
-            "birthday",
-            "gender",
+            "username",
             "phone_number",
+            "birthday_day",
+            "birthday_month",
+            "birthday_year",
             "password1",
             "password2",
         )
@@ -40,6 +46,12 @@ class CustomUserJoinForm(UserCreationForm):
         if CustomUser.objects.filter(email=email).exists():
             raise ValidationError("Email already in use.")
         return email
+    
+    def clean_username(self):
+        username = self.cleaned_data.get("username")
+        if CustomUser.objects.filter(username=username).exists():
+            raise ValidationError("Username already in use.")
+        return username
     
     # def clean(self):
     #     cleaned_data = super().clean()
@@ -65,6 +77,18 @@ class CustomUserJoinForm(UserCreationForm):
             raise ValidationError("Can contain only letters, spaces, or hyphens.")
         return last_name.strip()
     
+    def clean_birthday(self):
+        cleaned_birthdayData = super().clean()
+        birthday_day = cleaned_birthdayData.get("birthday_day")
+        birthday_month = cleaned_birthdayData.get("birthday_month")
+        birthday_year = cleaned_birthdayData.get("birthday_year")
+        
+        if birthday_day or birthday_month or birthday_year:
+            if not all([birthday_day, birthday_month, birthday_year]):
+                raise ValidationError("Enter a valid birthday.")
+            
+        return cleaned_birthdayData
+    
     def save(self, commit=True):
         user = super().save(commit=False)
         if commit:
@@ -80,8 +104,7 @@ class CustomUserChangeForm(UserChangeForm):
             "first_name",
             "last_name",
             "email",
-            "birthday",
-            "gender",
+            "username",
             "phone_number",
         )
 
