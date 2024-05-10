@@ -1,5 +1,6 @@
 import datetime
 from django.utils import timezone
+from django.contrib import messages
 from django.contrib.auth.tokens import default_token_generator
 from django.contrib.auth.views import PasswordResetConfirmView
 from django.urls import reverse
@@ -98,15 +99,21 @@ def forgotPasswordView(request):
                 # Including expiry time in reset url link
                 reset_url += f'?expires={expiry_time.timestamp()}'
 
-                subject = "Request to reset password"
+                subject = "Request to reset password | WAVE."
                 message = render_to_string(
                     "authenticationApp/passwordReset/email/resetEmailTemplate.html",
                     {"reset_url": reset_url},
                 )
                 send_mail(subject, message, None, [email])
-                return redirect("authentication:login")
+                messages.success(request, 'Email sent successfully!')
             else:
-                pass
+                messages.error(request, 'Account does not exist')
+                return redirect("authentication:forgot")
+        else:
+            for field, error_list in emailForm.errors.items():
+                for error in error_list:
+                    messages.error(request, f'{error}')
+            return redirect("authentication:forgot")
     else:
         emailForm = EmailPasswordResetForm()
     return render(
@@ -150,4 +157,4 @@ def setNewPassword(request, uidb64, token):
         )
     else:
         # Handle invalid or expired link
-        return HttpResponse("Password reset link is invalid or has expired.")
+        return render(request, "extras/invalid/invalid.html")
