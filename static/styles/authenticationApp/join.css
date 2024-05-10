@@ -195,7 +195,7 @@ body {
     font-family: Wanted-Regular;
 }
 
-#signupComplete button {
+#proceedBtn {
     background-color: #008d95;
     border: none;
     border-radius: 13px;
@@ -206,6 +206,11 @@ body {
     color: white;
 
     cursor: pointer;
+}
+
+#proceedBtn:disabled {
+    background-color: #008d9594;
+    cursor: default;
 }
 
 #signupComplete a {

@@ -162,6 +162,8 @@ footer {
 
     font-family: Wanted-Bold;
     font-size: 13px;
+
+    color: red;
 }
 
 #errorContainer {

@@ -1,6 +1,32 @@
 document.addEventListener('DOMContentLoaded', function () {
+    const proceedBtn = document.getElementById("proceedBtn");
+
+    function updateProceedButtonState() {
+        const isValid = validateFirstName() && validateLastName() && validateEmail() && validateUsername() && validatePasswordOne() && validatePasswordTwo() && validatePhoneNumber() && validateBirthday();
+
+        proceedBtn.disabled = !isValid;
+    }
+
+
+    const firstNameInput = document.getElementById("id_first_name");
+    const lastNameInput = document.getElementById("id_last_name");
+    const emailInput = document.getElementById("id_email");
+    const usernameInput = document.getElementById("id_username");
+    const passwordOneInput = document.getElementById("id_password1");
+    const passwordTwoInput = document.getElementById("id_password2");
+    const phoneInput = document.getElementById("id_phone_number");
+    const birthdayMonthInput = document.getElementById("id_birthday_month");
+    const birthdayDayInput = document.getElementById("id_birthday_day");
+    const birthdayYearInput = document.getElementById("id_birthday_year");
+
+    const fieldArray = [firstNameInput, lastNameInput, emailInput, usernameInput, passwordOneInput, passwordTwoInput, phoneInput, birthdayDayInput, birthdayMonthInput, birthdayYearInput];
+
+    fieldArray.forEach(field => {
+        field.value = '';
+    });
+
+
     function validateFirstName() {
-        var firstNameInput = document.getElementById("id_first_name");
         var firstNameInputValue = firstNameInput.value.trim();
         var firstNameRegex = /^[A-Za-z]+$/;
 
@@ -18,13 +44,8 @@ document.addEventListener('DOMContentLoaded', function () {
             return true;
         }
     }
-    document.getElementById("id_first_name").addEventListener("input", function () {
-        validateFirstName();
-    });
-
 
     function validateLastName() {
-        var lastNameInput = document.getElementById("id_last_name");
         var lastNameInputValue = lastNameInput.value.trim();
         var lastNameRegex = /^[A-Za-z]+$/;
 
@@ -42,13 +63,8 @@ document.addEventListener('DOMContentLoaded', function () {
             return true;
         }
     }
-    document.getElementById("id_last_name").addEventListener("input", function () {
-        validateLastName();
-    });
-
 
     function validateEmail() {
-        var emailInput = document.getElementById("id_email");
         var emailInputValue = emailInput.value.trim();
         var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -67,13 +83,8 @@ document.addEventListener('DOMContentLoaded', function () {
             return true;
         }
     }
-    document.getElementById("id_email").addEventListener("input", function () {
-        validateEmail();
-    });
-
 
     function validateUsername() {
-        var usernameInput = document.getElementById("id_username");
         var usernameInputValue = usernameInput.value.trim();
         var usernameRegex = /^[a-zA-Z0-9]+(?:[._][a-zA-Z0-9]+)*$/;
 
@@ -105,14 +116,10 @@ document.addEventListener('DOMContentLoaded', function () {
             return true;
         }
     }
-    document.getElementById("id_username").addEventListener("input", function () {
-        validateUsername();
-    });
-
 
     function validatePasswordOne() {
-        var passwordInput = document.getElementById("id_password1");
-        var passwordInputValue = passwordInput.value;
+
+        var passwordInputValue = passwordOneInput.value;
 
         if (passwordInputValue === "") {
             document.getElementById("passwordOneLiveValidationError").textContent = "Required";
@@ -158,17 +165,11 @@ document.addEventListener('DOMContentLoaded', function () {
             return true;
         }
     }
-    document.getElementById("id_password1").addEventListener("input", function () {
-        validatePasswordOne();
-    });
-
 
     function validatePasswordTwo() {
-        var passwordInput = document.getElementById("id_password1");
-        var passwordTwoInput = document.getElementById("id_password2");
         var passwordTwoInputValue = passwordTwoInput.value;
 
-        var passwordOneInputValue = passwordInput.value;
+        var passwordOneInputValue = passwordOneInput.value;
 
         if (passwordTwoInputValue !== passwordOneInputValue) {
             document.getElementById("passwordTwoLiveValidationError").textContent = "Passwords must match";
@@ -180,13 +181,8 @@ document.addEventListener('DOMContentLoaded', function () {
             return true;
         }
     }
-    document.getElementById("id_password2").addEventListener("input", function () {
-        validatePasswordTwo();
-    });
-
 
     function validatePhoneNumber(event) {
-        var phoneInput = document.getElementById("id_phone_number");
         var phoneInputValue = phoneInput.value.trim();
 
         var phoneRegex = /^\d{10}$/;
@@ -201,15 +197,11 @@ document.addEventListener('DOMContentLoaded', function () {
             return true;
         }
     }
-    document.getElementById("id_phone_number").addEventListener("input", function () {
-        validatePhoneNumber();
-    });
-
 
     function validateBirthday() {
-        var birthdayMonth = document.getElementById("id_birthday_month").value.trim();
-        var birthdayDay = document.getElementById("id_birthday_day").value.trim();
-        var birthdayYear = document.getElementById("id_birthday_year").value.trim();
+        var birthdayMonth = birthdayMonthInput.value.trim();
+        var birthdayDay = birthdayDayInput.value.trim();
+        var birthdayYear = birthdayYearInput.value.trim();
 
         var birthdayDate = new Date(birthdayYear, birthdayMonth - 1, birthdayDay);
 
@@ -228,7 +220,50 @@ document.addEventListener('DOMContentLoaded', function () {
             return true;
         }
     }
-    document.getElementById("id_birthday_month").addEventListener("input", validateBirthday);
-    document.getElementById("id_birthday_day").addEventListener("input", validateBirthday);
-    document.getElementById("id_birthday_year").addEventListener("input", validateBirthday);
+
+    firstNameInput.addEventListener("input", updateProceedButtonState);
+    lastNameInput.addEventListener("input", updateProceedButtonState);
+    emailInput.addEventListener("input", updateProceedButtonState);
+    usernameInput.addEventListener("input", updateProceedButtonState);
+    passwordOneInput.addEventListener("input", updateProceedButtonState);
+    passwordTwoInput.addEventListener("input", updateProceedButtonState);
+    phoneInput.addEventListener("input", updateProceedButtonState);
+    birthdayMonthInput.addEventListener("input", updateProceedButtonState);
+    birthdayDayInput.addEventListener("input", updateProceedButtonState);
+    birthdayYearInput.addEventListener("input", updateProceedButtonState);
+
+    // Update button state on page load
+    updateProceedButtonState();
+
+    // firstNameInput.addEventListener("input", function () {
+    //     validateFirstName();
+    // });
+
+    // lastNameInput.addEventListener("input", function () {
+    //     validateLastName();
+    // });
+
+    // emailInput.addEventListener("input", function () {
+    //     validateEmail();
+    // });   
+
+    // usernameInput.addEventListener("input", function () {
+    //     validateUsername();
+    // });
+
+    // passwordOneInput.addEventListener("input", function () {
+    //     validatePasswordOne();
+    // });
+
+    // passwordTwoInput.addEventListener("input", function () {
+    //     validatePasswordTwo();
+    // });
+
+    // phoneInput.addEventListener("input", function () {
+    //     validatePhoneNumber();
+    // });
+
+    // birthdayMonthInput.addEventListener("input", validateBirthday);
+    // birthdayDayInput.addEventListener("input", validateBirthday);
+    // birthdayYearInput.addEventListener("input", validateBirthday);
 })
