@@ -53,4 +53,4 @@ def logoutView(request):
     return redirect("core:index")
 
 def forgotPasswordView(request):
-    return render(request, 'authenticationApp/forgot_password.html')
+    return render(request, 'authenticationApp/passwordReset/forgot_password.html')

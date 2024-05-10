@@ -2,7 +2,6 @@ body {
     width: 100vw;
     height: 100vh;
     overflow: hidden;
-    background-color: black;
 }
 
 #navHeader {
@@ -18,7 +17,7 @@ body {
 }
 
 #logo a {
-    color: white;
+    color: black;
     text-decoration: none;
 }
 
@@ -70,9 +69,9 @@ body {
     border-radius: 20px;
 
     /** Card Shadowing **/
-    box-shadow: rgba(17, 17, 26, 0.05) 0px 1px 0px, rgba(17, 17, 26, 0.1) 0px 0px 8px;
-    -webkit-box-shadow: rgba(17, 17, 26, 0.05) 0px 1px 0px, rgba(17, 17, 26, 0.1) 0px 0px 8px;
-    -moz-box-shadow: rgba(17, 17, 26, 0.05) 0px 1px 0px, rgba(17, 17, 26, 0.1) 0px 0px 8px;
+    -webkit-box-shadow: 2px 3px 21px 4px rgba(62, 62, 62, 0.257);
+    -moz-box-shadow: 2px 3px 21px 4px rgba(62, 62, 62, 0.257);
+    box-shadow: 2px 3px 21px 4px rgba(62, 62, 62, 0.257);
 }
 
 #loginCard #heading {
@@ -93,8 +92,7 @@ body {
 #loginCard form {
     display: flex;
     flex-direction: column;
-
-    row-gap: 40px;
+    gap: 15px;
 }
 
 #sectionName {
@@ -105,58 +103,36 @@ body {
 
 
 /** Card Elements **/
-#contentElements {
+.input-box label {
+    font-family: Wanted-SemiBold;
+    font-size: 13px;
+    color: black;
+    text-transform: uppercase;
+
     display: flex;
     flex-direction: column;
-    row-gap: 0px;
-}
-.input-box {
-    font-family: Wanted-Regular;
-    position: relative;
+    gap: 5px;
+
     width: 100%;
-    height: 50px;
-    border-bottom: 2px solid black;
-    margin: 15px 0;
-}
-
-.input-box label {
-    position: absolute;
-    top: 50%;
-    left: 5px;
-    translate: translateY(-50%);
-    font-size: 1em;
-    color: black;
-    font-weight: 500;
-    pointer-events: none;
-    transition: .5s;
-}
-
-.input-box input:focus~label,
-.input-box input:valid~label{
-    top: -5px;
 }
 
 
 .input-box input {
-    font-family: Wanted-Regular;
-    width: 100%;
-    height: 100%;
-    background: transparent;
-    border: none;
-    outline: none;
-    font-size: 1em;
-    color: black;
-    font-weight: 600;
-    padding: 0 25px 0 6px;
-    margin-top: 10px;
-}
+    padding: 10px;
+    padding-left: 13px;
+    padding-right: 13px;
+    border-radius: 10px;
+    border: 1px solid rgba(9, 9, 9, 0.108);
 
-.input-box .icon{
-    position: absolute;
-    right: 8px;
-    font-size: 1.2em;
-    color: black;
-    line-height: 67px;
+    font-family: Wanted-Regular;
+    font-size: 15px;
+
+    width: 100%;
+
+    /** Box Shadowing **/
+    -webkit-box-shadow: 2px 3px 21px 4px rgba(138, 138, 138, 0.108);
+    -moz-box-shadow: 2px 3px 21px 4px rgba(138, 138, 138, 0.108);
+    box-shadow: 2px 3px 21px 4px rgba(138, 138, 138, 0.026);
 }
 
 #forgot {
@@ -183,6 +159,8 @@ body {
 
     display: flex;
     justify-content: center;
+    flex-direction: column;
+    gap: 15px;
 }
 
 #controlledElements button {
@@ -190,47 +168,54 @@ body {
     width: 100%;
     padding-top: 10px;
     padding-bottom: 10px;
-    background: black;
+    background-color: #008d95;
     border: none;
     outline: none;
-    border-radius: 6px;
+    border-radius: 13px;
     cursor: pointer;
     font-size: 1.2em;
     color: #fff;
     font-weight: 500;
+
+    cursor: pointer;
 }
 
 
 
 /** Don't have an account? **/
-#joinLink {
-    border: 1px solid white;
-    border-radius: 20px;
-    padding-top: 15px;
-    padding-bottom: 15px;
-    width: 30%;
-    
+#joinUs {
+    font-family: Wanted-Variable;
+    font-size: 14px;
+}
 
+#joinUs a {
+    color: #008d95;
+    text-decoration: none;
+}
+
+#joinUs a:hover {
+    text-decoration: underline;
+}
+
+
+/**Include in the base html - Error displaying.**/
+#errorContainer {
+    color: red;
+    display: inline-block;
+    font-size: 13px;
+    font-family: Wanted-Regular;
+    text-transform: capitalize;
+}
+
+#errorContainer div {
     display: flex;
-
+    gap: 10px;
 }
 
-#joinLink h6 {
-    color: white;
-
-    text-align: center;
-    width: 100%;
-
-    /** Font Settings **/
-    font-family: Easy-Grotesk-Regular;
-    font-size: 15px;
+#errorContainer div p {
+    display: inline-block;
 }
 
-#joinLink a {
-    color: white;
-    text-decoration: solid underline 1px;
-}
-
-#joinLink a:hover {
-    text-decoration: double underline 1px;
+#requiredIndicator {
+    color: red;
 }
