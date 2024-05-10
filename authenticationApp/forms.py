@@ -169,7 +169,7 @@ class EmailPasswordResetForm(PasswordResetForm):
 
 class NewPasswordForm(forms.Form):
     password = forms.CharField(label="New Password", widget=forms.PasswordInput)
-    confirm_password = forms.CharField(label="Confirm New Password", widget=forms.PasswordInput)
+    confirm_password = forms.CharField(label="Confirm Password", widget=forms.PasswordInput)
     
     def clean_passwords(self):
         cleaned_data = super().clean()
