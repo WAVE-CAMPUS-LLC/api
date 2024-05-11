@@ -9,10 +9,330 @@ Terms of Service — Wave.
 <link rel="stylesheet" type="text/css" href="{% static "/styles/extras/policy/terms.css" %}" />
 {% endblock app_page_style %}
 
+{% block script %}
+<script type="text/javascript" src="{% static "scripts/extras/policy/scroll.js" %}" defer></script>
+{% endblock script %}
+
 {% block header %}
 {% include "partials/nav-footer/nav/main_nav.html" %}
 {% endblock header %}
 
 {% block body %}
+<div id="content-container">
+    <div id="page-heading">
+        <h2>
+            Terms of Service @ <span id="body-logo">WAVE<span class="spot">.</span></span>
+        </h2>
+        <p>
+            Last Updated: <span>11th April 2024</span>
+        </p>
+    </div>
 
+    <div id="condition-numbers">
+        <ol>
+            <li>
+                <a href="#whoWeAre">
+                    About <span id="body-logo">WAVE<span class="black-spot">.</span>
+                </a>
+            </li>
+            <li>
+                <a href="#eligibilityTerms">
+                    Eligibility
+                </a>
+            </li>
+            <li>
+                <a href="#accountRegistration">
+                    Account Registration
+                </a>
+            </li>
+            <li>
+                <a href="#useOfServices">
+                    Use of our Services
+                </a>
+            </li>
+            <li>
+                <a href="#userContent">
+                    User Content
+                </a>
+            </li>
+            <li>
+                <a href="#intellectualProperty">
+                    Intellectual Property
+                </a>
+            </li>
+            <li>
+                <a href="#privacyTerms">
+                    Privacy
+                </a>
+            </li>
+            <li>
+                <a href="#thirdPartyServices">
+                    Third-Party Services
+                </a>
+            </li>
+            <li>
+                <a href="#disclaimerTerms">
+                    Disclaimers
+                </a>
+            </li>
+            <li>
+                <a href="#limitationLiability">
+                    Limitation of Liability
+                </a>
+            </li>
+            <li>
+                <a href="#indemnificationTerms">
+                    Indemnification
+                </a>
+            </li>
+            <li>
+                <a href="#termsModification">
+                    Modifications to our Terms
+                </a>
+            </li>
+            <li>
+                <a href="#governingLaw&Jurisdiction">
+                    Governing Law and Jurisdiction
+                </a>
+            </li>
+            <li>
+                <a href="#entireAgreement">
+                    Entire Agreement
+                </a>
+            </li>
+            <li>
+                <a href="#contactUsTerms">
+                    Getting in touch
+                </a>
+            </li>
+        </ol>
+    </div>
+
+    <div id="terms-container">
+        <div id="whoWeAre">
+            <h5 class="terms-container-heading">About <span id="body-logo">WAVE<span class="spot">.</span></h5>
+            <p>
+                Welcome to WAVE. ("WAVE.", "we", "our", or "us"). These Terms of Use ("Terms") govern
+                your access to and use of the WAVE. mobile application and any related services (collectively,
+                the
+                "Services"). By accessing or using the Services, you agree to be bound by these Terms. If you do
+                not
+                agree to these Terms, you may not access or use the Services.
+            </p>
+        </div>
+        <div id="eligibilityTerms">
+            <h5 class="terms-container-heading">Eligibility</h5>
+            <p>
+                You must be at least 14 years old to use the Services. By accessing or using the Services, you
+                represent and warrant that you are 14 years of age or older. If you are under 18 years old, you
+                represent and warrant that you have obtained the consent of your parent or legal guardian to
+                access and use the Services.
+            </p>
+        </div>
+        <div id="accountRegistration">
+            <h5 class="terms-container-heading">Account Registration</h5>
+            <ul>
+                <li>
+                    Account Creation: To access certain features of the Services, you may be required to
+                    register
+                    for an account. You agree to provide accurate, current, and complete information during the
+                    registration process and to update such information to keep it accurate, current, and
+                    complete.
+                </li>
+                <li>
+                    Account Security: You are responsible for maintaining the confidentiality of your account
+                    credentials and for all activities that occur under your account. You agree to notify us
+                    immediately of any unauthorized use of your account or any other breach of security.
+                </li>
+            </ul>
+        </div>
+        <div id="useOfServices">
+            <h5 class="terms-container-heading">Use of the Services</h5>
+            <ul>
+                <li>
+                    License: Subject to these Terms, WAVE. grants you a limited, non-exclusive,
+                    non-transferable, and revocable license to access and use the Services for your personal,
+                    non-commercial use.
+                </li>
+                <li>
+                    Prohibited Conduct: You agree not to engage in any conduct that violates these Terms or any
+                    applicable laws or regulations. Without limiting the foregoing, you agree not to:
+                    <ol type="i" class="prohibited-sublist">
+                        <li>
+                            Use the Services for any illegal purpose or in violation of any applicable laws or
+                            regulations;
+                        </li>
+                        <li>
+                            Attempt to circumvent or disable any security or technical measures of the Services;
+                        </li>
+                        <li>
+                            Use the Services to transmit any viruses, worms, or other malicious code;
+                        </li>
+                        <li>
+                            Interfere with or disrupt the operation of the Services or the servers or networks
+                            connected to the Services;
+                        </li>
+                        <li>
+                            Impersonate any person or entity or falsely state or misrepresent your affiliation
+                            with any person or entity;
+                        </li>
+                        <li>
+                            Collect or store personal information about other users of the Services without
+                            their consent.
+                        </li>
+                    </ol>
+                </li>
+                <li>
+                    Content: You acknowledge and agree that all information, data, text, software, music, sound,
+                    photographs, graphics, videos, messages, or other materials ("Content") provided by WAVE. in
+                    connection with the Services are the property of WAVE. or its licensors and are protected by
+                    copyright, trademark, and other intellectual property laws.
+                </li>
+            </ul>
+        </div>
+        <div id="userContent">
+            <h5 class="terms-container-heading">User Content</h5>
+            <ul>
+                <li>
+                    User Content: You may have the opportunity to submit, upload, post, display, or otherwise
+                    make available content, such as comments, reviews, photos, videos, or other materials
+                    (collectively, "User Content"), through the Services. You represent and warrant that you
+                    have all necessary rights to grant WAVE. the rights granted herein with respect to your User
+                    Content.
+                </li>
+                <li>
+                    License to User Content: By submitting User Content through the Services, you grant WAVE. a
+                    worldwide, royalty-free, non-exclusive license to use, reproduce, modify, adapt, publish,
+                    translate, distribute, perform, and display such User Content in connection with the
+                    Services.
+                </li>
+            </ul>
+        </div>
+        <div id="intellectualProperty">
+            <h5 class="terms-container-heading">Intellectual Property</h5>
+            <ul>
+                <li>
+                    WAVE. Content: All content, trademarks, logos, and other intellectual property displayed on
+                    the Services are the property of WAVE. or its licensors and are protected by copyright,
+                    trademark, and other intellectual property laws.
+                </li>
+                <li>
+                    Use of Intellectual Property: You may not use, reproduce, modify, adapt, distribute,
+                    perform, or display any content from the Services without the prior written consent of WAVE.
+                    or the respective owners of such content.
+                </li>
+            </ul>
+        </div>
+        <div id="privacyTerms">
+            <h5 class="terms-container-heading">Privacy</h5>
+            <p>
+                Your privacy is important to us. Our <a href="./privacy.html">Privacy Policy</a> explains
+                how we collect, use, and disclose your information. By accessing or using the Services,
+                you consent to the collection, use, and disclosure of your information
+                as described in the Privacy Policy.
+            </p>
+        </div>
+        <div id="thirdPartyServices">
+            <h5 class="terms-container-heading">Third-Party Services</h5>
+            <p>
+                The Services may contain links to third-party websites or services that are not owned or
+                controlled by WAVE.
+                <br>
+                WAVE. has no control over, and assumes no responsibility for, the content, privacy policies,
+                or practices of any third-party websites or services. You acknowledge and agree that WAVE.
+                shall not be responsible or liable, directly or indirectly, for any damage or loss caused
+                or alleged to be caused by or in connection with the use of or reliance on any such content,
+                goods, or services available on or through any such third-party websites or services.
+            </p>
+        </div>
+        <div id="disclaimerTerms">
+            <h5 class="terms-container-heading">Disclaimers</h5>
+            <ul>
+                <li>
+                    THE SERVICES ARE PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTIES OF ANY KIND, EITHER
+                    EXPRESS OR IMPLIED. WAVE. DISCLAIMS ALL WARRANTIES, WHETHER EXPRESS OR IMPLIED, INCLUDING,
+                    BUT NOT LIMITED TO, IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE,
+                    AND NON-INFRINGEMENT.
+                </li>
+                <li>
+                    WAVE. DOES NOT WARRANT THAT THE SERVICES WILL BE UNINTERRUPTED, TIMELY, SECURE, OR
+                    ERROR-FREE, OR THAT DEFECTS WILL BE CORRECTED.
+                </li>
+                <li>
+                    WAVE. MAKES NO WARRANTIES OR REPRESENTATIONS ABOUT THE ACCURACY OR COMPLETENESS OF THE
+                    CONTENT PROVIDED THROUGH THE SERVICES OR THE CONTENT OF ANY THIRD-PARTY WEBSITES OR SERVICES
+                    LINKED TO THE SERVICES.
+                </li>
+            </ul>
+        </div>
+        <div id="limitationLiability">
+            <h5 class="terms-container-heading">Liability of Liability</h5>
+            <ul>
+                <li>
+                    IN NO EVENT SHALL WAVE. OR ITS AFFILIATES, OFFICERS, DIRECTORS, EMPLOYEES, OR AGENTS BE
+                    LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES ARISING OUT
+                    OF OR IN CONNECTION WITH YOUR USE OF OR INABILITY TO USE THE SERVICES, INCLUDING, BUT NOT
+                    LIMITED TO, DAMAGES FOR LOSS OF PROFITS, GOODWILL, USE, DATA, OR OTHER INTANGIBLE LOSSES,
+                    WHETHER BASED ON WARRANTY, CONTRACT, TORT (INCLUDING NEGLIGENCE), OR ANY OTHER LEGAL THEORY,
+                    EVEN IF WAVE. HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+                </li>
+                <li>
+                    WAVE.'S TOTAL LIABILITY TO YOU FOR ALL CLAIMS ARISING OUT OF OR IN CONNECTION WITH THESE
+                    TERMS OR YOUR USE OF THE SERVICES SHALL NOT EXCEED THE AMOUNT PAID BY YOU TO WAVE. FOR THE
+                    SERVICES DURING THE SIX (6) MONTHS PRECEDING THE CLAIM.
+                </li>
+            </ul>
+        </div>
+        <div id="indemnificationTerms">
+            <h5 class="terms-container-heading">Indemnification</h5>
+            <p>
+                You agree to indemnify, defend, and hold harmless WAVE. and its affiliates, officers, directors,
+                employees, and agents from and against any and all claims, damages, losses, liabilities, costs,
+                and expenses (including reasonable attorneys' fees) arising out of or in connection with your
+                use of the Services, your violation of these Terms, or your violation of any rights of any third
+                party.
+            </p>
+        </div>
+        <div id="termsModification">
+            <h5 class="terms-container-heading">Modifications to the Terms</h5>
+            <p>
+                WAVE. reserves the right to modify or update these Terms at any time without prior notice. Your
+                continued use of the Services after any such changes shall constitute your acceptance of the
+                revised Terms. It is your responsibility to review these Terms periodically for any changes.
+            </p>
+        </div>
+        <div id="governingLaw&Jurisdiction">
+            <h5 class="terms-container-heading">Governing Law & Jurisdiction</h5>
+            <p>
+                These Terms shall be governed by and construed in accordance with the laws of your jurisdiction
+                without regard to its conflict of law provisions. You agree that any dispute arising out of or
+                in connection with these Terms or your use of the Services shall be brought exclusively in the
+                courts located in your jurisdiction, and you hereby consent to the personal jurisdiction and
+                venue of such courts.
+            </p>
+        </div>
+        <div id="entireAgreement">
+            <h5 class="terms-container-heading">Entire Agreement</h5>
+            <p>
+                These Terms constitute the entire agreement between you and WAVE. regarding your use of the
+                Services and supersede all prior or contemporaneous understandings and agreements, whether
+                written or oral, relating to such subject matter.
+            </p>
+        </div>
+        <div id="contactUsTerms">
+            <h5 class="terms-container-heading">Contact Us</h5>
+            <p>
+                If you have any questions or concerns about these Terms, please contact us.
+            </p>
+        </div>
+        <hr>
+        <div>
+            <p>
+                This Terms of Use document covers a wide range of topics and should provide comprehensive
+                guidance for users of your entertainment app, WAVE. Remember, it's always a good idea to consult
+                with a legal professional to ensure compliance with applicable laws and regulations.
+            </p>
+        </div>
+    </div>
+</div>
 {% endblock body %}

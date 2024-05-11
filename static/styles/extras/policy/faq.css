@@ -1,0 +1,140 @@
+/** ---- start ---- Body Content ---- start ---- **/
+#content-container {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+
+    padding-left: 150px;
+    padding-right: 150px;
+}
+
+/** Logo used in body's **/
+#body-logo {
+    font-family: Easy-Grotesk-Black;
+}
+
+#body-logo .spot {
+    color: #008d95;
+}
+
+#body-logo .black-spot {
+    color: black;
+    font-size: 20px;
+}
+
+/** [End] Logo used in body's [End]**/
+
+#page-heading {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+#page-heading h2{
+    font-size: 50px;
+    font-family: Wanted-SemiBold;
+}
+
+#page-heading p {
+    font-size: 25px;
+    font-family: Wanted-Regular;
+}
+
+#faq-search {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+#faq-search input {
+    border: 2px solid #070707;
+    border-radius: 15px;
+
+    padding: 15px;
+    width: 70%;
+
+    font-family: Wanted-Regular;
+    font-size: 17px;
+    color: #000000;
+
+    -webkit-box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.085);
+    -moz-box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.16);
+    box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.061);
+}
+
+.faq-info {
+    font-size: 18px;
+    font-family: Wanted-Regular;
+    color: #000000;
+
+    padding-top: 25px;
+    padding-bottom: 25px;
+
+    cursor: pointer;
+}
+
+.faqInfo-popup {
+    display: none;
+
+    background-color: #0000000e;
+    
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 100;
+
+    width: 100%;
+    height: 100%;
+
+    cursor: default;
+}
+
+.faqIp-container {
+    height: 100%;
+    width: 100%;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+}
+
+.faqIc-contentCard {
+    background-color: white;
+    height: 50%;
+    width: 50%;
+
+    padding: 30px;
+    border-radius: 20px;
+
+    border: 2px solid rgba(0, 0, 0, 0.096);
+    -webkit-box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.085);
+    -moz-box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.16);
+    box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.061);
+
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+#contentCard-close {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+#contentCard-close button {
+    cursor: pointer;
+
+    border: none;
+    background: none;
+}
+
+.faqIc-contentCard h5 {
+    font-family: Wanted-SemiBold;
+    font-size: 23px;
+}
+
+/** ---- end ---- Body Content ---- end ---- **/

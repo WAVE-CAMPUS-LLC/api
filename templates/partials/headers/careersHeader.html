@@ -1,0 +1,36 @@
+{% load static %}
+
+<link rel="stylesheet" type="text/css" href="{% static "/styles/partials/headers/careersHeader.css" %}" />
+
+<header>
+    <nav>
+        <div id="logo-menu">
+            <div id="logo">
+                <a href="{% url "core:index" %}">WAVE<span>.</span></a>
+            </div>
+            <div id="page-name">
+                <a href="{% url "extras:jobs" %}">Careers</a>
+            </div>
+        </div>
+        <div class="support-links">
+            <ul>
+                <li><a href="{% url "core:explore" %}">Explore</a></li>
+                <li><a href="{% url "extras:host" %}">Host Event</a></li>
+                <li><a href="{% url "extras:safety" %}">Safety</a></li>
+                <li><span>|</span></li>
+                <li><a id="support" href="{% url "support:home" %}">Support</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div id="support-container-art">
+        <div class="ticket-heading">
+            <div class="ticket-header">
+                <h3>
+                    Come, create with
+                    <span class="heading-logo">WAVE<span id="logo-dotty">.</span></span>
+                </h3>
+            </div>
+        </div>
+    </div>
+</header>

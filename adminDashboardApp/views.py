@@ -63,9 +63,9 @@ def adminUserDetailedView(request, user_id):
     
 @login_required(login_url="authentication:login")
 @admin_required
-def adminJobsView(request):
+def adminCareersView(request):
     if request.user.is_superuser:
-        return render(request, "adminDashboardApp/tabs/jobs.html")
+        return render(request, "adminDashboardApp/tabs/careers.html")
     
     else:
         return HttpResponse("You are not an admin. ")

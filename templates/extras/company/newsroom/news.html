@@ -1,0 +1,67 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}
+Newsroom — Wave.  
+{% endblock title %}
+
+{% block app_page_style %}
+<link rel="stylesheet" type="text/css" href="{% static "/styles/extras/company/newsroom/news.css" %}" />
+{% endblock app_page_style %}
+
+{% block header %}
+{% include "partials/nav-footer/nav/main_nav.html" %}
+{% endblock header %}
+
+{% block body %}
+<div id="content-container">
+    <div id="page-heading">
+        <h6>
+            College Sports: American Football
+        </h6>
+        <h2>
+            Tennessee State face Notre Dame
+        </h2>
+    </div>
+
+    <div id="blog-content">
+        <div class="blogContent-Sidebar">
+            <div class="blogContent-Sidebar-container">
+                <div class="userDate-published">
+                    <h6>By <a href="#" id="username">@nathaniel</a></h6>
+                    <p>May 4, 2024</p>
+                </div>
+                <div class="bCS-divider">
+                    <hr>
+                </div>
+                <div class="bCS-contentList">
+                    <h5>Content</h5>
+                    <ul>
+                        <li>Introduction</li>
+                        <li>General</li>
+                        <li>Media</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="blogContent-Main">
+            <p>
+                Lorem ipsum dolor sit, amet consectetur adipisicing elit. Facere possimus sed autem nemo
+                aspernatur.
+                Laborum voluptatibus, totam cum saepe doloribus, veniam neque sint dicta dolorum quidem autem.
+                Optio, eum facilis.
+                Lorem ipsum dolor sit amet, consectetur adipisicing elit. Architecto, harum. Quis modi inventore
+                maxime alias enim libero expedita quas quibusdam delectus laborum quidem asperiores, molestias
+                qui!
+                Enim amet perferendis deleniti!
+                Lorem ipsum dolor sit amet consectetur, adipisicing elit. Inventore commodi architecto
+                exercitationem. Cupiditate nobis quidem, deleniti animi recusandae distinctio exercitationem vel
+                soluta neque sed dicta facere delectus iusto veritatis. Id!
+                Lorem ipsum dolor sit amet, consectetur adipisicing elit. Dicta rerum, atque reiciendis
+                dignissimos beatae perferendis explicabo, dolor libero quidem praesentium itaque in. Nulla nemo
+                necessitatibus, ducimus tempore vel illum ex!
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock body %}

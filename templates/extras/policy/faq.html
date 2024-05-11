@@ -9,10 +9,134 @@ Frequently Asked — Wave.
 <link rel="stylesheet" type="text/css" href="{% static "/styles/extras/policy/faq.css" %}" />
 {% endblock app_page_style %}
 
+{% block script %}
+<script type="text/javascript" src="{% static "scripts/extras/policy/faqs/faqs.js" %}" defer></script>
+{% endblock script %}
+
 {% block header %}
 {% include "partials/nav-footer/nav/main_nav.html" %}
 {% endblock header %}
 
 {% block body %}
+<div id="content-container">
+    <div id="page-heading">
+        <h2>
+            Frequently Asked Questions
+        </h2>
+        <p>
+            Last Updated: <span>10th May 2024</span>
+        </p>
+        <div id="faq-search">
+            <input type="search" title="Search FAQ's" name="faq-search" id="faqSearch" placeholder="Search FAQ's...">
+        </div>
+    </div>
 
+    <div id="faq-container">
+        <div class="faq-info" data-card="event-hosting">
+            <p>What does it take to host an event?</p>
+            <span class="faqInfo-popup">
+                <div class="faqIp-container">
+                    <div class="faqIc-contentCard">
+                        <div id="contentCard-close">
+                            <button role="button" type="button" id="contentCardClose-button">
+                                <img src="{% static "images/extras/policy/faqs/faqClose.svg" %}" alt="Minimize Card">
+                            </button>
+                        </div>
+                        <h5>What does it take to host an event?</h5>
+                        <p>Lorem ipsum dolor sit, amet consectetur adipisicing elit. Quo amet quibusdam esse
+                            quisquam saepe ratione libero nobis, tempore sed atque consectetur cupiditate
+                            consequatur ullam. Magnam pariatur cum odit cumque quibusdam?</p>
+                    </div>
+                </div>
+            </span>
+        </div>
+        <div class="faq-divider">
+            <hr>
+        </div>
+        <div class="faq-info" data-card="wave-campus">
+            <p>Is <span id="body-logo">WAVE<span class="spot">.</span></span> available on my campus?</p>
+            <span class="faqInfo-popup">
+                <div class="faqIp-container">
+                    <div class="faqIc-contentCard">
+                        <div id="contentCard-close">
+                            <button role="button" type="button" id="contentCardClose-button">
+                                <img src="{% static "images/extras/policy/faqs/faqClose.svg" %}" alt="Minimize Card">
+                            </button>
+                        </div>
+                        <h5>Is <span id="body-logo">WAVE<span class="spot">.</span></span> available on my campus?</h5>
+                        <p>Lorem ipsum dolor sit, amet consectetur adipisicing elit. Quo amet quibusdam esse
+                            quisquam saepe ratione libero nobis, tempore sed atque consectetur cupiditate
+                            consequatur ullam. Magnam pariatur cum odit cumque quibusdam?</p>
+                    </div>
+                </div>
+            </span>
+        </div>
+        <div class="faq-divider">
+            <hr>
+        </div>
+        <div class="faq-info" data-card="anyone-signup">
+            <p>Can anyone sign up to use <span id="body-logo">WAVE<span class="spot">.</span></span>?</p>
+            <span class="faqInfo-popup">
+                <div class="faqIp-container">
+                    <div class="faqIc-contentCard">
+                        <div id="contentCard-close">
+                            <button role="button" type="button" id="contentCardClose-button">
+                                <img src="{% static "images/extras/policy/faqs/faqClose.svg" %}" alt="Minimize Card">
+                            </button>
+                        </div>
+                        <h5>Can anyone sign up to use <span id="body-logo">WAVE<span class="spot">.</span></span>?</h5>
+                        <p>Lorem ipsum dolor sit, amet consectetur adipisicing elit. Quo amet quibusdam esse
+                            quisquam saepe ratione libero nobis, tempore sed atque consectetur cupiditate
+                            consequatur ullam. Magnam pariatur cum odit cumque quibusdam?</p>
+                    </div>
+                </div>
+            </span>
+        </div>
+        <div class="faq-divider">
+            <hr>
+        </div>
+        <div class="faq-info" data-card="join-wave">
+            <p>How can I be a part of <span id="body-logo">WAVE<span class="spot">.</span></span>?</p>
+            <span class="faqInfo-popup">
+                <div class="faqIp-container">
+                    <div class="faqIc-contentCard">
+                        <div id="contentCard-close">
+                            <button role="button" type="button" id="contentCardClose-button">
+                                <img src="{% static "images/extras/policy/faqs/faqClose.svg" %}" alt="Minimize Card">
+                            </button>
+                        </div>
+                        <h5>How can I be a part of <span id="body-logo">WAVE<span class="spot">.</span></span>?</h5>
+                        <p>Lorem ipsum dolor sit, amet consectetur adipisicing elit. Quo amet quibusdam esse
+                            quisquam saepe ratione libero nobis, tempore sed atque consectetur cupiditate
+                            consequatur ullam. Magnam pariatur cum odit cumque quibusdam?</p>
+                    </div>
+                </div>
+            </span>
+        </div>
+        <div class="faq-divider">
+            <hr>
+        </div>
+        <div class="faq-info" data-card="wave-campus">
+            <p>Is <span id="body-logo">WAVE<span class="spot">.</span></span> available on my campus?</p>
+            <span class="faqInfo-popup">
+                <div class="faqIp-container">
+                    <div class="faqIc-contentCard">
+                        <div id="contentCard-close">
+                            <button role="button" type="button" id="contentCardClose-button">
+                                <img src="{% static "images/extras/policy/faqs/faqClose.svg" %}" alt="Minimize Card">
+                            </button>
+                        </div>
+                        <h5>Is <span id="body-logo">WAVE<span class="spot">.</span></span> available on my campus?</h5>
+                        <p>Lorem ipsum dolor sit, amet consectetur adipisicing elit. Quo amet quibusdam esse
+                            quisquam saepe ratione libero nobis, tempore sed atque consectetur cupiditate
+                            consequatur ullam. Magnam pariatur cum odit cumque quibusdam?</p>
+                    </div>
+                </div>
+            </span>
+        </div>
+        <div class="faq-divider">
+            <hr>
+        </div>
+    </div>
+</div>
 {% endblock body %}
