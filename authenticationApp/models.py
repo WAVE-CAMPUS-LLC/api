@@ -17,6 +17,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     ROLES = [
         ('host', 'Host'),
         ('user', 'User'),
+        ('admin', 'Admin')
     ]
     GENDER_OPTIONS = [
         ('Male', 'Male'),
@@ -62,7 +63,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     is_staff = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
     
-    role = models.CharField(max_length=4, choices=ROLES, default='user')
+    role = models.CharField(_("Role"), max_length=5, choices=ROLES, default='user', help_text=(_("Role")))
     
     objects = CustomUserManager()
 

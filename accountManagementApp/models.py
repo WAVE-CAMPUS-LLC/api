@@ -9,7 +9,7 @@ from django.utils import timezone
 class UserProfile(models.Model):
     ROLES = [
         ('host', 'Host'),
-        ('user', 'User'),
+        ('user', 'User'), # no admin field here, because this is an extension of AUTH_USER_MODEL
     ]
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     user_tag = models.CharField(primary_key = True, max_length=4, editable=False)
