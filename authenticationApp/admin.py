@@ -11,12 +11,12 @@ class CustomUserAdmin(UserAdmin):
     add_form = CustomUserJoinForm
     form = CustomUserChangeForm
     model = CustomUser
-    list_display = ("first_name", "last_name", "email", "is_active",)
+    list_display = ("first_name", "last_name", "email", "role", "is_active",)  # Added "role" to the list_display
     list_filter = ("email", "last_name", )
     readonly_fields = ("date_joined", "birthday")
     
     fieldsets = (
-        ("Account Information", {"fields": (("first_name", "last_name"), "email", "password", "birthday", "gender")}),
+        ("Account Information", {"fields": (("first_name", "last_name"), "email", "password", "birthday", "gender", "role")}),  # Added "role" to the fieldsets
         ("Access Data", {"fields": ("date_joined","last_login",)}),
         ("Permissions", {"fields": ("is_staff", "is_active", "groups", "user_permissions")}),
     )
@@ -26,7 +26,7 @@ class CustomUserAdmin(UserAdmin):
             "classes": ("wide",),
             "fields": (
                 "email", "password1", "password2", "is_staff","first_name", "last_name",  "phone_number",
-                "is_active", "groups", "user_permissions"
+                "is_active", "groups", "user_permissions", "role"  # Added "role" to the add_fieldsets
             )}
         ),
     )

@@ -14,6 +14,10 @@ from .managers import CustomUserManager
 
 # Create your models here.
 class CustomUser(AbstractBaseUser, PermissionsMixin):
+    ROLES = [
+        ('host', 'Host'),
+        ('user', 'User'),
+    ]
     GENDER_OPTIONS = [
         ('Male', 'Male'),
         ('Female', 'Female'),
@@ -58,8 +62,8 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     is_staff = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
     
-    # The generation of a random user id for every user that signs up.     
-
+    role = models.CharField(max_length=4, choices=ROLES, default='user')
+    
     objects = CustomUserManager()
 
     USERNAME_FIELD = "email"
@@ -78,11 +82,12 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return self.email
 
-@receiver(pre_save, sender=CustomUser)
-def generate_user_id(sender, instance, **kwargs):
-    if not instance.user_id:
-        instance.user_id = uuid.uuid4()
-        
+# @receiver(pre_save, sender=CustomUser)
+# def generate_user_id(sender, instance, **kwargs):
+#     if not instance.user_id:
+#         instance.user_id = uuid.uuid4()
+
+# not generated user IDs      
 
 @receiver(post_save, sender=CustomUser)
 def create_user_profile(sender, instance, created, **kwargs):
