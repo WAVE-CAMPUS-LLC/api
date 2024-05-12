@@ -1,6 +1,12 @@
 from django.db import models
 from django.conf import settings
 from django.utils import timezone
+from django.db import models
+from django.conf import settings
+from django.utils import timezone
+from accountManagementApp.models import UserProfile  # Import the UserRole model from the account management app
+
+# Create your models here.
 
 # Create your models here.
 class LoginHistoryModel(models.Model):
@@ -11,6 +17,8 @@ class LoginHistoryModel(models.Model):
     ip_address = models.CharField(max_length=50)
     session_duration_minutes = models.IntegerField(null=True, blank=True)
     session_duration_seconds = models.IntegerField(null=True, blank=True)  # New field for session duration in seconds
+    role = models.ForeignKey(UserProfile, on_delete=models.CASCADE, null=True, blank=True)  # Add a foreign key to the UserRole model
+
 
     def save(self, *args, **kwargs):
         if self.logout_time:
