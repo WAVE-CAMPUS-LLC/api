@@ -1,8 +1,22 @@
 from django.db import models
 from django.conf import settings
 from django.utils import timezone
+import uuid
 
 # Create your models here.
+class Department(models.Model):
+    name = models.CharField("Department Name", max_length=100)
+    departmentID = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, unique=True)
+    lead_name = models.CharField("Department Lead", max_length=100)
+    lead_email = models.EmailField("Lead Email")
+    capacity = models.IntegerField("Capacity")
+    location = models.CharField("Location", max_length=300)
+    description = models.TextField("Description")
+    
+    def __str__(self):
+        return self.name
+
+
 class LoginHistoryModel(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     email = models.EmailField()

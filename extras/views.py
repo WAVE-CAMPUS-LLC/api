@@ -7,9 +7,6 @@ def aboutView(request):
     pageName = "About"
     return render(request, "extras/company/about.html", {"pageName": pageName})
 
-def careersView(request):
-    pageName = "Careers"
-    return render(request, "extras/company/careers/careers.html", {"pageName": pageName})
 
 def newsroomView(request):
     pageName = "Newsroom"
