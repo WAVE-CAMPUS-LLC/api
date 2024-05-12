@@ -1,0 +1,112 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}
+{{ department.name }} Details — WAVE.
+{% endblock title %}
+
+{% block app_page_style %}
+<link rel="stylesheet" type="text/css" href="{% static "/styles/adminDashboardApp/tabs/departments/departmentDetails.css" %}" />
+{% endblock app_page_style %}
+
+{% block script %}
+<script type="text/javascript" src="{% static "scripts/adminDashboardApp/departments/departmentDetails.js" %}"></script>
+{% endblock script %}
+
+{% block header %}
+{% include "partials/nav-footer/nav/admin_nav.html" %}
+{% endblock header %}
+
+{% block container_art %}
+<div id="container-art">
+    <div class="ticket-heading">
+        <div class="ticket-header">
+            <h3>{{ department.name }}</h3>
+        </div>
+    </div>
+</div>
+{% endblock container_art %}
+
+{% block body %}
+<div id="content-container">
+    <div id="page-heading">
+        <div id="deptInfo">
+            <h2>
+                {{ department.name }}
+            </h2>
+            <p>
+                ID: <span>{{department.departmentID }}</span>
+            </p>
+        </div>
+        <div id="deptEdit">
+            {% if edit_mode %}
+            <button type="button" role="button" id="deptSaveButton">Save</button>
+            {% else %}
+            <button type="button" role="button" id="deptEditButton">Edit</button>
+            {% endif %}
+            
+        </div>
+    </div>
+
+    <div id="departmentSummary">
+        <div id="displaySummary">
+            <div id="departmentDescription" class="information">
+                <h5>Description</h5>
+                <p>
+                    {{ department.description }}
+                </p>
+            </div>
+            <div id="departmentLead" class="information">
+                <h5>Department Lead</h5>
+                <p>{{department.lead_name}}</p>
+            </div>
+            <div id="departmentContact" class="information">
+                <h5>Department Contact</h5>
+                <p>{{ department.lead_email }}</p>
+            </div>
+            <div id="departmentRoles" class="information">
+                <h5>Current Roles</h5>
+            </div>
+        </div>
+        <div id="editSummary" style="display: {% if edit_mode %}block{% else %}none{% endif %}">
+            <form id="departmentForm" action="{% url "waveAdmin:departmentDetails" department.departmentID department.name %}" method="post">
+                {% csrf_token %}
+                <div class="singleInputRow">
+                    <label for="{{ form.name.id_for_label }}">
+                        {{ form.name.label }}
+                        <input type="{{ form.name.field.widget.input_type }}" name="{{ form.name.html_name }}" id="{{ form.name.auto_id }}" autocomplete="off" value="{{department.name}}" required>
+                    </label>
+                </div>
+                <div class="doubleInputRow">
+                    <label for="{{ form.lead_name.id_for_label }}">
+                        {{ form.lead_name.label }}
+                        <input type="{{ form.lead_name.field.widget.input_type }}" name="{{ form.lead_name.html_name }}" id="{{ form.lead_name.auto_id }}" autocomplete="off" value="{{department.lead_name}}" required>
+                    </label>
+                    <label for="{{ form.lead_email.id_for_label }}">
+                        {{ form.lead_email.label }}
+                        <input type="{{ form.lead_email.field.widget.input_type }}" name="{{ form.lead_email.html_name }}" id="{{ form.lead_email.auto_id }}" autocomplete="off" value="{{department.lead_email}}" required>
+                    </label>
+                </div>
+                <div class="doubleInputRow">
+                    <label for="{{ form.capacity.id_for_label }}">
+                        {{ form.capacity.label }}
+                        <input type="{{ form.capacity.field.widget.input_type }}" name="{{ form.capacity.html_name }}" id="{{ form.capacity.auto_id }}" autocomplete="off" value="{{department.capacity}}" required>
+                    </label>
+                    <label for="{{ form.location.id_for_label }}">
+                        {{ form.location.label }}
+                        <input type="{{ form.location.field.widget.input_type }}" name="{{ form.location.html_name }}" id="{{ form.location.auto_id }}" autocomplete="off" value="{{department.location}}" required>
+                    </label>
+                </div>
+                <div class="singleInputRow">
+                    <label for="{{ form.description.id_for_label }}">
+                        {{ form.description.label }}
+                        <textarea type="{{ form.description.field.widget.input_type }}" name="{{ form.description.html_name }}" id="{{ form.description.auto_id }}" autocomplete="off" required>{{department.description}}</textarea>
+                    </label>
+                </div>
+
+                <button type="submit" id="deptSaveButton">Save</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock body %}

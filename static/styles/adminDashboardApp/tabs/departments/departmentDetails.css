@@ -1,0 +1,129 @@
+/** Body Content **/
+#content-container {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+
+    padding-left: 150px;
+    padding-right: 150px;
+}
+
+#page-heading {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+#deptEdit button {
+    background: none;
+    border: none;
+
+    font-family: Wanted-Bold;
+    font-size: 20px;
+    color: #008d95;
+}
+
+#deptEdit button:hover {
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+#page-heading h2{
+    font-size: 50px;
+    font-family: Wanted-Bold;
+    color: #008d95;
+}
+
+#page-heading p {
+    font-size: 25px;
+    font-family: Wanted-Medium;
+    font-weight: 700;
+}
+
+#departmentSummary {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.information {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.information h5 {
+    font-size: 25px;
+    font-family: Wanted-SemiBold;
+    text-decoration: underline;
+}
+
+.information p {
+    font-family: Wanted-Regular;
+    font-size: 20px;
+}
+
+
+
+
+#departmentForm {
+    width: 100%;
+    height: 100%;
+
+    background-color: white;
+    -webkit-box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.085);
+    -moz-box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.16);
+    box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.061);
+
+    border-radius: 20px;
+    padding: 20px;
+    padding-bottom: 50px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.singleInputRow {
+    width: 100%;
+
+    display: flex;
+    justify-content: start;
+}
+
+.doubleInputRow {
+    width: 100%;
+
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+}
+
+label {
+    width: 100%;
+
+    font-family: Wanted-Regular;
+    font-size: 17px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+label input,
+label textarea {
+    width: 100%;
+    padding: 15px;
+
+    border-radius: 15px;
+    border: 1px solid rgba(0, 0, 0, 0.153);
+
+    font-family: Wanted-Regular;
+    font-size: 16px;
+}
+
+label textarea {
+    min-height: 150px;
+}

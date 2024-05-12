@@ -47,38 +47,17 @@ Departments @ WAVE.
 
     <div id="sectionBody">
         {% for department in departments %}
-        <div id="department">
-            <a href="./careers/departmentInfo.html">
-                <h5>{{ department.name }}</h5>
-                <h6 id="departmentID">ID: <span>{{ department.departmentID }}</span></h6>
-            </a>
-        </div>
-        {% endfor %}
+            {% if department %}
+            <div id="department">
+                <a href="{% url "waveAdmin:departmentDetails" department.departmentID department.name %}">
+                    <h5>{{ department.name }}</h5>
+                </a>
+            </div>
+            {% else %}
+            <h6>No current departments.</h6>
+            {% endif %}
         
-        {% comment %} <div id="department">
-            <a href="./careers/departmentInfo.html">
-                <h5>Consumer Marketing</h5>
-                <h6 id="departmentID">ID: <span>38947</span></h6>
-            </a>
-        </div>
-        <div id="department">
-            <a href="./careers/departmentInfo.html">
-                <h5>Media Marketing</h5>
-                <h6 id="departmentID">ID: <span>38947</span></h6>
-            </a>
-        </div>
-        <div id="department">
-            <a href="./careers/departmentInfo.html">
-                <h5>Product Development</h5>
-                <h6 id="departmentID">ID: <span>38947</span></h6>
-            </a>
-        </div>
-        <div id="department">
-            <a href="./careers/departmentInfo.html">
-                <h5>Policy</h5>
-                <h6 id="departmentID">ID: <span>38947</span></h6>
-            </a>
-        </div> {% endcomment %}
+        {% endfor %}
     </div>
 </div>
 

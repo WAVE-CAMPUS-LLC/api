@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect, HttpResponse
+from django.shortcuts import render, redirect, HttpResponse, get_object_or_404
 from django.contrib.auth.decorators import login_required
 
 from authenticationApp.models import CustomUser
@@ -50,7 +50,25 @@ def adminDepartmentView(request):
         )
     else:
         return redirect("core:explore")
-
+    
+@login_required(login_url="authentication:login")
+@admin_required
+def adminDepartmentDetailedView(request, departmentID, department_name):
+    if request.user.is_superuser:
+        department = get_object_or_404(Department, departmentID=departmentID, name=department_name)
+        if request.method == "POST":
+            form = DepartmentForm(request.POST, instance=department)
+            if form.is_valid():
+                form.save()
+                return redirect("waveAdmin:departmentDetails", departmentID=departmentID, department_name=department_name)
+        else:
+            form = DepartmentForm(instance=department)
+        return render(request, 'adminDashboardApp/tabs/departments/departmentDetails.html', {'department': department, "form": form})
+    else:
+        return redirect('core:index')
+    
+    
+    
 
 @login_required(login_url="authentication:login")
 @admin_required
