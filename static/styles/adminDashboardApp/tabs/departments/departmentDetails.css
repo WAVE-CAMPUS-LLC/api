@@ -29,6 +29,22 @@
     text-decoration: underline;
     cursor: pointer;
 }
+#deptSaveButton {
+    background-color: #008d95;
+    padding: 15px;
+    border-radius: 15px;
+    border: none;
+
+    font-family: Wanted-Bold;
+    color: white;
+    font-size: 18px;
+}
+
+#displaySummary {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
 
 #page-heading h2{
     font-size: 50px;
@@ -51,18 +67,27 @@
 .information {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 5px;
 }
 
 .information h5 {
     font-size: 25px;
-    font-family: Wanted-SemiBold;
-    text-decoration: underline;
+    font-family: Wanted-Bold;
 }
 
 .information p {
     font-family: Wanted-Regular;
     font-size: 20px;
+}
+
+.information p a {
+    text-decoration: none;
+    color: black;
+}
+
+.information p a:hover {
+    text-decoration: underline;
+    color: #008d95;
 }
 
 
@@ -72,12 +97,6 @@
     width: 100%;
     height: 100%;
 
-    background-color: white;
-    -webkit-box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.085);
-    -moz-box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.16);
-    box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.061);
-
-    border-radius: 20px;
     padding: 20px;
     padding-bottom: 50px;
 
@@ -126,4 +145,310 @@ label textarea {
 
 label textarea {
     min-height: 150px;
+}
+
+
+
+
+
+#departmentRoles {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+
+    margin-top: 40px;
+}
+
+.departmentRolesHeading {
+    display: flex;
+    justify-content: center;
+}
+
+#noAvailableRoles {
+    padding: 30px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+
+    flex-direction: column;
+    gap: 10px;
+
+    font-family: Wanted-Regular;
+
+}
+
+#noAvailableRoles button {
+    padding: 15px;
+    background-color: white;
+    font-family: Wanted-Medium;
+    font-size: 18px;
+    color: #008d95;
+    border: 2px solid #008d95;
+    border-radius: 15px;
+    cursor: pointer;
+}
+
+#noAvailableRoles button:hover {
+    color: white;
+    background-color: #008d95;
+    border-color: #008d95;
+
+}
+
+#rolesContainer {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+    justify-content: start;
+}
+
+.roleDisplayCard {
+    border: 2px solid rgba(0, 0, 0, 0.038);
+    border-radius: 15px;
+
+    -webkit-box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.061);
+    -moz-box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.061);
+    box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.061);
+
+    padding: 30px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    
+    cursor: pointer;
+
+    text-decoration: none;
+    color: #000000;
+}
+
+.roleDisplayCard #compLogo {
+    width: 100%;
+
+    display: flex;
+    justify-content: end;
+}
+
+.roleDisplayCard:hover #compLogo h3 {
+    color: #008d95;
+}
+
+.roleDisplayCard #compLogo h3 {
+    color: #b0b0b0c1;
+    font-family: Easy-Grotesk-Black;
+    font-size: 25px;
+}
+
+.roleDisplayCard #roleName {
+    font-family: Wanted-SemiBold;
+    font-size: 35px;
+
+}
+
+.roleDisplayCard #roleCreated {
+    font-family: Wanted-Regular;
+    font-weight: 600;
+}
+
+#roleDisplayModal {
+    display: none;
+
+    background-color: rgba(0, 0, 0, 0.037);
+
+    -webkit-backdrop-filter: blur(2px) saturate(1.7);
+    backdrop-filter: blur(2px) saturate(1.7);
+
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1005;
+
+    width: 100%;
+    height: 100%;
+
+    cursor: default;
+}
+
+#roleDisplayModalContainer {
+    width: 100%;
+    height: 100%;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#roleDisplayModalCard {
+    width: 60%;
+    height: 90%;
+
+    background-color: white;
+    -webkit-box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.085);
+    -moz-box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.16);
+    box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.061);
+
+    border-radius: 20px;
+    padding: 20px;
+    padding-bottom: 50px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.rDMC-heading {
+    width: 100%;
+    display: flex;
+    
+    flex-direction: column;
+}
+
+.roleCloseInMC {
+    width: 100%;
+    display: flex;
+    justify-content: end;
+}
+
+#closeModalButton {
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+.roleHeadingInMC h5{
+    text-decoration: none;
+    color: #008d95;
+    font-size: 30px;
+    font-family: Wanted-Bold;
+}
+
+
+
+/* * Create New Role Modal * */
+#createNewRoleModal {
+    display: none;
+
+    background-color: rgba(0, 0, 0, 0.037);
+
+    -webkit-backdrop-filter: blur(2px) saturate(1.7);
+    backdrop-filter: blur(2px) saturate(1.7);
+
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1005;
+
+    width: 100%;
+    height: 100%;
+
+    cursor: default;
+}
+
+.createNewRoleModalContainer {
+    width: 100%;
+    height: 100%;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#createNewRoleModalForm {
+    width: 60%;
+    height: 90%;
+
+    background-color: white;
+    -webkit-box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.085);
+    -moz-box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.16);
+    box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.061);
+
+    border-radius: 20px;
+    padding: 30px;
+    padding-bottom: 50px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+
+    overflow: hidden;
+}
+
+.cnrmf-Header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    text-decoration: none;
+    color: #008d95;
+    font-size: 30px;
+    font-family: Wanted-Bold;
+}
+
+#closeCreateNewRoleModal {
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+.cnrmf-FormElements {
+    height: 100%;
+    overflow-y: auto;
+
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.doubleInputRow {
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+}
+
+.doubleInputRow label {
+    width: 100%;
+}
+
+.cnrmf-FormElements label {
+    width: 100%;
+
+    font-family: Wanted-Regular;
+    font-size: 17px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.cnrmf-FormElements label input,
+.cnrmf-FormElements label textarea {
+    width: 100%;
+    padding: 15px;
+
+    border-radius: 15px;
+    border: 1px solid rgba(0, 0, 0, 0.153);
+
+    font-family: Wanted-Regular;
+    font-size: 16px;
+}
+
+.cnrmf-FormElements label textarea {
+    min-height: 150px;
+}
+
+#submitRoleCreation {
+    padding: 15px;
+    border: 2px solid #008d95;
+    border-radius: 15px;
+    background-color: #008d95;
+    color: white;
+    font-family: Wanted-Medium;
+    font-size: 18px;
 }

@@ -3,8 +3,8 @@ from django.contrib.auth.decorators import login_required
 
 from authenticationApp.models import CustomUser
 from supportCenterApp.models import SupportTicket, FeedbackModel
-from .models import Department, LoginHistoryModel
-from .forms import DepartmentForm
+from .models import Department, CareerRole, LoginHistoryModel
+from .forms import DepartmentForm, CareerRoleCreationForm
 from wave_v1.decorators import admin_required
 
 
@@ -56,16 +56,27 @@ def adminDepartmentView(request):
 def adminDepartmentDetailedView(request, departmentID, department_name):
     if request.user.is_superuser:
         department = get_object_or_404(Department, departmentID=departmentID, name=department_name)
+        careerRoles = CareerRole.objects.filter(department=department)
+        
+        
         if request.method == "POST":
-            form = DepartmentForm(request.POST, instance=department)
-            if form.is_valid():
-                form.save()
+            departmentForm = DepartmentForm(request.POST, instance=department)
+            careerRoleForm = CareerRoleCreationForm(request.POST)
+            
+            if departmentForm.is_valid():
+                departmentForm.save()
+                return redirect("waveAdmin:departmentDetails", departmentID=departmentID, department_name=department_name)
+            elif careerRoleForm.is_valid():
+                career_role = careerRoleForm.save(commit=False)
+                career_role.department = department
+                career_role.save()
                 return redirect("waveAdmin:departmentDetails", departmentID=departmentID, department_name=department_name)
         else:
-            form = DepartmentForm(instance=department)
-        return render(request, 'adminDashboardApp/tabs/departments/departmentDetails.html', {'department': department, "form": form})
+            departmentForm = DepartmentForm(instance=department)
+            careerRoleForm = CareerRoleCreationForm()
+        return render(request, 'adminDashboardApp/tabs/departments/departmentDetails.html', {'department': department, 'careerRoles': careerRoles, "departmentForm": departmentForm, 'careerRoleForm': careerRoleForm})
     else:
-        return redirect('core:index')
+        return redirect('core:explore')
     
     
     
