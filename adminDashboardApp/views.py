@@ -60,12 +60,21 @@ def adminDepartmentDetailedView(request, departmentID, department_name):
         
         
         if request.method == "POST":
+            action = request.POST.get('action')
+            if action == 'delete':
+                role_id = request.POST.get('role_id')
+                careerRole_delete = get_object_or_404(CareerRole, roleID=role_id)
+                careerRole_delete.delete()
+                return redirect("waveAdmin:departmentDetails", departmentID=departmentID, department_name=department_name)
+            
+            
             departmentForm = DepartmentForm(request.POST, instance=department)
             careerRoleForm = CareerRoleCreationForm(request.POST)
             
             if departmentForm.is_valid():
                 departmentForm.save()
                 return redirect("waveAdmin:departmentDetails", departmentID=departmentID, department_name=department_name)
+            
             elif careerRoleForm.is_valid():
                 career_role = careerRoleForm.save(commit=False)
                 career_role.department = department
@@ -132,10 +141,20 @@ def adminUserDetailedView(request, user_id):
 @admin_required
 def adminCareersView(request):
     if request.user.is_superuser:
-        return render(request, "adminDashboardApp/tabs/careers.html")
+        # Querying every single career role.
+        all_career_roles = CareerRole.objects.all()
+        return render(request, "adminDashboardApp/tabs/careers.html", {'career_roles':all_career_roles})
 
     else:
         return redirect("core:explore")
+    
+@login_required(login_url="authentication:login")
+@admin_required
+def adminCareerDetailView(request, roleID):
+    if request.user.is_superuser:
+        # Querying every single career role.
+        all_career_role_details = get_object_or_404(CareerRole, roleID=roleID)
+        return render(request, "adminDashboardApp/tabs/careers/careerDetails.html", {'careerRoles_detail':all_career_role_details})
 
 
 @login_required(login_url="authentication:login")

@@ -35,9 +35,6 @@
             <h2>
                 {{ department.name }}
             </h2>
-            <p>
-                ID: <span>{{department.departmentID }}</span>
-            </p>
         </div>
         <div id="deptEdit">
             <button type="button" role="button" id="deptEditButton">Edit</button>
@@ -62,7 +59,11 @@
             </div>
             
             <div id="departmentRoles" class="information">
-                <h5 class="departmentRolesHeading">Available Roles</h5>
+                <div id="departmentRolesHeader">
+                    <h5 class="departmentRolesHeading">Available Roles</h5>
+                    <button type="button" role="button" id="createNewRoleButton">Create New Role</button>
+                </div>
+                
 
                 <div id="availableRolesContainer">
                     {% comment %} 
@@ -72,7 +73,7 @@
                     {% if careerRoles %}
                     <div id="rolesContainer">
                         {% for careers in careerRoles %}
-                        <div class="roleDisplayCard">
+                        <div class="roleDisplayCard" data-role-id="{{ careers.roleID }}">
                             <div id="compLogo">
                                 <h3>WAVE.</h3>
                             </div>
@@ -80,7 +81,98 @@
                                 {{ careers.roleTitle }}
                             </div>
                             <div id="roleCreated">
-                                Last Updated: May 12, 2024
+                                Last Updated: {{ careers.created_at }}
+                            </div>
+                        </div>
+
+                        {% comment %} Modal to display and information about career role. {% endcomment %}
+                        
+                        <div id="roleDisplayModal{{ careers.roleID }}" class="roleDisplayModal" >
+                            <div id="roleDisplayModalContainer">
+                                <div id="roleDisplayModalCard">
+                                    <div class="rDMC-heading">
+                                        <div class="roleCloseInMC">
+                                            <button type="button" role="button" id="hideModalButton">
+                                                <img src="{% static "images/admin/departments/modalClose.svg" %}" alt="Close">
+                                            </button>
+                                        </div>
+                                        <div class="roleHeadingInMC">
+                                            <h5>{{ careers.roleTitle }}</h5>
+                                        </div>
+                                    </div>
+                                    <div class="rDMC-body">
+                                        <div class="singleDisplayRow">
+                                            <h6>{{ careerRoleForm.roleDescription.label }}</h6>
+                                            <p>
+                                                {{ careers.roleDescription }}
+                                            </p>
+                                        </div>
+                                        <div class="singleDisplayRow">
+                                            <h6>{{ careerRoleForm.roleExpectations.label }}</h6>
+                                            <p>
+                                                {{ careers.roleExpectations }}
+                                            </p>
+                                        </div>
+                                        <div class="singleDisplayRow">
+                                            <h6>{{ careerRoleForm.roleRequirements.label }}</h6>
+                                            <p>
+                                                {{ careers.roleRequirements }}
+                                            </p>
+                                        </div>
+                                        <div class="doubleDisplayRow">
+                                            <div>
+                                                <h6>{{ careerRoleForm.roleLocation.label }}</h6>
+                                                <p>
+                                                    {{ careers.roleLocation }}
+                                                </p>
+                                            </div>
+                                            <div>
+                                                <h6>{{ careerRoleForm.roleType.label }}</h6>
+                                                <p>
+                                                    {{ careers.roleType }}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div class="doubleDisplayRow">
+                                            <div>
+                                                <h6>{{ careerRoleForm.advertisementLength.label }}</h6>
+                                                <p>
+                                                    {{ careers.advertisementLength }} days
+                                                </p>
+                                            </div>
+                                            <div>
+                                                <h6>{{ careerRoleForm.roleCapacity.label }}</h6>
+                                                <p>
+                                                    {{ careers.roleCapacity }}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div class="doubleDisplayRow">
+                                            <div>
+                                                <h6>Created At</h6>
+                                                <p>
+                                                    {{ careers.created_at }}
+                                                </p>
+                                            </div>
+                                            <div>
+                                                <h6>Last Updated</h6>
+                                                <p>
+                                                    {{ careers.updated_at }}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        
+                                        <form action="{% url "waveAdmin:departmentDetails" department.departmentID department.name %}" method="post">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="action" value="delete" />
+                                            <input type="hidden" name="role_id" value="{{ careers.roleID }}" />
+                                            <div class="rDMC-controls">
+                                                <button type="button" id="editRoleBtn">Edit</button>
+                                                <button type="submit" id="deleteRoleBtn">Delete</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         {% endfor %}
@@ -88,7 +180,6 @@
                     {% else %}
                     <div id="noAvailableRoles">
                         <p>Currently, no available roles.</p>
-                        <button type="button" role="button" id="createNewRoleButton">Create New Role</button>
                     </div>
                     {% endif %}
                 </div>
@@ -142,7 +233,7 @@
             <div class="createNewRoleModalContainer">
                 <form id="createNewRoleModalForm" action="{% url "waveAdmin:departmentDetails" department.departmentID department.name %}" method="post">
                     {% csrf_token %}
-                    {% comment %} {% if careerRoleForm.errors %}
+                    {% if careerRoleForm.errors %}
                         <ul>
                         {% for field, error_list in careerRoleForm.errors.items %}
                             {% for error in error_list %}
@@ -150,7 +241,7 @@
                             {% endfor %}
                         {% endfor %}
                         </ul>
-                    {% endif %} {% endcomment %}
+                    {% endif %}
                     <div class="cnrmf-Header">
                         <h3>Create New Role</h3>
                         <button type="button" role="button" id="closeCreateNewRoleModal">
@@ -213,29 +304,7 @@
                     </div>
                 </form>
             </div>
-        </div>
-        
-
-        {% comment %} Modal to display and information about career role. {% endcomment %}
-        <div id="roleDisplayModal">
-            <div id="roleDisplayModalContainer">
-                <div id="roleDisplayModalCard">
-                    <div class="rDMC-heading">
-                        <div class="roleCloseInMC">
-                            <button type="button" role="button" id="closeModalButton">
-                                <img src="{% static "images/admin/departments/modalClose.svg" %}" alt="Close">
-                            </button>
-                        </div>
-                        <div class="roleHeadingInMC">
-                            <h5>Internal Communications Manager</h5>
-                        </div>
-                        
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        
+        </div>        
     </div>
 </div>
 {% endblock body %}

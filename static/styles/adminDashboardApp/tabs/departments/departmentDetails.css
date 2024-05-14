@@ -159,6 +159,13 @@ label textarea {
     margin-top: 40px;
 }
 
+#departmentRolesHeader {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
 .departmentRolesHeading {
     display: flex;
     justify-content: center;
@@ -179,7 +186,7 @@ label textarea {
 
 }
 
-#noAvailableRoles button {
+#createNewRoleButton {
     padding: 15px;
     background-color: white;
     font-family: Wanted-Medium;
@@ -190,7 +197,7 @@ label textarea {
     cursor: pointer;
 }
 
-#noAvailableRoles button:hover {
+#createNewRoleButton:hover {
     color: white;
     background-color: #008d95;
     border-color: #008d95;
@@ -253,7 +260,8 @@ label textarea {
     font-weight: 600;
 }
 
-#roleDisplayModal {
+/* * Modal to display information about career role. * */
+.roleDisplayModal {
     display: none;
 
     background-color: rgba(0, 0, 0, 0.037);
@@ -294,7 +302,7 @@ label textarea {
 
     border-radius: 20px;
     padding: 20px;
-    padding-bottom: 50px;
+    padding-bottom: 0px;
 
     display: flex;
     flex-direction: column;
@@ -314,7 +322,7 @@ label textarea {
     justify-content: end;
 }
 
-#closeModalButton {
+#hideModalButton {
     background: none;
     border: none;
     cursor: pointer;
@@ -327,6 +335,81 @@ label textarea {
     font-family: Wanted-Bold;
 }
 
+.rDMC-body {
+    overflow-y: auto;
+    padding-bottom: 50px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 35px;
+}
+
+.singleDisplayRow {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.singleDisplayRow h6,
+.doubleDisplayRow h6 {
+    font-family: Wanted-Bold;
+    font-size: 18px;
+}
+
+.singleDisplayRow p,
+.doubleDisplayRow p {
+    font-family: Wanted-Regular;
+    font-size: 16px;
+}
+
+.doubleDisplayRow {
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+}
+
+.doubleDisplayRow div {
+    width: 50%;
+}
+
+.rDMC-controls {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+
+#editRoleBtn,
+#deleteRoleBtn {
+    padding: 12px;
+    font-family: Wanted-SemiBold;
+    font-size: 18px;
+
+    background-color: #008d95;
+    color: white;
+
+    border: 2px solid #008d95;
+    border-radius: 12px;
+
+    cursor: pointer;
+}
+
+#editRoleBtn:hover {
+    background-color: white;
+    border: 2px solid #008d95;
+    color: #008d95;
+}
+
+#deleteRoleBtn {
+    background-color: red;
+    border: 2px solid red;
+}
+
+#deleteRoleBtn:hover {
+    background-color: white;
+    border: 2px solid red;
+    color: red;
+}
 
 
 /* * Create New Role Modal * */

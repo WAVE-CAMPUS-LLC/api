@@ -19,19 +19,20 @@ class Department(models.Model):
     
 class CareerRole(models.Model):
     department = models.ForeignKey(Department, on_delete=models.CASCADE, related_name="admin_dashboard_career_roles")
+    roleID = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, unique=True)
     roleTitle = models.CharField("Name",max_length=100)
     roleDescription = models.TextField("Description")
     # companyOverview = models.TextField("Company Summary")
     roleExpectations = models.TextField("What's expected")
     roleRequirements = models.TextField("Requirements")
     roleLocation = models.CharField("Role Location", max_length=100)
-    roleType = models.CharField("Role Type", max_length=20, choices=[("remote", "Remote"), ("in-person", "In-Person")])
+    roleType = models.CharField("Role Type", max_length=20, choices=[("Remote", "remote"), ("In-person", "in-person")])
     # roleExperience = models.TextField("What you need to have")
     advertisementLength = models.IntegerField("Advertisement Length (in days)")
     advertisementStartDate = models.DateField("Advertisement Start Date", default=timezone.now)
-    roleCapacity = models.CharField("Role Capacity", max_length=20, choices=[("full-time", "Full-Time"), ("part-time", "Part-Time")])
+    roleCapacity = models.CharField("Role Capacity", max_length=20, choices=[("Full-Time", "full-time"), ("Part-Time", "part-time")])
 
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True, editable=False)
     updated_at = models.DateTimeField(auto_now=True)
     
     def is_ad_expired(self):

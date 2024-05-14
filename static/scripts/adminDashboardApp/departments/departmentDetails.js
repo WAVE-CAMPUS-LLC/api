@@ -16,39 +16,48 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
 
-
     const roleDisplayCards = document.querySelectorAll(".roleDisplayCard");
-    const roleDisplayModal = document.getElementById("roleDisplayModal");
-    const roleDisplayCardClose = document.getElementById("closeModalButton");
 
     roleDisplayCards.forEach(card => {
         card.addEventListener('click', function () {
-            roleDisplayModal.style.display = 'block';
+            const roleId = card.dataset.roleId;
+            const roleDisplayModal = document.getElementById(`roleDisplayModal${roleId}`);
+
+            if (roleDisplayModal) {
+                roleDisplayModal.style.display = 'block';
+            }
         });
     });
 
-    roleDisplayCardClose.addEventListener('click', function () {
-        roleDisplayModal.style.display = 'none';
-    });
 
+    const roleDisplayCardClose = document.querySelectorAll("#hideModalButton");
+
+    roleDisplayCardClose.forEach(button => {
+        button.addEventListener('click', function () {
+            const modal = button.closest('.roleDisplayModal');
+            modal.style.display = 'none';
+        });
+    });
 
     const createNewRoleButton = document.getElementById("createNewRoleButton");
     const createNewRoleModal = document.getElementById("createNewRoleModal");
     const closeCreateNewModalButton = document.getElementById("closeCreateNewRoleModal");
 
-    createNewRoleButton.addEventListener('click', function() {
+    createNewRoleButton.addEventListener('click', function () {
         createNewRoleModal.style.display = 'block';
-    })
+    });
 
-    closeCreateNewModalButton.addEventListener('click', function() {
+    closeCreateNewModalButton.addEventListener('click', function () {
         createNewRoleModal.style.display = 'none';
-    })
-
+    });
 
     document.addEventListener('keydown', (event) => {
         if (event.key === 'Escape') {
-            roleDisplayModal.style.display = 'none';
+            const modals = document.querySelectorAll('.roleDisplayModal');
+            modals.forEach(modal => {
+                modal.style.display = 'none';
+            });
             createNewRoleModal.style.display = 'none';
         }
-    })
+    });
 });
