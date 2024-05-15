@@ -19,6 +19,7 @@ Careers @ Wave.
 {% include "partials/headers/careersHeader.html" %}
 {% endblock pageHeader %}
 
+
 {% block body %}
 <div id="content-container">
     <div id="jobs-header-info">
@@ -53,206 +54,43 @@ Careers @ Wave.
 
         <div id="job-info-main-container">
             <div id="jit-tab-container">
+                {% for department, roles in department_roles.items %}
                 <div class="jit-role-tab">
                     <div role="button" class="jit-tab-header">
-                        <h3>Creative & Brand</h3>
+                        <h3>{{ department.name }}</h3>
                     </div>
                     <div class="jit-tab-body defaulted">
-                        <p id="role-count">6 Open Roles</p>
+                        <p id="role-count">
+                            {% if roles|length == 1 %}
+                            {{ roles|length }} Open Role
+                            {% else %}
+                            {{roles|length}} Open Roles
+                            {% endif %}
+                        </p>
                         <ul>
+                            {% for role in roles %}
                             <li>
-                                <a href="./careers/career.html">
+                                <a href="{% url "careers:roleDetails" roleID=role.roleID %}">
                                     <div id="role-title">
                                         <p>Role</p>
                                         <p>Team</p>
                                         <p>Location (Type)</p>
                                     </div>
                                     <div id="role-info">
-                                        <h6>Marketing Head</h6>
-                                        <h6>Marketing</h6>
-                                        <h6>Nashville, TN (Remote)</h6>
+                                        <h6>{{ role.roleTitle }}</h6>
+                                        <h6>{{ role.department }}</h6>
+                                        <h6>{{ role.roleLocation }} ({{ role.roleType }})</h6>
                                     </div>
                                 </a>
                             </li>
-                            <li>
-                                <a href="./careers/career.html">
-                                    <div id="role-title">
-                                        <p>Role</p>
-                                        <p>Team</p>
-                                        <p>Location (Type)</p>
-                                    </div>
-                                    <div id="role-info">
-                                        <h6>Marketing Head</h6>
-                                        <h6>Marketing</h6>
-                                        <h6>Nashville, TN (Remote)</h6>
-                                    </div>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="./careers/career.html">
-                                    <div id="role-title">
-                                        <p>Role</p>
-                                        <p>Team</p>
-                                        <p>Location (Type)</p>
-                                    </div>
-                                    <div id="role-info">
-                                        <h6>Marketing Head</h6>
-                                        <h6>Marketing</h6>
-                                        <h6>Nashville, TN (Remote)</h6>
-                                    </div>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="./careers/career.html">
-                                    <div id="role-title">
-                                        <p>Role</p>
-                                        <p>Team</p>
-                                        <p>Location (Type)</p>
-                                    </div>
-                                    <div id="role-info">
-                                        <h6>Marketing Head</h6>
-                                        <h6>Marketing</h6>
-                                        <h6>Nashville, TN (Remote)</h6>
-                                    </div>
-                                </a>
-                            </li>
+                            {% endfor %}
                         </ul>
                     </div>
                 </div>
+                {% endfor %}
+                
 
-                <div class="jit-role-tab">
-                    <div role="button" class="jit-tab-header">
-                        <h3>Communications & PR</h3>
-                    </div>
-                    <div class="jit-tab-body">
-                        <p id="role-count">6 Open Roles</p>
-                        <ul>
-                            <li>
-                                <a href="./careers/career.html">
-                                    <div id="role-title">
-                                        <p>Role</p>
-                                        <p>Team</p>
-                                        <p>Location (Type)</p>
-                                    </div>
-                                    <div id="role-info">
-                                        <h6>Marketing Head</h6>
-                                        <h6>Marketing</h6>
-                                        <h6>Nashville, TN (Remote)</h6>
-                                    </div>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="./careers/career.html">
-                                    <div id="role-title">
-                                        <p>Role</p>
-                                        <p>Team</p>
-                                        <p>Location (Type)</p>
-                                    </div>
-                                    <div id="role-info">
-                                        <h6>Marketing Head</h6>
-                                        <h6>Marketing</h6>
-                                        <h6>Nashville, TN (Remote)</h6>
-                                    </div>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="./careers/career.html">
-                                    <div id="role-title">
-                                        <p>Role</p>
-                                        <p>Team</p>
-                                        <p>Location (Type)</p>
-                                    </div>
-                                    <div id="role-info">
-                                        <h6>Marketing Head</h6>
-                                        <h6>Marketing</h6>
-                                        <h6>Nashville, TN (Remote)</h6>
-                                    </div>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="./careers/career.html">
-                                    <div id="role-title">
-                                        <p>Role</p>
-                                        <p>Team</p>
-                                        <p>Location (Type)</p>
-                                    </div>
-                                    <div id="role-info">
-                                        <h6>Marketing Head</h6>
-                                        <h6>Marketing</h6>
-                                        <h6>Nashville, TN (Remote)</h6>
-                                    </div>
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-
-                <div class="jit-role-tab">
-                    <div role="button" class="jit-tab-header">
-                        <h3>Support Management</h3>
-                    </div>
-                    <div class="jit-tab-body">
-                        <p id="role-count">6 Open Roles</p>
-                        <ul>
-                            <li>
-                                <a href="./careers/career.html">
-                                    <div id="role-title">
-                                        <p>Role</p>
-                                        <p>Team</p>
-                                        <p>Location (Type)</p>
-                                    </div>
-                                    <div id="role-info">
-                                        <h6>Marketing Head</h6>
-                                        <h6>Marketing</h6>
-                                        <h6>Nashville, TN (Remote)</h6>
-                                    </div>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="./careers/career.html">
-                                    <div id="role-title">
-                                        <p>Role</p>
-                                        <p>Team</p>
-                                        <p>Location (Type)</p>
-                                    </div>
-                                    <div id="role-info">
-                                        <h6>Marketing Head</h6>
-                                        <h6>Marketing</h6>
-                                        <h6>Nashville, TN (Remote)</h6>
-                                    </div>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="./careers/career.html">
-                                    <div id="role-title">
-                                        <p>Role</p>
-                                        <p>Team</p>
-                                        <p>Location (Type)</p>
-                                    </div>
-                                    <div id="role-info">
-                                        <h6>Marketing Head</h6>
-                                        <h6>Marketing</h6>
-                                        <h6>Nashville, TN (Remote)</h6>
-                                    </div>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="./careers/career.html">
-                                    <div id="role-title">
-                                        <p>Role</p>
-                                        <p>Team</p>
-                                        <p>Location (Type)</p>
-                                    </div>
-                                    <div id="role-info">
-                                        <h6>Marketing Head</h6>
-                                        <h6>Marketing</h6>
-                                        <h6>Nashville, TN (Remote)</h6>
-                                    </div>
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
+                
             </div>
         </div>
     </div>

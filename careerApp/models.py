@@ -1,26 +1,22 @@
 from django.db import models
-from adminDashboardApp.models import Department
+from adminDashboardApp.models import Department, CareerRole
 
-# Create your models here.
-class CareerRole(models.Model):
-    department = models.ForeignKey(Department, on_delete=models.CASCADE, related_name='career_app_career_role')
-    roleTitle = models.CharField("Name",max_length=100)
-    companyOverview = models.TextField("Company Summary", help_text="Company Summary")
-    roleDescription = models.TextField("Description")
-    roleExpectations = models.TextField("What's expected")
-    roleExperience = models.TextField("What's expected of you")
-    
-    def __str__(self):
-        return self.roleTitle
-    
-    
+
 class CareerRoleApplication(models.Model):
     role = models.ForeignKey(CareerRole, on_delete=models.CASCADE)
-    applicantFirstName = models.CharField(max_length=70)
-    applicantLastName = models.CharField(max_length=70)
-    applicantEmail = models.EmailField()
-    applicantResume = models.FileField(upload_to='resumes/')
-    applicantCoverLetter = models.TextField()
+    applicantFirstName = models.CharField(verbose_name="First Name",max_length=70)
+    applicantLastName = models.CharField(verbose_name="Last Name", max_length=70)
+    applicantEmail = models.EmailField(verbose_name="Email")
+    applicantPhone = models.CharField(verbose_name="Phone", max_length=10)
+    applicantGithub = models.URLField(verbose_name="GitHub")
+    applicantPortfolio = models.URLField(verbose_name="Portfolio")
+    applicantLinkedIn = models.URLField(verbose_name="LinkedIn Profile")
+    applicantResume = models.FileField(verbose_name="Resume",upload_to='resumes/')
+    applicantLocation = models.CharField(verbose_name="Location (Country, State/Region)", max_length=100)
+    applicantCoverLetter = models.FileField(verbose_name="Cover Letter", upload_to='coverLetters/')
+    whatYouBring = models.TextField(verbose_name="What do you bring to the team?")
+    workAuthorization = models.TextField(verbose_name="Are you legally authorized to work for us?")
+    
     
     def __str__(self):
         return f'{self.applicantFirstName} {self.applicantLastName} applied for {self.role.roleTitle}'

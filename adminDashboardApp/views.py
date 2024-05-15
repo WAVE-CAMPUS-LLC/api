@@ -1,8 +1,12 @@
 from django.shortcuts import render, redirect, HttpResponse, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
+from django.core.mail import send_mail
 
 from authenticationApp.models import CustomUser
 from supportCenterApp.models import SupportTicket, FeedbackModel
+from wave_v1 import settings
 from .models import Department, CareerRole, LoginHistoryModel
 from .forms import DepartmentForm, CareerRoleCreationForm
 from wave_v1.decorators import admin_required
@@ -154,7 +158,31 @@ def adminCareerDetailView(request, roleID):
     if request.user.is_superuser:
         # Querying every single career role.
         all_career_role_details = get_object_or_404(CareerRole, roleID=roleID)
+        
+        # Send email to applicant if they are denied or accepted.
+        action = request.POST.get("applicationAction")
+        if action == 'approve':
+            applicantEmail = all_career_role_details.applicant_email
+            sendApprovedApplicantEmaill(applicantEmail)
+            
+        elif action == 'deny':
+            applicantEmail = all_career_role_details.applicant_email
+            sendDeniedApplicantEmaill(applicantEmail)
         return render(request, "adminDashboardApp/tabs/careers/careerDetails.html", {'careerRoles_detail':all_career_role_details})
+
+def sendApprovedApplicantEmaill(applicantEmail):
+    subject = 'Welcome to WAVE.!'
+    emailMessageHtml = render_to_string('emailTemplates/adminDashboardApp/careers/applicationApproved.html', {})
+    plainMessage = strip_tags(emailMessageHtml)
+    send_mail(subject, plainMessage, None, [applicantEmail], html_message=emailMessageHtml)
+    
+def sendDeniedApplicantEmaill(applicantEmail):
+    subject = 'Thank you for your application!'
+    emailMessageHtml = render_to_string('emailTemplates/adminDashboardApp/careers/applicationDenied.html', {})
+    plainMessage = strip_tags(emailMessageHtml)
+    send_mail(subject, plainMessage, None, [applicantEmail], html_message=emailMessageHtml)
+
+
 
 
 @login_required(login_url="authentication:login")

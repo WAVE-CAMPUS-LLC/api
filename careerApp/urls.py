@@ -4,5 +4,6 @@ from . import views
 app_name = "careers"
 
 urlpatterns = [
-    path("careers/", views.careerHomeApp, name="home")
+    path("careers/", views.careerHomeApp, name="home"),
+    path("careers/<uuid:roleID>/", views.careerJobDetails, name="roleDetails")
 ]

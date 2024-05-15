@@ -136,7 +136,7 @@ WAVE. — Management Dashboard
                             <div class="appContent">
                                 <div class="singleDisplayRow">
                                     <h6>Name</h6>
-                                    <p>Enosh Lartey</p>
+                                    <p>{{ careerRoles_detail.applicantFirstName }}</p>
                                 </div>
 
                                 <div class="doubleDisplayRow">
@@ -187,11 +187,14 @@ WAVE. — Management Dashboard
                                 </div>
                             </div>
 
-                            <div class="appAction">
-                                <button type="button" id="denyApplicant">Deny</button>
-                                <button type="button" id="approveApplicant">Approve</button>
-                            </div>
-
+                            <form action="{% url "waveAdmin:careerDetails" roleID=careerRoles_detail.roleID %}" id="applicationActionForm" method="post">
+                                {% csrf_token %}
+                                <input type="hidden" name="applicationAction" value="" id="applicationActionInput" />
+                                <div class="appAction">
+                                    <button type="button" onclick="setAppAction('deny')" id="denyApplicant">Deny</button>
+                                    <button type="button" onclick="setAppAction('approve')" id="approveApplicant">Approve</button>
+                                </div>
+                            </form>
                         </div>
                     </div>
                 </div>
