@@ -42,12 +42,6 @@ class CareerRole(models.Model):
     def __str__(self):
         return self.roleTitle
     
-    @property
-    def short_roleID(self):
-        # Generate a UUID-like string using the first 6 characters of the roleID
-        short_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, str(self.roleID)))[:6]
-        # Pad the shortened string to match the format of a full UUID
-        return f'{short_id}-0000-0000-0000-000000000000'
     
 
 

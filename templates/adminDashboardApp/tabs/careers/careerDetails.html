@@ -112,92 +112,104 @@ WAVE. — Management Dashboard
                 Applications Received
             </div>
 
-            <div class="rA-Body">
-                <div role="button" id="applicantCard" class="applicantCard">
-                    <h3>Enosh Lartey</h3>
+            <div id="applicationsContainer">
+                {% for application in applications %}
+                <div class="rA-Body">
+                    
+                    <div role="button" id="applicantCard-{{ forloop.counter }}" class="applicantCard">
+                        <h3>{{ application.applicantFirstName }} {{ application.applicantLastName }}</h3>
+                    </div>
                 </div>
-            </div>
 
-            <div id="applicantInfoModal">
-                <div class="applicantInfoModalContainer">
-                    <div class="applicantInfoModalCard">
-                        <div class="aIMC-heading">
-                            <div class="roleCloseInMC">
-                                <button type="button" role="button" id="hideAppModalButton">
-                                    <img src="{% static "images/admin/jobs/modalClose.svg" %}"
-                                        alt="Close">
-                                </button>
-                            </div>
-                            <div class="roleHeadingInMC">
-                                <h5>Enosh Lartey</h5>
-                            </div>
-                        </div>
-                        <div class="aIMC-body">
-                            <div class="appContent">
-                                <div class="singleDisplayRow">
-                                    <h6>Name</h6>
-                                    <p>{{ careerRoles_detail.applicantFirstName }}</p>
+
+                <div id="applicantInfoModal-{{ forloop.counter }}" class="applicantInfoModal">
+                    <div class="applicantInfoModalContainer">
+                        <div class="applicantInfoModalCard">
+                            <div class="aIMC-heading">
+                                <div class="roleCloseInMC">
+                                    <button type="button" role="button" class="hideAppModalButton" id="hideAppModalButton-{{ forloop.counter }}">
+                                        <img src="{% static "images/admin/jobs/modalClose.svg" %}"
+                                            alt="Close">
+                                    </button>
                                 </div>
-
-                                <div class="doubleDisplayRow">
-                                    <div>
-                                        <h6>Email</h6>
-                                        <p>enoshlartey@gmail.com</p>
-                                    </div>
-                                    <div>
-                                        <h6>Phone</h6>
-                                        <p>9012339209</p>
-                                    </div>
-                                </div>
-
-                                <div class="singleDisplayRow">
-                                    <h6>Location</h6>
-                                    <p>Nashville, TN</p>
-                                </div>
-
-                                <div class="singleDisplayRow">
-                                    <h6>Portfolio or Github</h6>
-                                    <p>https://enoshlartey.xyz</p>
-                                </div>
-
-                                <div class="singleDisplayRow">
-                                    <h6>LinkedIn</h6>
-                                    <p>https://linkedin.com/in/enoshlartey/</p>
-                                </div>
-
-                                <div class="singleDisplayRow">
-                                    <h6>Legally allowed to work for WAVE.?</h6>
-                                    <p>
-                                        Lorem ipsum dolor sit amet consectetur adipisicing elit. Quo repellendus
-                                        ipsum eos eum maxime facere facilis iure, dolorum accusamus, saepe
-                                        earum, nihil sint accusantium quisquam deleniti laboriosam nesciunt
-                                        recusandae quibusdam.
-                                    </p>
-                                </div>
-
-                                <div class="doubleDisplayRow">
-                                    <div>
-                                        <h6>Resume or CV</h6>
-                                        <button type="button" class="downloadDoc">Download</button>
-                                    </div>
-                                    <div>
-                                        <h6>Cover Letter</h6>
-                                        <button type="button" class="downloadDoc">Download</button>
-                                    </div>
+                                <div class="roleHeadingInMC">
+                                    <h5>{{ application.applicantFirstName }} {{ application.applicantLastName }}</h5>
                                 </div>
                             </div>
+                            <div class="aIMC-body">
+                                <div class="appContent">
+                                    <div class="singleDisplayRow">
+                                        <h6>Name</h6>
+                                        <p>{{ application.applicantFirstName }} {{ application.applicantLastName }}</p>
+                                    </div>
 
-                            <form action="{% url "waveAdmin:careerDetails" roleID=careerRoles_detail.roleID %}" id="applicationActionForm" method="post">
-                                {% csrf_token %}
-                                <input type="hidden" name="applicationAction" value="" id="applicationActionInput" />
-                                <div class="appAction">
-                                    <button type="button" onclick="setAppAction('deny')" id="denyApplicant">Deny</button>
-                                    <button type="button" onclick="setAppAction('approve')" id="approveApplicant">Approve</button>
+                                    <div class="doubleDisplayRow">
+                                        <div>
+                                            <h6>Email</h6>
+                                            <p>{{ application.applicantEmail }}</p>
+                                        </div>
+                                        <div>
+                                            <h6>Phone</h6>
+                                            <p>{{ application.applicantPhone }}</p>
+                                        </div>
+                                    </div>
+
+                                    <div class="singleDisplayRow">
+                                        <h6>Location</h6>
+                                        <p>{{ application.applicantLocation }}</p>
+                                    </div>
+
+                                    <div class="singleDisplayRow">
+                                        <h6>Portfolio</h6>
+                                        <p>{{ application.applicantPortfolio }}</p>
+                                    </div>
+
+                                    <div  class="doubleDisplayRow">
+                                        <div>
+                                            <h6>LinkedIn</h6>
+                                            <p>{{ application.applicantLinkedIn }}</p>
+                                        </div>
+        
+                                        <div>
+                                            <h6>Github</h6>
+                                            <p>{{ application.applicantGithub }}</p>
+                                        </div>
+                                    </div>
+
+                                    
+
+                                    <div class="singleDisplayRow">
+                                        <h6>Legally allowed to work for WAVE.?</h6>
+                                        <p>
+                                            {{ application.workAuthorization }}
+                                        </p>
+                                    </div>
+
+                                    <div class="doubleDisplayRow">
+                                        <div>
+                                            <h6>Resume or CV</h6>
+                                            <button type="button" class="downloadDoc">Download</button>
+                                        </div>
+                                        <div>
+                                            <h6>Cover Letter</h6>
+                                            <button type="button" class="downloadDoc">Download</button>
+                                        </div>
+                                    </div>
                                 </div>
-                            </form>
+
+                                <form action="{% url "waveAdmin:careerDetails" roleID=careerRoles_detail.roleID %}" id="applicationActionForm" method="post">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="applicantEmail" value="{{application.applicantEmail}}" id="applicantEmailInput">
+                                    <div class="appAction">
+                                        <button type="submit" name="applicationAction" value="deny" id="denyApplicant">Deny</button>
+                                        <button type="submit" name="applicationAction" value="approve" id="approveApplicant">Approve</button>
+                                    </div>
+                                </form>
+                            </div>
                         </div>
                     </div>
                 </div>
+                {% endfor %}
             </div>
         </div>
     </div>

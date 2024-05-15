@@ -6,6 +6,7 @@ from django.core.mail import send_mail
 
 from authenticationApp.models import CustomUser
 from supportCenterApp.models import SupportTicket, FeedbackModel
+from careerApp.models import CareerRoleApplication
 from wave_v1 import settings
 from .models import Department, CareerRole, LoginHistoryModel
 from .forms import DepartmentForm, CareerRoleCreationForm
@@ -54,45 +55,65 @@ def adminDepartmentView(request):
         )
     else:
         return redirect("core:explore")
-    
+
+
 @login_required(login_url="authentication:login")
 @admin_required
 def adminDepartmentDetailedView(request, departmentID, department_name):
     if request.user.is_superuser:
-        department = get_object_or_404(Department, departmentID=departmentID, name=department_name)
+        department = get_object_or_404(
+            Department, departmentID=departmentID, name=department_name
+        )
         careerRoles = CareerRole.objects.filter(department=department)
-        
-        
+
         if request.method == "POST":
-            action = request.POST.get('action')
-            if action == 'delete':
-                role_id = request.POST.get('role_id')
+            action = request.POST.get("action")
+            if action == "delete":
+                role_id = request.POST.get("role_id")
                 careerRole_delete = get_object_or_404(CareerRole, roleID=role_id)
                 careerRole_delete.delete()
-                return redirect("waveAdmin:departmentDetails", departmentID=departmentID, department_name=department_name)
-            
-            
+                return redirect(
+                    "waveAdmin:departmentDetails",
+                    departmentID=departmentID,
+                    department_name=department_name,
+                )
+
             departmentForm = DepartmentForm(request.POST, instance=department)
             careerRoleForm = CareerRoleCreationForm(request.POST)
-            
+
             if departmentForm.is_valid():
                 departmentForm.save()
-                return redirect("waveAdmin:departmentDetails", departmentID=departmentID, department_name=department_name)
-            
+                return redirect(
+                    "waveAdmin:departmentDetails",
+                    departmentID=departmentID,
+                    department_name=department_name,
+                )
+
             elif careerRoleForm.is_valid():
                 career_role = careerRoleForm.save(commit=False)
                 career_role.department = department
                 career_role.save()
-                return redirect("waveAdmin:departmentDetails", departmentID=departmentID, department_name=department_name)
+                return redirect(
+                    "waveAdmin:departmentDetails",
+                    departmentID=departmentID,
+                    department_name=department_name,
+                )
         else:
             departmentForm = DepartmentForm(instance=department)
             careerRoleForm = CareerRoleCreationForm()
-        return render(request, 'adminDashboardApp/tabs/departments/departmentDetails.html', {'department': department, 'careerRoles': careerRoles, "departmentForm": departmentForm, 'careerRoleForm': careerRoleForm})
+        return render(
+            request,
+            "adminDashboardApp/tabs/departments/departmentDetails.html",
+            {
+                "department": department,
+                "careerRoles": careerRoles,
+                "departmentForm": departmentForm,
+                "careerRoleForm": careerRoleForm,
+            },
+        )
     else:
-        return redirect('core:explore')
-    
-    
-    
+        return redirect("core:explore")
+
 
 @login_required(login_url="authentication:login")
 @admin_required
@@ -147,42 +168,66 @@ def adminCareersView(request):
     if request.user.is_superuser:
         # Querying every single career role.
         all_career_roles = CareerRole.objects.all()
-        return render(request, "adminDashboardApp/tabs/careers.html", {'career_roles':all_career_roles})
+        return render(
+            request,
+            "adminDashboardApp/tabs/careers.html",
+            {"career_roles": all_career_roles},
+        )
 
     else:
         return redirect("core:explore")
-    
+
+
 @login_required(login_url="authentication:login")
 @admin_required
 def adminCareerDetailView(request, roleID):
     if request.user.is_superuser:
         # Querying every single career role.
-        all_career_role_details = get_object_or_404(CareerRole, roleID=roleID)
-        
+        career_role = get_object_or_404(CareerRole, roleID=roleID)
+
+        applications = CareerRoleApplication.objects.filter(role=career_role)
+
         # Send email to applicant if they are denied or accepted.
-        action = request.POST.get("applicationAction")
-        if action == 'approve':
-            applicantEmail = all_career_role_details.applicant_email
-            sendApprovedApplicantEmaill(applicantEmail)
-            
-        elif action == 'deny':
-            applicantEmail = all_career_role_details.applicant_email
-            sendDeniedApplicantEmaill(applicantEmail)
-        return render(request, "adminDashboardApp/tabs/careers/careerDetails.html", {'careerRoles_detail':all_career_role_details})
+        if request.method == "POST":
+            action = request.POST.get("applicationAction")
+            applicant_email = request.POST.get("applicantEmail")
 
-def sendApprovedApplicantEmaill(applicantEmail):
-    subject = 'Welcome to WAVE.!'
-    emailMessageHtml = render_to_string('emailTemplates/adminDashboardApp/careers/applicationApproved.html', {})
-    plainMessage = strip_tags(emailMessageHtml)
-    send_mail(subject, plainMessage, None, [applicantEmail], html_message=emailMessageHtml)
-    
-def sendDeniedApplicantEmaill(applicantEmail):
-    subject = 'Thank you for your application!'
-    emailMessageHtml = render_to_string('emailTemplates/adminDashboardApp/careers/applicationDenied.html', {})
-    plainMessage = strip_tags(emailMessageHtml)
-    send_mail(subject, plainMessage, None, [applicantEmail], html_message=emailMessageHtml)
+            if action == "approve":
+                sendApprovedApplicantEmail(applicant_email)
+                return redirect("waveAdmin:careers")
 
-
+            elif action == "deny":
+                sendDeniedApplicantEmail(applicant_email)
+                return redirect("waveAdmin:careers")
+        return render(
+            request,
+            "adminDashboardApp/tabs/careers/careerDetails.html",
+            {"careerRoles_detail": career_role, "applications": applications},
+        )
+def sendApprovedApplicantEmail(applicantEmail):
+    try:
+        subject = "Welcome to WAVE.!"
+        emailMessageHtml = render_to_string(
+            "emailTemplates/adminDashboardApp/careers/applicationApproved.html", {}
+        )
+        plainMessage = strip_tags(emailMessageHtml)
+        send_mail(
+            subject, plainMessage, None, [applicantEmail], html_message=emailMessageHtml
+        )
+    except Exception as e:
+        print(f"Error sending email to {applicantEmail}: {e}")
+def sendDeniedApplicantEmail(applicantEmail):
+    try:
+        subject = "Thank you for your application!"
+        emailMessageHtml = render_to_string(
+            "emailTemplates/adminDashboardApp/careers/applicationDenied.html", {}
+        )
+        plainMessage = strip_tags(emailMessageHtml)
+        send_mail(
+            subject, plainMessage, None, [applicantEmail], html_message=emailMessageHtml
+        )
+    except Exception as e:
+        print(f"Error sending email to {applicantEmail}: {e}")
 
 
 @login_required(login_url="authentication:login")

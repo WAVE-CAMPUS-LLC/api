@@ -94,6 +94,12 @@
     gap: 20px;
 }
 
+#applicationsContainer {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 30px;
+}
+
 .rA-header {
     font-family: Wanted-Bold;
 
@@ -101,12 +107,6 @@
     justify-content: center;
 
     font-size: 25px;
-}
-
-.rA-Body {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 30px;
 }
 
 .applicantCard {
@@ -122,7 +122,7 @@
     cursor: pointer;
 }
 
-#applicantInfoModal {
+.applicantInfoModal {
     display: none;
 
     background-color: rgba(0, 0, 0, 0.037);

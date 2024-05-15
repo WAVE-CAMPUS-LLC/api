@@ -178,6 +178,10 @@ Careers @ Wave.
 
             <form action="{% url "careers:roleDetails" careerRole.roleID %}" method="post">
                 {% csrf_token %}
+                {% for error in careerAppForm.errors %}
+                    <p>{{ error }}</p>
+                {% endfor %}
+
                 <section id="sectionOne">
                     <div class="infoSOneContainer">
                         <div id="fNlN-row">
@@ -236,6 +240,10 @@ Careers @ Wave.
                             <p>{{ careerAppForm.whatYouBring.label }}<span class="redRequired">*</span></p>
                             <textarea type="{{ careerAppForm.whatYouBring.field.widget.input_type }}" name="{{ careerAppForm.whatYouBring.html_name }}" id="{{ careerAppForm.whatYouBring.auto_id }}"></textarea>
                         </label>
+                        <label for="{{ careerAppForm.applicantPortfolio.id_for_label }}">
+                            <p>{{ careerAppForm.applicantPortfolio.label }}<span class="redRequired">*</span></p>
+                            <input type="{{ careerAppForm.applicantPortfolio.field.widget.input_type }}" name="{{ careerAppForm.applicantPortfolio.html_name }}" id="{{ careerAppForm.applicantPortfolio.auto_id }}">
+                        </label>
                         <label for="{{ careerAppForm.applicantLinkedIn.id_for_label }}">
                             <p>{{ careerAppForm.applicantLinkedIn.label }}<span class="redRequired">*</span></p>
                             <input type="{{ careerAppForm.applicantLinkedIn.field.widget.input_type }}" name="{{ careerAppForm.applicantLinkedIn.html_name }}" id="{{ careerAppForm.applicantLinkedIn.auto_id }}">
@@ -243,6 +251,10 @@ Careers @ Wave.
                         <label for="{{ careerAppForm.applicantGithub.id_for_label }}">
                             <p>{{ careerAppForm.applicantGithub.label }} <span class="redRequired">*</span></p>
                             <input type="{{ careerAppForm.applicantGithub.field.widget.input_type }}" name="{{ careerAppForm.applicantGithub.html_name }}" id="{{ careerAppForm.applicantGithub.auto_id }}">
+                        </label>
+                        <label for="{{ careerAppForm.workAuthorization.id_for_label }}">
+                            <p>{{ careerAppForm.workAuthorization.label }}<span class="redRequired">*</span></p>
+                            <textarea type="{{ careerAppForm.workAuthorization.field.widget.input_type }}" name="{{ careerAppForm.workAuthorization.html_name }}" id="{{ careerAppForm.workAuthorization.auto_id }}"></textarea>
                         </label>
 
                         <div id="previousSubmit">

@@ -22,10 +22,12 @@ def careerJobDetails(request, roleID):
     career_role = CareerRole.objects.get(roleID=roleID)
     
     if request.method == "POST":
-        careerApp = CareerRoleApplicationForm(request.POST)
+        careerApp = CareerRoleApplicationForm(request.POST, request.FILES)
         if careerApp.is_valid():
+            application = careerApp.save(commit=False)
+            application.role = career_role
             print(f'Applied for the role.')
-            careerApp.save()
+            application.save()
             return redirect("careers:home")
     else:
         careerApp = CareerRoleApplicationForm()

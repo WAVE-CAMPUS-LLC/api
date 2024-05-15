@@ -121,14 +121,14 @@
     font-size: 24px;
     padding: 15px 20px;
     border-radius: 20px;
-    border-color: #000000;
-    background-color: #000000;
+    border-color: #008d95;
+    background-color: #008d95;
     color: white;
     cursor: pointer;
 }
 
 .jit-tab-body {
-    border: 4px solid black;
+    border: 4px solid #008d95;
     border-bottom-left-radius: 20px;
     border-bottom-right-radius: 20px;
     margin: 0 20px;

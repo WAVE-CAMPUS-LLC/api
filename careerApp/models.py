@@ -11,9 +11,9 @@ class CareerRoleApplication(models.Model):
     applicantGithub = models.URLField(verbose_name="GitHub")
     applicantPortfolio = models.URLField(verbose_name="Portfolio")
     applicantLinkedIn = models.URLField(verbose_name="LinkedIn Profile")
-    applicantResume = models.FileField(verbose_name="Resume",upload_to='resumes/')
+    applicantResume = models.FileField(verbose_name="Resume",upload_to='resumes/', blank=True, null=True)
     applicantLocation = models.CharField(verbose_name="Location (Country, State/Region)", max_length=100)
-    applicantCoverLetter = models.FileField(verbose_name="Cover Letter", upload_to='coverLetters/')
+    applicantCoverLetter = models.FileField(verbose_name="Cover Letter", upload_to='coverLetters/', blank=True, null=True)
     whatYouBring = models.TextField(verbose_name="What do you bring to the team?")
     workAuthorization = models.TextField(verbose_name="Are you legally authorized to work for us?")
     
