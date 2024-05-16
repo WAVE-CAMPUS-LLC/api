@@ -30,7 +30,7 @@ header {
 }
 
 #logo {
-    font-family: Easy-Grotesk-Black;
+    font-family: Wanted-Black;
     font-size: 30px;
 }
 
@@ -58,7 +58,6 @@ header {
     color: black;
     font-family: Wanted-Medium;
     font-size: 16.5px;
-    font-weight: 900;
 
     text-decoration: none;
 }

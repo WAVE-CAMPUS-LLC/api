@@ -1,0 +1,310 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}
+{{ department.name }} Details — WAVE.
+{% endblock title %}
+
+{% block app_page_style %}
+<link rel="stylesheet" type="text/css" href="{% static "/styles/adminDashboardApp/tabs/departments/departmentDetails.css" %}" />
+{% endblock app_page_style %}
+
+{% block script %}
+<script type="text/javascript" src="{% static "scripts/adminDashboardApp/departments/departmentDetails.js" %}"></script>
+{% endblock script %}
+
+{% block header %}
+{% include "partials/nav-footer/nav/admin_nav.html" %}
+{% endblock header %}
+
+{% block container_art %}
+<div id="container-art">
+    <div class="ticket-heading">
+        <div class="ticket-header">
+            <h3>{{ department.name }}</h3>
+        </div>
+    </div>
+</div>
+{% endblock container_art %}
+
+
+{% block body %}
+<div id="content-container">
+    <div id="page-heading">
+        <div id="deptInfo">
+            <h2>
+                {{ department.name }}
+            </h2>
+        </div>
+        <div id="deptEdit">
+            <button type="button" role="button" id="deptEditButton">Edit</button>
+        </div>
+    </div>
+
+    <div id="departmentSummary">
+        <div id="displaySummary">
+            <div id="departmentLead" class="information">
+                <h5>Department Lead</h5>
+                <p>{{department.lead_name}}</p>
+            </div>
+            <div id="departmentContact" class="information">
+                <h5>Department Contact</h5>
+                <p><a href="mailto:{{department.lead_email}}">{{ department.lead_email }}</a></p>
+            </div>
+            <div id="departmentDescription" class="information">
+                <h5>Description</h5>
+                <p>
+                    {{ department.description }}
+                </p>
+            </div>
+            
+            <div id="departmentRoles" class="information">
+                <div id="departmentRolesHeader">
+                    <h5 class="departmentRolesHeading">Available Roles</h5>
+                    <button type="button" role="button" id="createNewRoleButton">Create New Role</button>
+                </div>
+                
+
+                <div id="availableRolesContainer">
+                    {% comment %} 
+                        Query the database to see if a career role exists. 
+                        If it does, display. Else we display "Currently no available roles". 
+                    {% endcomment %}
+                    {% if careerRoles %}
+                    <div id="rolesContainer">
+                        {% for careers in careerRoles %}
+                        <div class="roleDisplayCard" data-role-id="{{ careers.roleID }}">
+                            <div id="compLogo">
+                                <h3>WAVE.</h3>
+                            </div>
+                            <div id="roleName">
+                                {{ careers.roleTitle }}
+                            </div>
+                            <div id="roleCreated">
+                                Last Updated: {{ careers.created_at }}
+                            </div>
+                        </div>
+
+                        {% comment %} Modal to display and information about career role. {% endcomment %}
+                        
+                        <div id="roleDisplayModal{{ careers.roleID }}" class="roleDisplayModal" >
+                            <div id="roleDisplayModalContainer">
+                                <div id="roleDisplayModalCard">
+                                    <div class="rDMC-heading">
+                                        <div class="roleCloseInMC">
+                                            <button type="button" role="button" id="hideModalButton">
+                                                <img src="{% static "images/admin/departments/modalClose.svg" %}" alt="Close">
+                                            </button>
+                                        </div>
+                                        <div class="roleHeadingInMC">
+                                            <h5>{{ careers.roleTitle }}</h5>
+                                        </div>
+                                    </div>
+                                    <div class="rDMC-body">
+                                        <div class="singleDisplayRow">
+                                            <h6>{{ careerRoleForm.roleDescription.label }}</h6>
+                                            <p>
+                                                {{ careers.roleDescription }}
+                                            </p>
+                                        </div>
+                                        <div class="singleDisplayRow">
+                                            <h6>{{ careerRoleForm.roleExpectations.label }}</h6>
+                                            <p>
+                                                {{ careers.roleExpectations }}
+                                            </p>
+                                        </div>
+                                        <div class="singleDisplayRow">
+                                            <h6>{{ careerRoleForm.roleRequirements.label }}</h6>
+                                            <p>
+                                                {{ careers.roleRequirements }}
+                                            </p>
+                                        </div>
+                                        <div class="doubleDisplayRow">
+                                            <div>
+                                                <h6>{{ careerRoleForm.roleLocation.label }}</h6>
+                                                <p>
+                                                    {{ careers.roleLocation }}
+                                                </p>
+                                            </div>
+                                            <div>
+                                                <h6>{{ careerRoleForm.roleType.label }}</h6>
+                                                <p>
+                                                    {{ careers.roleType }}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div class="doubleDisplayRow">
+                                            <div>
+                                                <h6>{{ careerRoleForm.advertisementLength.label }}</h6>
+                                                <p>
+                                                    {{ careers.advertisementLength }} days
+                                                </p>
+                                            </div>
+                                            <div>
+                                                <h6>{{ careerRoleForm.roleCapacity.label }}</h6>
+                                                <p>
+                                                    {{ careers.roleCapacity }}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div class="doubleDisplayRow">
+                                            <div>
+                                                <h6>Created At</h6>
+                                                <p>
+                                                    {{ careers.created_at }}
+                                                </p>
+                                            </div>
+                                            <div>
+                                                <h6>Last Updated</h6>
+                                                <p>
+                                                    {{ careers.updated_at }}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        
+                                        <form action="{% url "waveAdmin:departmentDetails" department.departmentID department.name %}" method="post">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="action" value="delete" />
+                                            <input type="hidden" name="role_id" value="{{ careers.roleID }}" />
+                                            <div class="rDMC-controls">
+                                                <button type="button" id="editRoleBtn">Edit</button>
+                                                <button type="submit" id="deleteRoleBtn">Delete</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div id="noAvailableRoles">
+                        <p>Currently, no available roles.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        {% comment %} Setup to allow the editing of a department's information. {% endcomment %}
+        <div id="editSummary" style="display: {% if edit_mode %}block{% else %}none{% endif %}">
+            <form id="departmentForm" action="{% url "waveAdmin:departmentDetails" department.departmentID department.name %}" method="post">
+                {% csrf_token %}
+                <div class="singleInputRow">
+                    <label for="{{ departmentForm.name.id_for_label }}">
+                        {{ departmentForm.name.label }}
+                        <input type="{{ departmentForm.name.field.widget.input_type }}" name="{{ departmentForm.name.html_name }}" id="{{ departmentForm.name.auto_id }}" autocomplete="off" value="{{department.name}}" required>
+                    </label>
+                </div>
+                <div class="doubleInputRow">
+                    <label for="{{ departmentForm.lead_name.id_for_label }}">
+                        {{ departmentForm.lead_name.label }}
+                        <input type="{{ departmentForm.lead_name.field.widget.input_type }}" name="{{ departmentForm.lead_name.html_name }}" id="{{ departmentForm.lead_name.auto_id }}" autocomplete="off" value="{{department.lead_name}}" required>
+                    </label>
+                    <label for="{{ departmentForm.lead_email.id_for_label }}">
+                        {{ departmentForm.lead_email.label }}
+                        <input type="{{ departmentForm.lead_email.field.widget.input_type }}" name="{{ departmentForm.lead_email.html_name }}" id="{{ departmentForm.lead_email.auto_id }}" autocomplete="off" value="{{department.lead_email}}" required>
+                    </label>
+                </div>
+                <div class="doubleInputRow">
+                    <label for="{{ departmentForm.capacity.id_for_label }}">
+                        {{ departmentForm.capacity.label }}
+                        <input type="{{ departmentForm.capacity.field.widget.input_type }}" name="{{ departmentForm.capacity.html_name }}" id="{{ departmentForm.capacity.auto_id }}" autocomplete="off" value="{{department.capacity}}" required>
+                    </label>
+                    <label for="{{ departmentForm.location.id_for_label }}">
+                        {{ departmentForm.location.label }}
+                        <input type="{{ departmentForm.location.field.widget.input_type }}" name="{{ departmentForm.location.html_name }}" id="{{ departmentForm.location.auto_id }}" autocomplete="off" value="{{department.location}}" required>
+                    </label>
+                </div>
+                <div class="singleInputRow">
+                    <label for="{{ departmentForm.description.id_for_label }}">
+                        {{ departmentForm.description.label }}
+                        <textarea type="{{ departmentForm.description.field.widget.input_type }}" name="{{ departmentForm.description.html_name }}" id="{{ departmentForm.description.auto_id }}" autocomplete="off" required>{{department.description}}</textarea>
+                    </label>
+                </div>
+
+                <button type="submit" id="deptSaveButton">Save</button>
+            </form>
+        </div>
+
+
+        {% comment %} Modal to create new career role. {% endcomment %}
+        <div id="createNewRoleModal">
+            <div class="createNewRoleModalContainer">
+                <form id="createNewRoleModalForm" action="{% url "waveAdmin:departmentDetails" department.departmentID department.name %}" method="post">
+                    {% csrf_token %}
+                    {% if careerRoleForm.errors %}
+                        <ul>
+                        {% for field, error_list in careerRoleForm.errors.items %}
+                            {% for error in error_list %}
+                                <li>{{ field }}: {{ error }}</li>
+                            {% endfor %}
+                        {% endfor %}
+                        </ul>
+                    {% endif %}
+                    <div class="cnrmf-Header">
+                        <h3>Create New Role</h3>
+                        <button type="button" role="button" id="closeCreateNewRoleModal">
+                            <img src="{% static "images/admin/departments/modalClose.svg" %}" alt="Close">
+                        </button>
+                    </div>
+
+                    <div class="cnrmf-FormElements">
+                        <div class="singleInputRow">
+                            <label for="{{ careerRoleForm.roleTitle.id_for_label }}">
+                                {{ careerRoleForm.roleTitle.label }}
+                                <input type="{{ careerRoleForm.roleTitle.field.widget.input_type }}" name="{{ careerRoleForm.roleTitle.html_name }}" id="{{ careerRoleForm.roleTitle.auto_id }}" autocomplete="off" required>
+                            </label>
+                        </div>
+
+                        <div class="singleInputRow">
+                            <label for="{{ careerRoleForm.roleDescription.id_for_label }}">
+                                {{ careerRoleForm.roleDescription.label }}
+                                <textarea type="{{ careerRoleForm.roleDescription.field.widget.input_type }}" name="{{ careerRoleForm.roleDescription.html_name }}" id="{{ careerRoleForm.roleDescription.auto_id }}"></textarea>
+                            </label>
+                        </div>
+
+                        <div class="singleInputRow">
+                            <label for="{{ careerRoleForm.roleExpectations.id_for_label }}">
+                                {{ careerRoleForm.roleExpectations.label }}
+                                <textarea type="{{ careerRoleForm.roleExpectations.field.widget.input_type }}" name="{{ careerRoleForm.roleExpectations.html_name }}" id="{{ careerRoleForm.roleExpectations.auto_id }}"></textarea>
+                            </label>
+                        </div>
+
+                        <div class="singleInputRow">
+                            <label for="{{ careerRoleForm.roleRequirements.id_for_label }}">
+                                {{ careerRoleForm.roleRequirements.label }}
+                                <textarea type="{{ careerRoleForm.roleRequirements.field.widget.input_type }}" name="{{ careerRoleForm.roleRequirements.html_name }}" id="{{ careerRoleForm.roleRequirements.auto_id }}"></textarea>
+                            </label>
+                        </div>
+
+                        <div class="doubleInputRow">
+                            <label for="{{ careerRoleForm.roleLocation.id_for_label }}">
+                                {{ careerRoleForm.roleLocation.label }}
+                                <input type="{{ careerRoleForm.roleLocation.field.widget.input_type }}" name="{{ careerRoleForm.roleLocation.html_name }}" id="{{ careerRoleForm.roleLocation.auto_id }}" autocomplete="off" required>
+                            </label>
+                            <label for="{{ careerRoleForm.roleType.id_for_label }}">
+                                {{ careerRoleForm.roleType.label }}
+                                <input type="{{ careerRoleForm.roleType.field.widget.input_type }}" name="{{ careerRoleForm.roleType.html_name }}" id="{{ careerRoleForm.roleType.auto_id }}" autocomplete="off" required>
+                            </label>
+                        </div>
+
+                        <div class="doubleInputRow">
+                            <label for="{{ careerRoleForm.advertisementLength.id_for_label }}">
+                                {{ careerRoleForm.advertisementLength.label }}
+                                <input type="{{ careerRoleForm.advertisementLength.field.widget.input_type }}" name="{{ careerRoleForm.advertisementLength.html_name }}" id="{{ careerRoleForm.advertisementLength.auto_id }}" autocomplete="off" required>
+                            </label>
+                            <label for="{{ careerRoleForm.roleCapacity.id_for_label }}">
+                                {{ careerRoleForm.roleCapacity.label }}
+                                <input type="{{ careerRoleForm.roleCapacity.field.widget.input_type }}" name="{{ careerRoleForm.roleCapacity.html_name }}" id="{{ careerRoleForm.roleCapacity.auto_id }}" autocomplete="off" required>
+                            </label>
+                        </div>
+
+                        <button type="submit" role="button" id="submitRoleCreation">Create Role</button>
+                    </div>
+                </form>
+            </div>
+        </div>        
+    </div>
+</div>
+{% endblock body %}

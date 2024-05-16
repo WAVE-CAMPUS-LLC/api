@@ -16,11 +16,13 @@
 
     {% block auth_body %}
     <div id="html-content">
+        {% block pageHeader %}
         <header>
             {% block header %}{% endblock header %}
 
             {% block container_art %}{% endblock container_art %}
         </header>
+        {% endblock pageHeader %}
     
         <body>
             {% block body %}{% endblock body %}

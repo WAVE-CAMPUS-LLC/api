@@ -1,40 +1,55 @@
 from django.shortcuts import render, redirect
 
 # Create your views here.
-def aboutView(request):
-    return render(request, "extras/company/about.html")
 
-def careersView(request):
-    return render(request, "extras/company/careers.html")
+
+def aboutView(request):
+    pageName = "About"
+    return render(request, "extras/company/about.html", {"pageName": pageName})
+
 
 def newsroomView(request):
-    return render(request, "extras/company/newsroom.html")
+    pageName = "Newsroom"
+    return render(request, "extras/company/newsroom.html", {"pageName": pageName})
+
+def newsView(request):
+    return render(request, "extras/company/newsroom/news.html")
+
 
 def teamView(request):
-    return render(request, "extras/company/team.html")
+    pageName = "Our Team"
+    return render(request, "extras/company/team.html", {"pageName": pageName})
 
 
 def faqView(request):
-    return render(request, "extras/policy/faq.html")
+    pageName = "Frequently Asked"
+    return render(request, "extras/policy/faq.html", {"pageName": pageName})
 
 def privacyView(request):
-    return render(request, "extras/policy/privacy.html")
+    pageName = "Privacy Policy"
+    return render(request, "extras/policy/privacy.html", {"pageName": pageName})
 
 def safetyView(request):
-    return render(request, "extras/policy/safety.html")
+    pageName = "Safety Policy"
+    return render(request, "extras/policy/safety.html", {"pageName": pageName})
 
 def termsView(request):
-    return render(request, "extras/policy/terms.html")
+    pageName = "Terms"
+    return render(request, "extras/policy/terms.html", {"pageName": pageName})
 
 
-def collegesView(request):
-    return render(request, "extras/resources/colleges.html")
+def hostView(request):
+    pageName = "Host Event"
+    return render(request, "extras/resources/host.html", {"pageName": pageName})
 
-def creatorsView(request):
-    return render(request, "extras/resources/creators.html")
+def collegeCampusesView(request):
+    pageName = "Colleges"
+    return render(request, "extras/resources/collegeCampuses.html", {"pageName": pageName})
 
-def organizersView(request):
-    return render(request, "extras/resources/organizers.html")
+def affiliateView(request):
+    pageName = "Affiliate"
+    return render(request, "extras/resources/affiliate.html", {"pageName": pageName})
 
 def partnersView(request):
-    return render(request, "extras/resources/partners.html")
+    pageName = "Partnership"
+    return render(request, "extras/resources/partners.html", {"pageName": pageName})

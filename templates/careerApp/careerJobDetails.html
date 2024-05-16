@@ -1,0 +1,272 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}
+Careers @ Wave.  
+{% endblock title %}
+
+{% block app_page_style %}
+<link rel="stylesheet" type="text/css" href="{% static "/styles/careerApp/careerJobDetails.css" %}" />
+{% endblock app_page_style %}
+
+{% block script %}
+<script type="text/javascript" src="{% static "scripts/careerApp/careerJobDetails.js" %}"></script>
+{% endblock script %}
+
+
+{% block header %}
+{% include "partials/nav-footer/nav/main_nav.html" %}
+{% endblock header %}
+
+{% block body %}
+<div id="content-container">
+    <div id="page-heading">
+        <h6>
+            {{ careerRole.roleTitle }}
+        </h6>
+        <div id="jobDetailsApply">
+            <div id="jobDetails">
+                <h1 id="jobTeam">
+                    {{ careerRole.department }}
+                </h1>
+                <h2>
+                    {{ careerRole.roleLocation }} ({{ careerRole.roleType }})
+                </h2>
+            </div>
+            <div id="jobApply">
+                <div class="jA-Container">
+                    <button type="button" id="applyJobForm">Apply Now</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="job-divider">
+        <hr>
+    </div>
+
+    <div id="job-description">
+        <div class="jB-mission">
+            <p>
+                At <span id="body-logo">WAVE<span class="spot">.</span></span>, we're on a mission to
+                revolutionize
+                the way college students connect and engage with
+                entertainment and events on a global scale. Our platform is designed to empower students to
+                discover
+                and participate in a vibrant array of experiences, bringing them closer to their peers and the
+                excitement happening both locally and worldwide. We're a dynamic team of college students
+                ourselves,
+                driven by our shared passion for creating unforgettable moments and fostering a sense of
+                community
+                among our users.
+
+                <br><br>
+
+            As a Social Media Manager at <span id="body-logo">WAVE<span class="spot">.</span></span>, you'll
+            play a pivotal role in amplifying our brand and expanding
+            our reach across various social media platforms. You'll be at the forefront of shaping our online
+            presence, crafting compelling content, and engaging with our audience in meaningful ways. Whether
+            it's sharing the latest event highlights, sparking conversations around trending topics, or
+            fostering connections between students from different corners of the globe, you'll be instrumental
+            in bringing the <span id="body-logo">WAVE<span class="spot">.</span></span> experience to life.
+
+            <br><br>
+
+            If you're passionate about harnessing the power of social media to connect students and create
+            unforgettable experiences, we want to hear from you. Join us at <span id="body-logo">WAVE<span
+                    class="spot">.</span></span> and be part of a team that's
+            making waves in the world of college entertainment and events.
+            </p>
+        </div>
+
+        <div class="jB-responsibilities">
+            <h6>What's expected of you</h6>
+            <ul>
+                <li>
+                    Develop and execute a comprehensive social media content strategy aligned with our brand
+                    identity and target audience. Create engaging and relevant content, including graphics,
+                    videos, and written posts, to promote events, drive user engagement, and foster community
+                    interaction.
+                </li>
+                <li>
+                    Manage our presence across various social media platforms, including but not limited to
+                    Instagram, Twitter, Facebook, and TikTok. Regularly update and optimize profiles, monitor
+                    trends, and stay abreast of platform updates and algorithm changes to maximize reach and
+                    engagement.
+                </li>
+                <li>
+                    Proactively engage with our social media audience by responding to comments, messages,
+                    and mentions in a timely and personable manner. Foster a sense of community by facilitating
+                    conversations, encouraging user-generated content, and showcasing user experiences.
+                </li>
+                <li>
+                    Identify and cultivate relationships with relevant influencers, student organizations, and
+                    potential brand partners to amplify our reach and engagement. Collaborate on
+                    co-promotional initiatives, sponsored content, and influencer partnerships to broaden our
+                    presence within the college community.
+                </li>
+            </ul>
+        </div>
+
+        <div class="jB-experience">
+            <h6>What you need to have</h6>
+            <ul>
+                <li>
+                    Develop and execute a social media strategy aligned with WAVE's goals, regularly evaluating
+                    performance metrics to refine tactics and ensure alignment with objectives.
+                </li>
+                <li>
+                    Generate engaging multimedia content tailored to diverse platforms and audience interests,
+                    while also curating user-generated content and leveraging trending topics to maximize reach
+                    and resonance.
+                </li>
+                <li>
+                    Serve as the primary liaison between WAVE and its social media audience, fostering positive
+                    interactions, addressing inquiries promptly, and proactively engaging with users to
+                    cultivate a vibrant and inclusive community.
+                </li>
+            </ul>
+        </div>
+
+        <div class="jB-equalRights">
+            <p>
+                At <span id="body-logo">WAVE<span class="spot">.</span></span>, we're revolutionizing event
+                ticketing with a key focus on college campuses. Our
+                mission is to bring people together for unforgettable experiences, starting with the vibrant
+                communities on college campuses worldwide. With our platform, students can easily discover,
+                book, and attend a wide range of events, from music concerts and sports games to conferences and
+                community gatherings.
+
+                We're dedicated to fostering genuine human connections through our app. We believe that college
+                campuses are hubs of creativity, diversity, and excitement, and we're committed to making
+                event-going more accessible and enjoyable for students everywhere.
+
+                With a rapidly growing user base and ambitious goals, <span id="body-logo">WAVE<span
+                        class="spot">.</span></span> is poised to become a leader in the
+                event ticketing industry, starting with our focus on college campuses. We're looking for
+                passionate individuals who share our vision of bringing people together through live
+                entertainment. If you're excited about the prospect of positively impacting millions of students
+                worldwide, join us in building the future of event ticketing at <span id="body-logo">WAVE<span
+                        class="spot">.</span></span>
+            </p>
+        </div>
+    </div>
+
+    <div id="job-divider">
+        <hr>
+    </div>
+
+    <div id="apply-role">
+        <button id="applyJobFormTwo" type="button" role="button">Apply Now</button>
+    </div>
+</div>
+
+<span id="jobApplicationForm">
+    <div class="applicationPopupBg">
+        <div class="applicationPopupCard">
+            <div id="heading-Close">
+                <div id="contentCard-header">
+                    <h3>Apply for role</h3>
+                </div>
+                <div id="contentCard-close">
+                    <button role="button" type="button" id="contentCardClose-button">
+                        <img src="{% static "images/career/jobAppClose.svg" %}" alt="Minimize Card">
+                    </button>
+                </div>
+            </div>
+
+
+            <form action="{% url "careers:roleDetails" careerRole.roleID %}" method="post">
+                {% csrf_token %}
+                {% for error in careerAppForm.errors %}
+                    <p>{{ error }}</p>
+                {% endfor %}
+
+                <section id="sectionOne">
+                    <div class="infoSOneContainer">
+                        <div id="fNlN-row">
+                            <label for="{{ careerAppForm.applicantFirstName.id_for_label }}">
+                                <p>{{ careerAppForm.applicantFirstName.label }} <span class="redRequired">*</span></p>
+                                <input type="{{ careerAppForm.applicantFirstName.field.widget.input_type }}" name="{{ careerAppForm.applicantFirstName.html_name }}" id="{{ careerAppForm.applicantFirstName.auto_id }}" autocomplete="off" required>
+                            </label>
+                            <label for="{{ careerAppForm.applicantLastName.id_for_label }}">
+                                <p>{{ careerAppForm.applicantLastName.label }} <span class="redRequired">*</span></p>
+                                <input type="{{ careerAppForm.applicantLastName.field.widget.input_type }}" name="{{ careerAppForm.applicantLastName.html_name }}" id="{{ careerAppForm.applicantLastName.auto_id }}" autocomplete="off" required>
+                            </label>
+                        </div>
+                        <div id="emailPhone-row">
+                            <label for="{{ careerAppForm.applicantEmail.id_for_label }}">
+                                <p>{{ careerAppForm.applicantEmail.label }} <span class="redRequired">*</span></p>
+                                <input type="{{ careerAppForm.applicantEmail.field.widget.input_type }}" name="{{ careerAppForm.applicantEmail.html_name }}" id="{{ careerAppForm.applicantEmail.auto_id }}" autocomplete="off" required>
+                            </label>
+                            <label for="{{ careerAppForm.applicantPhone.id_for_label }}">
+                                <p>{{ careerAppForm.applicantPhone.label }} <span class="redRequired">*</span></p>
+                                <input type="{{ careerAppForm.applicantPhone.field.widget.input_type }}" name="{{ careerAppForm.applicantPhone.html_name }}" id="{{ careerAppForm.applicantPhone.auto_id }}" autocomplete="off" required>
+                            </label>
+                        </div>
+                        <div id="location-row">
+                            <label for="{{ careerAppForm.applicantLocation.id_for_label }}">
+                                <p>{{ careerAppForm.applicantLocation.label }} <span class="redRequired">*</span></p>
+                                <input type="{{ careerAppForm.applicantLocation.field.widget.input_type }}" name="{{ careerAppForm.applicantLocation.html_name }}" id="{{ careerAppForm.applicantLocation.auto_id }}" autocomplete="off" required>
+                            </label>
+                        </div>
+                        <div id="cVcL-row">
+                            <label for="{{ careerAppForm.applicantResume.id_for_label }}" class="file-upload">
+                                <p>{{ careerAppForm.applicantResume.label }}<span class="redRequired">*</span></p>
+                                <div class="resumeUpload">
+                                    Attach
+                                </div>
+                                <input  type="{{ careerAppForm.applicantResume.field.widget.input_type }}" name="{{ careerAppForm.applicantResume.html_name }}" id="{{ careerAppForm.applicantResume.auto_id }}" accept=".doc,.docx,.pdf,.txt" class="input-file">
+                            </label>
+
+                            <label for="{{ careerAppForm.applicantCoverLetter.id_for_label }}" class="file-upload">
+                                <p>{{ careerAppForm.applicantCoverLetter.label }}</p>
+                                <div class="coverLetterUpload">
+                                    Attach
+                                </div>
+                                <input type="{{ careerAppForm.applicantCoverLetter.field.widget.input_type }}" name="{{ careerAppForm.applicantCoverLetter.html_name }}" id="{{ careerAppForm.applicantCoverLetter.auto_id }}" accept=".doc,.docx,.pdf,.txt" class="input-file">
+                            </label>
+                        </div>
+
+                        <div id="submitNext">
+                            <button type="button" id="nextButtonControl">Next</button>
+                        </div>
+                    </div>
+                </section>
+                <section id="sectionTwo" style="display: none;">
+                    <h6>Extra Information</h6>
+                    <div class="infoSTwoContainer">
+                        <label for="{{ careerAppForm.whatYouBring.id_for_label }}">
+                            <p>{{ careerAppForm.whatYouBring.label }}<span class="redRequired">*</span></p>
+                            <textarea type="{{ careerAppForm.whatYouBring.field.widget.input_type }}" name="{{ careerAppForm.whatYouBring.html_name }}" id="{{ careerAppForm.whatYouBring.auto_id }}"></textarea>
+                        </label>
+                        <label for="{{ careerAppForm.applicantPortfolio.id_for_label }}">
+                            <p>{{ careerAppForm.applicantPortfolio.label }}<span class="redRequired">*</span></p>
+                            <input type="{{ careerAppForm.applicantPortfolio.field.widget.input_type }}" name="{{ careerAppForm.applicantPortfolio.html_name }}" id="{{ careerAppForm.applicantPortfolio.auto_id }}">
+                        </label>
+                        <label for="{{ careerAppForm.applicantLinkedIn.id_for_label }}">
+                            <p>{{ careerAppForm.applicantLinkedIn.label }}<span class="redRequired">*</span></p>
+                            <input type="{{ careerAppForm.applicantLinkedIn.field.widget.input_type }}" name="{{ careerAppForm.applicantLinkedIn.html_name }}" id="{{ careerAppForm.applicantLinkedIn.auto_id }}">
+                        </label>
+                        <label for="{{ careerAppForm.applicantGithub.id_for_label }}">
+                            <p>{{ careerAppForm.applicantGithub.label }} <span class="redRequired">*</span></p>
+                            <input type="{{ careerAppForm.applicantGithub.field.widget.input_type }}" name="{{ careerAppForm.applicantGithub.html_name }}" id="{{ careerAppForm.applicantGithub.auto_id }}">
+                        </label>
+                        <label for="{{ careerAppForm.workAuthorization.id_for_label }}">
+                            <p>{{ careerAppForm.workAuthorization.label }}<span class="redRequired">*</span></p>
+                            <textarea type="{{ careerAppForm.workAuthorization.field.widget.input_type }}" name="{{ careerAppForm.workAuthorization.html_name }}" id="{{ careerAppForm.workAuthorization.auto_id }}"></textarea>
+                        </label>
+
+                        <div id="previousSubmit">
+                            <button type="button" id="previousButtonControl">Return</button>
+                            <button type="submit" id="submitButtonControl">Submit</button>
+                        </div>
+                    </div>
+
+                </section>
+
+            </form>
+        </div>
+    </div>
+</span>
+{% endblock body %}

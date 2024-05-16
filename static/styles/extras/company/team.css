@@ -1,0 +1,111 @@
+/** Body Content **/
+#content-container {
+    padding-top: 70px;
+    padding-bottom: 70px;
+    padding-left: 100px;
+    padding-right: 100px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 100px;
+}
+
+#memberInformation {
+    display: flex;
+    flex-direction: row;
+    gap: 100px;
+}
+
+#memberInformation.reversed {
+    flex-direction: row-reverse;
+}
+
+#memberInformation-Img {
+    width: 40%;
+}
+
+#memberInformation-Img img{
+    width: 100%;
+    height: 100%;
+
+    -webkit-box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.061);
+    -moz-box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.061);
+    box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.061);
+
+    border-radius: 20px;
+}
+
+#memberInformation #text-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 60%;
+}
+
+.txtContainer-info {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.txtContainer-info h5{
+    font-family: Wanted-Bold;
+    font-size: 45px;
+}
+
+.txtContainer-info h4 {
+    font-family: Wanted-Medium;
+    font-size: 30px;
+    color: #008d95;
+}
+
+.txtContainer-info p {
+    font-family: Wanted-Regular;
+    font-size: 20px;
+    color: #343434c8;
+}
+
+.txtContainer-info img {
+    width: 30px;
+}
+
+
+
+.teamDivider {
+    width: 100%;
+    
+    display: flex;
+    justify-content: center;
+}
+
+.teamDivider hr {
+    width: 50%;
+    border: 3px solid rgba(70, 70, 70, 0.065);
+    border-radius: 10px;
+}
+
+.joinTeam {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    gap: 20px;
+
+    font-size: 25px;
+    font-family: Wanted-SemiBold;
+}
+
+.joinTeam a {
+    background-color: #000000;
+    padding: 20px;
+    border-radius: 15px;
+
+    font-size: 25px;
+    font-family: Wanted-SemiBold;
+    text-decoration: none;
+    color: white;
+
+    width: 20%;
+}

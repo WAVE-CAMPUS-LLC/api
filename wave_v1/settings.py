@@ -46,6 +46,8 @@ INSTALLED_APPS = [
     "adminDashboardApp",
     "accountManagementApp",
     "coreApp", 
+    "extras",
+    "careerApp",
     "eventManagementApp", 
     "supportCenterApp"
 ]

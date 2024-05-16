@@ -21,7 +21,7 @@ Profile Overview
 {% block body %}
 <div id="body">
     <div id="body-header">
-        <h3>Profile Overview</h3>
+        <h3>Welcome, {{ user.first_name }}!</h3>
     </div>
     <div id="content-container">
         <div class="cc-user-card">
@@ -42,7 +42,7 @@ Profile Overview
                     </div>
                     <div class="phone">
                         <h6>Phone Number</h6>
-                        <p>***-***-9206</p>
+                        <p>{{ user.phone_number }}</p>
                     </div>
                 </div>
                 <div id="edit">
