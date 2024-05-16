@@ -1,6 +1,7 @@
 from django.shortcuts import redirect
 from django.urls import reverse
 
+# This is a middleware that prevents already authenticated users from accessing the login and join pages. 
 class RedirectAuthenticatedUsersMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
