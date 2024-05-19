@@ -51,12 +51,12 @@ def adminUsersView(request):
 def adminUserDetailedView(request, user_id):
     if request.user.is_superuser:
         try:
-            user_in_view = CustomUser.objects.get(user_id=user_id)
+            user_in_view = CustomUser.objects.get(user_id = user_id)
             login_history = LoginHistoryModel.objects.filter(user=user_in_view)
             if request.method == 'POST':
                 new_role = request.POST.get('new_role')
                 try:
-                    user = CustomUser.objects.get(user_id=user_id)
+                    user = CustomUser.objects.get(user_id = user_id)
                     user.role = new_role
                     user.save()
                     return redirect('admin:users')

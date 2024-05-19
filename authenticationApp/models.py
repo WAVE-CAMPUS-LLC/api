@@ -15,9 +15,9 @@ from .managers import CustomUserManager
 # Create your models here.
 class CustomUser(AbstractBaseUser, PermissionsMixin):
     ROLES = [
-        ('host', 'Host'),
-        ('user', 'User'),
-        ('admin', 'Admin')
+        ('Host', 'Host'),
+        ('User', 'User'),
+        ('Admin', 'Admin')
     ]
     GENDER_OPTIONS = [
         ('Male', 'Male'),
@@ -63,7 +63,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     is_staff = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
     
-    role = models.CharField(_("Role"), max_length=5, choices=ROLES, default='user', help_text=(_("Role")))
+    role = models.CharField(_("Role"), max_length=5, choices=ROLES, default='User', help_text=(_("Role")))
     
     objects = CustomUserManager()
 
@@ -75,6 +75,8 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         "gender",
         "phone_number",
     ]
+    
+    user_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
 
     class Meta:
         verbose_name = "Current User"

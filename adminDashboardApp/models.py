@@ -5,7 +5,7 @@ from django.db import models
 from django.conf import settings
 from django.utils import timezone
 
-from accountManagementApp.models import UserProfile
+from authenticationApp.models import CustomUser
 
 # Create your models here.
 
@@ -18,7 +18,7 @@ class LoginHistoryModel(models.Model):
     ip_address = models.CharField(max_length=50)
     session_duration_minutes = models.IntegerField(null=True, blank=True)
     session_duration_seconds = models.IntegerField(null=True, blank=True)  # New field for session duration in seconds
-    role = models.CharField(max_length=4, blank=True) # New field for user role
+    role = models.CharField(max_length=4, null=True, blank=True) # New field for user role
 
 
     def save(self, *args, **kwargs):
@@ -32,9 +32,9 @@ class LoginHistoryModel(models.Model):
         
         if not self.role:
             try:
-                user_profile = self.user.userprofile
-                self.role = user_profile.role
-            except UserProfile.DoesNotExist:
+                user_info = CustomUser()    
+                self.role = user_info.role
+            except CustomUser.DoesNotExist:
                 self.role = 'user' # default role
         super().save(*args, **kwargs)
         
