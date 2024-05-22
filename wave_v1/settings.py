@@ -46,7 +46,8 @@ INSTALLED_APPS = [
     "accountManagementApp",
     "coreApp", 
     "eventManagementApp", 
-    "supportCenterApp"
+    "supportCenterApp",
+    "newsApp"
 ]
 
 MIDDLEWARE = [

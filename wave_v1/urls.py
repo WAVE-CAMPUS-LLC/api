@@ -24,5 +24,6 @@ urlpatterns = [
     path("", include('accountManagementApp.urls')),
     path("", include('coreApp.urls')),
     path("", include('supportCenterApp.urls')),
+    path("", include('newsApp.urls')),
     path("admin/", admin.site.urls),
 ]
