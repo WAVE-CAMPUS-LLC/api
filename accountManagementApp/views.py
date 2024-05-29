@@ -57,6 +57,12 @@ def settingsView(request):
         },
     )
 
+@login_required(login_url="authentication:login")
+def showUserTag(request):
+    user = request.user
+    profile = UserProfile.objects.get(user=user)
+    return render(request, "accountManagementApp/partials/userTag.html", {"profile": profile})
+
 
 from django.urls import reverse_lazy
 from django.contrib.auth.views import PasswordChangeView
@@ -74,7 +80,7 @@ class ChangePasswordView(SuccessMessageMixin, PasswordChangeView):
 
         # If password change is successful, update the session
         if result.status_code == 302:  # Redirection status code
-            update_session_auth_hash(request, request.user)
+            update_session_auth_hash(request, request.user) # type: ignore
 
         return result
     

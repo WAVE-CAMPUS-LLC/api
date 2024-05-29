@@ -2,7 +2,6 @@ from datetime import timedelta
 from django.db import models
 from django.conf import settings
 from django.utils import timezone
-import uuid
 
 # Create your models here.
 class Department(models.Model):
@@ -53,6 +52,8 @@ class LoginHistoryModel(models.Model):
     ip_address = models.CharField(max_length=50)
     session_duration_minutes = models.IntegerField(null=True, blank=True)
     session_duration_seconds = models.IntegerField(null=True, blank=True)  # New field for session duration in seconds
+    role = models.CharField(max_length=4, null=True, blank=True) # New field for user role
+
 
     def save(self, *args, **kwargs):
         if self.logout_time:
@@ -60,6 +61,15 @@ class LoginHistoryModel(models.Model):
             self.session_duration_minutes = session_duration.total_seconds() // 60
             self.session_duration_seconds = session_duration.total_seconds() % 60  # Calculate remaining seconds
             print(f'Session duration: {session_duration}')
+
+        # set the role
+        
+        if not self.role:
+            try:
+                user_info = CustomUser()    
+                self.role = user_info.role
+            except CustomUser.DoesNotExist:
+                self.role = 'user' # default role
         super().save(*args, **kwargs)
         
     @property

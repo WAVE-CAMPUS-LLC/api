@@ -96,13 +96,14 @@ WAVE. — Management Dashboard
 
                 <div id="icbh-role-info">
                     <div id="role-name">
-                        {% if user.is_superuser %}
+                        {{ user.role}}
+                        {% comment %} {% if user.is_superuser %}
                         <h5>Super Admin</h5>
                         {% elif user.is_staff %}
                         <h5>Staff</h5>
                         {% else %}
                         <h5>Member</h5>
-                        {% endif %}
+                        {% endif %} {% endcomment %}
                     </div>
 
                     <h5 id="last-active">

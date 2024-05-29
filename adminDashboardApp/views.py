@@ -11,8 +11,7 @@ from wave_v1 import settings
 from .models import Department, CareerRole, LoginHistoryModel
 from .forms import DepartmentForm, CareerRoleCreationForm
 from wave_v1.decorators import admin_required
-
-
+    
 # Create your views here.
 @login_required(login_url="authentication:login")
 @admin_required
@@ -144,7 +143,7 @@ def adminUserDetailedView(request, user_id):
     if request.user.is_superuser:
         try:
             user_in_view = CustomUser.objects.get(user_id=user_id)
-            login_history = LoginHistoryModel.objects.filter(user=user_in_view)
+            login_history = LoginHistoryModel.objects.filter(user=user_in_view) 
         except:
             return HttpResponse(
                 "User does not exist."
