@@ -2,17 +2,88 @@
 {% load static %}
 
 {% block title %}
-About Wave. — Our Goals and Values
+About WAVE.
 {% endblock title %}
 
 {% block app_page_style %}
 <link rel="stylesheet" type="text/css" href="{% static "/styles/extras/company/about.css" %}" />
 {% endblock app_page_style %}
 
-{% block header %}
-{% include "partials/nav-footer/nav/main_nav.html" %}
-{% endblock header %}
+{% block pageHeader %}
+{% include "partials/headers/aboutHeader.html" %}
+{% endblock pageHeader %}
 
 {% block body %}
+<div id="content-container">
+    <div id="body-content">
+        <div id="row-one">
+            <div id="bc-ro-information">
+                <h6>Our Story</h6>
+                <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Fuga nemo, repudiandae distinctio vel
+                    impedit totam, molestiae perferendis, provident voluptates numquam esse sed laudantium illo
+                    dolore et delectus dolores atque aut?
+                    Our platform serves as a dynamic bridge, empowering organizers to showcase their events with
+                    essential details while providing users with a hassle-free way to discover, purchase tickets,
+                    and participate in campus happenings.
+                    By cultivating a collaborative environment, we aim to entice organizers,
+                    thereby attracting a broad consumer base and ensuring widespread adoption.
+                </p>
+            </div>
 
+            <div id="bc-ro-img">
+                <span id="img-placeholder"></span>
+            </div>
+        </div>
+
+        <div id="row-two">
+            <div id="bc-rt-img">
+                <span id="img-placeholder"></span>
+            </div>
+
+            <div id="bc-rt-information">
+                <h6>Our Mission<h6>
+                <p id="bcrti-p">Lorem ipsum dolor sit amet consectetur adipisicing elit.
+                    Voluptates quam veniam facilis eum impedit deserunt ullam eveniet dicta distinctio
+                    voluptas excepturi cupiditate reiciendis sunt,
+                    sapiente vel sint corporis alias accusamus.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="page-divider">
+        <hr>
+    </div>
+
+    <div id="container-art3">
+        <div id="founders-heading">
+            <div id="founders-header">
+                <h3>Our Founders</h3>
+            </div>
+        </div>
+    </div>
+
+    <div id="container-art4">
+        <div id="row-five">
+            <div class="founder-container">
+                <div class="founders-image">
+                    <img src="{% static "images/extras/company/team/enosh.jpg" %}" />
+                </div>
+                <div class="founders-text">
+                    <h6>Enosh Lartey</h6>
+                    <h1>Founder</h1>
+                </div>
+            </div>
+            <div class="founder-container">
+                <div class="founders-image">
+                    <img src="{% static "images/extras/company/team/edmund.jpg" %}" />
+                </div>
+                <div class="founders-text">
+                    <h6>Edmund Afunyah</h6>
+                    <h1>Co-Founder</h1>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock body %}

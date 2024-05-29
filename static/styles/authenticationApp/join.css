@@ -2,7 +2,6 @@ body {
     width: 100vw;
     height: 100vh;
     overflow: hidden;
-    background-color: black;
 }
 
 
@@ -10,7 +9,7 @@ body {
     width: 100%;
     display: flex;
     justify-content: center;
-    padding-top: 50px;
+    padding-top: 30px;
 }
 
 #logo {
@@ -19,7 +18,7 @@ body {
 }
 
 #logo a {
-    color: white;
+    color: black;
     text-decoration: none;
 }
 
@@ -34,6 +33,9 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
+
+    padding-top: 150px;
+    padding-bottom: 10px;
 
     flex-direction: column; /** Making elements be displayed in rows. **/
     row-gap: 20px; /** Adding a gap between elements horizontally. **/
@@ -55,7 +57,7 @@ body {
     row-gap: 20px;
     background-color: white;
 
-    width: 60%;
+    width: 40%;
 
     /** Card Padding **/
     padding-top: 20px;
@@ -68,9 +70,9 @@ body {
     border-radius: 20px;
 
     /** Card Shadowing **/
-    -webkit-box-shadow: 2px 2px 2px 0px rgba(255,255,255,1);
-    -moz-box-shadow: 2px 2px 2px 0px rgba(255,255,255,1);
-    box-shadow: 2px 2px 2px 0px rgba(255,255,255,1);
+    -webkit-box-shadow: 2px 3px 21px 4px rgba(62, 62, 62, 0.257);
+    -moz-box-shadow: 2px 3px 21px 4px rgba(62, 62, 62, 0.257);
+    box-shadow: 2px 3px 21px 4px rgba(62, 62, 62, 0.257);
 }
 
 #joinCard #heading {
@@ -83,265 +85,187 @@ body {
     justify-content: center;
 }
 
-#sectionName {
-    color:black;
-}
-
-/* The CSS code `#joinCard form` is targeting the form element inside the element with the ID
-"joinCard". */
 #joinCard form {
     display: flex;
     flex-direction: column;
-    row-gap: 30px;
+    gap: 15px;
 }
 
+#rowOne,
+#rowFour {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+}
 
-/** Form Inputs and Labels **/
-#contentElements {
+#rowOne label,
+#rowTwo label,
+#rowThree label,
+#rowFour label,
+#rowFive label,
+#rowSix label {
+    font-family: Wanted-SemiBold;
+    font-size: 13px;
+    color: black;
+    text-transform: uppercase;
+
     display: flex;
     flex-direction: column;
-    row-gap: 30px;
-}
+    gap: 5px;
 
-#sectionName {
     width: 100%;
-    display: flex;
-    justify-content: center;
 }
 
-#sectionName h2 {
-    font-family: Wanted-Medium; 
+#rowOne input,
+#rowTwo input,
+#rowFour input,
+#rowFive input,
+#rowSix input {
+    padding: 10px;
+    padding-left: 13px;
+    padding-right: 13px;
+    border-radius: 10px;
+    border: 1px solid rgba(9, 9, 9, 0.108);
+
+    font-family: Wanted-Regular;
+    font-size: 15px;
+
+    width: 100%;
+
+    /** Box Shadowing **/
+    -webkit-box-shadow: 2px 3px 21px 4px rgba(138, 138, 138, 0.108);
+    -moz-box-shadow: 2px 3px 21px 4px rgba(138, 138, 138, 0.108);
+    box-shadow: 2px 3px 21px 4px rgba(138, 138, 138, 0.026);
+}
+
+#birthdayInputs {
+    display: flex;
+    flex-direction: row;
+    gap: 15px;
+}
+
+.firstName input:focus {
+    border-color: #008d95;
+}
+
+#usernamePlaceholder {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+
+    border-radius: 10px;
+    border: 1px solid rgba(9, 9, 9, 0.108);
+
+    padding: 12px;
+    padding-top: 0;
+    padding-bottom: 0;
+    padding-left: 0;
+}
+
+#usernamePlaceholder h6 {
+    font-family: Wanted-Bold;
+    font-size: 23px;
+
+    padding-left: 12px;
+    padding-right: 12px;
+    border-right: 1px solid rgba(9, 9, 9, 0.108);;
+
+    color: grey;
+}
+
+#usernamePlaceholder input {
+    border: none;
+    padding: 10px;
+    width: 100%;
+
+    font-family: Wanted-Regular;
     font-size: 15px;
 }
 
-#row {
-    display: flex;
-    width: 100%;
-    gap: 30px;
-}
-
-#rowElement {
-    font-family: Wanted-Regular;
-    position: relative;
-    height: 50px;
-    border-bottom: 2px solid black;
-    width: 50%;
-    margin: 10px 0;
-}
-
-
-
-#rowElement label {
-    position: absolute;
-    top: 50%;
-    left: 5px;
-    translate: translateY(-50%);
-    font-size: 1em;
-    color: black;
-    font-weight: 500;
-    pointer-events: none;
-    transition: .5s;
-}
-
-#rowElement label span,
-.input-group label span {
-    color: red;
-}
-
-#rowElement input:focus~label,
-#rowElement input:valid~label {
-    top: -5px;
-}
-
-input[type=date]:required:invalid::-webkit-datetime-edit {
-    color: transparent;
-}
-
-input[type=date]:focus::-webkit-datetime-edit {
-    color: black !important;
-}
-
-#rowElement input,
-#birthdayRowElement input,
-#rowElement select {
-    font-family: Wanted-Regular;
-    width: 100%;
-    height: 100%;
-    background: transparent;
+#usernamePlaceholder input:focus {
     border: none;
-    outline: none;
-    font-size: 1em;
-    color: black;
-    font-weight: 600;
-    padding: 0 25px 0 6px;
-    margin-top: 10px;
 }
 
-#birthdayRowElement {
-    font-family: Wanted-Regular;
-    width: 50%;
-    gap: 10px;
-    margin: 10px 0;
-}
-
-.input-group {
-    position: relative;
-    height: 50px;
-    border-bottom: 2px solid black;
-    margin-bottom: 10px; /* Adjust spacing between input groups */
-}
-
-.input-group input {
-    width: calc(100%/3);
-    border: none;
-    outline: none;
-    font-size: 1em;
-    padding-left: 5px;
-}
-
-.birthday-label {
-    position: absolute;
-    top: 50%;
-    left: 5px;
-    translate: translateY(-50%);
-    font-size: 1em;
-    color: black;
-    font-weight: 500;
-    pointer-events: none;
-    transition: .5s;
-}
-
-.input-group input:focus ~ .birthday-label,
-.input-group input:valid ~ .birthday-label {
-    top: -5px;
-}
-
-
-/** Section Two Elements **/
-#rowTwo {
+#signupComplete {
     display: flex;
-    width: 100%;
-    gap: 30px;
+    flex-direction: column;
+    gap: 5px;
+
+    font-family: Wanted-Regular;
 }
 
-#rowTwoElement {
-    font-family: Wanted-Regular;
-    position: relative;
-    height: 50px;
-    border-bottom: 2px solid black;
-    width: 100%;
-    margin: 10px 0;
-}
-
-#rowTwoElement input {
-    font-family: Wanted-Regular;
-    width: 100%;
-    height: 100%;
-    background: transparent;
+#proceedBtn {
+    background-color: #008d95;
     border: none;
-    outline: none;
-    font-size: 1em;
-    color: black;
-    font-weight: 600;
-    padding: 0 25px 0 6px;
-    margin-top: 10px;
-}
+    border-radius: 13px;
+    padding: 15px;
 
-#rowTwoElement label {
-    position: absolute;
-    top: 50%;
-    left: 5px;
-    translate: translateY(-50%);
-    font-size: 1em;
-    color: black;
-    font-weight: 500;
-    pointer-events: none;
-    transition: .5s;
-}
+    font-size: 18px;
+    font-family: Wanted-Regular;
+    color: white;
 
-#rowTwoElement label span{
-    color: red;
-}
-
-#rowTwoElement input:focus~label,
-#rowTwoElement input:valid~label {
-    top: -5px;
-}
-
-
-/** Submit or Return **/
-#controlledElements { 
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
-}
-
-#controlledElements #returnContainer h5,
-#nextContainer button {
     cursor: pointer;
 }
 
-#returnContainer h5 {
-    display: flex;
-    align-items: center;
+#proceedBtn:disabled {
+    background-color: #008d9594;
+    cursor: default;
+}
 
-    font-family: Wanted-Regular;
+#signupComplete a {
+    color: #008d95;
+    text-decoration: none;
+}
+
+#signupComplete p {
+    font-family: Wanted-Variable;
     font-size: 14px;
-    color: black;
 }
 
-#returnContainer h5:hover {
-    text-decoration: solid underline 1px;
-}
-
-#nextContainer button{
-    background: black;
-    border: none;
-    outline: none;
-    border-radius: 6px;
-
-    padding-top: 10px;
-    padding-bottom: 10px;
-    padding-left: 10px;
-    padding-right: 10px;
-
+#existingAccount {
+    font-family: Wanted-Variable;
     font-size: 14px;
-    color: white;
-    font-weight: 500;
-    font-family: Wanted-Regular;
-}
-
-
-
-/** Already have an account? **/
-#signInLink h6{
-    color: white;
-
-    text-align: center;
     width: 100%;
-
-    /** Font Settings **/
-    font-family: Wanted-Regular;
-    font-size: 15px;
+    display: flex;
+    justify-content: end;
 }
 
-#signInLink a {
-    color: white;
-    text-decoration: solid underline 1px;
-}
+#existingAccount a {
+    text-decoration: none;
+    color: #008d95;
+    padding-left: 3px;
 
-#signInLink a:hover {
-    text-decoration: double underline 1px;
 }
 
 /**Include in the base html - Error displaying.**/
 #errorContainer {
-    color: red;
     display: inline-block;
-    font-style: italic;
     font-size: 13px;
-    font-family: Wanted-Regular;
+    text-transform: capitalize;
+    align-items: center;
+}
+
+#firstNameLiveValidationError,
+#lastNameLiveValidationError,
+#emailLiveValidationError,
+#usernameLiveValidationError,
+#passwordOneLiveValidationError,
+#passwordTwoLiveValidationError,
+#phoneLiveValidationError,
+#birthdayLiveValidationError {
+    color: red;
+}
+
+#firstNameLiveValidationValid,
+#lastNameLiveValidationValid,
+#emailLiveValidationValid,
+#usernameLiveValidationValid,
+#passwordOneLiveValidationValid,
+#passwordTwoLiveValidationValid,
+#phoneLiveValidationValid,
+#birthdayLiveValidationValid {
+    color: rgb(0, 177, 0);
 }
 
 #errorContainer div {
@@ -351,4 +275,8 @@ input[type=date]:focus::-webkit-datetime-edit {
 
 #errorContainer div p {
     display: inline-block;
+}
+
+#requiredIndicator {
+    color: red;
 }

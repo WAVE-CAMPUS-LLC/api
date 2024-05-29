@@ -1,0 +1,217 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}
+WAVE. — Management Dashboard
+{% endblock title %}
+
+{% block app_page_style %}
+<link rel="stylesheet" type="text/css" href="{% static "/styles/adminDashboardApp/tabs/careers/careerDetails.css" %}" />
+{% endblock app_page_style %}
+
+{% block script %}
+<script type="text/javascript" src="{% static "scripts/adminDashboardApp/careers/careerDetails.js" %}"></script>
+{% endblock script %}
+
+
+{% block header %}
+{% include "partials/nav-footer/nav/admin_nav.html" %}
+{% endblock header %}
+
+{% block container_art %}
+<div id="container-art">
+    <div class="ticket-heading">
+        <div class="ticket-header">
+            <h3>Career Details</h3>
+        </div>
+    </div>
+</div>
+{% endblock container_art %}
+
+
+
+
+{% block body %}
+<div id="content-container">
+    <div id="page-heading">
+        <div id="deptInfo">
+            <h2>
+                {{ careerRoles_detail.roleTitle }}
+            </h2>
+        </div>
+    </div>
+
+    <div id="departmentSummary">
+        <div class="roleInformation">
+            <div class="rDMC-body">
+                <div class="singleDisplayRow">
+                    <h6>Description</h6>
+                    <p>
+                        {{ careerRoles_detail.roleDescription }}
+                    </p>
+                </div>
+                <div class="singleDisplayRow">
+                    <h6>Role Expectations</h6>
+                    <p>
+                        {{ careerRoles_detail.roleExpectation }}
+                    </p>
+                </div>
+                <div class="singleDisplayRow">
+                    <h6>Role Requirements</h6>
+                    <p>
+                        {{ careerRoles_detail.roleRequirements }}
+                    </p>
+                </div>
+                <div class="doubleDisplayRow">
+                    <div>
+                        <h6>Location</h6>
+                        <p>
+                            {{ careerRoles_detail.roleLocation }}
+                        </p>
+                    </div>
+                    <div>
+                        <h6>Role Type</h6>
+                        <p>
+                            {{ careerRoles_detail.roleType }}
+                        </p>
+                    </div>
+                </div>
+                <div class="doubleDisplayRow">
+                    <div>
+                        <h6>Ad Length Period</h6>
+                        <p>
+                            {{ careerRoles_detail.advertisementLength }} days
+                        </p>
+                    </div>
+                    <div>
+                        <h6>Role Capacity</h6>
+                        <p>
+                            {{ careerRoles_detail.roleCapacity }}
+                        </p>
+                    </div>
+                </div>
+                <div class="doubleDisplayRow">
+                    <div>
+                        <h6>Created At</h6>
+                        <p>
+                            {{ careerRoles_detail.created_at }}
+                        </p>
+                    </div>
+                    <div>
+                        <h6>Last Updated</h6>
+                        <p>
+                            {{ careerRoles_detail.updated_at }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="roleApplicants">
+            <div class="rA-header">
+                Applications Received
+            </div>
+
+            <div id="applicationsContainer">
+                {% for application in applications %}
+                <div class="rA-Body">
+                    
+                    <div role="button" id="applicantCard-{{ forloop.counter }}" class="applicantCard">
+                        <h3>{{ application.applicantFirstName }} {{ application.applicantLastName }}</h3>
+                    </div>
+                </div>
+
+
+                <div id="applicantInfoModal-{{ forloop.counter }}" class="applicantInfoModal">
+                    <div class="applicantInfoModalContainer">
+                        <div class="applicantInfoModalCard">
+                            <div class="aIMC-heading">
+                                <div class="roleCloseInMC">
+                                    <button type="button" role="button" class="hideAppModalButton" id="hideAppModalButton-{{ forloop.counter }}">
+                                        <img src="{% static "images/admin/jobs/modalClose.svg" %}"
+                                            alt="Close">
+                                    </button>
+                                </div>
+                                <div class="roleHeadingInMC">
+                                    <h5>{{ application.applicantFirstName }} {{ application.applicantLastName }}</h5>
+                                </div>
+                            </div>
+                            <div class="aIMC-body">
+                                <div class="appContent">
+                                    <div class="singleDisplayRow">
+                                        <h6>Name</h6>
+                                        <p>{{ application.applicantFirstName }} {{ application.applicantLastName }}</p>
+                                    </div>
+
+                                    <div class="doubleDisplayRow">
+                                        <div>
+                                            <h6>Email</h6>
+                                            <p>{{ application.applicantEmail }}</p>
+                                        </div>
+                                        <div>
+                                            <h6>Phone</h6>
+                                            <p>{{ application.applicantPhone }}</p>
+                                        </div>
+                                    </div>
+
+                                    <div class="singleDisplayRow">
+                                        <h6>Location</h6>
+                                        <p>{{ application.applicantLocation }}</p>
+                                    </div>
+
+                                    <div class="singleDisplayRow">
+                                        <h6>Portfolio</h6>
+                                        <p>{{ application.applicantPortfolio }}</p>
+                                    </div>
+
+                                    <div  class="doubleDisplayRow">
+                                        <div>
+                                            <h6>LinkedIn</h6>
+                                            <p>{{ application.applicantLinkedIn }}</p>
+                                        </div>
+        
+                                        <div>
+                                            <h6>Github</h6>
+                                            <p>{{ application.applicantGithub }}</p>
+                                        </div>
+                                    </div>
+
+                                    
+
+                                    <div class="singleDisplayRow">
+                                        <h6>Legally allowed to work for WAVE.?</h6>
+                                        <p>
+                                            {{ application.workAuthorization }}
+                                        </p>
+                                    </div>
+
+                                    <div class="doubleDisplayRow">
+                                        <div>
+                                            <h6>Resume or CV</h6>
+                                            <button type="button" class="downloadDoc">Download</button>
+                                        </div>
+                                        <div>
+                                            <h6>Cover Letter</h6>
+                                            <button type="button" class="downloadDoc">Download</button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <form action="{% url "waveAdmin:careerDetails" roleID=careerRoles_detail.roleID %}" id="applicationActionForm" method="post">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="applicantEmail" value="{{application.applicantEmail}}" id="applicantEmailInput">
+                                    <div class="appAction">
+                                        <button type="submit" name="applicationAction" value="deny" id="denyApplicant">Deny</button>
+                                        <button type="submit" name="applicationAction" value="approve" id="approveApplicant">Approve</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock body %}

@@ -10,10 +10,10 @@
         </div>
         <div id="menu">
             <ul>
-                <li><a href="">Explore</a></li>
-                <li><a href="">Partner</a></li>
-                <li><a href="">Safety</a></li>
-                <li><a href="">Careers</a></li>
+                <li><a href="{% url "core:explore" %}">Explore</a></li>
+                <li><a href="{% url "extras:partners" %}">Partner</a></li>
+                <li><a href="{% url "extras:safety" %}">Safety</a></li>
+                <li><a href="{% url "careers:home" %}">Careers</a></li>
             </ul>
         </div>
     </div>

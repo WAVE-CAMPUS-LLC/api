@@ -10,7 +10,7 @@ WAVE — Join Us!
 {% endblock app_page_style %}
 
 {% block script %}
-<script type="text/javascript" src="{% static "/scripts/authenticationApp/join/join.js" %}" defer></script>
+<script type="text/javascript" src="{% static "/scripts/authenticationApp/join/joinValidations.js" %}"></script>
 {% endblock script %}
 
 
@@ -18,209 +18,165 @@ WAVE — Join Us!
 <main id="joinCardContainer">
     <header id="navHeader">
         <div id="logo">
-            <a href="{% url 'core:index' %}">WAVE<span>.</span></a>
+            <a href="{% url "core:index" %}">WAVE<span>.</span></a>
         </div>
     </header>
     <div id="joinCard">
         <div id="heading">
-            <h3>Let's Get Started</h3>
+            <h3>Join Us</h3>
         </div>
 
-        <form action="{% url 'authentication:join' %}" method="post">
-            {% csrf_token %}
-            <input type="hidden" id="currentSectionIndex" name="current_section_index" value="0">
-            <div id="contentElements" class="section-one">
-                <div id="sectionName">
-                    <h2>1. Personal Information</h2>
-                </div>
-                <div id="row">
-                    <div id="rowElement">
-                        <input type="{{ form.first_name.field.widget.input_type }}" name="{{ form.first_name.html_name }}" id="{{ form.first_name.auto_id }}" class="" autocomplete="off" required />
-                        <label for="{{ form.first_name.id_for_label}}">
-                            {{ form.first_name.label }} 
-                            <span>*</span>
-                            <span id="errorContainer">
-                                {% if form.first_name.errors %}
-                                    {% for error in form.first_name.errors %}
-                                    <div>
-                                        <p>-</p>
-                                        <p>{{ error }}</p>
-                                    </div>
-                                    {% endfor %}
-                                {% endif %}
-                            </span>
-                        </label>
-                    </div>
-                    <div id="rowElement">
-                        <input type="{{ form.last_name.field.widget.input_type }}" name="{{ form.last_name.html_name }}" id="{{ form.last_name.auto_id }}" class="" autocomplete="off" required/>
-                        <label for="{{ form.last_name.id_for_label }}">
-                            {{ form.last_name.label }} 
-                            <span>*</span>
-                            <span id="errorContainer">
-                                {% if form.last_name.errors %}
-                                    {% for error in form.last_name.errors %}
-                                    <div>
-                                        <p>-</p>
-                                        <p>{{ error }}</p>
-                                    </div>
-                                    {% endfor %}
-                                {% endif %}
-                            </span>
-                        </label>
-                    </div>
-                </div>
-
-                <div id="row">
-                    <div id="rowElement">
-                        <input type="{{ form.email.field.widget.input_type }}" name="{{ form.email.html_name }}" id="{{ form.email.auto_id }}" class="" autocomplete="off" required/>
-                        <label for="{{ form.email.id_for_label }}">
-                            {{ form.email.label }} 
-                            <span>*</span>
-                            <span id="errorContainer">
-                                {% if form.email.errors %}
-                                    {% for error in form.email.errors %}
-                                    <div>
-                                        <p>-</p>
-                                        <p>{{ error }}</p>
-                                    </div>
-                                    {% endfor %}
-                                {% endif %}
-                            </span>
-                        </label>
-                    </div>
-                    <div id="rowElement">
-                        <input type="{{ form.phone_number.field.widget.input_type }}" name="{{ form.phone_number.html_name }}" id="{{ form.phone_number.auto_id }}" class="" autocomplete="off" required />
-                        <label for="{{ form.phone_number.id_for_label }}">
-                            {{ form.phone_number.label }}
-                            <span>*</span>
-                            <span id="errorContainer">
-                                {% if form.phone_number.errors %}
-                                    {% for error in form.phone_number.errors %}
-                                    <div>
-                                        <p>-</p>
-                                        <p>{{ error }}</p>
-                                    </div>
-                                    {% endfor %}
-                                {% endif %}
-                            </span>
-                        </label>
-                    </div>
-                </div>
-
-                <div id="row">
-                    <div id="birthdayRowElement">
-                        <div class="input-group">
-                            <input type="{{ form.birthday.field.widget.input_type }}" name="{{ form.birthday.html_name }}" id="{{ form.birthday.auto_id }}" class="" autocomplete="off" required />
-                            <label for="{{ form.birthday.id_for_label }}" class="birthday-label">
-                                {{ form.birthday.label }}
-                                <span>*</span>
-                                <span id="errorContainer">
-                                    {% if form.birthday.errors %}
-                                        {% for error in form.birthday.errors %}
-                                        <div>
-                                            <p>-</p>
-                                            <p>{{ error }}</p>
-                                        </div>
-                                        {% endfor %}
-                                    {% endif %}
-                                </span>
-                            </label>
+        <div id="formErrorDisplay">
+            {% if form.errors %}
+                {% for field_errors in form.errors.values %}
+                    {% for error in field_errors %}
+                        <div>
+                            <p></p>
+                            <p>{{ error }}</p>
                         </div>
-                    </div>
-                    <div id="rowElement">
-                        <select name="{{ form.gender.html_name }}" id="{{ form.gender.auto_id }}" autocomplete="off">
-                            <option value="select" selected>{{ form.gender.label }}</option>
-                            <option value="Male">Male</option>
-                            <option value="Female">Female</option>
-                            <option value="Other">Other</option>
-                        </select>
-                        <label for="{{ form.gender.id_for_label }}">
-                            
-                            
+                    {% endfor %}
+                {% endfor %}
+            {% endif %}
+        </div>
+        
 
-                            <span id="errorContainer">
-                                {% if form.gender.errors %}
-                                    {% for error in form.gender.errors %}
-                                    <div>
-                                        <p>-</p>
-                                        <p>{{ error }}</p>
-                                    </div>
-                                    {% endfor %}
-                                {% endif %}
-                            </span>
-                        </label>
+        <form action="{% url "authentication:join" %}" method="post">
+            {% csrf_token %}
+            <div id="rowOne">
+                <label for="{{ form.first_name.id_for_label }}">
+                    <div>
+                        {{ form.first_name.label }}
+                        <span id="requiredIndicator">*</span>
+                        <span id="errorContainer">
+                            <div>
+                                <p id="firstNameLiveValidationError"></p>
+                                <p id="firstNameLiveValidationValid"></p>
+                            </div>
+                        </span>
                     </div>
-                </div>
+                    <input type="{{ form.first_name.field.widget.input_type }}" name="{{ form.first_name.html_name }}" id="{{ form.first_name.auto_id }}" autocomplete="off" required class="firstName" autofocus>
+                </label>
+                <label for="{{ form.last_name.id_for_label }}">
+                    <div>
+                        {{ form.last_name.label }} 
+                        <span  id="requiredIndicator">*</span>
+                        <span id="errorContainer">
+                            <div>
+                                <p id="lastNameLiveValidationError"></p>
+                                <p id="lastNameLiveValidationValid"></p>
+                            </div>
+                        </span>
+                    </div>
+                    <input type="{{ form.last_name.field.widget.input_type }}" name="{{ form.last_name.html_name }}" id="{{ form.last_name.auto_id }}" autocomplete="off" required class="lastName">
+                </label>
             </div>
 
-            <div id="contentElements" class="section-two">
-                <div id="sectionName">
-                    <h2>2. Account Security</h2>
-                </div>
-                <div id="rowTwo">
-                    <div id="rowTwoElement">
-                        <input type="{{ form.password1.field.widget.input_type }}" name="{{ form.password1.html_name }}" id="{{ form.password1.auto_id }}" class="" autocomplete="off" required />
-                        <label for="{{ form.password1.id_for_label }}">
-                            {{ form.password1.label }} 
-                            <span>*</span>
-                            <span id="errorContainer">
-                                {% if form.password1.errors %}
-                                    {% for error in form.password1.errors %}
-                                    <div>
-                                        <p>-</p>
-                                        <p>{{ error }}</p>
-                                    </div>
-                                    {% endfor %}
-                                {% endif %}
-                            </span>
-                        </label>
+            <div id="rowTwo">
+                <label for="{{ form.email.id_for_label }}">
+                    <div>
+                        {{ form.email.label }} 
+                        <span  id="requiredIndicator">*</span>
+                        <span id="errorContainer">
+                            <div>
+                                <p id="emailLiveValidationError"></p>
+                                <p id="emailLiveValidationValid"></p>
+                            </div>
+                        </span>
                     </div>
-                    <div id="rowTwoElement">
-                        <input type="{{ form.password2.field.widget.input_type }}" name="{{ form.password2.html_name }}" id="{{ form.password2.auto_id }}" class="" autocomplete="off" required />
-                        <label for="{{ form.password2.id_for_label }}">
-                            {{ form.password2.label }} 
-                            <span>*</span>
-                            <span id="errorContainer">
-                                {% if form.password2.errors %}
-                                    {% for error in form.password2.errors %}
-                                    <div>
-                                        <p>-</p>
-                                        <p>{{ error }}</p>
-                                    </div>
-                                    {% endfor %}
-                                {% endif %}
-                            </span>
-                        </label>
-                    </div>
-                </div>
+                    <input type="{{ form.email.field.widget.input_type }}" name="{{ form.email.html_name }}" id="{{ form.email.auto_id }}" autocomplete="off" required class="emailAddress">
+                </label>
             </div>
 
-            <div id="controlledElements">
-                <div role="button" id="returnContainer">
-                    <h5>
-                        <img
-                            src="{% static "/images/join/return.svg" %}"
-                            alt="Return"
-                        />Return
-                    </h5>
-                </div>
-
-                <div id="nextContainer">
-                    <button role="button" id="nextButton" type="button">Next</button>
-                    <button
-                        role="button"
-                        type="submit"
-                        style="display: none"
-                    >
-                        Submit
-                    </button>
-                </div>
+            <div id="rowThree">
+                <label for="{{ form.username.id_for_label }}">
+                    <div>
+                        {{ form.username.label }} 
+                        <span id="requiredIndicator">*</span>
+                        <span id="errorContainer">
+                            <div>
+                                <p id="usernameLiveValidationError"></p>
+                                <p id="usernameLiveValidationValid"></p>
+                            </div>
+                        </span>
+                    </div>
+                    <div id="usernamePlaceholder">
+                        <h6>@</h6>
+                        <input type="{{ form.username.field.widget.input_type }}" name="{{ form.username.html_name }}" id="{{ form.username.auto_id }}" autocomplete="off" required class="username" maxlength="20">
+                    </div>
+                </label>
             </div>
+
+            <div id="rowFour">
+                <label for="{{ form.password1.id_for_label }}">
+                    <div>
+                        {{ form.password1.label }} 
+                        <span id="requiredIndicator">*</span>
+                        <span id="errorContainer">
+                            <div>
+                                <p id="passwordOneLiveValidationError"></p>
+                                <p id="passwordOneLiveValidationValid"></p>
+                            </div>
+                        </span>
+                    </div>
+                    <input type="{{ form.password1.field.widget.input_type }}" name="{{ form.password1.html_name }}" id="{{ form.password1.auto_id }}" autocomplete="off" required class="password" minlength="8">
+                </label>
+                <label for="{{ form.password2.id_for_label }}">
+                    <div>
+                        {{ form.password2.label }} 
+                        <span id="requiredIndicator">*</span>
+                        <span id="errorContainer">
+                            <div>
+                                <p id="passwordTwoLiveValidationError"></p>
+                                <p id="passwordTwoLiveValidationValid"></p>
+                            </div>
+                        </span>
+                    </div>
+                    <input type="{{ form.password2.field.widget.input_type }}" name="{{ form.password2.html_name }}" id="{{ form.password2.auto_id }}" autocomplete="off" required class="password">
+                </label>
+            </div>
+
+            <div id="rowFive">
+                <label for="{{ form.phone_number.id_for_label }}">
+                    <div>
+                        {{ form.phone_number.label }}
+                        <span id="errorContainer">
+                            <div>
+                                <p id="phoneLiveValidationError"></p>
+                                <p id="phoneLiveValidationValid"></p>
+                            </div>
+                        </span>
+                    </div>
+                    <input type="{{ form.phone_number.field.widget.input_type }}" placeholder="XXXXXXXXXX" name="{{ form.phone_number.html_name }}" id="{{ form.phone_number.auto_id }}" class="" maxlength="10" minlength="10" autocomplete="off" class="phoneNumber">
+                </label>
+            </div>
+
+            <div id="rowSix">
+                <label for="birthday">
+                    <div>
+                        Birthday
+                        <span id="errorContainer">
+                            <div>
+                                <p id="birthdayLiveValidationError"></p>
+                                <p id="birthdayLiveValidationValid"></p>
+                            </div>
+                        </span>
+                    </div>
+                    <div id="birthdayInputs">
+                        <input type="text" name="birthdayMonth" id="id_birthday_month" class="birthdayMonth" placeholder="Month (12)" maxlength="2">
+                        <input type="text" name="birthdayMonth" id="id_birthday_day" class="birthdayMonth" placeholder="Day (29)" maxlength="2">
+                        <input type="text" name="birthdayMonth" id="id_birthday_year" class="birthdayMonth" placeholder="Year (2004)" maxlength="4" minlength="4">
+                    </div>
+                </label>
+            </div>
+
+            <div id="signupComplete">
+                <button type="submit" id="proceedBtn">Proceed</button>
+                <p>By joining, you agree to our <a href="./policy/terms.html">Terms</a> and <a href="./policy/privacy.html">Privacy Policy</a>.</p>
+            </div>
+
+            <p id="existingAccount">Have an account? <a href="{% url "authentication:login" %}"> Login</a></p>
         </form>
     </div>
-
-    <div id="signInLink">
-        <h6>Already have an account?<a href="{% url "authentication:login" %}"> Sign in</a></h6>
-    </div>
 </main>
+
 {% endblock auth_body %}

@@ -1,0 +1,117 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}
+Departments @ WAVE.
+{% endblock title %}
+
+{% block app_page_style %}
+<link rel="stylesheet" type="text/css" href="{% static "/styles/adminDashboardApp/tabs/departments.css" %}" />
+{% endblock app_page_style %}
+
+{% block script %}
+<script type="text/javascript" src="{% static "scripts/adminDashboardApp/departments/department.js" %}"></script>
+{% endblock script %}
+
+
+{% block header %}
+{% include "partials/nav-footer/nav/admin_nav.html" %}
+{% endblock header %}
+
+{% block container_art %}
+<div id="container-art">
+    <div class="ticket-heading">
+        <div class="ticket-header">
+            <h3><a href="{% url 'waveAdmin:adminDashboard' %}">Management</a> > Departments</h3>
+        </div>
+    </div>
+</div>
+{% endblock container_art %}
+
+
+
+
+{% block body %}
+<div id="content-container">
+    <div id="sectionHeader">
+        <div>
+            <h2>Active Departments</h2>
+        </div>
+        <div id="addNewDepartment">
+            <button type="button" id="newDepartmentButton" role="button">
+                <img src="{% static "images/admin/departments/addNewDepartment.svg" %}" alt="Add New Department">
+                <h3>New Department</h3>
+            </button>
+        </div>
+    </div>
+
+    <div id="sectionBody">
+        {% for department in departments %}
+            {% if department %}
+            <div id="department">
+                <a href="{% url "waveAdmin:departmentDetails" department.departmentID department.name %}">
+                    <h5>{{ department.name }}</h5>
+                </a>
+            </div>
+            {% else %}
+            <h6>No current departments.</h6>
+            {% endif %}
+        
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Add New Department Modal with form. -->
+<div id="newDepartmentModal" class="modal">
+    <div class="modalFormContainer">
+        <div class="modalForm">
+            <div class="modalHeading">
+                <div class="modalHeader">Add New Department</div>
+                <button type="button" id="modalCloseButton" role="button">
+                    <img src="{% static "images/admin/departments/modalClose.svg" %}" alt="Close">
+                </button>
+            </div>
+
+            <form action="{% url "waveAdmin:departments" %}" method="post">
+                {% csrf_token %}
+                <div class="singleInputRow">
+                    <label for="{{ form.name.id_for_label }}">
+                        {{ form.name.label }}
+                        <input type="{{ form.name.field.widget.input_type }}" name="{{ form.name.html_name }}" id="{{ form.name.auto_id }}" autocomplete="off" required>
+                    </label>
+                </div>
+                <div class="doubleInputRow">
+                    <label for="{{ form.lead_name.id_for_label }}">
+                        {{ form.lead_name.label }}
+                        <input type="{{ form.lead_name.field.widget.input_type }}" name="{{ form.lead_name.html_name }}" id="{{ form.lead_name.auto_id }}" autocomplete="off" required>
+                    </label>
+                    <label for="{{ form.lead_email.id_for_label }}">
+                        {{ form.lead_email.label }}
+                        <input type="{{ form.lead_email.field.widget.input_type }}" name="{{ form.lead_email.html_name }}" id="{{ form.lead_email.auto_id }}" autocomplete="off" required>
+                    </label>
+                </div>
+                <div class="doubleInputRow">
+                    <label for="{{ form.capacity.id_for_label }}">
+                        {{ form.capacity.label }}
+                        <input type="{{ form.capacity.field.widget.input_type }}" name="{{ form.capacity.html_name }}" id="{{ form.capacity.auto_id }}" autocomplete="off" required>
+                    </label>
+                    <label for="{{ form.location.id_for_label }}">
+                        {{ form.location.label }}
+                        <input type="{{ form.location.field.widget.input_type }}" name="{{ form.location.html_name }}" id="{{ form.location.auto_id }}" autocomplete="off" required>
+                    </label>
+                </div>
+                <div class="singleInputRow">
+                    <label for="{{ form.description.id_for_label }}">
+                        {{ form.description.label }}
+                        <textarea type="{{ form.description.field.widget.input_type }}" name="{{ form.description.html_name }}" id="{{ form.description.auto_id }}" autocomplete="off" required></textarea>
+                    </label>
+                </div>
+
+                <div class="submitForm">
+                    <button type="submit">Create Department</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock body %}

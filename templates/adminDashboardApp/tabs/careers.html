@@ -1,0 +1,68 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}
+WAVE. — Management Dashboard
+{% endblock title %}
+
+{% block app_page_style %}
+<link rel="stylesheet" type="text/css" href="{% static "/styles/adminDashboardApp/tabs/careers.css" %}" />
+{% endblock app_page_style %}
+
+{% block script %}
+{% comment %} <script type="text/javascript" src="{% static "scripts/adminDashboardApp/careers/careers.js" %}"></script> {% endcomment %}
+{% endblock script %}
+
+
+{% block header %}
+{% include "partials/nav-footer/nav/admin_nav.html" %}
+{% endblock header %}
+
+{% block container_art %}
+<div id="container-art">
+    <div class="ticket-heading">
+        <div class="ticket-header">
+            <h3><a href="{% url 'waveAdmin:adminDashboard' %}">Management</a> > Jobs</h3>
+        </div>
+    </div>
+</div>
+{% endblock container_art %}
+
+
+
+
+{% block body %}
+<div id="content-container">
+    <div class="page-heading">
+        <h2>Active Roles</h2>
+    </div>
+
+    {% if career_roles %}
+    <div class="rolesDisplayContainer">
+        {% for careers in career_roles %}
+        <a href="{% url "waveAdmin:careerDetails" careers.roleID %}" class="rolesDisplayCard">
+            <div class="rdc-Heading">
+                <h4>{{ careers.roleTitle }}</h4>
+            </div>
+            <div class="rdc-Department">
+                <h4>{{ careers.department }}</h4>
+            </div>
+            <div class="rdc-CreatedAt">
+                <p>Last Updated: {{ careers.updated_at }}</p>
+            </div>
+            <div class="expandRole">
+                <p>Click to view role</p>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div id="noCurrentRole">
+        <h5>
+            No active roles! <br /> Check <a href="{% url "waveAdmin:departments" %}">departments</a>
+        </h5>
+    </div>
+    {% endif %}
+    
+</div>
+{% endblock body %}
