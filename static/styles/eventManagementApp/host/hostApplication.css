@@ -1,0 +1,389 @@
+#body-content {
+    display: flex;
+    flex-direction: column;
+
+    padding-left: 150px;
+    padding-right: 150px;
+}
+
+.page-heading h3{
+    font-family: Wanted-Bold;
+    font-size: 40px;
+    text-align: center;
+
+    padding-bottom: 50px;
+}
+
+#work-with-us {
+    border: 2px solid rgba(0, 0, 0, 0.038);
+    border-radius: 20px;
+    -webkit-box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.061);
+    -moz-box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.061);
+    box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.061);
+
+
+
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.wwu-heading {
+    border-bottom: 2px solid black;
+    padding: 25px;
+    background-color: #000000;
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
+}
+
+.wwu-heading ul {
+    list-style-type: none;
+    width: 100%;
+
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+
+    font-family: Wanted-Bold;
+    font-size: 17px;
+}
+
+.wwu-heading ul li {
+    width: 100%;
+
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    color: white;
+}
+
+.wwu-heading ul li.active {
+    font-weight: bold;
+    color: #008d95;
+}
+
+.wwu-heading ul li span.active {
+    background-color: #008d95;
+}
+
+.wwu-heading ul li span {
+    width: 35px;
+    height: 35px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background-color: #000000;
+    color: #ffffff;
+    border-radius: 30px;
+}
+
+.wwu-body {
+    padding: 25px;
+
+    width: 100%;
+    height: 100%;
+
+    display: flex;
+    align-items: center;
+}
+
+#hostEventApplication {
+    height: 100%;
+    width: 100%;
+}
+
+.section-summary {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.section-summary h5 {
+    font-family: Wanted-SemiBold;
+    font-size: 22px;
+}
+
+.section-summary p {
+    font-family: Wanted-Regular;
+    font-size: 17px;
+}
+
+/** About Yourself Section **/
+#about-yrslf {
+    width: 100%;
+
+    display: flex;
+    flex-direction: row;
+
+    gap: 25px;
+}
+
+#about-yrslf .section-summary {
+    width: 40%;
+}
+
+#about-yrslf #form-aboutYourself {
+    width: 60%;
+    
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+} 
+
+.form-aboutYourself-container {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+.form-aboutYourself-container input,
+.form-aboutYourorg-container input {
+    border: 1px solid rgba(48, 48, 48, 0.083);
+    border-radius: 12px;
+
+    font-family: Wanted-Regular;
+    font-size: 15px;
+
+    padding-top: 15px;
+    padding-bottom: 15px;
+    padding-left: 10px;
+    padding-right: 10px;
+
+    -webkit-box-shadow: 0px 2px 7px 0px rgba(116, 116, 116, 0.149);
+    box-shadow: 0px 2px 7px 0px rgba(116, 116, 116, 0.149);
+    -moz-box-shadow: 0px 2px 7px 0px rgba(116, 116, 116, 0.149);
+}
+
+.form-aboutYourself-container .first_last_name {
+    display: flex;
+    flex-direction: row;
+    gap: 25px;
+}
+
+.first_last_name input,
+.first_last_name input {
+    width: 50%;
+}
+
+.personal-email input {
+    width: 100%;
+}
+
+.personal_organization-email input {
+    width: 100%;
+}
+
+.doubleDisplayRow {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+}
+
+.form-aboutYourself-container label,
+.form-aboutYourorg-container label {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.form-aboutYourself-container input,
+.form-aboutYourorg-container input {
+    width: 100%;
+}
+
+
+/** About Your Organization Section **/
+#about-yrorg {
+    width: 100%;
+
+    display: flex;
+    flex-direction: row;
+    gap: 25px;
+}
+
+#about-yrorg .section-summary {
+    width: 40%;
+}
+
+#about-yrorg #form-aboutYourorg {
+    width: 60%;
+    
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.form-aboutYourorg-container {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+.form-aboutYourorg-container input {
+    border: 1px solid rgba(48, 48, 48, 0.083);
+    border-radius: 12px;
+
+    font-family: Wanted-Regular;
+    font-size: 15px;
+
+    padding-top: 15px;
+    padding-bottom: 15px;
+    padding-left: 10px;
+    padding-right: 10px;
+
+    -webkit-box-shadow: 0px 2px 7px 0px rgba(116, 116, 116, 0.149);
+    box-shadow: 0px 2px 7px 0px rgba(116, 116, 116, 0.149);
+    -moz-box-shadow: 0px 2px 7px 0px rgba(116, 116, 116, 0.149);
+}
+
+.organization-name input,
+.organization-email input,
+.organization-location input {
+    width: 100%;
+}
+
+
+/** About Event Section **/
+#about-yrevent {
+    width: 100%;
+
+    display: flex;
+    flex-direction: row;
+}
+
+#about-yrevent label,
+.form-aboutYourorg-container label {
+    font-family: Wanted-Regular;
+    font-size: 17px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+#about-yrevent .section-summary{
+    width: 40%;
+}
+
+#about-yrevent #form-aboutYourevent {
+    width: 60%;
+
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.form-aboutYourevent-container,
+.form-aboutYourself-container {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+
+    font-family: Wanted-Regular;
+}
+
+.form-aboutYourevent-container input,
+.form-aboutYourevent-container textarea {
+    border: 1px solid rgba(48, 48, 48, 0.083);
+    border-radius: 12px;
+
+    font-family: Wanted-Regular;
+    font-size: 15px;
+
+    padding-top: 15px;
+    padding-bottom: 15px;
+    padding-left: 10px;
+    padding-right: 10px;
+
+    -webkit-box-shadow: 0px 2px 7px 0px rgba(116, 116, 116, 0.149);
+    box-shadow: 0px 2px 7px 0px rgba(116, 116, 116, 0.149);
+    -moz-box-shadow: 0px 2px 7px 0px rgba(116, 116, 116, 0.149);
+}
+
+.form-aboutYourevent-container textarea {
+    max-width: 100%;
+    width: 100%;
+    min-height: 120px;
+}
+
+.event_name input{
+    width: 100%;
+}
+
+.event_date_time {
+    width: 100%;
+
+    display: flex;
+    flex-direction: row;
+    gap: 25px;
+}
+
+.event_date_time input {
+    width: 50%;
+}
+
+.event-location input {
+    width: 100%;
+}
+
+.eventTypeSelectorButtons {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.eventTypeSelectorButtons .optionals {
+    display: flex;
+    flex-direction: row;
+    -ms-flex-direction: row;
+
+    gap: 20px;
+}
+
+.eventTypeSelector {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.optionals span {
+    background-color: rgba(145, 145, 145, 0.098);
+
+    border-radius: 10px;
+    padding: 10px;
+
+    font-family: Wanted-Medium;
+    color: #008d95;
+
+    cursor: pointer;
+}
+
+
+
+/** Button for each section **/
+#nextOrSubmit {
+    width: 100%;
+    
+    display: flex;
+    justify-content: space-between;
+}
+
+#nextOrSubmit button {
+    color: white;
+    font-family: Wanted-Medium;
+    font-size: 15px;
+
+    padding: 15px;
+    padding-left: 25px;
+    padding-right: 25px;
+
+    background-color: #008d95;
+    border: 1px solid transparent;
+    border-radius: 10px;
+
+    cursor: pointer;
+}

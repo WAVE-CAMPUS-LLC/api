@@ -14,5 +14,149 @@ Your Safety @ Wave.
 {% endblock header %}
 
 {% block body %}
+<div id="body-content">
+    <div id="page-heading">
+        <h2>
+            Safety @ <span id="body-logo">WAVE<span class="spot">.</span></span>
+        </h2>
+    </div>
+    <div id="content-container">
+        <section id="body2">
+            <div class="container1">
+                <h1>For Hosts</h1>
+                <p>
+                    As a host on our platform, your safety and security are our top priorities. Here are the
+                    measures
+                    we take to ensure a safe hosting experience:</p>
+            </div>
 
+            <div id="row-one">
+                <div id="bc-ro-information1">
+                    <h6>Verification process</h6>
+                    <p>
+                        All hosts undergo a thorough verification process to confirm their identity and
+                        legitimacy
+                    </p>
+                </div>
+
+                <div id="bc-ro-img">
+                    <img src="{% static "/images/art/policy/safety/verifiedProcess.png" %}" alt="Verified Process">
+                </div>
+            </div>
+
+            <div id="row-two">
+                <div id="bc-rt-img">
+                    <img src="{% static "/images/art/policy/safety/securePayment.png" %}" alt="Secure Payments">
+                </div>
+
+                <div id="bc-rt-information1">
+                    <h6>
+                        Secure Payments
+                    </h6>
+                    <p id="bcrti-p"> 
+                        We use advanced encryption technology to protect your payment
+                        information during transactions
+                    </p>
+                </div>
+            </div>
+
+            <div id="row-one">
+                <div id="bc-ro-information1">
+                    <h6>Transparent Policies</h6>
+                    <p> Our policies are designed to provide clarity and protection for hosts, including
+                        cancellation and refund guidelines
+                    </p>
+                </div>
+
+                <div id="bc-ro-img">
+                    <img src="{% static "/images/art/policy/safety/transparentPolicy.png" %}" alt="Transparent Policy">
+                </div>
+            </div>
+
+            <div id="row-two">
+                <div id="bc-rt-img">
+                    <img src="{% static "/images/art/policy/safety/247Support.png" %}" alt="Around Clock Support">
+                </div>
+
+                <div id="bc-rt-information1">
+                    <h6>24/7 Support</h6>
+                    <p id="bcrti-p">
+                        Our support team is available round-the-clock to assist you with any
+                        concerns or issues you may encounter while hosting.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <hr>
+
+        <section id="body2">
+            <div class="container1">
+                <h1>For Attendees</h1>
+                <p>As an attendee on our platform, your safety and satisfaction are important. Here's how we
+                    ensure
+                    a secure and enjoyable experience for you:</p>
+            </div>
+
+            <div id="row-one">
+                <div id="bc-ro-information1">
+                    <h6>Verified sellers</h6>
+                    <p> We vet all ticket sellers to ensure they meet our standards of legitimacy and
+                        trustworthiness.
+                    </p>
+                </div>
+
+                <div id="bc-ro-img">
+                    <img src="{% static "/images/art/policy/safety/verifiedSellers.png" %}" alt="Verified Sellers">
+                </div>
+            </div>
+
+            <div id="row-two">
+                <div id="bc-rt-img">
+                    <img src="{% static "/images/art/policy/safety/securePayment.png" %}" alt="Secure Payments">
+                </div>
+
+                <div id="bc-rt-information1">
+                    <h6>Secure transactions</h6>
+                    <p id="bcrti-p"> Your payment information is encrypted and protected during every
+                        transaction on our platform.
+                    </p>
+                </div>
+            </div>
+
+            <div id="row-one">
+                <div id="bc-ro-information1">
+                    <h6>Refund assurance</h6>
+                    <p>In the event of a canceled or postponed event, we offer transparent refund policies to
+                        protect your investment.
+                    </p>
+                </div>
+
+                <div id="bc-ro-img">
+                    <img src="{% static "/images/art/policy/safety/assuredRefunds.png" %}" alt="Assured Refunds">
+                </div>
+            </div>
+
+            <div id="row-two">
+                <div id="bc-rt-img">
+                    <img src="{% static "/images/art/policy/safety/eventGuidelines.png" %}" alt="Event Guidelines">
+                </div>
+
+                <div id="bc-rt-information1">
+                    <h6>Event guidelines</h6>
+                    <p id="bcrti-p">
+                        We provide clear guidelines and safety protocols for events to
+                        ensure a safe and enjoyable experience for all attendees.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <div class="button-container">
+            <button id="safety-button" type="button"
+                onclick="location.href='../../template/policy/safetyform.html'">How can we help make things
+                safer?</button>
+        </div>
+    </div>
+</div>
 {% endblock body %}

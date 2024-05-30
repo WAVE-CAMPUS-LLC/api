@@ -13,7 +13,7 @@ class CustomUserAdmin(UserAdmin):
     model = CustomUser
     list_display = ("first_name", "last_name", "email", "is_active",)
     list_filter = ("email", "last_name", )
-    readonly_fields = ("date_joined", "birthday")
+    readonly_fields = ("date_joined",)
     
     fieldsets = (
         ("Account Information", {"fields": (("first_name", "last_name"), "email", "password", "user_id", "birthday", "gender")}),

@@ -38,9 +38,6 @@ def termsView(request):
     return render(request, "extras/policy/terms.html", {"pageName": pageName})
 
 
-def hostView(request):
-    pageName = "Host Event"
-    return render(request, "extras/resources/host.html", {"pageName": pageName})
 
 def collegeCampusesView(request):
     pageName = "Colleges"

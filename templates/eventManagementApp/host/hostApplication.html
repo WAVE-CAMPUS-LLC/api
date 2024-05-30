@@ -6,12 +6,152 @@ Become an event host. Apply Now! — WAVE.
 {% endblock title %}
 
 {% block app_page_style %}
-<link rel="stylesheet" type="text/css" href="{% static "/styles/coreApp/index.css" %}" />
+<link rel="stylesheet" type="text/css" href="{% static "/styles/eventManagementApp/host/hostApplication.css" %}" />
 {% endblock app_page_style %}
 
 {% block header %}
+{% include "partials/nav-footer/nav/main_nav.html" %}
 {% endblock header %}
+
+{% block script %}
+<script type="text/javascript" src="{% static "scripts/eventManagementApp/host/hostApplication.js" %}"></script>
+{% endblock script %}
+
 
 
 {% block body %}
+<div id="body-content">
+    <div class="page-heading">
+        <h3>Apply to host events</h3>
+    </div>
+    <div id="work-with-us">
+        <div class="wwu-heading">
+            <ul>
+                <li><span>1</span>Yourself</li>
+                <li><span>2</span>Your organization</li>
+                <li><span>3</span>Event</li>
+            </ul>
+        </div>
+        <div class="wwu-body">
+            <form id="hostEventApplication">
+                <section id="about-yrslf">
+                    <div class="section-summary">
+                        <h5>A bit about you</h5>
+                        <p>Tell us a bit about yourself. We will reach out in order to take the next step.</p>
+                    </div>
+                    <div id="form-aboutYourself">
+                        <div class="form-aboutYourself-container">
+                            <div class="doubleDisplayRow">
+                                <label for="personalFirst">
+                                    <p>First Name</p>
+                                    <input type="text" name="personalFirst" id="personalFirst">
+                                </label>
+                                <label for="personalLast">
+                                    <p>Last Name</p>
+                                    <input type="text" name="personalLast" id="personalLast">
+                                </label>
+                            </div>
+                            <label for="personalEmail">
+                                <p>Email</p>
+                                <input type="email" name="personalEmail" id="personalEmail">
+                            </label>
+                            
+                            <label for="personalPhone">
+                                <p>Phone</p>
+                                <input type="text" name="personalPhone" id="personalPhone">
+                            </label>
+                        </div>
+                        <div id="nextOrSubmit">
+                            <button type="button" id="nextButtonOne" class="next-button">Next</button>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="about-yrorg" style="display: none;">
+                    <div class="section-summary">
+                        <h5>Organization</h5>
+                        <p>Tell us a bit about organization. We will reach out in order to take the next step.
+                        </p>
+                    </div>
+                    <div id="form-aboutYourorg">
+                        <div class="form-aboutYourorg-container">
+                            <div class="organization-name">
+                                <label for="organizationName">
+                                    <p>Organization Name</p>
+                                    <input type="text" name="organizationName" id="organizationName" />
+                                </label>
+                            </div>
+                            <div class="organization-email">
+                                <label for="organizationEmail">
+                                    <p>Organization Email</p>
+                                    <input type="email" id="organization_email" name="organization_email" />
+                                </label>
+                            </div>
+                            <div class="organization-location">
+                                <label>
+                                    <p>Organization Location</p>
+                                    <input type="text" id="organization_location" name="organization_location" />
+                                </label>
+                            </div>
+                        </div>
+                        <div id="nextOrSubmit">
+                            <button type="button" id="previousButtonyrOrg"
+                                class="previous-button">Previous</button>
+                            <button type="button" id="nextButtonTwo" class="next-button">Next</button>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="about-yrevent" style="display: none;">
+                    <div class="section-summary">
+                        <h5>Event Information</h5>
+                        <p>
+                            Tell us about the kind of events you plan to host. We'd like to know a bit more.
+                        </p>
+                    </div>
+                    <div id="form-aboutYourevent">
+                        <div class="form-aboutYourevent-container">
+                            <div class="event_name">
+                                <label for="eventTypeSelector" class="eventTypeSelector">
+                                    <p>What type of events do you want to host?</p>
+                                    <div class="eventTypeSelectorButtons">
+                                        <div class="optionals">
+                                            <span>Music</span>
+                                            <span>Sports</span>
+                                            <span>Theatre</span>
+                                        </div>
+                                        <div class="optionals">
+                                            <span>Clubs</span>
+                                            <span>Organizations</span>
+                                            <span>Educational</span>
+                                        </div>
+                                        <div class="optionals">
+                                            <span>Academic</span>
+                                            <span>Academic</span>
+                                            <span>Academic</span>
+                                        </div>
+                                    </div>
+                                </label>
+                            </div>
+                            <label for="eventFrequency">
+                                <p>How many events do you plan on hosting annually?</p>
+                                <input type="number" name="eventFrequency" id="eventFrequency" min="1">
+                            </label>
+
+                            <label for="eventAttendance">
+                                <p>How many do you expect at each event?</p>
+                                <input type="number" name="eventAttendance" id="eventAttendance" min="1">
+                            </label>
+                        </div>
+                        <div id="nextOrSubmit">
+                            <button type="button" id="previousButtonyrEvent"
+                                class="previous-button">Previous</button>
+                            <button type="submit">Submit</button>
+                        </div>
+                    </div>
+                </section>
+            </form>
+        </div>
+    </div>
+</div>
 {% endblock body %}
