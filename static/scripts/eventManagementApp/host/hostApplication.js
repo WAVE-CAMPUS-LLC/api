@@ -67,5 +67,44 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 
     highlightListItem(currentSectionIndex);
+
+
+    // Restrict event type selection to a maximum of 3
+    const eventOptions = document.querySelectorAll(".eventTypeSelectorButtons input[type='checkbox']");
+
+    eventOptions.forEach(option => {
+        option.addEventListener('change', function() {
+            const selectedOptions = document.querySelectorAll('.eventTypeSelectorButtons input[type="checkbox"]:checked');
+            if (selectedOptions.length > 3) {
+                option.checked = false;
+                alert('You can select a maximum of 3 event types.');
+            }
+        });
+    });
+
+    // function validateForm() {
+    //     var checkboxes = document.querySelectorAll('input[name="eventTypes"]:checked');
+    //     if (checkboxes.length === 0) {
+    //         alert("Please select at least one event type.");
+    //         return false;
+    //     }
+    //     return true;
+    // }
+
+    // validateForm()
+
+
+    const optionalsContainers = document.querySelectorAll('.optionals');
+
+    optionalsContainers.forEach(container => {
+        const checkbox = container.querySelector('input[type="checkbox"]');
+        checkbox.addEventListener('change', function() {
+            if (checkbox.checked) {
+                container.classList.add('selected');
+            } else {
+                container.classList.remove('selected');
+            }
+        });
+    });
     
 });

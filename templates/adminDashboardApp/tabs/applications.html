@@ -1,0 +1,146 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}
+Applications Management — WAVE.
+{% endblock title %}
+
+{% block app_page_style %}
+<link rel="stylesheet" type="text/css" href="{% static "/styles/adminDashboardApp/tabs/applications.css" %}" />
+{% endblock app_page_style %}
+
+{% block script %}
+<script type="text/javascript" src="{% static "/scripts/adminDashboardApp/applications/applications.js" %}"></script>
+<script type="text/javascript" src="{% static "/scripts/adminDashboardApp/applications/applicationDetails.js" %}"></script>
+{% endblock script %}
+
+
+
+{% block header %}
+{% include "partials/nav-footer/nav/admin_nav.html" %}
+{% endblock header %}
+
+{% block container_art %}
+<div id="container-art">
+    <div class="ticket-heading">
+        <div class="ticket-header">
+            <h3><a href="{% url 'waveAdmin:adminDashboard' %}">Management</a> > Applications</h3>
+        </div>
+    </div>
+</div>
+{% endblock container_art %}
+
+
+
+
+{% block body %}
+<div id="content-container">
+    <div class="content-control">
+        <div class="applications-tab tab-active" data-tab="host-applications">Host Apps</div>
+        <div class="applications-tab" data-tab="career-applications">Career Apps</div>
+    </div>
+    
+    <div id="body-content">
+        <div class="applications-tab-content" id="host-applications">
+            <div class="applications-container">
+                {% for hostApplication in hostApps %}
+                {% if hostApplication %}
+                <div id="applicant-card" role="button">
+                    <h3>{{ hostApplication.firstName }} {{ hostApplication.lastName }}</h3>
+                    <p class="applicant-email">{{ hostApplication.email }}</p>
+                    <p class="application-received">{{ hostApplication.created_at|date:"F d, Y" }}</p>
+                </div>
+                {% else %}
+                <h3>No current host applications</h3>
+                {% endif %}
+
+                <div id="viewHostApplicationModal-{{ forloop.counter }}" class="viewHostApplicationModal">
+                    <div class="modalContainer">
+                        <div class="modalContentCard">
+                            <div class="modalHeader">
+                                <div class="modalClose">
+                                    <button type="button" role="button" id="hideModalButton">
+                                        <img src="{% static "images/admin/departments/modalClose.svg" %}" alt="Close">
+                                    </button>
+                                </div>
+                                <div class="modalHeading">
+                                    <h5>Host Application</h5>
+                                </div>
+                            </div>
+    
+                            <div class="modalBody">
+                                <!--Allow scrolling here.-->
+                                <div class="applicantName">
+                                    <h3>Full Name</h3>
+                                    <p>{{ hostApplication.firstName }} {{ hostApplication.lastName }}</p>
+                                </div>
+
+                                <div class="applicantContact">
+                                    <h3>Contact</h3>
+                                    <div>
+                                        <div>
+                                            <h6>Email</h6>
+                                            <p>{{ hostApplication.email }}</p>
+                                        </div>
+                                        <div>
+                                            <h6>Phone</h6>
+                                            <p>{{ hostApplication.phone }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h3>Organization Name</h3>
+                                    <p>{{ hostApplication.organizationName }}</p>
+                                </div>
+                                <div>
+                                    <h3>Organization Email</h3>
+                                    <p>{{ hostApplication.organizationEmail }}</p>
+                                </div>
+                                <div>
+                                    <h3>Organization Location</h3>
+                                    <p>{{ hostApplication.organizationLocation }}</p>
+                                </div>
+
+                                <div>
+                                    <h3>Event Types</h3>
+                                    <p>
+                                        {% for eventType in hostApplication.eventTypes.all %}
+                                            {{ eventType.name }}{% if not forloop.last %} | {% endif %}
+                                        {% endfor %}
+                                    </p>
+                                </div>
+
+                                <div>
+                                    <h3>Events held annually</h3>
+                                    <p>{{ hostApplication.eventHostedAnnually }}</p>
+                                </div>
+                                <div>
+                                    <h3>Event Attendance</h3>
+                                    <p>{{ hostApplication.eventPopulation }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            
+        </div>
+        <div class="applications-tab-content" id="career-applications">
+            <div class="applications-container">
+                <div id="applicant-card">
+                    <h3>Enosh Lartey</h3>
+                    <p class="applicant-email">enoshlartey3@gmail.com</p>
+                    <p class="application-received">30th May, 2024</p>
+                </div>
+                <div id="applicant-card">
+                    <h3>Enosh Lartey</h3>
+                    <p class="applicant-email">enoshlartey3@gmail.com</p>
+                    <p class="application-received">30th May, 2024</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock body %}

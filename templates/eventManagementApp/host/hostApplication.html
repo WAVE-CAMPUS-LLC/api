@@ -33,7 +33,8 @@ Become an event host. Apply Now! — WAVE.
             </ul>
         </div>
         <div class="wwu-body">
-            <form id="hostEventApplication">
+            <form id="hostEventApplication" action="{% url "eventManagement:hostApply" %}" method="POST">
+                {% csrf_token %}
                 <section id="about-yrslf">
                     <div class="section-summary">
                         <h5>A bit about you</h5>
@@ -42,23 +43,23 @@ Become an event host. Apply Now! — WAVE.
                     <div id="form-aboutYourself">
                         <div class="form-aboutYourself-container">
                             <div class="doubleDisplayRow">
-                                <label for="personalFirst">
-                                    <p>First Name</p>
-                                    <input type="text" name="personalFirst" id="personalFirst">
+                                <label for="{{ form.firstName.id_for_label }}">
+                                    <p>{{ form.firstName.label }}</p>
+                                    <input type="{{ form.firstName.field.widget.input_type }}" name="{{ form.firstName.html_name }}" id="{{ form.firstName.auto_id }}">
                                 </label>
-                                <label for="personalLast">
-                                    <p>Last Name</p>
-                                    <input type="text" name="personalLast" id="personalLast">
+                                <label for="{{ form.lastName.id_for_label }}">
+                                    <p>{{ form.lastName.label }}</p>
+                                    <input type="{{ form.lastName.field.widget.input_type }}" name="{{ form.lastName.html_name }}" id="{{ form.lastName.auto_id }}">
                                 </label>
                             </div>
-                            <label for="personalEmail">
-                                <p>Email</p>
-                                <input type="email" name="personalEmail" id="personalEmail">
+                            <label for="{{ form.email.id_for_label }}">
+                                <p>{{ form.email.label }}</p>
+                                <input type="{{ form.email.field.widget.input_type }}" name="{{ form.email.html_name }}" id="{{ form.email.auto_id }}">
                             </label>
                             
-                            <label for="personalPhone">
-                                <p>Phone</p>
-                                <input type="text" name="personalPhone" id="personalPhone">
+                            <label for="{{ form.phone.id_for_label }}">
+                                <p>{{ form.phone.label }}</p>
+                                <input type="{{ form.phone.field.widget.input_type }}" name="{{ form.phone.html_name }}" id="{{ form.phone.auto_id }}">
                             </label>
                         </div>
                         <div id="nextOrSubmit">
@@ -76,21 +77,21 @@ Become an event host. Apply Now! — WAVE.
                     <div id="form-aboutYourorg">
                         <div class="form-aboutYourorg-container">
                             <div class="organization-name">
-                                <label for="organizationName">
-                                    <p>Organization Name</p>
-                                    <input type="text" name="organizationName" id="organizationName" />
+                                <label for="{{ form.organizationName.id_for_label }}">
+                                    <p>{{ form.organizationName.label }}</p>
+                                    <input type="{{ form.organizationName.field.widget.input_type }}" name="{{ form.organizationName.html_name }}" id="{{ form.organizationName.auto_id }}">
                                 </label>
                             </div>
                             <div class="organization-email">
-                                <label for="organizationEmail">
-                                    <p>Organization Email</p>
-                                    <input type="email" id="organization_email" name="organization_email" />
+                                <label for="{{ form.organizationEmail.id_for_label }}">
+                                    <p>{{ form.organizationEmail.label }}</p>
+                                    <input type="{{ form.organizationEmail.field.widget.input_type }}" name="{{ form.organizationEmail.html_name }}" id="{{ form.organizationEmail.auto_id }}">
                                 </label>
                             </div>
                             <div class="organization-location">
-                                <label>
-                                    <p>Organization Location</p>
-                                    <input type="text" id="organization_location" name="organization_location" />
+                                <label for="{{ form.organizationLocation.id_for_label }}">
+                                    <p>{{ form.organizationLocation.label }}</p>
+                                    <input type="{{ form.organizationLocation.field.widget.input_type }}" name="{{ form.organizationLocation.html_name }}" id="{{ form.organizationLocation.auto_id }}">
                                 </label>
                             </div>
                         </div>
@@ -112,35 +113,26 @@ Become an event host. Apply Now! — WAVE.
                     <div id="form-aboutYourevent">
                         <div class="form-aboutYourevent-container">
                             <div class="event_name">
-                                <label for="eventTypeSelector" class="eventTypeSelector">
-                                    <p>What type of events do you want to host?</p>
+                                <label for="{{ form.eventTypes.id_for_label }}" class="eventTypeSelector">
+                                    <p>{{ form.eventTypes.label }}</p>
                                     <div class="eventTypeSelectorButtons">
-                                        <div class="optionals">
-                                            <span>Music</span>
-                                            <span>Sports</span>
-                                            <span>Theatre</span>
-                                        </div>
-                                        <div class="optionals">
-                                            <span>Clubs</span>
-                                            <span>Organizations</span>
-                                            <span>Educational</span>
-                                        </div>
-                                        <div class="optionals">
-                                            <span>Academic</span>
-                                            <span>Academic</span>
-                                            <span>Academic</span>
-                                        </div>
+                                        {% for choice_value, choice_label in form.eventTypes.field.choices %}
+                                            <div class="optionals">
+                                                <input type="checkbox" id="{{ form.eventTypes.id_for_label }}_{{ forloop.counter }}" name="{{ form.eventTypes.html_name }}" value="{{ choice_value }}">
+                                                <label for="{{ form.eventTypes.id_for_label }}_{{ forloop.counter }}">{{ choice_label }}</label>
+                                            </div>
+                                        {% endfor %}
                                     </div>
                                 </label>
                             </div>
-                            <label for="eventFrequency">
-                                <p>How many events do you plan on hosting annually?</p>
-                                <input type="number" name="eventFrequency" id="eventFrequency" min="1">
+                            <label for="{{ form.eventHostedAnnually.id_for_label }}">
+                                <p>{{ form.eventHostedAnnually.label }}</p>
+                                <input type="{{ form.eventHostedAnnually.field.widget.input_type }}" name="{{ form.eventHostedAnnually.html_name }}" id="{{ form.eventHostedAnnually.auto_id }}">
                             </label>
 
-                            <label for="eventAttendance">
-                                <p>How many do you expect at each event?</p>
-                                <input type="number" name="eventAttendance" id="eventAttendance" min="1">
+                            <label for="{{ form.eventPopulation.id_for_label }}">
+                                <p>{{ form.eventPopulation.label }}</p>
+                                <input type="{{ form.eventPopulation.field.widget.input_type }}" name="{{ form.eventPopulation.html_name }}" id="{{ form.eventPopulation.auto_id }}">
                             </label>
                         </div>
                         <div id="nextOrSubmit">

@@ -332,35 +332,64 @@
 
 .eventTypeSelectorButtons {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     gap: 15px;
 }
 
-.eventTypeSelectorButtons .optionals {
+.eventTypeSelectorButtons {
     display: flex;
     flex-direction: row;
     -ms-flex-direction: row;
+    flex-wrap: wrap;
 
-    gap: 20px;
+    gap: 10px;
 }
 
-.eventTypeSelector {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-.optionals span {
+.optionals {
     background-color: rgba(145, 145, 145, 0.098);
-
-    border-radius: 10px;
-    padding: 10px;
-
-    font-family: Wanted-Medium;
-    color: #008d95;
+    border: 2px solid #008d95;
+    border-radius: 20px;
 
     cursor: pointer;
+
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+    font-family: Wanted-Medium;
+    color: #008d95;
 }
+
+.optionals input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+
+    display: none;
+}
+
+.optionals input[type="checkbox"]:checked .optionals {
+    background-color: #008d95;
+}
+
+.optionals label {
+    cursor: pointer;
+
+    padding: 10px;
+    padding-top: 7px;
+    padding-bottom: 7px;
+
+    height: 100%;
+    width: 100%;
+
+    display: flex;
+    align-items: center;
+}
+
+.optionals.selected {
+    background-color: #008d95;
+    color: white;
+}
+
 
 
 
