@@ -69,56 +69,86 @@ Applications Management — WAVE.
                             </div>
     
                             <div class="modalBody">
-                                <!--Allow scrolling here.-->
-                                <div class="applicantName">
-                                    <h3>Full Name</h3>
-                                    <p>{{ hostApplication.firstName }} {{ hostApplication.lastName }}</p>
-                                </div>
-
-                                <div class="applicantContact">
-                                    <h3>Contact</h3>
-                                    <div>
-                                        <div>
-                                            <h6>Email</h6>
-                                            <p>{{ hostApplication.email }}</p>
-                                        </div>
-                                        <div>
-                                            <h6>Phone</h6>
-                                            <p>{{ hostApplication.phone }}</p>
+                                <section class="applicantInformation">
+                                    <div class="sectionHeading">
+                                        <h2>Applicant Personal Information</h2>
+                                    </div>
+                                    <div class="applicantName">
+                                        <h3>Full Name</h3>
+                                        <p>{{ hostApplication.firstName }} {{ hostApplication.lastName }}</p>
+                                    </div>
+    
+                                    <div class="applicantContact">
+                                        <h3>Contact</h3>
+                                        <div class="doubleDisplayRow">
+                                            <div>
+                                                <h6>Email</h6>
+                                                <p>{{ hostApplication.email }}</p>
+                                            </div>
+                                            <div>
+                                                <h6>Phone</h6>
+                                                <p>{{ hostApplication.phone }}</p>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                                <div>
-                                    <h3>Organization Name</h3>
-                                    <p>{{ hostApplication.organizationName }}</p>
-                                </div>
-                                <div>
-                                    <h3>Organization Email</h3>
-                                    <p>{{ hostApplication.organizationEmail }}</p>
-                                </div>
-                                <div>
-                                    <h3>Organization Location</h3>
-                                    <p>{{ hostApplication.organizationLocation }}</p>
-                                </div>
+                                </section>
 
-                                <div>
-                                    <h3>Event Types</h3>
-                                    <p>
-                                        {% for eventType in hostApplication.eventTypes.all %}
-                                            {{ eventType.name }}{% if not forloop.last %} | {% endif %}
-                                        {% endfor %}
-                                    </p>
-                                </div>
-
-                                <div>
-                                    <h3>Events held annually</h3>
-                                    <p>{{ hostApplication.eventHostedAnnually }}</p>
-                                </div>
-                                <div>
-                                    <h3>Event Attendance</h3>
-                                    <p>{{ hostApplication.eventPopulation }}</p>
-                                </div>
+                                <section class="organizationInformation">
+                                    <div class="sectionHeading">
+                                        <h2>Organization Information</h2>
+                                    </div>
+                                    <div class="orgName">
+                                        <h3>Name</h3>
+                                        <p>{{ hostApplication.organizationName }}</p>
+                                    </div>
+    
+                                    <div class="doubleDisplayRow">
+                                        <div class="orgEmail">
+                                            <h3>Email</h3>
+                                            <p>{{ hostApplication.organizationEmail }}</p>
+                                        </div>
+                                        <div class="orgLocation">
+                                            <h3>Location</h3>
+                                            <p>{{ hostApplication.organizationLocation }}</p>
+                                        </div>
+                                    </div>
+                                </section>                                
+                                
+                                <section class="eventInformation">
+                                    <div class="sectionHeading">
+                                        <h2>Event Information</h2>
+                                    </div>
+                                    <div class="sectionBody">
+                                        <h3>Types of events to be hosted</h3>
+                                        <div class="eventTypeContainer">
+                                            {% for eventType in hostApplication.eventTypes.all %}
+                                            <span class="eventType">
+                                                #  {{ eventType.name }}
+                                            </span>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+    
+                                    <div class="sectionBody">
+                                        <h3>Expected to hold annually</h3>
+                                        <p>{{ hostApplication.eventHostedAnnually }}</p>
+                                    </div>
+                                    <div class="sectionBody">
+                                        <h3>Average Expected Attendance per event</h3>
+                                        <p>{{ hostApplication.eventPopulation }}</p>
+                                    </div>
+                                </section>
                             </div>
+
+                            <form action="{% url "waveAdmin:applications" %}" id="hostApplicationDecisionForm" method="post">
+                                {% csrf_token %}
+                                <input type="hidden" name="applicantEmail" value="{{hostApplication.email}}" id="applicantEmailInput">
+
+                                <div class="applicationDecision">
+                                    <button type="submit" name="applicationAction" value="deny" id="applicationDeny">Deny</button>
+                                    <button type="submit" name="applicationAction" value="approve" id="applicationApprove">Approve</button>
+                                </div>
+                            </form>
                         </div>
                     </div>
                 </div>

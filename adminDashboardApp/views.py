@@ -156,10 +156,46 @@ def adminDepartmentDetailedView(request, departmentID, department_name):
 def adminApplicationsView(request):
     if request.user.is_superuser:
         hostApplications = HostApplication.objects.all()
+        
+        if request.method == "POST":
+            action =request.POST.get("applicationAction")
+            applicant_email = request.POST.get("applicantEmail")
+            
+            if action == "approve":
+                sendHostApprovalEmail(applicant_email)
+                return redirect("waveAdmin:applications")
+            elif action == "deny":
+                sendHostDenyEmail(applicant_email)
+                return redirect("waveAdmin:applications")
         return render(request, "adminDashboardApp/tabs/applications.html", {'hostApps': hostApplications})
     
     else:
         return redirect("core:explore")
+def sendHostApprovalEmail(applicantEmail):
+    try:
+        subject = "Congratulations, You are a WAVE. host! Start hosting your events now."
+        emailMessageHtml = render_to_string(
+            "emailTemplates/adminDashboardApp/applications/hostAppApproval.html", {}
+        )
+        plainMessage = strip_tags(emailMessageHtml)
+        send_mail(
+            subject, plainMessage, None, [applicantEmail], html_message=emailMessageHtml
+        )
+    except Exception as e:
+        print(f"Error sending email to {applicantEmail}: {e}")
+def sendHostDenyEmail(applicantEmail):
+    try:
+        subject = "Thank you for your application to be a host!"
+        emailMessageHtml = render_to_string(
+            "emailTemplates/adminDashboardApp/applications/hostAppDeny.html", {}
+        )
+        plainMessage = strip_tags(emailMessageHtml)
+        send_mail(
+            subject, plainMessage, None, [applicantEmail], html_message=emailMessageHtml
+        )
+    except Exception as e:
+        print(f"Error sending email to {applicantEmail}: {e}")
+        
 
 
 @login_required(login_url="authentication:login")
@@ -170,6 +206,7 @@ def adminEventsView(request):
 
     else:
         return redirect("core:explore")
+
 
 
 @login_required(login_url="authentication:login")
@@ -183,6 +220,7 @@ def adminUsersView(request):
         )
     else:
         return redirect("core:explore")
+
 
 
 @login_required(login_url="authentication:login")
@@ -209,6 +247,7 @@ def adminUserDetailedView(request, user_id):
         return redirect("core:explore")
 
 
+
 @login_required(login_url="authentication:login")
 @admin_required
 def adminCareersView(request):
@@ -223,6 +262,7 @@ def adminCareersView(request):
 
     else:
         return redirect("core:explore")
+
 
 
 @login_required(login_url="authentication:login")
@@ -303,6 +343,7 @@ def adminFinanceView(request):
         return redirect("core:explore")
 
 
+
 @login_required(login_url="authentication:login")
 @admin_required
 def adminSupportView(request):
@@ -329,6 +370,7 @@ def adminSupportView(request):
         )
     else:
         return redirect("core:explore")
+
 
 
 @login_required(login_url="authentication:login")
