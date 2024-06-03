@@ -1,0 +1,227 @@
+/** Body Content **/
+
+#body-content {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+    padding-left: 100px;
+    padding-right: 100px;
+    padding-top: 50px;
+    padding-bottom: 50px;
+    color: #000000;
+    flex-grow: 1;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+#content-container {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+    padding-left: 70px;
+    padding-right: 50px;
+    padding-top: 50px;
+    padding-bottom: 20px;
+    flex-grow: 1;
+}
+
+#page-heading {
+    display: flex;
+    flex-direction: column;
+    background-color: #ffffff;
+    gap: 20px;
+    align-items: start;
+}
+
+#page-heading h2{
+    font-size: 50px;
+    font-family: Wanted-SemiBold;
+    color: #000000;
+}
+
+
+.container1 {
+    
+    border-radius: 10px;
+    color: #ffffff;
+}
+
+.container1 h1 {
+    font-family: Wanted-SemiBold;
+    text-align: left;
+    padding-bottom: 10px;
+    color: #000000;
+}
+
+.container1 p {
+    font-family: Wanted-Regular;
+    text-align: left;
+    color: rgb(120, 120, 120);
+}
+
+
+#body-content{
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    padding-left: 100px;
+    padding-right: 100px;
+    color: #ffffff;
+}
+
+#row-one{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 30px;
+}
+
+#bc-ro-information {
+    width: 50%;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+#bc-ro-information h6{
+    font-family: Wanted-SemiBold;
+    font-size: 35px;
+}
+
+#bc-ro-information p {
+    font-family: Wanted-Regular;
+    font-size: 20px;
+
+    color: rgb(120, 120, 120);
+
+    line-height: 35px;
+}
+
+#bc-ro-img {
+    width: 40%;
+    padding: 30px;
+}
+
+#bc-ro-img img{
+    width: 100%;
+    border-radius: 20px;
+}
+
+#bc-ro-information1 {
+    width: 50%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+#bc-ro-information1 h6{
+    font-family: Wanted-SemiBold;
+    font-size: 35px;
+    color: #000000;
+}
+
+#bc-ro-information1 p {
+    font-family: Wanted-Regular;
+    font-size: 20px;
+
+    color: rgb(120, 120, 120);
+
+    line-height: 25px;
+}
+
+#row-two{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 30px;
+}
+
+#bc-rt-information {
+    width: 50%;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding-left: 30px;
+}
+
+#bc-rt-information h6{
+    font-family: Wanted-SemiBold;
+    font-size: 35px;
+}
+
+#bc-rt-information p {
+    font-family: Wanted-Regular;
+    font-size: 20px;
+    color: rgb(120, 120, 120);
+    line-height: 35px;
+}
+
+#bc-rt-img {
+    width: 40%;
+    padding: 30px;
+}
+
+#bc-rt-img img{
+    width: 100%;
+    border-radius: 20px;
+}
+
+#bc-rt-information1 {
+    width: 50%;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding-left: 30px;
+}
+
+#bc-rt-information1 h6{
+    font-family: Wanted-SemiBold;
+    font-size: 35px;
+    color: #000000;
+}
+
+#bc-rt-information1 p {
+    font-family: Wanted-Regular;
+    font-size: 20px;
+    color: rgb(120, 120, 120);
+    line-height: 35px;
+}
+
+.button-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 40px;
+}
+
+#safety-button {
+    background-color: #008d95;
+    color: #ffffff;
+    padding: 16px 32px;
+    font-family: Wanted-Bold;
+    font-size: 20px;
+    text-decoration: none;
+    display: inline-block;
+    margin: 4px 2px;
+    transition-duration: 0.4s;
+    cursor: pointer;
+    border: none;
+    border-radius: 15px;
+}
+
+#safety-button:hover {
+    background-color: #00565d;
+}
+
+/** Logo used in body's **/
+#body-logo {
+    font-family: Easy-Grotesk-Black;
+}
+
+#body-logo .spot {
+    color: #008d95;
+}
+
+#body-logo .black-spot {
+    color: black;
+    font-size: 20px;
+}

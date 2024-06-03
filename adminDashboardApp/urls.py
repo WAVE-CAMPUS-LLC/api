@@ -10,6 +10,7 @@ urlpatterns = [
     path('management/admin/departments/', views.adminDepartmentView, name="departments"),
     path('management/admin/departments/<str:departmentID>/<str:department_name>/', views.adminDepartmentDetailedView, name="departmentDetails"),
     
+    path('management/admin/applications', views.adminApplicationsView, name="applications"),
     path('management/admin/events/', views.adminEventsView, name="events"),
     
     path('management/admin/users/', views.adminUsersView, name="users"),

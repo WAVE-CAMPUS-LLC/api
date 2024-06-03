@@ -1,4 +1,7 @@
 document.addEventListener('DOMContentLoaded', function () {
+    /* This code snippet is selecting all elements with the class name "applicantCard" using
+    `document.querySelectorAll(".applicantCard")`. It then iterates over each of these elements
+    using `forEach`, passing in the `card` and `index` parameters. */
     const applicantCards = document.querySelectorAll(".applicantCard");
 
     applicantCards.forEach((card, index) => {
@@ -15,6 +18,10 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
+    /* This code snippet is handling the click event on the document. When a click event occurs, it
+    checks the target element of the event. If the target element has a class of
+    "applicantInfoModal", it extracts the index from the modal's ID and calls the `hideModal`
+    function passing in the extracted index to hide that specific modal. */
     document.addEventListener('click', function (event) {
         const target = event.target;
         const modal = target.closest('.applicantInfoModal');
@@ -36,6 +43,12 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
+    /**
+     * The JavaScript code defines functions to close modals by hiding them based on their index.
+     * @param index - The `index` parameter in this context refers to the unique identifier of a
+     * specific modal element. It is used to target and hide a modal with the corresponding index in
+     * the `hideModal` function.
+     */
     const closeModalButtons = document.querySelectorAll(".hideAppModalButton");
 
     closeModalButtons.forEach(btn => {

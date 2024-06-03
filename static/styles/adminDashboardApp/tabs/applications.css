@@ -1,0 +1,278 @@
+/* Body Content */
+#content-container {
+    width: 100%;
+
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+
+    padding-right: 100px;
+    padding-left: 100px;
+}
+
+.content-control {
+    border-bottom: 4px solid black;
+
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+
+    font-family: Wanted-Regular;
+    font-size: 20px;
+    font-weight: 700;
+    color: black;
+}
+
+.content-control .applications-tab {
+    display: inline-block;
+    padding-left: 7px;
+    padding-right: 7px;
+    cursor: pointer;
+}
+
+.applications-tab.tab-active {
+    border-bottom: 4px solid black;
+    padding-bottom: 10px;
+}
+
+.applications-tab:hover {
+    border-bottom: 4px solid rgba(0, 0, 0, 0.571);
+    padding-bottom: 10px;
+}
+
+/* Applications Container */
+.applications-container {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 20px;
+}
+
+#applicant-card {
+    background-color: #000000;
+    color: white;
+
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+
+    padding: 15px;
+    padding-left: 20px;
+    padding-right: 20px;
+
+    border-radius: 15px;
+    border: 4px solid black;
+
+    cursor: pointer;
+}
+
+#applicant-card:hover {
+    -webkit-box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.085);
+    -moz-box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.16);
+    box-shadow: 2px 3px 21px 4px rgba(42, 42, 42, 0.363);
+
+    border: 4px solid #008d95;
+}
+
+#applicant-card h3 {
+    font-family: Wanted-Bold;
+    font-size: 22px;
+}
+
+.applicant-email {
+    font-family: Wanted-Medium;
+    font-size: 18px;
+}
+
+.application-received {
+    font-family: Wanted-Regular;
+    font-size: 15px;
+
+    width: 100%;
+    display: flex;
+    justify-content: end;
+}
+
+/* Modal Container & Content */
+.viewHostApplicationModal {
+    display: none;
+
+    background-color: rgba(0, 0, 0, 0.037);
+
+    -webkit-backdrop-filter: blur(2px) saturate(1.7);
+    backdrop-filter: blur(2px) saturate(1.7);
+
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1005;
+
+    width: 100%;
+    height: 100%;
+
+    cursor: default;
+}
+
+.modalContainer {
+    width: 100%;
+    height: 100%;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.modalContentCard {
+    width: 60%;
+    height: 90%;
+
+    background-color: white;
+    -webkit-box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.085);
+    -moz-box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.16);
+    box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.061);
+
+    border-radius: 20px;
+    padding: 30px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.modalHeader {
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modalClose button {
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+.modalHeading {
+    font-family: Wanted-Bold;
+    font-size: 40px;
+}
+
+.modalBody {
+    display: flex;
+    flex-direction: column;
+
+    gap: 30px;
+
+    overflow-y: auto;
+}
+
+.modalBody section {
+    display: flex;
+    flex-direction: column;
+
+    gap: 10px;
+}
+
+.sectionHeading {
+    display: flex;
+    justify-content: start;
+}
+
+.sectionHeading h2 {
+    font-family: Wanted-Bold;
+    font-size: 22px;
+    color: #008d95;
+}
+
+.modalBody h3 {
+    font-family: Wanted-Bold;
+    font-size: 17px;
+}
+
+.modalBody h6 {
+    font-family: Wanted-SemiBold;
+    font-size: 13px;
+}
+
+.modalBody p {
+    font-family: Wanted-Regular;
+    font-size: 15px;
+}
+
+.applicantContact,
+.applicantName,
+.sectionBody {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.doubleDisplayRow {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    gap: 50px;
+}
+
+.eventTypeContainer {
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+}
+
+.eventType {
+    background-color: #008d95;
+    padding: 5px;
+    border-radius: 20px;
+    font-family: Wanted-Medium;
+    color: white;
+    cursor: pointer;
+    border: 2px solid transparent;
+
+}
+
+.eventType:hover {
+    border: 2px solid #008d95;
+    background-color: white;
+    color: #008d95;
+}
+
+/* Application Decision */
+.applicationDecision {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+.applicationDecision button {
+    padding: 12px;
+
+    border: 2px solid transparent;
+    border-radius: 15px;
+
+    font-family: Wanted-SemiBold;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+#applicationDeny {
+    background-color: red;
+    color: white;
+}
+
+#applicationDeny:hover {
+    border-color: red;
+    background-color: white;
+    color: red;
+}
+
+#applicationApprove {
+    background-color: #00ba13;
+    color: white;
+}
+
+#applicationApprove:hover {
+    border-color: #00ba13;
+    background-color: white;
+    color: #00ba13;
+}

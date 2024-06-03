@@ -1,0 +1,74 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}
+Hosting with WAVE.
+{% endblock title %}
+
+{% block app_page_style %}
+<link rel="stylesheet" type="text/css" href="{% static "/styles/eventManagementApp/host/hostHome.css" %}" />
+{% endblock app_page_style %}
+
+{% block pageHeader %}
+{% include "partials/headers/hostHeader.html" %}
+{% endblock pageHeader %}
+
+
+{% block body %}
+<div id="body-content">
+    <div class="row-header">
+        <h3>
+            The heart of entertainment on your campus!
+        </h3>
+        <p>
+            To be able to host events with WAVE., there are a few steps you have to go through.
+            This process exists to help us ensure the safety of yourself as a host and any event attendees, most
+            especially all our student users.
+            Our students matter to us!
+            <br>
+            Read more about our <a href="{% url "extras:safety" %}">safety policy</a>.
+        </p>
+    </div>
+    <div id="cCParentDiv">
+        <div id="cCBodyLeft">
+            <div class="process-container">
+                <div class="process-explanation">
+                    <h1><span class="process-number">1.</span> Apply as a host</h1>
+                    <p>
+                        We require a few details and an ID. <br>
+                        This ensures the safety of everyone!
+                    </p>
+                </div>
+                <div class="process-arrow">
+                    <img src="{% static "/images/eventManagementApp/process-arrowDown.svg" %}" alt="Arrow Down">
+                </div>
+                <div class="process-explanation">
+                    <h1><span class="process-number">2.</span> Get approved!</h1>
+                    <p>
+                        Approval will take less than 24 hours. <br>
+                        That's if your information matches!
+                    </p>
+                </div>
+                <div class="process-arrow">
+                    <img src="{% static "/images/eventManagementApp/process-arrowDown.svg" %}" alt="Arrow Down">
+                </div>
+                <div class="process-explanation">
+                    <h1><span class="process-number">3.</span> Start hosting events!</h1>
+                    <p>
+                        Share your talents with the world. <br>
+                        The world needs you.
+                        <br>
+                        We care!
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="applyNow">
+        <a href="{% url "eventManagement:hostApply" %}">Apply Now!</a>
+    </div>
+    <div class="standout-text">
+        <h1>Showcase your talent!</h1>
+    </div>
+</div>
+{% endblock body %}

@@ -1,0 +1,37 @@
+{% load static %}
+
+<link rel="stylesheet" type="text/css" href="{% static "/styles/partials/headers/hostHeader.css" %}" />
+
+
+<header>
+    <nav id="navigation-bar">
+        <div id="logo-menu">
+            <div id="logo">
+                <a href="{% url "core:index" %}">WAVE<span>.</span></a>
+            </div>
+            <div id="page-name">
+                <a href="{% url "eventManagement:hostHome" %}">Hosting</a>
+            </div>
+        </div>
+        <div class="support-links">
+            <ul>
+                <li><a href="{% url "core:explore" %}">Explore</a></li>
+                <li><a href="../resources/partnerWithUs.html">Partnership</a></li>
+                <li><a href="{% url "extras:safety" %}">Safety</a></li>
+                <li><span>|</span></li>
+                <li>
+                    <a id="support" href="{% url "support:home" %}">Support</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <div id="container-art">
+        <div class="ticket-heading">
+            <h1>
+                Hosting @
+                <span class="heading-logo">WAVE<span id="logo-dotty">.</span></span>
+            </h1>
+        </div>
+    </div>
+</header>
