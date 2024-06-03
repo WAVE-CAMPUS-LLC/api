@@ -18,7 +18,6 @@ urlpatterns = [
     path("safety/", views.safetyView, name="safety"), 
     path("terms/", views.termsView, name="terms"), 
     
-    path("host/", views.hostView, name="host"),
     path("colleges/", views.collegeCampusesView, name="colleges"), 
     path("partner/", views.partnersView, name="partners"),
     path("affiliate/", views.affiliateView, name="affiliate"), 

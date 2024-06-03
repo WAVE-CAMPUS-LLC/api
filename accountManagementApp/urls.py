@@ -7,4 +7,5 @@ urlpatterns = [
     path("profile/", views.profileView, name="userAccount"),
     path("settings/", views.settingsView, name="userSettings"),
     path('change-password/', views.ChangePasswordView.as_view(), name="changePassword"),
+    path('user-tag/', views.showUserTag, name="userTag"),
 ]

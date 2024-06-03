@@ -1,0 +1,149 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}
+Become an event host. Apply Now! — WAVE.
+{% endblock title %}
+
+{% block app_page_style %}
+<link rel="stylesheet" type="text/css" href="{% static "/styles/eventManagementApp/host/hostApplication.css" %}" />
+{% endblock app_page_style %}
+
+{% block header %}
+{% include "partials/nav-footer/nav/main_nav.html" %}
+{% endblock header %}
+
+{% block script %}
+<script type="text/javascript" src="{% static "scripts/eventManagementApp/host/hostApplication.js" %}"></script>
+{% endblock script %}
+
+
+
+{% block body %}
+<div id="body-content">
+    <div class="page-heading">
+        <h3>Apply to host events</h3>
+    </div>
+    <div id="work-with-us">
+        <div class="wwu-heading">
+            <ul>
+                <li><span>1</span>Yourself</li>
+                <li><span>2</span>Your organization</li>
+                <li><span>3</span>Event</li>
+            </ul>
+        </div>
+        <div class="wwu-body">
+            <form id="hostEventApplication" action="{% url "eventManagement:hostApply" %}" method="POST">
+                {% csrf_token %}
+                <section id="about-yrslf">
+                    <div class="section-summary">
+                        <h5>A bit about you</h5>
+                        <p>Tell us a bit about yourself. We will reach out in order to take the next step.</p>
+                    </div>
+                    <div id="form-aboutYourself">
+                        <div class="form-aboutYourself-container">
+                            <div class="doubleDisplayRow">
+                                <label for="{{ form.firstName.id_for_label }}">
+                                    <p>{{ form.firstName.label }}</p>
+                                    <input type="{{ form.firstName.field.widget.input_type }}" name="{{ form.firstName.html_name }}" id="{{ form.firstName.auto_id }}">
+                                </label>
+                                <label for="{{ form.lastName.id_for_label }}">
+                                    <p>{{ form.lastName.label }}</p>
+                                    <input type="{{ form.lastName.field.widget.input_type }}" name="{{ form.lastName.html_name }}" id="{{ form.lastName.auto_id }}">
+                                </label>
+                            </div>
+                            <label for="{{ form.email.id_for_label }}">
+                                <p>{{ form.email.label }}</p>
+                                <input type="{{ form.email.field.widget.input_type }}" name="{{ form.email.html_name }}" id="{{ form.email.auto_id }}">
+                            </label>
+                            
+                            <label for="{{ form.phone.id_for_label }}">
+                                <p>{{ form.phone.label }}</p>
+                                <input type="{{ form.phone.field.widget.input_type }}" name="{{ form.phone.html_name }}" id="{{ form.phone.auto_id }}">
+                            </label>
+                        </div>
+                        <div id="nextOrSubmit">
+                            <button type="button" id="nextButtonOne" class="next-button">Next</button>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="about-yrorg" style="display: none;">
+                    <div class="section-summary">
+                        <h5>Organization</h5>
+                        <p>Tell us a bit about organization. We will reach out in order to take the next step.
+                        </p>
+                    </div>
+                    <div id="form-aboutYourorg">
+                        <div class="form-aboutYourorg-container">
+                            <div class="organization-name">
+                                <label for="{{ form.organizationName.id_for_label }}">
+                                    <p>{{ form.organizationName.label }}</p>
+                                    <input type="{{ form.organizationName.field.widget.input_type }}" name="{{ form.organizationName.html_name }}" id="{{ form.organizationName.auto_id }}">
+                                </label>
+                            </div>
+                            <div class="organization-email">
+                                <label for="{{ form.organizationEmail.id_for_label }}">
+                                    <p>{{ form.organizationEmail.label }}</p>
+                                    <input type="{{ form.organizationEmail.field.widget.input_type }}" name="{{ form.organizationEmail.html_name }}" id="{{ form.organizationEmail.auto_id }}">
+                                </label>
+                            </div>
+                            <div class="organization-location">
+                                <label for="{{ form.organizationLocation.id_for_label }}">
+                                    <p>{{ form.organizationLocation.label }}</p>
+                                    <input type="{{ form.organizationLocation.field.widget.input_type }}" name="{{ form.organizationLocation.html_name }}" id="{{ form.organizationLocation.auto_id }}">
+                                </label>
+                            </div>
+                        </div>
+                        <div id="nextOrSubmit">
+                            <button type="button" id="previousButtonyrOrg"
+                                class="previous-button">Previous</button>
+                            <button type="button" id="nextButtonTwo" class="next-button">Next</button>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="about-yrevent" style="display: none;">
+                    <div class="section-summary">
+                        <h5>Event Information</h5>
+                        <p>
+                            Tell us about the kind of events you plan to host. We'd like to know a bit more.
+                        </p>
+                    </div>
+                    <div id="form-aboutYourevent">
+                        <div class="form-aboutYourevent-container">
+                            <div class="event_name">
+                                <label for="{{ form.eventTypes.id_for_label }}" class="eventTypeSelector">
+                                    <p>{{ form.eventTypes.label }}</p>
+                                    <div class="eventTypeSelectorButtons">
+                                        {% for choice_value, choice_label in form.eventTypes.field.choices %}
+                                            <div class="optionals">
+                                                <input type="checkbox" id="{{ form.eventTypes.id_for_label }}_{{ forloop.counter }}" name="{{ form.eventTypes.html_name }}" value="{{ choice_value }}">
+                                                <label for="{{ form.eventTypes.id_for_label }}_{{ forloop.counter }}">{{ choice_label }}</label>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </label>
+                            </div>
+                            <label for="{{ form.eventHostedAnnually.id_for_label }}">
+                                <p>{{ form.eventHostedAnnually.label }}</p>
+                                <input type="{{ form.eventHostedAnnually.field.widget.input_type }}" name="{{ form.eventHostedAnnually.html_name }}" id="{{ form.eventHostedAnnually.auto_id }}">
+                            </label>
+
+                            <label for="{{ form.eventPopulation.id_for_label }}">
+                                <p>{{ form.eventPopulation.label }}</p>
+                                <input type="{{ form.eventPopulation.field.widget.input_type }}" name="{{ form.eventPopulation.html_name }}" id="{{ form.eventPopulation.auto_id }}">
+                            </label>
+                        </div>
+                        <div id="nextOrSubmit">
+                            <button type="button" id="previousButtonyrEvent"
+                                class="previous-button">Previous</button>
+                            <button type="submit">Submit</button>
+                        </div>
+                    </div>
+                </section>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock body %}

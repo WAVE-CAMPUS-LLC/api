@@ -1,0 +1,116 @@
+/* Body Content */
+#body-content {
+	display: flex;
+	flex-direction: column;
+	gap: 70px;
+	padding-left: 100px;
+	padding-right: 100px;
+}
+
+.row-header {
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
+}
+
+.row-header h3{
+	font-family: Wanted-Bold;
+	font-size: 40px;
+}
+
+.row-header p {
+	font-family: Wanted-Variable;
+	font-size: 20px;
+}
+
+.row-header p a{
+	color: #008d95;
+	font-family: Wanted-SemiBold;
+	text-decoration: none;
+}
+
+.row-header p a:hover {
+	text-decoration: underline;
+}
+
+#cCParentDiv {
+	width: 100%;
+}
+#cCBodyLeft {
+	width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.process-container {
+	width: 100%;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	flex-direction: column;
+	gap: 40px;
+
+}
+
+.process-explanation {
+	display: flex;
+	justify-content: center;
+	flex-direction: column;
+	align-items: center;
+}
+
+.process-explanation h1 {
+	font-family: Wanted-ExtraBold;
+	font-family: 30px;
+}
+
+.process-explanation p {
+	font-family: Wanted-Regular;
+	font-size: 20px;
+	text-align: center;
+}
+
+.process-number {
+	color: #008d95;
+	font-family: Wanted-Bold;
+}
+
+
+
+
+.applyNow {
+	width: 100%;
+	display: flex;
+	justify-content: center;
+}
+
+.applyNow a {
+	border: 1px solid #008d95;
+	border-radius: 15px;
+
+	background-color: #008d95;
+	padding: 20px;
+	color: white;
+	text-decoration: none;
+
+	font-family: Wanted-Bold;
+	font-size: 30px;
+}
+
+
+.standout-text {
+	width: 100%;
+
+    display: flex;
+    justify-content: end;
+
+    
+    border-top: 2px solid rgba(146, 146, 146, 0.096);
+	color: #008d95;
+
+    padding-top: 70px;
+
+    font-family: Wanted-ExtraBold;
+    font-size: 35px;
+}
