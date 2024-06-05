@@ -4,23 +4,29 @@ from . import views
 app_name = "waveAdmin"
 
 urlpatterns = [
-    path('management/admin/', views.adminPortalView, name="adminDashboard"),
-    path('management/admin/dashboard/', views.adminDashboardView, name="dashboard"),
+    path('', views.adminPortalView, name="adminDashboard"),
+    path('dashboard/', views.adminDashboardView, name="dashboard"),
     
-    path('management/admin/departments/', views.adminDepartmentView, name="departments"),
-    path('management/admin/departments/<str:departmentID>/<str:department_name>/', views.adminDepartmentDetailedView, name="departmentDetails"),
+    path('departments/', views.adminDepartmentView, name="departments"),
+    path('departments/<str:departmentID>/<str:department_name>/', views.adminDepartmentDetailedView, name="departmentDetails"),
     
-    path('management/admin/applications', views.adminApplicationsView, name="applications"),
-    path('management/admin/events/', views.adminEventsView, name="events"),
+    path('applications', views.adminApplicationsView, name="applications"),
+    path('events/', views.adminEventsView, name="events"),
     
-    path('management/admin/users/', views.adminUsersView, name="users"),
-    path('management/admin/users/<str:user_id>/', views.adminUserDetailedView, name="user-detailed"), 
     
-    path('management/admin/careers/', views.adminCareersView, name="careers"), 
-    path('management/admin/careers/4ujdh sdha9 <uuid:roleID>ek98ep0 ujhdikjd/', views.adminCareerDetailView, name="careerDetails"),
+    # User Management    
+    path('users/', views.adminUsersView, name="users"),
+    path('users/<str:user_id>/', views.adminUserDetailedView, name="user-detailed"), 
     
-    path('management/admin/finances/', views.adminFinanceView, name="finances"), 
     
-    path('management/admin/support/', views.adminSupportView, name="support"),
-    path('management/admin/feedback/', views.adminFeedbackView, name="feedback")
+    # Roles & Permissions Management
+    path('roles/', views.adminRoleView, name="roles"),
+    
+    path('careers/', views.adminCareersView, name="careers"), 
+    path('careers/4ujdh sdha9 <uuid:roleID>ek98ep0 ujhdikjd/', views.adminCareerDetailView, name="careerDetails"),
+    
+    path('finances/', views.adminFinanceView, name="finances"), 
+    
+    path('support/', views.adminSupportView, name="support"),
+    path('feedback/', views.adminFeedbackView, name="feedback")
 ]

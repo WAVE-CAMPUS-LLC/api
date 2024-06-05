@@ -46,7 +46,8 @@ INSTALLED_APPS = [
     "careerApp",
     "eventManagementApp", 
     "supportCenterApp",
-    "newsApp"
+    "newsApp",
+    "socialApp",
 ]
 
 MIDDLEWARE = [

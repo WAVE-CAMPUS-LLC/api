@@ -11,7 +11,7 @@ from eventManagementApp.models import HostApplication
 
 from wave_v1 import settings
 from .models import Department, CareerRole, LoginHistoryModel
-from .forms import DepartmentForm, CareerRoleCreationForm
+from .forms import CreateRoleForm, DepartmentForm, CareerRoleCreationForm
 from wave_v1.decorators import admin_required
 
 
@@ -222,7 +222,6 @@ def adminUsersView(request):
         return redirect("core:explore")
 
 
-
 @login_required(login_url="authentication:login")
 @admin_required
 def adminUserDetailedView(request, user_id):
@@ -245,6 +244,25 @@ def adminUserDetailedView(request, user_id):
         )
     else:
         return redirect("core:explore")
+
+
+
+@login_required(login_url="authentication:login")
+@admin_required
+def adminRoleView(request):
+    if request.user.is_superuser:
+        createRole = CreateRoleForm(request.POST)
+        
+        if createRole.is_valid():
+            role = createRole.save(commit=False)
+            role.save()
+            createRole.save_m2m()
+            return redirect("waveAdmin:roles")
+        return render(request, "adminDashboardApp/tabs/roles.html", {"createRoleForm":createRole})
+    else: 
+        createRole = CreateRoleForm()
+        
+    return redirect("core:explore")
 
 
 

@@ -2,12 +2,29 @@
 #content-container {
     width: 100%;
 
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 50px;
 
     padding-left: 100px;
     padding-right: 100px;
+}
+
+.content-section {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.section-header {
+    font-family: Wanted-Bold;
+    font-size: 40px;
+}
+
+.section-body {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
 }
 
 #optionCard {

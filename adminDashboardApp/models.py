@@ -2,9 +2,15 @@ from datetime import timedelta
 from django.db import models
 from django.conf import settings
 from django.utils import timezone
+from django.contrib.auth.models import Group, Permission
 import uuid
+from authenticationApp.models import CustomUser
+
+
 
 # Create your models here.
+
+
 class Department(models.Model):
     name = models.CharField("Department Name", max_length=100)
     departmentID = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, unique=True)

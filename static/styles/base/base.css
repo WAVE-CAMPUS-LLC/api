@@ -181,3 +181,11 @@ footer {
 #errorContainer div p {
     display: inline-block;
 }
+
+.ticket-header a{
+    color: white;
+}
+
+.ticket-header a:hover {
+    color: #008d9f;
+}

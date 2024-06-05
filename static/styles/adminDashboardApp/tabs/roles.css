@@ -1,0 +1,464 @@
+/** Body Content Container **/
+#content-container {
+    width: 100%;
+
+    display: flex;
+    flex-direction: column;
+    gap: 50px;
+
+    padding-left: 150px;
+    padding-right: 150px;
+}
+
+
+#page-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#page-heading #heading-text {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+#page-heading #heading-button button {
+    background-color: #008d95;
+    border: none;
+    padding: 15px;
+    border-radius: 10px;
+
+    font-family: Wanted-Regular;
+    color: white;
+    font-size: 18px;
+
+    cursor: pointer;
+}
+
+#page-heading h6 {
+    font-size: 50px;
+    font-family: Wanted-ExtraBold;
+    color: #008d95;
+}
+
+#page-heading p {
+    font-size: 25px;
+    font-family: Wanted-Bold;
+    color: #444444;
+}
+
+.smaller-heading {
+    font-family: Wanted-Medium;
+    color: #444444;
+}
+
+#contentDNE {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    justify-content: center;
+
+    font-family: Wanted-Bold;
+    font-size: 20px;
+    text-align: center;
+}
+
+#contentDNE button {
+    background-color: #008d95;
+    color: white;
+    font-family: Wanted-Medium;
+    padding: 15px;
+    border-radius: 15px;
+    border: none;
+
+    cursor: pointer;
+}
+
+#roles-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.roleCard {
+    background-color: #008d95;
+    padding: 15px;
+    color: white;
+    border-radius: 15px;
+    border: 4px solid transparent;
+    font-family: Wanted-Medium;
+    font-size: 18px;
+
+    cursor: pointer;
+}
+
+
+.roleHeader {
+    font-family: Wanted-SemiBold;
+    color: #444444;
+
+    padding-left: 20px;
+    padding-right: 30px;
+}
+
+.roleHeader,
+.roleContainer {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.roleHeaderName {
+    display: flex;
+    align-items: center;
+}
+
+.roleHeaderMembers {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.roleHeaderAction {
+    display: flex;
+    justify-content: end;
+    align-items: center;
+}
+
+.roleHeaderActionContainer {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+}
+
+.roleHeaderActionContainer button {
+    border-radius: 10px;
+    border: none;
+    padding: 15px;
+
+    font-family: Wanted-ExtraBold;
+    font-size: 15px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+
+    background: #008d95;
+    color: white;
+
+    cursor: pointer;
+}
+
+#roleHeaderActionBtn:hover {
+    background-color: white;
+    color: #008d95;
+}
+
+#roleDeleteButton {
+    color: white;
+    background-color: red;
+
+    font-family: Wanted-ExtraBold;
+    font-size: 15px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+
+    border-radius: 10px;
+    border: none;
+    padding: 15px;
+}
+
+#roleDeleteButton:hover {
+    background-color: white;
+    color: red;
+}
+
+
+
+/* * Create new role modal * */
+#createRoleModal {
+    display: none;
+
+    background-color: rgba(0, 0, 0, 0.037);
+
+    -webkit-backdrop-filter: blur(2px) saturate(1.7);
+    backdrop-filter: blur(2px) saturate(1.7);
+
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1005;
+
+    width: 100%;
+    height: 100%;
+
+    cursor: default;
+}
+
+.createRoleModalContainer {
+    width: 100%;
+    height: 100%;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#createRoleCard {
+    width: 60%;
+    height: 90%;
+
+    background-color: white;
+    -webkit-box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.085);
+    -moz-box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.16);
+    box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.061);
+
+    border-radius: 20px;
+    padding: 20px;
+    padding-bottom: 0px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Card Header */
+.cardHeader,
+.editCardHeader {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+
+    width: 100%;
+}
+
+.cardHeader .header-rowOne,
+.editCardHeader .header-rowOne {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    gap: 25px;
+}
+
+.cH-heading {
+    font-family: Wanted-Bold;
+    font-size: 25px;
+    color: #008d95;
+}
+
+.header-rowOne .heading-tabs {
+    width: 100%;
+    border-bottom: 2px solid #008d958c;
+
+    display: flex;
+
+    justify-content: start;
+    gap: 35px;
+
+    font-family: Wanted-Medium;
+}
+
+.heading-tabs div {
+    display: inline-block;
+    padding-right: 7px;
+    cursor: pointer;
+}
+
+.createRole-tab.tab-active,
+.editRole-tab.tab-active {
+    border-bottom: 4px solid #008d95;
+    padding-bottom: 10px;
+}
+
+.createRole-tab:hover,
+.editRole-tab:hover {
+    border-bottom: 4px solid #008d958c;
+    padding-bottom: 10px;
+}
+
+.createRole-tab-content,
+.editRole-tab-content {
+    padding-left: 20px;
+    padding-right: 30px;
+}
+
+.cardBody,
+.viewCardBody {
+    overflow-y: auto;
+    padding-bottom: 30px;
+}
+
+.tab-content-container {
+    display: flex;
+    flex-direction: column;
+    gap: 35px;
+    width: 100%;
+    height: 100%;
+    min-height: 100%;
+
+    justify-content: space-between;
+}
+
+.form-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 35px;
+}
+
+#display-information .cols,
+#edit-display-information .cols {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    width: 60%;
+
+    font-family: Wanted-Medium;
+}
+
+#display-information label input,
+#edit-display-information label input {
+    padding: 10px;
+    padding-left: 13px;
+    padding-right: 13px;
+    border-radius: 10px;
+
+    background-color: #eeeded45;
+    border: 1px solid rgba(9, 9, 9, 0.057);
+
+    font-family: Wanted-Regular;
+    font-size: 15px;
+
+    /** Box Shadowing **/
+    -webkit-box-shadow: 2px 3px 21px 4px rgba(138, 138, 138, 0.108);
+    -moz-box-shadow: 2px 3px 21px 4px rgba(138, 138, 138, 0.108);
+    box-shadow: 2px 3px 21px 4px rgba(138, 138, 138, 0.026);
+}
+
+.profileDisplay {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+
+    font-family: Wanted-Medium;
+    font-size: 15px;
+}
+
+.profileDisplay p {
+    width: 100%;
+}
+
+
+
+
+
+.content-Submit {
+    display: flex;
+    justify-content: center;
+}
+
+#saveRolebtnOne,
+#saveEditbtnOne {
+    background-color: #008d95;
+    padding: 15px;
+    border: none;
+    border-radius: 15px;
+    color: white;
+    font-family: Wanted-Medium;
+    font-size: 16px;
+    letter-spacing: 1px;
+}
+
+
+/* Permissions Tab */
+#permissions-information label,
+#edit-permissions-information label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    font-family: Wanted-Medium;
+    font-size: 15px;
+}
+
+#permissions-information input,
+#edit-permissions-information input {
+    font-family: Wanted-Medium;
+    font-size: 15px;
+}
+
+
+
+
+.closeModal{
+    width: 100%;
+    display: flex;
+    justify-content: end;
+}
+
+.cardHeader .closeModal button,
+#closeEditRoleButton {
+    border: none;
+    background: none;
+
+    cursor: pointer;
+}
+
+.cardHeader .closeModal button p {
+    font-family: Wanted-SemiBold;
+    color: #6e6e6ef0;
+}
+
+
+/* Start -- View Role Modal -- Start */
+.viewRoleModal {
+    display: none;
+
+    background-color: rgba(0, 0, 0, 0.037);
+
+    -webkit-backdrop-filter: blur(2px) saturate(1.7);
+    backdrop-filter: blur(2px) saturate(1.7);
+
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1005;
+
+    width: 100%;
+    height: 100%;
+
+    cursor: default;
+}
+
+.viewRoleModalContainer {
+    width: 100%;
+    height: 100%;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.viewRoleCard {
+    width: 60%;
+    height: 90%;
+
+    background-color: white;
+    -webkit-box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.085);
+    -moz-box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.16);
+    box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.061);
+
+    border-radius: 20px;
+    padding: 20px;
+    padding-bottom: 0px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}

@@ -1,0 +1,34 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}
+Applications Management — WAVE.
+{% endblock title %}
+
+{% block app_page_style %}
+<link rel="stylesheet" type="text/css" href="{% static "/styles/adminDashboardApp/tabs/roles.css" %}" />
+{% endblock app_page_style %}
+
+{% block script %}
+{% comment %} <script type="text/javascript" src="{% static "/scripts/adminDashboardApp/roles/roleCreate.js" %}"></script> {% endcomment %}
+{% endblock script %}
+
+
+
+{% block header %}
+{% include "partials/nav-footer/nav/admin_nav.html" %}
+{% endblock header %}
+
+{% block container_art %}
+<div id="container-art">
+    <div class="ticket-heading">
+        <div class="ticket-header">
+            <h3><a href="{% url 'waveAdmin:adminDashboard' %}">Management</a> > User Roles</h3>
+        </div>
+    </div>
+</div>
+{% endblock container_art %}
+
+
+{% block body %}
+{% endblock body %}
