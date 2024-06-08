@@ -6,14 +6,18 @@ from .forms import UpdateContactInfo, UpdatePersonalInfo, UpdateProfileForm
 from authenticationApp.models import CustomUser
 from .models import UserProfile
 
+# Decorators to check user roles and permissions
+from wave_v1.decorators import member_required
 
 # Create your views here.
 @login_required(login_url="authentication:login")
+@member_required
 def profileView(request):
     return render(request, "accountManagementApp/profileManagement.html")
 
 
 @login_required(login_url="authentication:login")
+@member_required
 def settingsView(request):
     user = request.user
     personal_form = UpdatePersonalInfo(instance=user)
@@ -58,6 +62,7 @@ def settingsView(request):
     )
 
 @login_required(login_url="authentication:login")
+@member_required
 def showUserTag(request):
     user = request.user
     profile = UserProfile.objects.get(user=user)

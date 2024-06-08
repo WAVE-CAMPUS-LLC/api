@@ -18,6 +18,7 @@ from .forms import (
 from django.contrib.auth import login, logout, authenticate
 from .models import CustomUser
 from adminDashboardApp.models import LoginHistoryModel
+from django.contrib.auth.models import Group
 
 # from django.http import HttpResponse
 
@@ -29,6 +30,10 @@ def joinView(request):
         if form.is_valid():
             print("Form is valid!")
             user = form.save()
+            
+            group, created = Group.objects.get_or_create(name="Member")
+            user.groups.add(group)
+            
             login(request, user)
             return redirect("accountManagement:userAccount")
         else:

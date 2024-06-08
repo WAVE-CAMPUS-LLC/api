@@ -10,6 +10,15 @@
     padding-right: 150px;
 }
 
+/** Logo used in body's **/
+#body-logo {
+    font-family: Easy-Grotesk-Black;
+}
+
+#body-logo .spot {
+    color: #008d95;
+}
+
 
 #page-heading {
     display: flex;
@@ -128,12 +137,10 @@
 .roleHeaderActionContainer {
     display: flex;
     flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
     gap: 20px;
 }
 
-.roleHeaderActionContainer button {
+.roleEditButton {
     border-radius: 10px;
     border: none;
     padding: 15px;
@@ -149,31 +156,21 @@
     cursor: pointer;
 }
 
-#roleHeaderActionBtn:hover {
-    background-color: white;
-    color: #008d95;
-}
-
-#roleDeleteButton {
-    color: white;
-    background-color: red;
+.roleDeleteButton {
+    border-radius: 10px;
+    border: none;
+    padding: 15px;
 
     font-family: Wanted-ExtraBold;
     font-size: 15px;
     letter-spacing: 1px;
     text-transform: uppercase;
 
-    border-radius: 10px;
-    border: none;
-    padding: 15px;
+    background: red;
+    color: white;
+
+    cursor: pointer;
 }
-
-#roleDeleteButton:hover {
-    background-color: white;
-    color: red;
-}
-
-
 
 /* * Create new role modal * */
 #createRoleModal {
@@ -225,8 +222,7 @@
 }
 
 /* Card Header */
-.cardHeader,
-.editCardHeader {
+.cardHeader {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -235,8 +231,7 @@
     width: 100%;
 }
 
-.cardHeader .header-rowOne,
-.editCardHeader .header-rowOne {
+.cardHeader .header-rowOne {
     display: flex;
     flex-direction: column;
     width: 100%;
@@ -267,26 +262,22 @@
     cursor: pointer;
 }
 
-.createRole-tab.tab-active,
-.editRole-tab.tab-active {
+.createRole-tab.tab-active {
     border-bottom: 4px solid #008d95;
     padding-bottom: 10px;
 }
 
-.createRole-tab:hover,
-.editRole-tab:hover {
+.createRole-tab:hover {
     border-bottom: 4px solid #008d958c;
     padding-bottom: 10px;
 }
 
-.createRole-tab-content,
-.editRole-tab-content {
+.createRole-tab-content {
     padding-left: 20px;
     padding-right: 30px;
 }
 
-.cardBody,
-.viewCardBody {
+.cardBody {
     overflow-y: auto;
     padding-bottom: 30px;
 }
@@ -308,8 +299,7 @@
     gap: 35px;
 }
 
-#display-information .cols,
-#edit-display-information .cols {
+#display-information .cols {
     display: flex;
     flex-direction: column;
     gap: 5px;
@@ -318,8 +308,7 @@
     font-family: Wanted-Medium;
 }
 
-#display-information label input,
-#edit-display-information label input {
+#display-information label input {
     padding: 10px;
     padding-left: 13px;
     padding-right: 13px;
@@ -361,8 +350,7 @@
     justify-content: center;
 }
 
-#saveRolebtnOne,
-#saveEditbtnOne {
+#saveRolebtnOne {
     background-color: #008d95;
     padding: 15px;
     border: none;
@@ -375,8 +363,7 @@
 
 
 /* Permissions Tab */
-#permissions-information label,
-#edit-permissions-information label {
+#permissions-information label {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -385,8 +372,7 @@
     font-size: 15px;
 }
 
-#permissions-information input,
-#edit-permissions-information input {
+#permissions-information input {
     font-family: Wanted-Medium;
     font-size: 15px;
 }
@@ -394,14 +380,13 @@
 
 
 
-.closeModal{
+.closeModal {
     width: 100%;
     display: flex;
     justify-content: end;
 }
 
-.cardHeader .closeModal button,
-#closeEditRoleButton {
+.cardHeader .closeModal button {
     border: none;
     background: none;
 
@@ -414,8 +399,7 @@
 }
 
 
-/* Start -- View Role Modal -- Start */
-.viewRoleModal {
+.viewGroupModal {
     display: none;
 
     background-color: rgba(0, 0, 0, 0.037);
@@ -436,7 +420,7 @@
     cursor: default;
 }
 
-.viewRoleModalContainer {
+.viewGroupModalContainer {
     width: 100%;
     height: 100%;
 
@@ -445,8 +429,8 @@
     align-items: center;
 }
 
-.viewRoleCard {
-    width: 60%;
+#viewGroupCard {
+    width: 40%;
     height: 90%;
 
     background-color: white;
@@ -461,4 +445,63 @@
     display: flex;
     flex-direction: column;
     gap: 20px;
+}
+
+#viewGroupCard button {
+    background: none;
+    border: none;
+
+    font-family: Wanted-Bold;
+    color: #444444;
+
+    cursor: pointer;
+}
+
+.viewGC-header {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+
+    width: 100%;
+}
+
+.viewGC-header .header-name {
+    font-family: Wanted-Bold;
+    font-size: 25px;
+    color: #008d95;
+}
+
+.viewGC-body {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+
+    overflow-y: auto;
+    padding-bottom: 30px;
+}
+
+.viewGCrolePermissions {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.viewGC-body h6 {
+    font-family: Wanted-SemiBold;
+    font-size: 19px;
+}
+
+.viewGC-body p {
+    font-family: Wanted-Regular;
+    font-size: 17px;
+}
+
+.perm-active {
+    color: rgb(0, 152, 0);
+    font-family: Wanted-Bold;
+}
+
+.perm-inactive {
+    color: red;
+    font-family: Wanted-Bold;
 }

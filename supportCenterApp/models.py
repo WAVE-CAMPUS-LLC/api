@@ -33,6 +33,7 @@ class SupportTicket(models.Model):
     ticket_id = models.CharField(max_length=10, unique=True, default=generate_unique_ticket_id)
     
     class Meta:
+        default_permissions = () # Removing default permissions
         verbose_name = "Member Support Ticket"
         verbose_name_plural = "Member Support Tickets"
     
@@ -108,6 +109,7 @@ class FeedbackModel(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     
     class Meta:
+        default_permissions = () # Removing default permissions
         verbose_name = "User Feedback"
         verbose_name_plural = "User Feedbacks"
         

@@ -10,7 +10,7 @@ Applications Management — WAVE.
 {% endblock app_page_style %}
 
 {% block script %}
-{% comment %} <script type="text/javascript" src="{% static "/scripts/adminDashboardApp/roles/roleCreate.js" %}"></script> {% endcomment %}
+<script type="text/javascript" src="{% static "/scripts/adminDashboardApp/roles/roleCreate.js" %}"></script>
 {% endblock script %}
 
 
@@ -31,4 +31,179 @@ Applications Management — WAVE.
 
 
 {% block body %}
+<div id="content-container">
+    <div id="page-heading">
+        <div id="heading-text">
+            <h6>Roles & Permissions</h6>
+            <p>User roles to group users and assign permissions.</p>
+            <span class="smaller-heading">Click on roles to view permissions. </span>
+        </div>
+        <div id="heading-button">
+            <button role="button" type="button" id="headingCreateRole">New Role</button>
+        </div>
+    </div>
+
+    <div id="content-body">
+        <div id="roles-container">
+            <div class="roleHeader">
+                <div class="roleHeaderName">Role</div>
+                <div class="roleHeaderMembers">Members</div>
+                <div class="roleHeaderAction">Action</div>
+            </div>
+
+            {% for group in allGroups %}
+            <div id="roleInformation-{{ forloop.counter }}" class="roleCard" style="background-color: {{ group.role_color }}">
+                <div class="roleContainer">
+                    <div class="roleHeaderName">{{ group.name }}</div>
+                    <div class="roleHeaderMembers">
+                        <p>{{ group.extension.unique_id }}</p>
+                    </div>
+                    <div class="roleHeaderAction">
+                        <form action="{% url "waveAdmin:roles" %}" method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="group_id" value="{{ group.id }}">
+                            <div class="roleHeaderActionContainer">
+                                <button type="button" name="roleControlAction" value="edit" id="roleHeaderActionBtn-{{ forloop.counter }}" class="roleEditButton">
+                                    Edit
+                                </button>
+        
+                                <button type="submit" name="roleControlAction" value="delete" id="roleDeleteButton" class="roleDeleteButton">Delete</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div id="viewGroupModal-{{ forloop.counter }}" class="viewGroupModal">
+                <div class="viewGroupModalContainer">
+                    <div id="viewGroupCard">
+                        <div class="viewGC-header">
+                            <div class="closeModal">
+                                <button type="button" role="button" id="closeEditRoleButton-{{ forloop.counter }}">
+                                    <img src="{% static '/images/admin/roles/modalClose.svg' %}" alt="Close Modal">
+                                    <p>ESC</p>
+                                </button>
+                            </div>
+
+                            <div class="header-name">
+                                {{ group.name }}
+                            </div>
+                        </div>
+            
+                        <div class="viewGC-body">
+                            <div class="viewGCroleName">
+                                <h6>Role Name</h6>
+                                <p>{{ group.name }}</p>
+                            </div>
+
+                            <div class="viewGCroleCount">
+                                <h6>Role Member Count</h6>
+                                <p>3</p>
+                            </div>
+                            
+                            <section class="viewGCrolePermissions">
+                                {% for permission in allPerms %}
+                                <div class="vGcP-permission">
+                                    <h6>{{ permission.name }}</h6>
+                                    <p>
+                                        {% if permission in group.permissions.all %}
+                                        <span class="perm-active">
+                                            Active
+                                        </span>
+                                        {% else %}
+                                        <span class="perm-inactive">
+                                            Inactive
+                                        </span>
+                                        {% endif %}
+                                    </p>
+                                </div>
+                                {% endfor %}
+                            </section>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+            
+        </div>
+    </div>
+</div>
+
+<div id="createRoleModal">
+    <div class="createRoleModalContainer">
+        <div id="createRoleCard">
+            <div class="cardHeader">
+                <div class="closeModal">
+                    <button type="button" role="button" id="closeModalButton">
+                        <img src="{% static '/images/admin/roles/modalClose.svg' %}" alt="">
+                        <p>ESC</p>
+                    </button>
+                </div>
+                <div class="header-rowOne">
+                    <div class="cH-heading">
+                        <h4>Create Role - Role Name</h4>
+                    </div>
+                    <div class="heading-tabs">
+                        <div class="createRole-tab tab-active" data-tab="display-information">
+                            Display
+                        </div>
+                        <div class="createRole-tab" data-tab="permissions-information">Permissions</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="cardBody">
+                <form action="{% url "waveAdmin:roles" %}" method="post">
+                    {% csrf_token %}
+                    <div class="createRole-tab-content" id="display-information">
+                        <div class="tab-content-container">
+                            <div class="form-fields">
+                                <label class="cols" for="{{ createGroupForm.name.id_for_label }}">
+                                    {{ createGroupForm.name.label }}
+                                    <input type="{{ createGroupForm.name.field.widget.input_type }}" name="{{ createGroupForm.name.html_name }}" id="{{ createGroupForm.name.auto_id }}" autocomplete="off">
+                                </label>
+
+                                <label class="cols" for="{{ createGroupForm.role_color.id_for_label }}">
+                                    {{ createGroupForm.role_color.label }}
+                                    <input type="{{ createGroupForm.role_color.field.widget.input_type }}" name="{{ createGroupForm.role_color.html_name }}" id="{{ createGroupForm.role_color.auto_id }}" autocomplete="off">
+                                </label>
+
+                                <label class="cols" for="{{ createGroupForm.display_on_profile.id_for_label }}">
+                                    {{ createGroupForm.display_on_profile.label }}
+                                    <input type="{{ createGroupForm.display_on_profile.field.widget.input_type }}" name="{{ createGroupForm.display_on_profile.html_name }}" id="{{ createGroupForm.display_on_profile.auto_id }}" autocomplete="off">
+                                </label>
+                            </div>
+                            <div class="content-Submit">
+                                <button type="submit" id="saveRolebtnOne">Save</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="createRole-tab-content" id="permissions-information">
+                        <div class="tab-content-container">
+                            <div class="form-fields">
+                                {% for permission in createGroupForm.permissions.field.queryset %}
+                                    <label class="select switch" for="id_permissions_{{ forloop.counter0 }}">
+                                        <p>{{ permission.name }}</p>
+                                        <div class="labelSwitch">
+                                            <input type="checkbox" name="permissions" id="id_permissions_{{ forloop.counter0 }}" value="{{ permission.id }}">
+                                            <span class="slider round"></span>
+                                        </div>
+                                    </label>
+                                    <hr>
+                                {% endfor %}
+                            </div>
+
+                            <div class="content-Submit">
+                                <button type="submit" id="saveRolebtnOne">Create</button>
+                            </div>
+                        </div>
+                    </div> 
+                </form>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
 {% endblock body %}

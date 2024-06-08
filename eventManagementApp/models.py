@@ -27,11 +27,17 @@ class HostApplication(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     applicationId = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, unique=True)
     
+    class Meta:
+        default_permissions = () # Removing default permissions
+    
     def __str__(self):
         return f'{self.firstName} {self.lastName}'
 
 class EventType(models.Model):
     name = models.CharField(max_length=50, unique=True)
+
+    class Meta:
+        default_permissions = () # Removing default permissions
 
     def __str__(self):
         return self.name

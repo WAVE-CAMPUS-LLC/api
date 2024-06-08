@@ -17,6 +17,8 @@ class CareerRoleApplication(models.Model):
     whatYouBring = models.TextField(verbose_name="What do you bring to the team?")
     workAuthorization = models.TextField(verbose_name="Are you legally authorized to work for us?")
     
+    class Meta:
+        default_permissions = () # Removing default permissions
     
     def __str__(self):
         return f'{self.applicantFirstName} {self.applicantLastName} applied for {self.role.roleTitle}'

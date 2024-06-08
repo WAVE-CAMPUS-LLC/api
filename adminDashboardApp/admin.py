@@ -7,6 +7,8 @@ class DepartmentAdmin(admin.ModelAdmin):
 class CareersAdmin(admin.ModelAdmin):
     list_display = ('department', 'roleTitle', 'roleDescription', 'roleExpectations', 'roleRequirements', 'roleLocation', 'roleType', 'advertisementLength', 'roleCapacity')
 
+
+
 # Register your models here.
 admin.site.register(Department, DepartmentAdmin)
 admin.site.register(CareerRole, CareersAdmin)

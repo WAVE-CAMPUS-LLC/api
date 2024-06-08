@@ -12,4 +12,5 @@ class Post(models.Model):
         return self.title
     
     class Meta:
+        default_permissions = () # Removing default permissions
         ordering = ['-date_posted']

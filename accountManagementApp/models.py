@@ -18,8 +18,12 @@ class UserProfile(models.Model):
     role = models.CharField(max_length=4, choices=ROLES, default='user')
     
     class Meta:
+        default_permissions = () # Removing default permissions
+        
         verbose_name = "User Profile"
         verbose_name_plural = "User Profiles"
+        
+        
     
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)

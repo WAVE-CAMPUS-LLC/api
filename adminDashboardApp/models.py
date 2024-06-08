@@ -2,14 +2,13 @@ from datetime import timedelta
 from django.db import models
 from django.conf import settings
 from django.utils import timezone
-from django.contrib.auth.models import Group, Permission
+from django.contrib.auth.models import Group
 import uuid
 from authenticationApp.models import CustomUser
 
 
 
 # Create your models here.
-
 
 class Department(models.Model):
     name = models.CharField("Department Name", max_length=100)
@@ -19,6 +18,10 @@ class Department(models.Model):
     capacity = models.IntegerField("Capacity")
     location = models.CharField("Location", max_length=300)
     description = models.TextField("Description")
+    
+    
+    class Meta:
+        default_permissions = ()
     
     def __str__(self):
         return self.name
@@ -45,10 +48,11 @@ class CareerRole(models.Model):
         expiry_date = self.advertisementStartDate + timedelta(days=self.advertisementLength)
         return expiry_date <= timezone.now()
     
+    class Meta:
+        default_permissions = () # Removing default permissions
+    
     def __str__(self):
         return self.roleTitle
-    
-    
 
 
 class LoginHistoryModel(models.Model):
@@ -88,5 +92,70 @@ class LoginHistoryModel(models.Model):
             self.logout_time = timezone.now()
             self.save()
     
+    class Meta:
+        default_permissions = () # Removing default permissions
+    
     def __str__(self):
         return f'{self.user} - {self.login_time} - Active: {self.is_active}'
+    
+    
+
+
+class Permission(models.Model):
+    name = models.CharField(max_length=255, unique=True)
+    description = models.TextField()
+    
+    class Meta:
+        default_permissions = () # Removing default permissions
+        permissions = [
+            # Member Permissions
+            ('view_profile_overview', 'View profile overview - WAVE.'),
+            ('view_account_settings', 'View account settings - WAVE.'),
+            ('view_support_portal', 'View support portal - WAVE.'),
+            
+            
+            # Super Admin Permissions
+            ('view_users', 'View users - WAVE.'), # Regular Admin
+            ('manage_users', 'Manage users - WAVE.'), # Super Admin
+            
+            
+            ('view_applications', 'View applications - WAVE.'), # Regular admin
+            ('manage_applications', 'Manage applications - WAVE.'), # Super admin
+            
+            ('view_departments', 'View departments - WAVE.'), # Regular admin
+            ('manage_departments', 'Manage departments - WAVE.'),
+            
+            
+            # Event Manager
+            ('view_all_events', 'View all events - WAVE.'),
+            ('manage_all_events', 'Manage all events - WAVE.'),
+            
+            
+            # Support Staff
+            ('view_support_tickets', 'View support tickets - WAVE.'),
+            ('manage_support_tickets', 'Manage support tickets - WAVE.'),
+            
+            
+            # Event Host Member
+            ('create_event', 'Create events - WAVE.'),
+            ('manage_host_event', 'Manage host event - WAVE.'),
+            ('view_host_event', 'View host event - WAVE.')
+        ]
+    
+    
+    def __str__(self):
+        return self.name
+    
+    
+    
+class Group(models.Model):
+    name = models.CharField(max_length=100)
+    permissions = models.ManyToManyField(Permission)
+    role_color = models.CharField(max_length=7, blank=True, null=True)
+    display_on_profile = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.name
+    
+    
+    

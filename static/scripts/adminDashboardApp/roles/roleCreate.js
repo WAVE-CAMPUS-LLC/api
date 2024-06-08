@@ -1,37 +1,37 @@
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", function () {
     const headingCreateButton = document.getElementById("headingCreateRole");
     const createRoleModal = document.getElementById("createRoleModal");
     const closeModalButton = document.getElementById("closeModalButton");
 
-    const roleCardInformation = document.querySelectorAll("#roleInformation");
-    const closeEditRoleButton = document.querySelectorAll("#closeEditRoleButton");
+    const roleCards = document.querySelectorAll("[id^=roleHeaderActionBtn]");
+    const modals = document.querySelectorAll("[id^=viewGroupModal]");
+    const closeButtons = document.querySelectorAll("[id^=closeEditRoleButton]");
 
-    roleCardInformation.forEach((card, index) => {
-        const editRoleModal = document.getElementById(`viewRoleModal-${index + 1}`);
-        card.addEventListener('click', function() {
-            editRoleModal.style.display = 'block';
+    roleCards.forEach((card, index) => {
+        const modal = modals[index];
+
+        card.addEventListener('click', () => {
+            modal.style.display = 'block';
         });
 
         document.addEventListener('keydown', (event) => {
             if (event.key === 'Escape') {
-                editRoleModal.style.display = 'none';
+                modal.style.display = 'none';
             }
+        });
+
+        const closeButton = closeButtons[index];
+        closeButton.addEventListener('click', () => {
+            modal.style.display = 'none';
         });
     });
 
-    closeEditRoleButton.forEach((button, index) => {
-        button.addEventListener('click', function() {
-            const editRoleModal = document.getElementById(`viewRoleModal-${index + 1}`);
 
-            editRoleModal.style.display = 'none';
-        })
-    })
-
-    headingCreateButton.addEventListener("click", function() {
+    headingCreateButton.addEventListener("click", function () {
         createRoleModal.style.display = "block";
     });
 
-    closeModalButton.addEventListener("click", function() {
+    closeModalButton.addEventListener("click", function () {
         createRoleModal.style.display = "none";
     });
 
@@ -73,7 +73,7 @@ document.addEventListener("DOMContentLoaded", function() {
     // Initialize tab systems for each body section
     initializeTabSystem('body', 'createRole-tab', 'createRole-tab-content');
     initializeTabSystem('body', 'editRole-tab', 'editRole-tab-content');
-    
+
 
     // Function to initialize tab system for a specific body section
     function initializeTabSystem(bodyId, tabClass, contentClass) {
@@ -99,23 +99,26 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
 
-    
-    const colorInput = document.getElementById('roleColorInput');
-    const colorCard = document.getElementById('roleInformation');
-    const cardBtn = document.getElementById('roleHeaderActionBtn');
 
-    colorInput.addEventListener('input', function() {
-        const colorValue = colorInput.value;
+    // const colorInput = document.getElementById('roleColorInput');
+    // const colorCard = document.getElementById('roleInformation');
+    // const cardBtn = document.getElementById('roleHeaderActionBtn');
 
-        // Validate the hex code
-        const hexRegex = /^#([0-9A-F]{3}){1,2}$/i;
-        if (hexRegex.test(colorValue)) {
-            colorCard.style.backgroundColor = colorValue;
-            cardBtn.style.backgroundColor = colorValue;
-        } else {
-            colorCard.style.backgroundColor = '#008d95'; // Default color if invalid hex
-            cardBtn.style.backgroundColor = '#008d95';
-        }
-    });
+    // colorInput.addEventListener('input', function() {
+    //     const colorValue = colorInput.value;
+
+    //     // Validate the hex code
+    //     const hexRegex = /^#([0-9A-F]{3}){1,2}$/i;
+    //     if (hexRegex.test(colorValue)) {
+    //         colorCard.style.backgroundColor = colorValue;
+    //         cardBtn.style.backgroundColor = colorValue;
+    //     } else {
+    //         colorCard.style.backgroundColor = '#008d95'; // Default color if invalid hex
+    //         cardBtn.style.backgroundColor = '#008d95';
+    //     }
+    // });
+
+
+
 
 })

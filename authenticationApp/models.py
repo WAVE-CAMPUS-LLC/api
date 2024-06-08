@@ -82,8 +82,13 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     # user_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
 
     class Meta:
-        verbose_name = "Current User"
-        verbose_name_plural = "Current Users"
+        default_permissions = () # Removing default permissions
+        
+        
+        verbose_name = "Member Account"
+        verbose_name_plural = "Member Accounts"
+        
+        
 
     def __str__(self):
         return self.email
