@@ -44,7 +44,7 @@
 
 #user-details {
     padding: 25px;
-    
+
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -57,7 +57,7 @@
     box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.061);
     border: 2px solid rgba(183, 183, 183, 0.096);
     border-radius: 20px;
-    
+
 }
 
 #user-full_name {
@@ -68,12 +68,12 @@
     flex-direction: column;
 }
 
-#user-full_name h3{
+#user-full_name h3 {
     font-family: Wanted-Bold;
     font-size: 25px;
 }
 
-#user-full_name p{
+#user-full_name p {
     font-family: Wanted-Medium;
     font-size: 18px;
 
@@ -124,6 +124,287 @@
     cursor: pointer;
 }
 
+/* Role Display */
+.roleDisplay {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+
+    width: 100%;
+}
+
+.addRoleButton {
+    border: none;
+    background: none;
+
+    cursor: pointer;
+}
+
+#addRoleCardContainer {
+    display: none;
+
+    background-color: rgba(0, 0, 0, 0.037);
+
+    -webkit-backdrop-filter: blur(2px) saturate(1.7);
+    backdrop-filter: blur(2px) saturate(1.7);
+
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1005;
+
+    width: 100%;
+    height: 100%;
+
+    cursor: default;
+}
+
+.roleAdditionContainer {
+    width: 100%;
+    height: 100%;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#addRoleCard {
+    width: 30%;
+    height: 50%;
+
+    background-color: white;
+    -webkit-box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.085);
+    -moz-box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.16);
+    box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.061);
+
+    border-radius: 20px;
+    padding: 20px;
+
+    overflow-y: auto;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.addRolesContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 50px;
+}
+
+.activeRole {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+#addRoleCard h5 {
+    font-family: Wanted-Medium;
+    font-size: 19px;
+}
+
+.activeRoleContainer {
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+}
+
+#activerolee {
+    padding: 5px;
+    padding-left: 10px;
+    padding-right: 10px;
+    border-radius: 15px;
+    border: 1px solid rgba(9, 9, 9, 0.057);
+
+    font-family: Wanted-Medium;
+    font-size: 15px;
+
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    align-items: center;
+}
+
+
+#removeRoleFromUserButton {
+    border: none;
+    background: none;
+
+    cursor: pointer;
+}
+
+#removeRoleFromUserButton img {
+    width: 15px;
+}
+
+.closeAddRoleCard {
+    width: 100%;
+
+    display: flex;
+    justify-content: center;
+}
+
+#closeAddRoleCardButton {
+    background: none;
+    border: 2px solid rgba(79, 79, 79, 0.513);
+    border-radius: 12px;
+
+    padding: 10px;
+    cursor: pointer;
+
+    font-family: Wanted-Bold;
+    font-size: 16px;
+    color: #00000080;
+    text-transform: uppercase;
+}
+
+#closeAddRoleCardButton:hover {
+    -webkit-box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.085);
+    -moz-box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.16);
+    box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.061);
+}
+
+/* End -- End -- End */
+
+
+#suspendPeriodModal,
+#banPeriodModal {
+    display: none;
+
+    background-color: rgba(0, 0, 0, 0.037);
+
+    -webkit-backdrop-filter: blur(2px) saturate(1.7);
+    backdrop-filter: blur(2px) saturate(1.7);
+
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1005;
+
+    width: 100%;
+    height: 100%;
+
+    cursor: default;
+}
+
+.suspendPeriodModalContainer,
+.banPeriodModalContainer {
+    width: 100%;
+    height: 100%;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#suspendPeriodForm,
+#banPeriodForm {
+    width: 50%;
+    height: 40%;
+
+    background-color: white;
+    -webkit-box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.085);
+    -moz-box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.16);
+    box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.061);
+
+    border-radius: 20px;
+    padding: 20px;
+
+    overflow-y: auto;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+#suspendPeriodForm h3,
+#banPeriodForm h3 {
+    font-family: Wanted-Bold;
+    font-size: 16px;
+    text-align: center;
+}
+
+.field-container {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 20px;
+}
+
+.field-container label {
+    font-family: Wanted-Bold;
+    text-align: center;
+}
+
+.field-container label input {
+    padding: 15px;
+    border-radius: 10px;
+    border: 1px solid rgba(110, 109, 109, 0.293);
+}
+
+.suspendControl,
+.banControl {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#suspendActionButton {
+    border: 2px solid grey;
+    border-radius: 20px;
+    background-color: transparent;
+
+    cursor: pointer;
+
+    padding: 15px;
+
+    -webkit-box-shadow: 0px 2px 7px 0px rgba(116, 116, 116, 0.264);
+    box-shadow: 0px 2px 7px 0px rgba(116, 116, 116, 0.264);
+    -moz-box-shadow: 0px 2px 7px 0px rgba(116, 116, 116, 0.264);
+
+    border-color: #e7c100;
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    text-align: center;
+    gap: 10px;
+
+    font-family: Wanted-Bold;
+    font-size: 17px;
+    color: #e7c100;
+}
+
+#banActionButton {
+    border: 2px solid grey;
+    border-radius: 20px;
+    background-color: transparent;
+
+    cursor: pointer;
+
+    padding: 15px;
+    width: 20%;
+    text-align: center;
+
+    -webkit-box-shadow: 0px 2px 7px 0px rgba(116, 116, 116, 0.264);
+    box-shadow: 0px 2px 7px 0px rgba(116, 116, 116, 0.264);
+    -moz-box-shadow: 0px 2px 7px 0px rgba(116, 116, 116, 0.264);
+
+    border-color: red;
+    display: flex;
+    justify-content: center;
+    text-align: center;
+    gap: 10px;
+
+    font-family: Wanted-Bold;
+    font-size: 17px;
+    color: red;
+}
 
 
 
@@ -144,7 +425,7 @@
     border: 2px solid rgba(183, 183, 183, 0.096);
     border-radius: 20px;
 
-    padding-top:20px;
+    padding-top: 20px;
     padding-bottom: 30px;
 
     display: flex;
@@ -208,7 +489,7 @@
     -webkit-box-shadow: 0px 2px 7px 0px rgba(116, 116, 116, 0.264);
     box-shadow: 0px 2px 7px 0px rgba(116, 116, 116, 0.264);
     -moz-box-shadow: 0px 2px 7px 0px rgba(116, 116, 116, 0.264);
-    
+
     padding: 5px;
 
     display: flex;
@@ -287,7 +568,7 @@
     gap: 20px;
 }
 
-#admin-user-control button{
+#admin-user-control button {
     border: 2px solid grey;
     border-radius: 20px;
     background-color: transparent;
@@ -306,31 +587,31 @@
 }
 
 
-#admin-user-control button#ban{
+#admin-user-control button#ban {
     border-color: #e70000;
 }
 
-#admin-user-control button#ban:hover{
+#admin-user-control button#ban:hover {
     background-color: #e700004d;
 }
 
-#admin-user-control button#pause:hover{
+#admin-user-control button#pause:hover {
     background-color: #e7c1004d;
 }
 
-#admin-user-control button#allow:hover{
+#admin-user-control button#allow:hover {
     background-color: #00e7044d;
 }
 
-#admin-user-control button#pause{
+#admin-user-control button#pause {
     border-color: #e7c100;
 }
 
-#admin-user-control button#allow{
+#admin-user-control button#allow {
     border-color: #00e704;
 }
 
-#ban-btn{
+#ban-btn {
     display: flex;
     justify-content: center;
     flex-direction: column;
@@ -371,5 +652,3 @@
     font-family: Wanted-Bold;
     color: #00e704;
 }
-
-

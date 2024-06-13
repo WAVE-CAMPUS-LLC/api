@@ -16,7 +16,7 @@ urlpatterns = [
     
     # User Management    
     path('users/', views.adminUsersView, name="users"),
-    path('users/<str:user_id>/', views.adminUserDetailedView, name="user-detailed"), 
+    path('users/<str:username>/', views.adminUserDetailedView, name="user-detailed"), 
     
     
     # Roles & Permissions Management

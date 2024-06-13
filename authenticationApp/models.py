@@ -1,7 +1,9 @@
+import datetime
 from django.db import models
-from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
+from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, Group
 from django.utils import timezone
 import uuid
+import threading
 from django.dispatch import receiver
 from django.db.models.signals import pre_save, post_save
 from django.utils.translation import gettext_lazy as _
@@ -67,6 +69,42 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     
     # The generation of a random user id for every user that signs up. 
     user_id = models.UUIDField(_("User ID"), default=uuid.uuid4, editable=False, unique=True)
+    
+    
+    is_suspended = models.BooleanField(default=False)
+    suspension_end_date = models.DateTimeField(null=True, blank=True)
+    is_banned = models.BooleanField(default=False)
+    ban_end_date = models.DateTimeField(null=True, blank=True)
+    
+    def suspend(self, duration):
+        suspend_group, created = Group.objects.get_or_create(name="Suspend")
+        member_group = Group.objects.get(name="Member")
+        self.groups.remove(member_group)
+        self.groups.add(suspend_group)
+        self.is_suspended = True
+        self.suspension_end_date = timezone.now() + duration
+        self.save()
+        
+    
+    def ban(self, duration):
+        ban_group, created = Group.objects.get_or_create(name="Ban")
+        member_group = Group.objects.get(name="Member")
+        self.groups.remove(member_group)
+        self.groups.add(ban_group)
+        self.is_banned = True
+        self.ban_end_date = timezone.now() + duration
+        self.save()
+            
+        
+    def remove_suspension(self):
+        suspend_group = Group.objects.get(name="Suspend")
+        member_group, created = Group.objects.get_or_create(name="Member")
+        self.groups.remove(suspend_group)
+        self.groups.add(member_group)
+        self.is_suspended = False
+        self.suspension_end_date = None
+        self.save()
+        
     
 
     objects = CustomUserManager()

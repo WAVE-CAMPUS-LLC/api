@@ -2,6 +2,7 @@ from django import forms
 from django.contrib.auth.models import Permission, Group
 from authenticationApp.models import CustomUser
 from .models import Department, CareerRole
+from django.utils.translation import gettext_lazy as translate
 
 
 class CreateGroupForm(forms.ModelForm):
@@ -16,21 +17,42 @@ class CreateGroupForm(forms.ModelForm):
         required=True,
         widget=forms.TextInput(attrs={"type": "color"}),
     )
-    display_on_profile = forms.BooleanField(required=True, label="Profile display")
 
     class Meta:
         model = Group
-        fields = ["name", "permissions", "role_color", "display_on_profile"]
+        fields = ["name", "permissions", "role_color",]
 
     def save(self, commit=True):
         group = super().save(commit=False)
         if commit:
             group.save()
             group.permissions.set(self.cleaned_data["permissions"])
-            group.role_color = self.cleaned_data['role_color']
-            group.display_on_profile = self.cleaned_data['display_on_profile']
+            group.role_color = self.cleaned_data["role_color"]
+            group.display_on_profile = self.cleaned_data["display_on_profile"]
             group.save()
         return group
+
+
+class UpdateGroupForm(forms.ModelForm):
+    name = forms.CharField(max_length=150, required=False, help_text="Name", label="Name")
+    permissions = forms.ModelMultipleChoiceField(
+        queryset=Permission.objects.all(),
+        widget=forms.CheckboxSelectMultiple,
+        required=False,
+        help_text="Permissions",
+        label="Permissions",
+    )
+    role_color = forms.CharField(
+        max_length=7,
+        required=True,
+        widget=forms.TextInput(attrs={"type": "color"}),
+        help_text="Role Color",
+        label="Role Color"
+    )
+    
+    class Meta:
+        model = Group
+        fields = ['name', 'permissions', 'role_color',]
 
 
 class DepartmentForm(forms.ModelForm):
@@ -59,3 +81,15 @@ class CareerRoleCreationForm(forms.ModelForm):
             "advertisementLength",
             "roleCapacity",
         ]
+
+
+class SuspendUserForm(forms.Form):
+    days = forms.IntegerField(label=translate("Days"), min_value=0, initial=0)
+    hours = forms.IntegerField(label=translate("Hours"), min_value=0, max_value=23, initial=0)
+    minutes = forms.IntegerField(label=translate("Minutes"), min_value=0, max_value=59, initial=0)
+    
+
+class BanUserForm(forms.Form):
+    days = forms.IntegerField(label=translate("Days"), min_value=0, initial=0)
+    hours = forms.IntegerField(label=translate("Hours"), min_value=0, max_value=23, initial=0)
+    minutes = forms.IntegerField(label=translate("Minutes"), min_value=0, max_value=59, initial=0)

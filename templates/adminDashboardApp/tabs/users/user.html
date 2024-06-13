@@ -6,29 +6,20 @@ WAVE. — Member Details
 {% endblock title %}
 
 {% block app_page_style %}
-<link rel="stylesheet" type="text/css" href="{% static "/styles/partials/tabs/users/user.css" %}" />
+<link rel="stylesheet" type="text/css" href="{% static "/styles/adminDashboardApp/tabs/users/user.css" %}" />
 {% endblock app_page_style %}
 
 
 {% block script %}
-
+<script type="text/javascript" src="{% static "scripts/adminDashboardApp/users/addRoleToUser.js" %}"></script>
 {% endblock script %}
 
 
 {% block header %}
-<nav>
-    <div id="logo-menu">
-        <div id="logo">
-            <a href="{% url "core:index" %}">WAVE<span>.</span></a>
-        </div>
-    </div>
-    <div>
-        <div id="userId">
-            <a href="">E. Lartey</a>
-        </div>
-    </div>
-</nav>
+{% include "partials/nav-footer/nav/admin_nav.html" %}
+{% endblock header %}
 
+{% block container_art %}
 <div id="container-art">
     <div class="ticket-heading">
         <div class="ticket-header">
@@ -36,7 +27,7 @@ WAVE. — Member Details
         </div>
     </div>
 </div>
-{% endblock header %}
+{% endblock container_art %}
 
 
 {% block body %}
@@ -50,7 +41,7 @@ WAVE. — Member Details
             <div id="user-details">
                 <div id="user-full_name">
                     <h3>{{ user.first_name }} {{ user.last_name }}</h3>
-                    <p>#TXMF1-9</p>
+                    <p>@ {{ user.username }}</p>
                 </div>
 
                 <div id="user-detailed_view">
@@ -71,23 +62,72 @@ WAVE. — Member Details
 
                     <div>
                         <h6>Birthday</h6>
-                        <p>{{ user.birthday }}</p>
+                        <p>{{ user.birthday_year }}-{{ user.birthday_month }}-{{ user.birthday_day }}</p>
                     </div>
 
-                    <div>
-                        <h6>Gender</h6>
-                        <p>{{ user.gender }}</p>
-                    </div>
+                    <div class="roleDisplay">
+                        <div class="roleDisplay-info">
+                            <h6>User Role</h6>
+                            <p>
+                                {% for group in user_groups %}
+                                {{ group.name }}
+                                {% endfor %}
+                            </p>
+                        </div>
+                        <div id="roleDisplay-control">
+                            <button type="button" id="addRoleButton" class="addRoleButton">
+                                <img src="{% static "/images/admin/users/user/addRole.svg" %}" alt="Add role to user">
+                            </button>
 
-                    <div>
-                        <h6>Role</h6>
-                        {% if user.is_superuser %}
-                        <p>Super Admin</p>
-                        {% elif user.is_staff %}
-                        <p>Staff</p>
-                        {% else %}
-                        <p>Member</p>
-                        {% endif %}
+                            <div id="addRoleCardContainer">
+                                <div class="roleAdditionContainer">
+                                    <div id="addRoleCard">
+                                        <div class="addRolesContainer">
+                                            <div class="activeRole">
+                                                <h5>Active Roles</h5>
+                                                <div class="activeRoleContainer">
+                                                    {% for groupname in user_groups %}
+                                                    <span id="activerolee">
+                                                        {{ groupname.name }} 
+                                                        <form method="post">
+                                                            {% csrf_token %}
+                                                            <input type="hidden" name="group_id" value="{{ groupname.id }}">
+                                                            <button type="submit" name="removeRole" id="removeRoleFromUserButton">
+                                                                <img src="{% static "/images/admin/users/user/removeRole.svg" %}" alt="Remove role from user">
+                                                            </button>
+                                                        </form>
+                                                    </span>
+                                                    {% endfor %}
+                                                </div>
+                                            </div>
+
+                                            <div class="activeRole">
+                                                <h5>Available Roles</h5>
+                                                <div class="activeRoleContainer">
+                                                    {% for groupname in available_groups %}
+                                                    <span id="activerolee">
+                                                        {{ groupname.name }} 
+                                                        <form method="post">
+                                                            {% csrf_token %}
+                                                            <input type="hidden" name="group_id" value="{{ groupname.id }}">
+
+                                                            <button type="submit" name="addRole" id="removeRoleFromUserButton">
+                                                                <img src="{% static "/images/admin/users/user/addRole.svg" %}" alt="Remove role from user">
+                                                            </button>
+                                                        </form>
+                                                    </span>
+                                                    {% endfor %}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="closeAddRoleCard">
+                                            <button type="button" role="button" id="closeAddRoleCardButton">CLOSE</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -171,18 +211,82 @@ WAVE. — Member Details
             
             <div id="pause-btn">
                 <button id="pause">
-                    <img src="{% static "/images/admin/users/yellow-flag.svg" %}" alt="Pause User Account" title="Pause Member Account">
+                    <img src="{% static "/images/admin/users/yellow-flag.svg" %}" alt="Suspend User Account" title="Suspend Member Account">
                 </button>
-                <p>Pause</p>
+                <p>Suspend</p>
             </div>
             
             <div id="resume-btn">
-                <button id="allow">
+                <button id="allow" title="Resume Member Account">
                     <img src="{% static "/images/admin/users/green-flag.svg" %}" alt="Allow User Account" title="Resume Member Account">
                 </button>
                 <p>Resume</p>
             </div>
         </div>
+    </div>
+</div>
+
+<div id="banPeriodModal">
+    <div class="banPeriodModalContainer">
+        <form id="banPeriodForm" method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="ban" />
+
+            <h3>How long should ban last?</h3>
+
+            <div class="field-container">
+                <label for="{{ ban_form.days.id_for_label }}">
+                    <h6>{{ ban_form.days.label }}</h6>
+                    <input type="{{ ban_form.days.widget.input_type }}" name="{{ ban_form.days.html_name }}" id="{{ ban_form.days.auto_id }}" autocomplete="off" min="0" />    
+                </label>
+    
+                <label for="{{ ban_form.hours.id_for_label }}">
+                    <h6>{{ ban_form.hours.label }}</h6>
+                    <input type="{{ ban_form.hours.widget.input_type }}" name="{{ ban_form.hours.html_name }}" id="{{ ban_form.hours.auto_id }}" autocomplete="off" min="0" />    
+                </label>
+    
+                <label for="{{ ban_form.minutes.id_for_label }}">
+                    <h6>{{ ban_form.minutes.label }}</h6>
+                    <input type="{{ ban_form.minutes.widget.input_type }}" name="{{ ban_form.minutes.html_name }}" id="{{ ban_form.minutes.auto_id }}" autocomplete="off" min="0" />    
+                </label>
+            </div>
+            
+            <div class="banControl">
+                <button type="submit" id="banActionButton">Ban</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="suspendPeriodModal">
+    <div class="suspendPeriodModalContainer">
+        <form id="suspendPeriodForm" method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="suspend" />
+
+            <h3>How long should suspension last?</h3>
+
+            <div class="field-container">
+                <label for="{{ suspend_form.days.id_for_label }}">
+                    <h6>{{ suspend_form.days.label }}</h6>
+                    <input type="{{ suspend_form.days.widget.input_type }}" name="{{ suspend_form.days.html_name }}" id="{{ suspend_form.days.auto_id }}" autocomplete="off" min="0" />    
+                </label>
+    
+                <label for="{{ suspend_form.hours.id_for_label }}">
+                    <h6>{{ suspend_form.hours.label }}</h6>
+                    <input type="{{ suspend_form.hours.widget.input_type }}" name="{{ suspend_form.hours.html_name }}" id="{{ suspend_form.hours.auto_id }}" autocomplete="off" min="0" />    
+                </label>
+    
+                <label for="{{ suspend_form.minutes.id_for_label }}">
+                    <h6>{{ suspend_form.minutes.label }}</h6>
+                    <input type="{{ suspend_form.minutes.widget.input_type }}" name="{{ suspend_form.minutes.html_name }}" id="{{ suspend_form.minutes.auto_id }}" autocomplete="off" min="0" />    
+                </label>
+            </div>
+            
+            <div class="suspendControl">
+                <button type="submit" id="suspendActionButton">Suspend</button>
+            </div>
+        </form>
     </div>
 </div>
 {% endblock body %}

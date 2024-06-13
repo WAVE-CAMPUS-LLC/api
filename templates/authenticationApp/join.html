@@ -162,9 +162,9 @@ WAVE — Join Us!
                         </span>
                     </div>
                     <div id="birthdayInputs">
-                        <input type="text" name="birthdayMonth" id="id_birthday_month" class="birthdayMonth" placeholder="Month (12)" maxlength="2">
-                        <input type="text" name="birthdayMonth" id="id_birthday_day" class="birthdayMonth" placeholder="Day (29)" maxlength="2">
-                        <input type="text" name="birthdayMonth" id="id_birthday_year" class="birthdayMonth" placeholder="Year (2004)" maxlength="4" minlength="4">
+                        <input type="{{ form.birthday_month.field.widget.input_type }}" name="{{ form.birthday_month.html_name }}" id="{{ form.birthday_month.auto_id }}" class="birthdayMonth" placeholder="Month (12)" autocomplete="off" required>
+                        <input type="{{ form.birthday_day.field.widget.input_type }}" name="{{ form.birthday_day.html_name }}" id="{{ form.birthday_day.auto_id }}" class="birthdayMonth" placeholder="Day (30)" autocomplete="off" required>
+                        <input type="{{ form.birthday_year.field.widget.input_type }}" name="{{ form.birthday_year.html_name }}" id="{{ form.birthday_year.auto_id }}" class="birthdayMonth" placeholder="Year (2004)" autocomplete="off" required>
                     </div>
                 </label>
             </div>

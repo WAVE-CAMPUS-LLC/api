@@ -1,3 +1,4 @@
+import datetime
 from django import forms
 from .models import CustomUser
 from django.core.exceptions import ValidationError
@@ -88,19 +89,30 @@ class CustomUserJoinForm(UserCreationForm):
         return last_name.strip()
 
     def clean_birthday(self):
-        cleaned_birthdayData = super().clean()
-        birthday_day = cleaned_birthdayData.get("birthday_day")
-        birthday_month = cleaned_birthdayData.get("birthday_month")
-        birthday_year = cleaned_birthdayData.get("birthday_year")
+        birthday_day = self.cleaned_data.get("birthday_day")
+        birthday_month = self.cleaned_data.get("birthday_month")
+        birthday_year = self.cleaned_data.get("birthday_year")
 
-        if birthday_day or birthday_month or birthday_year:
+        if any([birthday_day, birthday_month, birthday_year]):
             if not all([birthday_day, birthday_month, birthday_year]):
                 raise ValidationError("Enter a valid birthday.")
 
-        return cleaned_birthdayData
+            try:
+                datetime.date(birthday_year, birthday_month, birthday_day)
+            except ValueError:
+                raise ValidationError("Enter a valid birthday.")
+
+        return self.cleaned_data
 
     def save(self, commit=True):
         user = super().save(commit=False)
+        birthday_day = self.cleaned_data.get("birthday_day")
+        birthday_month = self.cleaned_data.get("birthday_month")
+        birthday_year = self.cleaned_data.get("birthday_year")
+
+        if all([birthday_day, birthday_month, birthday_year]):
+            user.birthday = datetime.date(birthday_year, birthday_month, birthday_day)
+
         if commit:
             user.save()
 
@@ -156,27 +168,29 @@ class EmailPasswordResetForm(PasswordResetForm):
         max_length=254,
         widget=forms.EmailInput(attrs={"autocomplete": "off"}),
     )
-    
+
     def clean_email(self):
         email = self.cleaned_data.get("email")
-        
+
         try:
             CustomUser.objects.get(email=email)
         except CustomUser.DoesNotExist:
             raise forms.ValidationError("Account does not exist.")
         return email
-    
+
 
 class NewPasswordForm(forms.Form):
     password = forms.CharField(label="New Password", widget=forms.PasswordInput)
-    confirm_password = forms.CharField(label="Confirm Password", widget=forms.PasswordInput)
-    
+    confirm_password = forms.CharField(
+        label="Confirm Password", widget=forms.PasswordInput
+    )
+
     def clean_passwords(self):
         cleaned_data = super().clean()
         password = cleaned_data.get("password")
         confirm_password = cleaned_data.get("confirm_password")
-        
+
         if password != confirm_password:
             raise forms.ValidationError("Passwords do not match")
-        
+
         return cleaned_data

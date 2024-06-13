@@ -1,3 +1,4 @@
+from datetime import timedelta
 from django.shortcuts import render, redirect, HttpResponse, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.template.loader import render_to_string
@@ -5,6 +6,7 @@ from django.utils.html import strip_tags
 from django.core.mail import send_mail
 from django.contrib.auth.models import Group, Permission
 
+from accountManagementApp.models import UserProfile
 from authenticationApp.models import CustomUser
 from supportCenterApp.models import SupportTicket, FeedbackModel
 from careerApp.models import CareerRoleApplication
@@ -12,12 +14,21 @@ from eventManagementApp.models import HostApplication
 
 from wave_v1 import settings
 from .models import Department, CareerRole, LoginHistoryModel
-from .forms import CreateGroupForm, DepartmentForm, CareerRoleCreationForm
-from wave_v1.decorators import admin_required, support
+from .forms import (
+    CreateGroupForm,
+    UpdateGroupForm,
+    DepartmentForm,
+    CareerRoleCreationForm,
+    
+    SuspendUserForm,
+    BanUserForm,
+)
+from wave_v1.decorators import admin_required, superAdmin_required, support
 
 
 # Create your views here.
 @login_required(login_url="authentication:login")
+@superAdmin_required
 def adminPortalView(request):
     return render(request, "adminDashboardApp/index.html")
 
@@ -227,27 +238,68 @@ def adminUsersView(request):
 
 
 @login_required(login_url="authentication:login")
-@admin_required
-def adminUserDetailedView(request, user_id):
-    if request.user.is_superuser:
-        try:
-            user_in_view = CustomUser.objects.get(user_id=user_id)
-            login_history = LoginHistoryModel.objects.filter(user=user_in_view)
-        except:
-            return HttpResponse(
-                "User does not exist."
-            )  # Replace this with a page that renders a 404 error. User does not exist.
+@superAdmin_required
+def adminUserDetailedView(request, username):
+    user_in_view = get_object_or_404(CustomUser, username=username)
+    user_profile = UserProfile.objects.get(user=user_in_view)
+    login_history = LoginHistoryModel.objects.filter(user=user_in_view)
+    user_groups = user_in_view.groups.all()
+    all_groups = Group.objects.all()
+    available_groups = all_groups.difference(user_groups)
 
-        return render(
-            request,
-            "adminDashboardApp/tabs/users/user.html",
-            {
-                "user": user_in_view,
-                "login_history": login_history,
-            },
-        )
+    if request.method == "POST":
+        action = request.POST.get("action")
+        
+        if action == 'suspend':
+            suspend_form = SuspendUserForm(request.POST)
+            if suspend_form.is_valid():
+                days = suspend_form.cleaned_data.get("days", 0)
+                hours = suspend_form.cleaned_data.get("hours", 0)
+                minutes = suspend_form.cleaned_data.get("minutes", 0)
+                duration = timedelta(days=days, hours=hours, minutes=minutes)
+                user_in_view.suspend(duration)
+                return redirect("waveAdmin:user-detailed", username=username)
+
+        elif action == "ban":
+            ban_form = BanUserForm(request.POST)
+            if ban_form.is_valid():
+                days = ban_form.cleaned_data.get("days", 0)
+                hours = ban_form.cleaned_data.get("hours", 0)
+                minutes = ban_form.cleaned_data.get("minutes", 0)
+                duration = timedelta(days=days, hours=hours, minutes=minutes)
+                user_in_view.ban(duration)
+                return redirect("waveAdmin:user-detailed", username=username)
+        
+        
+        
+        group_id = request.POST.get("group_id")
+        
+        if group_id:
+            group = get_object_or_404(Group, id=group_id)
+            if "addRole" in request.POST:
+                user_in_view.groups.add(group)
+            elif "removeRole" in request.POST:
+                user_in_view.groups.remove(group)
+            return redirect("waveAdmin:user-detailed", username=username)
+        
+        
     else:
-        return redirect("core:explore")
+        suspend_form = SuspendUserForm()
+        ban_form = BanUserForm()
+
+    return render(
+        request,
+        "adminDashboardApp/tabs/users/user.html",
+        {
+            "user": user_in_view,
+            "profile": user_profile,
+            "login_history": login_history,
+            "user_groups": user_groups,
+            "available_groups": available_groups,
+            "suspend_form": suspend_form,
+            "ban_form": ban_form,
+        },
+    )
 
 
 @login_required(login_url="authentication:login")
@@ -260,7 +312,7 @@ def adminRoleView(request):
     if request.method == "POST":
         action = request.POST.get("roleControlAction")
         group_id = request.POST.get("group_id")
-        
+
         if action == "delete" and group_id:
             try:
                 group = get_object_or_404(Group, id=group_id)
@@ -268,16 +320,23 @@ def adminRoleView(request):
                 return redirect("waveAdmin:roles")
             except Group.DoesNotExist:
                 pass
-        
 
-        createGroup = CreateGroupForm(request.POST)
-        if createGroup.is_valid():
-            print(createGroup.cleaned_data)
-            group = createGroup.save()
-            print("Group created: ", group)
-            print("Assigned permissions: ", group.permissions.all())
-            
-            return redirect("waveAdmin:roles")
+        if action == "edit" and group_id:
+            group = get_object_or_404(Group, id=group_id)
+            updateForm = UpdateGroupForm(request.POST, instance=group)
+            if updateForm.is_valid():
+                updateForm.save()
+                return redirect("waveAdmin:roles")
+
+        else:
+            createGroup = CreateGroupForm(request.POST)
+            if createGroup.is_valid():
+                print(createGroup.cleaned_data)
+                group = createGroup.save()
+                print("Group created: ", group)
+                print("Assigned permissions: ", group.permissions.all())
+
+                return redirect("waveAdmin:roles")
 
     return render(
         request,

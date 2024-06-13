@@ -1,5 +1,7 @@
 from django.shortcuts import redirect
 from django.urls import reverse
+from django.utils.deprecation import MiddlewareMixin
+from django.utils import timezone
 
 # This is a middleware that prevents already authenticated users from accessing the login and join pages. 
 class RedirectAuthenticatedUsersMiddleware:
@@ -14,3 +16,4 @@ class RedirectAuthenticatedUsersMiddleware:
             if request.path in restricted_urls:
                 return redirect("accountManagement:userAccount")
         return response
+

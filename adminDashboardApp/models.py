@@ -152,7 +152,6 @@ class Group(models.Model):
     name = models.CharField(max_length=100)
     permissions = models.ManyToManyField(Permission)
     role_color = models.CharField(max_length=7, blank=True, null=True)
-    display_on_profile = models.BooleanField(default=False)
 
     def __str__(self):
         return self.name

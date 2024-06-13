@@ -7,37 +7,45 @@ document.addEventListener("DOMContentLoaded", function () {
     const modals = document.querySelectorAll("[id^=viewGroupModal]");
     const closeButtons = document.querySelectorAll("[id^=closeEditRoleButton]");
 
+    const htmlContent = document.getElementById("html-content");
+
     roleCards.forEach((card, index) => {
         const modal = modals[index];
 
         card.addEventListener('click', () => {
             modal.style.display = 'block';
+            htmlContent.style.overflow = 'hidden';
         });
 
         document.addEventListener('keydown', (event) => {
             if (event.key === 'Escape') {
                 modal.style.display = 'none';
+                htmlContent.style.overflow = 'auto';
             }
         });
 
         const closeButton = closeButtons[index];
         closeButton.addEventListener('click', () => {
             modal.style.display = 'none';
+            htmlContent.style.overflow = 'auto';
         });
     });
 
 
     headingCreateButton.addEventListener("click", function () {
         createRoleModal.style.display = "block";
+        htmlContent.style.overflow = 'hidden';
     });
 
     closeModalButton.addEventListener("click", function () {
         createRoleModal.style.display = "none";
+        htmlContent.style.overflow = 'auto';
     });
 
     document.addEventListener('keydown', (event) => {
         if (event.key === 'Escape') {
             createRoleModal.style.display = "none";
+            htmlContent.style.overflow = 'auto';
         }
     });
 
@@ -72,7 +80,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Initialize tab systems for each body section
     initializeTabSystem('body', 'createRole-tab', 'createRole-tab-content');
-    initializeTabSystem('body', 'editRole-tab', 'editRole-tab-content');
 
 
     // Function to initialize tab system for a specific body section
@@ -100,25 +107,17 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
 
-    // const colorInput = document.getElementById('roleColorInput');
-    // const colorCard = document.getElementById('roleInformation');
-    // const cardBtn = document.getElementById('roleHeaderActionBtn');
+    const roleNameInput = document.querySelector(".createRoleName");
+    const roleCardHeading = document.getElementById('liveRoleNameUpdate');
 
-    // colorInput.addEventListener('input', function() {
-    //     const colorValue = colorInput.value;
+    const updateHeading = () => {
+        const roleName = roleNameInput.value.trim();
+        if (roleName) {
+            roleCardHeading.textContent = `${roleName}`;
+        } else {
+            roleCardHeading.textContent = "Role Name";
+        }
+    };
 
-    //     // Validate the hex code
-    //     const hexRegex = /^#([0-9A-F]{3}){1,2}$/i;
-    //     if (hexRegex.test(colorValue)) {
-    //         colorCard.style.backgroundColor = colorValue;
-    //         cardBtn.style.backgroundColor = colorValue;
-    //     } else {
-    //         colorCard.style.backgroundColor = '#008d95'; // Default color if invalid hex
-    //         cardBtn.style.backgroundColor = '#008d95';
-    //     }
-    // });
-
-
-
-
+    roleNameInput.addEventListener("input", updateHeading)
 })

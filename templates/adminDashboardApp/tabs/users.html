@@ -74,7 +74,7 @@ WAVE. — Management Dashboard
             </div>
 
             <div id="icbh-role-info">
-                <h5>Role</h5>
+                <h5>Role(s)</h5>
                 <h5>Last Login</h5>
                 <h5>Date Joined</h5>
             </div>
@@ -96,14 +96,9 @@ WAVE. — Management Dashboard
 
                 <div id="icbh-role-info">
                     <div id="role-name">
-                        {{ user.role}}
-                        {% comment %} {% if user.is_superuser %}
-                        <h5>Super Admin</h5>
-                        {% elif user.is_staff %}
-                        <h5>Staff</h5>
-                        {% else %}
-                        <h5>Member</h5>
-                        {% endif %} {% endcomment %}
+                        {% for group in user.groups.all %}
+                        <p>{{ group.name }}</p>
+                        {% endfor %}
                     </div>
 
                     <h5 id="last-active">
@@ -114,8 +109,8 @@ WAVE. — Management Dashboard
                     <div id="datejoined-expand">
                         <h5>{{ user.date_joined }}</h5>
                         <div id="expandUserCard">
-                            <a type="button" href="{% url "waveAdmin:user-detailed" user_id=user.user_id %}" title="View Member Details">
-                                <img src="{% static "/images/admin/users/view-details.svg" %}" alt="View Member Details">
+                            <a type="button" href="{% url "waveAdmin:user-detailed" username=user.username %}" title="View Member Details">
+                                <img src="{% static "/images/admin/users/view_user.svg" %}" alt="View Member Details">
                             </a>
                         </div>
                     </div>
