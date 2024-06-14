@@ -139,12 +139,18 @@
     padding-left: 20px;
     padding-right: 20px;
 
-    font-family: Wanted-Regular;
+    font-family: Wanted-SemiBold;
     
     display: grid;
     grid-template-columns: repeat(7, minmax(0, 1fr));
     
     align-items: center;
+
+    cursor: pointer;
+}
+
+#ichbc-userSummaryCard:hover #icbhpi-name {
+    color: #008d95;
 }
 
 

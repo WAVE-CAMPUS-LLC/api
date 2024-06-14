@@ -304,8 +304,8 @@
 
 #suspendPeriodForm,
 #banPeriodForm {
-    width: 50%;
-    height: 40%;
+    width: 20%;
+    height: auto;
 
     background-color: white;
     -webkit-box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.085);
@@ -331,9 +331,8 @@
 }
 
 .field-container {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 20px;
+    display: flex;
+    justify-content: center;
 }
 
 .field-container label {
@@ -345,6 +344,8 @@
     padding: 15px;
     border-radius: 10px;
     border: 1px solid rgba(110, 109, 109, 0.293);
+
+    width: 50%;
 }
 
 .suspendControl,
@@ -356,31 +357,6 @@
 }
 
 #suspendActionButton {
-    border: 2px solid grey;
-    border-radius: 20px;
-    background-color: transparent;
-
-    cursor: pointer;
-
-    padding: 15px;
-
-    -webkit-box-shadow: 0px 2px 7px 0px rgba(116, 116, 116, 0.264);
-    box-shadow: 0px 2px 7px 0px rgba(116, 116, 116, 0.264);
-    -moz-box-shadow: 0px 2px 7px 0px rgba(116, 116, 116, 0.264);
-
-    border-color: #e7c100;
-    display: flex;
-    justify-content: center;
-    flex-direction: column;
-    text-align: center;
-    gap: 10px;
-
-    font-family: Wanted-Bold;
-    font-size: 17px;
-    color: #e7c100;
-}
-
-#banActionButton {
     border: 2px solid grey;
     border-radius: 20px;
     background-color: transparent;
@@ -404,8 +380,9 @@
     font-family: Wanted-Bold;
     font-size: 17px;
     color: red;
-}
 
+    width: 70%;
+}
 
 
 #user-details-login-history {
@@ -596,7 +573,7 @@
 }
 
 #admin-user-control button#pause:hover {
-    background-color: #e7c1004d;
+    background-color: #e700004d;
 }
 
 #admin-user-control button#allow:hover {
@@ -604,7 +581,7 @@
 }
 
 #admin-user-control button#pause {
-    border-color: #e7c100;
+    border-color: red;
 }
 
 #admin-user-control button#allow {
@@ -636,10 +613,10 @@
     max-width: 100px;
 
     font-family: Wanted-Bold;
-    color: #e7c100;
+    color: red;
 }
 
-#resume-btn {
+#resume-btn form {
     display: flex;
     justify-content: center;
     flex-direction: column;
@@ -651,4 +628,25 @@
 
     font-family: Wanted-Bold;
     color: #00e704;
+}
+
+
+
+
+.closeModal {
+    width: 100%;
+    display: flex;
+    justify-content: end;
+}
+
+.closeModal button {
+    border: none;
+    background: none;
+
+    cursor: pointer;
+}
+
+.closeModal button p {
+    font-family: Wanted-SemiBold;
+    color: #6e6e6ef0;
 }

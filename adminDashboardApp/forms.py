@@ -28,7 +28,6 @@ class CreateGroupForm(forms.ModelForm):
             group.save()
             group.permissions.set(self.cleaned_data["permissions"])
             group.role_color = self.cleaned_data["role_color"]
-            group.display_on_profile = self.cleaned_data["display_on_profile"]
             group.save()
         return group
 
@@ -84,12 +83,5 @@ class CareerRoleCreationForm(forms.ModelForm):
 
 
 class SuspendUserForm(forms.Form):
-    days = forms.IntegerField(label=translate("Days"), min_value=0, initial=0)
     hours = forms.IntegerField(label=translate("Hours"), min_value=0, max_value=23, initial=0)
-    minutes = forms.IntegerField(label=translate("Minutes"), min_value=0, max_value=59, initial=0)
     
-
-class BanUserForm(forms.Form):
-    days = forms.IntegerField(label=translate("Days"), min_value=0, initial=0)
-    hours = forms.IntegerField(label=translate("Hours"), min_value=0, max_value=23, initial=0)
-    minutes = forms.IntegerField(label=translate("Minutes"), min_value=0, max_value=59, initial=0)

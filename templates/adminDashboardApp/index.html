@@ -202,5 +202,37 @@ WAVE. — Management Dashboard
             </a>
         </div>
     </section>
+
+    <section class="content-section">
+        <div class="section-header">
+            <h4>Product Marketing</h4>
+        </div>
+
+        <div class="section-body">
+            <a id="optionCard" href="{% url 'waveAdmin:support' %}">
+                <div id="oC-img">
+                    <img src="{% static "/images/admin/emailMarketing/optionEmails.svg" %}" alt="Email Marketing">
+                </div>
+                <div id="oC-info">
+                    <div class="oci-content">
+                        <h3>Emailing</h3>
+                        <p>Last Update: 5th March, 2024</p>
+                    </div>
+                </div>
+            </a>
+        
+            <a id="optionCard" href="{% url 'waveAdmin:feedback' %}">
+                <div id="oC-img">
+                    <img src="{% static "/images/admin/surveyMarketing/optionSurvey.svg" %}" alt="Survey Marketing">
+                </div>
+                <div id="oC-info">
+                    <div class="oci-content">
+                        <h3>Surveys</h3>
+                        <p>Last Update: 5th March, 2024</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </section>
 </div>
 {% endblock body %}

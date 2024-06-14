@@ -19,32 +19,33 @@ from .forms import (
     UpdateGroupForm,
     DepartmentForm,
     CareerRoleCreationForm,
-    
     SuspendUserForm,
-    BanUserForm,
 )
-from wave_v1.decorators import admin_required, superAdmin_required, support
+from wave_v1.decorators import (
+    admin_required,
+    superAdmin_required,
+    check_suspension,
+)
 
 
 # Create your views here.
 @login_required(login_url="authentication:login")
-@superAdmin_required
+@check_suspension
+@admin_required
 def adminPortalView(request):
     return render(request, "adminDashboardApp/index.html")
 
 
 @login_required(login_url="authentication:login")
+@check_suspension
 @admin_required
 def adminDashboardView(request):
-    if request.user.is_superuser:
-        return render(request, "adminDashboardApp/tabs/dashboard.html")
-
-    else:
-        return redirect("core:explore")
+    return render(request, "adminDashboardApp/tabs/dashboard.html")
 
 
 # Department Management
 @login_required(login_url="authentication:login")
+@check_suspension
 @admin_required
 def adminDepartmentView(request):
     """
@@ -59,27 +60,26 @@ def adminDepartmentView(request):
     existing departments data, or it is redirecting to the "core:explore" URL depending on the user's
     permissions.
     """
-    if request.user.is_superuser:
-        if request.method == "POST":
-            form = DepartmentForm(request.POST)
-            if form.is_valid():
-                form.save()
-                return redirect("waveAdmin:departments")
-        else:
-            form = DepartmentForm()
 
-        # Fetch all existing departments in order to pass them into the template
-        departments = Department.objects.all()
-        return render(
-            request,
-            "adminDashboardApp/tabs/departments.html",
-            {"form": form, "departments": departments},
-        )
+    if request.method == "POST":
+        form = DepartmentForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect("waveAdmin:departments")
     else:
-        return redirect("core:explore")
+        form = DepartmentForm()
+
+    # Fetch all existing departments in order to pass them into the template
+    departments = Department.objects.all()
+    return render(
+        request,
+        "adminDashboardApp/tabs/departments.html",
+        {"form": form, "departments": departments},
+    )
 
 
 @login_required(login_url="authentication:login")
+@check_suspension
 @admin_required
 def adminDepartmentDetailedView(request, departmentID, department_name):
     """
@@ -103,85 +103,92 @@ def adminDepartmentDetailedView(request, departmentID, department_name):
     department, career roles, department form, and career role form, or it is redirecting to the
     "core:explore" URL if the user is not a superuser.
     """
-    if request.user.is_superuser:
-        department = get_object_or_404(
-            Department, departmentID=departmentID, name=department_name
-        )
-        careerRoles = CareerRole.objects.filter(department=department)
 
-        if request.method == "POST":
-            action = request.POST.get("action")
-            if action == "delete":
-                role_id = request.POST.get("role_id")
-                careerRole_delete = get_object_or_404(CareerRole, roleID=role_id)
-                careerRole_delete.delete()
-                return redirect(
-                    "waveAdmin:departmentDetails",
-                    departmentID=departmentID,
-                    department_name=department_name,
-                )
+    department = get_object_or_404(
+        Department, departmentID=departmentID, name=department_name
+    )
+    careerRoles = CareerRole.objects.filter(department=department)
 
-            departmentForm = DepartmentForm(request.POST, instance=department)
-            careerRoleForm = CareerRoleCreationForm(request.POST)
+    if request.method == "POST":
+        action = request.POST.get("action")
+        if action == "delete":
+            role_id = request.POST.get("role_id")
+            careerRole_delete = get_object_or_404(CareerRole, roleID=role_id)
+            careerRole_delete.delete()
+            return redirect(
+                "waveAdmin:departmentDetails",
+                departmentID=departmentID,
+                department_name=department_name,
+            )
 
-            if departmentForm.is_valid():
-                departmentForm.save()
-                return redirect(
-                    "waveAdmin:departmentDetails",
-                    departmentID=departmentID,
-                    department_name=department_name,
-                )
+        departmentForm = DepartmentForm(request.POST, instance=department)
+        careerRoleForm = CareerRoleCreationForm(request.POST)
 
-            elif careerRoleForm.is_valid():
-                career_role = careerRoleForm.save(commit=False)
-                career_role.department = department
-                career_role.save()
-                return redirect(
-                    "waveAdmin:departmentDetails",
-                    departmentID=departmentID,
-                    department_name=department_name,
-                )
-        else:
-            departmentForm = DepartmentForm(instance=department)
-            careerRoleForm = CareerRoleCreationForm()
-        return render(
-            request,
-            "adminDashboardApp/tabs/departments/departmentDetails.html",
-            {
-                "department": department,
-                "careerRoles": careerRoles,
-                "departmentForm": departmentForm,
-                "careerRoleForm": careerRoleForm,
-            },
-        )
+        if departmentForm.is_valid():
+            departmentForm.save()
+            return redirect(
+                "waveAdmin:departmentDetails",
+                departmentID=departmentID,
+                department_name=department_name,
+            )
+
+        elif careerRoleForm.is_valid():
+            career_role = careerRoleForm.save(commit=False)
+            career_role.department = department
+            career_role.save()
+            return redirect(
+                "waveAdmin:departmentDetails",
+                departmentID=departmentID,
+                department_name=department_name,
+            )
     else:
-        return redirect("core:explore")
+        departmentForm = DepartmentForm(instance=department)
+        careerRoleForm = CareerRoleCreationForm()
+    return render(
+        request,
+        "adminDashboardApp/tabs/departments/departmentDetails.html",
+        {
+            "department": department,
+            "careerRoles": careerRoles,
+            "departmentForm": departmentForm,
+            "careerRoleForm": careerRoleForm,
+        },
+    )
 
 
 @login_required(login_url="authentication:login")
+@check_suspension
 @admin_required
 def adminApplicationsView(request):
-    if request.user.is_superuser:
-        hostApplications = HostApplication.objects.all()
+    hostApplications = HostApplication.objects.all()
 
-        if request.method == "POST":
-            action = request.POST.get("applicationAction")
-            applicant_email = request.POST.get("applicantEmail")
+    if request.method == "POST":
+        action = request.POST.get("applicationAction")
+        applicant_email = request.POST.get("applicantEmail")
 
-            if action == "approve":
-                sendHostApprovalEmail(applicant_email)
-                return redirect("waveAdmin:applications")
-            elif action == "deny":
-                sendHostDenyEmail(applicant_email)
-                return redirect("waveAdmin:applications")
-        return render(
-            request,
-            "adminDashboardApp/tabs/applications.html",
-            {"hostApps": hostApplications},
-        )
+        if action == "approve":
+            sendHostApprovalEmail(applicant_email)
+            
+            try:
+                applicant = CustomUser.objects.get(email=applicant_email)
+                host_group, created = Group.objects.get_or_create(name="Host")
+                applicant.groups.add(host_group)
+                applicant.save()
+                
+            except CustomUser.DoesNotExist:
+                pass
 
-    else:
-        return redirect("core:explore")
+            return redirect("waveAdmin:applications")
+        
+        
+        elif action == "deny":
+            sendHostDenyEmail(applicant_email)
+            return redirect("waveAdmin:applications")
+    return render(
+        request,
+        "adminDashboardApp/tabs/applications.html",
+        {"hostApps": hostApplications},
+    )
 
 
 def sendHostApprovalEmail(applicantEmail):
@@ -215,30 +222,24 @@ def sendHostDenyEmail(applicantEmail):
 
 
 @login_required(login_url="authentication:login")
+@check_suspension
 @admin_required
 def adminEventsView(request):
-    if request.user.is_superuser:
-        return render(request, "adminDashboardApp/tabs/events.html")
-
-    else:
-        return redirect("core:explore")
+    return render(request, "adminDashboardApp/tabs/events.html")
 
 
 @login_required(login_url="authentication:login")
+@check_suspension
 @admin_required
 def adminUsersView(request):
-    if request.user.is_superuser:
-        # Going into the CustomUser database which holds all the users and fetching them to be displayed.
-        total_users = CustomUser.objects.all()
-        return render(
-            request, "adminDashboardApp/tabs/users.html", {"users": total_users}
-        )
-    else:
-        return redirect("core:explore")
+    # Going into the CustomUser database which holds all the users and fetching them to be displayed.
+    total_users = CustomUser.objects.all()
+    return render(request, "adminDashboardApp/tabs/users.html", {"users": total_users})
 
 
 @login_required(login_url="authentication:login")
-@superAdmin_required
+@check_suspension
+@admin_required
 def adminUserDetailedView(request, username):
     user_in_view = get_object_or_404(CustomUser, username=username)
     user_profile = UserProfile.objects.get(user=user_in_view)
@@ -249,31 +250,20 @@ def adminUserDetailedView(request, username):
 
     if request.method == "POST":
         action = request.POST.get("action")
-        
-        if action == 'suspend':
+
+        if action == "suspend":
             suspend_form = SuspendUserForm(request.POST)
             if suspend_form.is_valid():
-                days = suspend_form.cleaned_data.get("days", 0)
                 hours = suspend_form.cleaned_data.get("hours", 0)
-                minutes = suspend_form.cleaned_data.get("minutes", 0)
-                duration = timedelta(days=days, hours=hours, minutes=minutes)
-                user_in_view.suspend(duration)
+                user_in_view.suspend(hours)
                 return redirect("waveAdmin:user-detailed", username=username)
 
-        elif action == "ban":
-            ban_form = BanUserForm(request.POST)
-            if ban_form.is_valid():
-                days = ban_form.cleaned_data.get("days", 0)
-                hours = ban_form.cleaned_data.get("hours", 0)
-                minutes = ban_form.cleaned_data.get("minutes", 0)
-                duration = timedelta(days=days, hours=hours, minutes=minutes)
-                user_in_view.ban(duration)
-                return redirect("waveAdmin:user-detailed", username=username)
-        
-        
-        
+        elif action == "allow":
+            user_in_view.remove_suspension_OR_ban()
+            return redirect("waveAdmin:user-detailed", username=username)
+
         group_id = request.POST.get("group_id")
-        
+
         if group_id:
             group = get_object_or_404(Group, id=group_id)
             if "addRole" in request.POST:
@@ -281,11 +271,9 @@ def adminUserDetailedView(request, username):
             elif "removeRole" in request.POST:
                 user_in_view.groups.remove(group)
             return redirect("waveAdmin:user-detailed", username=username)
-        
-        
+
     else:
         suspend_form = SuspendUserForm()
-        ban_form = BanUserForm()
 
     return render(
         request,
@@ -297,12 +285,12 @@ def adminUserDetailedView(request, username):
             "user_groups": user_groups,
             "available_groups": available_groups,
             "suspend_form": suspend_form,
-            "ban_form": ban_form,
         },
     )
 
 
 @login_required(login_url="authentication:login")
+@check_suspension
 @admin_required
 def adminRoleView(request):
     createGroup = CreateGroupForm()
@@ -350,22 +338,20 @@ def adminRoleView(request):
 
 
 @login_required(login_url="authentication:login")
+@check_suspension
 @admin_required
 def adminCareersView(request):
-    if request.user.is_superuser:
-        # Querying every single career role.
-        all_career_roles = CareerRole.objects.all()
-        return render(
-            request,
-            "adminDashboardApp/tabs/careers.html",
-            {"career_roles": all_career_roles},
-        )
-
-    else:
-        return redirect("core:explore")
+    # Querying every single career role.
+    all_career_roles = CareerRole.objects.all()
+    return render(
+        request,
+        "adminDashboardApp/tabs/careers.html",
+        {"career_roles": all_career_roles},
+    )
 
 
 @login_required(login_url="authentication:login")
+@check_suspension
 @admin_required
 def adminCareerDetailView(request, roleID):
     """
@@ -383,29 +369,28 @@ def adminCareerDetailView(request, roleID):
     `{"careerRoles_detail": career_role, "applications": applications}`. This template is used to
     display details of a specific career role along with its applications.
     """
-    if request.user.is_superuser:
-        # Querying every single career role.
-        career_role = get_object_or_404(CareerRole, roleID=roleID)
+    # Querying every single career role.
+    career_role = get_object_or_404(CareerRole, roleID=roleID)
 
-        applications = CareerRoleApplication.objects.filter(role=career_role)
+    applications = CareerRoleApplication.objects.filter(role=career_role)
 
-        # Send email to applicant if they are denied or accepted.
-        if request.method == "POST":
-            action = request.POST.get("applicationAction")
-            applicant_email = request.POST.get("applicantEmail")
+    # Send email to applicant if they are denied or accepted.
+    if request.method == "POST":
+        action = request.POST.get("applicationAction")
+        applicant_email = request.POST.get("applicantEmail")
 
-            if action == "approve":
-                sendApprovedApplicantEmail(applicant_email)
-                return redirect("waveAdmin:careers")
+        if action == "approve":
+            sendApprovedApplicantEmail(applicant_email)
+            return redirect("waveAdmin:careers")
 
-            elif action == "deny":
-                sendDeniedApplicantEmail(applicant_email)
-                return redirect("waveAdmin:careers")
-        return render(
-            request,
-            "adminDashboardApp/tabs/careers/careerDetails.html",
-            {"careerRoles_detail": career_role, "applications": applications},
-        )
+        elif action == "deny":
+            sendDeniedApplicantEmail(applicant_email)
+            return redirect("waveAdmin:careers")
+    return render(
+        request,
+        "adminDashboardApp/tabs/careers/careerDetails.html",
+        {"careerRoles_detail": career_role, "applications": applications},
+    )
 
 
 def sendApprovedApplicantEmail(applicantEmail):
@@ -437,17 +422,15 @@ def sendDeniedApplicantEmail(applicantEmail):
 
 
 @login_required(login_url="authentication:login")
+@check_suspension
 @admin_required
 def adminFinanceView(request):
-    if request.user.is_superuser:
-        return render(request, "adminDashboardApp/tabs/financial.html")
-
-    else:
-        return redirect("core:explore")
+    return render(request, "adminDashboardApp/tabs/financial.html")
 
 
 @login_required(login_url="authentication:login")
-@support
+@check_suspension
+@admin_required
 def adminSupportView(request):
     all_support_tickets = SupportTicket.objects.all()
 
@@ -472,6 +455,7 @@ def adminSupportView(request):
 
 
 @login_required(login_url="authentication:login")
+@check_suspension
 @admin_required
 def adminFeedbackView(request):
     """
@@ -487,15 +471,12 @@ def adminFeedbackView(request):
     total number of feedback entries, and renders a template "adminDashboardApp/tabs/feedback.html" with
     the feedback offers and count as context data. If the user is not a superuser, it redirects
     """
-    if request.user.is_superuser:
-        all_feedback_offers = FeedbackModel.objects.all()
-        feedback_count = FeedbackModel.objects.count()
+    all_feedback_offers = FeedbackModel.objects.all()
+    feedback_count = FeedbackModel.objects.count()
 
-        return render(
-            request,
-            "adminDashboardApp/tabs/feedback.html",
-            {"feedback_offers": all_feedback_offers, "feedback_count": feedback_count},
-        )
+    return render(
+        request,
+        "adminDashboardApp/tabs/feedback.html",
+        {"feedback_offers": all_feedback_offers, "feedback_count": feedback_count},
+    )
 
-    else:
-        return redirect("core:explore")

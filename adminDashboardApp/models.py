@@ -139,7 +139,10 @@ class Permission(models.Model):
             # Event Host Member
             ('create_event', 'Create events - WAVE.'),
             ('manage_host_event', 'Manage host event - WAVE.'),
-            ('view_host_event', 'View host event - WAVE.')
+            ('view_host_event', 'View host event - WAVE.'),
+            
+            # Suspend Group Permissions
+            ('user_suspension', 'Member has been suspended - WAVE.'),
         ]
     
     

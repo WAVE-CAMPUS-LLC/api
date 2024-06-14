@@ -7,16 +7,18 @@ from authenticationApp.models import CustomUser
 from .models import UserProfile
 
 # Decorators to check user roles and permissions
-from wave_v1.decorators import member_required
+from wave_v1.decorators import member_required, check_suspension
 
 # Create your views here.
 @login_required(login_url="authentication:login")
+@check_suspension
 @member_required
 def profileView(request):
     return render(request, "accountManagementApp/profileManagement.html")
 
 
 @login_required(login_url="authentication:login")
+@check_suspension
 @member_required
 def settingsView(request):
     user = request.user
@@ -60,13 +62,6 @@ def settingsView(request):
             "phone_number": user.phone_number,
         },
     )
-
-@login_required(login_url="authentication:login")
-@member_required
-def showUserTag(request):
-    user = request.user
-    profile = UserProfile.objects.get(user=user)
-    return render(request, "accountManagementApp/partials/userTag.html", {"profile": profile})
 
 
 from django.urls import reverse_lazy

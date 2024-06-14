@@ -9,6 +9,7 @@ from django.template.loader import render_to_string
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 from django.shortcuts import render, redirect, HttpResponse
+from django.contrib.auth.decorators import login_required
 from .forms import (
     CustomUserJoinForm,
     UserAuthenticationForm,
@@ -20,7 +21,9 @@ from .models import CustomUser
 from adminDashboardApp.models import LoginHistoryModel
 from django.contrib.auth.models import Group
 
-# from django.http import HttpResponse
+from wave_v1.decorators import (
+    check_suspension,
+)
 
 
 # Create your views here.
@@ -67,6 +70,7 @@ def loginView(request):
     return render(request, "authenticationApp/login.html", {"form": form})
 
 
+@login_required(login_url="authentication:login")
 def logoutView(request):
     try:
         login_history = LoginHistoryModel.objects.filter(user=request.user).latest(
