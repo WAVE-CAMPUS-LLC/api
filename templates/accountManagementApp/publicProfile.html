@@ -1,0 +1,83 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}
+Member Profile (@{{user.username}}) — WAVE.
+{% endblock title %}
+
+{% block app_page_style %}
+<link rel="stylesheet" type="text/css" href="{% static "/styles/accountManagementApp/publicProfile.css" %}" />
+{% endblock app_page_style %}
+
+{% block script %}
+{% endblock script %}
+
+
+{% block header %}
+{% include "partials/nav-footer/nav/main_nav.html" %}
+{% endblock header %}
+
+
+{% block body %}
+<div id="content-container">
+    <section class="profileHeader">
+        <div class="profileHeaderCard profileMain">
+            <div class="profilePicture">
+                <img src="{% static "images/account/publicProfile/profile/E.L.png" %}" />
+            </div>
+            <div class="profileInfo">
+                <h5>{{ user.first_name }}</h5>
+                <p>Member since {{ user.date_joined }}</p>
+            </div>
+        </div>
+        <div class="profileHeaderCard profileSecond">
+            <h6>{{ user.first_name }} has verified</h6>
+            <div>
+                <ul>
+                    <li>Organization ID</li>
+                    <li>Email Address</li>
+                    <li>Phone Number</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <div class="pP_divider">
+        <hr>
+    </div>
+
+    <section class="profileBody">
+        <h3 class="profileBodyHeading">A little about {{ user.first_name }}</h3>
+        <div class="bodyInformation">
+            <div class="informationals">
+                <img src="{% static "images/account/publicProfile/student.svg" %}" />
+                <p>Student at Tennessee State University</p>
+            </div>
+            <div class="informationals">
+                <img src="{% static "images/account/publicProfile/major.svg" %}" />
+                <p>I am studying Computer Science</p>
+            </div>
+            <div class="informationals">
+                <img src="{% static "images/account/publicProfile/birthday.svg" %}" />
+                <p>I celebrate my birth on the 3rd of December</p>
+            </div>
+            <div class="informationals">
+                <img src="{% static "images/account/publicProfile/location.svg" %}" />
+                <p>I am from Long Beach, California</p>
+            </div>
+            <div class="informationals">
+                <img src="{% static "images/account/publicProfile/hobbies.svg" %}" />
+                <p>My hobbies: Reading, soccer, gyming</p>
+            </div>
+            <div class="informationals">
+                <img src="{% static "images/account/publicProfile/interest.svg" %}" />
+                <p>Events I'm interested in: music & sports</p>
+            </div>
+            <div class="informationals">
+                <img src="{% static "images/account/publicProfile/feeling.svg" %}" />
+                <p>Currently, I feel joyous!</p>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock body %}

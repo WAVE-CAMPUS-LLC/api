@@ -41,7 +41,7 @@ WAVE. — Member Details
             <div id="user-details">
                 <div id="user-full_name">
                     <h3>{{ user.first_name }} {{ user.last_name }}</h3>
-                    <p>@ {{ user.username }}</p>
+                    <p><a href="{% url "accountManagement:memberProfile" username=user.username %} " target="_blank">@ {{ user.username }}</a></p>
                 </div>
 
                 <div id="user-detailed_view">

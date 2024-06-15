@@ -1,13 +1,16 @@
 from http.client import HTTPResponse
-from django.http import HttpResponseBadRequest
-from django.shortcuts import render, redirect
+from django.http import Http404, HttpResponseBadRequest
+from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth import get_user_model
 from .forms import UpdateContactInfo, UpdatePersonalInfo, UpdateProfileForm
-from authenticationApp.models import CustomUser
 from .models import UserProfile
 
 # Decorators to check user roles and permissions
 from wave_v1.decorators import member_required, check_suspension
+
+UserModel = get_user_model()
+
 
 # Create your views here.
 @login_required(login_url="authentication:login")
@@ -66,23 +69,32 @@ def settingsView(request):
 
 from django.urls import reverse_lazy
 from django.contrib.auth.views import PasswordChangeView
-from django.contrib. messages.views import SuccessMessageMixin
+from django.contrib.messages.views import SuccessMessageMixin
 from django.contrib.auth import update_session_auth_hash
 
 
 class ChangePasswordView(SuccessMessageMixin, PasswordChangeView):
-    template_name = 'accountManagementApp/partials/passwordChange.html'
+    template_name = "accountManagementApp/partials/passwordChange.html"
     success_message = "Password successfully changed!"
-    
+
     def post(self, request, *args, **kwargs):
         # Call the original post method to handle password change logic
         result = super().post(request, *args, **kwargs)
 
         # If password change is successful, update the session
         if result.status_code == 302:  # Redirection status code
-            update_session_auth_hash(request, request.user) # type: ignore
+            update_session_auth_hash(request, request.user)  # type: ignore
 
         return result
-    
-    
-    success_url = reverse_lazy('accountManagement:userAccount')
+
+    success_url = reverse_lazy("accountManagement:userAccount")
+
+
+def memberView(request, username):
+    try:
+        user = get_object_or_404(UserModel, username=username)
+
+    except Http404:
+        return render(request, "extras/invalid/invalid.html")
+
+    return render(request, "accountManagementApp/publicProfile.html", {"user": user})

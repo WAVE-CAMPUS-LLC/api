@@ -180,7 +180,7 @@ def adminApplicationsView(request):
 
             return redirect("waveAdmin:applications")
         
-        
+    
         elif action == "deny":
             sendHostDenyEmail(applicant_email)
             return redirect("waveAdmin:applications")

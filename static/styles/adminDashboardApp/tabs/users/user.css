@@ -80,6 +80,15 @@
     color: grey;
 }
 
+#user-full_name p a{
+    text-decoration: none;
+    color: #008d95;
+}
+
+#user-full_name p a:hover {
+    text-decoration: underline;
+}
+
 #user-detailed_view {
     border: 2px solid #6868684d;
     border-radius: 15px;
