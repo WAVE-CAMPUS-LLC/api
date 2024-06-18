@@ -73,14 +73,7 @@ class LoginHistoryModel(models.Model):
             self.session_duration_seconds = session_duration.total_seconds() % 60  # Calculate remaining seconds
             print(f'Session duration: {session_duration}')
 
-        # set the role
         
-        if not self.role:
-            try:
-                user_info = CustomUser()    
-                self.role = user_info.role
-            except CustomUser.DoesNotExist:
-                self.role = 'user' # default role
         super().save(*args, **kwargs)
         
     @property
