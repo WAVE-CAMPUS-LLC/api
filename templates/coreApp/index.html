@@ -1,5 +1,6 @@
 {% extends "base/base.html" %}
 {% load static %}
+{% load hosts %}
 
 {% block title %}
 WAVE. — Explore a new wave of events. Tick them off your bucketlist!
@@ -54,7 +55,7 @@ WAVE. — Explore a new wave of events. Tick them off your bucketlist!
 
                 <div id="cch2i-body">
                     <a id="partnerships" href="#">Partnerships</a>
-                    <a id="joining" href="{% url "authentication:join" %}">Not a member? Join Us</a>
+                    <a id="joining" href="{% host_url "authentication:join" host 'www' %}">Not a member? Join Us</a>
                 </div>
             </div>
         </div>

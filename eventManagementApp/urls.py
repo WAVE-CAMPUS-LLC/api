@@ -5,6 +5,7 @@ from . import views
 app_name = "eventManagement"
 
 urlpatterns = [
-    path("host/", views.hostView, name="hostHome"),
-    path("host/onboarding/apply/", views.hostApplyView, name="hostApply")
+    path("", views.hostView, name="hostHome"),
+    path("apply/", views.hostApplyView, name="hostApply"),
+    path("portal/", views.hostPortalView, name="hostPortal")
 ]

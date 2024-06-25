@@ -15,7 +15,7 @@
 }
 
 #work-with-us {
-    border: 2px solid rgba(0, 0, 0, 0.038);
+    border: 1px solid rgba(170, 170, 170, 0.404);
     border-radius: 20px;
     -webkit-box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.061);
     -moz-box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.061);
@@ -29,9 +29,8 @@
 }
 
 .wwu-heading {
-    border-bottom: 2px solid black;
+    border-bottom: 1px solid rgba(170, 170, 170, 0.404);
     padding: 25px;
-    background-color: #000000;
     border-top-left-radius: 20px;
     border-top-right-radius: 20px;
 }
@@ -55,7 +54,7 @@
     align-items: center;
     justify-content: center;
     gap: 15px;
-    color: white;
+    color: rgb(0, 0, 0);
 }
 
 .wwu-heading ul li.active {

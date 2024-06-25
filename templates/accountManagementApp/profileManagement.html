@@ -1,5 +1,6 @@
 {% extends "base/base.html" %}
 {% load static %}
+{% load hosts %}
 
 {% block title %}
 Profile Overview
@@ -31,7 +32,7 @@ Profile Overview
                     <p>Joined {{ user.date_joined }}</p>
                 </div>
                 <div id="edit">
-                    <a href="{% url "accountManagement:userSettings" %}#personal-change">Edit</a>
+                    <a href="{% host_url "accountManagement:userSettings" host 'www' %}#personal-change">Edit</a>
                 </div>
             </div>
             <div id="summary">
@@ -46,7 +47,7 @@ Profile Overview
                     </div>
                 </div>
                 <div id="edit">
-                    <a href="{% url "accountManagement:userSettings" %}#email-change">Edit</a>
+                    <a href="{% host_url "accountManagement:userSettings" host 'www' %}#email-change">Edit</a>
                 </div>
             </div>
             <div id="status">
@@ -80,7 +81,7 @@ Profile Overview
                             <a href="#">My Listings</a>
                         </li>
                         <li>
-                            <a href="{% url "accountManagement:userSettings" %}">Settings</a>
+                            <a href="{% host_url "accountManagement:userSettings" host 'www' %}">Settings</a>
                         </li>
                         <li>
                             <a href="#">My Preferences</a>
@@ -104,7 +105,7 @@ Profile Overview
                         <p>
                             Can't find what you're looking for?
                             <br />
-                            <a href="{% url "support:home" %}">Visit our Support Center</a>
+                            <a href="{% host_url "home" host 'support' %}">Visit our Support Center</a>
                         </p>
                         <p>
                             Having issues with any purchases?

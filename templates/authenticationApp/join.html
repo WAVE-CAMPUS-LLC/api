@@ -1,5 +1,6 @@
 {% extends "base/base.html" %}
 {% load static %}
+{% load hosts %}
 
 {% block title %}
 WAVE — Join Us!
@@ -18,7 +19,7 @@ WAVE — Join Us!
 <main id="joinCardContainer">
     <header id="navHeader">
         <div id="logo">
-            <a href="{% url "core:index" %}">WAVE<span>.</span></a>
+            <a href="{% host_url "core:index" host 'www' %}">WAVE<span>.</span></a>
         </div>
     </header>
     <div id="joinCard">
@@ -40,7 +41,7 @@ WAVE — Join Us!
         </div>
         
 
-        <form action="{% url "authentication:join" %}" method="post">
+        <form action="{% host_url "authentication:join" host 'www' %}" method="post">
             {% csrf_token %}
             <div id="rowOne">
                 <label for="{{ form.first_name.id_for_label }}">
@@ -171,10 +172,10 @@ WAVE — Join Us!
 
             <div id="signupComplete">
                 <button type="submit" id="proceedBtn">Proceed</button>
-                <p>By joining, you agree to our <a href="./policy/terms.html">Terms</a> and <a href="./policy/privacy.html">Privacy Policy</a>.</p>
+                <p>By joining, you agree to our <a href="{% host_url "extras:terms" host 'www' %}">Terms</a> and <a href="{% host_url "extras:privacy" host 'www' %}">Privacy Policy</a>.</p>
             </div>
 
-            <p id="existingAccount">Have an account? <a href="{% url "authentication:login" %}"> Login</a></p>
+            <p id="existingAccount">Have an account? <a href="{% host_url "authentication:login" host 'www' %}"> Login</a></p>
         </form>
     </div>
 </main>

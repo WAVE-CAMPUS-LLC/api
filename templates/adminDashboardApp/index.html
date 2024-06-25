@@ -1,5 +1,6 @@
 {% extends "base/base.html" %}
 {% load static %}
+{% load hosts %}
 
 {% block title %}
 WAVE. — Management Dashboard
@@ -39,7 +40,7 @@ WAVE. — Management Dashboard
         </div>
 
         <div class="section-body">
-            <a id="optionCard" href="{% url 'waveAdmin:dashboard' %}">
+            <a id="optionCard" href="{% host_url 'waveAdmin:dashboard' host 'adminPortal' %}">
                 <div id="oC-img">
                     <img src="{% static "/images/admin/dashboard/optionDashboard.svg" %}" alt="Support Management Dashboard">
                 </div>
@@ -51,7 +52,7 @@ WAVE. — Management Dashboard
                 </div>
             </a>
 
-            <a id="optionCard" href="{% url 'waveAdmin:finances' %}">
+            <a id="optionCard" href="{% host_url 'finances' host 'adminPortal' %}">
                 <div id="oC-img">
                     <img src="{% static "/images/admin/finance/optionFinance.svg" %}" alt="Support Management [Finance]">
                 </div>
@@ -71,7 +72,7 @@ WAVE. — Management Dashboard
         </div>
 
         <div class="section-body">
-            <a id="optionCard" href="{% url 'waveAdmin:departments' %}">
+            <a id="optionCard" href="{% host_url 'departments' host 'adminPortal' %}">
                 <div id="oC-img">
                     <img src="{% static "/images/admin/departments/optionDepartment.svg" %}" alt="Departments Management Dashboard">
                 </div>
@@ -83,7 +84,7 @@ WAVE. — Management Dashboard
                 </div>
             </a>
 
-            <a id="optionCard" href="{% url 'waveAdmin:careers' %}">
+            <a id="optionCard" href="{% host_url 'careers' host 'adminPortal' %}">
                 <div id="oC-img">
                     <img src="{% static "/images/admin/jobs/optionJobs.svg" %}" alt="Support Management Jobs">
                 </div>
@@ -103,7 +104,7 @@ WAVE. — Management Dashboard
         </div>
 
         <div class="section-body">
-            <a id="optionCard" href="{% url 'waveAdmin:applications' %}">
+            <a id="optionCard" href="{% host_url 'applications' host 'adminPortal' %}">
                 <div id="oC-img">
                     <img src="{% static "/images/admin/applications/optionApplications.svg" %}" alt="Applications Management Dashboard">
                 </div>
@@ -123,7 +124,7 @@ WAVE. — Management Dashboard
         </div>
 
         <div class="section-body">
-            <a id="optionCard" href="{% url 'waveAdmin:users' %}">
+            <a id="optionCard" href="{% host_url 'users' host 'adminPortal' %}">
                 <div id="oC-img">
                     <img src="{% static "/images/admin/users/optionUsers.svg" %}" alt="Support Management Users">
                 </div>
@@ -135,7 +136,7 @@ WAVE. — Management Dashboard
                 </div>
             </a>
 
-            <a id="optionCard" href="{% url 'waveAdmin:roles' %}">
+            <a id="optionCard" href="{% host_url 'roles' host 'adminPortal' %}">
                 <div id="oC-img">
                     <img src="{% static "/images/admin/roles/optionRoles.svg" %}" alt="User Role Management">
                 </div>
@@ -156,7 +157,7 @@ WAVE. — Management Dashboard
         </div>
 
         <div class="section-body">
-            <a id="optionCard" href="{% url 'waveAdmin:events' %}">
+            <a id="optionCard" href="{% host_url 'events' host 'adminPortal' %}">
                 <div id="oC-img">
                     <img src="{% static "/images/admin/events/optionEvent.svg" %}" alt="Support Management Events">
                 </div>
@@ -176,7 +177,7 @@ WAVE. — Management Dashboard
         </div>
 
         <div class="section-body">
-            <a id="optionCard" href="{% url 'waveAdmin:support' %}">
+            <a id="optionCard" href="{% host_url 'support' host 'adminPortal' %}">
                 <div id="oC-img">
                     <img src="{% static "/images/admin/campusManagement/optionCollege.svg" %}" alt="Email Marketing">
                 </div>
@@ -188,7 +189,7 @@ WAVE. — Management Dashboard
                 </div>
             </a>
         
-            <a id="optionCard" href="{% url 'waveAdmin:feedback' %}">
+            <a id="optionCard" href="{% host_url 'feedback' host 'adminPortal' %}">
                 <div id="oC-img">
                     <img src="{% static "/images/admin/campusManagement/optionOrganization.svg" %}" alt="Survey Marketing">
                 </div>
@@ -208,7 +209,7 @@ WAVE. — Management Dashboard
         </div>
 
         <div class="section-body">
-            <a id="optionCard" href="{% url 'waveAdmin:support' %}">
+            <a id="optionCard" href="{% host_url 'support' host 'adminPortal' %}">
                 <div id="oC-img">
                     <img src="{% static "/images/admin/support/optionSupport.svg" %}" alt="Support Management [Support]">
                 </div>
@@ -220,7 +221,7 @@ WAVE. — Management Dashboard
                 </div>
             </a>
         
-            <a id="optionCard" href="{% url 'waveAdmin:feedback' %}">
+            <a id="optionCard" href="{% host_url 'feedback' host 'adminPortal' %}">
                 <div id="oC-img">
                     <img src="{% static "/images/admin/feedback/optionFeedback.svg" %}" alt="Support Management [Feedback]">
                 </div>
@@ -240,7 +241,7 @@ WAVE. — Management Dashboard
         </div>
 
         <div class="section-body">
-            <a id="optionCard" href="{% url 'waveAdmin:support' %}">
+            <a id="optionCard" href="{% host_url 'support' host 'adminPortal' %}">
                 <div id="oC-img">
                     <img src="{% static "/images/admin/emailMarketing/optionEmails.svg" %}" alt="Email Marketing">
                 </div>
@@ -252,7 +253,7 @@ WAVE. — Management Dashboard
                 </div>
             </a>
         
-            <a id="optionCard" href="{% url 'waveAdmin:feedback' %}">
+            <a id="optionCard" href="{% host_url 'feedback' host 'adminPortal' %}">
                 <div id="oC-img">
                     <img src="{% static "/images/admin/surveyMarketing/optionSurvey.svg" %}" alt="Survey Marketing">
                 </div>

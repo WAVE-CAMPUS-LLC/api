@@ -34,3 +34,7 @@ def hostApplyView(request):
     else:
         form = HostApplicationForm()
     return render(request, "eventManagementApp/host/hostApplication.html", {'form': form})
+
+
+def hostPortalView(request):
+    return render(request, "eventManagementApp/host/hostPortal.html")

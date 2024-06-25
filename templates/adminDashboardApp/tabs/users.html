@@ -1,5 +1,6 @@
 {% extends "base/base.html" %}
 {% load static %}
+{% load hosts %}
 
 {% block title %}
 WAVE. — Management Dashboard
@@ -23,7 +24,7 @@ WAVE. — Management Dashboard
 <div id="container-art">
     <div class="ticket-heading">
         <div class="ticket-header">
-            <h3><a href="{% url 'waveAdmin:adminDashboard' %}">Management</a> > Users</h3>
+            <h3><a href="{% host_url 'adminDashboard' host 'adminPortal' %}">Management</a> > Users</h3>
         </div>
     </div>
 </div>
@@ -109,7 +110,7 @@ WAVE. — Management Dashboard
                     <div id="datejoined-expand">
                         <h5>{{ user.date_joined }}</h5>
                         <div id="expandUserCard">
-                            <a type="button" href="{% url "waveAdmin:user-detailed" username=user.username %}" title="View Member Details">
+                            <a type="button" href="{% url 'waveAdmin:user-detailed' username=user.username %}" title="View Member Details">
                                 <img src="{% static "/images/admin/users/view_user.svg" %}" alt="View Member Details">
                             </a>
                         </div>

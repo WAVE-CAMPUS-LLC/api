@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
+from django_hosts.resolvers import reverse
 
 from .forms import SupportTicketForm, FeedbackForm
 from .models import SupportTicket
@@ -32,7 +33,8 @@ def supportTicket(request):
             support_ticket = form.save(commit=False)
             support_ticket.user = request.user
             support_ticket.save()
-            return redirect("support:supportPortal")
+            redirectUrl = reverse('supportPortal', host='support')
+            return redirect(redirectUrl)
     else:
         form = SupportTicketForm()
     return render(request, "supportCenterApp/ticket/createTicket.html", {'form': form})
@@ -43,7 +45,8 @@ def userFeedback(request):
         support_form = FeedbackForm(request.POST)
         if support_form.is_valid():
             support_form.save()
-            return redirect("support:home")
+            redirectUrl = reverse('home', host='support')
+            return redirect(redirectUrl)
     else:
         support_form = FeedbackForm()
     return render(request, "supportCenterApp/feedback/provideFeedback.html", {'support_form': support_form})

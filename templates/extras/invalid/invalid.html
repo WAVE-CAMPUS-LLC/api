@@ -1,5 +1,6 @@
 {% extends "base/base.html" %}
 {% load static %}
+{% load hosts %}
 
 {% block title %}
 Page Not Found | WAVE.
@@ -30,7 +31,7 @@ Page Not Found | WAVE.
                 <span>•</span>
                 <a href="#">Our Status</a>
                 <span>•</span>
-                <a href="{% url "support:home" %}">Support</a>
+                <a href="{% host_url "home" host 'support' %}">Support</a>
             </div>
         </div>
     </div>

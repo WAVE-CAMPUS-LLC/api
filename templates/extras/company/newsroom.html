@@ -1,5 +1,6 @@
 {% extends "base/base.html" %}
 {% load static %}
+{% load hosts %}
 
 {% block title %}
 Newsroom — Wave.  
@@ -16,7 +17,7 @@ Newsroom — Wave.
 {% block body %}
 <div class="content-container">
     <div class="top-container">
-        <a href="{% url "extras:news" %}" class="section-one">
+        <a href="{% host_url "extras:news" host 'www' %}" class="section-one">
             <div class="first-news">
                 <div class="left-side">
                     <h4>Latest</h4>
@@ -42,7 +43,7 @@ Newsroom — Wave.
                 <div class="news-content">
                     <h5>April 18th, 2024</h5>
                     <h4>
-                        <a href="{% url "extras:news" %}">
+                        <a href="{% host_url "extras:news" host 'www' %}">
                             Lorem ipsum dolor sit amet, consectetur adipisicing. 
                           
                         </a>
@@ -56,7 +57,7 @@ Newsroom — Wave.
                 
                 <div class="news-button">
                     <div class="section-button">
-                        <a href="{% url "extras:news" %}">Read more</a>
+                        <a href="{% host_url "extras:news" host 'www' %}">Read more</a>
                     </div>
                    
                 </div>
@@ -70,7 +71,7 @@ Newsroom — Wave.
             <div class="news-content">
                 <h5>April 18th, 2024</h5>
                 <h4>
-                    <a href="{% url "extras:news" %}">
+                    <a href="{% host_url "extras:news" host 'www' %}">
                         Lorem ipsum dolor sit amet, consectetur adipisicing. 
                       
                     </a>
@@ -84,7 +85,7 @@ Newsroom — Wave.
             
             <div class="news-button">
                 <div class="section-button">
-                    <a href="{% url "extras:news" %}">Read more</a>
+                    <a href="{% host_url "extras:news" host 'www' %}">Read more</a>
                 </div>
                 
             </div>
@@ -97,7 +98,7 @@ Newsroom — Wave.
             <div class="news-content">
                 <h5>April 18th, 2024</h5>
                 <h4>
-                    <a href="{% url "extras:news" %}">
+                    <a href="{% host_url "extras:news" host 'www' %}">
                         Lorem ipsum dolor sit amet, consectetur adipisicing. 
                     </a>
                 </h4>
@@ -110,7 +111,7 @@ Newsroom — Wave.
             
             <div class="news-button">
                 <div class="section-button">
-                    <a href="{% url "extras:news" %}">Read more</a>
+                    <a href="{% host_url "extras:news" host 'www' %}">Read more</a>
 
                 </div>
             </div>
@@ -122,7 +123,7 @@ Newsroom — Wave.
             <div class="news-content">
                 <h5>April 18th, 2024</h5>
                 <h4>
-                    <a href="{% url "extras:news" %}">
+                    <a href="{% host_url "extras:news" host 'www' %}">
                         Lorem ipsum dolor sit amet, consectetur adipisicing. 
                       
                     </a>
@@ -136,7 +137,7 @@ Newsroom — Wave.
             
             <div class="news-button">
                 <div class="section-button">
-                    <a href="{% url "extras:news" %}">Read more</a>
+                    <a href="{% host_url "extras:news" host 'www' %}">Read more</a>
                 </div>
                 
             </div>
@@ -150,7 +151,7 @@ Newsroom — Wave.
             <div class="news-content">
                 <h5>April 18th, 2024</h5>
                 <h4>
-                    <a href="{% url "extras:news" %}">
+                    <a href="{% host_url "extras:news" host 'www' %}">
                         Lorem ipsum dolor sit amet, consectetur adipisicing. 
                       
                     </a>
@@ -164,7 +165,7 @@ Newsroom — Wave.
             
             <div class="news-button">
                 <div class="section-button">
-                  <a href="{% url "extras:news" %}">Read more</a>
+                  <a href="{% host_url "extras:news" host 'www' %}">Read more</a>
                 </div>
             </div>
 
@@ -177,7 +178,7 @@ Newsroom — Wave.
             <div class="news-content">
                 <h5>April 18th, 2024</h5>
                 <h4>
-                    <a href="{% url "extras:news" %}">
+                    <a href="{% host_url "extras:news" host 'www' %}">
                         Lorem ipsum dolor sit amet, consectetur adipisicing. 
                       
                     </a>
@@ -191,7 +192,7 @@ Newsroom — Wave.
             
             <div class="news-button">
                 <div class="section-button">
-                   <a href="{% url "extras:news" %}">Read more</a>
+                   <a href="{% host_url "extras:news" host 'www' %}">Read more</a>
                 </div>
             </div>
 

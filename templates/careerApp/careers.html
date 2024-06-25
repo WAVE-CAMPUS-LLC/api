@@ -1,5 +1,6 @@
 {% extends "base/base.html" %}
 {% load static %}
+{% load hosts %}
 
 {% block title %}
 Careers @ Wave.  
@@ -70,7 +71,7 @@ Careers @ Wave.
                         <ul>
                             {% for role in roles %}
                             <li>
-                                <a href="{% url "careers:roleDetails" roleID=role.roleID %}">
+                                <a href="{% host_url "careers:roleDetails" host 'www' roleID=role.roleID %}">
                                     <div id="role-title">
                                         <p>Role</p>
                                         <p>Team</p>

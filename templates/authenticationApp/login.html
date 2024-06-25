@@ -1,5 +1,6 @@
 {% extends "base/base.html" %}
 {% load static %}
+{% load hosts %}
 
 {% block title %}
 WAVE — Welcome back!
@@ -16,7 +17,7 @@ WAVE — Welcome back!
 <main id="loginCardContainer">
     <header id="navHeader">
         <div id="logo">
-            <a href="{% url "core:index" %}">WAVE<span>.</span></a>
+            <a href="{% host_url "core:index" host 'www' %}">WAVE<span>.</span></a>
         </div>
     </header>
     <div id="loginCard">
@@ -27,8 +28,9 @@ WAVE — Welcome back!
             </div>
         </div>
 
-        <form action="{% url "authentication:login" %}" method="post">
+        <form action="{% host_url "authentication:login" host 'www' %}" method="post">
             {% csrf_token %}
+            <input type="hidden" name="next" value="{{ next }}" />
             <div class="input-box">
                 <label for="{{ form.email.id_for_label }}">
                     <div>
@@ -68,12 +70,12 @@ WAVE — Welcome back!
                 </label>
             </div>
             <div id="forgot">
-                <h6><a href="{% url "authentication:forgot" %}">Forgot password?</a></h6>
+                <h6><a href="{% host_url "authentication:forgot" host 'www' %}">Forgot password?</a></h6>
             </div>
             <div id="controlledElements">
                 <button type="submit" role="button">Login</button>
                 <div id="joinUs">
-                    <p>Need an account? <a href="{% url "authentication:join" %}">Join Us</a></p>
+                    <p>Need an account? <a href="{% host_url "authentication:join" host 'www' %}">Join Us</a></p>
                 </div>
             </div>
 

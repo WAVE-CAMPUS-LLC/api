@@ -21,7 +21,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure--7u2gz^jrm@-(e)w%@6d8b4r8f*t5ba&7yss#$xyp4-^a4nho%'
+SECRET_KEY = "django-insecure--7u2gz^jrm@-(e)w%@6d8b4r8f*t5ba&7yss#$xyp4-^a4nho%"
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -38,19 +38,21 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django_hosts",
     "authenticationApp",
     "adminDashboardApp",
     "accountManagementApp",
-    "coreApp", 
+    "coreApp",
     "extras",
     "careerApp",
-    "eventManagementApp", 
+    "eventManagementApp",
     "supportCenterApp",
     "newsApp",
     "socialApp",
 ]
 
 MIDDLEWARE = [
+    "django_hosts.middleware.HostsRequestMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -59,10 +61,14 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "authenticationApp.middleware.RedirectAuthenticatedUsersMiddleware"
+    "authenticationApp.middleware.RedirectAuthenticatedUsersMiddleware",
+    "django_hosts.middleware.HostsResponseMiddleware",
 ]
 
 ROOT_URLCONF = "wave_v1.urls"
+ROOT_HOSTCONF = 'wave_v1.hosts'
+DEFAULT_HOST = 'www'
+PARENT_HOST = 'localhost:8000'
 
 TEMPLATES = [
     {
@@ -94,12 +100,12 @@ DATABASES = {
 }
 
 # Email Configurations
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.gmail.com"
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'larteyokle@gmail.com'
-EMAIL_HOST_PASSWORD = 'lrxkfnqqxxkyzgct'
+EMAIL_HOST_USER = "larteyokle@gmail.com"
+EMAIL_HOST_PASSWORD = "lrxkfnqqxxkyzgct"
 
 
 # Password validation
@@ -137,7 +143,7 @@ USE_TZ = True
 
 
 # Login Link
-LOGIN_URL = 'authentication:login'
+LOGIN_URL = "authentication:login"
 
 
 # Static files (CSS, JavaScript, Images)
@@ -145,12 +151,9 @@ LOGIN_URL = 'authentication:login'
 
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 STATIC_URL = "/static/"
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, "static")
-]
+STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-

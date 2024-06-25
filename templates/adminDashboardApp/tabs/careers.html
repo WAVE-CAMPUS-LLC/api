@@ -1,5 +1,6 @@
 {% extends "base/base.html" %}
 {% load static %}
+{% load hosts %}
 
 {% block title %}
 WAVE. — Management Dashboard
@@ -22,7 +23,7 @@ WAVE. — Management Dashboard
 <div id="container-art">
     <div class="ticket-heading">
         <div class="ticket-header">
-            <h3><a href="{% url 'waveAdmin:adminDashboard' %}">Management</a> > Jobs</h3>
+            <h3><a href="{% host_url 'adminDashboard' host 'adminPortal' %}">Management</a> > Jobs</h3>
         </div>
     </div>
 </div>
@@ -40,7 +41,7 @@ WAVE. — Management Dashboard
     {% if career_roles %}
     <div class="rolesDisplayContainer">
         {% for careers in career_roles %}
-        <a href="{% url "waveAdmin:careerDetails" careers.roleID %}" class="rolesDisplayCard">
+        <a href="{% host_url "careerDetails" host 'adminPortal' careers.roleID %}" class="rolesDisplayCard">
             <div class="rdc-Heading">
                 <h4>{{ careers.roleTitle }}</h4>
             </div>
@@ -59,7 +60,7 @@ WAVE. — Management Dashboard
     {% else %}
     <div id="noCurrentRole">
         <h5>
-            No active roles! <br /> Check <a href="{% url "waveAdmin:departments" %}">departments</a>
+            No active roles! <br /> Check <a href="{% host_url "departments" host 'adminPortal' %}">departments</a>
         </h5>
     </div>
     {% endif %}

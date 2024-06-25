@@ -1,5 +1,6 @@
 {% extends "base/base.html" %}
 {% load static %}
+{% load hosts %}
 
 {% block title %}
 Hosting with WAVE.
@@ -26,7 +27,7 @@ Hosting with WAVE.
             especially all our student users.
             Our students matter to us!
             <br>
-            Read more about our <a href="{% url "extras:safety" %}">safety policy</a>.
+            Read more about our <a href="{% host_url "extras:safety" host 'www' %}">safety policy</a>.
         </p>
     </div>
     <div id="cCParentDiv">
@@ -65,7 +66,7 @@ Hosting with WAVE.
         </div>
     </div>
     <div class="applyNow">
-        <a href="{% url "eventManagement:hostApply" %}">Apply Now!</a>
+        <a href="{% host_url "hostApply" host 'hosting' %}">Apply Now!</a>
     </div>
     <div class="standout-text">
         <h1>Showcase your talent!</h1>

@@ -21,6 +21,7 @@ header {
     width: 100%;
     display: flex;
     justify-content: space-between;
+    align-items: center;
 }
 
 /**- Navigation Bar Contents -**/
@@ -56,7 +57,7 @@ header {
 
 #menu ul li a {
     color: black;
-    font-family: Wanted-Medium;
+    font-family: Wanted-Regular;
     font-size: 16.5px;
 
     text-decoration: none;
@@ -79,7 +80,7 @@ header {
 }
 
 .support-links ul li a {
-    font-family: Wanted-Medium;
+    font-family: Wanted-Regular;
     text-decoration: none;
 
     color: #000000;
@@ -93,28 +94,29 @@ header {
     gap: 10px;
 }
 
-#auth #login,
-.support-links #support {
+
+.support-links #host {
     padding: 12.5px 15px;
+    background-color: #008d95;
     border-radius: 15px;
-}
-
-#auth #login:hover,
-.support-links #support:hover {
-    background-color: #00000043;
-}
-
-
-
-#auth #join,
-#auth #account {
-    background-color: #000000;
     color: white;
-    padding: 12.5px 15px;
-    border-radius: 15px;
 }
 
-#auth #join:hover,
-#auth #account:hover {
-    background-color: #282828;
+.support-links #host:hover {
+    background-color: #007379;
+}
+
+.support-links #auth {
+    display: flex;
+    flex-direction: row;
+    gap: 27px;
+}
+
+.support-links #auth #join:hover,
+.support-links #auth #login:hover,
+.support-links #auth #account:hover {
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-decoration-color: #008d95;
+    text-underline-offset: 2px;
 }

@@ -1,5 +1,6 @@
 {% extends "base/base.html" %}
 {% load static %}
+{% load hosts %}
 
 {% block title %}
 Become an event host. Apply Now! — WAVE.
@@ -22,7 +23,7 @@ Become an event host. Apply Now! — WAVE.
 {% block body %}
 <div id="body-content">
     <div class="page-heading">
-        <h3>Apply to host events</h3>
+        <h3>Become a host</h3>
     </div>
     <div id="work-with-us">
         <div class="wwu-heading">
@@ -33,12 +34,12 @@ Become an event host. Apply Now! — WAVE.
             </ul>
         </div>
         <div class="wwu-body">
-            <form id="hostEventApplication" action="{% url "eventManagement:hostApply" %}" method="POST">
+            <form id="hostEventApplication" action="{% host_url "hostApply" host 'hosting' %}" method="POST">
                 {% csrf_token %}
                 <section id="about-yrslf">
                     <div class="section-summary">
                         <h5>A bit about you</h5>
-                        <p>Tell us a bit about yourself. We will reach out in order to take the next step.</p>
+                        <p>Tell us a bit about yourself.</p>
                     </div>
                     <div id="form-aboutYourself">
                         <div class="form-aboutYourself-container">
@@ -71,7 +72,7 @@ Become an event host. Apply Now! — WAVE.
                 <section id="about-yrorg" style="display: none;">
                     <div class="section-summary">
                         <h5>Organization</h5>
-                        <p>Tell us a bit about organization. We will reach out in order to take the next step.
+                        <p>Tell us a bit about your organization.
                         </p>
                     </div>
                     <div id="form-aboutYourorg">
@@ -107,7 +108,7 @@ Become an event host. Apply Now! — WAVE.
                     <div class="section-summary">
                         <h5>Event Information</h5>
                         <p>
-                            Tell us about the kind of events you plan to host. We'd like to know a bit more.
+                            What kind of events would you host?
                         </p>
                     </div>
                     <div id="form-aboutYourevent">

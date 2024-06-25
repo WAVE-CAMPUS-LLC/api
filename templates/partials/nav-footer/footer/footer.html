@@ -1,10 +1,11 @@
 {% load static %}
+{% load hosts %}
 
 <link rel="stylesheet" href="{% static "/styles/partials/footer.css" %}" />
 
 
 <div id="footer-logo">
-    <a href="{% url "core:index" %}">WAVE<span>.</span></a>
+    <a href="{% host_url "core:index" host 'www' %}">WAVE<span>.</span></a>
 </div>
 <div id="footer-body">
     <div id="the-company">
@@ -12,11 +13,11 @@
             <li>
                 <h5>The Company</h5>
             </li>
-            <li><a href="{% url "extras:about" %}">About <span id="footer-btm-logo">WAVE<span id="dot">.</span></span></a>
+            <li><a href="{% host_url "extras:about" host 'www' %}">About <span id="footer-btm-logo">WAVE<span id="dot">.</span></span></a>
             </li>
-            <li><a href="{% url "extras:team" %}">Our Team</a></li>
-            <li><a href="{% url "extras:newsroom" %}">Newsroom</a></li>
-            <li><a href="{% url "careers:home" %}">Join The Team!</a></li>
+            <li><a href="{% host_url "extras:team" host 'www' %}">Our Team</a></li>
+            <li><a href="{% host_url "extras:newsroom" host 'www' %}">Newsroom</a></li>
+            <li><a href="{% host_url "careers:home" host 'www' %}">Join The Team!</a></li>
         </ul>
     </div>
     <div id="the-terms">
@@ -24,10 +25,10 @@
             <li>
                 <h5>Policies</h5>
             </li>
-            <li><a href="{% url "extras:privacy" %}">Privacy</a></li>
-            <li><a href="{% url "extras:terms" %}">Terms</a></li>
-            <li><a href="{% url "extras:safety" %}">Safety</a></li>
-            <li><a href="{% url "extras:faq" %}">Frequently Asked</a></li>
+            <li><a href="{% host_url "extras:privacy" host 'www' %}">Privacy</a></li>
+            <li><a href="{% host_url "extras:terms" host 'www' %}">Terms</a></li>
+            <li><a href="{% host_url "extras:safety" host 'www' %}">Safety</a></li>
+            <li><a href="{% host_url "extras:faq" host 'www' %}">Frequently Asked</a></li>
         </ul>
     </div>
     <div id="the-partners">
@@ -36,10 +37,10 @@
                 <h5>Resources</h5>
             </li>
             <li>
-                <a href="{% url "eventManagement:hostHome" %}">Host Event</a></li>
-            <li><a href="{% url "extras:colleges" %}">College Campuses</a></li>
-            <li><a href="{% url "extras:partners" %}">Partner With Us</a></li>
-            <li><a href="{% url "extras:affiliate" %}">Become an Affiliate</a></li>
+                <a href="{% host_url "hostHome" host 'hosting' %}">Host Event</a></li>
+            <li><a href="{% host_url "extras:colleges" host 'www' %}">College Campuses</a></li>
+            <li><a href="{% host_url "extras:partners" host 'www' %}">Partner With Us</a></li>
+            <li><a href="{% host_url "extras:affiliate" host 'www' %}">Become an Affiliate</a></li>
         </ul>
     </div>
 </div>

@@ -5,6 +5,7 @@ from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from django.core.mail import send_mail
 from django.contrib.auth.models import Group, Permission
+from django_hosts.resolvers import reverse
 
 from accountManagementApp.models import UserProfile
 from authenticationApp.models import CustomUser
@@ -256,11 +257,13 @@ def adminUserDetailedView(request, username):
             if suspend_form.is_valid():
                 hours = suspend_form.cleaned_data.get("hours", 0)
                 user_in_view.suspend(hours)
-                return redirect("waveAdmin:user-detailed", username=username)
+                urlLinkOne = reverse('waveAdmin:user-detailed', host='www', kwargs={'username': username})
+                return redirect(urlLinkOne)
 
         elif action == "allow":
             user_in_view.remove_suspension_OR_ban()
-            return redirect("waveAdmin:user-detailed", username=username)
+            urlLinkTwo = reverse('waveAdmin:user-detailed', host='www', kwargs={'username': username})
+            return redirect(urlLinkTwo)
 
         group_id = request.POST.get("group_id")
 
@@ -270,7 +273,8 @@ def adminUserDetailedView(request, username):
                 user_in_view.groups.add(group)
             elif "removeRole" in request.POST:
                 user_in_view.groups.remove(group)
-            return redirect("waveAdmin:user-detailed", username=username)
+            urlLinkOne = reverse('waveAdmin:user-detailed', host='www', kwargs={'username': username})
+            return redirect(urlLinkOne)
 
     else:
         suspend_form = SuspendUserForm()

@@ -1,5 +1,6 @@
 {% extends "base/base.html" %}
 {% load static %}
+{% load hosts %}
 
 {% block title %}
 Submit support ticket — Wave.
@@ -37,7 +38,7 @@ Submit support ticket — Wave.
         <div id="support-form-heading">
             <p>We will get back to you soon!</p>
         </div>
-        <form action="{% url "support:newTicket" %}" method="POST">
+        <form action="{% host_url "newTicket" host 'support' %}" method="POST">
             {% csrf_token %}
             {% if form.errors %}
             <div class="alert alert-danger">

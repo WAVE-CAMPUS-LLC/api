@@ -1,5 +1,6 @@
 {% extends "base/base.html" %}
 {% load static %}
+{% load hosts %}
 
 
 {% block title %}
@@ -42,7 +43,7 @@ Settings
         <div class="settings-tab-content" id="profile-information">
             <section id="personal-change" class="info-container">
                 <h6 class="ic-headers">Personal Information</h6>
-                <form method="post" action="{% url "accountManagement:userSettings" %}">
+                <form method="post" action="{% host_url "accountManagement:userSettings" host 'www' %}">
                     {% csrf_token %}
                     <input type="hidden" name="form_type" value="personal-info" />
                     <div class="input-div">
@@ -76,7 +77,7 @@ Settings
 
             <section id="email-change" class="info-container">
                 <h6 class="ic-headers">Email Address</h6>
-                <form method="post" action="{% url "accountManagement:userSettings" %}">
+                <form method="post" action="{% host_url "accountManagement:userSettings" host 'www' %}">
                     {% csrf_token %}
                     <input type="hidden" name="form_type" value="email-info" />
                     <div class="input-div">
@@ -101,7 +102,7 @@ Settings
                 </div>
                 <div>
                     {% comment %} <button type="button" id="updatePwbtn">Change Password</button> {% endcomment %}
-                    <a href="{% url "accountManagement:changePassword" %}">Change Password</a>
+                    <a href="{% host_url "accountManagement:changePassword" host 'www' %}">Change Password</a>
                 </div>
                 {% comment %} <div id="pw-card_container">
                     <div class="container-main">
@@ -138,7 +139,7 @@ Settings
 
             <section id="phone-change" class="info-container">
                 <h6 class="ic-headers">Phone Number</h6>
-                <form method="post" action="{% url "accountManagement:userSettings" %}">
+                <form method="post" action="{% host_url "accountManagement:userSettings" host 'www' %}">
                     {% csrf_token %}
                     <input type="hidden" name="form_type" value="phone-info" />
                     <div class="input-div">
@@ -162,7 +163,7 @@ Settings
 
             <section id="location-change" class="info-container">
                 <h6 class="ic-headers">Location</h6>
-                <form method="post" action="{% url "accountManagement:userSettings" %}">
+                <form method="post" action="{% host_url "accountManagement:userSettings" host 'www' %}">
                     {% csrf_token %}
                     <input type="hidden" name="form_type" value="location-info" />
                     <div class="input-div">

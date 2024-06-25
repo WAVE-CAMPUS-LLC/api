@@ -1,5 +1,6 @@
 {% extends "base/base.html" %}
 {% load static %}
+{% load hosts %}
 
 {% block title %}
 WAVE. — Management Dashboard
@@ -197,7 +198,7 @@ WAVE. — Management Dashboard
                                     </div>
                                 </div>
 
-                                <form action="{% url "waveAdmin:careerDetails" roleID=careerRoles_detail.roleID %}" id="applicationActionForm" method="post">
+                                <form action="{% host_url "careerDetails" host 'adminPortal' roleID=careerRoles_detail.roleID %}" id="applicationActionForm" method="post">
                                     {% csrf_token %}
                                     <input type="hidden" name="applicantEmail" value="{{application.applicantEmail}}" id="applicantEmailInput">
                                     <div class="appAction">
