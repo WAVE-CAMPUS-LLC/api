@@ -10,16 +10,24 @@ Hosting with WAVE.
 <link rel="stylesheet" type="text/css" href="{% static "/styles/eventManagementApp/host/hostHome.css" %}" />
 {% endblock app_page_style %}
 
-{% block pageHeader %}
-{% include "partials/headers/hostHeader.html" %}
-{% endblock pageHeader %}
+{% block header %}
+{% include "partials/nav-footer/nav/host_nav.html" %}
+{% endblock header %}
 
 
 {% block body %}
 <div id="body-content">
+    <div class="host-rowOne">
+        <div class="infoText">
+            Hosting @ <span id="body-logo"> WAVE<span class="spot">.</span>
+        </div>
+        <div class="image">
+            <img src="{% static "images\eventManagementApp\host\hostHome.png" %}" />
+        </div>
+    </div>
     <div class="row-header">
         <h3>
-            The heart of entertainment on your campus!
+            It's a simple process, really!
         </h3>
         <p>
             To be able to host events with WAVE., there are a few steps you have to go through.
