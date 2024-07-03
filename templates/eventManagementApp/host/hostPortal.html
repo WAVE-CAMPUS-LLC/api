@@ -1,1 +1,73 @@
-HOST PORTAL!
+{% extends "base/base.html" %}
+{% load static %}
+{% load hosts %}
+
+
+{% block title %}
+Host Dashboard | WAVE.
+{% endblock title %}
+
+{% block app_page_style %}
+<link rel="stylesheet" type="text/css" href="{% static "/styles/eventManagementApp/host/hostPortal.css" %}" />
+{% endblock app_page_style %}
+
+{% block script %}
+<script type="text/javascript" src="{% static "scripts/eventManagementApp/host/hostPortal.js" %}"></script>
+{% endblock script %}
+
+
+{% block header %}
+{% include "partials/nav-footer/nav/host/host_portal.html" %}
+{% endblock header %}
+
+
+{% block body %}
+<div id="body-content">
+    <div class="page-heading">
+        <h2>Good to see you, Enosh!<h2>
+        <button class="createEventBtn">
+            <img src="{% static "/images/eventManagementApp/host/host_ticket.svg" %}" />
+            Create Event
+        </button>
+    </div>
+
+    <div id="portal-body">
+        <div class="control-row">
+            <div role="button" type="button" class="dashboard-tab tab-active" data-tab="live-events">Live</div>
+            <div role="button" type="button" class="dashboard-tab" data-tab="upcoming-events">Upcoming</div>
+            <div role="button" type="button" class="dashboard-tab" data-tab="archived-events">Archived</div>
+            <div role="button" type="button" class="dashboard-tab" data-tab="incomplete-events">Incomplete</div>
+        </div>
+
+        <div id="portal-body-content">
+            <div class="pbc-element-content" id="live-events">
+                <div class="empty-pcb">
+                    <img class="empty-image" src="{% static "/images/eventManagementApp/host/empty-listing.svg" %}" />
+                    <p>You currently have no live events to display!</p>
+                </div>
+            </div>
+
+            <div class="pbc-element-content" id="upcoming-events">
+                <div class="empty-pcb">
+                    <img class="empty-image" src="{% static "/images/eventManagementApp/host/empty-listing.svg" %}" />
+                    <p>You currently have no upcoming events to display!</p>
+                </div>
+            </div>
+
+            <div class="pbc-element-content" id="archived-events">
+                <div class="empty-pcb">
+                    <img class="empty-image" src="{% static "/images/eventManagementApp/host/empty-listing.svg" %}" />
+                    <p>You currently have no archived events to display!</p>
+                </div>
+            </div>
+
+            <div class="pbc-element-content" id="incomplete-events">
+                <div class="empty-pcb">
+                    <img class="empty-image" src="{% static "/images/eventManagementApp/host/empty-listing.svg" %}" />
+                    <p>You currently have no incomplete events to display!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock body %}

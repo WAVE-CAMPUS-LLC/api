@@ -25,12 +25,21 @@
             <li>
                 {% if user.is_authenticated %}
                     {% if user|has_group:"Host" %}
-                    <a id="host" href="{% host_url "hostPortal" host 'hosting' %}">Create Event</a>
+                    <a id="host" href="{% host_url "hostPortal" host 'hosting' %}">
+                        <img src="{% static "/images/eventManagementApp/host/host_ticket.svg" %}" />
+                        Create Event
+                    </a>
                     {% else %}
-                    <a id="host" href="{% host_url "hostHome" host 'hosting' %}">Host an Event</a>
+                    <a id="host" href="{% host_url "hostGuide" host 'hosting' %}">
+                        <img src="{% static "/images/eventManagementApp/host/hostGuide.svg" %}" />
+                        Host Guide
+                    </a>
                     {% endif %}
                 {% else %}
-                <a id="host" href="{% host_url "hostHome" host 'hosting' %}">Host an Event</a>
+                <a id="host" href="{% host_url "hostHome" host 'hosting' %}">
+                    <img src="{% static "/images/eventManagementApp/host/host_ticket.svg" %}" />
+                    Host Event
+                </a>
                 {% endif %}
                 
             </li>
@@ -40,7 +49,7 @@
                 <a id="account" href="{% host_url "accountManagement:userAccount" host 'www' %}">My Account</a>
                 {% else %}
                 <a id="login" href="{% host_url "authentication:login" host 'www' %}">Login</a>
-                <a id="join" href="{% host_url "authentication:join" host 'www' %}">Join</a>
+                 <a id="join" href="{% host_url "authentication:join" host 'www' %}">Join</a>
                 {% endif %}
             </li>
         </ul>

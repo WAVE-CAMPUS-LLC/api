@@ -97,9 +97,14 @@ header {
 
 .support-links #host {
     padding: 12.5px 15px;
-    background-color: #008d95;
-    border-radius: 15px;
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    align-items: center;
     color: white;
+
+    border-radius: 20px;
+    background-image: linear-gradient(to right,  #007d84c3 0%, #13c9d3 100%);
 }
 
 .support-links #host:hover {

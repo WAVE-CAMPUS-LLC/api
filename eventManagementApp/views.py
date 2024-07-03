@@ -38,3 +38,7 @@ def hostApplyView(request):
 
 def hostPortalView(request):
     return render(request, "eventManagementApp/host/hostPortal.html")
+
+
+def hostGuideView(request):
+    return render(request, "eventManagementApp/host/hostGuide.html")

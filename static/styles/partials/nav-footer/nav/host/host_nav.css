@@ -68,14 +68,15 @@ nav {
     color: white;
 }
 
-#createEventBtn {
+#createEventBtn,
+.applyNowBtn {
     padding: 15px;
     border: 1px solid transparent;
     border-right-color: #13c9d3;
     border-left-color: #008d95bc;
     color: white;
 
-    font-family: Wanted-Bold;
+    font-family: Wanted-SemiBold;
     text-decoration: none;
 
     display: flex;
@@ -85,7 +86,14 @@ nav {
 
     font-size: 20px;
     border-radius: 20px;
-    background-image: linear-gradient(to right,  #008d95bc 0%, #13c9d3 100%);
+
+    cursor: pointer;
+    background-image: linear-gradient(to right,  #007d84c3 0%, #13c9d3 100%);
+}
+
+#createEventBtn:hover, 
+.applyNowBtn:hover {
+    background-color: #007379;
 }
 
 #createEventBtn img {

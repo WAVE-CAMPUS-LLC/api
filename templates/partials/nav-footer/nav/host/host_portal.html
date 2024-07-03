@@ -1,0 +1,28 @@
+{% load static %}
+{% load hosts %}
+
+
+<link rel="stylesheet" type="text/css" href="{% static "/styles/partials/nav-footer/nav/host/host_portal.css" %}" />
+
+<nav>
+    <div id="logo-menu">
+        <div id="logo">
+            <a href="{% host_url "core:index" host 'www' %}">WAVE<span>.</span></a>
+        </div>
+    </div>
+    <div id="menu-options">
+        <ul>
+            <li>
+                <a href="">Dashboard</a>
+            </li>
+
+            <li>
+                <a href="">Listings</a>
+            </li>
+
+            <li>
+                <a href="">Insights</a>
+            </li>
+        </ul>
+    </div>
+</nav>

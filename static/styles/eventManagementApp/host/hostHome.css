@@ -27,12 +27,28 @@
 	flex-direction: row;
 }
 
-.host-rowOne .infoText {
-	font-family: Wanted-ExtraBold;
-	font-size: 40px;
-
+.infoText {
 	display: flex;
 	align-items: center;
+}
+
+.host-rowOne .infoText .text-holder {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+
+	width: 100%;
+}
+
+.infoText .text-holder h3 {
+	font-family: Wanted-Bold;
+	font-size: 40px;
+}
+
+.infoText .text-holder p {
+	font-family: Wanted-Medium;
+	font-size: 20px;
+	color: rgb(99, 99, 99);
 }
 
 .host-rowOne div {
@@ -52,12 +68,12 @@
 
 .row-header {
 	display: flex;
-	flex-direction: column;
+	justify-content: center;
 	gap: 20px;
 }
 
 .row-header h3{
-	font-family: Wanted-Bold;
+	font-family: Wanted-Regular;
 	font-size: 40px;
 }
 
@@ -88,12 +104,9 @@
 
 .process-container {
 	width: 100%;
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	flex-direction: column;
+	display: grid;
 	gap: 40px;
-
+	grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .process-explanation {
@@ -106,6 +119,8 @@
 .process-explanation h1 {
 	font-family: Wanted-ExtraBold;
 	font-family: 30px;
+	display: flex;
+	flex-direction: column;
 }
 
 .process-explanation p {
@@ -115,8 +130,10 @@
 }
 
 .process-number {
-	color: #008d95;
+	color: rgb(99, 99, 99);
 	font-family: Wanted-Bold;
+	display: flex;
+	justify-content: center;
 }
 
 
@@ -129,16 +146,23 @@
 }
 
 .applyNow a {
-	border: 1px solid #008d95;
-	border-radius: 15px;
+	padding: 15px;
+    border: 1px solid transparent;
+    border-right-color: #13c9d3;
+    border-left-color: #008d95bc;
+    color: white;
 
-	background-color: #008d95;
-	padding: 20px;
-	color: white;
-	text-decoration: none;
+    font-family: Wanted-Bold;
+    text-decoration: none;
 
-	font-family: Wanted-Bold;
-	font-size: 30px;
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    gap: 10px;
+
+    font-size: 20px;
+    border-radius: 20px;
+    background-image: linear-gradient(to right,  #008d95bc 0%, #13c9d3 100%);
 }
 
 
@@ -150,7 +174,9 @@
 
     
     border-top: 2px solid rgba(146, 146, 146, 0.096);
-	color: #008d95;
+	background: linear-gradient(to right, #008d95bc 0%, #13c9d3 100%);
+	-webkit-background-clip: text;
+	-webkit-text-fill-color: transparent;
 
     padding-top: 70px;
 

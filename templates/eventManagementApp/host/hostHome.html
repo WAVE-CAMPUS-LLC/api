@@ -1,9 +1,10 @@
 {% extends "base/base.html" %}
 {% load static %}
 {% load hosts %}
+{% load user_tags %}
 
 {% block title %}
-Hosting with WAVE.
+Hosting Events | WAVE.
 {% endblock title %}
 
 {% block app_page_style %}
@@ -11,7 +12,7 @@ Hosting with WAVE.
 {% endblock app_page_style %}
 
 {% block header %}
-{% include "partials/nav-footer/nav/host_nav.html" %}
+{% include "partials/nav-footer/nav/host/host_nav.html" %}
 {% endblock header %}
 
 
@@ -19,7 +20,10 @@ Hosting with WAVE.
 <div id="body-content">
     <div class="host-rowOne">
         <div class="infoText">
-            Hosting @ <span id="body-logo"> WAVE<span class="spot">.</span>
+            <div class="text-holder">
+                <h3>Hosting @ <span id="body-logo"> WAVE<span class="spot">.</span></h3>
+                <p>Create something bigger than yourself. <br /> Create a community!</p>
+            </div>
         </div>
         <div class="image">
             <img src="{% static "images\eventManagementApp\host\hostHome.png" %}" />
@@ -29,55 +33,57 @@ Hosting with WAVE.
         <h3>
             It's a simple process, really!
         </h3>
-        <p>
-            To be able to host events with WAVE., there are a few steps you have to go through.
-            This process exists to help us ensure the safety of yourself as a host and any event attendees, most
-            especially all our student users.
-            Our students matter to us!
-            <br>
-            Read more about our <a href="{% host_url "extras:safety" host 'www' %}">safety policy</a>.
-        </p>
     </div>
     <div id="cCParentDiv">
         <div id="cCBodyLeft">
             <div class="process-container">
                 <div class="process-explanation">
-                    <h1><span class="process-number">1.</span> Apply as a host</h1>
+                    <h1><span class="process-number">1.</span> Apply</h1>
                     <p>
-                        We require a few details and an ID. <br>
-                        This ensures the safety of everyone!
+                        Submit an application to be a host.
                     </p>
                 </div>
-                <div class="process-arrow">
+                
+                {% comment %} <div class="process-arrow">
                     <img src="{% static "/images/eventManagementApp/process-arrowDown.svg" %}" alt="Arrow Down">
-                </div>
+                </div> {% endcomment %}
+
                 <div class="process-explanation">
-                    <h1><span class="process-number">2.</span> Get approved!</h1>
+                    <h1><span class="process-number">2.</span> Create </h1>
                     <p>
-                        Approval will take less than 24 hours. <br>
-                        That's if your information matches!
+                        Create your event. Be detailed. 
                     </p>
                 </div>
-                <div class="process-arrow">
+
+                {% comment %} <div class="process-arrow">
                     <img src="{% static "/images/eventManagementApp/process-arrowDown.svg" %}" alt="Arrow Down">
-                </div>
+                </div> {% endcomment %}
+
                 <div class="process-explanation">
-                    <h1><span class="process-number">3.</span> Start hosting events!</h1>
+                    <h1><span class="process-number">3.</span> Go live!</h1>
                     <p>
-                        Share your talents with the world. <br>
-                        The world needs you.
-                        <br>
-                        We care!
+                        Watch your community show up!
                     </p>
                 </div>
             </div>
         </div>
     </div>
     <div class="applyNow">
+        {% if request.user.is_authenticated %}
+            {% if request.user|has_group:"Host" or request.user|has_group:"host" %}
+            <a id="createEventBtn" href="">
+                <img src="{% static "/images/eventManagementApp/host/host_ticket.svg" %}" />
+                Create Event
+            </a>
+            {% else %}
+            <a href="{% host_url "hostApply" host 'hosting' %}">Apply Now!</a>
+            {% endif %}
+        {% else %}
         <a href="{% host_url "hostApply" host 'hosting' %}">Apply Now!</a>
+        {% endif %}
     </div>
     <div class="standout-text">
-        <h1>Showcase your talent!</h1>
+        <h1>Create something bigger!</h1>
     </div>
 </div>
 {% endblock body %}
