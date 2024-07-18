@@ -1,6 +1,5 @@
 {% extends "base/base.html" %}
 {% load static %}
-{% load hosts %}
 
 {% block title %}
 Our Team @ WAVE.  
@@ -104,7 +103,7 @@ Our Team @ WAVE.
 
     <div class="joinTeam">
         <h3>Join us, let's create something bigger!</h3>
-        <a href="{% host_url "careers:home" host 'www' %}">Join the team</a>
+        <a href="{% url "careers:home" %}">Join the team</a>
     </div>
 </div>
 {% endblock body %}

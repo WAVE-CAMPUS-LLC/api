@@ -1,6 +1,5 @@
 {% extends "base/base.html" %}
 {% load static %}
-{% load hosts %}
 
 {% block title %}
 Provide Feedback — Wave.
@@ -38,7 +37,7 @@ Provide Feedback — Wave.
         <div id="feedback-form-heading">
             <p>We greatly appreciate your feedback!</p>
         </div>
-        <form action="{% host_url "feedback" host 'support' %}" method="POST">
+        <form action="{% url "support:feedback" %}" method="POST">
             {% csrf_token %}
             {% if support_form.errors %}
             <ul>

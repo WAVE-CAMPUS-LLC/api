@@ -1,0 +1,23 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+
+{% block title %}
+{{ event.title }} (Preview) — WAVE.
+{% endblock title %}
+
+{% block app_page_style %}
+{% endblock app_page_style %}
+
+{% block script %}
+{% comment %} <script type="text/javascript" src="{% static "scripts/eventManagementApp/host/hostPortal.js" %}"></script> {% endcomment %}
+{% endblock script %}
+
+{% block header %}
+{% include "partials/nav-footer/nav/host/host_portal.html" %}
+{% endblock header %}
+
+
+{% block body %}
+<div id="body-content"></div>
+{% endblock body %}

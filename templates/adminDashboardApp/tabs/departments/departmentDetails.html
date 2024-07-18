@@ -1,6 +1,5 @@
 {% extends "base/base.html" %}
 {% load static %}
-{% load hosts %}
 
 
 {% block title %}
@@ -164,7 +163,7 @@
                                             </div>
                                         </div>
                                         
-                                        <form action="{% host_url "departmentDetails" host 'adminPortal'  department.departmentID department.name %}" method="post">
+                                        <form action="{% url "waveAdmin:departmentDetails" department.departmentID department.name %}" method="post">
                                             {% csrf_token %}
                                             <input type="hidden" name="action" value="delete" />
                                             <input type="hidden" name="role_id" value="{{ careers.roleID }}" />
@@ -190,7 +189,7 @@
 
         {% comment %} Setup to allow the editing of a department's information. {% endcomment %}
         <div id="editSummary" style="display: {% if edit_mode %}block{% else %}none{% endif %}">
-            <form id="departmentForm" action="{% host_url "departmentDetails" host 'adminPortal' department.departmentID department.name %}" method="post">
+            <form id="departmentForm" action="{% url "waveAdmin:departmentDetails" department.departmentID department.name %}" method="post">
                 {% csrf_token %}
                 <div class="singleInputRow">
                     <label for="{{ departmentForm.name.id_for_label }}">
@@ -233,7 +232,7 @@
         {% comment %} Modal to create new career role. {% endcomment %}
         <div id="createNewRoleModal">
             <div class="createNewRoleModalContainer">
-                <form id="createNewRoleModalForm" action="{% host_url "departmentDetails" host 'adminPortal' department.departmentID department.name %}" method="post">
+                <form id="createNewRoleModalForm" action="{% url "waveAdmin:departmentDetails"  department.departmentID department.name %}" method="post">
                     {% csrf_token %}
                     {% if careerRoleForm.errors %}
                         <ul>

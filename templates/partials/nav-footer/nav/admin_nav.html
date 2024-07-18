@@ -1,5 +1,4 @@
 {% load static %}
-{% load hosts %}
 
 <link rel="stylesheet" type="text/css" href="{% static "/styles/partials/nav-footer/nav/admin_nav.css" %}" />
 
@@ -7,12 +6,12 @@
 <nav>
     <div id="logo-menu">
         <div id="logo">
-            <a href="{% host_url "core:index" host 'www' %}">WAVE<span>.</span></a>
+            <a href="{% url "core:index" %}">WAVE<span>.</span></a>
         </div>
     </div>
     <div>
         <div id="userId">
-            <a href="{% host_url "accountManagement:userAccount" host 'www' %}">{{ request.user.first_name }} {{ request.user.last_name }}</a>
+            <a target="_blank" href="{% url "accountManagement:userAccount" %}">{{ request.user.first_name }} {{ request.user.last_name }}</a>
         </div>
     </div>
 </nav>

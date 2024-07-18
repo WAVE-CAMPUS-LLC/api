@@ -1,6 +1,5 @@
 {% extends "base/base.html" %}
 {% load static %}
-{% load hosts %}
 {% load user_tags %}
 
 {% block title %}
@@ -71,15 +70,15 @@ Hosting Events | WAVE.
     <div class="applyNow">
         {% if request.user.is_authenticated %}
             {% if request.user|has_group:"Host" or request.user|has_group:"host" %}
-            <a id="createEventBtn" href="">
+            <a href="{% url "eventManagement:hostCreateEvent" %}" class="createEventBtn">
                 <img src="{% static "/images/eventManagementApp/host/host_ticket.svg" %}" />
                 Create Event
             </a>
             {% else %}
-            <a href="{% host_url "hostApply" host 'hosting' %}">Apply Now!</a>
+            <a href="{% url "eventManagement:hostApply" %}">Apply Now!</a>
             {% endif %}
         {% else %}
-        <a href="{% host_url "hostApply" host 'hosting' %}">Apply Now!</a>
+        <a href="{% url "eventManagement:hostApply" %}">Apply Now!</a>
         {% endif %}
     </div>
     <div class="standout-text">

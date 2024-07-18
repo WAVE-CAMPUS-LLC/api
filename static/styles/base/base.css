@@ -110,6 +110,10 @@ footer {
     flex: none;
 }
 
+.hidden {
+    display: none;
+}
+
 /** Container Art **/
 #container-art {
     width: 100%;
@@ -182,7 +186,7 @@ footer {
     display: inline-block;
 }
 
-.ticket-header a{
+.ticket-header a {
     color: white;
 }
 

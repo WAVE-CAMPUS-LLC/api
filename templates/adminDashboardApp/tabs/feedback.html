@@ -1,6 +1,5 @@
 {% extends "base/base.html" %}
 {% load static %}
-{% load hosts %}
 
 {% block title %}
 WAVE. — Management Dashboard
@@ -23,7 +22,7 @@ WAVE. — Management Dashboard
 <div id="container-art">
     <div class="ticket-heading">
         <div class="ticket-header">
-            <h3><a href="{% host_url 'adminDashboard' host 'adminPortal' %}">Management</a> > Feedback</h3>
+            <h3><a href="{% url 'waveAdmin:adminDashboard' %}">Management</a> > Feedback</h3>
         </div>
     </div>
 </div>

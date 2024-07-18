@@ -1,6 +1,5 @@
 {% extends "base/base.html" %}
 {% load static %}
-{% load hosts %}
 
 {% block title %}
 WAVE. — Explore a new wave of events. Tick them off your bucketlist!
@@ -20,7 +19,8 @@ WAVE. — Explore a new wave of events. Tick them off your bucketlist!
         <div id="cc-hime1-info">
             <div id="cc-hime1-info-cont">
                 <div id="cch1i-header">
-                    <h1>Create lasting memories with <span id="body-logo">WAVE<span class="spot">.</span></span>
+                    <h1>
+                        Create lasting memories with <span id="body-logo">WAVE<span class="spot">.</span></span>
                     </h1>
                     <p>Purchase ticket, be there, live in the moment.</p>
                 </div>
@@ -55,7 +55,7 @@ WAVE. — Explore a new wave of events. Tick them off your bucketlist!
 
                 <div id="cch2i-body">
                     <a id="partnerships" href="#">Partnerships</a>
-                    <a id="joining" href="{% host_url "authentication:join" host 'www' %}">Not a member? Join Us</a>
+                    <a id="joining" href="{% url "authentication:join" %}">Not a member? Join Us</a>
                 </div>
             </div>
         </div>

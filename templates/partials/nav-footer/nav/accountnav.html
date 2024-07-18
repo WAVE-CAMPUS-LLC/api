@@ -1,5 +1,4 @@
 {% load static %}
-{% load hosts %}
 
 <link rel="stylesheet" type="text/css" href="{% static "/styles/partials/nav-footer/nav/account_nav.css" %}" />
 
@@ -7,24 +6,24 @@
 <div id="navigation-bar">
     <div id="logo-menu">
         <div id="logo">
-            <a href="{% host_url "core:index" host 'www' %}">WAVE<span>.</span></a>
+            <a href="{% url "core:index" %}">WAVE<span>.</span></a>
         </div>
         <div id="menu">
             <ul>
-                <li><a href="{% host_url "core:explore" host 'www' %}">Explore</a></li>
-                <li><a href="{% host_url "extras:partners" host 'www' %}">Partner</a></li>
-                <li><a href="{% host_url "extras:safety" host 'www' %}">Safety</a></li>
-                <li><a href="{% host_url "careers:home" host 'www' %}">Careers</a></li>
+                <li><a href="{% url "core:explore" %}">Explore</a></li>
+                <li><a href="{% url "extras:partners" %}">Partner</a></li>
+                <li><a href="{% url "extras:safety" %}">Safety</a></li>
+                <li><a href="{% url "careers:home" %}">Careers</a></li>
             </ul>
         </div>
     </div>
 
     <div class="support-links">
         <ul>
-            <li><a id="support" href="{% host_url "home" host 'support' %}">Support</a></li>
+            <li><a id="support" href="{% url "support:home" %}">Support</a></li>
             <li><span>|</span></li>
             <li id="auth">
-                <a id="logout" href="{% host_url "authentication:logout" host 'www' %}">Logout</a>
+                <a id="logout" href="{% url "authentication:logout" %}">Logout</a>
             </li>
         </ul>
     </div>

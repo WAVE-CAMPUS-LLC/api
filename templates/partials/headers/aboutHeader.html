@@ -1,5 +1,4 @@
 {% load static %}
-{% load hosts %}
 
 <link rel="stylesheet" type="text/css" href="{% static "/styles/partials/headers/aboutHeader.css" %}" />
 
@@ -7,7 +6,7 @@
     <nav>
         <div id="logo-menu">
             <div id="logo">
-                <a href="{% host_url "core:index" host 'www' %}">WAVE<span>.</span></a>
+                <a href="{% url "core:index" %}">WAVE<span>.</span></a>
             </div>
             <div id="page-name">
                 <a href="{% host_url "extras:about" host 'www' %}">{{ pageName }}</a>
@@ -15,11 +14,11 @@
         </div>
         <div class="support-links">
             <ul>
-                <li><a href="{% host_url "core:explore" host 'www' %}">Explore</a></li>
-                <li><a href="{% host_url "eventManagement:hostHome" host 'hosting' %}">Host Event</a></li>
-                <li><a href="{% host_url "extras:safety" host 'www' %}">Safety</a></li>
+                <li><a href="{% url "core:explore" %}">Explore</a></li>
+                <li><a href="{% url "eventManagement:hostHome" %}">Host Event</a></li>
+                <li><a href="{% url "extras:safety" %}">Safety</a></li>
                 <li><span>|</span></li>
-                <li><a id="support" href="{% host_url "home" host 'support' %}">Support</a></li>
+                <li><a id="support" href="{% host_url "support:home" %}">Support</a></li>
             </ul>
         </div>
     </nav>

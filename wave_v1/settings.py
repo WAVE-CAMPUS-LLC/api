@@ -38,7 +38,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "django_hosts",
+    "widget_tweaks",
     "authenticationApp",
     "adminDashboardApp",
     "accountManagementApp",
@@ -52,7 +52,6 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    "django_hosts.middleware.HostsRequestMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -62,13 +61,13 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "authenticationApp.middleware.RedirectAuthenticatedUsersMiddleware",
-    "django_hosts.middleware.HostsResponseMiddleware",
 ]
 
 ROOT_URLCONF = "wave_v1.urls"
-ROOT_HOSTCONF = 'wave_v1.hosts'
-DEFAULT_HOST = 'www'
-PARENT_HOST = 'localhost:8000'
+# ROOT_HOSTCONF = "wave_v1.hosts"
+# DEFAULT_HOST = "www"
+# PARENT_HOST = "localhost:8000"
+
 
 TEMPLATES = [
     {
@@ -152,6 +151,12 @@ LOGIN_URL = "authentication:login"
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 STATIC_URL = "/static/"
 STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
+
+
+# Media files (Images, Videos, GIFs)
+MEDIA_URL = "/media/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field

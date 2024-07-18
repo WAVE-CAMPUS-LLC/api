@@ -1,0 +1,118 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+
+{% block title %}
+Create an event! — WAVE.
+{% endblock title %}
+
+{% block app_page_style %}
+<link rel="stylesheet" type="text/css" href="{% static "/styles/eventManagementApp/host/createEvent.css" %}" />
+{% endblock app_page_style %}
+
+{% block script %}
+{% endblock script %}
+
+{% block header %}
+{% include "partials/headers/logoAlone.html" %}
+{% endblock header %}
+
+
+{% block body %}
+<div id="body-content">
+    <div id="creation-header">
+        <a href="{% url "eventManagement:hostPortal" %}" id="exitCreationBtn" class="exitCreationBtn">Exit</a>
+        <a href="{% url "eventManagement:hostCreateEventGenerator"  %}" class="begin-btn">Let's Begin</a>
+    </div>
+
+    <div id="creation-body">
+        <div id="creation-body-content">
+            <div id="cbc-info-container" style="display: none;">
+                <div id="cbc-ic-info"></div>
+                <div id="cbc-ic-image">
+                    <img src="{% static "images/eventManagementApp/host/images/createEvent.png" %}" />
+                </div>
+            </div>
+
+            <section id="cbc-info-container">
+                <div class="cbc-i-c-header">
+                    <h2>
+                        Getting started is quite easy with 
+                        <span id="body-logo">WAVE<span class="spot">.</span></span>
+                    </h2>
+                </div>
+
+                <div class="cbc-i-c-body">
+                    <div class="steps-container">
+                        <div class="steps">
+                            <div class="steps-heading">
+                                <span>1</span>
+                                <h5>
+                                    Talk about the event
+                                </h5>
+                            </div>
+                            
+                            <div class="steps-body">
+                                <p>
+                                    Give us some information regarding the event. The name of the event, 
+                                    of event it is, location, how many attendees you'd expect.
+                                </p>
+                            </div>
+                        </div>
+                        <hr />
+                        <div class="steps">
+                            <div class="steps-heading">
+                                <span>2</span>
+                                <h5>
+                                    Go into details
+                                </h5>
+                            </div>
+                            
+                            <div class="steps-body">
+                                <p>
+                                    Provide a persuasive description of your event to sway users. 
+                                    Describe your event as one that will allow users to create memories unlike any other. 
+                                </p>
+                            </div>
+                        </div> 
+                        <hr />
+                        <div class="steps">
+                            <div class="steps-heading">
+                                <span>3</span>
+                                <h5>
+                                    Add some life
+                                </h5>
+                            </div>
+                            
+                            <div class="steps-body">
+                                <p>
+                                    Add some pictures, choose a color and set your theme. Let it represent who you are! 
+                                </p>
+                            </div>
+                        </div>  
+                        <hr />
+                        <div class="steps">
+                            <div class="steps-heading">
+                                <span>4</span>
+                                <h5>
+                                    Go live!
+                                </h5>
+                            </div>
+                            
+                            <div class="steps-body">
+                                <p>
+                                    You are ready to go live! Make this event discoverable by all users! 
+                                </p>
+                            </div>
+                        </div>                           
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <div id="get-started">
+        <a href="{% url "eventManagement:hostCreateEventGenerator" %}" class="begin-btn">Let's Begin</a>
+    </div>
+</div>
+{% endblock body %}

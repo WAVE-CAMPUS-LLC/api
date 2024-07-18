@@ -1,6 +1,5 @@
 {% extends "base/base.html" %}
 {% load static %}
-{% load hosts %}
 
 {% block title %}
 WAVE. — Member Details
@@ -24,7 +23,7 @@ WAVE. — Member Details
 <div id="container-art">
     <div class="ticket-heading">
         <div class="ticket-header">
-            <h3><a href="{% host_url 'adminDashboard' host 'adminPortal' %}">Management</a> > <a href="{% url "waveAdmin:users" %}">Users</a> > {{ user.first_name }} {{ user.last_name }}</h3>
+            <h3><a href="{% url 'waveAdmin:adminDashboard' %}">Management</a> > <a href="{% url "waveAdmin:users" %}">Users</a> > {{ user.first_name }} {{ user.last_name }}</h3>
         </div>
     </div>
 </div>
@@ -42,7 +41,7 @@ WAVE. — Member Details
             <div id="user-details">
                 <div id="user-full_name">
                     <h3>{{ user.first_name }} {{ user.last_name }}</h3>
-                    <p><a href="{% host_url "accountManagement:memberProfile" host='www' username=user.username %} " target="_blank">@ {{ user.username }}</a></p>
+                    <p><a href="{% url "accountManagement:memberProfile" username=user.username %} " target="_blank">@ {{ user.username }}</a></p>
                 </div>
 
                 <div id="user-detailed_view">

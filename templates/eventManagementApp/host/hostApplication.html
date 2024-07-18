@@ -1,6 +1,5 @@
 {% extends "base/base.html" %}
 {% load static %}
-{% load hosts %}
 
 {% block title %}
 Become an event host. Apply Now! — WAVE.
@@ -34,7 +33,7 @@ Become an event host. Apply Now! — WAVE.
             </ul>
         </div>
         <div class="wwu-body">
-            <form id="hostEventApplication" action="{% host_url "hostApply" host 'hosting' %}" method="POST">
+            <form id="hostEventApplication" action="{% url "eventManagement:hostApply" %}" method="POST">
                 {% csrf_token %}
                 <section id="about-yrslf">
                     <div class="section-summary">

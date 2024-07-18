@@ -1,6 +1,5 @@
 {% extends "base/base.html" %}
 {% load static %}
-{% load hosts %}
 
 {% block title %}
 Applications Management — WAVE.
@@ -25,7 +24,7 @@ Applications Management — WAVE.
 <div id="container-art">
     <div class="ticket-heading">
         <div class="ticket-header">
-            <h3><a href="{% host_url 'adminDashboard' host 'adminPortal' %}">Management</a> > Applications</h3>
+            <h3><a href="{% url 'waveAdmin:adminDashboard' %}">Management</a> > Applications</h3>
         </div>
     </div>
 </div>
@@ -141,7 +140,7 @@ Applications Management — WAVE.
                                 </section>
                             </div>
 
-                            <form action="{% host_url "applications" host 'adminPortal' %}" id="hostApplicationDecisionForm" method="post">
+                            <form action="{% url "waveAdmin:applications" %}" id="hostApplicationDecisionForm" method="post">
                                 {% csrf_token %}
                                 <input type="hidden" name="applicantEmail" value="{{hostApplication.email}}" id="applicantEmailInput">
 

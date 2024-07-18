@@ -39,6 +39,7 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         });
 
+
         if (tabContents.length > 0) {
             tabContents.forEach(content => {
                 content.style.display = 'none';

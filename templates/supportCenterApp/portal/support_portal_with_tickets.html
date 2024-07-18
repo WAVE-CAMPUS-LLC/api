@@ -1,6 +1,5 @@
 {% extends "base/base.html" %}
 {% load static %}
-{% load hosts %}
 
 {% block title %}
 Support Portal — Wave.
@@ -57,7 +56,7 @@ Support Portal — Wave.
                                 {% comment %} 
                                     We use the ticket ID which is generated as part of the ticket creation process to generate the links below
                                 {% endcomment %}
-                                <a href="{% host_url "viewTicket" host 'support' ticket_id=support_ticket.ticket_id %}" class="rbc-btn">
+                                <a href="{% url "support:viewTicket" ticket_id=support_ticket.ticket_id %}" class="rbc-btn">
                                     <h3>View</h3>
                                 </a>
                             </div>

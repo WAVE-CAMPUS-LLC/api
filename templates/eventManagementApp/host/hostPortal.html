@@ -1,6 +1,5 @@
 {% extends "base/base.html" %}
 {% load static %}
-{% load hosts %}
 
 
 {% block title %}
@@ -25,10 +24,10 @@ Host Dashboard | WAVE.
 <div id="body-content">
     <div class="page-heading">
         <h2>Good to see you, Enosh!<h2>
-        <button class="createEventBtn">
+        <a href="{% url "eventManagement:hostCreateEvent"%}" class="createEventBtn">
             <img src="{% static "/images/eventManagementApp/host/host_ticket.svg" %}" />
             Create Event
-        </button>
+        </a>
     </div>
 
     <div id="portal-body">
@@ -41,6 +40,7 @@ Host Dashboard | WAVE.
 
         <div id="portal-body-content">
             <div class="pbc-element-content" id="live-events">
+                <div></div>
                 <div class="empty-pcb">
                     <img class="empty-image" src="{% static "/images/eventManagementApp/host/empty-listing.svg" %}" />
                     <p>You currently have no live events to display!</p>

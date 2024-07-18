@@ -2,7 +2,13 @@ from django.shortcuts import render
 
 # Create your views here.
 def indexView(request):
-    return render(request, 'coreApp/index.html')
+    pageName = "home"
+    return render(request, 'coreApp/index.html', {'page': pageName})
 
 def exploreView(request):
-    return render(request, "coreApp/explore.html")
+    pageName = "explore"
+    return render(request, "coreApp/explore.html", {'page':pageName})
+
+def eventDetailsView(request):
+    pageName = "explore"
+    return render(request, "coreApp/eventDetails.html", {'page':pageName})

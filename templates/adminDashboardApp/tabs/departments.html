@@ -1,6 +1,5 @@
 {% extends "base/base.html" %}
 {% load static %}
-{% load hosts %}
 
 {% block title %}
 Departments @ WAVE.
@@ -23,7 +22,7 @@ Departments @ WAVE.
 <div id="container-art">
     <div class="ticket-heading">
         <div class="ticket-header">
-            <h3><a href="{% host_url 'adminDashboard' host 'adminPortal' %}">Management</a> > Departments</h3>
+            <h3><a href="{% url 'waveAdmin:adminDashboard' %}">Management</a> > Departments</h3>
         </div>
     </div>
 </div>
@@ -50,7 +49,7 @@ Departments @ WAVE.
         {% for department in departments %}
             {% if department %}
             <div id="department">
-                <a href="{% host_url "departmentDetails" host 'adminPortal' department.departmentID department.name %}">
+                <a href="{% url "waveAdmin:departmentDetails" department.departmentID department.name %}">
                     <h5>{{ department.name }}</h5>
                 </a>
             </div>
@@ -73,7 +72,7 @@ Departments @ WAVE.
                 </button>
             </div>
 
-            <form action="{% host_url "departments" host 'adminPortal' %}" method="post">
+            <form action="{% url "waveAdmin:departments" %}" method="post">
                 {% csrf_token %}
                 <div class="singleInputRow">
                     <label for="{{ form.name.id_for_label }}">

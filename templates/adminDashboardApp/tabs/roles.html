@@ -1,6 +1,5 @@
 {% extends "base/base.html" %}
 {% load static %}
-{% load hosts %}
 
 {% block title %}
 Applications Management — WAVE.
@@ -26,7 +25,7 @@ Applications Management — WAVE.
 <div id="container-art">
     <div class="ticket-heading">
         <div class="ticket-header">
-            <h3><a href="{% host_url 'adminDashboard' host 'adminPortal' %}">Management</a> > User Roles</h3>
+            <h3><a href="{% url 'waveAdmin:adminDashboard' %}">Management</a> > User Roles</h3>
         </div>
     </div>
 </div>
@@ -62,7 +61,7 @@ Applications Management — WAVE.
                         <p>{{ group.extension.unique_id }}</p>
                     </div>
                     <div class="roleHeaderAction">
-                        <form action="{% host_url "roles" host 'adminPortal' %}" method="post">
+                        <form action="{% url "waveAdmin:roles" %}" method="post">
                             {% csrf_token %}
                             <input type="hidden" name="group_id" value="{{ group.id }}">
                             <div class="roleHeaderActionContainer">
@@ -80,7 +79,7 @@ Applications Management — WAVE.
             
             <div id="viewGroupModal-{{ forloop.counter }}" class="viewGroupModal">
                 <div class="viewGroupModalContainer">
-                    <form id="editGroupForm-{{ group.id }}" action="{% host_url 'roles' host 'adminPortal' %}" method="post" class="viewGroupCard">
+                    <form id="editGroupForm-{{ group.id }}" action="{% url 'waveAdmin:roles' %}" method="post" class="viewGroupCard">
                         {% csrf_token %}
                         <input type="hidden" name="roleControlAction" value="edit">
                         <input type="hidden" name="group_id" value="{{ group.id }}">
@@ -137,7 +136,7 @@ Applications Management — WAVE.
 
 <div id="createRoleModal">
     <div class="createRoleModalContainer">
-        <form action="{% host_url "roles" host 'adminPortal' %}" method="post" id="createRoleCard">
+        <form action="{% url "waveAdmin:roles" %}" method="post" id="createRoleCard">
             {% csrf_token %}
             <div class="cardHeader">
                 <div class="closeModal">

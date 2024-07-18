@@ -1,5 +1,4 @@
 {% load static %}
-{% load hosts %}
 {% load user_tags %}
 
 <link rel="stylesheet" type="text/css" href="{% static "/styles/partials/nav-footer/nav/host/host_nav.css" %}" />
@@ -8,28 +7,28 @@
 <nav>
     <div id="logo-menu">
         <div id="logo">
-            <a href="{% host_url "core:index" host 'www' %}">WAVE<span>.</span></a>
+            <a href="{% url "core:index" %}">WAVE<span>.</span></a>
         </div>
     </div>
     <div id="menu-options">
         <ul>
             <li class="navlink">
-                <a href="{% host_url "feedback" host 'support' %}"> Faq's </a>
+                <a href="{% url "support:feedback" %}"> Faq's </a>
             </li>
             <li class="createEvent">
                 Come, create!
 
                 {% if request.user.is_authenticated %}
                     {% if request.user|has_group:"Host" or request.user|has_group:"host" %}
-                    <a id="createEventBtn" href="">
+                    <a href="{% url "eventManagement:hostCreateEvent" %}" class="createEventBtn" id="createEventBtn">
                         <img src="{% static "/images/eventManagementApp/host/host_ticket.svg" %}" />
                         Create Event
                     </a>
                     {% else %}
-                    <a class="applyNowBtn" href="{% host_url "hostApply" host 'hosting' %}">Apply Now!</a>
+                    <a class="applyNowBtn" href="{% url "eventManagement:hostApply" %}">Apply Now!</a>
                     {% endif %}
                 {% else %}
-                <a class="applyNowBtn" href="{% host_url "hostApply" host 'hosting' %}">Apply Now!</a>
+                <a class="applyNowBtn" href="{% url "eventManagement:hostApply" %}">Apply Now!</a>
                 {% endif %}
                 
             </li>
