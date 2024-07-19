@@ -1,40 +1,56 @@
 {% extends "base/base.html" %}
 {% load static %}
+{% load date_tag %}
 
 {% block title %}
-
+{{ event.title }} ({{ event.date }}) hosted by @{{ event.host.username }}
 {% endblock title %}
 
 {% block app_page_style %}
-<link rel="stylesheet" type="text/css" href="{% static "/styles/eventManagementApp/event/eventDetails.css" %}" />
+<link rel="stylesheet" type="text/css" href="{% static "/styles/coreApp/event/eventDetails.css" %}" />
 {% endblock app_page_style %}
+
+{% block script %}
+<script type="text/javascript" src="{% static "scripts/coreApp/event/eventDetailsTabs.js" %}"></script>
+<script type="text/javascript" src="{% static "scripts/coreApp/event/eventDetailsTicketsTab.js" %}"></script>
+<script type="text/javascript" src="{% static "scripts/coreApp/event/slideshow.js" %}"></script>
+{% endblock script %}
 
 
 {% block header %}
+{% include "partials/nav-footer/nav/main_nav.html" %}
 {% endblock header %}
+
 
 {% block body %}
 <div id="content-container">
     <div class="page-header">
-        <h3>3 OAK Brothers</h3>
-        <p><span class="at">@</span> oakbrothers</p>
+        <div class="event-title">
+            <h3>{{ event.title }}</h3>
+        </div>
+        <div class="hosted-by">
+            <p>
+                Hosted by {{ event.host.first_name }} {{ event.host.last_name }}
+                <a target="_blank" href="{% url "accountManagement:memberProfile" username=event.host.username %}">
+                   @ {{ event.host.username }}
+                </a>
+            </p>
+        </div>
     </div>
 
     <div id="contentContainerBodyOne">
         <div class="header-image">
-            <img alt="Event Header" src="../../static/images/explore/events/exploreart.png"
+            <img alt="Event Header" src="{{ event.header_photo.url }}"
                 class="placeholderImage" />
         </div>
 
         <div id="contentContainerTabs">
             <div id="tabHeaderParent">
                 <ul id="tabHeader">
-                    <li class="eventDetailsTab tab-active" data-tab="eventDescription">Description</li>
-                    <li class="eventDetailsTab" data-tab="eventDetails">Details</li>
+                    <li class="eventDetailsTab tab-active" data-tab="eventDetails">Details</li>
+                    <li class="eventDetailsTab" data-tab="eventDescription">Description</li>
                     <li class="eventDetailsTab" data-tab="eventTicketInformation">Ticketing</li>
-                    <li class="eventDetailsTab" data-tab="eventPhotosVideos">Photos & Videos</li>
-                    <li class="eventDetailsTab" data-tab="eventAdditionalInformation">Additional Info
-                    </li>
+                    <li class="eventDetailsTab" data-tab="eventPhotosVideos">Photos</li>
                 </ul>
                 <div class="headerDivider">
                     <hr>
@@ -44,127 +60,40 @@
 
             <div id="tabBody">
                 <div id="tabBodyContent">
-                    <div id="eventDescription" class="description-body eventDetailsTabInformation">
-                        <div class="eventDescription-body">
-                            <span class="attention-graber">
-                                Get ready for an unforgettable night of music and fun at our annual Campus
-                                Concert
-                                Extravaganza! Join us on April 30th, 2024 at 7:00 PM at the Gentry Center on
-                                Tennessee State University campus for an electrifying evening filled with live
-                                performances, vibrant energy, and unforgettable memories.
-                            </span>
+                    <div id="eventDetails" class="details-body eventDetailsTabInformation">
+                        <div class="eventDetails-body">
+                            <div class="eventTitleDate">
+                                <h5 class="event-title">
+                                    {{ event.title }}
+                                </h5>
+                                <p class="eventTitleDated">{{ event.date|custom_date }}</p>
+                            </div>
 
+                            <div class="event-details-location">
+                                <p class="location-name">Shamrock Rovers Stadia</p>
+                                <p class="event-dated-timed">{{ event.date }} at {{event.time|time:"g:i A" }}</p>
+                            </div>
 
-                            <br><br><br>
+                            <div class="event-details-location-address">
+                                <i class='bx bx-current-location'></i>
+                                <p>
+                                    {{ event.street }}, {{ event.city }},  {{ event.state }}, {{ event.zip_code }}, {{ event.country }}
+                                </p>
+                            </div>
 
-                            <h6>Headlining Acts</h6>
-                            <p>
-                                We are thrilled to present an incredible lineup of artists who will be rocking
-                                the
-                                stage. Headlining the concert are:
-
-                                The Electric Waves: Known for their chart-topping hits and dynamic stage
-                                presence,
-                                they are set to deliver a performance that will leave you wanting more.
-                                <br>
-                                Luna and the Comets: With their unique sound and captivating lyrics, this band
-                                is
-                                sure to get you dancing and singing along.
-                                <br>
-                                Echo Horizon: Kicking off the night, this talented group will set the tone with
-                                their energetic and heartfelt performance.
-                            </p>
-
-
-                            <br><br><br>
-
-                            <h6>Event Highlights</h6>
-                            Food and Drinks: Enjoy a variety of delicious food trucks and beverage stations
-                            available throughout the venue. From classic festival fare to gourmet treats,
-                            there's something for everyone.
-                            Interactive Zones: Explore our interactive zones featuring fun activities, photo
-                            booths, and merchandise stands where you can grab your favorite band’s memorabilia.
-                            VIP Experience: Upgrade to a VIP ticket for exclusive access to front-row seating, a
-                            private lounge, meet-and-greet opportunities with the artists, and more.
-
-                            <br><br><br>
-
-                            <h6>Additional Information</h6>
-                            Tickets: Purchase your tickets in advance at [Ticket Link] to secure your spot.
-                            Student discounts are available with a valid ID.
-                            Location: The concert will be held at Gentry Center, located at 3500 John A Merritt
-                            Blvd, Nashville, TN 37209. Free parking is available at designated campus lots.
-                            Safety Measures: Your safety is our priority. The event will adhere to all current
-                            health guidelines, including sanitation stations and socially distanced seating
-                            arrangements.
-
-                            <br><br><br>
-
-                            <h6>Join Us</h6>
-                            <br>
-                            Don’t miss out on the biggest event of the year! Gather your friends, bring your
-                            school spirit, and get ready to rock the night away at the Campus Concert
-                            Extravaganza. Follow us on social media [Social Media Handles] for updates,
-                            giveaways, and more exciting announcements leading up to the event.
-
-                            Mark your calendars, and we’ll see you there for a night of music, fun, and memories
-                            that will last a lifetime!
+                            <div class="google-map">
+                                <iframe
+                                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d6442.0794877577355!2d-86.83092992418085!3d36.16558747243483!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x8864612e29e63677%3A0xa3822085d95d0eb4!2sMartha%20M.%20Brown%20-%20Lois%20H.%20Daniel%20Library!5e0!3m2!1sen!2sus!4v1712885732026!5m2!1sen!2sus"
+                                    width="400" height="400" style="border:0;" allowfullscreen=""
+                                    loading="lazy"
+                                    referrerpolicy="no-referrer-when-downgrade"></iframe>
+                            </div>
                         </div>
                     </div>
 
-                    <div id="eventDetails" class="details-body eventDetailsTabInformation">
-                        <div class="details-info">
-                            <div class="left-side">
-                                <div class="sub-info">
-                                    <div class="date">
-                                        <h2>
-                                            When?
-                                        </h2>
-
-                                        <p><i class='bx bx-calendar'></i> April 30, 2024</p>
-                                        <p><i class='bx bx-time-five'></i> 2pm-6pm</p>
-                                    </div>
-
-                                    <div class="location-info">
-                                        <h2>
-                                            Where?
-                                        </h2>
-                                        <p>Tennessee State University</p>
-                                        <p><i class='bx bx-current-location'></i> Martha M. Brown - Lois H.
-                                            Daniel library, 3408 Alameda St, Nashville, TN 37209</p>
-                                        <div class="google-map">
-                                            <iframe
-                                                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d6442.0794877577355!2d-86.83092992418085!3d36.16558747243483!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x8864612e29e63677%3A0xa3822085d95d0eb4!2sMartha%20M.%20Brown%20-%20Lois%20H.%20Daniel%20Library!5e0!3m2!1sen!2sus!4v1712885732026!5m2!1sen!2sus"
-                                                width="400" height="400" style="border:0;" allowfullscreen=""
-                                                loading="lazy"
-                                                referrerpolicy="no-referrer-when-downgrade"></iframe>
-                                        </div>
-                                    </div>
-
-                                    <div class="contact-info">
-                                        <h2>Contact</h2>
-                                        <div class="contact-container">
-                                            <div>
-                                                <p>
-                                                    <h6>Email</h6>
-                                                    <a class="cc-email"
-                                                        href="mailto:edmundosafo818@gmail.com">edmundosafo818@gmail.com</a>
-                                                </p>
-                                                <p>
-                                                    <h6>Phone</h6>
-                                                    <a class="cc-phone" href="tel:+">(678)-668-9434</a>
-                                                </p>
-                                                <p>
-                                                    <h6>Website</h6>
-                                                    <a class="cc-web" href="https://enoshlartey.xyz">enoshlartey.xyz</a>
-                                                </p>
-                                            </div>
-                                        </div>
-
-                                    </div>
-
-                                </div>
-                            </div>
+                    <div id="eventDescription" class="description-body eventDetailsTabInformation">
+                        <div class="eventDescription-body">
+                            {{ event.description }}
                         </div>
                     </div>
 
@@ -293,115 +222,12 @@
                     </div>
 
                     <div id="eventPhotosVideos" class="attachment-body eventDetailsTabInformation">
-                        <div>
-                            <div class="slideshow-container">
-                                <img src="../../static/images/explore/events/exploreart.png" alt="">
+                        <div class="eventPhotosVideos-body">
+                            <div id="slideshow-container" class="slideshow-container">
+                                {% for photo in body_photos %}
+                                    <img src="{{ photo }}" {% if forloop.first %}class="image-active"{% endif %} />
+                                {% endfor %}
                             </div>
-                        </div>
-                    </div>
-
-                    <div id="eventAdditionalInformation" class="additional-body eventDetailsTabInformation ">
-                        <div class="additional-info">
-                            <h6>Directions & Parking</h6>
-                            <p>
-                                The Gentry Center is conveniently located on Tennessee State University's campus
-                                at
-                                3500 John A Merritt Blvd, Nashville, TN 37209. Free parking is available in
-                                designated lots adjacent to the venue. Follow the signs on campus for concert
-                                parking. We encourage carpooling or using rideshare services to help ease
-                                traffic
-                                congestion.
-                            </p>
-
-
-                            <br><br><br>
-
-                            <h6>Accessibility</h6>
-                            <p>
-                                We are committed to making our event accessible to everyone. The Gentry Center
-                                is
-                                wheelchair accessible, and designated seating areas will be available for
-                                individuals with disabilities. If you have specific accessibility needs or
-                                require
-                                assistance, please contact our event staff at [Contact Information] prior to the
-                                event.
-                            </p>
-
-
-                            <br><br><br>
-
-                            <h6>What to Bring</h6>
-                            <p>
-                                Tickets: Ensure you have your printed ticket or e-ticket ready for scanning at
-                                the
-                                entrance.
-                                ID: Valid identification is required for student ticket holders and for
-                                purchasing
-                                alcoholic beverages.
-                                Comfortable Attire: Wear comfortable clothing and shoes, as you’ll likely be
-                                standing, dancing, and moving around.
-                                Blankets & Chairs: You can bring blankets or portable chairs for seating in
-                                designated areas.
-                                Prohibited Items
-                                For safety and enjoyment of all attendees, the following items are prohibited at
-                                the
-                                event:
-
-                                Outside food and beverages
-                                Large bags or backpacks
-                                Weapons of any kind
-                                Illegal substances
-                                Professional cameras or recording equipment
-                                Food & Beverages
-                                A variety of food trucks and beverage stations will be available throughout the
-                                venue, offering a range of options from classic festival fare to gourmet treats.
-                                Vegetarian, vegan, and gluten-free options will also be available.
-                            </p>
-
-
-                            <br><br><br>
-
-                            <h6>Weather Policy</h6>
-                            <p>
-                                The concert will take place rain or shine. In the event of severe weather,
-                                updates
-                                will be provided on our social media channels and event website. Please dress
-                                appropriately for the weather conditions, and consider bringing rain gear if
-                                necessary.
-                            </p>
-
-                            <br><br><br>
-
-                            <h6>Safety Measures</h6>
-                            <p>
-                                Your safety is our priority. The event will adhere to all current health
-                                guidelines,
-                                including:
-
-                                Sanitation Stations: Hand sanitizing stations will be available throughout the
-                                venue.
-                                Social Distancing: Please follow marked guidelines and staff instructions for
-                                socially distanced seating and lines.
-                                Face Coverings: Masks are recommended, especially in crowded areas.
-                            </p>
-
-                            <br><br><br>
-                            <h6>Contact Information</h6>
-                            <p>
-                                If you have any questions or need further information, please contact us at
-                                [Contact
-                                Information] or visit our website at [Event Website]. Our team is here to ensure
-                                you
-                                have a fantastic experience at the Campus Concert Extravaganza.
-                            </p>
-
-                            <br><br><br>
-
-                            <div class="attention-graber">
-                                We look forward to seeing you there for an
-                                unforgettable night!
-                            </div>
-
                         </div>
                     </div>
                 </div>
@@ -513,81 +339,6 @@
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <hr>
-
-    <div id="recommended-events">
-        <h3 class="people-viewed">People also viewed</h3>
-
-        <div class="suggested-events-container">
-            <div class="category-event-card">
-                <a href="./events/eventDetails.html">
-                    <div class="category-image">
-                        <img src="../../static/images/explore/events/exploreart.png" alt="">
-                    </div>
-                    <div class="category-event-name">
-                        <h2 id="eventTitle">The OAK Brothers</h2>
-                        <div class="eventSubInfo">
-                            <p id="eventLocation">Bridgestone Arena</p>
-                            <p id="eventDate">May 30</p>
-                        </div>
-                        <div id="eventType">
-                            <a href="#">Festivals</a>
-                            <a href="#">Music</a>
-                            <a href="#">Concert</a>
-                        </div>
-                        <div class="eventSubPrice">
-                            <p id="eventPrice">From $27</p>
-                        </div>
-                    </div>
-                </a>
-            </div>
-            <div class="category-event-card">
-                <a href="./events/eventDetails.html">
-                    <div class="category-image">
-                        <img src="../../static/images/explore/events/exploreart.png" alt="">
-                    </div>
-                    <div class="category-event-name">
-                        <h2 id="eventTitle">The OAK Brothers</h2>
-                        <div class="eventSubInfo">
-                            <p id="eventLocation">Bridgestone Arena</p>
-                            <p id="eventDate">May 30</p>
-                        </div>
-                        <div id="eventType">
-                            <a href="#">Festivals</a>
-                            <a href="#">Music</a>
-                            <a href="#">Concert</a>
-                        </div>
-                        <div class="eventSubPrice">
-                            <p id="eventPrice">From $27</p>
-                        </div>
-                    </div>
-                </a>
-            </div>
-            <div class="category-event-card">
-                <a href="./events/eventDetails.html">
-                    <div class="category-image">
-                        <img src="../../static/images/explore/events/exploreart.png" alt="">
-                    </div>
-                    <div class="category-event-name">
-                        <h2 id="eventTitle">The OAK Brothers</h2>
-                        <div class="eventSubInfo">
-                            <p id="eventLocation">Bridgestone Arena</p>
-                            <p id="eventDate">May 30</p>
-                        </div>
-                        <div id="eventType">
-                            <a href="#">Festivals</a>
-                            <a href="#">Music</a>
-                            <a href="#">Concert</a>
-                        </div>
-                        <div class="eventSubPrice">
-                            <p id="eventPrice">From $27</p>
-                        </div>
-                    </div>
-                </a>
             </div>
         </div>
     </div>

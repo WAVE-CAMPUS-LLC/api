@@ -16,6 +16,13 @@ header {
 
 
 /** Header Container **/
+#navigation-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+
+    width: 100%;
+}
 
 #navigation-bar {
     width: 100%;
@@ -124,4 +131,66 @@ header {
     text-decoration-thickness: 2px;
     text-decoration-color: #008d95;
     text-underline-offset: 2px;
+}
+
+/* Find events search bar */
+/* Find events search input container */
+#main-find-events {
+    width: 100%;
+
+    display: flex;
+    justify-content: center;
+}
+
+#content-body {
+    display: flex;
+    flex-direction: column;
+    gap: 100px;
+}
+
+.find-event-by-categ {
+    width: 50%;
+
+    display: flex;
+    flex-direction: row;
+    gap: 5px;
+
+    border: 2px solid #07070715;
+    border-radius: 25px;
+
+    background-color: #ffffff07;
+    -webkit-box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.085);
+    -moz-box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.16);
+    box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.061);
+}
+
+.find-event-by-categ input {
+    width: 100%;
+    height: 100%;
+
+    padding: 15px;
+    padding-top: 20px;
+    padding-bottom: 20px;
+
+    font-family: Wanted-Regular;
+    font-size: 17px;
+    color: #000000;
+
+    border: none;
+    border-top-right-radius: 25px;
+    border-bottom-right-radius: 25px;
+
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+}
+
+.find-event-by-categ input::placeholder {
+    color: #00000076;
+    font-family: Wanted-Regular;
+}
+
+.febc-img {
+    display: flex;
+    justify-content: center;
+    padding: 15px;
 }

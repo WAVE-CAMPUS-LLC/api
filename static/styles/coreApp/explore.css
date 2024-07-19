@@ -25,72 +25,99 @@
     max-height: 400px;
 }
 
-/* Find events search input container */
-#main-find-events {
+/* Trending Explore Image and Caption */
+#ehim-img-cont {
     width: 100%;
-
-    display: flex;
-    justify-content: center;
+    position: relative;
 }
 
-#content-body {
-    display: flex;
-    flex-direction: column;
-    gap: 100px;
+#trending-img {
+    object-fit: cover;
+    width: 100%;
 }
 
-.find-event-by-categ {
-    width: 70%;
+#event-favourite-caption {
+    padding: 25px;
+    position: absolute;
+    top: 0;
+    right: 0;
+}
 
-    display: flex;
-    flex-direction: row;
-    gap: 5px;
-
-    border: 2px solid #07070715;
+#favourite-btn {
+    cursor: pointer;
+    padding: 10px;
     border-radius: 15px;
 
-    background-color: #ffffff07;
-    -webkit-box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.085);
-    -moz-box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.16);
-    box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.061);
+    border: none;
+    background-color: rgba(255, 255, 255, 0.037);
+
+    -webkit-backdrop-filter: blur(2px) saturate(1.7);
+    backdrop-filter: blur(2px) saturate(1.7);
+
+    display: flex;
+    align-items: center;
 }
 
-.find-event-by-categ input {
-    width: 100%;
-    height: 100%;
+#event-favourite-caption img {
+    width: 50px;
+    height: 50px;
+}
 
-    padding: 15px;
-    padding-top: 20px;
-    padding-bottom: 20px;
+#event-hosted-caption {
+    padding: 25px;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+}
 
+
+#event-caption-host {
     font-family: Wanted-Regular;
-    font-size: 17px;
-    color: #000000;
+    font-size: 22px;
+    color: white;
+
+    padding: 10px;
+    border-radius: 15px;
 
     border: none;
-    border-top-right-radius: 15px;
-    border-bottom-right-radius: 15px;
+    background-color: rgba(255, 255, 255, 0.037);
 
-    outline: 2px solid transparent;
-    outline-offset: 2px;
+    -webkit-backdrop-filter: blur(2px) saturate(1.7);
+    backdrop-filter: blur(2px) saturate(1.7);
 }
 
-.find-event-by-categ input::placeholder {
-    color: #00000076;
+#event-caption-host a {
+    text-decoration: none;
+    color: white;
+}
+
+#event-countdown-caption {
+    padding: 25px;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+#event-caption-date {
     font-family: Wanted-Regular;
-}
+    font-size: 22px;
+    color: white;
 
-.febc-img {
-    display: flex;
-    justify-content: center;
-    padding: 15px;
+    padding: 10px;
+    border-radius: 15px;
+
+    border: none;
+    background-color: rgba(255, 255, 255, 0.037);
+
+    -webkit-backdrop-filter: blur(2px) saturate(1.7);
+    backdrop-filter: blur(2px) saturate(1.7);
 }
 
 /* Row Styles */
 .row-container {
     display: flex;
     flex-direction: column;
-    gap: 100px;
+    gap: 50px;
 }
 
 .row-header {
@@ -215,21 +242,15 @@
 .category-event-card {
     display: flex;
     flex-direction: column;
-    gap: 20px;
-    
+    justify-content: center;
+    align-items: center;
 
     cursor: pointer;
     overflow: hidden;
 
     padding: 10px;
-}
-
-.category-event-card:hover {
-    -webkit-box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.289);
-    -moz-box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.289);
-    box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.289);
-    border: none;
-    border-radius: 20px;
+    color: black;
+    text-decoration: none;
 }
 
 .category-event-card {
@@ -255,17 +276,15 @@
     border-radius: 10px;
 }
 
-.category-event-card a {
-    text-decoration: none;
-    color: black;
-
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-}
-
 .category-image {
     width: 100%;
+    border-radius: 20px;
+    border: 0px solid #00000013;
+    border-bottom-left-radius: 20px;
+    border-bottom-right-radius: 20px;
+    -webkit-box-shadow: 2px 3px 21px 4px rgba(170, 170, 170, 0.075);
+    -moz-box-shadow: 2px 3px 21px 4px rgba(170, 170, 170, 0.075);
+    box-shadow: 2px 3px 21px 4px rgba(170, 170, 170, 0.075);
 }
 
 .category-image img {
@@ -281,15 +300,32 @@
 
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+
+    width: 80%;
+
+    border: 1px solid rgba(113, 113, 113, 0.182);
+    border-bottom-left-radius: 20px;
+    border-bottom-right-radius: 20px;
+    -webkit-box-shadow: 2px 3px 21px 4px rgba(170, 170, 170, 0.075);
+    -moz-box-shadow: 2px 3px 21px 4px rgba(170, 170, 170, 0.075);
+    box-shadow: 2px 3px 21px 4px rgba(170, 170, 170, 0.075);
+
+    border-top: 1px;
+
+    padding-top: 10px;
+    padding-bottom: 10px;
 }
 
 .eventSubInfo {
     display: flex;
     flex-direction: column;
-    gap: 7px;
+    align-items: center;
+    gap: 1px;
 
-    font-family: Wanted-Regular;
+    font-family: Wanted-Variable;
     color: rgba(66, 66, 66, 0.575);
 }
 

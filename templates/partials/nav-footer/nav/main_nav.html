@@ -4,78 +4,92 @@
 <link rel="stylesheet" type="text/css" href="{% static "/styles/partials/nav-footer/nav/main_nav.css" %}" />
 
 
-<div id="navigation-bar">
-    <div id="logo-menu">
-        <div id="logo">
-            <a href="{% url "core:index"  %}">WAVE<span>.</span></a>
+<div id="navigation-container">
+    <div id="navigation-bar">
+        <div id="logo-menu">
+            <div id="logo">
+                <a href="{% url "core:index"  %}">WAVE<span>.</span></a>
+            </div>
+            <div id="menu">
+                <ul>
+                    <li><a href="{% url "core:explore"  %}">Explore</a></li>
+                    <li><a href="{% url "extras:partners"  %}">Partner</a></li>
+                    <li><a href="{% url "extras:safety"  %}">Safety</a></li>
+                    <li><a href="{% url "careers:home"  %}">Careers</a></li>
+                </ul>
+            </div>
         </div>
-        <div id="menu">
+    
+        <div class="support-links">
             <ul>
-                <li><a href="{% url "core:explore"  %}">Explore</a></li>
-                <li><a href="{% url "extras:partners"  %}">Partner</a></li>
-                <li><a href="{% url "extras:safety"  %}">Safety</a></li>
-                <li><a href="{% url "careers:home"  %}">Careers</a></li>
-            </ul>
-        </div>
-    </div>
-
-    <div class="support-links">
-        <ul>
-            <li>
-                {% if user.is_authenticated %}
-                    {% if page == home %}
-                        {% if user|has_group:"Host" %}
+                <li>
+                    {% if user.is_authenticated %}
+                        {% if page == home %}
+                            {% if user|has_group:"Host" %}
+                            <a id="host" href="{% url "eventManagement:hostCreateEvent" %}">
+                                <img src="{% static "/images/eventManagementApp/host/host_ticket.svg" %}" />
+                                Create Event
+                            </a>
+                            {% else %}
+                            <a id="host" href="{% url "eventManagement:hostGuide" %}">
+                                <img src="{% static "/images/eventManagementApp/host/hostGuide.svg" %}" />
+                                Host Guide
+                            </a>
+                            {% endif %}
+                        {% elif page == "explore" %}
+                            <a id="host" href="{% url "eventManagement:hostHome" %}">
+                                <img src="{% static "/images/explore/community.svg" %}" />
+                                Join Campus!
+                            </a>
+                        {% else %}
                         <a id="host" href="{% url "eventManagement:hostCreateEvent" %}">
                             <img src="{% static "/images/eventManagementApp/host/host_ticket.svg" %}" />
                             Create Event
                         </a>
-                        {% else %}
-                        <a id="host" href="{% url "eventManagement:hostGuide" %}">
-                            <img src="{% static "/images/eventManagementApp/host/hostGuide.svg" %}" />
-                            Host Guide
-                        </a>
                         {% endif %}
-                    {% elif page == "explore" %}
-                        <a id="host" href="{% url "eventManagement:hostHome" %}">
-                            <img src="{% static "/images/explore/community.svg" %}" />
-                            Join Campus!
-                        </a>
                     {% else %}
-                    <a id="host" href="{% url "eventManagement:hostCreateEvent" %}">
-                        <img src="{% static "/images/eventManagementApp/host/host_ticket.svg" %}" />
-                        Create Event
-                    </a>
+                        {% if page == "home" %}
+                            <a id="host" href="{% url "eventManagement:hostHome" %}">
+                                <img src="{% static "/images/eventManagementApp/host/host_ticket.svg" %}" />
+                                Host Event
+                            </a>
+                        {% elif page == "explore" %}
+                            <a id="host" href="{% url "eventManagement:hostHome" %}">
+                                <img src="{% static "/images/explore/community.svg" %}" />
+                                Join Campus!
+                            </a>
+                        {% else %}
+                            <a id="host" href="{% url "eventManagement:hostHome" %}">
+                                <img src="{% static "/images/eventManagementApp/host/host_ticket.svg" %}" />
+                                Host Event
+                            </a>
+                        {% endif %}
+                    
                     {% endif %}
-                {% else %}
-                    {% if page == "home" %}
-                        <a id="host" href="{% url "eventManagement:hostHome" %}">
-                            <img src="{% static "/images/eventManagementApp/host/host_ticket.svg" %}" />
-                            Host Event
-                        </a>
-                    {% elif page == "explore" %}
-                        <a id="host" href="{% url "eventManagement:hostHome" %}">
-                            <img src="{% static "/images/explore/community.svg" %}" />
-                            Join Campus!
-                        </a>
+                    
+                </li>
+                <li><span>|</span></li>
+                <li id="auth">
+                    {% if user.is_authenticated %}
+                    <a id="account" href="{% url "accountManagement:userAccount"  %}">My Account</a>
                     {% else %}
-                        <a id="host" href="{% url "eventManagement:hostHome" %}">
-                            <img src="{% static "/images/eventManagementApp/host/host_ticket.svg" %}" />
-                            Host Event
-                        </a>
+                    <a id="login" href="{% url "authentication:login"  %}">Login</a>
+                     <a id="join" href="{% url "authentication:join"  %}">Join</a>
                     {% endif %}
-                
-                {% endif %}
-                
-            </li>
-            <li><span>|</span></li>
-            <li id="auth">
-                {% if user.is_authenticated %}
-                <a id="account" href="{% url "accountManagement:userAccount"  %}">My Account</a>
-                {% else %}
-                <a id="login" href="{% url "authentication:login"  %}">Login</a>
-                 <a id="join" href="{% url "authentication:join"  %}">Join</a>
-                {% endif %}
-            </li>
-        </ul>
+                </li>
+            </ul>
+        </div>
     </div>
+
+    {% if page == "explore" %}
+    <div id="main-find-events">
+        <div class="find-event-by-categ">
+            <div class="febc-img">
+                <img src="{% static "images/explore/find.svg" %}" alt="Find Events">
+            </div>
+            <input type="text" name="" id="" placeholder="Find event by category or title">
+        </div>
+    </div>
+    {% endif %}
+    
 </div>

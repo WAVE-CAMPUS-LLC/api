@@ -16,102 +16,31 @@ See what's happening around you — WAVE.
 
 {% block body %}
 <div id="content-container">
-    
-
     <div id="explore-home-image-main" class="explore-home-image-main">
-        <img src="{% static "images/explore/display.png" %}" />
+        <div id="ehim-img-cont">
+            <figcaption id="event-favourite-caption">
+                <button type="button" role="button" id="favourite-btn" title="Favourite event">
+                    <img src="{% static "images/explore/favourite.svg" %}" />
+                </button>
+            </figcaption>
 
-        <div id="main-find-events">
-            <div class="find-event-by-categ">
-                <div class="febc-img">
-                    <img src="{% static "images/explore/find.svg" %}" alt="Find Events">
-                </div>
-                <input type="text" name="" id="" placeholder="Find event by category or title" autofocus>
-            </div>
+            <figcaption id="event-countdown-caption">
+                <h6 id="event-caption-date">
+                    10 days, 5 hours, 2 minutes, 1 second
+                </h6>
+            </figcaption>
+
+            <img id="trending-img" src="{% static "images/explore/display.png" %}" />
+
+            <figcaption id="event-hosted-caption">
+                <h6 id="event-caption-host">
+                    Hosted by  <a href="#">@enoshlartey</a>
+                </h6>
+            </figcaption>
         </div>
     </div>
 
     <div id="content-body">
-        <div id="trending-row">
-            <div id="row-header">
-                <h5>Trending</h5>
-            </div>
-            <div id="row-display-cards">
-                <div class="category-event-card">
-                    <div class="category-image">
-                        <img src="{% static "images/explore/exploreart.png" %}" alt="">
-                    </div>
-                    <div class="category-event-name">
-                        <h2 id="eventTitle">The OAK Brothers</h2>
-                        <div class="eventSubInfo">
-                            <p id="eventLocation">Bridgestone Arena</p>
-                            <p id="eventDate">May 30</p>
-                        </div>
-                        <div id="eventType">
-                            <a href="#">Festivals</a>
-                            <a href="#">Music</a>
-                            <a href="#">Concert</a>
-                        </div>
-                        <div class="eventHr">
-                            <hr>
-                        </div>
-                        <div class="eventSubPrice">
-                            <p id="eventPrice">From $27</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="category-event-card">
-                    <div class="category-image">
-                        <img src="{% static "images/explore/exploreart.png" %}" alt="">
-                    </div>
-                    <div class="category-event-name">
-                        <h2 id="eventTitle">The OAK Brothers</h2>
-                        <div class="eventSubInfo">
-                            <p id="eventLocation">Bridgestone Arena</p>
-                            <p id="eventDate">May 30</p>
-                        </div>
-                        <div id="eventType">
-                            <a href="#">Festivals</a>
-                            <a href="#">Music</a>
-                            <a href="#">Concert</a>
-                        </div>
-                        <div class="eventHr">
-                            <hr>
-                        </div>
-                        <div class="eventSubPrice">
-                            <p id="eventPrice">From $27</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="category-event-card">
-                    <div class="category-image">
-                        <img src="{% static "images/explore/exploreart.png" %}" alt="">
-                    </div>
-                    <div class="category-event-name">
-                        <h2 id="eventTitle">The OAK Brothers</h2>
-                        <div class="eventSubInfo">
-                            <p id="eventLocation">Bridgestone Arena</p>
-                            <p id="eventDate">May 30</p>
-                        </div>
-                        <div id="eventType">
-                            <a href="#">Festivals</a>
-                            <a href="#">Music</a>
-                            <a href="#">Concert</a>
-                        </div>
-                        <div class="eventHr">
-                            <hr>
-                        </div>
-                        <div class="eventSubPrice">
-                            <p id="eventPrice">From $27</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-        </div>
-
         <div id="categories-row" class="row-container">
             <div class="row-header">
                 <div class="heading-text">
@@ -174,199 +103,21 @@ See what's happening around you — WAVE.
         </div>
 
         <div id="categories-row" class="row-container">
-
             <div class="row-body event-row-body">
-                <div class="category-event-card">
+                {% for event in events %}
+                <a target="_blank" href="{% url "core:eventDetails" eventId=event.eventId %}" class="category-event-card">
                     <div class="category-image">
                         <img src="{% static "images/explore/exploreart.png" %}" alt="">
                     </div>
                     <div class="category-event-name">
-                        <h2 id="eventTitle">The OAK Brothers</h2>
+                        <h2 id="eventTitle">{{ event.title }}</h2>
                         <div class="eventSubInfo">
-                            <p id="eventLocation">Bridgestone Arena</p>
-                            <p id="eventDate">May 30</p>
-                        </div>
-                        <div id="eventType">
-                            <a href="#">Festivals</a>
-                            <a href="#">Music</a>
-                            <a href="#">Concert</a>
-                        </div>
-                        <div class="eventHr">
-                            <hr>
-                        </div>
-                        <div class="eventSubPrice">
-                            <p id="eventPrice">From $27</p>
+                            <p id="eventLocation">Hosted by @{{ event.host.username }}</p>
+                            <p id="eventDate">{{ event.date }}</p>
                         </div>
                     </div>
-                </div>
-
-                <div class="category-event-card">
-                    <div class="category-image">
-                        <img src="{% static "images/explore/exploreart.png" %}" alt="">
-                    </div>
-                    <div class="category-event-name">
-                        <h2 id="eventTitle">The OAK Brothers</h2>
-                        <div class="eventSubInfo">
-                            <p id="eventLocation">Bridgestone Arena</p>
-                            <p id="eventDate">May 30</p>
-                        </div>
-                        <div id="eventType">
-                            <a href="#">Festivals</a>
-                            <a href="#">Music</a>
-                            <a href="#">Concert</a>
-                        </div>
-                        <div class="eventHr">
-                            <hr>
-                        </div>
-                        <div class="eventSubPrice">
-                            <p id="eventPrice">From $27</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="category-event-card">
-                    <div class="category-image">
-                        <img src="{% static "images/explore/exploreart.png" %}" alt="">
-                    </div>
-                    <div class="category-event-name">
-                        <h2 id="eventTitle">The OAK Brothers</h2>
-                        <div class="eventSubInfo">
-                            <p id="eventLocation">Bridgestone Arena</p>
-                            <p id="eventDate">May 30</p>
-                        </div>
-                        <div id="eventType">
-                            <a href="#">Festivals</a>
-                            <a href="#">Music</a>
-                            <a href="#">Concert</a>
-                        </div>
-                        <div class="eventHr">
-                            <hr>
-                        </div>
-                        <div class="eventSubPrice">
-                            <p id="eventPrice">From $27</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="category-event-card">
-                    <div class="category-image">
-                        <img src="{% static "images/explore/exploreart.png" %}" alt="">
-                    </div>
-                    <div class="category-event-name">
-                        <h2 id="eventTitle">The OAK Brothers</h2>
-                        <div class="eventSubInfo">
-                            <p id="eventLocation">Bridgestone Arena</p>
-                            <p id="eventDate">May 30</p>
-                        </div>
-                        <div id="eventType">
-                            <a href="#">Festivals</a>
-                            <a href="#">Music</a>
-                            <a href="#">Concert</a>
-                        </div>
-                        <div class="eventHr">
-                            <hr>
-                        </div>
-                        <div class="eventSubPrice">
-                            <p id="eventPrice">From $27</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="category-event-card">
-                    <div class="category-image">
-                        <img src="{% static "images/explore/exploreart.png" %}" alt="">
-                    </div>
-                    <div class="category-event-name">
-                        <h2 id="eventTitle">The OAK Brothers</h2>
-                        <div class="eventSubInfo">
-                            <p id="eventLocation">Bridgestone Arena</p>
-                            <p id="eventDate">May 30</p>
-                        </div>
-                        <div id="eventType">
-                            <a href="#">Festivals</a>
-                            <a href="#">Music</a>
-                            <a href="#">Concert</a>
-                        </div>
-                        <div class="eventHr">
-                            <hr>
-                        </div>
-                        <div class="eventSubPrice">
-                            <p id="eventPrice">From $27</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="category-event-card">
-                    <div class="category-image">
-                        <img src="{% static "images/explore/exploreart.png" %}" alt="">
-                    </div>
-                    <div class="category-event-name">
-                        <h2 id="eventTitle">The OAK Brothers</h2>
-                        <div class="eventSubInfo">
-                            <p id="eventLocation">Bridgestone Arena</p>
-                            <p id="eventDate">May 30</p>
-                        </div>
-                        <div id="eventType">
-                            <a href="#">Festivals</a>
-                            <a href="#">Music</a>
-                            <a href="#">Concert</a>
-                        </div>
-                        <div class="eventHr">
-                            <hr>
-                        </div>
-                        <div class="eventSubPrice">
-                            <p id="eventPrice">From $27</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="category-event-card">
-                    <div class="category-image">
-                        <img src="{% static "images/explore/exploreart.png" %}" alt="">
-                    </div>
-                    <div class="category-event-name">
-                        <h2 id="eventTitle">The OAK Brothers</h2>
-                        <div class="eventSubInfo">
-                            <p id="eventLocation">Bridgestone Arena</p>
-                            <p id="eventDate">May 30</p>
-                        </div>
-                        <div id="eventType">
-                            <a href="#">Festivals</a>
-                            <a href="#">Music</a>
-                            <a href="#">Concert</a>
-                        </div>
-                        <div class="eventHr">
-                            <hr>
-                        </div>
-                        <div class="eventSubPrice">
-                            <p id="eventPrice">From $27</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="category-event-card">
-                    <div class="category-image">
-                        <img src="{% static "images/explore/exploreart.png" %}" alt="">
-                    </div>
-                    <div class="category-event-name">
-                        <h2 id="eventTitle">The OAK Brothers</h2>
-                        <div class="eventSubInfo">
-                            <p id="eventLocation">Bridgestone Arena</p>
-                            <p id="eventDate">May 30</p>
-                        </div>
-                        <div id="eventType">
-                            <a href="#">Festivals</a>
-                            <a href="#">Music</a>
-                            <a href="#">Concert</a>
-                        </div>
-                        <div class="eventHr">
-                            <hr>
-                        </div>
-                        <div class="eventSubPrice">
-                            <p id="eventPrice">From $27</p>
-                        </div>
-                    </div>
-                </div>
+                </a>
+                {% endfor %}
             </div>
 
             <div class="loadMore">
