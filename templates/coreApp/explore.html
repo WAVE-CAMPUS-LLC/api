@@ -17,7 +17,7 @@ See what's happening around you — WAVE.
 {% block body %}
 <div id="content-container">
     <div id="explore-home-image-main" class="explore-home-image-main">
-        <div id="ehim-img-cont">
+        <div id="ehim-img-cont" style="background-image: url('{% static "images/explore/display.png" %}');">
             <figcaption id="event-favourite-caption">
                 <button type="button" role="button" id="favourite-btn" title="Favourite event">
                     <img src="{% static "images/explore/favourite.svg" %}" />
@@ -30,7 +30,9 @@ See what's happening around you — WAVE.
                 </h6>
             </figcaption>
 
-            <img id="trending-img" src="{% static "images/explore/display.png" %}" />
+            <div id="display-trending">
+                <img id="trending-img" src="{% static "images/explore/display.png" %}" />
+            </div>
 
             <figcaption id="event-hosted-caption">
                 <h6 id="event-caption-host">
@@ -105,6 +107,7 @@ See what's happening around you — WAVE.
         <div id="categories-row" class="row-container">
             <div class="row-body event-row-body">
                 {% for event in events %}
+                {% if event.status == "live" %}
                 <a target="_blank" href="{% url "core:eventDetails" eventId=event.eventId %}" class="category-event-card">
                     <div class="category-image">
                         <img src="{% static "images/explore/exploreart.png" %}" alt="">
@@ -117,6 +120,7 @@ See what's happening around you — WAVE.
                         </div>
                     </div>
                 </a>
+                {% endif %}
                 {% endfor %}
             </div>
 

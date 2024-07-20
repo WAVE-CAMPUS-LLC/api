@@ -23,7 +23,7 @@ Host Dashboard | WAVE.
 {% block body %}
 <div id="body-content">
     <div class="page-heading">
-        <h2>Good to see you, Enosh!<h2>
+        <h2>Good to see you, {{ request.user.first_name }}!<h2>
         <a href="{% url "eventManagement:hostCreateEvent"%}" class="createEventBtn">
             <img src="{% static "/images/eventManagementApp/host/host_ticket.svg" %}" />
             Create Event
@@ -35,16 +35,51 @@ Host Dashboard | WAVE.
             <div role="button" type="button" class="dashboard-tab tab-active" data-tab="live-events">Live</div>
             <div role="button" type="button" class="dashboard-tab" data-tab="upcoming-events">Upcoming</div>
             <div role="button" type="button" class="dashboard-tab" data-tab="archived-events">Archived</div>
-            <div role="button" type="button" class="dashboard-tab" data-tab="incomplete-events">Incomplete</div>
         </div>
 
         <div id="portal-body-content">
             <div class="pbc-element-content" id="live-events">
-                <div></div>
+                {% if events %}
+                <div id="event-container">
+                    {% for event in events %}
+                        {% if event.status == "live" %}
+                        <div id="port-event-display">
+                            <div class="event-image">
+                                <img src="{{event.header_photo.url}}" />
+                            </div>
+                            <div class="event-information">
+                                <h5>
+                                    {{ event.title }}
+                                </h5>
+                                <p>{{ event.date }}</p>
+                                <div class="event-view">
+                                    <h6>
+                                        View Event
+                                    </h6>
+                                    <span class="view-containers">
+                                        <a target="_blank" href="{% url "eventManagement:eventOverview" eventId=event.eventId %}">Host View</a>
+                                        <a target="_blank" href="{% url "core:eventDetails" eventId=event.eventId %}">Public View</a>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="event-delete">
+                                <form method="POST">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="event_id" value="{{ event.eventId }}">
+                                    <button type="submit" role="button" name="eventAction" value="deleteEvent">Delete</button>
+                                </form>
+                                
+                            </div>
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                {% else %}
                 <div class="empty-pcb">
                     <img class="empty-image" src="{% static "/images/eventManagementApp/host/empty-listing.svg" %}" />
                     <p>You currently have no live events to display!</p>
                 </div>
+                {% endif %}
             </div>
 
             <div class="pbc-element-content" id="upcoming-events">
@@ -58,13 +93,6 @@ Host Dashboard | WAVE.
                 <div class="empty-pcb">
                     <img class="empty-image" src="{% static "/images/eventManagementApp/host/empty-listing.svg" %}" />
                     <p>You currently have no archived events to display!</p>
-                </div>
-            </div>
-
-            <div class="pbc-element-content" id="incomplete-events">
-                <div class="empty-pcb">
-                    <img class="empty-image" src="{% static "/images/eventManagementApp/host/empty-listing.svg" %}" />
-                    <p>You currently have no incomplete events to display!</p>
                 </div>
             </div>
         </div>

@@ -28,12 +28,54 @@
 /* Trending Explore Image and Caption */
 #ehim-img-cont {
     width: 100%;
+    height: 100%;
+    min-width: 100%;
+    min-height: 450px;
+    max-height: 500px;
+    position: relative;
+
+    border-radius: 25px;
+
+    background-size: cover;
+    background-position: top;
+    background-repeat: no-repeat;
+}
+
+#ehim-img-cont::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background: rgba(23, 23, 23, 0.2); /* Light color overlay with transparency */
+    backdrop-filter: blur(5px); /* Apply the blur effect */
+    -webkit-backdrop-filter: blur(5px); /* For Safari */
+    border-radius: 25px; /* Match the container's border radius */
+    z-index: 1; /* Ensure it's on top of the background */
+}
+
+#ehim-img-cont * {
+    position: relative;
+    z-index: 2; /* Ensure all child elements are above the blur effect */
+}
+
+#display-trending {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 100%;
+    height: 100%;
+    min-height: 500px;
     position: relative;
 }
 
 #trending-img {
-    object-fit: cover;
     width: 100%;
+    max-width: 500px;
+    max-height: 500px;
+    object-fit: contain;
 }
 
 #event-favourite-caption {
@@ -49,7 +91,7 @@
     border-radius: 15px;
 
     border: none;
-    background-color: rgba(255, 255, 255, 0.037);
+    background: none;
 
     -webkit-backdrop-filter: blur(2px) saturate(1.7);
     backdrop-filter: blur(2px) saturate(1.7);
@@ -80,7 +122,7 @@
     border-radius: 15px;
 
     border: none;
-    background-color: rgba(255, 255, 255, 0.037);
+    background: none;
 
     -webkit-backdrop-filter: blur(2px) saturate(1.7);
     backdrop-filter: blur(2px) saturate(1.7);
@@ -107,7 +149,7 @@
     border-radius: 15px;
 
     border: none;
-    background-color: rgba(255, 255, 255, 0.037);
+    background:none;
 
     -webkit-backdrop-filter: blur(2px) saturate(1.7);
     backdrop-filter: blur(2px) saturate(1.7);

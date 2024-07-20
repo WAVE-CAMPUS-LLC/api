@@ -74,8 +74,11 @@ class Event(models.Model):
 
     COUNTRY_CHOICES = [("United States", "United States")]
 
-    eventId = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    host = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="events")
+    eventId = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, unique=True)
+    # publicId = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    host = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="events"
+    )
     status = models.CharField(
         max_length=20,
         choices=STATUS_CHOICES,
@@ -117,7 +120,10 @@ class Event(models.Model):
     date = models.DateField(
         _("Choose date"), null=False, blank=True, default=timezone.now
     )
-    time = models.TimeField(
+    start_time = models.TimeField(
+        _("End time"), null=False, blank=True, default=timezone.now
+    )
+    end_time = models.TimeField(
         _("Choose time"), null=False, blank=True, default=timezone.now
     )
     description = models.TextField(
@@ -139,6 +145,9 @@ class Event(models.Model):
         blank=True,
         default="",
         choices=COUNTRY_CHOICES,
+    )
+    building_name = models.CharField(
+        _("Building Name"), max_length=250, null=False, blank=False, default=""
     )
     street = models.CharField(
         _("Street address"), max_length=500, null=False, blank=True, default=""
@@ -170,7 +179,7 @@ class Event(models.Model):
     )
 
     header_photo = models.ImageField(
-        _("Add a header photo"),
+        _("Add a cover photo"),
         upload_to="event_images/header/",
         null=False,
         blank=True,

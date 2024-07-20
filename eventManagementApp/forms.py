@@ -45,8 +45,15 @@ class EventForm(forms.ModelForm):
         input_formats=["%Y-%m-%d"],
     )
 
-    time = forms.TimeField(
-        label=_("Choose time"),
+    start_time = forms.TimeField(
+        label=_("Start time"),
+        required=False,
+        widget=forms.TimeInput(format="%H:%M", attrs={"type": "time"}),
+        input_formats=["%H:%M"],
+    )
+    
+    end_time = forms.TimeField(
+        label=_("End time"),
         required=False,
         widget=forms.TimeInput(format="%H:%M", attrs={"type": "time"}),
         input_formats=["%H:%M"],
@@ -59,10 +66,12 @@ class EventForm(forms.ModelForm):
             "title",
             "event_type",
             "date",
-            "time",
+            "start_time",
+            "end_time",
             "description",
             "privacy",
             "country",
+            "building_name",
             "street",
             "apt_suite_unit",
             "city",

@@ -24,6 +24,12 @@
     justify-content: space-between;
 }
 
+#eventForm { 
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+}
+
 .exitProcessBtn {
     background-color: red;
     color: white;
@@ -162,6 +168,10 @@
     box-shadow: 2px 3px 21px 4px rgba(138, 138, 138, 0.026);
 }
 
+#event-type-select {
+    display: none;
+}
+
 .type-input {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -208,6 +218,9 @@
 
     display: flex;
     justify-content: center;
+    flex-direction: column;
+    align-items: center;
+    gap: 40px;
 }
 
 .date-intake label,

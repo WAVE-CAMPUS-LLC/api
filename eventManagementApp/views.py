@@ -54,7 +54,16 @@ def hostApplyView(request):
 
 def hostPortalView(request):
     event = Event.objects.filter(host=request.user)
-    return render(request, "eventManagementApp/host/hostPortal.html")
+    
+    if request.method == "POST":
+        action = request.POST.get("eventAction")
+        event_id = request.POST.get("event_id")
+        
+        if action == "deleteEvent" and event_id:
+            event_to_delete = get_object_or_404(Event, eventId=event_id, host=request.user)
+            event_to_delete.delete()
+            return redirect("eventManagement:hostPortal")
+    return render(request, "eventManagementApp/host/hostPortal.html", {'events':event})
 
 
 def hostGuideView(request):
@@ -68,9 +77,7 @@ def hostCreateEvent(request):
 def hostCreateEventGenerator(request):
     event = Event.objects.create(host=request.user)
 
-    return redirect(
-        "eventManagement:eventCreationProcess", eventId=event.eventId
-    )
+    return redirect("eventManagement:eventCreationProcess", eventId=event.eventId)
 
 
 def eventCreationProcess(request, eventId):
@@ -84,10 +91,16 @@ def eventCreationProcess(request, eventId):
 
         if eventForm.is_valid():
             event = eventForm.save(commit=False)
+            event.event_type = request.POST.get("event_type")
 
             if go_live:
+                event_status = "live"
+                event.status = event_status
                 event.save()
                 messages.success(request, "Event is live!")
+            
+            else:
+                event.save()
 
             return redirect("eventManagement:eventOverview", eventId=eventId)
     else:
@@ -107,6 +120,12 @@ def eventCreationProcess(request, eventId):
 
 def eventCreatedOverview(request, eventId):
     event = get_object_or_404(Event, eventId=eventId)
+    if request.method == "POST":
+        action = request.POST.get("eventAction")
+        
+        if action == "deleteEvent":
+            event.delete()
+            return redirect("eventManagement:hostPortal")
     return render(
-        request, "eventManagementApp/host/eventPreview.html", {"event":event}
+        request, "eventManagementApp/host/eventPreview.html", {"event": event}
     )

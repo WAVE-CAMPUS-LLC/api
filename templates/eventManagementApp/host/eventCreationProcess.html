@@ -33,7 +33,7 @@ Create your event — WAVE.
     <form method="POST" id="eventForm" enctype="multipart/form-data" data-event-id="{{ event.eventId }}" action="{% url 'eventManagement:eventCreationProcess' event.eventId %}">
         {% csrf_token %}
 
-        {% if eventForm.non_field_errors %}
+        {% comment %} {% if eventForm.non_field_errors %}
             <div class="error">
                 {% for error in eventForm.non_field_errors %}
                     <p>{{ error }}</p>
@@ -51,7 +51,7 @@ Create your event — WAVE.
                     {% endfor %}
                 </div>
             {% endif %}
-        {% endfor %}
+        {% endfor %} {% endcomment %}
         <div id="section-container">
             <section id="stage-section">
                 <input type="hidden" class="section-title" value="Stage 1 - Talk about the event — WAVE." />
@@ -95,9 +95,15 @@ Create your event — WAVE.
                     </div>
         
                     <div class="section-intake">
+                        <select id="event-type-select" name="event_type">
+                            {% for value, display in eventTypeChoices %}
+                            <option value="{{ value }}">{{ display }}</option>
+                            {% endfor %}
+                        </select>
+
                         <div class="type-input">
                             {% for value, display in eventTypeChoices %}
-                            <div type="button" role="button" class="type-selector" onclick="selectEventType(this)" data-value="{{ value }}">
+                            <div type="button" role="button" class="type-selector" onclick="selectEventTypeOption('{{ value }}')" data-value="{{ value }}">
                                 <img src="{% static eventTypeImages|get_item:value %}" />
                                 <h6>{{display}}</h6>
                             </div>
@@ -128,13 +134,19 @@ Create your event — WAVE.
                 <input type="hidden" class="section-title" value="Stage 1 - Choose time — WAVE." />
                 <div class="stageSection-container-col">
                     <div class="section-question">
-                        {{ eventForm.time.label }}
+                        Choose time
                     </div>
         
                     <div class="section-intake">
                         <div class="time-intake">
-                            <label for="{{ eventForm.time.id_for_label }}">
-                                <input type="{{ eventForm.time.field.widget.input_type }}" id="{{ eventForm.time.auto_id }}" name="{{ eventForm.time.html_name }}" />
+                            <label for="{{ eventForm.start_time.id_for_label }}">
+                                <p>{{ eventForm.start_time.label }}</p>
+                                <input type="{{ eventForm.start_time.field.widget.input_type }}" id="{{ eventForm.start_time.auto_id }}" name="{{ eventForm.start_time.html_name }}" />
+                            </label>
+
+                            <label for="{{ eventForm.end_time.id_for_label }}">
+                                <p>{{ eventForm.end_time.label }}</p>
+                                <input type="{{ eventForm.end_time.field.widget.input_type }}" id="{{ eventForm.end_time.auto_id }}" name="{{ eventForm.end_time.html_name }}" />
                             </label>
                         </div>
                     </div>
@@ -192,6 +204,11 @@ Create your event — WAVE.
                         </div>
                         
                         <div class="address-intake">
+                            <label for="{{ eventForm.building_name.id_for_label }}">
+                                <p>{{ eventForm.building_name.label }}</p>
+                                <input type="{{ eventForm.building_name.field.widget.input_type }}" id="{{ eventForm.building_name.auto_id }}" name="{{ eventForm.building_name.html_name }}" />
+                            </label>
+
                             <label for="{{ eventForm.street.id_for_label }}">
                                 <p>{{ eventForm.street.label }}</p>
                                 <input type="{{ eventForm.street.field.widget.input_type }}" id="{{ eventForm.street.auto_id }}" name="{{ eventForm.street.html_name }}" />
