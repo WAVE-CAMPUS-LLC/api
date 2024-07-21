@@ -205,6 +205,12 @@ body {
     gap: 20px;
 }
 
+#cc-hime1-img img,
+#cc-hime2-img img {
+    max-height: 500px;
+    border-radius: 20px;
+}
+
 #cch2i-body #partnerships {
     padding: 15px;
     background-color: white;

@@ -12,7 +12,10 @@ def indexView(request):
 def exploreView(request):
     pageName = "explore"
     events = Event.objects.all()
-    return render(request, "coreApp/explore.html", {"page": pageName, "events": events})
+    
+    trending_events = Event.objects.filter(status="live").order_by("date")[:3]
+    
+    return render(request, "coreApp/explore.html", {"page": pageName, "events": events, "trending_events":trending_events})
 
 
 def eventDetailsView(request, eventId):

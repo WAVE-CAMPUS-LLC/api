@@ -13,7 +13,7 @@
 .explore-home-image-main {
     width: 100%;
 
-    display:flex;
+    display: flex;
     flex-direction: column;
     gap: 20px;
 }
@@ -30,8 +30,8 @@
     width: 100%;
     height: 100%;
     min-width: 100%;
-    min-height: 450px;
-    max-height: 500px;
+    min-height: 500px;
+    max-height: 550px;
     position: relative;
 
     border-radius: 25px;
@@ -39,6 +39,11 @@
     background-size: cover;
     background-position: top;
     background-repeat: no-repeat;
+    display: none;
+}
+
+#ehim-img-cont:first-child {
+    display: block;
 }
 
 #ehim-img-cont::before {
@@ -48,16 +53,57 @@
     right: 0;
     bottom: 0;
     left: 0;
-    background: rgba(23, 23, 23, 0.2); /* Light color overlay with transparency */
-    backdrop-filter: blur(5px); /* Apply the blur effect */
-    -webkit-backdrop-filter: blur(5px); /* For Safari */
-    border-radius: 25px; /* Match the container's border radius */
-    z-index: 1; /* Ensure it's on top of the background */
+    background: rgba(23, 23, 23, 0.2);
+    /* Light color overlay with transparency */
+    backdrop-filter: blur(5px);
+    /* Apply the blur effect */
+    -webkit-backdrop-filter: blur(5px);
+    /* For Safari */
+    border-radius: 25px;
+    /* Match the container's border radius */
+    z-index: 1;
+    /* Ensure it's on top of the background */
 }
 
 #ehim-img-cont * {
     position: relative;
-    z-index: 2; /* Ensure all child elements are above the blur effect */
+    z-index: 2;
+    /* Ensure all child elements are above the blur effect */
+}
+
+#trending-slideshow {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    overflow: hidden; /* Ensure slides don't overflow */
+}
+
+.trending-event-element {
+    width: 100%;
+    height: 100%;
+    min-width: 100%;
+    min-height: 500px;
+    max-height: 550px;
+    position: absolute; /* Position slides absolutely */
+    top: 0;
+    left: 0;
+    border-radius: 25px;
+    background-size: cover;
+    background-position: top;
+    background-repeat: no-repeat;
+    transition: transform 1s ease; /* Smooth transition */
+}
+
+/* Container for slides */
+#trending-slideshow {
+    display: flex; /* Use flexbox to align slides horizontally */
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+#trending-slideshow .trending-event-element {
+    flex: 0 0 100%; /* Ensure slides take up full width of the container */
 }
 
 #display-trending {
@@ -69,35 +115,14 @@
     height: 100%;
     min-height: 500px;
     position: relative;
+    padding: 80px;
 }
 
 #trending-img {
     width: 100%;
-    max-width: 500px;
-    max-height: 500px;
+    max-width: 400px;
+    max-height: 400px;
     object-fit: contain;
-}
-
-#event-favourite-caption {
-    padding: 25px;
-    position: absolute;
-    top: 0;
-    right: 0;
-}
-
-#favourite-btn {
-    cursor: pointer;
-    padding: 10px;
-    border-radius: 15px;
-
-    border: none;
-    background: none;
-
-    -webkit-backdrop-filter: blur(2px) saturate(1.7);
-    backdrop-filter: blur(2px) saturate(1.7);
-
-    display: flex;
-    align-items: center;
 }
 
 #event-favourite-caption img {
@@ -109,7 +134,7 @@
     padding: 25px;
     position: absolute;
     bottom: 0;
-    left: 0;
+    right: 0;
 }
 
 
@@ -118,14 +143,6 @@
     font-size: 22px;
     color: white;
 
-    padding: 10px;
-    border-radius: 15px;
-
-    border: none;
-    background: none;
-
-    -webkit-backdrop-filter: blur(2px) saturate(1.7);
-    backdrop-filter: blur(2px) saturate(1.7);
 }
 
 #event-caption-host a {
@@ -141,19 +158,13 @@
 }
 
 #event-caption-date {
-    font-family: Wanted-Regular;
+    font-family: Wanted-Variable;
     font-size: 22px;
     color: white;
-
-    padding: 10px;
-    border-radius: 15px;
-
-    border: none;
-    background:none;
-
-    -webkit-backdrop-filter: blur(2px) saturate(1.7);
-    backdrop-filter: blur(2px) saturate(1.7);
 }
+
+
+
 
 /* Row Styles */
 .row-container {
@@ -190,7 +201,7 @@
     cursor: pointer;
 }
 
-#section-indicator{
+#section-indicator {
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -296,7 +307,8 @@
 }
 
 .category-event-card {
-    overflow: hidden; /* Ensures that the zoomed image doesn't overflow the card */
+    overflow: hidden;
+    /* Ensures that the zoomed image doesn't overflow the card */
 }
 
 .category-image img {
@@ -334,6 +346,7 @@
     height: 100%;
 
     border-radius: 20px;
+    object-fit: cover;
 }
 
 .category-event-name {
@@ -357,8 +370,16 @@
 
     border-top: 1px;
 
-    padding-top: 10px;
-    padding-bottom: 10px;
+    padding: 10px;
+    box-sizing: border-box;
+}
+
+#eventTitle {
+    white-space: nowrap; /* Prevent wrapping */
+    overflow: hidden; /* Hide overflow content */
+    text-overflow: ellipsis; /* Show ellipsis for overflow text */
+    width: 100%;
+    text-align: center;
 }
 
 .eventSubInfo {
@@ -394,7 +415,7 @@
     align-items: center;
     gap: 5px;
 
-    
+
 }
 
 #eventType a:hover {
@@ -421,7 +442,7 @@
     border-radius: 20px;
     border: 2px solid #008d95;
     background-color: #008d95;
-    
+
     font-family: Wanted-SemiBold;
     font-size: 20px;
     color: white;
