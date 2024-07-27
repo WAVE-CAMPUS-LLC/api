@@ -2,6 +2,7 @@ from django.db import models
 from django.utils.translation import gettext_lazy as translate
 from django.conf import settings
 from django.contrib.auth.models import Group
+from collegeManagementApp.models import College
 
 
 # Create your models here.
@@ -10,6 +11,7 @@ class UserProfile(models.Model):
     status = models.TextField(blank=True)
     country = models.CharField(max_length=100,blank=True)
     group = models.ManyToManyField(Group, related_name='user_group')
+    college = models.ForeignKey(College, null=True, blank=True, on_delete=models.SET_NULL)
     
     class Meta:
         default_permissions = ()

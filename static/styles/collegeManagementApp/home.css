@@ -1,0 +1,264 @@
+/** Logo used in body's **/
+#body-logo {
+    font-family: Wanted-Black;
+}
+
+#body-logo .spot {
+    color: #008d95;
+}
+
+/** [End] Logo used in body's [End]**/
+
+#content-container {
+    padding-bottom: 70px;
+    padding-left: 100px;
+    padding-right: 100px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 70px;
+}
+
+/* College Row One */
+.college-rowOne {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+}
+
+.infoText {
+	display: flex;
+	align-items: center;
+    flex-direction: column;
+    justify-content: center;
+    gap: 30px;
+}
+
+.college-rowOne .infoText .text-holder {
+	display: flex;
+	flex-direction: column;
+	gap: 5px;
+
+	width: 100%;
+}
+
+.infoText .text-holder h3 {
+	font-family: Wanted-Bold;
+	font-size: 40px;
+}
+
+.infoText .text-holder p {
+	font-family: Wanted-Medium;
+	font-size: 20px;
+	color: rgb(99, 99, 99);
+}
+
+.infoText .button-container {
+    width: 100%;
+    display: flex;
+    justify-content: start;
+}
+
+.findCollege {
+    padding: 15px;
+    border: 1px solid transparent;
+    border-right-color: #13c9d3;
+    border-left-color: #008d95bc;
+    color: white;
+
+    font-family: Wanted-SemiBold;
+    text-decoration: none;
+
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    gap: 10px;
+
+    font-size: 20px;
+    border-radius: 20px;
+    background-image: linear-gradient(to right,  #008d95bc 0%, #13c9d3 100%);
+}
+
+.findCollege img {
+    width: 23px;
+    height: 23px;
+}
+
+.findCollege:hover {
+    background-color: #008d95;
+}
+
+.college-rowOne div {
+	width: 50%;
+}
+
+.college-rowOne .image {
+	padding: 30px;
+}
+
+.college-rowOne .image img {
+	width: 100%;
+	height: 100%;
+
+	border-radius: 30px;
+}
+
+/* Row Two Container */
+.college-rowTwo p {
+    font-family: Wanted-Variable;
+    font-size: 18px;
+    line-height: 25px;
+    color: black;
+}
+
+
+/* Row Three Container */
+
+.college-rowThree {
+    display: flex;
+    flex-direction: row;
+    gap: 50px;
+}
+
+.image-container img {
+    width: 600px;
+    border-radius: 20px;
+}
+
+.college-rowThreeRight {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+}
+
+.college-rowThreeRight .top-header,
+.college-rowThreeRight .top-body {
+    width: 100%;
+    display: flex;
+    justify-content: start;
+}
+
+.college-rowThreeRight .top-header h2 {
+    font-family: Wanted-SemiBold;
+    font-size: 30px;
+}
+
+.top-body p {
+    font-family: Wanted-Variable;
+    font-size: 18px;
+    line-height: 25px;
+}
+
+.college-rowThreeRight .middle-button {
+    display: flex;
+    justify-content: start;
+    width: 100%;
+}
+
+.college-rowThreeRight .middle-button a {
+    padding: 15px;
+    border: 1px solid transparent;
+    border-right-color: #13c9d3;
+    border-left-color: #008d95bc;
+    color: white;
+
+    font-family: Wanted-SemiBold;
+    text-decoration: none;
+
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    gap: 10px;
+
+    font-size: 20px;
+    border-radius: 20px;
+    background-image: linear-gradient(to right,  #008d95bc 0%, #13c9d3 100%);
+}
+
+
+/* Row Four Container */
+.last-heading {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.last-heading h2 {
+    font-family: Wanted-Bold;
+    font-size: 32.5px;
+    text-align: center;
+}
+
+.last-heading p {
+    font-family: Wanted-Regular;
+    text-align: center;
+    color: gray;
+    font-size: 18px;
+}
+
+.last-cards {
+    display: flex;
+    gap: 20px;
+    cursor: pointer;
+
+    padding-top: 80px;
+}
+
+.college-cards {
+    border: 2px solid rgba(0, 0, 0, 0.038);
+    border-radius: 20px;
+
+    -webkit-box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.061);
+    -moz-box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.061);
+    box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.061);
+
+    padding: 30px;    
+}
+
+.college-cards img {
+    width: 80px;
+}
+
+.college-info {
+    padding-top: 20px;
+    font-family: Wanted-Variable;
+    line-height: 25px;
+}
+
+.college-details {
+    display: flex;
+    flex-direction: column;
+    align-items: end;
+}
+
+.college-details h4 {
+    font-family: Wanted-SemiBold;
+    color: #008d95;
+
+}
+
+.college-details p {
+    font-family: Wanted-Regular;
+    color: #008d95;
+}
+
+/** Colleges Footer Information **/
+#colleges-footer-info {
+    width: 100%;
+
+    display: flex;
+    justify-content: end;
+
+    color: #008d95;
+
+    padding-top: 70px;
+    padding-bottom: 50px;
+    padding-right: 100px;
+    padding-left: 100px;
+
+    font-family: Wanted-ExtraBold;
+    font-size: 40px;
+}

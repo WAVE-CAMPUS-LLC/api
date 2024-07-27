@@ -1,0 +1,139 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}
+{{ college.name }} — WAVE. on Campus 
+{% endblock title %}
+
+{% block app_page_style %}
+<link rel="stylesheet" type="text/css" href="{% static "/styles/collegeManagementApp/collegeInformation.css" %}" />
+{% endblock app_page_style %}
+
+{% block script %}
+<script type="text/javascript" src="{% static "scripts/collegeManagementApp/tabControl.js" %}"></script>
+{% endblock script %}
+
+{% block header %}
+{% include "partials/nav-footer/nav/main_nav.html" %}
+{% endblock header %}
+
+{% block body %}
+<div id="content-container">
+    <div id="pageHeader">
+        <h3>
+            {{ college.name }}
+        </h3>
+        <p>{{ college.address }}, {{ college.city }}, {{ college.state }} {{college.zip_code}}, {{ college.country }}</p>
+    </div>
+
+    <div id="pageBody">
+        <div id="pageBodyHeading">
+            <p>1200 Members</p>
+            <p>100 Organizations</p>
+        </div>
+
+        <div id="pageBodyContent">
+            <div id="contentContainerTabs">
+                <div id="tabHeaderParent">
+                    <ul id="tabHeader">
+                        <li class="collegeDetailsTab tab-active" data-tab="eventInformation">Live Events</li>
+                        <li class="collegeDetailsTab" data-tab="organizationInformation">Organizations</li>
+                        <li class="collegeDetailsTab" data-tab="memberInformation">Members</li>
+                    </ul>
+                </div>
+
+                <div id="tabBody">
+                    <div id="tabBodyContent">
+                        <div id="eventInformation" class="events-body collegeTabInformation">
+                            <div class="collegeEventContainer">
+                                <a target="_blank" href="" class="category-event-card">
+                                    <div class="category-image">
+                                        <img src="{% static "images/explore/display.png" %}" alt="">
+                                    </div>
+                                    <div class="category-event-name">
+                                        <h2 id="eventTitle">Event Demo</h2>
+                                        <div class="eventSubInfo">
+                                            <p id="eventLocation">Hosted by @enoshlartey</p>
+                                            <p id="eventDate">28th July, 2024</p>
+                                        </div>
+                                    </div>
+                                </a>
+
+                                <a target="_blank" href="" class="category-event-card">
+                                    <div class="category-image">
+                                        <img src="{% static "images/explore/display.png" %}" alt="">
+                                    </div>
+                                    <div class="category-event-name">
+                                        <h2 id="eventTitle">Event Demo</h2>
+                                        <div class="eventSubInfo">
+                                            <p id="eventLocation">Hosted by @enoshlartey</p>
+                                            <p id="eventDate">28th July, 2024</p>
+                                        </div>
+                                    </div>
+                                </a>
+
+                                <a target="_blank" href="" class="category-event-card">
+                                    <div class="category-image">
+                                        <img src="{% static "images/explore/display.png" %}" alt="">
+                                    </div>
+                                    <div class="category-event-name">
+                                        <h2 id="eventTitle">Event Demo</h2>
+                                        <div class="eventSubInfo">
+                                            <p id="eventLocation">Hosted by @enoshlartey</p>
+                                            <p id="eventDate">28th July, 2024</p>
+                                        </div>
+                                    </div>
+                                </a>
+
+                                <a target="_blank" href="" class="category-event-card">
+                                    <div class="category-image">
+                                        <img src="{% static "images/explore/display.png" %}" alt="">
+                                    </div>
+                                    <div class="category-event-name">
+                                        <h2 id="eventTitle">Event Demo</h2>
+                                        <div class="eventSubInfo">
+                                            <p id="eventLocation">Hosted by @enoshlartey</p>
+                                            <p id="eventDate">28th July, 2024</p>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <div id="organizationInformation" class="organizations-body collegeTabInformation">
+                            <div class="collegeOrganizationsContainer">
+                                <a target="_blank" href="" class="organization-card">
+                                    <div class="orgCard-image-container">
+                                        <img src="{% static "/images/collegeManagementApp/organizations.jpg" %}" class="orgCard-image"/>
+                                    </div>
+                                    <div class="orgCard-body-container">
+                                        <h3>Sigma Gamma Rho</h3>
+                                        <div class="subBody-row">
+                                            <p id="privacyStatus">
+                                                Private 
+                                                <img src="{% static "images/collegeManagementApp/private.svg" %}" />
+                                            </p>
+
+                                            <p id="memberCounter">
+                                                505 Active
+                                            </p>
+                                        </div>
+                                        <div class="expandOrg">
+                                            <button role="button" type="button" class="viewOrgButton">View Org</button>
+                                        </div>
+                                    </div>
+                                    
+                                </a>
+                            </div>
+                        </div>
+
+                        <div id="memberInformation" class="members-body collegeTabInformation">
+                            College members
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock body %}

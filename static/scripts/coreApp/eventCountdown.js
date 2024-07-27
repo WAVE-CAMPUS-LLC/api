@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const timeLeft = eventDate - now;
 
             if (timeLeft < 0) {
-                eventDateElement.textContent = "Event has started!";
+                eventDateElement.textContent = "Live Now!";
                 return;
             }
 

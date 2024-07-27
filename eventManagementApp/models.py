@@ -64,6 +64,7 @@ class Event(models.Model):
         ("incomplete", "Incomplete"),
         ("active", "Active"),
         ("live", "Live"),
+        ("archived", "Archived")
     ]
 
     PRIVACY_CHOICES = [
@@ -74,7 +75,9 @@ class Event(models.Model):
 
     COUNTRY_CHOICES = [("United States", "United States")]
 
-    eventId = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, unique=True)
+    eventId = models.UUIDField(
+        primary_key=True, default=uuid.uuid4, editable=False, unique=True
+    )
     # publicId = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     host = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="events"
@@ -99,6 +102,9 @@ class Event(models.Model):
         ("Music", "Music"),
         ("Party", "Party"),
         ("Concert", "Concert"),
+        ("Sports", "Sports"),
+        ("Games", "Games"),
+        ("Greek", "Greek"),
     ]
 
     EVENT_IMG_PATH = "images/eventManagementApp/host/images/selectors/"
@@ -107,6 +113,29 @@ class Event(models.Model):
         "Music": f"{EVENT_IMG_PATH}music.svg",
         "Party": f"{EVENT_IMG_PATH}party.svg",
         "Concert": f"{EVENT_IMG_PATH}concert.svg",
+        "Sports": f"{EVENT_IMG_PATH}sports.svg",
+        "Games": f"{EVENT_IMG_PATH}games.svg",
+        "Greek": f"{EVENT_IMG_PATH}greek.png",
+    }
+
+    EXPLORE_TYPE_CHOICES = [
+        ("Music", "Music"),
+        ("Party", "Party"),
+        ("Concert", "Concert"),
+        ("Sports", "Sports"),
+        ("Games", "Games"),
+        ("Greek", "Greek"),
+    ]
+
+    EXPLORE_CATEGORY_IMG_PATH = "images/explore/categories/"
+
+    EXPLORE_CATEGORY_TYPE_IMAGES = {
+        "Music": f"{EXPLORE_CATEGORY_IMG_PATH}music.png",
+        "Party": f"{EXPLORE_CATEGORY_IMG_PATH}party.png",
+        "Concert": f"{EXPLORE_CATEGORY_IMG_PATH}concert.png",
+        "Sports": f"{EXPLORE_CATEGORY_IMG_PATH}sports.png",
+        "Games": f"{EXPLORE_CATEGORY_IMG_PATH}games.png",
+        "Greek": f"{EXPLORE_CATEGORY_IMG_PATH}greek.png",
     }
 
     event_type = models.CharField(

@@ -262,11 +262,16 @@
     color: black;
 
     cursor: pointer;
+}
 
+.category-card a {
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
+
+    text-decoration: none;
+    color: #000000;
 }
 
 .category-card:hover {
@@ -283,7 +288,7 @@
 }
 
 .category-card img {
-    height: 90px;
+    height: 100px;
 }
 
 .category-name {
@@ -359,7 +364,7 @@
     align-items: center;
     gap: 5px;
 
-    width: 80%;
+    width: 100%;
 
     border: 1px solid rgba(113, 113, 113, 0.182);
     border-bottom-left-radius: 20px;
@@ -371,6 +376,8 @@
     border-top: 1px;
 
     padding: 10px;
+    padding-left: 20px;
+    padding-right: 20px;
     box-sizing: border-box;
 }
 
@@ -379,7 +386,7 @@
     overflow: hidden; /* Hide overflow content */
     text-overflow: ellipsis; /* Show ellipsis for overflow text */
     width: 100%;
-    text-align: center;
+    text-align: left;
 }
 
 .eventSubInfo {

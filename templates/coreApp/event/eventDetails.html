@@ -39,9 +39,10 @@
     </div>
 
     <div id="contentContainerBodyOne">
-        <div class="header-image">
-            <img alt="Event Header" src="{{ event.header_photo.url }}"
-                class="placeholderImage" />
+        <div class="header-image" style="background-image: url('{{ event.header_photo.url }}');">
+            <div class="placeHolderImage">
+                <img id="trending-img" src="{{event.header_photo.url}}" />
+            </div>
         </div>
 
         <div id="contentContainerTabs">
@@ -66,11 +67,11 @@
                                 <h5 class="event-title">
                                     {{ event.title }}
                                 </h5>
-                                <p class="eventTitleDated">{{ event.date|custom_date }}</p>
+                                <p class="eventTitleDated">{{ event.date|custom_date }} at {{ event.building_name}}</p>
                             </div>
 
                             <div class="event-details-location">
-                                <p class="location-name">{{ event.building_name}}</p>
+                                
                                 <p class="event-dated-timed">{{ event.date }} at {{event.start_time|time:"g:i A" }}</p>
                             </div>
 
@@ -225,7 +226,7 @@
                         <div class="eventPhotosVideos-body">
                             <div id="slideshow-container" class="slideshow-container">
                                 {% for photo in body_photos %}
-                                    <img src="{{ photo }}" {% if forloop.first %}class="image-active"{% endif %} />
+                                    <img src="{{ photo }}" {% if forloop.first %}class="hidden-image"{% endif %} />
                                 {% endfor %}
                             </div>
                         </div>

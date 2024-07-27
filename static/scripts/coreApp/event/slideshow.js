@@ -6,14 +6,14 @@ document.addEventListener('DOMContentLoaded', function () {
     function showSlides() {
         // Hide all slides
         slides.forEach((slide) => {
-            slide.classList.remove('image-active');
+            slide.classList.add('hidden-image');
         });
 
         // Increment slide index
         slideIndex = (slideIndex + 1) % totalSlides;
 
         // Show the current slide
-        slides[slideIndex].classList.add('image-active');
+        slides[slideIndex].classList.remove('hidden-image');
 
         // Change slide every 5 seconds (5000 milliseconds)
         setTimeout(showSlides, 5000);

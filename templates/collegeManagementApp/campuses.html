@@ -1,0 +1,76 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}
+See all campuses — WAVE. on Campus 
+{% endblock title %}
+
+{% block app_page_style %}
+<link rel="stylesheet" type="text/css" href="{% static "/styles/collegeManagementApp/campuses.css" %}" />
+{% endblock app_page_style %}
+
+{% block script %}
+
+{% endblock script %}
+
+{% block header %}
+{% include "partials/nav-footer/nav/main_nav.html" %}
+{% endblock header %}
+
+{% block body %}
+<div id="content-container">
+    <div id="pageHeader">
+        <h3>
+            <span id="body-logo"> WAVE<span class="spot">.</span>
+            Colleges
+        </h3>
+        <p>Find your college by search or in the list below.</p>
+    </div>
+
+    <div id="pageSearch">
+        <div id="find-colleges">
+            <div class="find-college-name">
+                <div class="febc-img">
+                    <img src="{% static "images/explore/find.svg" %}" alt="Find College">
+                </div>
+                <input type="text" name="" id="" placeholder="Find college by name" autofocus>
+            </div>
+        </div>
+    </div>
+
+    <div id="pageBody">
+        <div id="header">
+            <h6>College List</h6>
+
+            <a class="add-college" href="{% url "colleges:add" %}">
+                <img src="{% static "/images/collegeManagementApp/add.svg" %}" /><h5>Add College</h5>
+            </a>
+        </div>
+
+        <div id="support-categories-body">
+            {% for college in colleges %}
+            <div id="college-card">
+                <div id="college-logo">
+                    <img src="{{ college.logo.url }}">
+                </div>
+                <div id="college-body">
+                    <div id="college-card-header">
+                        <h5>{{ college.name }}</h5>
+                    </div>
+                    <div id="college-card-body">
+                        <p class="members-display">
+                            100 Members
+                        </p>
+                        <p class="organization-display">55 Organizations</p>
+                    </div>
+                    <div id="college-card-footer">
+                        <a class="join-college" href="">Join College</a>
+                        <a class="view-college" target="_blank" href="{% url "colleges:info" collegeId=college.collegeId %}">View College</a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock body %}

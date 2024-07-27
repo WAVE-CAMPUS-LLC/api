@@ -17,8 +17,6 @@ urlpatterns = [
     path("privacy/", views.privacyView, name="privacy"), 
     path("safety/", views.safetyView, name="safety"), 
     path("terms/", views.termsView, name="terms"), 
-    
-    path("colleges/", views.collegeCampusesView, name="colleges"), 
     path("partner/", views.partnersView, name="partners"),
     path("affiliate/", views.affiliateView, name="affiliate"), 
 ]

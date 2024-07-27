@@ -36,7 +36,7 @@
 }
 
 .event-title h3 {
-    font-family: Wanted-Medium;
+    font-family: Wanted-Black;
     font-size: 35px;
     color: black;
 }
@@ -61,22 +61,64 @@
 }
 
 .header-image {
-    display: flex;
-    width: 100%;
-    height: auto;
-    max-height: 500px;
-    justify-content: center;
-}
-
-.header-image img {
     width: 100%;
     height: 100%;
-    max-height: 500px;
-    border-radius: 20px;
-    margin-bottom: 20px;
-    background-color: #000000;
+    min-width: 100%;
+    min-height: 500px;
+    max-height: 550px;
+    position: relative;
 
-    object-fit: cover;
+    border-radius: 25px;
+
+    background-size: cover;
+    background-position: top;
+    background-repeat: no-repeat;
+}
+
+.header-image * {
+    position: relative;
+    z-index: 2;
+    /* Ensure all child elements are above the blur effect */
+}
+
+.header-image::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background: rgba(23, 23, 23, 0.2);
+    /* Light color overlay with transparency */
+    backdrop-filter: blur(5px);
+    /* Apply the blur effect */
+    -webkit-backdrop-filter: blur(5px);
+    /* For Safari */
+    border-radius: 25px;
+    /* Match the container's border radius */
+    z-index: 1;
+    /* Ensure it's on top of the background */
+}
+
+.placeHolderImage {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 100%;
+    height: 100%;
+    min-height: 500px;
+    position: relative;
+    padding: 80px;
+}
+
+#trending-img {
+    width: 100%;
+    max-width: 400px;
+    max-height: 400px;
+    object-fit: contain;
+
+    border-radius: 20px;
 }
 
 .dividerOne {
@@ -177,8 +219,9 @@
 }
 
 .eventTitleDate .event-title {
-    font-family: Wanted-SemiBold;
-    font-size: 40px;
+    font-family: Wanted-Black;
+    font-size: 45px;
+    text-decoration: underline;
 }
 
 .eventTitleDated {
@@ -186,7 +229,7 @@
     font-size: 37px;
 }
 
-.event-details-location .location-name {
+.location-name {
     font-family: Wanted-Regular;
     font-size: 27px;
 }
@@ -360,8 +403,9 @@
 
 /* Event Description Tab */
 .eventDescription-body {
-    font-family: Wanted-Regular;
-    color: #545454;
+    font-family: Wanted-Variable;
+    line-height: 40px;
+    color: #000000;
 }
 
 .attention-graber {
@@ -379,28 +423,35 @@
 .eventPhotosVideos-body {
     width: 100%;
     height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
+
 .slideshow-container {
     max-height: 500px;
     max-width: 600px;
+    height: 100%;
 
     position: relative;
     margin: auto;
     overflow: hidden;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .slideshow-container img {
     height: 100%;
-    width: 100%;
+    width: auto;
     max-height: 500px;
     max-width: 600px;
-    object-fit: cover;
     border-radius: 15px;
-    display: none; /* Hide images by default */
 }
 
-.image-active {
-    display: block;
+.hidden-image {
+    display: none;
 }
 
 /* Event Additional Information Tab */
@@ -459,7 +510,8 @@
     border-bottom-right-radius: 20px;
     margin: 0 20px;
     padding: 20px;
-    display: none; /* Hide tab body by default */
+    display: none;
+    /* Hide tab body by default */
 }
 
 

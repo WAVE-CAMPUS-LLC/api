@@ -38,11 +38,6 @@ def termsView(request):
     return render(request, "extras/policy/terms.html", {"pageName": pageName})
 
 
-
-def collegeCampusesView(request):
-    pageName = "Colleges"
-    return render(request, "extras/resources/collegeCampuses.html", {"pageName": pageName})
-
 def affiliateView(request):
     pageName = "Affiliate"
     return render(request, "extras/resources/affiliate.html", {"pageName": pageName})
@@ -50,3 +45,7 @@ def affiliateView(request):
 def partnersView(request):
     pageName = "Partnership"
     return render(request, "extras/resources/partners.html", {"pageName": pageName})
+
+
+def error_404(request, exception):
+    return render(request, 'extras/invalid/invalid.html', status=404)

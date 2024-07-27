@@ -1,0 +1,139 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}
+Find your community! — WAVE. on Campus 
+{% endblock title %}
+
+{% block app_page_style %}
+<link rel="stylesheet" type="text/css" href="{% static "/styles/collegeManagementApp/home.css" %}" />
+<link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+{% endblock app_page_style %}
+
+{% block header %}
+{% include "partials/nav-footer/nav/main_nav.html" %}
+{% endblock header %}
+
+{% block body %}
+<div id="content-container">
+    <div class="college-rowOne">
+        <div class="infoText">
+            <div class="text-holder">
+                <h3>Colleges @ <span id="body-logo"> WAVE<span class="spot">.</span></h3>
+                <p>Join a community. Be a part of something!</p>
+                
+            </div>
+            <div class="button-container">
+                <a href="{% url "colleges:find" %}" class="findCollege">
+                    <img src="{% static "/images/collegeManagementApp/find.svg" %}" />
+                    Find College
+                </a>
+            </div>
+        </div>
+        <div class="image">
+            <img src="{% static "/images/collegeManagementApp/colleges.png" %}"/>
+        </div>
+    </div>
+
+
+    <div class="college-rowTwo">  
+        <p>
+            Our platform serves as a dynamic bridge, empowering organizers to showcase their events with
+            essential details while providing users with a hassle-free way to discover, purchase tickets,
+            and participate in campus happenings.
+            By cultivating a collaborative environment, we aim to entice organizers,
+            thereby attracting a broad consumer base and ensuring widespread adoption.
+        </p>
+    </div>
+    
+
+    <div class="college-rowThree">
+        <div class="image-container">
+            <img src="{% static "/images/collegeManagementApp/colleges-map.png" %}" alt="">
+        </div>
+    
+        <div class="college-rowThreeRight">
+            <div class="top-header">
+                <h2>Add your campus</h2>
+            </div>
+            <div class="top-body">
+                <p>
+                    Our platform serves as a dynamic bridge, empowering organizers to showcase their events with
+                    essential details while providing users with a hassle-free way to discover, purchase tickets,
+                    and participate in campus happenings.
+                    By cultivating a collaborative environment, we aim to entice organizers,
+                    thereby attracting a broad consumer base and ensuring widespread adoption.
+                </p>
+            </div>
+            <div class="middle-button">
+                <a class="addCampusBtn" href="{% url "colleges:add" %}">
+                    <img src="{% static "/images/collegeManagementApp/add_white.svg" %}" alt="Add campus">
+                    Add Campus
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="last-container">
+        <div class="last-heading">
+            <h2>
+                Major Campuses @ 
+                <span id="body-logo"> 
+                    WAVE
+                    <span class="spot">
+                        .
+                    </span>
+                </span>
+            </h2>
+            <p>Create a safe space where members can connect, have fun and build long-lasting friendships</p>
+        </div>
+    
+        <div class="last-cards">
+            <div class="college-cards">
+                <img src="{% static "/images/collegeManagementApp/collegeLogos/tennstate.png" %}" alt="Tennessee State University">
+                <div class="college-info">
+                    Lorem ipsum dolor, sit amet consectetur adipisicing elit. 
+                    Consequatur qui dolorem consectetur aspernatur. Esse, eos ex quis delectus sunt deserunt quo? 
+                    Eveniet sed amet suscipit reprehenderit porro dolorum neque cum?
+                </div>
+                <div class="college-details">
+                    <h4>Enosh Lartey </h4>
+                    <p>Tennessee State University</p>
+                </div>
+            </div>
+    
+            <div class="college-cards">
+                <img src="{% static "/images/collegeManagementApp/collegeLogos/fisk.png" %}" alt="">
+                <div class="college-info">
+                    Lorem ipsum dolor, sit amet consectetur adipisicing elit. 
+                    Consequatur qui dolorem consectetur aspernatur. Esse, eos ex quis delectus sunt deserunt quo? 
+                    Eveniet sed amet suscipit reprehenderit porro dolorum neque cum?
+                </div>
+                <div class="college-details">
+                    <h4> Edmund Afunyah </h4>
+                    <p>Fisk University</p>
+                </div>
+            </div>
+    
+            <div class="college-cards">
+                <img src="{% static "/images/collegeManagementApp/collegeLogos/belmont.png" %}" alt="">
+                <div class="college-info">
+                    Lorem ipsum dolor, sit amet consectetur adipisicing elit. 
+                    Consequatur qui dolorem consectetur aspernatur. Esse, eos ex quis delectus sunt deserunt quo? 
+                    Eveniet sed amet suscipit reprehenderit porro dolorum neque cum?
+                </div>
+                <div class="college-details">
+                    <h4>Chigekwu Chukwuezi </h4>
+                    <p>Belmont Univeristy</p>
+                </div>
+            </div>
+    
+        </div>
+    </div>
+</div>
+
+<div id="colleges-footer-info">
+    <h3>Be part of a community!</h3>
+</div>
+
+{% endblock body %}
