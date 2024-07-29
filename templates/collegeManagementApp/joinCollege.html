@@ -1,0 +1,43 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}
+Join {{ college.name }} — WAVE. on campus 
+{% endblock title %}
+
+{% block app_page_style %}
+<link rel="stylesheet" type="text/css" href="{% static "/styles/collegeManagementApp/joinCollege.css" %}" />
+{% endblock app_page_style %}
+
+{% block script %}
+{% endblock script %}
+
+{% block header %}
+{% include "partials/nav-footer/nav/main_nav.html" %}
+{% endblock header %}
+
+{% block body %}
+<div id="content-container">
+    <div id="pageHeader">
+        <h3>
+            Join {{ college.name }}
+        </h3>
+        <p>Enter your school to receive a verification code. </p>
+    </div>
+
+    <div id="pageBody">
+        <form class="verifyForm" method="post" action="{% url "colleges:join" collegeId=college.collegeId %}">
+            {% csrf_token %}
+            <h5>Verify your campus email</h5>
+            <label for="{{joinForm.email.id_for_label}}">
+                <p>{{ joinForm.email.label }}</p>
+                {{ joinForm.email }}
+            </label>
+
+            <div class="submitFormContainer">
+                <button type="submit" role="button" class="submitButton">Verify</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock body %}

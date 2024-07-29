@@ -119,7 +119,7 @@
     color: #008d95;
     font-family: Wanted-Variable;
     text-underline-offset: 3px;
-    
+
     display: flex;
     flex-direction: row;
     gap: 3px;
@@ -135,10 +135,13 @@
 }
 
 #pageBody #header h6 {
-    font-family: Wanted-Regular;
+    font-family: Wanted-Variable;
     font-size: 15px;
     padding: 12px;
-    background-color: #008d95;
+    border-right-color: #13c9d3;
+    border-left-color: #008d95bc;
+    border-radius: 25px;
+    background-image: linear-gradient(to right, #008d95bc 0%, #13c9d3 100%);
     color: white;
     border-radius: 12px;
 }
@@ -172,7 +175,7 @@
     display: flex;
     flex-direction: column;
     gap: 10px;
-    
+
     cursor: pointer;
 }
 
@@ -211,9 +214,12 @@
 }
 
 #college-card-header h5 {
-    white-space: nowrap; /* Prevent wrapping */
-    overflow: hidden; /* Hide overflow content */
-    text-overflow: ellipsis; /* Show ellipsis for overflow text */
+    white-space: nowrap;
+    /* Prevent wrapping */
+    overflow: hidden;
+    /* Hide overflow content */
+    text-overflow: ellipsis;
+    /* Show ellipsis for overflow text */
     width: 100%;
     text-align: left;
 }
@@ -262,7 +268,7 @@
     flex-direction: row;
     gap: 10px;
     border-radius: 20px;
-    background-image: linear-gradient(to right,  #008d95bc 0%, #13c9d3 100%);
+    background-image: linear-gradient(to right, #008d95bc 0%, #13c9d3 100%);
     cursor: pointer;
 }
 

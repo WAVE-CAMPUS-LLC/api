@@ -64,7 +64,11 @@ See all campuses — WAVE. on Campus
                         <p class="organization-display">55 Organizations</p>
                     </div>
                     <div id="college-card-footer">
-                        <a class="join-college" href="">Join College</a>
+                        {% if user_profile and user_profile.college == college %}
+                        <a class="join-college" href="{% url "colleges:exit" collegeId=college.collegeId %}">Exit College</a>
+                        {% else %}
+                        <a class="join-college" href="{% url "colleges:join" collegeId=college.collegeId %}">Join College</a>
+                        {% endif %}
                         <a class="view-college" target="_blank" href="{% url "colleges:info" collegeId=college.collegeId %}">View College</a>
                     </div>
                 </div>

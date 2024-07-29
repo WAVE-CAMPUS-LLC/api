@@ -1,0 +1,142 @@
+/** Logo used in body's **/
+#body-logo {
+    font-family: Wanted-Black;
+}
+
+#body-logo .spot {
+    color: #008d95;
+}
+
+/** [End] Logo used in body's [End]**/
+
+#content-container {
+    padding-bottom: 70px;
+    padding-left: 100px;
+    padding-right: 100px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 70px;
+}
+
+/* Page Header */
+#pageHeader {
+    width: 100%;
+    display: flex;
+    justify-content: start;
+    flex-direction: column;
+    gap: 5px;
+}
+
+#pageHeader h3 {
+    font-family: Wanted-Bold;
+    font-size: 40px;
+}
+
+#pageHeader p {
+    font-family: Wanted-Variable;
+    font-size: 17px;
+    color: rgba(128, 128, 128, 0.798);
+}
+
+/* Page Body */
+#pageBody {
+    width: 100%;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.verifyForm {
+    display: flex;
+    flex-direction: column;
+    row-gap: 20px;
+    background-color: white;
+
+    width: 40%;
+
+    /** Card Padding **/
+    padding-top: 20px;
+    padding-bottom: 30px;
+    padding-left: 50px;
+    padding-right: 50px;
+
+    /** Card Border Elements **/
+    border: 1px solid rgba(130, 130, 130, 0.094);
+    border-radius: 20px;
+
+    /** Card Shadowing **/
+    -webkit-box-shadow: 2px 3px 21px 4px rgba(62, 62, 62, 0.257);
+    -moz-box-shadow: 2px 3px 21px 4px rgba(62, 62, 62, 0.257);
+    box-shadow: 2px 3px 21px 4px rgba(62, 62, 62, 0.257);
+}
+
+.verifyForm h5 {
+    font-family: Wanted-Medium;
+    font-size: 27px;
+    width: 100%;
+
+    display: flex;
+    justify-content: center;
+}
+
+.verifyForm label {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.verifyForm label p {
+    font-family: Wanted-Regular;
+    font-size: 15px;
+    color: rgba(0, 0, 0, 0.798);
+}
+
+.verifyForm label input {
+    padding: 10px;
+    padding-left: 13px;
+    padding-right: 13px;
+    border-radius: 10px;
+    border: 1px solid rgba(9, 9, 9, 0.108);
+
+    font-family: Wanted-Variable;
+    font-size: 15px;
+
+    width: 100%;
+
+    /** Box Shadowing **/
+    -webkit-box-shadow: 2px 3px 21px 4px rgba(170, 170, 170, 0.075);
+    -moz-box-shadow: 2px 3px 21px 4px rgba(170, 170, 170, 0.075);
+    box-shadow: 2px 3px 21px 4px rgba(170, 170, 170, 0.075);
+}
+
+.submitFormContainer {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+.submitButton {
+    padding: 15px;
+    border: 1px solid transparent;
+    border-right-color: #13c9d3;
+    border-left-color: #008d95bc;
+    color: white;
+
+    font-family: Wanted-Medium;
+    text-decoration: none;
+
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    justify-content: center;
+    gap: 10px;
+
+    width: 50%;
+
+    cursor: pointer;
+    font-size: 20px;
+    border-radius: 20px;
+    background-image: linear-gradient(to right,  #008d95bc 0%, #13c9d3 100%);
+}

@@ -20,18 +20,28 @@
 {% block body %}
 <div id="content-container">
     <div id="pageHeader">
-        <h3>
-            {{ college.name }}
-        </h3>
-        <p>{{ college.address }}, {{ college.city }}, {{ college.state }} {{college.zip_code}}, {{ college.country }}</p>
+        <div id="collegeInformation">
+            <h3>
+                {{ college.name }}
+            </h3>
+            <p>{{ college.address }}, {{ college.city }}, {{ college.state }} {{college.zip_code}}, {{ college.country }}</p>
+        </div>
+        <div id="joinCollege">
+            {% if user_profile and user_profile.college == college %}
+                <a href="{% url 'colleges:exit' college.collegeId %}" class="joinCollegeButton">
+                    <img src="{% static 'images/collegeManagementApp/exit.svg' %}" />
+                    Leave Campus
+                </a>
+            {% else %}
+                <a href="{% url 'colleges:join' college.collegeId %}" class="joinCollegeButton">
+                    <img src="{% static 'images/collegeManagementApp/join.svg' %}" />
+                    Join Campus
+                </a>
+            {% endif %}
+        </div>
     </div>
 
     <div id="pageBody">
-        <div id="pageBodyHeading">
-            <p>1200 Members</p>
-            <p>100 Organizations</p>
-        </div>
-
         <div id="pageBodyContent">
             <div id="contentContainerTabs">
                 <div id="tabHeaderParent">
@@ -102,7 +112,7 @@
                         
                         <div id="organizationInformation" class="organizations-body collegeTabInformation">
                             <div class="collegeOrganizationsContainer">
-                                <a target="_blank" href="" class="organization-card">
+                                <div class="organization-card">
                                     <div class="orgCard-image-container">
                                         <img src="{% static "/images/collegeManagementApp/organizations.jpg" %}" class="orgCard-image"/>
                                     </div>
@@ -119,16 +129,28 @@
                                             </p>
                                         </div>
                                         <div class="expandOrg">
-                                            <button role="button" type="button" class="viewOrgButton">View Org</button>
+                                            <a target="_blank" href="" class="viewOrgButton">View Org</a>
                                         </div>
                                     </div>
                                     
-                                </a>
+                                </div>
                             </div>
                         </div>
 
                         <div id="memberInformation" class="members-body collegeTabInformation">
-                            College members
+                            <div class="collegeMembersContainer">
+                                {% for member in collegeMembers %}
+                                <a target="_blank" href="{% url "accountManagement:memberProfile" username=member.user.username %}" class="collegeMemberCard">
+                                    <div class="memberPfp">
+                                        <img src="{% static "/images/collegeManagementApp/pfp.jpg" %}" />
+                                    </div>
+                                    <div class="memberBody">
+                                        <h5>{{member.user.first_name}} {{member.user.last_name}}</h5>
+                                        <p>Class of '26</p>
+                                    </div>
+                                </a>
+                                {% endfor %}
+                            </div>
                         </div>
                     </div>
                 </div>
