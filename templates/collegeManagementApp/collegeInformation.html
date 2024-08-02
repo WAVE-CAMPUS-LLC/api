@@ -55,101 +55,138 @@
                 <div id="tabBody">
                     <div id="tabBodyContent">
                         <div id="eventInformation" class="events-body collegeTabInformation">
-                            <div class="collegeEventContainer">
-                                <a target="_blank" href="" class="category-event-card">
-                                    <div class="category-image">
-                                        <img src="{% static "images/explore/display.png" %}" alt="">
-                                    </div>
-                                    <div class="category-event-name">
-                                        <h2 id="eventTitle">Event Demo</h2>
-                                        <div class="eventSubInfo">
-                                            <p id="eventLocation">Hosted by @enoshlartey</p>
-                                            <p id="eventDate">28th July, 2024</p>
+                            <div class="collegeTabInformationRow">
+                                <div class="createEventRow">
+                                    <a class="createEventButton" href="">
+                                        <img src="{% static "/images/collegeManagementApp/add.svg" %}" />
+                                        Create Event
+                                    </a>
+                                </div>
+                                <div class="collegeEventContainer">
+                                    <a target="_blank" href="" class="category-event-card">
+                                        <div class="category-image">
+                                            <img src="{% static "images/explore/display.png" %}" alt="">
                                         </div>
-                                    </div>
-                                </a>
-
-                                <a target="_blank" href="" class="category-event-card">
-                                    <div class="category-image">
-                                        <img src="{% static "images/explore/display.png" %}" alt="">
-                                    </div>
-                                    <div class="category-event-name">
-                                        <h2 id="eventTitle">Event Demo</h2>
-                                        <div class="eventSubInfo">
-                                            <p id="eventLocation">Hosted by @enoshlartey</p>
-                                            <p id="eventDate">28th July, 2024</p>
+                                        <div class="category-event-name">
+                                            <h2 id="eventTitle">Event Demo</h2>
+                                            <div class="eventSubInfo">
+                                                <p id="eventLocation">Hosted by @enoshlartey</p>
+                                                <p id="eventDate">28th July, 2024</p>
+                                            </div>
                                         </div>
-                                    </div>
-                                </a>
-
-                                <a target="_blank" href="" class="category-event-card">
-                                    <div class="category-image">
-                                        <img src="{% static "images/explore/display.png" %}" alt="">
-                                    </div>
-                                    <div class="category-event-name">
-                                        <h2 id="eventTitle">Event Demo</h2>
-                                        <div class="eventSubInfo">
-                                            <p id="eventLocation">Hosted by @enoshlartey</p>
-                                            <p id="eventDate">28th July, 2024</p>
+                                    </a>
+    
+                                    <a target="_blank" href="" class="category-event-card">
+                                        <div class="category-image">
+                                            <img src="{% static "images/explore/display.png" %}" alt="">
                                         </div>
-                                    </div>
-                                </a>
-
-                                <a target="_blank" href="" class="category-event-card">
-                                    <div class="category-image">
-                                        <img src="{% static "images/explore/display.png" %}" alt="">
-                                    </div>
-                                    <div class="category-event-name">
-                                        <h2 id="eventTitle">Event Demo</h2>
-                                        <div class="eventSubInfo">
-                                            <p id="eventLocation">Hosted by @enoshlartey</p>
-                                            <p id="eventDate">28th July, 2024</p>
+                                        <div class="category-event-name">
+                                            <h2 id="eventTitle">Event Demo</h2>
+                                            <div class="eventSubInfo">
+                                                <p id="eventLocation">Hosted by @enoshlartey</p>
+                                                <p id="eventDate">28th July, 2024</p>
+                                            </div>
                                         </div>
-                                    </div>
-                                </a>
+                                    </a>
+    
+                                    <a target="_blank" href="" class="category-event-card">
+                                        <div class="category-image">
+                                            <img src="{% static "images/explore/display.png" %}" alt="">
+                                        </div>
+                                        <div class="category-event-name">
+                                            <h2 id="eventTitle">Event Demo</h2>
+                                            <div class="eventSubInfo">
+                                                <p id="eventLocation">Hosted by @enoshlartey</p>
+                                                <p id="eventDate">28th July, 2024</p>
+                                            </div>
+                                        </div>
+                                    </a>
+    
+                                    <a target="_blank" href="" class="category-event-card">
+                                        <div class="category-image">
+                                            <img src="{% static "images/explore/display.png" %}" alt="">
+                                        </div>
+                                        <div class="category-event-name">
+                                            <h2 id="eventTitle">Event Demo</h2>
+                                            <div class="eventSubInfo">
+                                                <p id="eventLocation">Hosted by @enoshlartey</p>
+                                                <p id="eventDate">28th July, 2024</p>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </div>
                             </div>
                         </div>
                         
                         <div id="organizationInformation" class="organizations-body collegeTabInformation">
-                            <div class="collegeOrganizationsContainer">
-                                <div class="organization-card">
-                                    <div class="orgCard-image-container">
-                                        <img src="{% static "/images/collegeManagementApp/organizations.jpg" %}" class="orgCard-image"/>
-                                    </div>
-                                    <div class="orgCard-body-container">
-                                        <h3>Sigma Gamma Rho</h3>
-                                        <div class="subBody-row">
-                                            <p id="privacyStatus">
-                                                Private 
-                                                <img src="{% static "images/collegeManagementApp/private.svg" %}" />
-                                            </p>
-
-                                            <p id="memberCounter">
-                                                505 Active
-                                            </p>
+                            <div class="collegeTabInformationRow">
+                                <div class="createOrgRow">
+                                    <a class="createOrgButton" href="{% url "colleges:createOrg" collegeId=college.collegeId %}">
+                                        <img src="{% static "/images/collegeManagementApp/add.svg" %}" />
+                                        Create Organization
+                                    </a>
+                                </div>
+                                <div class="collegeOrganizationsContainer">
+                                    {% for org in organizations %}
+                                    <div class="organization-card">
+                                        <div class="orgCard-image-container">
+                                            <img src="{{org.logo.url}}" class="orgCard-image"/>
                                         </div>
-                                        <div class="expandOrg">
-                                            <a target="_blank" href="" class="viewOrgButton">View Org</a>
+                                        <div class="orgCard-body-container">
+                                            <h3> {{ org.name }}</h3>
+                                            <div class="subBody-row">
+                                                <p id="privacyStatus">
+                                                    {% if org.privacy == "Private" %}
+                                                    {{ org.privacy }}
+                                                    <img src="{% static "images/collegeManagementApp/private.svg" %}" />
+                                                    {% elif org.privacy == "Public" %}
+                                                    {{ org.privacy }}
+                                                    <img src="{% static "images/collegeManagementApp/public.svg" %}" />
+                                                    {% endif %}
+                                                    
+                                                </p>
+    
+                                                <p id="memberCounter">
+                                                    505 Members
+                                                </p>
+                                            </div>
+                                            <div class="expandOrg">
+                                                <a target="_blank" href="{% url "colleges:viewOrg" collegeId=college.collegeId orgId=org.orgId %}" class="viewOrgButton">View Org</a>
+                                            </div>
                                         </div>
                                     </div>
+                                    {% endfor %}
                                     
                                 </div>
                             </div>
                         </div>
 
                         <div id="memberInformation" class="members-body collegeTabInformation">
-                            <div class="collegeMembersContainer">
-                                {% for member in collegeMembers %}
-                                <a target="_blank" href="{% url "accountManagement:memberProfile" username=member.user.username %}" class="collegeMemberCard">
-                                    <div class="memberPfp">
-                                        <img src="{% static "/images/collegeManagementApp/pfp.jpg" %}" />
+                            <div class="collegeTabInformationRow">
+                                {% if collegeMembers %}
+                                <div class="collegeMembersContainer">
+                                    {% for member in collegeMembers %}
+                                    <a target="_blank" href="{% url "accountManagement:memberProfile" username=member.user.username %}" class="collegeMemberCard">
+                                        <div class="memberPfp">
+                                            <img src="{% static "/images/collegeManagementApp/pfp.jpg" %}" />
+                                        </div>
+                                        <div class="memberBody">
+                                            <h5>{{member.user.first_name}} {{member.user.last_name}}</h5>
+                                            <p>Class of '26</p>
+                                        </div>
+                                    </a>
+                                    {% endfor %}
+                                </div>
+                                {% else %}
+                                <div class="emptyContainer">
+                                    <div>
+                                        <img src="{% static "/images/collegeManagementApp/collegeInformation/empty-listing.svg" %}" />
                                     </div>
-                                    <div class="memberBody">
-                                        <h5>{{member.user.first_name}} {{member.user.last_name}}</h5>
-                                        <p>Class of '26</p>
+                                    <div>
+                                        <p>No members to display!</p>
                                     </div>
-                                </a>
-                                {% endfor %}
+                                </div>
+                                {% endif %}
                             </div>
                         </div>
                     </div>

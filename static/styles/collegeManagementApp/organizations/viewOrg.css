@@ -1,0 +1,406 @@
+/** Logo used in body's **/
+#body-logo {
+    font-family: Wanted-Black;
+}
+
+#body-logo .spot {
+    color: #008d95;
+}
+
+/** [End] Logo used in body's [End]**/
+
+#content-container {
+    padding-bottom: 70px;
+    padding-left: 100px;
+    padding-right: 100px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 70px;
+}
+
+/* Page Header */
+#pageHeader {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    flex-direction: row;
+    align-items: center;
+}
+
+#collegeInformation {
+    display: flex;
+    justify-content: start;
+    flex-direction: column;
+    gap: 5px;
+}
+
+#pageHeader h3 {
+    font-family: Wanted-Bold;
+    font-size: 40px;
+}
+
+#pageHeader p {
+    font-family: Wanted-Variable;
+    font-size: 17px;
+    color: rgba(128, 128, 128, 0.798);
+}
+
+.joinCollegeButton {
+    padding: 15px;
+    border: 1px solid transparent;
+    border-right-color: #13c9d3;
+    border-left-color: #008d95bc;
+    color: white;
+
+    font-family: Wanted-SemiBold;
+    text-decoration: none;
+
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    gap: 10px;
+
+    font-size: 20px;
+    border-radius: 20px;
+    background-image: linear-gradient(to right, #008d95bc 0%, #13c9d3 100%);
+}
+
+.joinCollegeButton img {
+    width: 25px;
+    height: 25px;
+}
+
+
+/* Page Body */
+#pageBody {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+
+    width: 100%;
+}
+
+
+/* Page Body Content */
+#contentContainerTabs {
+    width: 100%;
+
+    display: flex;
+    flex-direction: column;
+    gap: 50px;
+}
+
+#tabHeaderParent {
+    width: 100%;
+
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+}
+
+
+#tabHeader {
+    list-style-type: none;
+
+    display: flex;
+    flex-direction: row;
+    justify-content: start;
+    gap: 10px;
+
+    width: 100%;
+    padding-bottom: 5px;
+
+    font-family: Wanted-Regular;
+    font-size: 16px;
+}
+
+#tabHeader li {
+    cursor: pointer;
+}
+
+.collegeDetailsTab {
+    padding: 10px;
+    padding-left: 20px;
+    padding-right: 20px;
+}
+
+.collegeDetailsTab:hover {
+    border-bottom: 4px solid #008d95a4;
+}
+
+.collegeDetailsTab.tab-active {
+    border-bottom: 4px solid #008d95;
+}
+
+#tabBody {
+    display: flex;
+    flex-direction: row;
+    gap: 40px;
+}
+
+#tabBodyContent {
+    width: 100%;
+}
+
+.collegeTabInformationRow {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Event Information Tab */
+.createEventRow,
+.createOrgRow {
+    width: 100%;
+    display: flex;
+    justify-content: end;
+}
+
+.createEventButton,
+.createOrgButton {
+    padding: 15px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    border: 1px solid transparent;
+    border-right-color: #13c9d3;
+    border-left-color: #008d95bc;
+    color: white;
+
+    font-family: Wanted-SemiBold;
+    text-decoration: none;
+
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    gap: 10px;
+
+    font-size: 20px;
+    border-radius: 20px;
+    background-image: linear-gradient(to right, #008d95bc 0%, #13c9d3 100%);
+}
+
+.collegeEventContainer {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 20px;
+}
+
+.category-event-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    cursor: pointer;
+    overflow: hidden;
+
+    padding: 10px;
+    color: black;
+    text-decoration: none;
+}
+
+.category-event-card {
+    overflow: hidden;
+    /* Ensures that the zoomed image doesn't overflow the card */
+}
+
+.category-image img {
+    transition: transform 0.3s ease;
+}
+
+.category-event-card:hover .category-image img {
+    transform: scale(0.96);
+}
+
+.eventHr {
+    display: flex;
+    justify-content: center;
+}
+
+.eventHr hr {
+    border: 2px solid #8f8f8f47;
+    width: 70%;
+    border-radius: 10px;
+}
+
+.category-image {
+    width: 100%;
+    border-radius: 20px;
+    border: 0px solid #00000013;
+    border-bottom-left-radius: 20px;
+    border-bottom-right-radius: 20px;
+    -webkit-box-shadow: 2px 3px 21px 4px rgba(170, 170, 170, 0.075);
+    -moz-box-shadow: 2px 3px 21px 4px rgba(170, 170, 170, 0.075);
+    box-shadow: 2px 3px 21px 4px rgba(170, 170, 170, 0.075);
+}
+
+.category-image img {
+    width: 100%;
+    height: 100%;
+
+    border-radius: 20px;
+    object-fit: cover;
+}
+
+.category-event-name {
+    font-family: Wanted-SemiBold;
+    font-size: 15px;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+
+    width: 100%;
+
+    border: 1px solid rgba(113, 113, 113, 0.182);
+    border-bottom-left-radius: 20px;
+    border-bottom-right-radius: 20px;
+    -webkit-box-shadow: 2px 3px 21px 4px rgba(170, 170, 170, 0.075);
+    -moz-box-shadow: 2px 3px 21px 4px rgba(170, 170, 170, 0.075);
+    box-shadow: 2px 3px 21px 4px rgba(170, 170, 170, 0.075);
+
+    border-top: 1px;
+
+    padding: 10px;
+    padding-left: 20px;
+    padding-right: 20px;
+    box-sizing: border-box;
+}
+
+#eventTitle {
+    white-space: nowrap;
+    /* Prevent wrapping */
+    overflow: hidden;
+    /* Hide overflow content */
+    text-overflow: ellipsis;
+    /* Show ellipsis for overflow text */
+    width: 100%;
+    text-align: left;
+}
+
+.eventSubInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    width: 100%;
+
+    font-family: Wanted-Variable;
+    color: rgba(66, 66, 66, 0.575);
+}
+
+#eventLocation {
+    display: flex;
+    justify-content: center;
+}
+
+#eventDate {
+    display: flex;
+    justify-content: end;
+}
+
+
+/* Overview Tab Content */
+.descriptionRow {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.descriptionRow h3 {
+    font-family: Wanted-Medium;
+    font-size: 17px;
+}
+
+.descriptionRow p{
+    font-family: Wanted-Variable;
+    font-size: 18px;
+}
+
+
+/* College Members Container */
+.collegeMembersContainer {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 20px;
+
+    width: 100%;
+}
+
+.collegeMemberCard {
+    border: 1px solid rgba(116, 116, 116, 0.031);
+    border-radius: 20px;
+
+    padding-top: 20px;
+    padding-bottom: 20px;
+    padding-left: 40px;
+    padding-right: 40px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+
+    -webkit-box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.272);
+    -moz-box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+
+    text-decoration: none;
+    color: black;
+}
+
+.memberPfp {
+    display: flex;
+    justify-content: center;
+}
+
+.memberPfp img {
+    width: 120px;
+    height: 120px;
+    border-radius: 100%;
+}
+
+.memberBody {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+}
+
+.memberBody h5 {
+    font-family: Wanted-Regular;
+    font-size: 22px;
+}
+
+.memberBody p {
+    font-family: Wanted-Variable;
+    font-size: 15.5px;
+    color: #5e5e5edb;
+}
+
+.emptyContainer {
+    width: 100%;
+    border-radius: 20px;
+    padding-top: 70px;
+    padding-bottom: 70px;
+
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+
+    background-color: rgba(146, 146, 146, 0.096);
+}
+
+.emptyContainer img {
+    width: 60px;
+}
+
+.emptyContainer p {
+    font-family: Wanted-Variable;
+    font-size: 16.5px;
+    color: black;
+}

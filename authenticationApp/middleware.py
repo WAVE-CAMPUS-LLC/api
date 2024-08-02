@@ -14,6 +14,7 @@ class RedirectAuthenticatedUsersMiddleware:
         if request.user.is_authenticated:
             restricted_urls = [reverse('authentication:login'), reverse('authentication:join')]
             if request.path in restricted_urls:
-                return redirect("accountManagement:userAccount")
+                next_url = request.GET.get("next", "accountManagement:userAccount")
+                return redirect(next_url)
         return response
 

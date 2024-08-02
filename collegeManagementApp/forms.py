@@ -32,6 +32,21 @@ class JoinCollegeForm(forms.Form):
         ),
     )
 
+    def __init__(self, *args, **kwargs):
+        self.college = kwargs.pop("college", None)
+        super().__init__(*args, **kwargs)
+
+    def clean_email(self):
+        email = self.cleaned_data.get("email")
+        if self.college:
+            email_domain = email.split("@")[1]
+
+            if self.college.email_domain not in email_domain:
+                raise forms.ValidationError(
+                    f"Please use your school email ending in @{self.college.email_domain}"
+                )
+        return email
+
 
 class VerifyCollegeJoinForm(forms.Form):
     code = forms.CharField(
@@ -45,3 +60,20 @@ class VerifyCollegeJoinForm(forms.Form):
             }
         ),
     )
+
+
+class OrganizationForm(forms.ModelForm):
+    class Meta:
+        model = Organization
+        fields = [
+            "name",
+            "description",
+            "privacy",
+            "logo",
+            "contact_name",
+            "contact_email",
+            "contact_website",
+            "instagram",
+        ]
+
+        widgets = {"privacy": forms.Select()}

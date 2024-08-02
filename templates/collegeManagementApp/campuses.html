@@ -48,28 +48,28 @@ See all campuses — WAVE. on Campus
         </div>
 
         <div id="support-categories-body">
-            {% for college in colleges %}
+            {% for college_info in college_members_info %}
             <div id="college-card">
                 <div id="college-logo">
-                    <img src="{{ college.logo.url }}">
+                    <img src="{{ college_info.college.logo.url }}">
                 </div>
                 <div id="college-body">
                     <div id="college-card-header">
-                        <h5>{{ college.name }}</h5>
+                        <h5>{{ college_info.college.name }}</h5>
                     </div>
                     <div id="college-card-body">
                         <p class="members-display">
-                            100 Members
+                            {{ college_info.member_count }} {% if college_info.member_count == 1 %}Member{% else %}Members{% endif %}
                         </p>
                         <p class="organization-display">55 Organizations</p>
                     </div>
                     <div id="college-card-footer">
-                        {% if user_profile and user_profile.college == college %}
-                        <a class="join-college" href="{% url "colleges:exit" collegeId=college.collegeId %}">Exit College</a>
+                        {% if user_profile and user_profile.college == college_info.college %}
+                        <a class="join-college" href="{% url "colleges:exit" collegeId=college_info.college.collegeId %}">Exit College</a>
                         {% else %}
-                        <a class="join-college" href="{% url "colleges:join" collegeId=college.collegeId %}">Join College</a>
+                        <a class="join-college" href="{% url "colleges:join" collegeId=college_info.college.collegeId %}">Join College</a>
                         {% endif %}
-                        <a class="view-college" target="_blank" href="{% url "colleges:info" collegeId=college.collegeId %}">View College</a>
+                        <a class="view-college" target="_blank" href="{% url "colleges:info" collegeId=college_info.college.collegeId %}">View College</a>
                     </div>
                 </div>
             </div>

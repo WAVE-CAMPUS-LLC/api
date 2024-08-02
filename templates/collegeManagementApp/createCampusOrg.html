@@ -1,0 +1,141 @@
+{% extends "base/base.html" %}
+{% load static %}
+{% load widget_tweaks %}
+
+{% block title %}
+Create new organization — WAVE. on Campus 
+{% endblock title %}
+
+{% block app_page_style %}
+<link rel="stylesheet" type="text/css" href="{% static "/styles/collegeManagementApp/createCampusOrg.css" %}" />
+{% endblock app_page_style %}
+
+{% block script %}
+<script type="text/javascript" src="{% static "scripts/collegeManagementApp/sectionControl.js" %}"></script>
+<script type="text/javascript" src="{% static "scripts/collegeManagementApp/logoPreview.js" %}"></script>
+{% endblock script %}
+
+{% block header %}
+{% include "partials/nav-footer/nav/main_nav.html" %}
+{% endblock header %}
+
+{% block body %}
+<div id="content-container">
+    <div id="pageHeader">
+        <h3>
+            Campus Organizations
+        </h3>
+        <p>Create a new organization at {{ college.name }}.</p>
+    </div>
+
+
+    <div id="pageBody">
+        <form method="POST" action="{% url "colleges:createOrg" collegeId=college.collegeId %}" enctype="multipart/form-data">
+            {% csrf_token %}
+            <section class="section active">
+                <div class="section-container body-section">
+                    <div class="section-title">
+                        <h4>{{ orgForm.name.label }}</h4>
+                    </div>
+                    <div class="section-input">
+                        <input type="{{ orgForm.name.field.widget.input_type }}" id="{{ collegForm.name.auto_id }}" name="{{ orgForm.name.html_name }}" placeholder="African Students Association, NSBE, etc" />
+                    </div>
+                </div>
+            </section>
+    
+            <section class="section">
+                <div class="section-container body-section">
+                    <div class="section-title">
+                        <h4>{{ orgForm.description.label }}</h4>
+                    </div>
+                    <div class="section-input">
+                        {{ orgForm.description }}
+                    </div>
+                </div>
+            </section>
+    
+            <section class="section active">
+                <div class="section-container body-section">
+                    <div class="section-title">
+                        <h4>{{ orgForm.logo.label }}</h4>
+                        <p>
+                            A logo works just fine!
+                        </p>
+                    </div>
+                    <div class="image-input-container">
+                        <div class="image-input">
+                            <img id="logo-preview" src="#" />
+                            <button id="logoUpload" type="button" role="button" onclick="document.getElementById('{{ orgForm.logo.auto_id }}').click();">Upload</button>
+                            {{ orgForm.logo|add_class:"hidden" }}
+                        </div>
+                    </div>
+                </div>
+            </section>
+    
+            <section class="section active">
+                <div class="section-container body-section">
+                    <div class="section-title">
+                        <h4>{{ orgForm.privacy.label }}</h4>
+                    </div>
+                    <div class="section-input">
+                        {{ orgForm.privacy }}
+                    </div>
+                </div>
+            </section>
+    
+            <section class="section active">
+                <div class="section-container body-section">
+                    <div class="section-title">
+                        <h4>{{ orgForm.contact_name.label }}</h4>
+                    </div>
+                    <div class="section-input">
+                        {% render_field orgForm.contact_name  %}
+                    </div>
+                </div>
+            </section>
+
+            <section class="section active">
+                <div class="section-container body-section">
+                    <div class="section-title">
+                        <h4>{{ orgForm.contact_email.label }}</h4>
+                    </div>
+                    <div class="section-input">
+                        {% render_field orgForm.contact_email  %}
+                    </div>
+                </div>
+            </section>
+
+            <section class="section active">
+                <div class="section-container body-section">
+                    <div class="section-title">
+                        <h4>{{ orgForm.contact_website.label }}</h4>
+                    </div>
+                    <div class="section-input">
+                        {% render_field orgForm.contact_website placeholder="https://example.com" %}
+                    </div>
+                </div>
+            </section>
+
+            <section class="section active">
+                <div class="section-container body-section">
+                    <div class="section-title">
+                        <h4>{{ orgForm.instagram.label }}</h4>
+                    </div>
+                    <div class="section-input">
+                        {% render_field orgForm.instagram  %}
+                    </div>
+                </div>
+            </section>
+    
+            <div class="nextPreviousRow">
+                <button type="button" role="button" id="previousSectionButton">Previous</button>
+    
+                <div id="nextSubmitContainer">
+                    <button type="button" role="button" id="nextSectionButton">Next</button>
+                    <button type="submit" role="button" id="submitButton">Submit</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock body %}

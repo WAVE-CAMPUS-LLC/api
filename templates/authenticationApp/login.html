@@ -27,7 +27,7 @@ WAVE — Welcome back!
             </div>
         </div>
 
-        <form action="{% url "authentication:login" %}" method="post">
+        <form action="{% url "authentication:login" %}?next={{ request.GET.next }}" method="post">
             {% csrf_token %}
             <input type="hidden" name="next" value="{{ next }}">
             <div class="input-box">

@@ -3,6 +3,8 @@ from django.db import models
 from django.utils.translation import gettext as _
 from django.utils import timezone
 from django.conf import settings
+from urllib.parse import urlparse
+from django.core.exceptions import ValidationError
 
 
 # Create your models here.
@@ -80,6 +82,9 @@ class College(models.Model):
     motto = models.CharField(_("What's your college's motto?"), max_length=200)
 
     contact_website = models.URLField(_("College website"), blank=True, null=True)
+    email_domain = models.CharField(
+        _("College email domain"), max_length=100, blank=True
+    )
 
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -92,6 +97,24 @@ class College(models.Model):
     def __str__(self):
         return self.name
 
+    def save(self, *args, **kwargs):
+        if not self.email_domain and self.contact_website:
+            self.email_domain = self.extract_email_domain_from_website(
+                self.contact_website
+            )
+        super().save(*args, **kwargs)
+
+    @staticmethod
+    def extract_email_domain_from_website(url):
+        parsed_url = urlparse(url)
+
+        domain = parsed_url.netloc
+        if domain.startswith("www."):
+            domain = domain[4:]
+        if not domain:
+            raise ValidationError("Invalid link. Enter your college's website.")
+        return domain
+
 
 class Organization(models.Model):
     PRIVACY_CHOICES = [("Private", "Private"), ("Public", "Public")]
@@ -103,21 +126,17 @@ class Organization(models.Model):
         primary_key=True, default=uuid.uuid4, editable=False, unique=True
     )
 
-    name = models.CharField(max_length=100)
-    description = models.TextField()
-    privacy = models.CharField(max_length=30, choices=PRIVACY_CHOICES)
+    name = models.CharField(_("Organization name"),max_length=100)
+    description = models.TextField(_("Describe your org"),)
+    privacy = models.CharField(_("Organization privacy?"),max_length=30, choices=PRIVACY_CHOICES)
 
-    logo = models.ImageField(upload_to="organization_logos/", blank=True, null=True)
+    logo = models.ImageField(_("Upload an image to represent the org"),upload_to="organization_logos/", blank=True, null=True)
 
-    contact_name = models.CharField(max_length=100)
-    contact_email = models.EmailField()
-    contact_website = models.URLField(blank=True, null=True)
-    contact_phone = models.CharField(max_length=15)
+    contact_name = models.CharField(_("Who can we contact? e.g. president, etc"),max_length=100)
+    contact_email = models.EmailField(_("What email can we contact?"),)
+    contact_website = models.URLField(_("Does the organization have a website?"),blank=True, null=True)
 
-    instagram = models.CharField(max_length=50, blank=True, null=True)
-    twitter = models.CharField(max_length=50, blank=True, null=True)
-    facebook = models.CharField(max_length=50, blank=True, null=True)
-    threads = models.CharField(max_length=50, blank=True, null=True)
+    instagram = models.CharField(_("Connect via Instagram"),max_length=50, blank=True, null=True)
 
     date_added = models.DateTimeField(auto_now_add=True, editable=False)
     date_modified = models.DateTimeField(auto_now=True)
@@ -132,3 +151,22 @@ class Organization(models.Model):
 
     def __str__(self):
         return self.name
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["name", "college"], name="unique_organization_per_college"
+            )
+        ]
+
+
+class Membership(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    college = models.ForeignKey(College, on_delete=models.CASCADE)
+    date_joined = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        unique_together = ('user', 'college')
+        
+    def __str__(self):
+        return f'{self.user} - {self.college}'

@@ -6,8 +6,8 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import HttpResponseRedirect
 
-from .forms import CollegeForm, JoinCollegeForm, VerifyCollegeJoinForm
-from .models import College
+from .forms import CollegeForm, JoinCollegeForm, OrganizationForm, VerifyCollegeJoinForm
+from .models import College, Membership, Organization
 from accountManagementApp.models import UserProfile
 
 
@@ -21,6 +21,13 @@ def collegeCampusesView(request):
     pageName = "Colleges"
 
     colleges = College.objects.all()
+
+    # Counting the number of users in a college.
+    college_members_info = []
+    for college in colleges:
+        member_count = UserProfile.objects.filter(college=college).count()
+        college_members_info.append({"college": college, "member_count": member_count})
+
     user_profile = None
     if request.user.is_authenticated:
         user_profile = UserProfile.objects.filter(user=request.user).first()
@@ -30,7 +37,7 @@ def collegeCampusesView(request):
         "collegeManagementApp/campuses.html",
         {
             "pageName": pageName,
-            "colleges": colleges,
+            "college_members_info": college_members_info,
             "user_profile": user_profile,
         },
     )
@@ -60,6 +67,7 @@ def viewCollegeInformation(request, collegeId):
 
     college = get_object_or_404(College, collegeId=collegeId)
     members = UserProfile.objects.filter(college=college)
+    organizations = Organization.objects.filter(college=college)
 
     user_profile = None
     if request.user.is_authenticated:
@@ -73,6 +81,7 @@ def viewCollegeInformation(request, collegeId):
             "college": college,
             "collegeMembers": members,
             "user_profile": user_profile,
+            "organizations": organizations,
         },
     )
 
@@ -83,7 +92,7 @@ def joinCollege(request, collegeId):
     college = get_object_or_404(College, collegeId=collegeId)
 
     if request.method == "POST":
-        joinForm = JoinCollegeForm(request.POST)
+        joinForm = JoinCollegeForm(request.POST, college=college)
         if joinForm.is_valid():
             user = request.user
             email = joinForm.cleaned_data["email"]
@@ -96,16 +105,21 @@ def joinCollege(request, collegeId):
             request.session["college_id"] = str(collegeId)
             request.session["user_email"] = email
 
-            send_mail(
-                "Verify your campus email",
-                f"Your verification code is: {code}",
-                settings.DEFAULT_FROM_EMAIL,
-                [email],
-                fail_silently=False,
-            )
+            try:
+                send_mail(
+                    "Verify your campus email",
+                    f"Your verification code is: {code}",
+                    settings.DEFAULT_FROM_EMAIL,
+                    [email],
+                    fail_silently=False,
+                )
+                print(f"Verification email sent to {email}")
+            except Exception as e:
+                print(f"Error sending email: {e}")
+
             return redirect("colleges:verify", collegeId=collegeId)
     else:
-        joinForm = JoinCollegeForm()
+        joinForm = JoinCollegeForm(college=college)
 
     return render(
         request,
@@ -127,6 +141,7 @@ def verifyJoinCollege(request, collegeId):
                 user_profile = get_object_or_404(UserProfile, user=request.user)
                 user_profile.college = college
                 user_profile.save()
+                Membership.objects.get_or_create(user=request.user, college=college)
 
                 messages.success(
                     request,
@@ -147,12 +162,16 @@ def verifyJoinCollege(request, collegeId):
 
 @login_required
 def exitCollege(request, collegeId):
-    pageName = "Colleges"
     user_profile = get_object_or_404(UserProfile, user=request.user)
+    college = get_object_or_404(College, collegeId=collegeId)
 
     print(f"User Profile: {user_profile}")
     print(f"User's College: {user_profile.college}")
     print(f"College ID in URL: {collegeId}")
+
+    if not Membership.objects.filter(user=request.user, college=college).exists():
+        messages.error(request, "You aren't a member.")
+        return redirect("colleges:find")
 
     if user_profile.college and str(user_profile.college.collegeId) == str(collegeId):
         user_profile.college = None
@@ -164,3 +183,46 @@ def exitCollege(request, collegeId):
         print("User is not a member of the college or college ID mismatch.")
 
     return redirect("colleges:find")
+
+
+@login_required
+def createOrg(request, collegeId):
+    pageName = "Colleges"
+    college = get_object_or_404(College, collegeId=collegeId)
+
+    if not Membership.objects.filter(user=request.user, college=college).exists():
+        messages.error(
+            request, "You must be a member of this college to create an organization."
+        )
+        return redirect("colleges:find")
+
+    if request.method == "POST":
+        orgForm = OrganizationForm(request.POST, request.FILES)
+
+        if orgForm.is_valid():
+            organization = orgForm.save(commit=False)
+            organization.college = college
+            organization.created_by = request.user
+            organization.save()
+
+            return redirect("colleges:find")
+    else:
+        orgForm = OrganizationForm()
+    return render(
+        request,
+        "collegeManagementApp/createCampusOrg.html",
+        {"college": college, "orgForm": orgForm, "pageName": pageName},
+    )
+
+
+@login_required
+def viewOrganization(request, collegeId, orgId):
+    pageName = "Colleges"
+    college = get_object_or_404(College, collegeId=collegeId)
+    organization = get_object_or_404(Organization, orgId=orgId, college=college)
+
+    return render(
+        request,
+        "collegeManagementApp/organizations/viewOrg.html",
+        {"pageName": pageName, "college": college, "organization": organization},
+    )

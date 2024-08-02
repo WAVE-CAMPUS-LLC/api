@@ -28,7 +28,7 @@ Join {{ college.name }} — WAVE. on campus
     <div id="pageBody">
         <form class="verifyForm" method="post" action="{% url "colleges:join" collegeId=college.collegeId %}">
             {% csrf_token %}
-            <h5>Verify your campus email</h5>
+            <h5>Enter your campus email</h5>
             <label for="{{joinForm.email.id_for_label}}">
                 <p>{{ joinForm.email.label }}</p>
                 {{ joinForm.email }}
