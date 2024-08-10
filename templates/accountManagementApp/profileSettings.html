@@ -135,7 +135,7 @@ Settings
 
             <section id="phone-change" class="info-container">
                 <h6 class="ic-headers">Phone Number</h6>
-                <form method="post" action="{% hurl "accountManagement:userSettings" %}">
+                <form method="post" action="{% url "accountManagement:userSettings" %}">
                     {% csrf_token %}
                     <input type="hidden" name="form_type" value="phone-info" />
                     <div class="input-div">

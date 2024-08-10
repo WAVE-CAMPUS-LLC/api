@@ -27,16 +27,18 @@
             <p>Explore all {{ organization.name }} have to offer!</p>
         </div>
         <div id="joinCollege">
-            {% if user_profile and user_profile.college == college %}
-                <a href="{% url 'colleges:exit' college.collegeId %}" class="joinCollegeButton">
-                    <img src="{% static 'images/collegeManagementApp/exit.svg' %}" />
-                    Leave Org
-                </a>
-            {% else %}
-                <a href="{% url 'colleges:join' college.collegeId %}" class="joinCollegeButton">
-                    <img src="{% static 'images/collegeManagementApp/join.svg' %}" />
-                    Join Org
-                </a>
+            {% if user.is_authenticated %}
+                {% if is_member %}
+                    <a href="{% url 'colleges:leaveOrg' college.collegeId organization.orgId %}" class="joinCollegeButton">
+                        <img src="{% static 'images/collegeManagementApp/collegeInformation/exit-college.svg' %}" />
+                        Leave Org
+                    </a>
+                {% else %}
+                    <a href="{% url 'colleges:joinOrg' college.collegeId organization.orgId %}" class="joinCollegeButton">
+                        <img src="{% static 'images/collegeManagementApp/join.svg' %}" />
+                        Join Org
+                    </a>
+                {% endif %}
             {% endif %}
         </div>
     </div>
@@ -57,8 +59,28 @@
                         <div id="overviewInformation" class="overview-body collegeTabInformation">
                             <div class="collegeTabInformationRow">
                                 <div class="descriptionRow">
-                                    <h3>Summary</h3>
+                                    <h3>Location</h3>
+                                    <p>{{ college.name }}</p>
+                                </div>
+
+                                <div class="descriptionRow">
+                                    <h3>Description</h3>
                                     <p>{{ organization.description }}</p>
+                                </div>
+
+                                <div class="descriptionRow">
+                                    <h3>Privacy Status</h3>
+                                    <p>{{ organization.privacy }}</p>
+                                </div>
+
+                                <div class="descriptionRow">
+                                    <h3>Email</h3>
+                                    <p>{{ organization.contact_email }}</p>
+                                </div>
+
+                                <div class="descriptionRow">
+                                    <h3>Email</h3>
+                                    <p>{{ organization.contact_website }}</p>
                                 </div>
                             </div>
                         </div>
@@ -129,9 +151,9 @@
 
                         <div id="memberInformation" class="members-body collegeTabInformation">
                             <div class="collegeTabInformationRow">
-                                {% if collegeMembers %}
+                                {% if members %}
                                 <div class="collegeMembersContainer">
-                                    {% for member in collegeMembers %}
+                                    {% for member in members %}
                                     <a target="_blank" href="{% url "accountManagement:memberProfile" username=member.user.username %}" class="collegeMemberCard">
                                         <div class="memberPfp">
                                             <img src="{% static "/images/collegeManagementApp/pfp.jpg" %}" />
@@ -149,7 +171,11 @@
                                         <img src="{% static "/images/collegeManagementApp/collegeInformation/empty-listing.svg" %}" />
                                     </div>
                                     <div>
+                                        {% if not user.is_authenticated %}
+                                        <p>Log in to display members</p>
+                                        {% else %}
                                         <p>No members to display!</p>
+                                        {% endif %}
                                     </div>
                                 </div>
                                 {% endif %}

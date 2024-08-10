@@ -7,7 +7,7 @@ from django.contrib import messages
 from django.http import HttpResponseRedirect
 
 from .forms import CollegeForm, JoinCollegeForm, OrganizationForm, VerifyCollegeJoinForm
-from .models import College, Membership, Organization
+from .models import College, Membership, Organization, OrganizationMembership
 from accountManagementApp.models import UserProfile
 
 
@@ -43,6 +43,7 @@ def collegeCampusesView(request):
     )
 
 
+@login_required
 def addCollegeView(request):
     pageName = "Colleges"
 
@@ -61,7 +62,7 @@ def addCollegeView(request):
         {"pageName": pageName, "collegeForm": collegeForm},
     )
 
-
+@login_required
 def viewCollegeInformation(request, collegeId):
     pageName = "Colleges"
 
@@ -221,8 +222,58 @@ def viewOrganization(request, collegeId, orgId):
     college = get_object_or_404(College, collegeId=collegeId)
     organization = get_object_or_404(Organization, orgId=orgId, college=college)
 
+    is_member = OrganizationMembership.objects.filter(
+        user=request.user, organization=organization
+    ).exists()
+    
+    member_count = OrganizationMembership.objects.filter(organization=organization).count()
+    members = OrganizationMembership.objects.filter(organization=organization).select_related('user')
+
     return render(
         request,
         "collegeManagementApp/organizations/viewOrg.html",
-        {"pageName": pageName, "college": college, "organization": organization},
+        {
+            "pageName": pageName,
+            "college": college,
+            "organization": organization,
+            "is_member": is_member,
+            "member_count":member_count,
+            "members": members
+        },
     )
+
+
+@login_required
+def joinOrganization(request, collegeId, orgId):
+    college = get_object_or_404(College, collegeId=collegeId)
+    organization = get_object_or_404(Organization, orgId=orgId, college=college)
+
+    if not OrganizationMembership.objects.filter(
+        user=request.user, organization=organization
+    ).exists():
+        OrganizationMembership.objects.create(
+            user=request.user, organization=organization
+        )
+        messages.success(request, f"You have successfully joined {organization.name}!")
+    else:
+        messages.warning(request, "You are already a member of this organization!")
+
+    return redirect("colleges:viewOrg", collegeId=collegeId, orgId=orgId)
+
+
+@login_required
+def leaveOrganization(request, collegeId, orgId):
+    college = get_object_or_404(College, collegeId=collegeId)
+    organization = get_object_or_404(Organization, orgId=orgId, college=college)
+
+    membership = OrganizationMembership.objects.filter(
+        user=request.user, organization=organization
+    ).first()
+
+    if membership:
+        membership.delete()
+        messages.success(request, f"You have successfully left {organization.name}!")
+    else:
+        messages.warning(request, "You are not a member of this organization!")
+
+    return redirect("colleges:viewOrg", collegeId=collegeId, orgId=orgId)

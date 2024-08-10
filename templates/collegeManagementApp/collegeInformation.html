@@ -29,7 +29,7 @@
         <div id="joinCollege">
             {% if user_profile and user_profile.college == college %}
                 <a href="{% url 'colleges:exit' college.collegeId %}" class="joinCollegeButton">
-                    <img src="{% static 'images/collegeManagementApp/exit.svg' %}" />
+                    <img src="{% static 'images/collegeManagementApp/collegeInformation/exit-college.svg' %}" />
                     Leave Campus
                 </a>
             {% else %}
@@ -127,36 +127,49 @@
                                     </a>
                                 </div>
                                 <div class="collegeOrganizationsContainer">
-                                    {% for org in organizations %}
-                                    <div class="organization-card">
-                                        <div class="orgCard-image-container">
-                                            <img src="{{org.logo.url}}" class="orgCard-image"/>
+                                    
+                                    {% if organizations %}
+                                    <div class="collegeOrgsGrid">
+                                        {% for org in organizations %}
+                                        <div class="organization-card">
+                                            <div class="orgCard-image-container">
+                                                <img src="{{org.logo.url}}" class="orgCard-image"/>
+                                            </div>
+                                            <div class="orgCard-body-container">
+                                                <h3> {{ org.name }}</h3>
+                                                <div class="subBody-row">
+                                                    <p id="privacyStatus">
+                                                        {% if org.privacy == "Private" %}
+                                                        {{ org.privacy }}
+                                                        <img src="{% static "images/collegeManagementApp/private.svg" %}" />
+                                                        {% elif org.privacy == "Public" %}
+                                                        {{ org.privacy }}
+                                                        <img src="{% static "images/collegeManagementApp/public.svg" %}" />
+                                                        {% endif %}
+                                                        
+                                                    </p>
+        
+                                                    <p id="memberCounter">
+                                                        505 Members
+                                                    </p>
+                                                </div>
+                                                <div class="expandOrg">
+                                                    <a target="_blank" href="{% url "colleges:viewOrg" collegeId=college.collegeId orgId=org.orgId %}" class="viewOrgButton">View</a>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div class="orgCard-body-container">
-                                            <h3> {{ org.name }}</h3>
-                                            <div class="subBody-row">
-                                                <p id="privacyStatus">
-                                                    {% if org.privacy == "Private" %}
-                                                    {{ org.privacy }}
-                                                    <img src="{% static "images/collegeManagementApp/private.svg" %}" />
-                                                    {% elif org.privacy == "Public" %}
-                                                    {{ org.privacy }}
-                                                    <img src="{% static "images/collegeManagementApp/public.svg" %}" />
-                                                    {% endif %}
-                                                    
-                                                </p>
-    
-                                                <p id="memberCounter">
-                                                    505 Members
-                                                </p>
-                                            </div>
-                                            <div class="expandOrg">
-                                                <a target="_blank" href="{% url "colleges:viewOrg" collegeId=college.collegeId orgId=org.orgId %}" class="viewOrgButton">View Org</a>
-                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                    {% else %}
+                                    <div class="emptyContainer">
+                                        <div>
+                                            <img src="{% static "/images/collegeManagementApp/collegeInformation/empty-listing.svg" %}" />
+                                        </div>
+                                        <div>
+                                            <p>No organizations to display!</p>
                                         </div>
                                     </div>
-                                    {% endfor %}
-                                    
+                                    {% endif %}
                                 </div>
                             </div>
                         </div>

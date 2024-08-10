@@ -32,7 +32,7 @@ WAVE. — Explore a new wave of events. Tick them off your bucketlist!
                             <img src="{% static "/images/home/home-explore-icon.svg" %}" alt="Explore Events">
                         </div>
                     </div>
-                    <button type="button" role="button">View Events</button>
+                    <button type="button" role="button" onclick="redirectToPage({% url "core:explore" %})">View Events</button>
                 </div>
             </div>
         </div>
@@ -55,7 +55,7 @@ WAVE. — Explore a new wave of events. Tick them off your bucketlist!
                 </div>
 
                 <div id="cch2i-body">
-                    <a id="partnerships" href="#">Find Campus</a>
+                    <a id="partnerships" href="{% url "colleges:find" %}">Find Campus</a>
                     <a id="joining" href="{% url "authentication:join" %}">Not a member? Join Us</a>
                 </div>
             </div>
@@ -76,7 +76,7 @@ WAVE. — Explore a new wave of events. Tick them off your bucketlist!
                         <li>Access real-time analytics and insights</li>
                         <li>Receive dedicated support and assistance</li>
                     </ul>
-                    <a href="#" type="button" role="button">Get Started</a>
+                    <a href="{% url "authentication:join" %}" target="_blank" type="button" role="button">Get Started</a>
                     <!-- Host events information page -->
                 </div>
             </div>

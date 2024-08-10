@@ -304,6 +304,10 @@
 
 /* Organization Tab Content */
 .collegeOrganizationsContainer {
+    width: 100%;
+}
+
+.collegeOrgsGrid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 20px;
@@ -412,11 +416,11 @@
 .expandOrg {
     width: 100%;
     display: flex;
-    justify-content: center;
+    justify-content: end;
 }
 
 .viewOrgButton {
-    padding: 15px;
+    padding: 12px 15px;
     border: 1px solid transparent;
     border-right-color: #13c9d3;
     border-left-color: #008d95bc;
@@ -431,9 +435,7 @@
     justify-content: center;
     gap: 10px;
 
-    width: 50%;
-
-    font-size: 20px;
+    font-size: 18px;
     border-radius: 20px;
     background-image: linear-gradient(to right, #008d95bc 0%, #13c9d3 100%);
 }

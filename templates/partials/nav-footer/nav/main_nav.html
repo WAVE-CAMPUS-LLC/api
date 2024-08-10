@@ -37,7 +37,7 @@
                             </a>
                             {% endif %}
                         {% elif page == "explore" %}
-                            <a id="host" href="{% url "eventManagement:hostHome" %}">
+                            <a id="host" href="{% url "colleges:find" %}">
                                 <img src="{% static "/images/explore/community.svg" %}" />
                                 Join Campus!
                             </a>
@@ -54,7 +54,7 @@
                                 Host Event
                             </a>
                         {% elif page == "explore" %}
-                            <a id="host" href="{% url "eventManagement:hostHome" %}">
+                            <a id="host" href="{% url "colleges:find" %}">
                                 <img src="{% static "/images/explore/community.svg" %}" />
                                 Join Campus!
                             </a>

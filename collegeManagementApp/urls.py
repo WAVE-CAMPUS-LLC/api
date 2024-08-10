@@ -20,4 +20,14 @@ urlpatterns = [
         views.viewOrganization,
         name="viewOrg",
     ),
+    path(
+        "<uuid:collegeId>/view/organization/<uuid:orgId>/join/",
+        views.joinOrganization,
+        name="joinOrg",
+    ),
+    path(
+        "<uuid:collegeId>/view/organization/<uuid:orgId>/leave/",
+        views.leaveOrganization,
+        name="leaveOrg",
+    ),
 ]
