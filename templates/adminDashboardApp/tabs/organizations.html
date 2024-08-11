@@ -1,0 +1,38 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}
+Organizations Management — WAVE.
+{% endblock title %}
+
+{% block app_page_style %}
+<link rel="stylesheet" type="text/css" href="{% static "/styles/adminDashboardApp/tabs/colleges.css" %}" />
+{% endblock app_page_style %}
+
+{% block script %}
+{% comment %} <script type="text/javascript" src="{% static "scripts/adminDashboardApp/careers/careers.js" %}"></script> {% endcomment %}
+{% endblock script %}
+
+
+{% block header %}
+{% include "partials/nav-footer/nav/admin_nav.html" %}
+{% endblock header %}
+
+{% block container_art %}
+<div id="container-art">
+    <div class="ticket-heading">
+        <div class="ticket-header">
+            <h3><a href="{% url 'waveAdmin:adminDashboard' %}">Management</a> > Organizations</h3>
+        </div>
+    </div>
+</div>
+{% endblock container_art %}
+
+
+{% block body %}
+<div id="content-container">
+    <div class="page-heading">
+        <h2>Our Campuses</h2>
+    </div>
+</div>
+{% endblock body %}

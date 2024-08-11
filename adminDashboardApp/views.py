@@ -3,6 +3,7 @@ from django.shortcuts import render, redirect, HttpResponse, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
+from django.db.models import Count
 from django.core.mail import send_mail
 from django.contrib.auth.models import Group, Permission
 
@@ -11,6 +12,7 @@ from authenticationApp.models import CustomUser
 from supportCenterApp.models import SupportTicket, FeedbackModel
 from careerApp.models import CareerRoleApplication
 from eventManagementApp.models import HostApplication
+from collegeManagementApp.models import College, Organization, OrganizationMembership, Membership
 
 from wave_v1 import settings
 from .models import Department, CareerRole, LoginHistoryModel
@@ -480,3 +482,26 @@ def adminFeedbackView(request):
         {"feedback_offers": all_feedback_offers, "feedback_count": feedback_count},
     )
 
+
+@login_required
+@check_suspension
+@admin_required
+def adminCollegeView(request):
+    colleges = College.objects.annotate(member_count=Count('membership'))
+    # member_count = College.objects.annotate(member_count=Count('membership'))
+    return render(request, "adminDashboardApp/tabs/colleges.html", {'colleges':colleges})
+
+
+@login_required
+@check_suspension
+@admin_required
+def adminCollegeDetailView(request, collegeId):
+    college = get_object_or_404(College, collegeId=collegeId)
+    return render(request, "adminDashboardApp/tabs/colleges/collegeInfo.html", {'college':college})
+
+
+@login_required
+@check_suspension
+@admin_required
+def adminCollegeOrgsView(request):
+    return render(request, "adminDashboardApp/tabs/organizations.html")

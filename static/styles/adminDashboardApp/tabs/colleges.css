@@ -1,0 +1,139 @@
+/** Body Container **/
+#content-container {
+    width: 100%;
+
+    padding-left: 100px;
+    padding-right: 100px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.page-heading h2 {
+    font-family: Wanted-Bold;
+    font-size: 45px;
+    color: #008d95;
+}
+
+.collegeContainer {
+    display: grid;
+
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 30px;
+
+    width: 100%;
+}
+
+/* College Card */
+#college-card {
+    border: 2px solid rgba(0, 0, 0, 0.038);
+    border-radius: 15px;
+
+    -webkit-box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.061);
+    -moz-box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.061);
+    box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.061);
+
+    padding: 30px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    cursor: pointer;
+}
+
+#college-logo {
+    width: 100%;
+
+    display: flex;
+    justify-content: end;
+}
+
+#college-logo img {
+    width: 90px;
+    height: 90px;
+}
+
+#college-logo h3 {
+    color: #b0b0b0c1;
+    font-family: Easy-Grotesk-Black;
+    font-size: 25px;
+}
+
+#college-body {
+    font-family: Wanted-SemiBold;
+    font-size: 30px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+#college-card-header {
+    display: flex;
+    width: 100%;
+
+    justify-content: space-between;
+}
+
+#college-card-header h5 {
+    white-space: nowrap;
+    /* Prevent wrapping */
+    overflow: hidden;
+    /* Hide overflow content */
+    text-overflow: ellipsis;
+    /* Show ellipsis for overflow text */
+    width: 100%;
+    text-align: left;
+}
+
+#college-card-header img {
+    width: 30px;
+}
+
+#college-card-body {
+    font-family: Wanted-Regular;
+    font-size: 15.5px;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.members-display,
+.organization-display {
+    font-family: Wanted-Variable;
+    font-size: 13px;
+}
+
+#college-card-footer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    font-family: Wanted-Variable;
+    font-size: 15px;
+}
+
+.manage-college {
+    padding: 17px 12px;
+    border: 1px solid transparent;
+    border-right-color: #13c9d3;
+    border-left-color: #008d95bc;
+    color: white;
+
+    text-decoration: none;
+
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    gap: 10px;
+    border-radius: 20px;
+    background-image: linear-gradient(to right, #008d95bc 0%, #13c9d3 100%);
+    cursor: pointer;
+}
+
+.manage-college:hover {
+    text-decoration: underline;
+}

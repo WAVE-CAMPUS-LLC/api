@@ -1,0 +1,63 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}
+College Management — WAVE.
+{% endblock title %}
+
+{% block app_page_style %}
+<link rel="stylesheet" type="text/css" href="{% static "/styles/adminDashboardApp/tabs/colleges.css" %}" />
+{% endblock app_page_style %}
+
+{% block script %}
+{% comment %} <script type="text/javascript" src="{% static "scripts/adminDashboardApp/careers/careers.js" %}"></script> {% endcomment %}
+{% endblock script %}
+
+
+{% block header %}
+{% include "partials/nav-footer/nav/admin_nav.html" %}
+{% endblock header %}
+
+{% block container_art %}
+<div id="container-art">
+    <div class="ticket-heading">
+        <div class="ticket-header">
+            <h3><a href="{% url 'waveAdmin:adminDashboard' %}">Management</a> > Colleges</h3>
+        </div>
+    </div>
+</div>
+{% endblock container_art %}
+
+
+{% block body %}
+<div id="content-container">
+    <div class="page-heading">
+        <h2>Live Campuses</h2>
+    </div>
+
+    <div class="collegeContainer">
+        {% for college in colleges %}
+        <div id="college-card">
+            <div id="college-logo">
+                <img src="{{ college.logo.url }}">
+            </div>
+            <div id="college-body">
+                <div id="college-card-header">
+                    <h5>{{ college.name }}</h5>
+                </div>
+                <div id="college-card-body">
+                    <p class="members-display">
+                        {{ college.member_count }} {% if college.member_count == 1 %}Member{% else %}Members{% endif %}
+                    </p>
+                    <p class="organization-display">55 Organizations</p>
+                </div>
+                <div id="college-card-footer">
+                    <a class="manage-college" href="{% url "waveAdmin:collegeDetail" collegeId=college.collegeId %}">Manage College</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        
+    </div>
+</div>
+{% endblock body %}

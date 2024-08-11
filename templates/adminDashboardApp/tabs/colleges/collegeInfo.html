@@ -1,0 +1,344 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}
+College Management — WAVE.
+{% endblock title %}
+
+{% block app_page_style %}
+<link rel="stylesheet" type="text/css" href="{% static "/styles/adminDashboardApp/tabs/colleges/collegeInfo.css" %}" />
+{% endblock app_page_style %}
+
+{% block script %}
+<script type="text/javascript" src="{% static "scripts/adminDashboardApp/tabControl.js" %}" defer></script> 
+{% endblock script %}
+
+
+{% block header %}
+{% include "partials/nav-footer/nav/admin_nav.html" %}
+{% endblock header %}
+
+{% block container_art %}
+<div id="container-art">
+    <div class="ticket-heading">
+        <div class="ticket-header">
+            <h3><a href="{% url 'waveAdmin:adminDashboard' %}">Management</a> > Colleges</h3>
+        </div>
+    </div>
+</div>
+{% endblock container_art %}
+
+
+{% block body %}
+<div id="content-container">
+    <div class="page-heading">
+        <h2>{{ college.name }}</h2>
+        <p>
+            {% if college.created_by %}
+                Created by: {{ college.created_by.first_name }} {{ college.created_by.last_name }}
+            {% else %}
+                Creator information not available.
+            {% endif %}
+        </p>
+    </div>
+
+    <div id="pageBody">
+        <div id="contentContainerTabs">
+            <div id="tabHeaderParent">
+                <ul id="tabHeader">
+                    <li class="adminCollegeInfoTab tab-active" data-tab="overviewInformation">Overview</li>
+                    <li class="adminCollegeInfoTab" data-tab="eventInformation">Events</li>
+                    <li class="adminCollegeInfoTab" data-tab="organizationInformation">Organizations</li>
+                    <li class="adminCollegeInfoTab" data-tab="memberInformation">Members</li>
+                </ul>
+            </div>
+
+            <div id="tabBody">
+                <div id="overviewInformation" class="adminCollegeTabInformation">
+                    <div class="tabInformationContainer">
+                        <div class="edit-row">
+                            <div class="information-row">
+                                <h6 class="campus-info-heading">Campus Name</h6>
+                                <p class="campus-info">{{ college.name }}</p>
+                            </div>
+                            
+                            <button type="button" role="button" class="edit-element">Edit</button>
+                        </div>
+                
+                        <div class="edit-row">
+                            <div class="information-row">
+                                <h6 class="campus-info-heading">Campus Address</h6>
+                                <span class="address-container">
+                                    <p class="campus-info">{{ college.address }},</p>
+                                    <p class="campus-info">{{ college.city }},</p>
+                                    <p class="campus-info">{{ college.state }}, {{ college.zip_code }},</p>
+                                    <p class="campus-info">{{ college.country }}</p>
+                                </span>
+                            </div>
+                            
+                            <button type="button" role="button" class="edit-element">Edit</button>
+                        </div>
+                
+                        <div class="edit-row">
+                            <div class="information-row">
+                                <h6 class="campus-info-heading">Campus Logo</h6>
+                                <p class="campus-info">
+                                    <img class="campus-logo" src="{{ college.logo.url }}">
+                                </p>
+                            </div>
+                            
+                            <button type="button" role="button" class="edit-element">Edit</button>
+                        </div>
+                
+                        <div class="edit-row">
+                            <div class="information-row">
+                                <h6 class="campus-info-heading">Campus Motto</h6>
+                                <p class="campus-info">
+                                    {{ college.motto }}
+                                </p>
+                            </div>
+                            
+                            <button type="button" role="button" class="edit-element">Edit</button>
+                        </div>
+                
+                        <div class="edit-row">
+                            <div class="information-row">
+                                <h6 class="campus-info-heading">Website</h6>
+                                <p class="campus-info">
+                                    <a target="_blank" href="{{college.contact_website}}">{{ college.contact_website }}</a>
+                                </p>
+                            </div>
+                            
+                            <button type="button" role="button" class="edit-element">Edit</button>
+                        </div>
+                
+                        <div class="edit-row">
+                            <div class="information-row">
+                                <h6 class="campus-info-heading">Email Domain</h6>
+                                <p class="campus-info">
+                                    {{ college.email_domain }}
+                                </p>
+                            </div>
+                            
+                            <button type="button" role="button" class="edit-element">Edit</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="eventInformation" class="adminCollegeTabInformation">
+                    <div class="tabInformationContainer">
+                        <div class="eventDisplayContainer">
+                            <a target="_blank" href="" class="category-event-card">
+                                <div class="category-image">
+                                    <img src="{% static "images/explore/display.png" %}" alt="">
+                                </div>
+                                <div class="category-event-name">
+                                    <h2 id="eventTitle">Event Demo</h2>
+                                    <div class="eventSubInfo">
+                                        <p id="eventLocation">Hosted by @enoshlartey</p>
+                                        <p id="eventDate">28th July, 2024</p>
+                                    </div>
+                                </div>
+                            </a>
+
+                            <a target="_blank" href="" class="category-event-card">
+                                <div class="category-image">
+                                    <img src="{% static "images/explore/display.png" %}" alt="">
+                                </div>
+                                <div class="category-event-name">
+                                    <h2 id="eventTitle">Event Demo</h2>
+                                    <div class="eventSubInfo">
+                                        <p id="eventLocation">Hosted by @enoshlartey</p>
+                                        <p id="eventDate">28th July, 2024</p>
+                                    </div>
+                                </div>
+                            </a>
+
+                            <a target="_blank" href="" class="category-event-card">
+                                <div class="category-image">
+                                    <img src="{% static "images/explore/display.png" %}" alt="">
+                                </div>
+                                <div class="category-event-name">
+                                    <h2 id="eventTitle">Event Demo</h2>
+                                    <div class="eventSubInfo">
+                                        <p id="eventLocation">Hosted by @enoshlartey</p>
+                                        <p id="eventDate">28th July, 2024</p>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="organizationInformation" class="adminCollegeTabInformation">
+                    <div class="tabInformationContainer">
+                        <div class="organizationDisplayContainer">
+                            <div class="organization-card">
+                                <div class="orgCard-image-container">
+                                    <img src="{{org.logo.url}}" class="orgCard-image"/>
+                                </div>
+                                <div class="orgCard-body-container">
+                                    <h3> {{ org.name }}</h3>
+                                    <div class="subBody-row">
+                                        <p id="privacyStatus">
+                                            {% if org.privacy == "Private" %}
+                                            {{ org.privacy }}
+                                            <img src="{% static "images/collegeManagementApp/private.svg" %}" />
+                                            {% elif org.privacy == "Public" %}
+                                            {{ org.privacy }}
+                                            <img src="{% static "images/collegeManagementApp/public.svg" %}" />
+                                            {% endif %}
+                                            
+                                        </p>
+
+                                        <p id="memberCounter">
+                                            505 Members
+                                        </p>
+                                    </div>
+                                    <div class="expandOrg">
+                                        <a target="_blank" href="" class="viewOrgButton">View</a>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="organization-card">
+                                <div class="orgCard-image-container">
+                                    <img src="{{org.logo.url}}" class="orgCard-image"/>
+                                </div>
+                                <div class="orgCard-body-container">
+                                    <h3> {{ org.name }}</h3>
+                                    <div class="subBody-row">
+                                        <p id="privacyStatus">
+                                            {% if org.privacy == "Private" %}
+                                            {{ org.privacy }}
+                                            <img src="{% static "images/collegeManagementApp/private.svg" %}" />
+                                            {% elif org.privacy == "Public" %}
+                                            {{ org.privacy }}
+                                            <img src="{% static "images/collegeManagementApp/public.svg" %}" />
+                                            {% endif %}
+                                            
+                                        </p>
+
+                                        <p id="memberCounter">
+                                            505 Members
+                                        </p>
+                                    </div>
+                                    <div class="expandOrg">
+                                        <a target="_blank" href="" class="viewOrgButton">View</a>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="organization-card">
+                                <div class="orgCard-image-container">
+                                    <img src="{{org.logo.url}}" class="orgCard-image"/>
+                                </div>
+                                <div class="orgCard-body-container">
+                                    <h3> {{ org.name }}</h3>
+                                    <div class="subBody-row">
+                                        <p id="privacyStatus">
+                                            {% if org.privacy == "Private" %}
+                                            {{ org.privacy }}
+                                            <img src="{% static "images/collegeManagementApp/private.svg" %}" />
+                                            {% elif org.privacy == "Public" %}
+                                            {{ org.privacy }}
+                                            <img src="{% static "images/collegeManagementApp/public.svg" %}" />
+                                            {% endif %}
+                                            
+                                        </p>
+
+                                        <p id="memberCounter">
+                                            505 Members
+                                        </p>
+                                    </div>
+                                    <div class="expandOrg">
+                                        <a target="_blank" href="" class="viewOrgButton">View</a>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="organization-card">
+                                <div class="orgCard-image-container">
+                                    <img src="{{org.logo.url}}" class="orgCard-image"/>
+                                </div>
+                                <div class="orgCard-body-container">
+                                    <h3> {{ org.name }}</h3>
+                                    <div class="subBody-row">
+                                        <p id="privacyStatus">
+                                            {% if org.privacy == "Private" %}
+                                            {{ org.privacy }}
+                                            <img src="{% static "images/collegeManagementApp/private.svg" %}" />
+                                            {% elif org.privacy == "Public" %}
+                                            {{ org.privacy }}
+                                            <img src="{% static "images/collegeManagementApp/public.svg" %}" />
+                                            {% endif %}
+                                            
+                                        </p>
+
+                                        <p id="memberCounter">
+                                            505 Members
+                                        </p>
+                                    </div>
+                                    <div class="expandOrg">
+                                        <a target="_blank" href="" class="viewOrgButton">View</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="memberInformation" class="adminCollegeTabInformation">
+                    <div class="tabInformationContainer">
+                        <div class="memberCardContainer">
+                            <div class="collegeMemberCard">
+                                <div class="memberPfp">
+                                    <img src="{% static "/images/collegeManagementApp/pfp.jpg" %}" />
+                                </div>
+                                <div class="memberBody">
+                                    <h5>{{member.user.first_name}} {{member.user.last_name}}</h5>
+                                    <p>Class of '26</p>
+                                </div>
+                                <div>
+                                    <a>Manage</a>
+                                    <a>View</a>
+                                </div>
+                            </div>
+
+                            <div class="collegeMemberCard">
+                                <div class="memberPfp">
+                                    <img src="{% static "/images/collegeManagementApp/pfp.jpg" %}" />
+                                </div>
+                                <div class="memberBody">
+                                    <h5>{{member.user.first_name}} {{member.user.last_name}}</h5>
+                                    <p>Class of '26</p>
+                                </div>
+                                <div>
+                                    <a>Manage</a>
+                                    <a>View</a>
+                                </div>
+                            </div>
+
+                            <div class="collegeMemberCard">
+                                <div class="memberPfp">
+                                    <img src="{% static "/images/collegeManagementApp/pfp.jpg" %}" />
+                                </div>
+                                <div class="memberBody">
+                                    <h5>{{member.user.first_name}} {{member.user.last_name}}</h5>
+                                    <p>Class of '26</p>
+                                </div>
+                                <div>
+                                    <a>Manage</a>
+                                    <a>View</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+    
+</div>
+{% endblock body %}
