@@ -1,0 +1,36 @@
+{% extends "base/base.html" %}
+{% load static %}
+{% load date_tag %}
+{% load category_tag %}
+
+
+{% block title %}
+{{ categoryName|capfirst }} events — WAVE.
+{% endblock title %}
+
+{% block app_page_style %}
+<link rel="stylesheet" type="text/css" href="{% static "/styles/coreApp/category/empty_category.css" %}" />
+{% endblock app_page_style %}
+
+{% block script %}
+{% comment %} <script type="text/javascript" src="{% static "scripts/coreApp/eventCountdown.js" %}"></script> {% endcomment %}
+{% endblock script %}
+
+{% block header %}
+{% include "partials/nav-footer/nav/main_nav.html" %}
+{% endblock header %}
+
+{% block body %}
+<div id="content-container">
+    <div id="content-header">
+        <h4 class="heading">{{ categoryName }} Events</h4>
+    </div>
+
+    <div id="content-body">
+        <div class="empty-container">
+            <img class="empty-image" src="{% static "/images/eventManagementApp/host/empty-listing.svg" %}" />
+            <p>Currently no {{ categoryName }} events to be displayed!</p>
+        </div>
+    </div>
+</div>
+{% endblock body %}

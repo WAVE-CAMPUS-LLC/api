@@ -4,6 +4,8 @@ from django.utils.deprecation import MiddlewareMixin
 from django.utils import timezone
 
 # This is a middleware that prevents already authenticated users from accessing the login and join pages. 
+# The `RedirectAuthenticatedUsersMiddleware` class redirects authenticated users from specific
+# restricted URLs to a specified next URL or the index page.
 class RedirectAuthenticatedUsersMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
@@ -15,6 +17,8 @@ class RedirectAuthenticatedUsersMiddleware:
             restricted_urls = [reverse('authentication:login'), reverse('authentication:join')]
             if request.path in restricted_urls:
                 next_url = request.GET.get("next", "accountManagement:userAccount")
+                if not next_url:
+                    return redirect("core:index")
                 return redirect(next_url)
         return response
 

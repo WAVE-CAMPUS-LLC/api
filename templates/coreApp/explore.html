@@ -16,6 +16,8 @@ See what's happening around you — WAVE.
 <script type="text/javascript" src="{% static "scripts/coreApp/eventCountdown.js" %}"></script>
 <script type="text/javascript" src="{% static "scripts/coreApp/trendingSlideshow.js" %}"></script>
 <script type="text/javascript" src="{% static "scripts/coreApp/categoryScroll.js" %}"></script>
+<script type="text/javascript" src="{% static "scripts/coreApp/explore/categoryCarousel.js" %}"></script>
+<script type="text/javascript" src="{% static "scripts/coreApp/explore/loadMoreEvents.js" %}"></script>
 {% endblock script %}
 
 {% block header %}
@@ -92,7 +94,7 @@ See what's happening around you — WAVE.
         </div>
 
         <div id="categories-row" class="row-container">
-            <div class="row-body event-row-body">
+            <div class="row-body event-row-body" id="events-container">
                 {% for event in events %}
                 {% if event.status == "live" %}
                 <a target="_blank" href="{% url "core:eventDetails" eventId=event.eventId %}" class="category-event-card">
@@ -112,7 +114,7 @@ See what's happening around you — WAVE.
             </div>
 
             <div class="loadMore">
-                <button type="button" role="button">Load More</button>
+                <button type="button" role="button" id="loadMoreButton" onclick="loadMoreEvents()">Load More</button>
             </div>
         </div>
     </div>

@@ -295,6 +295,7 @@
     width: 100%;
     display: flex;
     justify-content: start;
+    text-transform: capitalize;
 }
 
 .category-event-card {
@@ -443,18 +444,28 @@
 }
 
 .loadMore button {
-    width: 50%;
-
     padding: 20px;
-    border-radius: 20px;
-    border: 2px solid #008d95;
-    background-color: #008d95;
-
-    font-family: Wanted-SemiBold;
-    font-size: 20px;
+    width: 40%;
+    border: 1px solid transparent;
+    border-right-color: #13c9d3;
+    border-left-color: #008d95bc;
     color: white;
 
-    letter-spacing: 1px;
+    font-family: Wanted-SemiBold;
+    text-decoration: none;
 
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    justify-content: center;
+    gap: 10px;
+
+    font-size: 24px;
+    border-radius: 20px;
+    background-image: linear-gradient(to right,  #008d95bc 0%, #13c9d3 100%);
     cursor: pointer;
+}
+
+.loadMore button:hover {
+    background-color: #008d95;
 }

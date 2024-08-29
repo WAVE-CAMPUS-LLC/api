@@ -9,4 +9,5 @@ urlpatterns = [
     path("explore/", views.exploreView, name="explore"),
     path("event/<uuid:eventId>/", views.eventDetailsView, name="eventDetails"),
     path("category/<str:name>/", views.categoryView, name="category"),
+    path("load-more/", views.load_more_events, name="load_more_events"),
 ]

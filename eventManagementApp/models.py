@@ -99,43 +99,43 @@ class Event(models.Model):
     )
 
     EVENT_TYPE_CHOICES = [
-        ("Music", "Music"),
-        ("Party", "Party"),
-        ("Concert", "Concert"),
-        ("Sports", "Sports"),
-        ("Games", "Games"),
-        ("Greek", "Greek"),
+        ("music", "music"),
+        ("party", "party"),
+        ("concert", "concert"),
+        ("sports", "sports"),
+        ("games", "games"),
+        ("greek", "greek"),
     ]
 
     EVENT_IMG_PATH = "images/eventManagementApp/host/images/selectors/"
 
     EVENT_TYPE_IMAGES = {
-        "Music": f"{EVENT_IMG_PATH}music.svg",
-        "Party": f"{EVENT_IMG_PATH}party.svg",
-        "Concert": f"{EVENT_IMG_PATH}concert.svg",
-        "Sports": f"{EVENT_IMG_PATH}sports.svg",
-        "Games": f"{EVENT_IMG_PATH}games.svg",
-        "Greek": f"{EVENT_IMG_PATH}greek.png",
+        "music": f"{EVENT_IMG_PATH}music.svg",
+        "party": f"{EVENT_IMG_PATH}party.svg",
+        "concert": f"{EVENT_IMG_PATH}concert.svg",
+        "sports": f"{EVENT_IMG_PATH}sports.svg",
+        "games": f"{EVENT_IMG_PATH}games.svg",
+        "greek": f"{EVENT_IMG_PATH}greek.png",
     }
 
     EXPLORE_TYPE_CHOICES = [
-        ("Music", "Music"),
-        ("Party", "Party"),
-        ("Concert", "Concert"),
-        ("Sports", "Sports"),
-        ("Games", "Games"),
-        ("Greek", "Greek"),
+        ("music", "music"),
+        ("party", "party"),
+        ("concert", "concert"),
+        ("sports", "sports"),
+        ("games", "games"),
+        ("greek", "greek"),
     ]
 
     EXPLORE_CATEGORY_IMG_PATH = "images/explore/categories/"
 
     EXPLORE_CATEGORY_TYPE_IMAGES = {
-        "Music": f"{EXPLORE_CATEGORY_IMG_PATH}music.png",
-        "Party": f"{EXPLORE_CATEGORY_IMG_PATH}party.png",
-        "Concert": f"{EXPLORE_CATEGORY_IMG_PATH}concert.png",
-        "Sports": f"{EXPLORE_CATEGORY_IMG_PATH}sports.png",
-        "Games": f"{EXPLORE_CATEGORY_IMG_PATH}games.png",
-        "Greek": f"{EXPLORE_CATEGORY_IMG_PATH}greek.png",
+        "music": f"{EXPLORE_CATEGORY_IMG_PATH}music.png",
+        "party": f"{EXPLORE_CATEGORY_IMG_PATH}party.png",
+        "concert": f"{EXPLORE_CATEGORY_IMG_PATH}concert.png",
+        "sports": f"{EXPLORE_CATEGORY_IMG_PATH}sports.png",
+        "games": f"{EXPLORE_CATEGORY_IMG_PATH}games.png",
+        "greek": f"{EXPLORE_CATEGORY_IMG_PATH}greek.png",
     }
 
     event_type = models.CharField(
