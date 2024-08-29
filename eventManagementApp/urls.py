@@ -12,5 +12,6 @@ urlpatterns = [
     path("create/", views.hostCreateEvent, name="hostCreateEvent"),
     path("create/new/", views.hostCreateEventGenerator, name="hostCreateEventGenerator"),
     path('create/new/<uuid:eventId>/', views.eventCreationProcess, name="eventCreationProcess"),
-    path('event/overview/<uuid:eventId>/', views.eventCreatedOverview, name="eventOverview")
+    path('event/overview/<uuid:eventId>/', views.eventCreatedOverview, name="eventOverview"),
+    path('event/<uuid:eventId>/', views.eventTicketingOverview, name="ticketingOverview")
 ]

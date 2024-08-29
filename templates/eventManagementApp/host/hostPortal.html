@@ -62,14 +62,20 @@ Host Dashboard | WAVE.
                                     </span>
                                 </div>
                             </div>
-                            <div class="event-delete">
-                                <form method="POST">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="event_id" value="{{ event.eventId }}">
-                                    <button type="submit" role="button" name="eventAction" value="deleteEvent">Delete</button>
-                                </form>
-                                
+                            <div class="ticketing-delete">
+                                <div class="event-delete">
+                                    <form method="POST">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="event_id" value="{{ event.eventId }}">
+                                        <button type="submit" role="button" name="eventAction" value="deleteEvent">Delete</button>
+                                    </form>
+                                    
+                                </div>
                             </div>
+                            <div class="event-ticketing">
+                                <a href=""></a>
+                            </div>
+                            
                         </div>
                         {% endif %}
                     {% endfor %}

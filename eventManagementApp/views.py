@@ -1,6 +1,7 @@
 from django.shortcuts import get_object_or_404, redirect, render
 from django.http import JsonResponse
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 
 
 from .forms import HostApplicationForm, EventForm, EventTicketForm
@@ -13,6 +14,7 @@ from .models import (
 
 
 # Create your views here.
+
 def hostView(request):
     pageName = "Host Event"
     return render(
@@ -51,7 +53,7 @@ def hostApplyView(request):
         request, "eventManagementApp/host/hostApplication.html", {"form": form}
     )
 
-
+@login_required
 def hostPortalView(request):
     event = Event.objects.filter(host=request.user)
     
@@ -65,21 +67,21 @@ def hostPortalView(request):
             return redirect("eventManagement:hostPortal")
     return render(request, "eventManagementApp/host/hostPortal.html", {'events':event})
 
-
+@login_required
 def hostGuideView(request):
     return render(request, "eventManagementApp/host/hostGuide.html")
 
-
+@login_required
 def hostCreateEvent(request):
     return render(request, "eventManagementApp/host/createEvent.html")
 
-
+@login_required
 def hostCreateEventGenerator(request):
     event = Event.objects.create(host=request.user)
 
     return redirect("eventManagement:eventCreationProcess", eventId=event.eventId)
 
-
+@login_required
 def eventCreationProcess(request, eventId):
     event = get_object_or_404(Event, eventId=eventId)
     event_type_choices = Event.EVENT_TYPE_CHOICES
@@ -117,7 +119,7 @@ def eventCreationProcess(request, eventId):
         },
     )
 
-
+@login_required
 def eventCreatedOverview(request, eventId):
     event = get_object_or_404(Event, eventId=eventId)
     if request.method == "POST":
@@ -129,3 +131,10 @@ def eventCreatedOverview(request, eventId):
     return render(
         request, "eventManagementApp/host/eventPreview.html", {"event": event}
     )
+
+
+@login_required
+def eventTicketingOverview(request, eventId):
+    event = get_object_or_404(Event, eventId=eventId)
+    
+    return render(request, 'eventManagementApp/host/event/ticketing/ticketingOverview.html', {'event': event})
