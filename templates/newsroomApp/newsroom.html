@@ -1,0 +1,90 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}
+Newsroom — Wave.  
+{% endblock title %}
+
+{% block app_page_style %}
+<link rel="stylesheet" type="text/css" href="{% static "/styles/newsroomApp/newsroom.css" %}" />
+{% endblock app_page_style %}
+
+{% block header %}
+{% include "partials/nav-footer/nav/main_nav.html" %}
+{% endblock header %}
+
+{% block body %}
+<div class="content-container">
+    <div class="top-container">
+        {% if headlineNews %}
+        <a href="{% url "newsroom:news" newsId=headlineNews.newsId %}" class="section-one">
+            <div class="first-news">
+                <div class="left-side">
+                    <h4>{{ headlineNews.urgencyLevel }}</h4>
+                    <h2>
+                        {{ headlineNews.title }}
+                    </h2>
+                </div>
+            </div>
+            <div class="right-side">
+                <img src="{{ headlineNews.headerImage.url }}" alt="Headline Image">
+            </div>
+            <hr>
+        </a>
+        {% else %}
+        <div class="emptyContainer">
+            <div>
+                <img src="{% static "/images/collegeManagementApp/collegeInformation/empty-listing.svg" %}" />
+            </div>
+            <p>Nothing to display, currently.</p>
+        </div>
+        {% endif %}
+        
+    </div>
+    <section class="section-two">
+        <div class="sectionTwoHeader">
+            <h2>News @ <span id="body-logo">WAVE<span class="spot">.</span></span></h2>
+        </div>
+
+        {% if regularNews %}
+            {% for news in regularNews %}
+            <div class="news-container">
+                <div class="sub-news">
+                    <img src="{% static "images/extras/company/newsroom/penn-stadia.jpg" %}" alt="">
+                    <div class="news-content">
+                        <h5>April 18th, 2024</h5>
+                        <h4>
+                            <a href="">
+                                Lorem ipsum dolor sit amet, consectetur adipisicing. 
+                            
+                            </a>
+                        </h4>
+                        <p>
+                            Lorem ipsum dolor sit, amet consectetur adipisicing elit. 
+                            Unde mollitia consectetur sit officia perspiciatis necessitatibus cum tenetur odit voluptas molestiae! 
+                            Aperiam, quis libero? Commodi cum ullam error eum nisi totam.
+                        </p>
+                    </div>
+                    
+                    <div class="news-button">
+                        <div class="section-button">
+                            <a href="">Read more</a>
+                        </div>
+                    
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+            <hr>
+        {% else %}
+        <div class="emptyContainer">
+            <div>
+                <img src="{% static "/images/collegeManagementApp/collegeInformation/empty-listing.svg" %}" />
+            </div>
+            <p>Nothing to display, currently.</p>
+        </div>
+        {% endif %}
+        
+    </section>
+</div>
+{% endblock body %}

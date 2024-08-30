@@ -1,0 +1,82 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}
+Newsroom — WAVE. Management Dashboard
+{% endblock title %}
+
+{% block app_page_style %}
+<link rel="stylesheet" type="text/css" href="{% static "/styles/adminDashboardApp/tabs/newsroom.css" %}" />
+{% endblock app_page_style %}
+
+{% block script %}
+{% endblock script %}
+
+
+{% block header %}
+{% include "partials/nav-footer/nav/admin_nav.html" %}
+{% endblock header %}
+
+{% block container_art %}
+<div id="container-art">
+    <div class="ticket-heading">
+        <div class="ticket-header">
+            <h3><a href="{% url 'waveAdmin:adminDashboard' %}">Management</a> > Newsroom</h3>
+        </div>
+    </div>
+</div>
+{% endblock container_art %}
+
+
+
+
+{% block body %}
+<div id="content-container">
+    <div class="page-header">
+        <div class="page-heading">
+            <h2>The Newsroom</h2>
+        </div>
+        <div class="buttonContainer">
+            <a href="{% url "waveAdmin:createNews" %}" class="createNewBtn">Create New</a>
+        </div>
+    </div>
+
+    <div id="content-body">
+        {% if news %}
+        <div class="newsContainer">
+            {% for newsItem in news %}
+            <a href="" class="newsCard">
+                <div class="newsHeader">
+                    <img src="{{ newsItem.headerImage.url }}" />
+                </div>
+                <div class="newsBody">
+                    <div class="newsType">
+                        <h6>{{ newsItem.newsCategory }}</h6>
+                    </div>
+                    <div class="newsTitle">
+                        <h4>{{ newsItem.title }}</h4>
+                    </div>
+                    <div class="newsDate">
+                        <p>By {{ newsItem.created_by.first_name }} {{ newsItem.created_by.last_name }}</p>
+                    </div>
+                </div>
+            </a> 
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="emptyContainer">
+            <div>
+                <img src="{% static "/images/collegeManagementApp/collegeInformation/empty-listing.svg" %}" />
+            </div>
+            <p>Currently nothing to be displayed.</p>
+            <div class="buttonContainer">
+                <a href="{% url "waveAdmin:createNews" %}" class="createNewBtn">Create New</a>
+            </div>
+        </div>
+        {% endif %}
+        <div id="displayNewsElement"></div>
+        
+    </div>
+    
+</div>
+{% endblock body %}

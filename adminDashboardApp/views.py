@@ -15,13 +15,14 @@ from eventManagementApp.models import HostApplication
 from collegeManagementApp.models import College, Organization, OrganizationMembership, Membership
 
 from wave_v1 import settings
-from .models import Department, CareerRole, LoginHistoryModel
+from .models import Department, CareerRole, LoginHistoryModel, Newsroom
 from .forms import (
     CreateGroupForm,
     UpdateGroupForm,
     DepartmentForm,
     CareerRoleCreationForm,
     SuspendUserForm,
+    CreateNewsForm
 )
 from wave_v1.decorators import (
     admin_required,
@@ -505,3 +506,29 @@ def adminCollegeDetailView(request, collegeId):
 @admin_required
 def adminCollegeOrgsView(request):
     return render(request, "adminDashboardApp/tabs/organizations.html")
+
+@login_required
+@check_suspension
+@admin_required
+def adminNewsRoomView(request):
+    news = Newsroom.objects.all()
+    return render(request, "adminDashboardApp/tabs/newsroom.html", {'news':news})
+
+@login_required
+@check_suspension
+@admin_required
+def adminCreateNewsView(request):
+    createNewsForm = CreateNewsForm(request.POST, request.FILES)
+    if request.method == 'POST':
+        if createNewsForm.is_valid():
+            news_instance = createNewsForm.save(commit=False)
+            news_instance.created_by = request.user
+            news_instance.save()
+            return redirect("waveAdmin:newsroom")
+        
+        else:
+            print(createNewsForm.errors)
+            
+    else:
+        createNewsForm = CreateNewsForm()
+    return render(request, "adminDashboardApp/tabs/newsroom/createNews.html", {'createNewsForm':createNewsForm})

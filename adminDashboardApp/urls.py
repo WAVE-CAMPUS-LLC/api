@@ -31,4 +31,6 @@ urlpatterns = [
     path("colleges/", views.adminCollegeView, name="colleges"),
     path("colleges/<uuid:collegeId>/view/", views.adminCollegeDetailView, name="collegeDetail"),
     path("organizations/", views.adminCollegeOrgsView, name="organizations"),
+    path("newsroom/", views.adminNewsRoomView, name="newsroom"),
+    path("newsroom/create/", views.adminCreateNewsView, name="createNews"),
 ]

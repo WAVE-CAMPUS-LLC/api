@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import LoginHistoryModel, Department, CareerRole
+from .models import LoginHistoryModel, Department, CareerRole, Newsroom
 
 
 class DepartmentAdmin(admin.ModelAdmin):
@@ -28,7 +28,25 @@ class CareersAdmin(admin.ModelAdmin):
     )
 
 
+class NewsroomAdmin(admin.ModelAdmin):
+    list_display = (
+        "title",
+        "body",
+        "headerImage",
+        "imageOne",
+        "imageTwo",
+        "imageThree",
+    )
+    
+    readonly_fields = ('created_at', 'created_by')
+
+    list_filter = ("created_at", "created_by")
+
+    search_fields = ("title",)
+
+
 # Register your models here.
 admin.site.register(Department, DepartmentAdmin)
 admin.site.register(CareerRole, CareersAdmin)
 admin.site.register(LoginHistoryModel)
+admin.site.register(Newsroom, NewsroomAdmin)
