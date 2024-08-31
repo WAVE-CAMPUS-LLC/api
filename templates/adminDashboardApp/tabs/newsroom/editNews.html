@@ -1,0 +1,79 @@
+{% extends "base/base.html" %}
+{% load static %}
+{% load widget_tweaks %}
+
+{% block title %}
+WAVE. — Management Dashboard
+{% endblock title %}
+
+{% block app_page_style %}
+<link rel="stylesheet" type="text/css" href="{% static "/styles/adminDashboardApp/tabs/newsroom/editNews.css" %}" />
+{% endblock app_page_style %}
+
+
+{% block script %}
+{% endblock script %}
+
+
+{% block header %}
+{% include "partials/nav-footer/nav/admin_nav.html" %}
+{% endblock header %}
+
+{% block container_art %}
+<div id="container-art">
+    <div class="ticket-heading">
+        <div class="ticket-header">
+            <h3><a href="{% url 'waveAdmin:adminDashboard' %}">Management</a> > Create News</h3>
+        </div>
+    </div>
+</div>
+{% endblock container_art %}
+
+
+
+{% block body %}
+<div id="content-container">
+    <div class="page-heading">
+        <h2>{{ newsItem.title }}</h2>
+        <p>Edit this news article.</p>
+    </div>
+
+    <div id="content-body">
+        <form method="POST" action="{% url "waveAdmin:editNews" newsId=newsItem.newsId %}">
+            <div class="formRow">
+                <input type="hidden" name="field" value="title-info" />
+                {% csrf_token %}
+                
+                <label for="{{ titleFieldForm.title.id_for_label }}" class="formLabel">
+                    <p class="rowTitle">{{ titleFieldForm.title.label }}</p>
+                    <input type="{{ titleFieldForm.title.field.widget.input_type }}"
+                        name="{{ titleFieldForm.title.name }}" 
+                        id="{{ titleFieldForm.title.id_for_label }}" 
+                        value="{{ newsItem.title }}" 
+                    />
+                </label>
+            </div>
+            <div class="submit-row">
+                <button type="submit">Submit</button>
+            </div>
+        </form>
+
+        <form method="POST" action="{% url "waveAdmin:editNews" newsId=newsItem.newsId %}">
+            <div class="formRow">
+                <input type="hidden" name="field" value="body-info" />
+                {% csrf_token %}
+                
+                <label for="{{ titleFieldForm.body.id_for_label }}" class="formLabel">
+                    <p class="rowTitle">{{ titleFieldForm.body.label }}</p>
+                    <textarea type="{{ titleFieldForm.body.field.widget.input_type }}"
+                        name="{{ titleFieldForm.body.name }}" 
+                        id="{{ titleFieldForm.body.id_for_label }}" 
+                        value="{{ newsItem.body }}" 
+                    >{{ newsItem.body }}</textarea>
+                </label>
+            </div>
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+</div>
+{% endblock body %}

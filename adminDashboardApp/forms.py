@@ -101,7 +101,16 @@ class SuspendUserForm(forms.Form):
 class CreateNewsForm(forms.ModelForm):
     class Meta:
         model = Newsroom
-        fields = ["title", "newsCategory", "body", "headerImage", "imageOne", "imageTwo", "imageThree"]
+        fields = [
+            "title",
+            "newsCategory",
+            "body",
+            "headerImage",
+            "imageOne",
+            "imageTwo",
+            "imageThree",
+            "urgencyLevel",
+        ]
 
         widgets = {
             "body": forms.Textarea(
@@ -114,3 +123,74 @@ class CreateNewsForm(forms.ModelForm):
                 }
             )
         }
+
+
+class UpdateNewsTitleForm(forms.ModelForm):
+    class Meta:
+        model = Newsroom
+        fields = [
+            "title",
+        ]
+
+
+class UpdateNewsBodyForm(forms.ModelForm):
+    class Meta:
+        model = Newsroom
+        fields = ["body",]
+
+        widgets = {
+            "body": forms.Textarea(
+                attrs={
+                    "class": "",
+                    "rows": 5,
+                    "cols": 40,
+                    "autocomplete": "off",
+                    "required": True,
+                }
+            )
+        }
+
+
+class UpdateUrgencyLevelForm(forms.ModelForm):
+    class Meta:
+        model = Newsroom
+        fields = [
+            "urgencyLevel",
+        ]
+
+
+class UpdateNewsCategoryForm(forms.ModelForm):
+    class Meta:
+        model = Newsroom
+        fields = [
+            "newsCategory",
+        ]
+
+
+class UpdateHeaderImageForm(forms.ModelForm):
+    class Meta:
+        model = Newsroom
+        fields = [
+            "headerImage",
+        ]
+        
+class UpdateImageOneForm(forms.ModelForm):
+    class Meta:
+        model = Newsroom
+        fields = [
+            "imageOne",
+        ]
+        
+class UpdateImageTwoForm(forms.ModelForm):
+    class Meta:
+        model = Newsroom
+        fields = [
+            "imageTwo",
+        ]
+        
+class UpdateImageThreeForm(forms.ModelForm):
+    class Meta:
+        model = Newsroom
+        fields = [
+            "imageThree",
+        ]

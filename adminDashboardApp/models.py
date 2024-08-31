@@ -163,7 +163,7 @@ class Group(models.Model):
 
 
 class Newsroom(models.Model):
-    NEWS_TYPE_CHOICES = [("The HQ", "HQ"), ("Product & Features", "PRODUCT")]
+    NEWS_TYPE_CHOICES = [("The HQ", "HQ"), ("Product & Features", "Product & Features")]
     URGENCY_TYPE_CHOICES = [("THE LATEST", "THE LATEST"), ("REGULAR", "REGULAR")]
     newsId = models.UUIDField(
         primary_key=True, default=uuid.uuid4, editable=False, unique=True

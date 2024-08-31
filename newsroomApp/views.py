@@ -4,8 +4,6 @@ from adminDashboardApp.models import Newsroom
 
 # Create your views here.
 def newsroomView(request):
-    
-
     headline_news = (
         Newsroom.objects.filter(urgencyLevel="THE LATEST")
         .order_by("created_at")

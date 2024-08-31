@@ -64,7 +64,8 @@
 }
 
 .formLabel input,
-.formLabel textarea {
+.formLabel textarea,
+.formLabel select {
     width: 100%;
     padding: 15px;
 

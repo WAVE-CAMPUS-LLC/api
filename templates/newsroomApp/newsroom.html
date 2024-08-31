@@ -47,35 +47,25 @@ Newsroom — Wave.
         </div>
 
         {% if regularNews %}
+        <div class="news-container">
             {% for news in regularNews %}
-            <div class="news-container">
-                <div class="sub-news">
-                    <img src="{% static "images/extras/company/newsroom/penn-stadia.jpg" %}" alt="">
+                <a href="{% url "newsroom:news" newsId=news.newsId %}" class="sub-news">
+                    <img src="{{ news.headerImage.url }}" alt="">
                     <div class="news-content">
-                        <h5>April 18th, 2024</h5>
+                        <h5>{{ news.newsCategory }}</h5>
                         <h4>
-                            <a href="">
-                                Lorem ipsum dolor sit amet, consectetur adipisicing. 
-                            
-                            </a>
+                            {{ news.title }}
                         </h4>
-                        <p>
-                            Lorem ipsum dolor sit, amet consectetur adipisicing elit. 
-                            Unde mollitia consectetur sit officia perspiciatis necessitatibus cum tenetur odit voluptas molestiae! 
-                            Aperiam, quis libero? Commodi cum ullam error eum nisi totam.
-                        </p>
                     </div>
                     
-                    <div class="news-button">
-                        <div class="section-button">
-                            <a href="">Read more</a>
-                        </div>
-                    
+                    <div class="section-button">
+                        <button type="button" role="button">
+                            Read more
+                        </button>
                     </div>
-                </div>
-            </div>
+                </a>
             {% endfor %}
-            <hr>
+        </div>
         {% else %}
         <div class="emptyContainer">
             <div>
@@ -84,7 +74,6 @@ Newsroom — Wave.
             <p>Nothing to display, currently.</p>
         </div>
         {% endif %}
-        
     </section>
 </div>
 {% endblock body %}

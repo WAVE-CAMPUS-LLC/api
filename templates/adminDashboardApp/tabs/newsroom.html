@@ -45,7 +45,7 @@ Newsroom — WAVE. Management Dashboard
         {% if news %}
         <div class="newsContainer">
             {% for newsItem in news %}
-            <a href="" class="newsCard">
+            <a href="{% url "waveAdmin:editNews" newsId=newsItem.newsId %}" class="newsCard">
                 <div class="newsHeader">
                     <img src="{{ newsItem.headerImage.url }}" />
                 </div>

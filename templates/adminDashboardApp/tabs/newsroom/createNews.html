@@ -54,6 +54,20 @@ WAVE. — Management Dashboard
             </div> 
 
             <div class="formRow">
+                <label for="{{ createNewsForm.newsCategory.id_for_label }}" class="formLabel">
+                    <p class="rowTitle">{{ createNewsForm.newsCategory.label }}</p>
+                    {{ createNewsForm.newsCategory }}
+                </label>
+            </div> 
+
+            <div class="formRow">
+                <label for="{{ createNewsForm.urgencyLevel.id_for_label }}" class="formLabel">
+                    <p class="rowTitle">{{ createNewsForm.urgencyLevel.label }}</p>
+                    {{ createNewsForm.urgencyLevel }}
+                </label>
+            </div> 
+
+            <div class="formRow">
                 <label for="{{ createNewsForm.headerImage.id_for_label }}" class="formLabel">
                     <p class="rowTitle">{{ createNewsForm.headerImage.label }}</p>
                     {{ createNewsForm.headerImage }}

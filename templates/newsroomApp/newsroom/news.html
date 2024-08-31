@@ -17,10 +17,10 @@ Newsroom — Wave.
 <div id="content-container">
     <div id="page-heading">
         <h6>
-            College Sports: American Football
+            {{ newsItem.newsCategory }}
         </h6>
         <h2>
-            Tennessee State face Notre Dame
+            {{ newsItem.title }}
         </h2>
     </div>
 
@@ -28,38 +28,17 @@ Newsroom — Wave.
         <div class="blogContent-Sidebar">
             <div class="blogContent-Sidebar-container">
                 <div class="userDate-published">
-                    <h6>By <a href="#" id="username">@nathaniel</a></h6>
-                    <p>May 4, 2024</p>
+                    <h6>By <a href="#" id="username">@{{ newsItem.created_by.username }}</a></h6>
+                    <p>{{ newsItem.created_at|date:"F d, Y" }}</p>
                 </div>
                 <div class="bCS-divider">
                     <hr>
-                </div>
-                <div class="bCS-contentList">
-                    <h5>Content</h5>
-                    <ul>
-                        <li>Introduction</li>
-                        <li>General</li>
-                        <li>Media</li>
-                    </ul>
                 </div>
             </div>
         </div>
         <div class="blogContent-Main">
             <p>
-                Lorem ipsum dolor sit, amet consectetur adipisicing elit. Facere possimus sed autem nemo
-                aspernatur.
-                Laborum voluptatibus, totam cum saepe doloribus, veniam neque sint dicta dolorum quidem autem.
-                Optio, eum facilis.
-                Lorem ipsum dolor sit amet, consectetur adipisicing elit. Architecto, harum. Quis modi inventore
-                maxime alias enim libero expedita quas quibusdam delectus laborum quidem asperiores, molestias
-                qui!
-                Enim amet perferendis deleniti!
-                Lorem ipsum dolor sit amet consectetur, adipisicing elit. Inventore commodi architecto
-                exercitationem. Cupiditate nobis quidem, deleniti animi recusandae distinctio exercitationem vel
-                soluta neque sed dicta facere delectus iusto veritatis. Id!
-                Lorem ipsum dolor sit amet, consectetur adipisicing elit. Dicta rerum, atque reiciendis
-                dignissimos beatae perferendis explicabo, dolor libero quidem praesentium itaque in. Nulla nemo
-                necessitatibus, ducimus tempore vel illum ex!
+                {{ newsItem.body }}
             </p>
         </div>
     </div>

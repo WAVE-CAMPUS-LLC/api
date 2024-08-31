@@ -33,4 +33,5 @@ urlpatterns = [
     path("organizations/", views.adminCollegeOrgsView, name="organizations"),
     path("newsroom/", views.adminNewsRoomView, name="newsroom"),
     path("newsroom/create/", views.adminCreateNewsView, name="createNews"),
+    path("newsroom/<uuid:newsId>/edit/", views.adminEditNewsView, name="editNews"),
 ]
