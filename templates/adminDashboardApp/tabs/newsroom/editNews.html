@@ -74,6 +74,109 @@ WAVE. — Management Dashboard
             </div>
             <button type="submit">Submit</button>
         </form>
+
+        <form method="POST" action="{% url "waveAdmin:editNews" newsId=newsItem.newsId %}">
+            <div class="formRow">
+                <input type="hidden" name="field" value="urgency-info" />
+                {% csrf_token %}
+                
+                <label for="{{ titleFieldForm.urgencyLevel.id_for_label }}" class="formLabel">
+                    <p class="rowTitle">{{ titleFieldForm.urgencyLevel.label }}</p>
+                    <textarea type="{{ titleFieldForm.urgencyLevel.field.widget.input_type }}"
+                        name="{{ titleFieldForm.urgencyLevel.name }}" 
+                        id="{{ titleFieldForm.urgencyLevel.id_for_label }}" 
+                        value="{{ newsItem.urgencyLevel }}" 
+                    >{{ newsItem.urgencyLevel }}</textarea>
+                </label>
+            </div>
+            <button type="submit">Submit</button>
+        </form>
+
+        <form method="POST" action="{% url "waveAdmin:editNews" newsId=newsItem.newsId %}">
+            <div class="formRow">
+                <input type="hidden" name="field" value="newsCategory-info" />
+                {% csrf_token %}
+                
+                <label for="{{ titleFieldForm.newsCategory.id_for_label }}" class="formLabel">
+                    <p class="rowTitle">{{ titleFieldForm.newsCategory.label }}</p>
+                    <textarea type="{{ titleFieldForm.newsCategory.field.widget.input_type }}"
+                        name="{{ titleFieldForm.newsCategory.name }}" 
+                        id="{{ titleFieldForm.newsCategory.id_for_label }}" 
+                        value="{{ newsItem.newsCategory }}" 
+                    >{{ newsItem.newsCategory }}</textarea>
+                </label>
+            </div>
+            <button type="submit">Submit</button>
+        </form>
+
+        <form method="POST" action="{% url "waveAdmin:editNews" newsId=newsItem.newsId %}">
+            <div class="formRow">
+                <input type="hidden" name="field" value="headerImage-info" />
+                {% csrf_token %}
+                
+                <label for="{{ titleFieldForm.headerImage.id_for_label }}" class="formLabel">
+                    <p class="rowTitle">{{ titleFieldForm.headerImage.label }}</p>
+                    <textarea type="{{ titleFieldForm.headerImage.field.widget.input_type }}"
+                        name="{{ titleFieldForm.headerImage.name }}" 
+                        id="{{ titleFieldForm.headerImage.id_for_label }}" 
+                        value="{{ newsItem.headerImage }}" 
+                    >{{ newsItem.headerImage }}</textarea>
+                </label>
+            </div>
+            <button type="submit">Submit</button>
+        </form>
+
+        <form method="POST" action="{% url "waveAdmin:editNews" newsId=newsItem.newsId %}">
+            <div class="formRow">
+                <input type="hidden" name="field" value="imageOne-info" />
+                {% csrf_token %}
+                
+                <label for="{{ titleFieldForm.imageOne.id_for_label }}" class="formLabel">
+                    <p class="rowTitle">{{ titleFieldForm.imageOne.label }}</p>
+                    <textarea type="{{ titleFieldForm.imageOne.field.widget.input_type }}"
+                        name="{{ titleFieldForm.imageOne.name }}" 
+                        id="{{ titleFieldForm.imageOne.id_for_label }}" 
+                        value="{{ newsItem.imageOne }}" 
+                    >{{ newsItem.imageOne }}</textarea>
+                </label>
+            </div>
+            <button type="submit">Submit</button>
+        </form>
+
+        <form method="POST" action="{% url "waveAdmin:editNews" newsId=newsItem.newsId %}">
+            <div class="formRow">
+                <input type="hidden" name="field" value="imageTwo-info" />
+                {% csrf_token %}
+                
+                <label for="{{ titleFieldForm.imageTwo.id_for_label }}" class="formLabel">
+                    <p class="rowTitle">{{ titleFieldForm.imageTwo.label }}</p>
+                    <textarea type="{{ titleFieldForm.imageTwo.field.widget.input_type }}"
+                        name="{{ titleFieldForm.imageTwo.name }}" 
+                        id="{{ titleFieldForm.imageTwo.id_for_label }}" 
+                        value="{{ newsItem.imageTwo }}" 
+                    >{{ newsItem.imageTwo }}</textarea>
+                </label>
+            </div>
+            <button type="submit">Submit</button>
+        </form>
+
+        <form method="POST" action="{% url "waveAdmin:editNews" newsId=newsItem.newsId %}">
+            <div class="formRow">
+                <input type="hidden" name="field" value="imageThree-info" />
+                {% csrf_token %}
+                
+                <label for="{{ titleFieldForm.imageThree.id_for_label }}" class="formLabel">
+                    <p class="rowTitle">{{ titleFieldForm.imageThree.label }}</p>
+                    <textarea type="{{ titleFieldForm.imageThree.field.widget.input_type }}"
+                        name="{{ titleFieldForm.imageThree.name }}" 
+                        id="{{ titleFieldForm.imageThree.id_for_label }}" 
+                        value="{{ newsItem.imageThree }}" 
+                    >{{ newsItem.imageThree }}</textarea>
+                </label>
+            </div>
+            <button type="submit">Submit</button>
+        </form>
+
     </div>
 </div>
 {% endblock body %}

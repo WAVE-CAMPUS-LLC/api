@@ -29,6 +29,7 @@ class CareersAdmin(admin.ModelAdmin):
 
 
 class NewsroomAdmin(admin.ModelAdmin):
+    # should we change this to match with the model and forms?
     list_display = (
         "title",
         "body",
