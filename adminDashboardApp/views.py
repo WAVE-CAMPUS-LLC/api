@@ -579,37 +579,45 @@ def adminEditNewsView(request, newsId):
             bodyFieldForm = UpdateNewsBodyForm(request.POST, instance=newsItem)
             if bodyFieldForm.is_valid():
                 bodyFieldForm.save()
-        
-        elif field == 'urgency-info':
+
+        elif field == "urgency-info":
             urgencyFieldForm = UpdateUrgencyLevelForm(request.POST, instance=newsItem)
             if urgencyFieldForm.is_valid():
                 urgencyFieldForm.save()
-        
-        elif field == 'newsCategory-info':
+
+        elif field == "newsCategory-info":
             newsCategoryForm = UpdateNewsCategoryForm(request.POST, instance=newsItem)
             if newsCategoryForm.is_valid():
                 newsCategoryForm.save()
-                
+
         elif field == "headerImage-info":
-            headerImageForm = UpdateHeaderImageForm(request.POST, request.FILES, instance=newsItem)
+            headerImageForm = UpdateHeaderImageForm(
+                request.POST, request.FILES, instance=newsItem
+            )
             if headerImageForm.is_valid():
                 headerImageForm.save()
-            
-        elif field == 'imageOne-info':
-            imageOneForm = UpdateImageOneForm(request.POST, request.FILES, instance=newsItem)
+
+        elif field == "imageOne-info":
+            imageOneForm = UpdateImageOneForm(
+                request.POST, request.FILES, instance=newsItem
+            )
             if imageOneForm.is_valid():
                 imageOneForm.save()
-                
-        elif field == 'imageTwo-info':
-            imageTwoForm = UpdateImageTwoForm(request.POST, request.FILES, instance=newsItem)
+
+        elif field == "imageTwo-info":
+            imageTwoForm = UpdateImageTwoForm(
+                request.POST, request.FILES, instance=newsItem
+            )
             if imageTwoForm.is_valid():
                 imageTwoForm.save()
-                
-        elif field == 'imageThree-info':
-            imageThreeForm = UpdateImageThreeForm(request.POST, request.FILES, instance=newsItem)
+
+        elif field == "imageThree-info":
+            imageThreeForm = UpdateImageThreeForm(
+                request.POST, request.FILES, instance=newsItem
+            )
             if imageThreeForm.is_valid():
                 imageThreeForm.save()
-                
+
         else:
             return HttpResponseBadRequest("Invalid form type")
 
@@ -617,8 +625,26 @@ def adminEditNewsView(request, newsId):
 
     else:
         titleFieldForm = UpdateNewsTitleForm()
+        bodyFieldForm = UpdateNewsBodyForm()
+        urgencyFieldForm = UpdateUrgencyLevelForm()
+        newsCategoryForm = UpdateNewsCategoryForm()
+        headerImageForm = UpdateHeaderImageForm()
+        imageOneForm = UpdateImageOneForm()
+        imageTwoForm = UpdateImageTwoForm()
+        imageThreeForm = UpdateImageThreeForm()
+
     return render(
         request,
         "adminDashboardApp/tabs/newsroom/editNews.html",
-        {"newsItem": newsItem, "titleFieldForm": titleFieldForm},
+        {
+            "newsItem": newsItem,
+            "titleFieldForm": titleFieldForm,
+            "bodyFieldForm": bodyFieldForm,
+            "urgencyFieldForm": urgencyFieldForm,
+            "newsCategoryForm": newsCategoryForm,
+            "headerImageForm": headerImageForm,
+            "imageOneForm": imageOneForm,
+            "imageTwoForm": imageTwoForm,
+            "imageThreeForm": imageThreeForm,
+        },
     )

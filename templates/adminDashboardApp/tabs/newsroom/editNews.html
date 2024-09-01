@@ -63,11 +63,11 @@ WAVE. — Management Dashboard
                 <input type="hidden" name="field" value="body-info" />
                 {% csrf_token %}
                 
-                <label for="{{ titleFieldForm.body.id_for_label }}" class="formLabel">
-                    <p class="rowTitle">{{ titleFieldForm.body.label }}</p>
-                    <textarea type="{{ titleFieldForm.body.field.widget.input_type }}"
-                        name="{{ titleFieldForm.body.name }}" 
-                        id="{{ titleFieldForm.body.id_for_label }}" 
+                <label for="{{ bodyFieldForm.body.id_for_label }}" class="formLabel">
+                    <p class="rowTitle">{{ bodyFieldForm.body.label }}</p>
+                    <textarea type="{{ bodyFieldForm.body.field.widget.input_type }}"
+                        name="{{ bodyFieldForm.body.name }}" 
+                        id="{{ bodyFieldForm.body.id_for_label }}" 
                         value="{{ newsItem.body }}" 
                     >{{ newsItem.body }}</textarea>
                 </label>
@@ -80,11 +80,11 @@ WAVE. — Management Dashboard
                 <input type="hidden" name="field" value="urgency-info" />
                 {% csrf_token %}
                 
-                <label for="{{ titleFieldForm.urgencyLevel.id_for_label }}" class="formLabel">
-                    <p class="rowTitle">{{ titleFieldForm.urgencyLevel.label }}</p>
-                    <textarea type="{{ titleFieldForm.urgencyLevel.field.widget.input_type }}"
-                        name="{{ titleFieldForm.urgencyLevel.name }}" 
-                        id="{{ titleFieldForm.urgencyLevel.id_for_label }}" 
+                <label for="{{ urgencyFieldForm.urgencyLevel.id_for_label }}" class="formLabel">
+                    <p class="rowTitle">{{ urgencyFieldForm.urgencyLevel.label }}</p>
+                    <textarea type="{{ urgencyFieldForm.urgencyLevel.field.widget.input_type }}"
+                        name="{{ urgencyFieldForm.urgencyLevel.name }}" 
+                        id="{{ urgencyFieldForm.urgencyLevel.id_for_label }}" 
                         value="{{ newsItem.urgencyLevel }}" 
                     >{{ newsItem.urgencyLevel }}</textarea>
                 </label>
@@ -97,11 +97,11 @@ WAVE. — Management Dashboard
                 <input type="hidden" name="field" value="newsCategory-info" />
                 {% csrf_token %}
                 
-                <label for="{{ titleFieldForm.newsCategory.id_for_label }}" class="formLabel">
-                    <p class="rowTitle">{{ titleFieldForm.newsCategory.label }}</p>
-                    <textarea type="{{ titleFieldForm.newsCategory.field.widget.input_type }}"
-                        name="{{ titleFieldForm.newsCategory.name }}" 
-                        id="{{ titleFieldForm.newsCategory.id_for_label }}" 
+                <label for="{{ newsCategoryForm.newsCategory.id_for_label }}" class="formLabel">
+                    <p class="rowTitle">{{ newsCategoryForm.newsCategory.label }}</p>
+                    <textarea type="{{ newsCategoryForm.newsCategory.field.widget.input_type }}"
+                        name="{{ newsCategoryForm.newsCategory.name }}" 
+                        id="{{ newsCategoryForm.newsCategory.id_for_label }}" 
                         value="{{ newsItem.newsCategory }}" 
                     >{{ newsItem.newsCategory }}</textarea>
                 </label>
@@ -114,13 +114,9 @@ WAVE. — Management Dashboard
                 <input type="hidden" name="field" value="headerImage-info" />
                 {% csrf_token %}
                 
-                <label for="{{ titleFieldForm.headerImage.id_for_label }}" class="formLabel">
-                    <p class="rowTitle">{{ titleFieldForm.headerImage.label }}</p>
-                    <textarea type="{{ titleFieldForm.headerImage.field.widget.input_type }}"
-                        name="{{ titleFieldForm.headerImage.name }}" 
-                        id="{{ titleFieldForm.headerImage.id_for_label }}" 
-                        value="{{ newsItem.headerImage }}" 
-                    >{{ newsItem.headerImage }}</textarea>
+                <label for="{{ headerImageForm.headerImage.id_for_label }}" class="formLabel">
+                    <p class="rowTitle">{{ headerImageForm.headerImage.label }}</p>
+                    {{ headerImageForm.headerImage }}
                 </label>
             </div>
             <button type="submit">Submit</button>
@@ -131,11 +127,11 @@ WAVE. — Management Dashboard
                 <input type="hidden" name="field" value="imageOne-info" />
                 {% csrf_token %}
                 
-                <label for="{{ titleFieldForm.imageOne.id_for_label }}" class="formLabel">
-                    <p class="rowTitle">{{ titleFieldForm.imageOne.label }}</p>
-                    <textarea type="{{ titleFieldForm.imageOne.field.widget.input_type }}"
-                        name="{{ titleFieldForm.imageOne.name }}" 
-                        id="{{ titleFieldForm.imageOne.id_for_label }}" 
+                <label for="{{ imageOneForm.imageOne.id_for_label }}" class="formLabel">
+                    <p class="rowTitle">{{ imageOneForm.imageOne.label }}</p>
+                    <textarea type="{{ imageOneForm.imageOne.field.widget.input_type }}"
+                        name="{{ imageOneForm.imageOne.name }}" 
+                        id="{{ imageOneForm.imageOne.id_for_label }}" 
                         value="{{ newsItem.imageOne }}" 
                     >{{ newsItem.imageOne }}</textarea>
                 </label>
@@ -148,11 +144,11 @@ WAVE. — Management Dashboard
                 <input type="hidden" name="field" value="imageTwo-info" />
                 {% csrf_token %}
                 
-                <label for="{{ titleFieldForm.imageTwo.id_for_label }}" class="formLabel">
-                    <p class="rowTitle">{{ titleFieldForm.imageTwo.label }}</p>
-                    <textarea type="{{ titleFieldForm.imageTwo.field.widget.input_type }}"
-                        name="{{ titleFieldForm.imageTwo.name }}" 
-                        id="{{ titleFieldForm.imageTwo.id_for_label }}" 
+                <label for="{{ imageTwoForm.imageTwo.id_for_label }}" class="formLabel">
+                    <p class="rowTitle">{{ imageTwoForm.imageTwo.label }}</p>
+                    <textarea type="{{ imageTwoForm.imageTwo.field.widget.input_type }}"
+                        name="{{ imageTwoForm.imageTwo.name }}" 
+                        id="{{ imageTwoForm.imageTwo.id_for_label }}" 
                         value="{{ newsItem.imageTwo }}" 
                     >{{ newsItem.imageTwo }}</textarea>
                 </label>
@@ -165,11 +161,11 @@ WAVE. — Management Dashboard
                 <input type="hidden" name="field" value="imageThree-info" />
                 {% csrf_token %}
                 
-                <label for="{{ titleFieldForm.imageThree.id_for_label }}" class="formLabel">
-                    <p class="rowTitle">{{ titleFieldForm.imageThree.label }}</p>
-                    <textarea type="{{ titleFieldForm.imageThree.field.widget.input_type }}"
-                        name="{{ titleFieldForm.imageThree.name }}" 
-                        id="{{ titleFieldForm.imageThree.id_for_label }}" 
+                <label for="{{ imageThreeForm.imageThree.id_for_label }}" class="formLabel">
+                    <p class="rowTitle">{{ imageThreeForm.imageThree.label }}</p>
+                    <textarea type="{{ imageThreeForm.imageThree.field.widget.input_type }}"
+                        name="{{ imageThreeForm.imageThree.name }}" 
+                        id="{{ imageThreeForm.imageThree.id_for_label }}" 
                         value="{{ newsItem.imageThree }}" 
                     >{{ newsItem.imageThree }}</textarea>
                 </label>
