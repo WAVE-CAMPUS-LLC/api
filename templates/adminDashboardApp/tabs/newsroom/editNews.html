@@ -23,7 +23,7 @@ WAVE. — Management Dashboard
 <div id="container-art">
     <div class="ticket-heading">
         <div class="ticket-header">
-            <h3><a href="{% url 'waveAdmin:adminDashboard' %}">Management</a> > Create News</h3>
+            <h3><a href="{% url 'waveAdmin:adminDashboard' %}">Management</a> > Edit News</h3>
         </div>
     </div>
 </div>
@@ -34,8 +34,17 @@ WAVE. — Management Dashboard
 {% block body %}
 <div id="content-container">
     <div class="page-heading">
-        <h2>{{ newsItem.title }}</h2>
-        <p>Edit this news article.</p>
+        <div class="heading">
+            <h2>{{ newsItem.title }}</h2>
+            <p>Edit this news article.</p>
+        </div>
+        <div class="delete">
+            <form method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="news_id" value="{{ newsItem.newsId }}">
+                <button type="submit" class="delete-news" role="button" name="eventAction" value="deleteNews">Delete News</button>
+            </form>
+        </div>
     </div>
 
     <div id="content-body">
@@ -76,7 +85,9 @@ WAVE. — Management Dashboard
 
                 </label>
             </div>
-            <button type="submit">Submit</button>
+            <div class="submit-row">
+                <button type="submit">Submit</button>
+            </div>
         </form>
 
         <form method="POST" action="{% url 'waveAdmin:editNews' newsId=newsItem.newsId %}">
@@ -97,7 +108,9 @@ WAVE. — Management Dashboard
 
                 </label>
             </div>
-            <button type="submit">Submit</button>
+            <div class="submit-row">
+                <button type="submit">Submit</button>
+            </div>
         </form>
         
         <form method="POST" action="{% url 'waveAdmin:editNews' newsId=newsItem.newsId %}">
@@ -117,7 +130,9 @@ WAVE. — Management Dashboard
         
                 </label>
             </div>
-            <button type="submit">Submit</button>
+            <div class="submit-row">
+                <button type="submit">Submit</button>
+            </div>
         </form>
         
 
@@ -125,25 +140,29 @@ WAVE. — Management Dashboard
             <div class="formRow">
                 <input type="hidden" name="field" value="headerImage-info" />
                 {% csrf_token %}
-        
-                <label for="{{ headerImageForm.headerImage.id_for_label }}" class="formLabel">
-                    <p class="rowTitle">{{ headerImageForm.headerImage.label }}</p>
-                    {% if newsItem.headerImage %}
-                        <img src="{{ newsItem.headerImage.url }}" alt="Current Header Image" style="max-width: 200px; max-height: 200px;" />
-                    {% else %}
-                        <p>No current header image</p>
-                    {% endif %}
-                </label>
-        
-                <label for="{{ headerImageForm.headerImage.id_for_label }}" class="formLabel">
-                    <p class="rowTitle">Upload New Header Image</p>
-                    <input type="file" 
-                           name="{{ headerImageForm.headerImage.name }}" 
-                           id="{{ headerImageForm.headerImage.id_for_label }}" 
-                           accept="image/*" />
-                </label>
+
+                <div class="imageDisplays">
+                    <label for="{{ headerImageForm.headerImage.id_for_label }}" class="formLabel">
+                        <p class="rowTitle">{{ headerImageForm.headerImage.label }}</p>
+                        {% if newsItem.headerImage %}
+                            <img src="{{ newsItem.headerImage.url }}" alt="Current Header Image" style="max-width: 200px; max-height: 200px;" />
+                        {% else %}
+                            <p>No current header image</p>
+                        {% endif %}
+                    </label>
+            
+                    <label for="{{ headerImageForm.headerImage.id_for_label }}" class="formLabel">
+                        <p class="rowTitle">Upload New Header Image</p>
+                        <input type="file" 
+                               name="{{ headerImageForm.headerImage.name }}" 
+                               id="{{ headerImageForm.headerImage.id_for_label }}" 
+                               accept="image/*" />
+                    </label>
+                </div>
             </div>
-            <button type="submit">Submit</button>
+            <div class="submit-row">
+                <button type="submit">Submit</button>
+            </div>
         </form>
         
         <form method="POST" action="{% url 'waveAdmin:editNews' newsId=newsItem.newsId %}" enctype="multipart/form-data">
@@ -152,25 +171,29 @@ WAVE. — Management Dashboard
                 {% csrf_token %}
         
                 <!-- Display the current image -->
-                <label for="{{ imageOneForm.imageOne.id_for_label }}" class="formLabel">
-                    <p class="rowTitle">{{ imageOneForm.imageOne.label }}</p>
-                    {% if newsItem.imageOne %}
-                        <img src="{{ newsItem.imageOne.url }}" alt="Current Image" style="max-width: 200px; max-height: 200px;" />
-                    {% else %}
-                        <p>No current first image</p>
-                    {% endif %}
-                </label>
-        
-                <!-- File input for uploading a new image -->
-                <label for="{{ imageOneForm.imageOne.id_for_label }}" class="formLabel">
-                    <p class="rowTitle">Upload New First Image</p>
-                    <input type="file" 
-                           name="{{ imageOneForm.imageOne.name }}" 
-                           id="{{ imageOneForm.imageOne.id_for_label }}" 
-                           accept="image/*" />
-                </label>
+                <div class="imageDisplays">
+                    <label for="{{ imageOneForm.imageOne.id_for_label }}" class="formLabel">
+                        <p class="rowTitle">{{ imageOneForm.imageOne.label }}</p>
+                        {% if newsItem.imageOne %}
+                            <img src="{{ newsItem.imageOne.url }}" alt="Current Image" style="max-width: 200px; max-height: 200px;" />
+                        {% else %}
+                            <p>No current first image</p>
+                        {% endif %}
+                    </label>
+            
+                    <!-- File input for uploading a new image -->
+                    <label for="{{ imageOneForm.imageOne.id_for_label }}" class="formLabel">
+                        <p class="rowTitle">Upload New First Image</p>
+                        <input type="file" 
+                            name="{{ imageOneForm.imageOne.name }}" 
+                            id="{{ imageOneForm.imageOne.id_for_label }}" 
+                            accept="image/*" />
+                    </label>
+                </div>
             </div>
-            <button type="submit">Submit</button>
+            <div class="submit-row">
+                <button type="submit">Submit</button>
+            </div>
         </form>
         
 
@@ -180,25 +203,29 @@ WAVE. — Management Dashboard
                 {% csrf_token %}
         
                 <!-- Display the current imageTwo -->
-                <label for="{{ imageTwoForm.imageTwo.id_for_label }}" class="formLabel">
-                    <p class="rowTitle">{{ imageTwoForm.imageTwo.label }}</p>
-                    {% if newsItem.imageTwo %}
-                        <img src="{{ newsItem.imageTwo.url }}" alt="Current Image Two" style="max-width: 200px; max-height: 200px;" />
-                    {% else %}
-                        <p>No current second image</p>
-                    {% endif %}
-                </label>
-        
-                <!-- File input for uploading a new imageTwo -->
-                <label for="{{ imageTwoForm.imageTwo.id_for_label }}" class="formLabel">
-                    <p class="rowTitle">Upload New Second Image</p>
-                    <input type="file" 
-                           name="{{ imageTwoForm.imageTwo.name }}" 
-                           id="{{ imageTwoForm.imageTwo.id_for_label }}" 
-                           accept="image/*" />
-                </label>
+                <div class="imageDisplays">
+                    <label for="{{ imageTwoForm.imageTwo.id_for_label }}" class="formLabel">
+                        <p class="rowTitle">{{ imageTwoForm.imageTwo.label }}</p>
+                        {% if newsItem.imageTwo %}
+                            <img src="{{ newsItem.imageTwo.url }}" alt="Current Image Two" style="max-width: 200px; max-height: 200px;" />
+                        {% else %}
+                            <p>No current second image</p>
+                        {% endif %}
+                    </label>
+            
+                    <!-- File input for uploading a new imageTwo -->
+                    <label for="{{ imageTwoForm.imageTwo.id_for_label }}" class="formLabel">
+                        <p class="rowTitle">Upload New Second Image</p>
+                        <input type="file" 
+                            name="{{ imageTwoForm.imageTwo.name }}" 
+                            id="{{ imageTwoForm.imageTwo.id_for_label }}" 
+                            accept="image/*" />
+                    </label>
+                </div>
             </div>
-            <button type="submit">Submit</button>
+            <div class="submit-row">
+                <button type="submit">Submit</button>
+            </div>
         </form>
         
 
@@ -208,26 +235,30 @@ WAVE. — Management Dashboard
                 {% csrf_token %}
         
                 <!-- Display the current imageThree -->
-                <label for="{{ imageThreeForm.imageThree.id_for_label }}" class="formLabel">
-                    <p class="rowTitle">{{ imageThreeForm.imageThree.label }}</p>
-                    {% if newsItem.imageThree %}
-                        <img src="{{ newsItem.imageThree.url }}" alt="Current Image Three" style="max-width: 200px; max-height: 200px;" />
-                    {% else %}
-                        <p>No current third image</p>
-                    {% endif %}
-                    
-                </label>
-        
-                <!-- File input for uploading a new imageThree -->
-                <label for="{{ imageThreeForm.imageThree.id_for_label }}" class="formLabel">
-                    <p class="rowTitle">Upload New Third Image</p>
-                    <input type="file" 
-                           name="{{ imageThreeForm.imageThree.name }}" 
-                           id="{{ imageThreeForm.imageThree.id_for_label }}" 
-                           accept="image/*" />
-                </label>
+                <div class="imageDisplays">
+                    <label for="{{ imageThreeForm.imageThree.id_for_label }}" class="formLabel">
+                        <p class="rowTitle">{{ imageThreeForm.imageThree.label }}</p>
+                        {% if newsItem.imageThree %}
+                            <img src="{{ newsItem.imageThree.url }}" alt="Current Image Three" style="max-width: 200px; max-height: 200px;" />
+                        {% else %}
+                            <p>No current third image</p>
+                        {% endif %}
+                        
+                    </label>
+            
+                    <!-- File input for uploading a new imageThree -->
+                    <label for="{{ imageThreeForm.imageThree.id_for_label }}" class="formLabel">
+                        <p class="rowTitle">Upload New Third Image</p>
+                        <input type="file" 
+                            name="{{ imageThreeForm.imageThree.name }}" 
+                            id="{{ imageThreeForm.imageThree.id_for_label }}" 
+                            accept="image/*" />
+                    </label>
+                </div>
             </div>
-            <button type="submit">Submit</button>
+            <div class="submit-row">
+                <button type="submit">Submit</button>
+            </div>
         </form>
         
     </div>

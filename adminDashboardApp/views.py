@@ -569,6 +569,11 @@ def adminEditNewsView(request, newsId):
 
     if request.method == "POST":
         field = request.POST.get("field")
+        action = request.POST.get("eventAction")
+
+        if action == "deleteNews":
+            newsItem.delete()
+            return redirect("waveAdmin:newsroom")
 
         if field == "title-info":
             titleFieldForm = UpdateNewsTitleForm(request.POST, instance=newsItem)

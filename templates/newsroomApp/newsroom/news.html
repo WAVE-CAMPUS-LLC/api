@@ -24,6 +24,14 @@ Newsroom — Wave.
         </h2>
     </div>
 
+    <div id="news-header">
+        <div id="nH-image-container" style="background-image: url('{{ newsItem.headerImage.url }}');">
+            <div id="display-header">
+                <img id="header-img" src="{{newsItem.headerImage.url}}" />
+            </div>
+        </div>
+    </div>
+
     <div id="blog-content">
         <div class="blogContent-Sidebar">
             <div class="blogContent-Sidebar-container">
@@ -40,6 +48,20 @@ Newsroom — Wave.
             <p>
                 {{ newsItem.body }}
             </p>
+
+            <div class="bodyImages">
+                {% if newsItem.imageOne %}
+                <img src="{{ newsItem.imageOne.url }}" />
+                {% endif %}
+
+                {% if newsItem.imageTwo %}
+                <img src="{{ newsItem.imageTwo.url }}" />
+                {% endif %}
+
+                {% if newsItem.imageThree %}
+                <img src="{{ newsItem.imageThree.url }}" />
+                {% endif %}
+            </div>
         </div>
     </div>
 </div>
