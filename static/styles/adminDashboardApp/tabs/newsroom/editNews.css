@@ -1,0 +1,161 @@
+/** Body Container **/
+#content-container {
+    width: 100%;
+
+    padding-left: 100px;
+    padding-right: 100px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.page-heading {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.heading {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.heading h2 {
+    display: flex;
+    justify-content: start;
+    align-items: center;
+    font-family: Wanted-Bold;
+    font-size: 45px;
+    color: black;
+}
+
+.heading p {
+    font-family: Wanted-Variable;
+    font-size: 17px;
+    color: rgba(126, 126, 126, 0.711);
+}
+
+/* Delete News Item Row */
+.delete form {
+    width: 100%;
+    display: flex;
+    justify-content: end;
+}
+
+.delete-news {
+    padding: 15px 20px;
+    border: 2px solid transparent;
+    background-color: red;
+    color: white;
+
+    font-family: Wanted-Regular;
+    font-size: 19px;
+    text-decoration: none;
+
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    gap: 10px;
+    border-radius: 20px;
+    cursor: pointer;
+    justify-content: center;
+}
+
+#content-body {
+    width: 100%;
+
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    gap: 50px;
+}
+
+form {
+    width: 100%;
+    align-items: center;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 20px;
+}
+
+.formRow {
+    gap: 50px;
+    grid-column: span 3 / span 3;
+}
+
+.formLabel {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.formLabel p {
+    font-family: Wanted-Bold;
+    font-size: 19px;
+    color: black;
+}
+
+.formLabel input,
+.formLabel textarea,
+.formLabel select {
+    width: 100%;
+    padding: 15px;
+
+    border-radius: 15px;
+    border: 1px solid rgba(0, 0, 0, 0.153);
+
+    font-family: Wanted-Regular;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+.formLabel img {
+    max-width: 500px;
+    max-height: 500px;
+    height: 100%;
+    width: 100%;
+    border-radius: 20px;
+}
+
+.formLabel textarea {
+    min-height: 200px;
+}
+
+.imageDisplays {
+    display: flex;
+    flex-direction: row;
+    gap: 50px;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.submit-row {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.submit-row button {
+    padding: 15px 20px;
+    border: 2px solid transparent;
+    border-right-color: #13c9d3;
+    border-left-color: #008d95bc;
+    color: white;
+    width: 50%;
+
+    font-family: Wanted-Regular;
+    font-size: 19px;
+    text-decoration: none;
+
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    gap: 10px;
+    border-radius: 20px;
+    background-image: linear-gradient(to right, #008d95bc 0%, #13c9d3 100%);
+    cursor: pointer;
+    justify-content: center;
+}

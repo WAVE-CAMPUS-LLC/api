@@ -8,14 +8,6 @@ def aboutView(request):
     return render(request, "extras/company/about.html", {"pageName": pageName})
 
 
-def newsroomView(request):
-    pageName = "Newsroom"
-    return render(request, "extras/company/newsroom.html", {"pageName": pageName})
-
-def newsView(request):
-    return render(request, "extras/company/newsroom/news.html")
-
-
 def teamView(request):
     pageName = "Our Team"
     return render(request, "extras/company/team.html", {"pageName": pageName})

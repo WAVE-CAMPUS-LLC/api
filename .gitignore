@@ -1,2 +1,5 @@
 .env
 virtualenv/
+.venv
+Pipfile
+Pipfile.lock

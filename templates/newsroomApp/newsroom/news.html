@@ -1,0 +1,68 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}
+Newsroom — Wave.  
+{% endblock title %}
+
+{% block app_page_style %}
+<link rel="stylesheet" type="text/css" href="{% static "/styles/newsroomApp/newsroom/news.css" %}" />
+{% endblock app_page_style %}
+
+{% block header %}
+{% include "partials/nav-footer/nav/main_nav.html" %}
+{% endblock header %}
+
+{% block body %}
+<div id="content-container">
+    <div id="page-heading">
+        <h6>
+            {{ newsItem.newsCategory }}
+        </h6>
+        <h2>
+            {{ newsItem.title }}
+        </h2>
+    </div>
+
+    <div id="news-header">
+        <div id="nH-image-container" style="background-image: url('{{ newsItem.headerImage.url }}');">
+            <div id="display-header">
+                <img id="header-img" src="{{newsItem.headerImage.url}}" />
+            </div>
+        </div>
+    </div>
+
+    <div id="blog-content">
+        <div class="blogContent-Sidebar">
+            <div class="blogContent-Sidebar-container">
+                <div class="userDate-published">
+                    <h6>By <a href="#" id="username">@{{ newsItem.created_by.username }}</a></h6>
+                    <p>{{ newsItem.created_at|date:"F d, Y" }}</p>
+                </div>
+                <div class="bCS-divider">
+                    <hr>
+                </div>
+            </div>
+        </div>
+        <div class="blogContent-Main">
+            <p>
+                {{ newsItem.body }}
+            </p>
+
+            <div class="bodyImages">
+                {% if newsItem.imageOne %}
+                <img src="{{ newsItem.imageOne.url }}" />
+                {% endif %}
+
+                {% if newsItem.imageTwo %}
+                <img src="{{ newsItem.imageTwo.url }}" />
+                {% endif %}
+
+                {% if newsItem.imageThree %}
+                <img src="{{ newsItem.imageThree.url }}" />
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock body %}

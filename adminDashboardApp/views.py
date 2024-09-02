@@ -1,4 +1,5 @@
 from datetime import timedelta
+from django.http import HttpResponseBadRequest
 from django.shortcuts import render, redirect, HttpResponse, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.template.loader import render_to_string
@@ -12,16 +13,30 @@ from authenticationApp.models import CustomUser
 from supportCenterApp.models import SupportTicket, FeedbackModel
 from careerApp.models import CareerRoleApplication
 from eventManagementApp.models import HostApplication
-from collegeManagementApp.models import College, Organization, OrganizationMembership, Membership
+from collegeManagementApp.models import (
+    College,
+    Organization,
+    OrganizationMembership,
+    Membership,
+)
 
 from wave_v1 import settings
-from .models import Department, CareerRole, LoginHistoryModel
+from .models import Department, CareerRole, LoginHistoryModel, Newsroom
 from .forms import (
     CreateGroupForm,
     UpdateGroupForm,
     DepartmentForm,
     CareerRoleCreationForm,
     SuspendUserForm,
+    CreateNewsForm,
+    UpdateNewsTitleForm,
+    UpdateNewsBodyForm,
+    UpdateUrgencyLevelForm,
+    UpdateNewsCategoryForm,
+    UpdateHeaderImageForm,
+    UpdateImageOneForm,
+    UpdateImageTwoForm,
+    UpdateImageThreeForm,
 )
 from wave_v1.decorators import (
     admin_required,
@@ -170,19 +185,18 @@ def adminApplicationsView(request):
 
         if action == "approve":
             sendHostApprovalEmail(applicant_email)
-            
+
             try:
                 applicant = CustomUser.objects.get(email=applicant_email)
                 host_group, created = Group.objects.get_or_create(name="Host")
                 applicant.groups.add(host_group)
                 applicant.save()
-                
+
             except CustomUser.DoesNotExist:
                 pass
 
             return redirect("waveAdmin:applications")
-        
-    
+
         elif action == "deny":
             sendHostDenyEmail(applicant_email)
             return redirect("waveAdmin:applications")
@@ -258,11 +272,13 @@ def adminUserDetailedView(request, username):
             if suspend_form.is_valid():
                 hours = suspend_form.cleaned_data.get("hours", 0)
                 user_in_view.suspend(hours)
-                return redirect('waveAdmin:user-detailed', kwargs={'username': username})
+                return redirect(
+                    "waveAdmin:user-detailed", kwargs={"username": username}
+                )
 
         elif action == "allow":
             user_in_view.remove_suspension_OR_ban()
-            return redirect('waveAdmin:user-detailed', kwargs={'username': username})
+            return redirect("waveAdmin:user-detailed", kwargs={"username": username})
 
         group_id = request.POST.get("group_id")
 
@@ -272,7 +288,7 @@ def adminUserDetailedView(request, username):
                 user_in_view.groups.add(group)
             elif "removeRole" in request.POST:
                 user_in_view.groups.remove(group)
-            return redirect('waveAdmin:user-detailed', kwargs={'username': username})
+            return redirect("waveAdmin:user-detailed", kwargs={"username": username})
 
     else:
         suspend_form = SuspendUserForm()
@@ -487,9 +503,11 @@ def adminFeedbackView(request):
 @check_suspension
 @admin_required
 def adminCollegeView(request):
-    colleges = College.objects.annotate(member_count=Count('membership'))
+    colleges = College.objects.annotate(member_count=Count("membership"))
     # member_count = College.objects.annotate(member_count=Count('membership'))
-    return render(request, "adminDashboardApp/tabs/colleges.html", {'colleges':colleges})
+    return render(
+        request, "adminDashboardApp/tabs/colleges.html", {"colleges": colleges}
+    )
 
 
 @login_required
@@ -497,7 +515,11 @@ def adminCollegeView(request):
 @admin_required
 def adminCollegeDetailView(request, collegeId):
     college = get_object_or_404(College, collegeId=collegeId)
-    return render(request, "adminDashboardApp/tabs/colleges/collegeInfo.html", {'college':college})
+    return render(
+        request,
+        "adminDashboardApp/tabs/colleges/collegeInfo.html",
+        {"college": college},
+    )
 
 
 @login_required
@@ -505,3 +527,129 @@ def adminCollegeDetailView(request, collegeId):
 @admin_required
 def adminCollegeOrgsView(request):
     return render(request, "adminDashboardApp/tabs/organizations.html")
+
+
+@login_required
+@check_suspension
+@admin_required
+def adminNewsRoomView(request):
+    news = Newsroom.objects.all()
+    return render(request, "adminDashboardApp/tabs/newsroom.html", {"news": news})
+
+
+@login_required
+@check_suspension
+@admin_required
+def adminCreateNewsView(request):
+    createNewsForm = CreateNewsForm(request.POST, request.FILES)
+    if request.method == "POST":
+        if createNewsForm.is_valid():
+            news_instance = createNewsForm.save(commit=False)
+            news_instance.created_by = request.user
+            news_instance.save()
+            return redirect("waveAdmin:newsroom")
+
+        else:
+            print(createNewsForm.errors)
+
+    else:
+        createNewsForm = CreateNewsForm()
+    return render(
+        request,
+        "adminDashboardApp/tabs/newsroom/createNews.html",
+        {"createNewsForm": createNewsForm},
+    )
+
+
+@login_required
+@check_suspension
+@admin_required
+def adminEditNewsView(request, newsId):
+    newsItem = get_object_or_404(Newsroom, newsId=newsId)
+
+    if request.method == "POST":
+        field = request.POST.get("field")
+        action = request.POST.get("eventAction")
+
+        if action == "deleteNews":
+            newsItem.delete()
+            return redirect("waveAdmin:newsroom")
+
+        if field == "title-info":
+            titleFieldForm = UpdateNewsTitleForm(request.POST, instance=newsItem)
+            if titleFieldForm.is_valid():
+                titleFieldForm.save()
+
+        elif field == "body-info":
+            bodyFieldForm = UpdateNewsBodyForm(request.POST, instance=newsItem)
+            if bodyFieldForm.is_valid():
+                bodyFieldForm.save()
+
+        elif field == "urgency-info":
+            urgencyFieldForm = UpdateUrgencyLevelForm(request.POST, instance=newsItem)
+            if urgencyFieldForm.is_valid():
+                urgencyFieldForm.save()
+
+        elif field == "newsCategory-info":
+            newsCategoryForm = UpdateNewsCategoryForm(request.POST, instance=newsItem)
+            if newsCategoryForm.is_valid():
+                newsCategoryForm.save()
+
+        elif field == "headerImage-info":
+            headerImageForm = UpdateHeaderImageForm(
+                request.POST, request.FILES, instance=newsItem
+            )
+            if headerImageForm.is_valid():
+                headerImageForm.save()
+
+        elif field == "imageOne-info":
+            imageOneForm = UpdateImageOneForm(
+                request.POST, request.FILES, instance=newsItem
+            )
+            if imageOneForm.is_valid():
+                imageOneForm.save()
+
+        elif field == "imageTwo-info":
+            imageTwoForm = UpdateImageTwoForm(
+                request.POST, request.FILES, instance=newsItem
+            )
+            if imageTwoForm.is_valid():
+                imageTwoForm.save()
+
+        elif field == "imageThree-info":
+            imageThreeForm = UpdateImageThreeForm(
+                request.POST, request.FILES, instance=newsItem
+            )
+            if imageThreeForm.is_valid():
+                imageThreeForm.save()
+
+        else:
+            return HttpResponseBadRequest("Invalid form type")
+
+        return redirect("waveAdmin:newsroom")
+
+    else:
+        titleFieldForm = UpdateNewsTitleForm()
+        bodyFieldForm = UpdateNewsBodyForm()
+        urgencyFieldForm = UpdateUrgencyLevelForm()
+        newsCategoryForm = UpdateNewsCategoryForm()
+        headerImageForm = UpdateHeaderImageForm()
+        imageOneForm = UpdateImageOneForm()
+        imageTwoForm = UpdateImageTwoForm()
+        imageThreeForm = UpdateImageThreeForm()
+
+    return render(
+        request,
+        "adminDashboardApp/tabs/newsroom/editNews.html",
+        {
+            "newsItem": newsItem,
+            "titleFieldForm": titleFieldForm,
+            "bodyFieldForm": bodyFieldForm,
+            "urgencyFieldForm": urgencyFieldForm,
+            "newsCategoryForm": newsCategoryForm,
+            "headerImageForm": headerImageForm,
+            "imageOneForm": imageOneForm,
+            "imageTwoForm": imageTwoForm,
+            "imageThreeForm": imageThreeForm,
+        },
+    )

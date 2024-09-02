@@ -38,7 +38,6 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "widget_tweaks",
     "authenticationApp",
     "adminDashboardApp",
     "accountManagementApp",
@@ -48,8 +47,9 @@ INSTALLED_APPS = [
     "eventManagementApp",
     "supportCenterApp",
     "collegeManagementApp",
-    "newsApp",
     "socialApp",
+    "newsroomApp",
+    "widget_tweaks"
 ]
 
 MIDDLEWARE = [

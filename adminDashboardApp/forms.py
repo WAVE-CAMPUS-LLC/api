@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.models import Permission, Group
 from authenticationApp.models import CustomUser
-from .models import Department, CareerRole
+from .models import Department, CareerRole, Newsroom
 from django.utils.translation import gettext_lazy as translate
 
 
@@ -20,7 +20,11 @@ class CreateGroupForm(forms.ModelForm):
 
     class Meta:
         model = Group
-        fields = ["name", "permissions", "role_color",]
+        fields = [
+            "name",
+            "permissions",
+            "role_color",
+        ]
 
     def save(self, commit=True):
         group = super().save(commit=False)
@@ -33,7 +37,9 @@ class CreateGroupForm(forms.ModelForm):
 
 
 class UpdateGroupForm(forms.ModelForm):
-    name = forms.CharField(max_length=150, required=False, help_text="Name", label="Name")
+    name = forms.CharField(
+        max_length=150, required=False, help_text="Name", label="Name"
+    )
     permissions = forms.ModelMultipleChoiceField(
         queryset=Permission.objects.all(),
         widget=forms.CheckboxSelectMultiple,
@@ -46,12 +52,16 @@ class UpdateGroupForm(forms.ModelForm):
         required=True,
         widget=forms.TextInput(attrs={"type": "color"}),
         help_text="Role Color",
-        label="Role Color"
+        label="Role Color",
     )
-    
+
     class Meta:
         model = Group
-        fields = ['name', 'permissions', 'role_color',]
+        fields = [
+            "name",
+            "permissions",
+            "role_color",
+        ]
 
 
 class DepartmentForm(forms.ModelForm):
@@ -83,5 +93,104 @@ class CareerRoleCreationForm(forms.ModelForm):
 
 
 class SuspendUserForm(forms.Form):
-    hours = forms.IntegerField(label=translate("Hours"), min_value=0, max_value=23, initial=0)
-    
+    hours = forms.IntegerField(
+        label=translate("Hours"), min_value=0, max_value=23, initial=0
+    )
+
+
+class CreateNewsForm(forms.ModelForm):
+    class Meta:
+        model = Newsroom
+        fields = [
+            "title",
+            "newsCategory",
+            "body",
+            "headerImage",
+            "imageOne",
+            "imageTwo",
+            "imageThree",
+            "urgencyLevel",
+        ]
+
+        widgets = {
+            "body": forms.Textarea(
+                attrs={
+                    "class": "",
+                    "rows": 5,
+                    "cols": 40,
+                    "autocomplete": "off",
+                    "required": True,
+                }
+            )
+        }
+
+
+class UpdateNewsTitleForm(forms.ModelForm):
+    class Meta:
+        model = Newsroom
+        fields = [
+            "title",
+        ]
+
+
+class UpdateNewsBodyForm(forms.ModelForm):
+    class Meta:
+        model = Newsroom
+        fields = ["body",]
+
+        widgets = {
+            "body": forms.Textarea(
+                attrs={
+                    "class": "",
+                    "rows": 5,
+                    "cols": 40,
+                    "autocomplete": "off",
+                    "required": True,
+                }
+            )
+        }
+
+
+class UpdateUrgencyLevelForm(forms.ModelForm):
+    class Meta:
+        model = Newsroom
+        fields = [
+            "urgencyLevel",
+        ]
+
+
+class UpdateNewsCategoryForm(forms.ModelForm):
+    class Meta:
+        model = Newsroom
+        fields = [
+            "newsCategory",
+        ]
+
+
+class UpdateHeaderImageForm(forms.ModelForm):
+    class Meta:
+        model = Newsroom
+        fields = [
+            "headerImage",
+        ]
+        
+class UpdateImageOneForm(forms.ModelForm):
+    class Meta:
+        model = Newsroom
+        fields = [
+            "imageOne",
+        ]
+        
+class UpdateImageTwoForm(forms.ModelForm):
+    class Meta:
+        model = Newsroom
+        fields = [
+            "imageTwo",
+        ]
+        
+class UpdateImageThreeForm(forms.ModelForm):
+    class Meta:
+        model = Newsroom
+        fields = [
+            "imageThree",
+        ]

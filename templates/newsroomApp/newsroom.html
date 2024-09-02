@@ -1,0 +1,79 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}
+Newsroom — Wave.  
+{% endblock title %}
+
+{% block app_page_style %}
+<link rel="stylesheet" type="text/css" href="{% static "/styles/newsroomApp/newsroom.css" %}" />
+{% endblock app_page_style %}
+
+{% block header %}
+{% include "partials/nav-footer/nav/main_nav.html" %}
+{% endblock header %}
+
+{% block body %}
+<div class="content-container">
+    <div class="top-container">
+        {% if headlineNews %}
+        <a href="{% url "newsroom:news" newsId=headlineNews.newsId %}" class="section-one">
+            <div class="first-news">
+                <div class="left-side">
+                    <h4>{{ headlineNews.urgencyLevel }}</h4>
+                    <h2>
+                        {{ headlineNews.title }}
+                    </h2>
+                </div>
+            </div>
+            <div class="right-side">
+                <img src="{{ headlineNews.headerImage.url }}" alt="Headline Image">
+            </div>
+            <hr>
+        </a>
+        {% else %}
+        <div class="emptyContainer">
+            <div>
+                <img src="{% static "/images/collegeManagementApp/collegeInformation/empty-listing.svg" %}" />
+            </div>
+            <p>Nothing to display, currently.</p>
+        </div>
+        {% endif %}
+        
+    </div>
+    <section class="section-two">
+        <div class="sectionTwoHeader">
+            <h2>News @ <span id="body-logo">WAVE<span class="spot">.</span></span></h2>
+        </div>
+
+        {% if regularNews %}
+        <div class="news-container">
+            {% for news in regularNews %}
+                <a href="{% url "newsroom:news" newsId=news.newsId %}" class="sub-news">
+                    <img src="{{ news.headerImage.url }}" alt="">
+                    <div class="news-content">
+                        <h5>{{ news.newsCategory }}</h5>
+                        <h4>
+                            {{ news.title }}
+                        </h4>
+                    </div>
+                    
+                    <div class="section-button">
+                        <button type="button" role="button">
+                            Read more
+                        </button>
+                    </div>
+                </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="emptyContainer">
+            <div>
+                <img src="{% static "/images/collegeManagementApp/collegeInformation/empty-listing.svg" %}" />
+            </div>
+            <p>Nothing to display, currently.</p>
+        </div>
+        {% endif %}
+    </section>
+</div>
+{% endblock body %}

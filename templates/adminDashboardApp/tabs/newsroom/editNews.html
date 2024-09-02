@@ -1,0 +1,301 @@
+{% extends "base/base.html" %}
+{% load static %}
+{% load widget_tweaks %}
+
+{% block title %}
+WAVE. — Management Dashboard
+{% endblock title %}
+
+{% block app_page_style %}
+<link rel="stylesheet" type="text/css" href="{% static "/styles/adminDashboardApp/tabs/newsroom/editNews.css" %}" />
+{% endblock app_page_style %}
+
+
+{% block script %}
+{% endblock script %}
+
+
+{% block header %}
+{% include "partials/nav-footer/nav/admin_nav.html" %}
+{% endblock header %}
+
+{% block container_art %}
+<div id="container-art">
+    <div class="ticket-heading">
+        <div class="ticket-header">
+            <h3><a href="{% url 'waveAdmin:adminDashboard' %}">Management</a> > Edit News</h3>
+        </div>
+    </div>
+</div>
+{% endblock container_art %}
+
+
+
+{% block body %}
+<div id="content-container">
+    <div class="page-heading">
+        <div class="heading">
+            <h2>{{ newsItem.title }}</h2>
+            <p>Edit this news article.</p>
+        </div>
+        <div class="delete">
+            <form method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="news_id" value="{{ newsItem.newsId }}">
+                <button type="submit" class="delete-news" role="button" name="eventAction" value="deleteNews">Delete News</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="content-body">
+        <form method="POST" action="{% url "waveAdmin:editNews" newsId=newsItem.newsId %}">
+            <div class="formRow">
+                <input type="hidden" name="field" value="title-info" />
+                {% csrf_token %}
+                
+                <label for="{{ titleFieldForm.title.id_for_label }}" class="formLabel">
+                    <p class="rowTitle">{{ titleFieldForm.title.label }}</p>
+
+
+                    <input type="{{ titleFieldForm.title.field.widget.input_type }}"
+                        name="{{ titleFieldForm.title.name }}" 
+                        id="{{ titleFieldForm.title.id_for_label }}" 
+                        value="{{ newsItem.title }}" 
+                    />
+
+
+                </label>
+            </div>
+            <div class="submit-row">
+                <button type="submit">Submit</button>
+            </div>
+        </form>
+
+        <form method="POST" action="{% url "waveAdmin:editNews" newsId=newsItem.newsId %}">
+            <div class="formRow">
+                <input type="hidden" name="field" value="body-info" />
+                {% csrf_token %}
+                
+                <label for="{{ bodyFieldForm.body.id_for_label }}" class="formLabel">
+                    <p class="rowTitle">{{ bodyFieldForm.body.label }}</p>
+
+
+                    <textarea type="{{ bodyFieldForm.body.field.widget.input_type }}"
+                        name="{{ bodyFieldForm.body.name }}" 
+                        id="{{ bodyFieldForm.body.id_for_label }}" 
+                        value="{{ newsItem.body }}" 
+                    >{{ newsItem.body }}</textarea>
+
+
+                </label>
+            </div>
+            <div class="submit-row">
+                <button type="submit">Submit</button>
+            </div>
+        </form>
+
+        <form method="POST" action="{% url 'waveAdmin:editNews' newsId=newsItem.newsId %}">
+        <form method="POST" action="{% url 'waveAdmin:editNews' newsId=newsItem.newsId %}">
+            <div class="formRow">
+                <input type="hidden" name="field" value="urgency-info" />
+                {% csrf_token %}
+                
+                <label for="{{ urgencyFieldForm.urgencyLevel.id_for_label }}" class="formLabel">
+                    <p class="rowTitle">{{ urgencyFieldForm.urgencyLevel.label }}</p>
+
+                    <select 
+
+                    <select 
+                        name="{{ urgencyFieldForm.urgencyLevel.name }}" 
+                        id="{{ urgencyFieldForm.urgencyLevel.id_for_label }}" 
+                        required>
+                        <option value="THE LATEST" {% if newsItem.urgencyLevel == "THE LATEST" %}selected{% endif %}>THE LATEST</option>
+                        <option value="REGULAR" {% if newsItem.urgencyLevel == "REGULAR" %}selected{% endif %}>REGULAR</option>
+                    </select>
+
+                        required>
+                        <option value="THE LATEST" {% if newsItem.urgencyLevel == "THE LATEST" %}selected{% endif %}>THE LATEST</option>
+                        <option value="REGULAR" {% if newsItem.urgencyLevel == "REGULAR" %}selected{% endif %}>REGULAR</option>
+                    </select>
+
+                </label>
+            </div>
+            <div class="submit-row">
+                <button type="submit">Submit</button>
+            </div>
+        </form>
+        
+        <form method="POST" action="{% url 'waveAdmin:editNews' newsId=newsItem.newsId %}">
+        
+        <form method="POST" action="{% url 'waveAdmin:editNews' newsId=newsItem.newsId %}">
+            <div class="formRow">
+                <input type="hidden" name="field" value="newsCategory-info" />
+                {% csrf_token %}
+        
+        
+                <label for="{{ newsCategoryForm.newsCategory.id_for_label }}" class="formLabel">
+                    <p class="rowTitle">{{ newsCategoryForm.newsCategory.label }}</p>
+        
+                    <!-- Dropdown menu for selecting news category -->
+                    <select name="{{ newsCategoryForm.newsCategory.name }}" 
+                            id="{{ newsCategoryForm.newsCategory.id_for_label }}">
+                        <option value="The HQ" {% if newsItem.newsCategory == "The HQ" %}selected{% endif %}>The HQ</option>
+                        <option value="Product & Features" {% if newsItem.newsCategory == "Product & Features" %}selected{% endif %}>Product & Features</option>
+                    </select>
+        
+        
+                    <!-- Dropdown menu for selecting news category -->
+                    <select name="{{ newsCategoryForm.newsCategory.name }}" 
+                            id="{{ newsCategoryForm.newsCategory.id_for_label }}">
+                        <option value="The HQ" {% if newsItem.newsCategory == "The HQ" %}selected{% endif %}>The HQ</option>
+                        <option value="Product & Features" {% if newsItem.newsCategory == "Product & Features" %}selected{% endif %}>Product & Features</option>
+                    </select>
+        
+                </label>
+            </div>
+            <div class="submit-row">
+                <button type="submit">Submit</button>
+            </div>
+        </form>
+        
+
+        <form method="POST" action="{% url 'waveAdmin:editNews' newsId=newsItem.newsId %}" enctype="multipart/form-data">
+        
+
+        <form method="POST" action="{% url 'waveAdmin:editNews' newsId=newsItem.newsId %}" enctype="multipart/form-data">
+            <div class="formRow">
+                <input type="hidden" name="field" value="headerImage-info" />
+                {% csrf_token %}
+
+                <div class="imageDisplays">
+                    <label for="{{ headerImageForm.headerImage.id_for_label }}" class="formLabel">
+                        <p class="rowTitle">{{ headerImageForm.headerImage.label }}</p>
+                        {% if newsItem.headerImage %}
+                            <img src="{{ newsItem.headerImage.url }}" alt="Current Header Image" style="max-width: 200px; max-height: 200px;" />
+                        {% else %}
+                            <p>No current header image</p>
+                        {% endif %}
+                    </label>
+            
+                    <label for="{{ headerImageForm.headerImage.id_for_label }}" class="formLabel">
+                        <p class="rowTitle">Upload New Header Image</p>
+                        <input type="file" 
+                               name="{{ headerImageForm.headerImage.name }}" 
+                               id="{{ headerImageForm.headerImage.id_for_label }}" 
+                               accept="image/*" />
+                    </label>
+                </div>
+            </div>
+            <div class="submit-row">
+                <button type="submit">Submit</button>
+            </div>
+        </form>
+        
+        <form method="POST" action="{% url 'waveAdmin:editNews' newsId=newsItem.newsId %}" enctype="multipart/form-data">
+        
+        <form method="POST" action="{% url 'waveAdmin:editNews' newsId=newsItem.newsId %}" enctype="multipart/form-data">
+            <div class="formRow">
+                <input type="hidden" name="field" value="imageOne-info" />
+                {% csrf_token %}
+        
+                <!-- Display the current image -->
+                <div class="imageDisplays">
+                    <label for="{{ imageOneForm.imageOne.id_for_label }}" class="formLabel">
+                        <p class="rowTitle">{{ imageOneForm.imageOne.label }}</p>
+                        {% if newsItem.imageOne %}
+                            <img src="{{ newsItem.imageOne.url }}" alt="Current Image" style="max-width: 200px; max-height: 200px;" />
+                        {% else %}
+                            <p>No current first image</p>
+                        {% endif %}
+                    </label>
+            
+                    <!-- File input for uploading a new image -->
+                    <label for="{{ imageOneForm.imageOne.id_for_label }}" class="formLabel">
+                        <p class="rowTitle">Upload New First Image</p>
+                        <input type="file" 
+                            name="{{ imageOneForm.imageOne.name }}" 
+                            id="{{ imageOneForm.imageOne.id_for_label }}" 
+                            accept="image/*" />
+                    </label>
+                </div>
+            </div>
+            <div class="submit-row">
+                <button type="submit">Submit</button>
+            </div>
+        </form>
+        
+
+        <form method="POST" action="{% url 'waveAdmin:editNews' newsId=newsItem.newsId %}" enctype="multipart/form-data">
+        
+
+        <form method="POST" action="{% url 'waveAdmin:editNews' newsId=newsItem.newsId %}" enctype="multipart/form-data">
+            <div class="formRow">
+                <input type="hidden" name="field" value="imageTwo-info" />
+                {% csrf_token %}
+        
+                <!-- Display the current imageTwo -->
+                <div class="imageDisplays">
+                    <label for="{{ imageTwoForm.imageTwo.id_for_label }}" class="formLabel">
+                        <p class="rowTitle">{{ imageTwoForm.imageTwo.label }}</p>
+                        {% if newsItem.imageTwo %}
+                            <img src="{{ newsItem.imageTwo.url }}" alt="Current Image Two" style="max-width: 200px; max-height: 200px;" />
+                        {% else %}
+                            <p>No current second image</p>
+                        {% endif %}
+                    </label>
+            
+                    <!-- File input for uploading a new imageTwo -->
+                    <label for="{{ imageTwoForm.imageTwo.id_for_label }}" class="formLabel">
+                        <p class="rowTitle">Upload New Second Image</p>
+                        <input type="file" 
+                            name="{{ imageTwoForm.imageTwo.name }}" 
+                            id="{{ imageTwoForm.imageTwo.id_for_label }}" 
+                            accept="image/*" />
+                    </label>
+                </div>
+            </div>
+            <div class="submit-row">
+                <button type="submit">Submit</button>
+            </div>
+        </form>
+        
+
+        <form method="POST" action="{% url 'waveAdmin:editNews' newsId=newsItem.newsId %}" enctype="multipart/form-data">
+        
+
+        <form method="POST" action="{% url 'waveAdmin:editNews' newsId=newsItem.newsId %}" enctype="multipart/form-data">
+            <div class="formRow">
+                <input type="hidden" name="field" value="imageThree-info" />
+                {% csrf_token %}
+        
+                <!-- Display the current imageThree -->
+                <div class="imageDisplays">
+                    <label for="{{ imageThreeForm.imageThree.id_for_label }}" class="formLabel">
+                        <p class="rowTitle">{{ imageThreeForm.imageThree.label }}</p>
+                        {% if newsItem.imageThree %}
+                            <img src="{{ newsItem.imageThree.url }}" alt="Current Image Three" style="max-width: 200px; max-height: 200px;" />
+                        {% else %}
+                            <p>No current third image</p>
+                        {% endif %}
+                        
+                    </label>
+            
+                    <!-- File input for uploading a new imageThree -->
+                    <label for="{{ imageThreeForm.imageThree.id_for_label }}" class="formLabel">
+                        <p class="rowTitle">Upload New Third Image</p>
+                        <input type="file" 
+                            name="{{ imageThreeForm.imageThree.name }}" 
+                            id="{{ imageThreeForm.imageThree.id_for_label }}" 
+                            accept="image/*" />
+                    </label>
+                </div>
+            </div>
+            <div class="submit-row">
+                <button type="submit">Submit</button>
+            </div>
+        </form>
+        
+        
+    </div>
+</div>
+{% endblock body %}

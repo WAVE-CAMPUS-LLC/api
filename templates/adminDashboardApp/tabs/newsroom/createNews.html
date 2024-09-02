@@ -1,0 +1,104 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}
+WAVE. — Management Dashboard
+{% endblock title %}
+
+{% block app_page_style %}
+<link rel="stylesheet" type="text/css" href="{% static "/styles/adminDashboardApp/tabs/newsroom/createNews.css" %}" />
+{% endblock app_page_style %}
+
+
+{% block script %}
+{% endblock script %}
+
+
+{% block header %}
+{% include "partials/nav-footer/nav/admin_nav.html" %}
+{% endblock header %}
+
+{% block container_art %}
+<div id="container-art">
+    <div class="ticket-heading">
+        <div class="ticket-header">
+            <h3><a href="{% url 'waveAdmin:adminDashboard' %}">Management</a> > Create News</h3>
+        </div>
+    </div>
+</div>
+{% endblock container_art %}
+
+
+
+{% block body %}
+<div id="content-container">
+    <div class="page-heading">
+        <h2>What's happening?</h2>
+    </div>
+
+    <div id="content-body">
+        <form id="newsForm" method="POST" action="{% url "waveAdmin:createNews" %}" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="formRow">
+                <label for="{{ createNewsForm.title.id_for_label }}" class="formLabel">
+                    <p class="rowTitle">{{ createNewsForm.title.label }}</p>
+                    {{ createNewsForm.title }}
+                </label>
+            </div>
+
+            <div class="formRow">
+                <label for="{{ createNewsForm.body.id_for_label }}" class="formLabel">
+                    <p class="rowTitle">{{ createNewsForm.body.label }}</p>
+                    {{ createNewsForm.body }}
+                </label>
+            </div> 
+
+            <div class="formRow">
+                <label for="{{ createNewsForm.newsCategory.id_for_label }}" class="formLabel">
+                    <p class="rowTitle">{{ createNewsForm.newsCategory.label }}</p>
+                    {{ createNewsForm.newsCategory }}
+                </label>
+            </div> 
+
+            <div class="formRow">
+                <label for="{{ createNewsForm.urgencyLevel.id_for_label }}" class="formLabel">
+                    <p class="rowTitle">{{ createNewsForm.urgencyLevel.label }}</p>
+                    {{ createNewsForm.urgencyLevel }}
+                </label>
+            </div> 
+
+            <div class="formRow">
+                <label for="{{ createNewsForm.headerImage.id_for_label }}" class="formLabel">
+                    <p class="rowTitle">{{ createNewsForm.headerImage.label }}</p>
+                    {{ createNewsForm.headerImage }}
+                </label>
+            </div> 
+
+            <div class="formRow">
+                <label for="{{ createNewsForm.imageOne.id_for_label }}" class="formLabel">
+                    <p class="rowTitle">{{ createNewsForm.imageOne.label }}</p>
+                    {{ createNewsForm.imageOne }}
+                </label>
+            </div> 
+
+            <div class="formRow">
+                <label for="{{ createNewsForm.imageTwo.id_for_label }}" class="formLabel">
+                    <p class="rowTitle">{{ createNewsForm.imageTwo.label }}</p>
+                    {{ createNewsForm.imageTwo }}
+                </label>
+            </div> 
+
+            <div class="formRow">
+                <label for="{{ createNewsForm.imageThree.id_for_label }}" class="formLabel">
+                    <p class="rowTitle">{{ createNewsForm.imageThree.label }}</p>
+                    {{ createNewsForm.imageThree }}
+                </label>
+            </div> 
+
+            <div class="buttonRow">
+                <button type="submit" role="button">Post Latest!</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock body %}
