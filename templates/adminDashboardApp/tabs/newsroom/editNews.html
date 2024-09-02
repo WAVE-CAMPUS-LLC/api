@@ -95,7 +95,6 @@ WAVE. — Management Dashboard
         </form>
 
         <form method="POST" action="{% url 'waveAdmin:editNews' newsId=newsItem.newsId %}">
-        <form method="POST" action="{% url 'waveAdmin:editNews' newsId=newsItem.newsId %}">
             <div class="formRow">
                 <input type="hidden" name="field" value="urgency-info" />
                 {% csrf_token %}
@@ -103,17 +102,7 @@ WAVE. — Management Dashboard
                 <label for="{{ urgencyFieldForm.urgencyLevel.id_for_label }}" class="formLabel">
                     <p class="rowTitle">{{ urgencyFieldForm.urgencyLevel.label }}</p>
 
-                    <select 
-
-                    <select 
-                        name="{{ urgencyFieldForm.urgencyLevel.name }}" 
-                        id="{{ urgencyFieldForm.urgencyLevel.id_for_label }}" 
-                        required>
-                        <option value="THE LATEST" {% if newsItem.urgencyLevel == "THE LATEST" %}selected{% endif %}>THE LATEST</option>
-                        <option value="REGULAR" {% if newsItem.urgencyLevel == "REGULAR" %}selected{% endif %}>REGULAR</option>
-                    </select>
-
-                        required>
+                    <select name="{{ urgencyFieldForm.urgencyLevel.name }}" id="{{ urgencyFieldForm.urgencyLevel.id_for_label }}" required>
                         <option value="THE LATEST" {% if newsItem.urgencyLevel == "THE LATEST" %}selected{% endif %}>THE LATEST</option>
                         <option value="REGULAR" {% if newsItem.urgencyLevel == "REGULAR" %}selected{% endif %}>REGULAR</option>
                     </select>
@@ -124,9 +113,7 @@ WAVE. — Management Dashboard
                 <button type="submit">Submit</button>
             </div>
         </form>
-        
-        <form method="POST" action="{% url 'waveAdmin:editNews' newsId=newsItem.newsId %}">
-        
+
         <form method="POST" action="{% url 'waveAdmin:editNews' newsId=newsItem.newsId %}">
             <div class="formRow">
                 <input type="hidden" name="field" value="newsCategory-info" />
@@ -143,24 +130,12 @@ WAVE. — Management Dashboard
                         <option value="Product & Features" {% if newsItem.newsCategory == "Product & Features" %}selected{% endif %}>Product & Features</option>
                     </select>
         
-        
-                    <!-- Dropdown menu for selecting news category -->
-                    <select name="{{ newsCategoryForm.newsCategory.name }}" 
-                            id="{{ newsCategoryForm.newsCategory.id_for_label }}">
-                        <option value="The HQ" {% if newsItem.newsCategory == "The HQ" %}selected{% endif %}>The HQ</option>
-                        <option value="Product & Features" {% if newsItem.newsCategory == "Product & Features" %}selected{% endif %}>Product & Features</option>
-                    </select>
-        
                 </label>
             </div>
             <div class="submit-row">
                 <button type="submit">Submit</button>
             </div>
         </form>
-        
-
-        <form method="POST" action="{% url 'waveAdmin:editNews' newsId=newsItem.newsId %}" enctype="multipart/form-data">
-        
 
         <form method="POST" action="{% url 'waveAdmin:editNews' newsId=newsItem.newsId %}" enctype="multipart/form-data">
             <div class="formRow">
@@ -190,8 +165,6 @@ WAVE. — Management Dashboard
                 <button type="submit">Submit</button>
             </div>
         </form>
-        
-        <form method="POST" action="{% url 'waveAdmin:editNews' newsId=newsItem.newsId %}" enctype="multipart/form-data">
         
         <form method="POST" action="{% url 'waveAdmin:editNews' newsId=newsItem.newsId %}" enctype="multipart/form-data">
             <div class="formRow">
@@ -224,10 +197,6 @@ WAVE. — Management Dashboard
             </div>
         </form>
         
-
-        <form method="POST" action="{% url 'waveAdmin:editNews' newsId=newsItem.newsId %}" enctype="multipart/form-data">
-        
-
         <form method="POST" action="{% url 'waveAdmin:editNews' newsId=newsItem.newsId %}" enctype="multipart/form-data">
             <div class="formRow">
                 <input type="hidden" name="field" value="imageTwo-info" />
@@ -258,10 +227,6 @@ WAVE. — Management Dashboard
                 <button type="submit">Submit</button>
             </div>
         </form>
-        
-
-        <form method="POST" action="{% url 'waveAdmin:editNews' newsId=newsItem.newsId %}" enctype="multipart/form-data">
-        
 
         <form method="POST" action="{% url 'waveAdmin:editNews' newsId=newsItem.newsId %}" enctype="multipart/form-data">
             <div class="formRow">
