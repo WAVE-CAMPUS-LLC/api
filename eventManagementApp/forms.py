@@ -96,10 +96,10 @@ class EventForm(forms.ModelForm):
         
 
 
-class EventTicketForm(forms.ModelForm):
-    class Meta:
-        model = EventTicket
-        fields = ["ticket_total", "type_name", "type_quantity"]
+# class EventTicketForm(forms.ModelForm):
+#     class Meta:
+#         model = EventTicket
+#         fields = ["ticket_total", "type_name", "type_quantity"]
 
 
 # EventTicketFormSet = modelformset_factory(EventTicket, form=EventTicketForm, extra=1)

@@ -1,7 +1,4 @@
 document.addEventListener('DOMContentLoaded', function () {
-
-    
-    
     // Function to handle tab click
     function handleTabClick(tab, tabContents) {
         tab.forEach(tab => {

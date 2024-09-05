@@ -35,9 +35,9 @@ class EventAdmin(admin.ModelAdmin):
         "header_photo",
     )
 
-class EventTicketAdmin(admin.ModelAdmin):
-    list_display = ('event', 'type_name', 'type_quantity')
+# class EventTicketAdmin(admin.ModelAdmin):
+#     list_display = ('event', 'type_name', 'type_quantity')
 
 admin.site.register(Event, EventAdmin)
-admin.site.register(EventTicket, EventTicketAdmin)
+# admin.site.register(EventTicket, EventTicketAdmin)
 admin.site.register(HostApplication, HostApplicationAdmin)

@@ -96,6 +96,25 @@
     display: flex;
     flex-direction: column;
     gap: 20px;
+
+    font-family: Wanted-SemiBold;
+    font-size: 15px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+
+    width: 100%;
+
+    border: 1px solid rgba(113, 113, 113, 0.182);
+    border-radius: 20px;
+    -webkit-box-shadow: 2px 3px 21px 4px rgba(170, 170, 170, 0.075);
+    -moz-box-shadow: 2px 3px 21px 4px rgba(170, 170, 170, 0.075);
+    box-shadow: 2px 3px 21px 4px rgba(170, 170, 170, 0.075);
+
+    padding: 20px;
+
+    cursor: pointer;
 }
 
 .event-image img {
@@ -167,11 +186,22 @@
     text-decoration-thickness: 2.5px;
 }
 
-.event-delete {
-    width: 100%;
-
+.ticketing-delete {
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
+    flex-direction: row;
+    align-items: center;
+
+    width: 100%;
+}
+
+.ticketing-link {
+    background-color: #008d95;
+    padding: 13px;
+    border-radius: 15px;
+    color: white;
+    text-decoration: none;
+    font-family: Wanted-Regular;
 }
 
 .event-delete button {

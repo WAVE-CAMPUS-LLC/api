@@ -1,0 +1,29 @@
+/* Body Content */
+#content-container {
+    width: 100%;
+
+    display: flex;
+    flex-direction: column;
+    gap: 100px;
+
+    padding-left: 100px;
+    padding-right: 100px;
+}
+
+/* Page Heading */
+.page-heading {
+    font-family: Wanted-Bold;
+    font-size: 30px;
+
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Portal Body Content */
+#portal-body {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+}

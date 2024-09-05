@@ -4,7 +4,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 
 
-from .forms import HostApplicationForm, EventForm, EventTicketForm
+from .forms import HostApplicationForm, EventForm
 from .models import (
     EventTicket,
     EventType,
@@ -14,6 +14,7 @@ from .models import (
 
 
 # Create your views here.
+
 
 def hostView(request):
     pageName = "Host Event"
@@ -53,33 +54,40 @@ def hostApplyView(request):
         request, "eventManagementApp/host/hostApplication.html", {"form": form}
     )
 
+
 @login_required
 def hostPortalView(request):
     event = Event.objects.filter(host=request.user)
-    
+
     if request.method == "POST":
         action = request.POST.get("eventAction")
         event_id = request.POST.get("event_id")
-        
+
         if action == "deleteEvent" and event_id:
-            event_to_delete = get_object_or_404(Event, eventId=event_id, host=request.user)
+            event_to_delete = get_object_or_404(
+                Event, eventId=event_id, host=request.user
+            )
             event_to_delete.delete()
             return redirect("eventManagement:hostPortal")
-    return render(request, "eventManagementApp/host/hostPortal.html", {'events':event})
+    return render(request, "eventManagementApp/host/hostPortal.html", {"events": event})
+
 
 @login_required
 def hostGuideView(request):
     return render(request, "eventManagementApp/host/hostGuide.html")
 
+
 @login_required
 def hostCreateEvent(request):
     return render(request, "eventManagementApp/host/createEvent.html")
+
 
 @login_required
 def hostCreateEventGenerator(request):
     event = Event.objects.create(host=request.user)
 
     return redirect("eventManagement:eventCreationProcess", eventId=event.eventId)
+
 
 @login_required
 def eventCreationProcess(request, eventId):
@@ -100,7 +108,7 @@ def eventCreationProcess(request, eventId):
                 event.status = event_status
                 event.save()
                 messages.success(request, "Event is live!")
-            
+
             else:
                 event.save()
 
@@ -119,12 +127,13 @@ def eventCreationProcess(request, eventId):
         },
     )
 
+
 @login_required
 def eventCreatedOverview(request, eventId):
     event = get_object_or_404(Event, eventId=eventId)
     if request.method == "POST":
         action = request.POST.get("eventAction")
-        
+
         if action == "deleteEvent":
             event.delete()
             return redirect("eventManagement:hostPortal")
@@ -136,5 +145,9 @@ def eventCreatedOverview(request, eventId):
 @login_required
 def eventTicketingOverview(request, eventId):
     event = get_object_or_404(Event, eventId=eventId)
-    
-    return render(request, 'eventManagementApp/host/event/ticketing/ticketingOverview.html', {'event': event})
+
+    return render(
+        request,
+        "eventManagementApp/host/event/ticketing/ticketingOverview.html",
+        {"event": event},
+    )
