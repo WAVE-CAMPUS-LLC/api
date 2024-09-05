@@ -10,6 +10,7 @@ Profile Overview
 {% endblock app_page_style %}
 
 {% block script %}
+<script type="text/javascript" src="{% static "/scripts/accountManagementApp/settings/profileManagement.js" %}" defer></script>
 {% endblock script %}
 
 
@@ -69,15 +70,18 @@ Profile Overview
         </div>
         <!--User Card | End-->
 
-        <div class="cc-sub-body">
+        <div class="cc-sub-body" id="cc-sub-body">
             <div id="side-nav">
                 <div id="settings">
                     <ul>
-                        <li>
-                            <a href="#">My Purchases</a>
+                        <li class="profile-tab tab-active" data-tab="myEvents-information">
+                            <div>My Events</div>
                         </li>
                         <li>
-                            <a href="#">My Listings</a>
+                            <a target="_blank" href="{% url "eventManagement:hostHome" %}">Event Hosting</a>
+                        </li>
+                        <li class="profile-tab" data-tab="myBlog-information">
+                            <div>Blog</div>
                         </li>
                         <li>
                             <a href="{% url "accountManagement:userSettings" %}">Settings</a>
@@ -94,9 +98,7 @@ Profile Overview
                         <li>
                             <a href="#">Account Activity</a>
                         </li>
-                        <li>
-                            <a href="#">Blog</a>
-                        </li>
+                        
                     </ul>
                 </div>
                 <div id="support">
@@ -121,7 +123,7 @@ Profile Overview
                 </div>
             </div>
             <div class="main-content">
-                <div class="host-info">
+                <div class="host-info profile-tab-content" id="myEvents-information">
                     <div class="mchi-heading">
                         <h5>Host Your Event</h5>
                     </div>
@@ -143,6 +145,11 @@ Profile Overview
                                 <a target="_blank" href="{% url "eventManagement:hostHome" %}">Learn More</a>
                             </div>
                         </div>
+                    </div>
+                </div>
+                <div class="host-info profile-tab-content" id="myBlog-information">
+                    <div class="profile-tab">
+                        My blog tab
                     </div>
                 </div>
             </div>

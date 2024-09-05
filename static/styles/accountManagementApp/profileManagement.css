@@ -193,7 +193,11 @@
     padding: 20px;
 
     font-family: Wanted-Regular;
+    cursor: pointer;
+}
 
+.profile-tab {
+    cursor: pointer;
 }
 
 #side-nav #settings ul li:last-child {
@@ -207,6 +211,7 @@
 
 #side-nav #settings ul li a:hover {
     color: #008d95;
+    cursor: pointer;
 }
 
 
@@ -332,3 +337,17 @@
     align-items: center;
     font-size: 13px;
 }
+
+
+/* Tab Control */
+.profile-tab.tab-active {
+    border-bottom: 4px solid #25567b;
+    padding-bottom: 10px;
+}
+
+.profile-tab:hover {
+    border-bottom: 4px solid #25567b90;
+    padding-bottom: 10px;
+}
+
+/* Blog Tab Information */
