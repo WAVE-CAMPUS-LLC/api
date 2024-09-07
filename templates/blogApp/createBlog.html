@@ -1,0 +1,82 @@
+{% extends "base/base.html" %}
+{% load static %}
+{% load user_tags %}
+
+{% block title %}
+Hosting Events | WAVE.
+{% endblock title %}
+
+{% block app_page_style %}
+<link rel="stylesheet" type="text/css" href="{% static "/styles/blogApp/createBlog.css" %}" />
+{% endblock app_page_style %}
+
+{% block header %}
+{% include "partials/nav-footer/nav/host/host_nav.html" %}
+{% endblock header %}
+
+
+
+{% block body %}
+<div id="content-container">
+    <div class="page-heading">
+        <h2>Speak your mind!</h2>
+    </div>
+
+    <div id="content-body">
+        <form id="blogsForm" method="POST" action="{% url "blog:createBlog" %}" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="formRow">
+                <label for="{{ createBlogForm.blogType.id_for_label }}" class="formLabel">
+                    <p class="rowTitle">{{ createBlogForm.blogType.label }}</p>
+                    {{ createBlogForm.blogType }}
+                </label>
+            </div>
+
+                <label for="{{ createBlogForm.title.id_for_label }}" class="formLabel">
+                    <p class="rowTitle">{{ createBlogForm.title.label }}</p>
+                    {{ createBlogForm.title }}
+                </label>
+            </div>
+
+            <div class="formRow">
+                <label for="{{ createBlogForm.body.id_for_label }}" class="formLabel">
+                    <p class="rowTitle">{{ createBlogForm.body.label }}</p>
+                    {{ createBlogForm.body }}
+                </label>
+            </div> 
+
+            <div class="formRow">
+                <label for="{{ createBlogForm.imageOne.id_for_label }}" class="formLabel">
+                    <p class="rowTitle">{{ createBlogForm.imageOne.label }}</p>
+                    {{ createBlogForm.imageOne }}
+                </label>
+            </div> 
+
+            <div class="formRow">
+                <label for="{{ createBlogForm.imageTwo.id_for_label }}" class="formLabel">
+                    <p class="rowTitle">{{ createBlogForm.imageTwo.label }}</p>
+                    {{ createBlogForm.imageTwo }}
+                </label>
+            </div> 
+
+            <div class="formRow">
+                <label for="{{ createBlogForm.imageThree.id_for_label }}" class="formLabel">
+                    <p class="rowTitle">{{ createBlogForm.imageThree.label }}</p>
+                    {{ createBlogForm.imageThree }}
+                </label>
+            </div> 
+
+            <div class="formRow">
+                <label for="{{ createBlogForm.mood.id_for_label }}" class="formLabel">
+                    <p class="rowTitle">{{ createBlogForm.mood.label }}</p>
+                    {{ createBlogForm.mood }}
+                </label>
+            </div> 
+
+            <div class="buttonRow">
+                <button type="submit" role="button">Post Your Blog!</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock body %}

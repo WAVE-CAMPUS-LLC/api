@@ -8,6 +8,7 @@ from .models import UserProfile
 
 # Decorators to check user roles and permissions
 from wave_v1.decorators import member_required, check_suspension
+from blogApp.models import Blog
 
 UserModel = get_user_model()
 
@@ -17,7 +18,9 @@ UserModel = get_user_model()
 @check_suspension
 @member_required
 def profileView(request):
-    return render(request, "accountManagementApp/profileManagement.html")
+    blogItems = Blog.objects.filter(created_by=request.user)
+    
+    return render(request, "accountManagementApp/profileManagement.html", {"blogItems":blogItems})
 
 
 @login_required(login_url="authentication:login")

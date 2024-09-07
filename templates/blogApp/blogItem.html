@@ -1,0 +1,68 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}
+{{ blog.title}} — Wave.  
+{% endblock title %}
+
+{% block app_page_style %}
+<link rel="stylesheet" type="text/css" href="{% static "/styles/blogApp/blogItem.css" %}" />
+{% endblock app_page_style %}
+
+{% block header %}
+{% include "partials/nav-footer/nav/main_nav.html" %}
+{% endblock header %}
+
+{% block body %}
+<div id="content-container">
+    <div id="page-heading">
+        <h6>
+            {{ blog.blogType }}
+        </h6>
+        <h2>
+            {{ blog.title }}
+        </h2>
+    </div>
+
+    <div id="news-header">
+        <div id="nH-image-container" style="background-image: url('{{ blog.imageOne.url }}');">
+            <div id="display-header">
+                <img id="header-img" src="{{blog.imageOne.url}}" />
+            </div>
+        </div>
+    </div>
+
+    <div id="blog-content">
+        <div class="blogContent-Sidebar">
+            <div class="blogContent-Sidebar-container">
+                <div class="userDate-published">
+                    <h6>By <a href="{% url "accountManagement:memberProfile" username=blog.created_by.username %}" id="username">@{{ blog.created_by.username }}</a></h6>
+                    <p>{{ blog.created_at|date:"F d, Y" }}</p>
+                </div>
+                <div class="bCS-divider">
+                    <hr>
+                </div>
+            </div>
+        </div>
+        <div class="blogContent-Main">
+            <p>
+                {{ blog.body }}
+            </p>
+
+            <div class="bodyImages">
+                {% if blog.imageOne %}
+                <img src="{{ blog.imageOne.url }}" />
+                {% endif %}
+
+                {% if blog.imageTwo %}
+                <img src="{{ blog.imageTwo.url }}" />
+                {% endif %}
+
+                {% if blog.imageThree %}
+                <img src="{{ blog.imageThree.url }}" />
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock body %}

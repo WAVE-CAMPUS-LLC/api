@@ -32,7 +32,7 @@ urlpatterns = [
     path("", include("coreApp.urls")),
     path("", include("careerApp.urls")),
     path("", include("newsroomApp.urls")),
-    path("", include("blogApp.urls")),
+    path("blog/", include("blogApp.urls")),
     path("admin/", admin.site.urls),
 ]
 

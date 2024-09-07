@@ -1,0 +1,51 @@
+{% extends "base/base.html" %} 
+{% load static %} 
+{% load user_tags %} 
+
+{% block title %} Blog | WAVE. {% endblock title %} 
+
+{% block app_page_style %} 
+<link rel="stylesheet" type="text/css" href="{% static "/styles/blogApp/blogHome.css" %}" /> 
+{% endblock app_page_style %}
+
+{% block header %} 
+{% include "partials/nav-footer/nav/host/host_nav.html" %} 
+{% endblock header %} 
+
+{% block body%}
+<div class="content-container">
+  <section class="section-two">
+    <div class="sectionTwoHeader">
+      <h2>
+        What's happening @
+        <span id="body-logo">WAVE<span class="spot">.</span></span>
+      </h2>
+    </div>
+
+    {% if blogItems %}
+    <div class="news-container">
+      {% for blog in blogItems %}
+      <a href="{% url "blog:blogItem" blogId=blog.blogId %}" class="sub-news">
+        <img src="{{ blog.imageOne.url }}" alt="" />
+        <div class="news-content">
+          <h5>{{ blog.blogType }}</h5>
+          <h4>{{ blog.title }}</h4>
+        </div>
+
+        <div class="section-button">
+          <button type="button" role="button">Read more</button>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="emptyContainer">
+      <div>
+        <img src="{% static "/images/collegeManagementApp/collegeInformation/empty-listing.svg" %}" />
+      </div>
+      <p>Nothing to display, currently.</p>
+    </div>
+    {% endif %}
+  </section>
+</div>
+{% endblock body %}

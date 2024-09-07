@@ -147,9 +147,42 @@ Profile Overview
                         </div>
                     </div>
                 </div>
-                <div class="host-info profile-tab-content" id="myBlog-information">
-                    <div class="profile-tab">
-                        My blog tab
+
+                <div class="profile-tab-content" id="myBlog-information">
+                    <div class="blog-tab">
+                        <div class="header">
+                            <div class="headerRow">
+                                <h3 class="heading">My Blog Posts</h3>
+                            </div>
+                            
+                            <div class="createBlog">
+                                <a target="_blank" href="{% url "blog:createBlog" %}">Create Blog</a>
+                            </div>
+                        </div>
+
+                        <div class="blogContainer">
+                            {% for blog in blogItems %}
+                            <a href="{% url "blog:blogItem" blogId=blog.blogId %}" class="blogCard">
+                                <div class="blogHeader">
+                                    <img src="{{ blog.imageOne.url }}" />
+                                </div>
+                                <div class="blogBody">
+                                    <div class="blogType">
+                                        <h6>{{ blog.blogType }}</h6>
+                                    </div>
+                                    <div class="blogTitle">
+                                        <h4>{{ blog.title }}</h4>
+                                    </div>
+                                    <div class="blogDate">
+                                        <p>By {{ blog.created_by.first_name }} {{ blog.created_by.last_name }}</p>
+                                    </div>
+                                </div>
+                            </a> 
+                            {% endfor %}
+                        </div>
+                        <div class="createBlogLink">
+                            <a target="_blank" href="{% url "blog:createBlog" %}">Create Blog</a>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -23,21 +23,21 @@ class Blog(models.Model):
 
     imageOne = models.ImageField(
         _("First Image"),
-        upload_to="newsroom/images/body/",
+        upload_to="blog/images/body/",
         blank=True,
         null=True,
     )
 
     imageTwo = models.ImageField(
         _("Second Image"),
-        upload_to="newsroom/images/body/",
+        upload_to="blog/images/body/",
         blank=True,
         null=True,
     )
 
     imageThree = models.ImageField(
         _("Third Image"),
-        upload_to="newsroom/images/body/",
+        upload_to="blog/images/body/",
         blank=True,
         null=True,
     )
@@ -51,7 +51,7 @@ class Blog(models.Model):
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name="news_created",
+        related_name="blog_created",
     )
 
     class Meta:
