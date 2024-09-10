@@ -1,0 +1,10 @@
+{% load static %}
+
+<link rel="stylesheet" type="text/css" href="{% static "/styles/collegeManagementApp/extras/search-item.css" %}" />
+
+<div class="search-result-item">
+    <a href="{% url "colleges:info" collegeId=college.collegeId %} " target="_blank" class="search-result-info">
+        <h6>{{ college.name }}</h6>
+        <p>{{ college.city }}, {{ college.state }}</p>
+    </a>
+</div>

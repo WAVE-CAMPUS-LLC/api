@@ -4,7 +4,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 
 
-from .forms import HostApplicationForm, EventForm
+from .forms import EventTicketForm, HostApplicationForm, EventForm
 from .models import (
     EventTicket,
     EventType,
@@ -14,8 +14,6 @@ from .models import (
 
 
 # Create your views here.
-
-
 def hostView(request):
     pageName = "Host Event"
     return render(
@@ -145,9 +143,25 @@ def eventCreatedOverview(request, eventId):
 @login_required
 def eventTicketingOverview(request, eventId):
     event = get_object_or_404(Event, eventId=eventId)
+    eventTicket = EventTicket.objects.filter(event=event)
+    eventTicketForm = EventTicketForm(request.POST)
+
+    if request.method == "POST":
+        if eventTicketForm.is_valid():
+            new_ticket = eventTicketForm.save(commit=False)
+            new_ticket.event = event
+            new_ticket.save()
+            
+            return redirect("eventManagement:ticketingOverview", eventId=eventId)
+    else:
+        eventTicketForm = EventTicketForm()
 
     return render(
         request,
         "eventManagementApp/host/event/ticketing/ticketingOverview.html",
-        {"event": event},
+        {
+            "event": event,
+            "eventTickets": eventTicket,
+            "eventTicketForm": eventTicketForm,
+        },
     )

@@ -273,12 +273,12 @@ def adminUserDetailedView(request, username):
                 hours = suspend_form.cleaned_data.get("hours", 0)
                 user_in_view.suspend(hours)
                 return redirect(
-                    "waveAdmin:user-detailed", kwargs={"username": username}
+                    "waveAdmin:user-detailed", username=username
                 )
 
         elif action == "allow":
             user_in_view.remove_suspension_OR_ban()
-            return redirect("waveAdmin:user-detailed", kwargs={"username": username})
+            return redirect("waveAdmin:user-detailed", username=username)
 
         group_id = request.POST.get("group_id")
 
@@ -288,7 +288,7 @@ def adminUserDetailedView(request, username):
                 user_in_view.groups.add(group)
             elif "removeRole" in request.POST:
                 user_in_view.groups.remove(group)
-            return redirect("waveAdmin:user-detailed", kwargs={"username": username})
+            return redirect("waveAdmin:user-detailed", username=username)
 
     else:
         suspend_form = SuspendUserForm()

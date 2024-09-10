@@ -1,10 +1,11 @@
 from django.shortcuts import get_object_or_404, render, redirect
+from django.template.loader import render_to_string
 from django.core.mail import send_mail
 from django.conf import settings
 from django.utils.crypto import get_random_string
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, JsonResponse
 
 from .forms import CollegeForm, JoinCollegeForm, OrganizationForm, VerifyCollegeJoinForm
 from .models import College, Membership, Organization, OrganizationMembership
@@ -20,6 +21,22 @@ def collegeHomeView(request):
 def collegeCampusesView(request):
     pageName = "Colleges"
 
+    if request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest':
+        query = request.GET.get('query', '')
+        results = College.objects.filter(name__icontains=query)
+
+        # Render each result using the template
+        if results.exists():
+            results_html = []
+            for college in results:
+                html = render_to_string('collegeManagementApp/extras/search-item.html', {'college': college})
+                results_html.append(html)
+            return JsonResponse({'results_html': results_html, 'no_results': False})
+        else:
+            no_results_html = render_to_string('collegeManagementApp/extras/no-result.html')
+            return JsonResponse({'results_html': [], 'no_results': True, 'no_results_html': no_results_html})
+
+
     colleges = College.objects.all()
 
     # Counting the number of users in a college.
@@ -32,6 +49,9 @@ def collegeCampusesView(request):
     if request.user.is_authenticated:
         user_profile = UserProfile.objects.filter(user=request.user).first()
 
+
+    
+    
     return render(
         request,
         "collegeManagementApp/campuses.html",
@@ -42,6 +62,8 @@ def collegeCampusesView(request):
         },
     )
 
+# def collegeCampusesSearch(request):
+    
 
 @login_required
 def addCollegeView(request):

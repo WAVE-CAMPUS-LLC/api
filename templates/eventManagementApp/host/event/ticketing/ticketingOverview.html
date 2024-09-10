@@ -1,17 +1,18 @@
 {% extends "base/base.html" %}
 {% load static %}
+{% load widget_tweaks %}
 
 
 {% block title %}
-{{ event.title }} Ticketing Info | WAVE.
+{{ event.title }} -- Ticketing Info | WAVE.
 {% endblock title %}
 
 {% block app_page_style %}
-<link rel="stylesheet" type="text/css" href="{% static "/styles/eventManagementApp/event/ticketing/ticketingOverview.css" %}" />
+<link rel="stylesheet" type="text/css"  href="{% static "/styles/eventManagementApp/event/ticketing/ticketingOverview.css" %}" />
 {% endblock app_page_style %}
 
 {% block script %}
-<script type="text/javascript" src="{% static "scripts/eventManagementApp/host/hostPortal.js" %}"></script>
+<script type="text/javascript" src="{% static "scripts/eventManagementApp/event/ticketingOverview.js" %}" defer></script>
 {% endblock script %}
 
 
@@ -22,12 +23,144 @@
 
 {% block body %}
 <div id="content-container">
-    <div class="page-heading">
-        <h2>{{ event.title }} -- Ticketing Information<h2>
+    <div id="page-header">
+        <div id="page-heading">
+            <h5>{{ event.title }} -- Ticketing Information</h5>
+            <p>Add new tickets or edit existing ticket information.</p>
+        </div>
+        <div class="header-button">
+            <button type="button" role="button" class="createEventButton" id="createTicketButtonOne">Create
+                Ticket</button>
+        </div>
     </div>
 
     <div id="portal-body">
+        {% if eventTickets %}
+        <div class="ticketContainer">
+            {% for ticket in eventTickets %}
+            <div id="eventTicket">
+                <div class="amountSold">
+                    <h4>101</h4>
+                    <p>Sold</p>
+                </div>
+                <div class="ticketInfo">
+                    <div class="info">
+                        <h6>Music Event</h6>
+                        <h1>{{ ticket.ticket_name }}</h1>
+                        <div class="sub-info">
+                            <p>{{ ticket.ticket_quantity }} Made Available</p>
+                            <p>{{ ticket.event.date }}</p>
+                        </div>
+                    </div>
+                    <div class="viewMore">
+                        <button type="button" role="button" class="viewTicketInfoBtn">View More</button>
+                    </div>
+                </div>
 
+                <span class="ticketInformationModal">
+                    <div class="ticketInformationContainer">
+                        <div class="ticketInformationCard">
+                            <div class="modalHeading">
+                                <div class="closeModalRow">
+                                    <button type="button" class="ticketInfoModalClose" role="button">
+                                        <img src="{% static "images/admin/departments/modalClose.svg" %}" alt="Close">
+                                    </button>
+                                </div>
+                                <div class="modalHeader">{{ ticket.ticket_name }}</div>
+                            </div>
+        
+                            <div class="informationModalBody">
+                                <div>
+                                    <p class="informationHeading">Linked Event</p>
+                                    <p class="informationBody">{{ ticket.event.title }}</p>
+                                </div>
+                                <div>
+                                    <p class="informationHeading">Ticket Type</p>
+                                    <p class="informationBody">{{ ticket.ticket_type }}</p>
+                                </div>
+                                <div>
+                                    <p class="informationHeading">Price</p>
+                                    <p class="informationBody">${{ ticket.ticket_price }}</p>
+                                </div>
+                                <div>
+                                    <p class="informationHeading">Tickets Available</p>
+                                    <p class="informationBody">{{ ticket.ticket_quantity }}</p>
+                                </div>
+                                <div>
+                                    <p class="informationHeading">Description</p>
+                                    <p class="informationBody"> {{ ticket.ticket_description }} </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </span>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-container">
+            <div class="first-row">
+                <div class="image">
+                    <img class="empty-image" src="{% static "/images/eventManagementApp/host/empty-listing.svg" %}" />
+                </div>
+                <p>You currently have no tickets related to this event.</p>
+            </div>
+
+            <div class="create-event-row">
+                <button type="button" role="button" class="createEventButton" id="createTicketButtonOne">Create
+                    Ticket</button>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div id="ticketCreationModal">
+        <div class="ticketCreationContainer">
+            <div class="ticketCreateCard">
+                <div class="modalHeading">
+                    <div class="closeModalRow">
+                        <button type="button" id="modalCloseButton" role="button">
+                            <img src="{% static "images/admin/departments/modalClose.svg" %}" alt="Close">
+                        </button>
+                    </div>
+                    <div class="modalHeader">Create New Ticket</div>
+                </div>
+
+                <div class="modalBody">
+                    <form method="POST" action="{% url "eventManagement:ticketingOverview" eventId=event.eventId %}">
+                        {% csrf_token %}
+                        <label for="{{ eventTicketForm.ticket_name.id_for_label }}">
+                            <p class="rowTitle">{{ eventTicketForm.ticket_name.label }}</p>
+                            {% render_field eventTicketForm.ticket_name placeholder="VIP, General Admission, Early Bird, etc." %}
+                        </label>
+
+                        <label for="{{ eventTicketForm.ticket_type.id_for_label }}">
+                            <p class="rowTitle">{{ eventTicketForm.ticket_type.label }}</p>
+                            {{ eventTicketForm.ticket_type }}
+                        </label>
+
+                        <label for="{{ eventTicketForm.ticket_price.id_for_label }}">
+                            <p class="rowTitle">{{ eventTicketForm.ticket_price.label }}</p>
+                            {% render_field eventTicketForm.ticket_price placeholder="$ 12.35" %}
+                        </label>
+
+                        <label for="{{ eventTicketForm.ticket_description.id_for_label }}">
+                            <p class="rowTitle">{{ eventTicketForm.ticket_description.label }}</p>
+                            {{ eventTicketForm.ticket_description }}
+                        </label>
+
+                        <label for="{{ eventTicketForm.ticket_quantity.id_for_label }}">
+                            <p class="rowTitle">{{ eventTicketForm.ticket_quantity.label }}</p>
+                            {{ eventTicketForm.ticket_quantity }}
+                        </label>
+
+                        <div class="submit-row">
+                            <button type="submit" role="button" class="submit-button">Create Ticket</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock body %}

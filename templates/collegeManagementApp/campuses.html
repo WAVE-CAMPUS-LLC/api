@@ -10,7 +10,7 @@ See all campuses — WAVE. on Campus
 {% endblock app_page_style %}
 
 {% block script %}
-
+<script type="text/javascript" src="{% static "scripts/collegeManagementApp/collegeSearch.js" %}" defer></script>
 {% endblock script %}
 
 {% block header %}
@@ -33,7 +33,33 @@ See all campuses — WAVE. on Campus
                 <div class="febc-img">
                     <img src="{% static "images/explore/find.svg" %}" alt="Find College">
                 </div>
-                <input type="text" name="" id="" placeholder="Find college by name" autofocus>
+                <input type="text" name="" id="collegeSearchBar" placeholder="Find college by name" autocomplete="off">
+            </div>
+        </div>
+
+        <div id="collegeSearchCardModal">
+            <div class="searchCardContainer">
+                <div class="searchCard">
+                    <div class="searchCardHeader">
+                        <div id="searchCardHeading">
+                            <h6>Find a college</h6>
+                            <button type="button" role="button" id="closeSearchModalButton">
+                                <img src="{% static '/images/admin/roles/modalClose.svg' %}" alt="">
+                                <p>CLOSE</p>
+                            </button>
+                        </div>
+                        <div id="searchBarRow">
+                            <div class="find-college-card-name">
+                                <div class="febc-img">
+                                    <img src="{% static "images/explore/find.svg" %}" alt="Find College">
+                                </div>
+                                <input type="text" name="" id="collegeSearchContentBar" placeholder="Find college by name" autofocus autocomplete="off">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="searchCardBody"></div>
+                </div>
             </div>
         </div>
     </div>

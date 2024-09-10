@@ -267,7 +267,10 @@ class EventTicket(models.Model):
     ticket_description = models.TextField(
         _("Describe ticket. Are there any perks?"), max_length=300
     )
-    ticket_quantity = models.PositiveIntegerField()
+    ticket_quantity = models.PositiveIntegerField(
+        _("How many tickets should be made available?")
+    )
+
     class Meta:
         unique_together = ("event", "ticket_name")
 

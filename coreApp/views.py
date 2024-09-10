@@ -1,7 +1,7 @@
 from django.shortcuts import get_object_or_404, render
 from django.http import JsonResponse
 
-from eventManagementApp.models import Event
+from eventManagementApp.models import Event, EventTicket
 
 
 # Create your views here.
@@ -64,6 +64,7 @@ def load_more_events(request):
 def eventDetailsView(request, eventId):
     pageName = "eventDetails"
     event = get_object_or_404(Event, eventId=eventId)
+    eventTickets = EventTicket.objects.filter(event=event)
 
     body_photos = [
         event.body_photo_one.url if event.body_photo_one else None,
@@ -78,7 +79,12 @@ def eventDetailsView(request, eventId):
     return render(
         request,
         "coreApp/event/eventDetails.html",
-        {"page": pageName, "event": event, "body_photos": body_photos},
+        {
+            "page": pageName,
+            "event": event,
+            "body_photos": body_photos,
+            "eventTickets": eventTickets,
+        },
     )
 
 
