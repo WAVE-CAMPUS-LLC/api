@@ -1,7 +1,5 @@
 from django import forms
-from django.contrib.auth.models import Permission, Group
 from .models import Blog
-from django.utils.translation import gettext_lazy as translate
 
 class createBlogForm(forms.ModelForm):
     
@@ -28,3 +26,66 @@ class createBlogForm(forms.ModelForm):
                 }
             )
         }
+        
+class UpdateBlogTypeForm(forms.ModelForm):
+    class Meta:
+        model = Blog
+        fields = [
+            "blogType",
+        ]
+
+
+class UpdateBlogTitleForm(forms.ModelForm):
+    class Meta:
+        model = Blog
+        fields = [
+            "title",
+        ]
+
+
+class UpdateBlogBodyForm(forms.ModelForm):
+    class Meta:
+        model = Blog
+        fields = [
+            "body",
+        ]
+        
+        widgets = {
+            "body": forms.Textarea(
+                attrs={
+                    "class": "",
+                    "rows": 5,
+                    "cols": 40,
+                    "autocomplete": "off",
+                    "required": True,
+                }
+            )
+        }
+        
+class UpdateImageOneForm(forms.ModelForm):
+    class Meta:
+        model = Blog
+        fields = [
+            "imageOne",
+        ]
+        
+class UpdateImageTwoForm(forms.ModelForm):
+    class Meta:
+        model = Blog
+        fields = [
+            "imageTwo",
+        ]
+        
+class UpdateImageThreeForm(forms.ModelForm):
+    class Meta:
+        model = Blog
+        fields = [
+            "imageThree",
+        ]
+        
+class UpdateBlogMoodForm(forms.ModelForm):
+    class Meta:
+        model = Blog
+        fields = [
+            "mood",
+        ]

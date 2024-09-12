@@ -75,13 +75,13 @@ Profile Overview
                 <div id="settings">
                     <ul>
                         <li class="profile-tab tab-active" data-tab="myEvents-information">
-                            <div>My Events</div>
+                            <a>My Events</a>
                         </li>
                         <li>
                             <a target="_blank" href="{% url "eventManagement:hostHome" %}">Event Hosting</a>
                         </li>
                         <li class="profile-tab" data-tab="myBlog-information">
-                            <div>Blog</div>
+                            <a>Blog</a>
                         </li>
                         <li>
                             <a href="{% url "accountManagement:userSettings" %}">Settings</a>
@@ -98,7 +98,6 @@ Profile Overview
                         <li>
                             <a href="#">Account Activity</a>
                         </li>
-                        
                     </ul>
                 </div>
                 <div id="support">
@@ -148,7 +147,8 @@ Profile Overview
                     </div>
                 </div>
 
-                <div class="profile-tab-content" id="myBlog-information">
+                <!-- inline style to stop blogs briefly showing on page refresh -->
+                <div class="profile-tab-content" id="myBlog-information" style="display:none;">
                     <div class="blog-tab">
                         <div class="header">
                             <div class="headerRow">
@@ -162,7 +162,7 @@ Profile Overview
 
                         <div class="blogContainer">
                             {% for blog in blogItems %}
-                            <a href="{% url "blog:blogItem" blogId=blog.blogId %}" class="blogCard">
+                            <a href="{% url "blog:blogView" blogId=blog.blogId %}" class="blogCard">
                                 <div class="blogHeader">
                                     <img src="{{ blog.imageOne.url }}" />
                                 </div>
@@ -179,9 +179,6 @@ Profile Overview
                                 </div>
                             </a> 
                             {% endfor %}
-                        </div>
-                        <div class="createBlogLink">
-                            <a target="_blank" href="{% url "blog:createBlog" %}">Create Blog</a>
                         </div>
                     </div>
                 </div>

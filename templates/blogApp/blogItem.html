@@ -1,5 +1,6 @@
 {% extends "base/base.html" %}
 {% load static %}
+{% load widget_tweaks %}
 
 {% block title %}
 {{ blog.title}} — Wave.  
@@ -9,20 +10,52 @@
 <link rel="stylesheet" type="text/css" href="{% static "/styles/blogApp/blogItem.css" %}" />
 {% endblock app_page_style %}
 
+{% block script %}
+<script type="text/javascript" src="{% static "/scripts/blogApp/blogItem.js" %}" defer></script>
+{% endblock script %}
+
 {% block header %}
 {% include "partials/nav-footer/nav/main_nav.html" %}
 {% endblock header %}
 
 {% block body %}
+
+
+
 <div id="content-container">
-    <div id="page-heading">
-        <h6>
-            {{ blog.blogType }}
-        </h6>
-        <h2>
-            {{ blog.title }}
-        </h2>
-    </div>
+    <form method="POST" action="{% url "blog:blogView" blogId=blog.blogId %}">
+        <div id="page-heading">
+            <h6>{{ blog.blogType }}</h6>
+            
+            <div style="display: flex; flex-direction: row; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <input type="hidden" name="field" value="title-info" />
+                    {% csrf_token %}
+                    
+                    <label for="{{ titleFieldForm.title.id_for_label }}" class="formLabel">
+                        <h2 id="title">{{ blog.title }}</h2>
+                        <input
+                            type="text" 
+                            name="{{ titleFieldForm.title.name }}"
+                            id="title-input" 
+                            style="display: none; font-size: 2em; font-weight: bold; width: auto;"
+                        />
+                    </label>
+                </div>
+                    
+                <div class="submit-row">
+                    <button type="submit" id="save-btn" style="display: none;">Save</button>
+                </div>
+            </div>
+            
+            <!-- Moved inside form for consistency -->
+            <button type="button" id="edit-btn" style="display: flex; align-items: center; cursor: pointer; background: none; border: none; padding: 0;">
+                <img style="padding-top: 5px;" src="{% static 'images/home/edit-svgrepo-com.svg' %}" alt="Edit"> 
+                <span style="margin-left: 5px;">Edit title</span>
+            </button>
+        </div>
+    </form>
+
 
     <div id="news-header">
         <div id="nH-image-container" style="background-image: url('{{ blog.imageOne.url }}');">

@@ -1,30 +1,4 @@
 document.addEventListener("DOMContentLoaded", function () {
-  // Function to handle tab click
-  function handleTabClick(tab, tabContents) {
-    tab.forEach((tab) => {
-      tab.classList.remove("tab-active");
-    });
-    this.classList.add("tab-active");
-
-    // Logic to display corresponding content based on clicked tab
-    const tabId = this.getAttribute("data-tab");
-    showTabContent(tabContents, tabId);
-  }
-
-  // Function to display corresponding content based on tab clicked
-  function showTabContent(contents, tabId) {
-    // Hide all tab contents
-    contents.forEach((content) => {
-      content.style.display = "none";
-    });
-
-    // Show the selected tab content
-    const selectedTabContent = document.getElementById(tabId);
-    if (selectedTabContent) {
-      selectedTabContent.style.display = "block";
-    }
-  }
-
   // Initialize tab systems for each body section
   initializeTabSystem("cc-sub-body", "profile-tab", "profile-tab-content");
 
@@ -50,6 +24,27 @@ document.addEventListener("DOMContentLoaded", function () {
       tabs[0].classList.add("tab-active");
       const defaultTabId = tabs[0].getAttribute("data-tab");
       showTabContent(tabContents, defaultTabId);
+    }
+  }
+
+  // Function to handle tab click
+  function handleTabClick(tab, tabContents) {
+    tab.forEach((tab) => {
+      tab.classList.remove("tab-active");
+    });
+    this.classList.add("tab-active");
+
+    // Logic to display corresponding content based on clicked tab
+    const tabId = this.getAttribute("data-tab");
+    showTabContent(tabId);
+  }
+
+  // Function to display corresponding content based on tab clicked
+  function showTabContent(tabId) {
+    // Show the selected tab content
+    const selectedTabContent = document.getElementById(tabId);
+    if (selectedTabContent) {
+      selectedTabContent.style.display = "block";
     }
   }
 });

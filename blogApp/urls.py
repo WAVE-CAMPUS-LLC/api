@@ -7,5 +7,5 @@ app_name = "blog"
 urlpatterns = [
     path("", views.blogHomeView, name="home"),
     path("create/", views.blogCreateView, name="createBlog"),
-    path("<uuid:blogId>/", views.blogView, name="blogItem"),  
+    path("<uuid:blogId>/", views.blogView, name="blogView"),  
 ]
