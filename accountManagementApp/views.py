@@ -89,12 +89,3 @@ class ChangePasswordView(SuccessMessageMixin, PasswordChangeView):
 
     success_url = reverse_lazy("accountManagement:userAccount")
 
-
-def memberView(request, username):
-    try:
-        user = get_object_or_404(UserModel, username=username)
-
-    except Http404:
-        return render(request, "extras/invalid/invalid.html")
-
-    return render(request, "accountManagementApp/publicProfile.html", {"user": user})

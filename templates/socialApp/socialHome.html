@@ -1,0 +1,165 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}
+My Social @{{ user.username }} — WAVE.
+{% endblock title %}
+
+{% block app_page_style %}
+<link rel="stylesheet" type="text/css" href="{% static "/styles/socialApp/socialHome.css" %}" />
+{% endblock app_page_style %}
+
+{% block script %}
+{% endblock script %}
+
+
+{% block header %}
+{% include "partials/nav-footer/nav/main_nav.html" %}
+{% endblock header %}
+
+
+{% block body %}
+<div id="content-container">
+    <div class="userHeader">
+        <div>
+            <div class="userPfp">
+                <img src="{% static "images/socialApp/publicProfile/profile/E.L.png" %}" alt="Profile Picture" />
+            </div>
+            <div class="userNames">
+                <h1>{{ user.first_name }} {{ user.last_name }}</h1>
+            </div>
+        </div>
+        
+        <div class="connectRow">
+            <button class="shareBtn" type="button" role="button">
+                <img src="{% static "images/socialApp/share-profile.svg" %}" />
+                Share Profile
+            </button>
+        </div>
+    </div>
+
+    <div class="social-body">
+        <div class="manage-menu">
+            <div class="menu-header">
+                <h4>Manage Social</h4>
+            </div>
+            <div class="manage-list">
+                <ul>
+                    <li>
+                        <p>Home</p>
+                    </li>
+                    <li>
+                        <p>Friend Requests</p>
+                    </li>
+                    <li>
+                        <p>Invitations</p>
+                    </li>
+                    <li>
+                        <p>Groups</p>
+                    </li>
+                    <li>
+                        <p>Shared</p>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class="display-info">
+            <div id="social-home">
+                <div class="sh-container">
+                    <div class="row-one">
+                        <div class="home-header">
+                            <h4>My Socials</h4>
+                        </div>
+                        <div class="home-body">
+                            <div class="user-card">
+                                <div class="user-pfp">
+                                    <img src="{% static "images/socialApp/publicProfile/profile/E.L.png" %}" alt="Profile Picture" />
+                                </div>
+                                <div class="user-names">
+                                    <h1>Elon Musk</h1>
+                                    <p>Class of 28'</p>
+                                </div>
+                                <div class="user-actions">
+                                    <a href="#">View Social</a>
+                                </div>
+                            </div>
+    
+                            <div class="user-card">
+                                <div class="user-pfp">
+                                    <img src="{% static "images/socialApp/publicProfile/profile/E.L.png" %}" alt="Profile Picture" />
+                                </div>
+                                <div class="user-names">
+                                    <h1>Elon Musk</h1>
+                                    <p>Class of 28'</p>
+                                </div>
+                                <div class="user-actions">
+                                    <a href="#">View Social</a>
+                                </div>
+                            </div>
+    
+                            <div class="user-card">
+                                <div class="user-pfp">
+                                    <img src="{% static "images/socialApp/publicProfile/profile/E.L.png" %}" alt="Profile Picture" />
+                                </div>
+                                <div class="user-names">
+                                    <h1>Elon Musk</h1>
+                                    <p>Class of 28'</p>
+                                </div>
+                                <div class="user-actions">
+                                    <a href="#">View Social</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row-one">
+                        <div class="home-header">
+                            <h4>Our Suggestions</h4>
+                        </div>
+                        <div class="home-body">
+                            <div class="user-card">
+                                <div class="user-pfp">
+                                    <img src="{% static "images/socialApp/publicProfile/profile/E.L.png" %}" alt="Profile Picture" />
+                                </div>
+                                <div class="user-names">
+                                    <h1>Elon Musk</h1>
+                                    <p>Class of 28'</p>
+                                </div>
+                                <div class="user-actions">
+                                    <a href="#">View Social</a>
+                                </div>
+                            </div>
+    
+                            <div class="user-card">
+                                <div class="user-pfp">
+                                    <img src="{% static "images/socialApp/publicProfile/profile/E.L.png" %}" alt="Profile Picture" />
+                                </div>
+                                <div class="user-names">
+                                    <h1>Elon Musk</h1>
+                                    <p>Class of 28'</p>
+                                </div>
+                                <div class="user-actions">
+                                    <a href="#">View Social</a>
+                                </div>
+                            </div>
+    
+                            <div class="user-card">
+                                <div class="user-pfp">
+                                    <img src="{% static "images/socialApp/publicProfile/profile/E.L.png" %}" alt="Profile Picture" />
+                                </div>
+                                <div class="user-names">
+                                    <h1>Elon Musk</h1>
+                                    <p>Class of 28'</p>
+                                </div>
+                                <div class="user-actions">
+                                    <a href="#">View Social</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock body %}

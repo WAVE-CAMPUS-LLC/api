@@ -66,23 +66,12 @@ def eventDetailsView(request, eventId):
     event = get_object_or_404(Event, eventId=eventId)
     eventTickets = EventTicket.objects.filter(event=event)
 
-    body_photos = [
-        event.body_photo_one.url if event.body_photo_one else None,
-        event.body_photo_two.url if event.body_photo_two else None,
-        event.body_photo_three.url if event.body_photo_three else None,
-        event.body_photo_four.url if event.body_photo_four else None,
-        event.body_photo_five.url if event.body_photo_five else None,
-    ]
-
-    body_photos = [photo for photo in body_photos if photo]
-
     return render(
         request,
         "coreApp/event/eventDetails.html",
         {
             "page": pageName,
             "event": event,
-            "body_photos": body_photos,
             "eventTickets": eventTickets,
         },
     )

@@ -46,7 +46,7 @@ See what's happening around you — WAVE.
     
                 <figcaption id="event-hosted-caption">
                     <h6 id="event-caption-host">
-                        Hosted by  <a target="_blank" href="{% url "accountManagement:memberProfile" username=trending.host.username %}">@{{ trending.host.username }}</a>
+                        Hosted by  <a target="_blank" href="{% url "social:publicProfile" username=trending.host.username %}">@{{ trending.host.username }}</a>
                     </h6>
                 </figcaption>
             </div>

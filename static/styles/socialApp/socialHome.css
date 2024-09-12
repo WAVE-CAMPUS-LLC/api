@@ -1,0 +1,250 @@
+#content-container {
+    width: 100%;
+
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+
+    padding-left: 100px;
+    padding-right: 100px;
+}
+
+.userHeader {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    width: 100%;
+    height: auto;
+
+    padding: 20px;
+}
+
+.userPfp {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.userPfp img {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+}
+
+.userNames {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.userNames h1 {
+    font-family: Wanted-Bold;
+    font-size: 30px;
+}
+
+.shareBtn {
+    padding: 12.5px 15px;
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    align-items: center;
+    color: white;
+
+    border-radius: 20px;
+    background-image: linear-gradient(to right, #007d84c3 0%, #13c9d3 100%);
+    cursor: pointer;
+
+    font-family: Wanted-Medium;
+    font-size: 22px;
+
+    border: transparent;
+}
+
+.shareBtn:hover {
+    background-color: #008d95;
+}
+
+.shareBtn img {
+    width: 30px;
+    height: 30px;
+}
+
+/* Social Body */
+
+.social-body {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 50px;
+}
+
+.sh-container {
+    display: flex;
+    flex-direction: column;
+    gap: 70px;
+}
+
+.sh-container .row-one {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+
+.manage-menu {
+    width: 30%;
+    height: auto;
+
+    border: 1px solid rgba(0, 0, 0, 0.038);
+    border-radius: 20px;
+
+    -webkit-box-shadow: 2px 3px 21px 4px rgba(136, 136, 136, 0.257);
+    -moz-box-shadow: 2px 3px 21px 4px rgba(136, 136, 136, 0.257);
+    box-shadow: 2px 3px 21px 4px rgba(136, 136, 136, 0.257);
+
+    padding: 40px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 35px;
+}
+
+.menu-header {
+    display: flex;
+    justify-content: center;
+}
+
+.menu-header h4 {
+    font-family: Wanted-ExtraBold;
+    font-size: 25px;
+}
+
+.manage-list {
+   padding-left: 20px;
+   padding-right: 20px;
+}
+
+.home-header {
+    display: flex;
+    justify-content: start;
+    gap: 20px;
+}
+
+.home-header h4 {
+    font-family: Wanted-ExtraBold;
+    font-size: 25px;
+}
+
+.display-info {
+    width: 70%;
+    height: 100%;
+
+    border: 1px solid rgba(0, 0, 0, 0.038);
+    border-radius: 20px;
+
+    -webkit-box-shadow: 2px 3px 21px 4px rgba(136, 136, 136, 0.257);
+    -moz-box-shadow: 2px 3px 21px 4px rgba(136, 136, 136, 0.257);
+    box-shadow: 2px 3px 21px 4px rgba(136, 136, 136, 0.257);
+
+    padding: 40px;
+
+}
+
+.manage-list ul {
+    list-style-type: none;
+    height: auto;
+    display: flex;
+    gap: 20px;
+    flex-direction: column;
+
+    font-family: Wanted-Variable;
+    font-size: 20px;
+}
+
+.manage-list ul li {
+    padding: 10px;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+/* Display Info */
+.user-card {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    gap: 10px;
+    border: 1px solid rgba(0, 0, 0, 0.038);
+    border-radius: 20px;
+
+    -webkit-box-shadow: 2px 3px 21px 4px rgba(136, 136, 136, 0.257);
+    -moz-box-shadow: 2px 3px 21px 4px rgba(136, 136, 136, 0.257);
+    box-shadow: 2px 3px 21px 4px rgba(136, 136, 136, 0.257);
+
+    padding: 40px;
+}
+
+.user-actions {
+    padding: 12.5px 15px;
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    align-items: center;
+    color: white;
+
+    border-radius: 20px;
+    background-image: linear-gradient(to right, #007d84c3 0%, #13c9d3 100%);
+    cursor: pointer;
+
+    font-family: Wanted-Medium;
+    font-size: 22px;
+
+    border: transparent;
+}
+
+.user-names {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    justify-content: center;
+    align-items: center;
+}
+
+.user-names h1 {
+    font-family: Wanted-Medium;
+    font-size: 20px;
+}
+
+.user-names p {
+    font-family: Wanted-Variable;
+    font-size: 17px;
+    color: grey;
+}
+
+.user-actions a {
+    color: white;
+    text-decoration: none;
+    font-size: 18px;
+}
+
+.home-body {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    display: grid;
+    gap: 30px;
+}
+
+.user-pfp {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.user-pfp img{
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+}

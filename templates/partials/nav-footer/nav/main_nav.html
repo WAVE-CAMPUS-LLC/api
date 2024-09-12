@@ -15,7 +15,7 @@
                     <li><a href="{% url "core:explore"  %}">Explore</a></li>
                     <li><a href="{% url "eventManagement:hostHome"  %}">Hosting</a></li>
                     <li><a href="{% url "colleges:home"  %}">Colleges</a></li>
-                    <li><a href="{% url "extras:safety"  %}">Safety</a></li>
+                    <li><a href="{% url "social:home"  %}" target="_blank">The Social</a></li>
                 </ul>
             </div>
         </div>
@@ -64,11 +64,17 @@
                                 Host Event
                             </a>
                         {% endif %}
-                    
                     {% endif %}
-                    
                 </li>
-                <li><span>|</span></li>
+                <li>
+                    <button role="button" type="button" id="shopping-cart-btn" class="shopping-cart-btn">
+                        <img src="{% static "images/partials/shopping-cart.svg" %}" />
+                        <span id="cart-count" class="cart-count-badge"></span>
+                    </button>
+                </li>
+                <li>
+                    <span>|</span>
+                </li>
                 <li id="auth">
                     {% if user.is_authenticated %}
                     <a id="account" href="{% url "accountManagement:userAccount"  %}">My Account</a>

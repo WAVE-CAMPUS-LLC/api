@@ -1,0 +1,91 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}
+{{ user.first_name }} {{ user.last_name }} @{{user.username}} — WAVE.
+{% endblock title %}
+
+{% block app_page_style %}
+<link rel="stylesheet" type="text/css" href="{% static "/styles/socialApp/publicProfile.css" %}" />
+{% endblock app_page_style %}
+
+{% block script %}
+{% endblock script %}
+
+
+{% block header %}
+{% include "partials/nav-footer/nav/main_nav.html" %}
+{% endblock header %}
+
+
+{% block body %}
+<div id="content-container">
+    <div class="userHeader">
+        <div>
+            <div class="userPfp">
+                <img src="{% static "images/socialApp/publicProfile/profile/E.L.png" %}" alt="Profile Picture" />
+            </div>
+            <div class="userNames">
+                <h1>{{ user.first_name }} {{ user.last_name }}</h1>
+                <h2>@{{ user.username }}</h2>
+            </div>
+        </div>
+        
+        <div class="connectRow">
+            <button class="connectBtn" type="button" role="button">
+                <img src="{% static "images/socialApp/connect.svg" %}" />
+                Connect
+            </button>
+        </div>
+    </div>
+
+    <div class="social-body">
+        <div class="verified-info">
+            <h4>{{ user.first_name }} has verified</h4>
+            <div class="viContainer">
+                <ul>
+                    <li>
+                        <span class="verified-indicator verified"></span>
+                        <p>Phone Number</p>
+                    </li>
+                    <li>
+                        <span class="verified-indicator unverified"></span>
+                        <p>Email Address </p>
+                    </li>
+                    <li>
+                        <span class="verified-indicator inactive"></span>
+                        <p>Student ID </p>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class="social-info">
+            <h4>A little about {{ user.first_name }}</h4>
+            <div class="siContainer">
+                <ul>
+                    <li>
+                        <img src="{% static "images/socialApp/publicProfile/student.svg" %}"/>
+                        <p>Student at Tennessee State University</p>
+                    </li>
+                    <li>
+                        <img src="{% static "images/socialApp/publicProfile/major.svg" %}"/>
+                        <p>Majoring in Computer Science</p>
+                    </li>
+                    <li>
+                        <img src="{% static "images/socialApp/publicProfile/hobbies.svg" %}"/>
+                        <p>Loves playing soccer</p>
+                    </li>
+                    <li>
+                        <img src="{% static "images/socialApp/publicProfile/location.svg" %}"/>
+                        <p>From Nashville, TN</p>
+                    </li>
+                    <li>
+                        <img src="{% static "images/socialApp/publicProfile/feeling.svg" %}"/>
+                        <p>Feeling excited!</p>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock body %}
