@@ -3,3 +3,4 @@ virtualenv/
 .venv
 Pipfile
 Pipfile.lock
+.vscode

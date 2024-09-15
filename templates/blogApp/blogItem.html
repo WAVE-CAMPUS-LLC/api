@@ -3,15 +3,15 @@
 {% load widget_tweaks %}
 
 {% block title %}
-{{ blog.title}} — Wave.  
+{{ blog.title }} — Wave.
 {% endblock title %}
 
 {% block app_page_style %}
-<link rel="stylesheet" type="text/css" href="{% static "/styles/blogApp/blogItem.css" %}" />
+<link rel="stylesheet" type="text/css" href="{% static '/styles/blogApp/blogItem.css' %}?v={{ time }}" />
 {% endblock app_page_style %}
 
 {% block script %}
-<script type="text/javascript" src="{% static "/scripts/blogApp/blogItem.js" %}" defer></script>
+<script type="text/javascript" src="{% static '/scripts/blogApp/blogItem.js' %}?v={{ time }}" defer></script>
 {% endblock script %}
 
 {% block header %}
@@ -19,83 +19,182 @@
 {% endblock header %}
 
 {% block body %}
-
-
-
 <div id="content-container">
-    <form method="POST" action="{% url "blog:blogView" blogId=blog.blogId %}">
-        <div id="page-heading">
-            <h6>{{ blog.blogType }}</h6>
-            
-            <div style="display: flex; flex-direction: row; justify-content: space-between; align-items: flex-start;">
+    <div id="page-heading">
+        <div id="blogType-and-editButton">
+                <form method="POST" action="{% url 'blog:blogView' blogId=blog.blogId %}" id="typeInput-and-saveButton">
+                    <input type="hidden" name="field" value="type-info" />
+                    {% csrf_token %}
+                    <div class="formRow">
+                        <label for="{{ typeFieldForm.blogType.id_for_label }}" class="formLabel">
+                            <h5 id="type">Type: {{ blog.blogType }}</h5>
+                            <select 
+                                name="{{ typeFieldForm.blogType.name }}" 
+                                id="type-input"
+                                style="display: none;"
+                                required>
+                                <option value="Review" {% if blog.blogType == "Review" %}selected{% endif %}>Review</option>
+                                <option value="Anticipation" {% if blog.blogType == "Anticipation" %}selected{% endif %}>Anticipation</option>
+                                <option value="Safety" {% if blog.blogType == "Safety" %}selected{% endif %}>Safety</option>
+                            </select>
+                        </label>
+                    </div>
+                    <div class="submit-row">
+                        <button type="submit" id="save-type" style="display: none;">Save Type</button>
+                    </div>
+                
+            </form>
+                {% if request.user.is_authenticated %}
+                <button type="button" id="edit-btn" >
+                    <img id="edit-img" src="{% static 'images/home/edit-svgrepo-com.svg' %}" alt="Edit">
+                    <span style="margin-left: 5px;">Edit Blog</span>
+                </button>
+                {% endif %}
+        </div>
+
+        <form method="POST" action="{% url 'blog:blogView' blogId=blog.blogId %}">
+            {% csrf_token %}
+            <div class="formRow">
                 <div>
                     <input type="hidden" name="field" value="title-info" />
-                    {% csrf_token %}
-                    
                     <label for="{{ titleFieldForm.title.id_for_label }}" class="formLabel">
                         <h2 id="title">{{ blog.title }}</h2>
                         <input
-                            type="text" 
+                            type="text"
                             name="{{ titleFieldForm.title.name }}"
-                            id="title-input" 
+                            id="title-input"
                             style="display: none; font-size: 2em; font-weight: bold; width: auto;"
                         />
                     </label>
                 </div>
-                    
                 <div class="submit-row">
-                    <button type="submit" id="save-btn" style="display: none;">Save</button>
+                    <button type="submit" id="save-title" style="display: none;">Save Title</button>
+                </div>
+            </div>
+        </form>
+        
+        <form method="POST" action="{% url 'blog:blogView' blogId=blog.blogId %}" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div id="news-header">
+                <div id="nH-image-container" style="background-image: url('{{ blog.imageOne.url }}');">
+                    <div id="display-header">
+                        <img id="header-img" src="{{ blog.imageOne.url }}" />
+                    </div>
                 </div>
             </div>
             
-            <!-- Moved inside form for consistency -->
-            <button type="button" id="edit-btn" style="display: flex; align-items: center; cursor: pointer; background: none; border: none; padding: 0;">
-                <img style="padding-top: 5px;" src="{% static 'images/home/edit-svgrepo-com.svg' %}" alt="Edit"> 
-                <span style="margin-left: 5px;">Edit title</span>
-            </button>
-        </div>
-    </form>
+            <div style="display: flex; flex-direction: row;align-items: center; justify-content: space-between;">
+                <div class="formRow">
+                    <input type="hidden" name="field" value="imageOne-info" />
+                    <label for="{{ imageOneForm.imageOne.id_for_label }}" class="formLabel" style="margin-right: auto;">
+                        <div id="news-header-input" style="display: none;">
+                            <p class="rowTitle" style="padding-bottom: 10px;">Upload New Header Image</p>
+    
+                            <input type="file" 
+                                name="{{ imageOneForm.imageOne.name }}"
+                                id="{{ imageOneForm.imageOne.id_for_label }}" 
+                                accept="image/*" />
+                        </div>
+                    </label>
+                </div>
+                <div class="submit-row">
+                    <button type="submit" id="save-imageOne" style="display: none;">Save Header Image</button>
+                </div>
+            </div>
+        </form>
+        <div id="blog-content">
+            <div class="blogContent-Sidebar">
+                <div class="blogContent-Sidebar-container">
+                    <div class="userDate-published">
+                        <h6>By <a href="{% url 'accountManagement:memberProfile' username=blog.created_by.username %}" id="username">@{{ blog.created_by.username }}</a></h6>
+                        <p>{{ blog.created_at|date:"F d, Y" }}</p>
+                    </div>
+                    <div class="bCS-divider">
+                        <hr>
+                    </div>
+                </div>
+            </div>
 
 
-    <div id="news-header">
-        <div id="nH-image-container" style="background-image: url('{{ blog.imageOne.url }}');">
-            <div id="display-header">
-                <img id="header-img" src="{{blog.imageOne.url}}" />
+            <div class="blogContent-Main">
+                <form method="POST" action="{% url 'blog:blogView' blogId=blog.blogId %}">
+                    {% csrf_token %}
+                    <div>
+                        <input type="hidden" name="field" value="body-info" />
+                        <label for="{{ bodyFieldForm.body.id_for_label }}" class="formRow" style="margin-right: auto;">
+                            <p id="blog-body">{{ blog.body }}</p>
+                            <textarea
+                            name="{{ bodyFieldForm.body.name }}"
+                            id="blog-body-input"
+                            style="display: none; width: 100%;"
+                        >{{blog.body}}</textarea>
+                        </label>
+                        <div class="submit-row">
+                            <button type="submit" id="save-blog-body" style="display: none;">Save Body</button>
+                        </div>
+                    </div>
+                </form>
+
+                <div>
+                    <div class="bodyImages" id="images">
+                        {% if blog.imageOne %}
+                        <img src="{{ blog.imageOne.url }}" />
+                        {% endif %}
+                        {% if blog.imageTwo %}
+                        <img src="{{ blog.imageTwo.url }}" />
+                        {% endif %}
+                        {% if blog.imageThree %}
+                        <img src="{{ blog.imageThree.url }}" />
+                        {% endif %}
+                    </div>
+    
+                    <form method="POST" action="{% url 'blog:blogView' blogId=blog.blogId %}" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div style="display: flex; flex-direction: row;align-items: center; justify-content: space-between; padding: 5px;">
+                            <div class="formRow">
+                                <div id="image-two">
+                                    <input type="hidden" name="field" value="imageTwo-info" />
+                                    <label for="{{ imageTwoForm.imageTwo.id_for_label }}" class="formLabel">
+                                        <div id="imageTwo-input" style="display: none;">
+                                            <p class="rowTitle">Update Body Image 1</p>
+                                            <input type="file" 
+                                                name="{{ imageTwoForm.imageTwo.name }}"
+                                                id="{{ imageTwoForm.imageThree.id_for_label }}" 
+                                                accept="image/*" />
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="submit-row">
+                                <button type="submit" id="save-imageTwo" style="display: none;">Save Image 1</button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <form method="POST" action="{% url 'blog:blogView' blogId=blog.blogId %}" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div style="display: flex; flex-direction: row;align-items: center; justify-content: space-between; padding: 5px;">
+                            <div class="formRow">
+                                <div>
+                                    <input type="hidden" name="field" value="imageThree-info" />
+                                    <label for="{{ imageThreeForm.imageThree.id_for_label }}" class="formLabel">
+                                        <div id="imageThree-input" style="display: none;">
+                                            <p class="rowTitle">Update Body Image 2</p>
+                                            <input type="file" 
+                                                name="{{ imageThreeForm.imageThree.name }}"
+                                                id="{{ imageThreeForm.imageThree.id_for_label }}" 
+                                                accept="image/*" />
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="submit-row">
+                                <button type="submit" id="save-imageThree" style="display: none;">Save Image 2</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>      
             </div>
         </div>
     </div>
-
-    <div id="blog-content">
-        <div class="blogContent-Sidebar">
-            <div class="blogContent-Sidebar-container">
-                <div class="userDate-published">
-                    <h6>By <a href="{% url "accountManagement:memberProfile" username=blog.created_by.username %}" id="username">@{{ blog.created_by.username }}</a></h6>
-                    <p>{{ blog.created_at|date:"F d, Y" }}</p>
-                </div>
-                <div class="bCS-divider">
-                    <hr>
-                </div>
-            </div>
-        </div>
-        <div class="blogContent-Main">
-            <p>
-                {{ blog.body }}
-            </p>
-
-            <div class="bodyImages">
-                {% if blog.imageOne %}
-                <img src="{{ blog.imageOne.url }}" />
-                {% endif %}
-
-                {% if blog.imageTwo %}
-                <img src="{{ blog.imageTwo.url }}" />
-                {% endif %}
-
-                {% if blog.imageThree %}
-                <img src="{{ blog.imageThree.url }}" />
-                {% endif %}
-            </div>
-        </div>
-    </div>
-</div>
 {% endblock body %}

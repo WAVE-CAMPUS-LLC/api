@@ -1,31 +1,53 @@
 document.addEventListener("DOMContentLoaded", function () {
-  // Get the elements
+  const editBtn = document.getElementById("edit-btn");
+
+  const type = document.getElementById("type");
+  const typeInput = document.getElementById("type-input");
+  const saveType = document.getElementById("save-type");
+
   const title = document.getElementById("title");
   const titleInput = document.getElementById("title-input");
-  const editBtn = document.getElementById("edit-btn");
-  const saveBtn = document.getElementById("save-btn");
+  const saveTitle = document.getElementById("save-title");
 
-  // Function to switch to edit mode (show input field)
+  const imageOne = document.getElementById("nH-image-container");
+  const imageOneInput = document.getElementById("news-header-input");
+  const saveImageOne = document.getElementById("save-imageOne");
+
+  const body = document.getElementById("blog-body");
+  const bodyInput = document.getElementById("blog-body-input");
+  const saveBody = document.getElementById("save-blog-body");
+
+  const imageTwoAndThree = document.getElementById("images");
+  const imageTwoInput = document.getElementById("imageTwo-input");
+  const imageThreeInput = document.getElementById("imageThree-input");
+  const saveImageTwo = document.getElementById("save-imageTwo");
+  const saveImageThree = document.getElementById("save-imageThree");
+
   editBtn.addEventListener("click", function () {
+    editBtn.style.display = "none";
+
+    type.style.display = "none";
+    typeInput.style.display = "block";
+    saveType.style.display = "block";
+
     titleInput.value = title.textContent;
-    title.style.display = "none"; // Hide the <h2>
-    titleInput.style.display = "block"; // Show the input field
-    editBtn.style.display = "none"; // Hide the Edit button
-    saveBtn.style.display = "block"; // Show the Save button
-  });
+    title.style.display = "none";
+    titleInput.style.display = "block";
+    saveTitle.style.display = "block";
 
-  // Function to handle saving the updated title
-  saveBtn.addEventListener("click", function () {
-    const form = titleInput.closest("form");
-    form.submit(); // Submit the form when Save button is clicked
-  });
+    imageOne.style.display = "none";
+    imageOneInput.style.display = "block";
+    saveImageOne.style.display = "block";
 
-  // // Function to save the updated title
-  // saveBtn.addEventListener("click", function () {
-  //   title.textContent = titleInput.value; // Update <h2> text with input value
-  //   title.style.display = "block"; // Show the <h2> again
-  //   titleInput.style.display = "none"; // Hide the input field
-  //   editBtn.style.display = "flex"; // Show the Edit button again
-  //   saveBtn.style.display = "none"; // Hide the Save button
-  // });
+    bodyInput.value = body.textContent;
+    body.style.display = "none";
+    bodyInput.style.display = "block";
+    saveBody.style.display = "block";
+
+    imageTwoAndThree.style.display = "none";
+    imageTwoInput.style.display = "block";
+    imageThreeInput.style.display = "block";
+    saveImageTwo.style.display = "block";
+    saveImageThree.style.display = "block";
+  });
 });
