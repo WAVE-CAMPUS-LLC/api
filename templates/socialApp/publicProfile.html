@@ -32,10 +32,43 @@
         </div>
         
         <div class="connectRow">
-            <button class="connectBtn" type="button" role="button">
-                <img src="{% static "images/socialApp/connect.svg" %}" />
-                Connect
-            </button>
+            {% if friend_request_status == "pending" %}
+            <form method="POST" class="actionForm">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="cancel_request">
+                <div class="statusDisplay pending">
+                    <img src="{% static "images/socialApp/pending.svg" %}" alt="Connect" />
+                    {{ friend_request_status }}
+                </div>
+                <button class="cancelBtn" type="submit">
+                    Cancel
+                </button>
+            </form>
+            {% elif friend_request_status == "accepted" %}
+            <form method="POST" class="actionForm">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="remove_request">
+                <div class="statusDisplay connected">
+                    <img src="{% static "images/socialApp/connected.svg" %}" alt="Connect" />
+                    {{ friend_request_status }}
+                </div>
+                <button class="removeBtn" type="submit">
+                    Remove
+                </button>
+            </form>
+            {% else %}
+            <form method="POST" class="actionForm">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="send_request">
+                <button class="connectBtn" type="submit">
+                    <img src="{% static "images/socialApp/connect.svg" %}" alt="Connect" />
+                    Connect
+                </button>
+            </form>
+            {% endif %}
+            
+
+
         </div>
     </div>
 

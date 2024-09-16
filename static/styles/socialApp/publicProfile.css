@@ -69,12 +69,69 @@
     border: transparent;
 }
 
+.cancelBtn, 
+.removeBtn {
+    padding: 12.5px 15px;
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    align-items: center;
+    color: white;
+
+    border-radius: 15px;
+    background-color: red;
+    cursor: pointer;
+
+    font-family: Wanted-Medium;
+    font-size: 17px;
+
+    border: transparent;
+}
+
 .connectBtn:hover {
     background-color: #008d95;
 }
 
-/* Social Body */
+/* Action Form Design */
+.actionForm {
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
 
+}
+
+.statusDisplay {
+    text-transform: capitalize;
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    align-items: center;
+
+    padding: 15px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    border-radius: 15px;
+
+    display: flex;
+    align-items: center;
+
+    font-family: Wanted-Medium;
+    font-size: 17px;
+
+    background-color: white;
+}
+
+.actionForm .statusDisplay.connected {
+    border: 2px solid #0fc70f;
+    color: #0fc70f;    
+}
+
+.actionForm .statusDisplay.pending {
+    border: 2px solid #ffff00;
+    color: #ffff00;
+}
+
+/* Social Body */
 .social-body {
     width: 100%;
     display: flex;
