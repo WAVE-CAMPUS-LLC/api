@@ -4,3 +4,5 @@ virtualenv/
 Pipfile
 Pipfile.lock
 .vscode
+**/__pycache__/
+*.py[cod]
