@@ -82,13 +82,13 @@
     gap: 50px;
 }
 
-.sh-container {
+.info-container {
     display: flex;
     flex-direction: column;
     gap: 70px;
 }
 
-.sh-container .row-one {
+.info-container .row-one {
     display: flex;
     flex-direction: column;
     gap: 20px;
@@ -247,4 +247,92 @@
     width: 80px;
     height: 80px;
     border-radius: 50%;
+}
+
+/* Friend Request Section */
+.request-home-body {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    color: black;
+}
+
+.request-item {
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+}
+
+.request-left {
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+    align-items: center;
+}
+
+.request-pfp img{
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+}
+
+.request-names {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.request-names h1 {
+    font-family: Wanted-Regular;
+    font-size: 22px;
+    color: black;
+}
+
+.request-names p {
+    font-family: Wanted-Variable;
+    font-size: 14px;
+    color: rgba(128, 128, 128, 0.459);
+}
+
+.request-actions {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+}
+
+.request-actions button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    border-radius: 50%;
+}
+
+/* Empty Container */
+.emptyContainer {
+    width: 100%;
+    border-radius: 20px;
+    padding-top: 70px;
+    padding-bottom: 70px;
+
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+
+    background-color: rgba(146, 146, 146, 0.096);
+}
+
+.emptyContainer img {
+    width: 60px;
+}
+
+.emptyContainer p {
+    font-family: Wanted-Variable;
+    font-size: 16.5px;
+    color: black;
+    text-align: center;
 }

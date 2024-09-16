@@ -10,6 +10,7 @@ My Social @{{ user.username }} — WAVE.
 {% endblock app_page_style %}
 
 {% block script %}
+<script type="text/javascript" src="{% static "scripts/socialApp/tabControl.js" %}" defer></script>
 {% endblock script %}
 
 
@@ -38,34 +39,34 @@ My Social @{{ user.username }} — WAVE.
         </div>
     </div>
 
-    <div class="social-body">
+    <div class="social-body" id="socialBody">
         <div class="manage-menu">
             <div class="menu-header">
                 <h4>Manage Social</h4>
             </div>
             <div class="manage-list">
                 <ul>
-                    <li>
+                    <li role="button" type="button" class="social-tab tab-active" data-tab="home">
                         <p>Home</p>
                     </li>
-                    <li>
+                    <li role="button" type="button" class="social-tab" data-tab="friend-requests">
                         <p>Friend Requests</p>
                     </li>
-                    <li>
+                    <li role="button" type="button" class="social-tab" data-tab="invitations">
                         <p>Invitations</p>
                     </li>
-                    <li>
+                    <li role="button" type="button" class="social-tab" data-tab="my-groups">
                         <p>Groups</p>
                     </li>
-                    <li>
+                    <li role="button" type="button" class="social-tab" data-tab="shared">
                         <p>Shared</p>
                     </li>
                 </ul>
             </div>
         </div>
         <div class="display-info">
-            <div id="social-home">
-                <div class="sh-container">
+            <div class="social-home-elements" id="home">
+                <div class="info-container">
                     <div class="row-one">
                         <div class="home-header">
                             <h4>My Socials</h4>
@@ -157,6 +158,81 @@ My Social @{{ user.username }} — WAVE.
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
+            <div class="social-home-elements" id="friend-requests">
+                <div class="info-container">
+                    <div class="home-header">
+                        <h4>
+                            Friend Requests
+                        </h4>
+                    </div>
+                    {% if pending_friend_requests %}
+                    <div class="request-home-body">
+                        {% for request in pending_friend_requests %}
+                        <div class="request-item">
+                            <div class="request-left">
+                                <div class="request-pfp">
+                                    <img src="{% static "images/socialApp/publicProfile/profile/E.L.png" %}" alt="Profile Picture" />
+                                </div>
+                                <div class="request-names">
+                                    <h1>{{ request }}</h1>
+                                    <p>Sent at {{ request.created_at|date:"H:i A" }}</p>
+                                </div>
+                            </div>
+                            <div class="request-actions">
+                                <form method="POST">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="friend_request_id" value="{{ request.requestId }}">
+                                    <input type="hidden" name="action" value="acceptRequest">  
+                                    <button class="accept" type="submit" role="button">
+                                        <img src="{% static "/images/socialApp/socialHome/accept.svg" %}" alt="Accept Friend Request">
+                                    </button>
+                                    
+                                </form>
+
+                                <form method="POST">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="friend_request_id" value="{{ request.requestId }}">
+                                    <input type="hidden" name="action" value="declineRequest"> 
+                                    <button class="decline" type="submit" role="button">
+                                        <img src="{% static "/images/socialApp/socialHome/decline.svg" %}" alt="Decline Friend Request">
+                                    </button>
+                                </form>
+                            </div>
+                            
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="emptyContainer">
+                        <div>
+                            <img src="{% static "/images/collegeManagementApp/collegeInformation/empty-listing.svg" %}" />
+                        </div>
+                        <div>
+                            <p>
+                                Currently no friend requests. 
+                                <br>
+                                Let your friends know about WAVE.
+                            </p>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="social-home-elements" id="invitations">
+                <div class="info-container">
+                    Invitations
+                </div>
+            </div>
+            <div class="social-home-elements" id="my-groups">
+                <div class="info-container">
+                    My Groups
+                </div>
+            </div>
+            <div class="social-home-elements" id="shared">
+                <div class="info-container">
+                    Shared
                 </div>
             </div>
         </div>

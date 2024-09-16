@@ -14,6 +14,10 @@ class FriendRequest(models.Model):
         ("accepted", "Accepted"),
     ]
 
+    requestId = models.UUIDField(
+        primary_key=True, default=uuid.uuid4, editable=False, unique=True
+    )
+
     sender = models.ForeignKey(
         settings.AUTH_USER_MODEL, related_name="sent_requests", on_delete=models.CASCADE
     )
@@ -38,3 +42,11 @@ class FriendRequest(models.Model):
 
     def __str__(self):
         return f"{self.sender.username} -> {self.receiver.username} ({self.status})"
+
+    def acceptRequest(self):
+        self.status = "accepted"
+        self.save()
+
+    def declineRequest(self):
+        self.status = "declined"
+        self.save()

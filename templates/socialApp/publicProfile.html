@@ -32,6 +32,11 @@
         </div>
         
         <div class="connectRow">
+        {% if is_profile %}
+            <div>
+                <p class="cant-connect">Can't Connect!</p>
+            </div>
+        {% else %}
             {% if friend_request_status == "pending" %}
             <form method="POST" class="actionForm">
                 {% csrf_token %}
@@ -50,7 +55,7 @@
                 <input type="hidden" name="action" value="remove_request">
                 <div class="statusDisplay connected">
                     <img src="{% static "images/socialApp/connected.svg" %}" alt="Connect" />
-                    {{ friend_request_status }}
+                    Connected
                 </div>
                 <button class="removeBtn" type="submit">
                     Remove
@@ -66,9 +71,7 @@
                 </button>
             </form>
             {% endif %}
-            
-
-
+        {% endif %}
         </div>
     </div>
 

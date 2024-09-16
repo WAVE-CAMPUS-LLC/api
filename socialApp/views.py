@@ -18,7 +18,29 @@ UserModel = get_user_model()
 # Create your views here.
 @login_required
 def socialHomeView(request):
-    return render(request, "socialApp/socialHome.html")
+    pending_friend_requests  = FriendRequest.objects.filter(receiver=request.user, status="pending")
+    
+    if request.method == "POST":
+        action = request.POST.get('action')
+        friend_request_id = request.POST.get('friend_request_id')
+        
+        try:
+            friend_request = FriendRequest.objects.get(requestId=friend_request_id, receiver=request.user)
+
+            if action == 'acceptRequest':
+                friend_request.acceptRequest()
+                messages.success(request, "Friend request accepted.")
+            
+            elif action == 'declineRequest':
+                friend_request.declineRequest()
+                messages.success(request, "Friend request declined.")
+
+
+        except FriendRequest.DoesNotExist:
+            messages.warning(request, "Friend request not found.")
+            
+            
+    return render(request, "socialApp/socialHome.html", {'pending_friend_requests': pending_friend_requests})
 
 
 def publicProfileView(request, username):
@@ -35,6 +57,8 @@ def publicProfileView(request, username):
         friend_request_status = None
         if friend_request:
             friend_request_status = friend_request.status
+            
+        is_profile = request.user == user
 
         if request.method == "POST":
             action = request.POST.get("action")
@@ -77,6 +101,7 @@ def publicProfileView(request, username):
             "user": user,
             "user_profile": user_profile,
             "friend_request_status": friend_request_status,
+            "is_profile": is_profile,
         },
     )
 
