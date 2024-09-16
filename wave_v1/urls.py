@@ -33,6 +33,7 @@ urlpatterns = [
     path("", include("careerApp.urls")),
     path("", include("newsroomApp.urls")),
     path("", include("socialApp.urls")),
+    path("blog/", include("blogApp.urls")),
     path("admin/", admin.site.urls),
 ]
 
