@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     "collegeManagementApp",
     "socialApp",
     "newsroomApp",
+    "blogApp",
     "widget_tweaks"
 ]
 
