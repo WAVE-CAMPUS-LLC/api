@@ -28,7 +28,7 @@
                             {% if user|has_group:"Host" %}
                             <a id="host" href="{% url "eventManagement:hostCreateEvent" %}">
                                 <img src="{% static "/images/eventManagementApp/host/host_ticket.svg" %}" />
-                                Create Event
+                                Host Portal
                             </a>
                             {% else %}
                             <a id="host" href="{% url "eventManagement:hostGuide" %}">
@@ -42,9 +42,9 @@
                                 Join Campus!
                             </a>
                         {% else %}
-                        <a id="host" href="{% url "eventManagement:hostCreateEvent" %}">
+                        <a id="host" target="_blank" href="{% url "eventManagement:hostPortal" %}">
                             <img src="{% static "/images/eventManagementApp/host/host_ticket.svg" %}" />
-                            Create Event
+                            Host Portal
                         </a>
                         {% endif %}
                     {% else %}

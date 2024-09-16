@@ -51,7 +51,7 @@ class EventForm(forms.ModelForm):
         widget=forms.TimeInput(format="%H:%M", attrs={"type": "time"}),
         input_formats=["%H:%M"],
     )
-    
+
     end_time = forms.TimeField(
         label=_("End time"),
         required=False,
@@ -86,20 +86,22 @@ class EventForm(forms.ModelForm):
             "body_photo_two",
             "body_photo_three",
             "body_photo_four",
-            "body_photo_five"
+            "body_photo_five",
         ]
         widgets = {
             "privacy": forms.Select(attrs={"class": "event-privacy"}),
             "country": forms.Select(),
             "status": forms.HiddenInput(),
         }
-        
 
 
 class EventTicketForm(forms.ModelForm):
     class Meta:
         model = EventTicket
-        fields = ["ticket_total", "type_name", "type_quantity"]
-
-
-# EventTicketFormSet = modelformset_factory(EventTicket, form=EventTicketForm, extra=1)
+        fields = [
+            "ticket_name",
+            "ticket_type",
+            "ticket_price",
+            "ticket_description",
+            "ticket_quantity",
+        ]
