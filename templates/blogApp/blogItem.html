@@ -44,7 +44,7 @@
                     </div>
                 
             </form>
-            {% if request.user. request.user == blog.created_by%}
+            {% if request.user.is_authenticated and request.user == blog.created_by%}
             <button type="button" id="edit-btn" >
                 <img id="edit-img" src="{% static 'images/home/edit-svgrepo-com.svg' %}" alt="Edit">
                 <span style="margin-left: 5px;">Edit Blog</span>
