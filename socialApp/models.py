@@ -1,3 +1,4 @@
+import re
 import uuid
 from django.db import models
 from django.utils.translation import gettext as _
@@ -50,3 +51,31 @@ class FriendRequest(models.Model):
     def declineRequest(self):
         self.status = "declined"
         self.save()
+
+
+class FriendGroups(models.Model):
+    friendGroupId = models.UUIDField(
+        primary_key=True, default=uuid.uuid4, editable=False, unique=True
+    )
+    name = models.CharField(_("Group Name"), max_length=100, null=False, blank=False)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="friend_groups",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return self.name
+
+
+class GroupMember(models.Model):
+    group = models.ForeignKey(FriendGroups, on_delete=models.CASCADE, related_name='members')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    joined_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('group', 'user')
+
+    def __str__(self):
+        return f"{self.user.username} in {self.group.name}"

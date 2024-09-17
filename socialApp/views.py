@@ -18,7 +18,11 @@ UserModel = get_user_model()
 # Create your views here.
 @login_required
 def socialHomeView(request):
+    
+    
     pending_friend_requests  = FriendRequest.objects.filter(receiver=request.user, status="pending")
+    friends = FriendRequest.objects.filter(Q(sender=request.user) | Q(receiver=request.user), status="accepted")
+    
     
     if request.method == "POST":
         action = request.POST.get('action')
@@ -40,7 +44,7 @@ def socialHomeView(request):
             messages.warning(request, "Friend request not found.")
             
             
-    return render(request, "socialApp/socialHome.html", {'pending_friend_requests': pending_friend_requests})
+    return render(request, "socialApp/socialHome.html", {'pending_friend_requests': pending_friend_requests, 'friends': friends})
 
 
 def publicProfileView(request, username):

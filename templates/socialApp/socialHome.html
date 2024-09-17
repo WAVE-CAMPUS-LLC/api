@@ -72,90 +72,20 @@ My Social @{{ user.username }} — WAVE.
                             <h4>My Socials</h4>
                         </div>
                         <div class="home-body">
+                            {% for friend in friends %}
                             <div class="user-card">
                                 <div class="user-pfp">
                                     <img src="{% static "images/socialApp/publicProfile/profile/E.L.png" %}" alt="Profile Picture" />
                                 </div>
                                 <div class="user-names">
-                                    <h1>Elon Musk</h1>
+                                    <h1>{{ friend.sender.first_name }} {{ friend.sender.last_name }}</h1>
                                     <p>Class of 28'</p>
                                 </div>
                                 <div class="user-actions">
-                                    <a href="#">View Social</a>
+                                    <a target="_blank" href="{% url "social:publicProfile" username=friend.sender.username %}">View Social</a>
                                 </div>
                             </div>
-    
-                            <div class="user-card">
-                                <div class="user-pfp">
-                                    <img src="{% static "images/socialApp/publicProfile/profile/E.L.png" %}" alt="Profile Picture" />
-                                </div>
-                                <div class="user-names">
-                                    <h1>Elon Musk</h1>
-                                    <p>Class of 28'</p>
-                                </div>
-                                <div class="user-actions">
-                                    <a href="#">View Social</a>
-                                </div>
-                            </div>
-    
-                            <div class="user-card">
-                                <div class="user-pfp">
-                                    <img src="{% static "images/socialApp/publicProfile/profile/E.L.png" %}" alt="Profile Picture" />
-                                </div>
-                                <div class="user-names">
-                                    <h1>Elon Musk</h1>
-                                    <p>Class of 28'</p>
-                                </div>
-                                <div class="user-actions">
-                                    <a href="#">View Social</a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row-one">
-                        <div class="home-header">
-                            <h4>Our Suggestions</h4>
-                        </div>
-                        <div class="home-body">
-                            <div class="user-card">
-                                <div class="user-pfp">
-                                    <img src="{% static "images/socialApp/publicProfile/profile/E.L.png" %}" alt="Profile Picture" />
-                                </div>
-                                <div class="user-names">
-                                    <h1>Elon Musk</h1>
-                                    <p>Class of 28'</p>
-                                </div>
-                                <div class="user-actions">
-                                    <a href="#">View Social</a>
-                                </div>
-                            </div>
-    
-                            <div class="user-card">
-                                <div class="user-pfp">
-                                    <img src="{% static "images/socialApp/publicProfile/profile/E.L.png" %}" alt="Profile Picture" />
-                                </div>
-                                <div class="user-names">
-                                    <h1>Elon Musk</h1>
-                                    <p>Class of 28'</p>
-                                </div>
-                                <div class="user-actions">
-                                    <a href="#">View Social</a>
-                                </div>
-                            </div>
-    
-                            <div class="user-card">
-                                <div class="user-pfp">
-                                    <img src="{% static "images/socialApp/publicProfile/profile/E.L.png" %}" alt="Profile Picture" />
-                                </div>
-                                <div class="user-names">
-                                    <h1>Elon Musk</h1>
-                                    <p>Class of 28'</p>
-                                </div>
-                                <div class="user-actions">
-                                    <a href="#">View Social</a>
-                                </div>
-                            </div>
+                            {% endfor %}
                         </div>
                     </div>
                 </div>
@@ -176,7 +106,7 @@ My Social @{{ user.username }} — WAVE.
                                     <img src="{% static "images/socialApp/publicProfile/profile/E.L.png" %}" alt="Profile Picture" />
                                 </div>
                                 <div class="request-names">
-                                    <h1>{{ request }}</h1>
+                                    <h1>{{ request.sender.first_name }} {{ request.sender.last_name }}</h1>
                                     <p>Sent at {{ request.created_at|date:"H:i A" }}</p>
                                 </div>
                             </div>
