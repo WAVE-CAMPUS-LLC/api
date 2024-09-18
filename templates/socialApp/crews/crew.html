@@ -1,0 +1,99 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}
+{{ crew.name}} — WAVE.
+{% endblock title %}
+
+{% block app_page_style %}
+<link rel="stylesheet" type="text/css" href="{% static "/styles/socialApp/crews/crew.css" %}" />
+{% endblock app_page_style %}
+
+{% block script %}
+<script type="text/javascript" src="{% static "scripts/socialApp/tabControl.js" %}" defer></script>
+{% endblock script %}
+
+
+{% block header %}
+{% include "partials/nav-footer/nav/main_nav.html" %}
+{% endblock header %}
+
+
+{% block body %}
+<div id="content-container">
+    <div id="pageHeader">
+        <h3>
+            View your crew: {{ crew.name }}
+        </h3>
+        <p>Invite your friends to join your crew and go to events with them!</p>
+    </div>
+
+    <div id="pageBody">
+        <div class="subHeader" id="subHeader">
+            <div class="crewDetailsTab tab-active" data-tab="overviewInformation">
+                Overview
+            </div>
+            <div class="crewDetailsTab" data-tab="memberInformation">
+                Members
+            </div>
+        </div>
+
+        <div id="subBody">
+            <div id="subBodyContent">
+                <div id="overviewInformation" class="overviewInformation crewTabInformation">
+                    <div class="overviewContainer">
+                        <div class="heading">
+                            <h4 class="crew-name">
+                                {{ crew.name }}
+                            </h4>
+                            
+                            <p class="created-by">
+                                Created By:
+                                <span>
+                                    {{ crew.created_by.first_name }} {{ crew.created_by.last_name }} 
+
+                                    <a target="_blank" href="{% url "social:publicProfile" username=crew.created_by.username %}">
+                                        @{{ crew.created_by.username }}
+                                    </a>
+                                </span>
+                            </p>
+                        </div>
+                        <div>
+                            <p class="bio">
+                                {{ crew.bio }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="memberInformation" class="crewTabInformation">
+                    <div class="memberContainer">
+                        <div class="inviteFriends">
+                            <input type="search" placeholder="Invite friend to join the crew" />
+                        </div>
+
+                        <div class="memberDisplay">
+                            {% for member in crewMembers %}
+                            <div id="memberItem">
+                                <div class="item-right">
+                                    <img src="{% static "/images/socialApp/publicProfile/profile/E.L.png" %}" alt="crew member" />
+                                    <div class="member-info">
+                                        <h3 class="member-name">{{ member.user.first_name }} {{ member.user.last_name }}</h3>
+                                        <p class="member-username">@enoshlartey</p>
+                                    </div>
+                                </div>
+                                <div class="item-left">
+                                    <a href="">View Crew Member</a>
+                                </div>
+                            </div>
+                            {% endfor %}
+                           
+                        </div>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock body %}

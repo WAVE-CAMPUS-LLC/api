@@ -27,6 +27,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Initialize tab systems for each body section
     initializeTabSystem('socialBody', 'social-tab', 'social-home-elements');
+    initializeTabSystem('pageBody', 'crewDetailsTab', 'crewTabInformation');
 
 
     // Function to initialize tab system for a specific body section
