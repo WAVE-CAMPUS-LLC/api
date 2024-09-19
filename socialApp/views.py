@@ -1,6 +1,7 @@
 from http.client import HTTPResponse
 from os import name
 import re
+from datetime import datetime
 from django.http import Http404, HttpResponseBadRequest
 from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth.decorators import login_required
@@ -21,6 +22,7 @@ UserModel = get_user_model()
 @login_required
 def socialHomeView(request):
     my_crews = Crew.objects.filter(members__user=request.user)
+    time = datetime.now().timestamp()
 
     pending_friend_requests = FriendRequest.objects.filter(
         receiver=request.user, status="pending"
@@ -52,7 +54,7 @@ def socialHomeView(request):
     return render(
         request,
         "socialApp/socialHome.html",
-        {"pending_friend_requests": pending_friend_requests, "friends": friends, "my_crews": my_crews},
+        {"pending_friend_requests": pending_friend_requests, "friends": friends, "my_crews": my_crews, "time": time},
     )
 
 

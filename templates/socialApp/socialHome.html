@@ -6,7 +6,7 @@ My Social @{{ user.username }} — WAVE.
 {% endblock title %}
 
 {% block app_page_style %}
-<link rel="stylesheet" type="text/css" href="{% static "/styles/socialApp/socialHome.css" %}" />
+<link rel="stylesheet" type="text/css" href="{% static "/styles/socialApp/socialHome.css" %}?v={{ time }}" />
 {% endblock app_page_style %}
 
 {% block script %}
@@ -50,7 +50,18 @@ My Social @{{ user.username }} — WAVE.
                         <p>Home</p>
                     </li>
                     <li role="button" type="button" class="social-tab" data-tab="friend-requests">
-                        <p>Friend Requests</p>
+                        <div id="friend-requests">
+                            <p>Friend Requests</p>
+                            {% if pending_friend_requests %}
+                                <span id="number-of-requests">
+                                    {% if pending_friend_requests|length > 9 %}
+                                        9+
+                                    {% else %}
+                                        {{ pending_friend_requests|length }}
+                                    {% endif %}
+                                </span>
+                            {% endif %}
+                        </div>
                     </li>
                     <li role="button" type="button" class="social-tab" data-tab="invitations">
                         <p>Invitations</p>

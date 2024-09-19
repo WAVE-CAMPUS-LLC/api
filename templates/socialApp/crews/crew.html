@@ -76,18 +76,19 @@
                             {% for member in crewMembers %}
                             <div id="memberItem">
                                 <div class="item-right">
-                                    <img src="{% static "/images/socialApp/publicProfile/profile/E.L.png" %}" alt="crew member" />
+                                    <div class="ir-pfp">
+                                        <img src="{% static "/images/socialApp/publicProfile/profile/E.L.png" %}" alt="crew member" />
+                                    </div>
                                     <div class="member-info">
                                         <h3 class="member-name">{{ member.user.first_name }} {{ member.user.last_name }}</h3>
                                         <p class="member-username">@enoshlartey</p>
                                     </div>
                                 </div>
                                 <div class="item-left">
-                                    <a href="">View Crew Member</a>
+                                    <a target="_blank" href="{% url "social:publicProfile" username=member.user.username %}">View Crew Member</a>
                                 </div>
                             </div>
                             {% endfor %}
-                           
                         </div>
                         
                     </div>

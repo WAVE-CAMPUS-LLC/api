@@ -512,3 +512,21 @@
     font-size: 16px;
     color: rgba(0, 0, 0, 0.459);
 }
+
+#friend-requests {
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center;
+}
+
+#number-of-requests {
+    background-color: red;
+    color: white;
+    border-radius: 50%;
+    padding: 5px 10px;
+    font-size: 14px;
+    font-weight: bold;
+    display: inline-block;
+    min-width: 20px;
+    text-align: center;
+}
