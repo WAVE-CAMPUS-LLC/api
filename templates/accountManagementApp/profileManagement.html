@@ -10,6 +10,7 @@ Profile Overview
 {% endblock app_page_style %}
 
 {% block script %}
+<script type="text/javascript" src="{% static "/scripts/accountManagementApp/settings/profileManagement.js" %}" defer></script>
 {% endblock script %}
 
 
@@ -69,15 +70,18 @@ Profile Overview
         </div>
         <!--User Card | End-->
 
-        <div class="cc-sub-body">
+        <div class="cc-sub-body" id="cc-sub-body">
             <div id="side-nav">
                 <div id="settings">
                     <ul>
-                        <li>
-                            <a href="#">My Purchases</a>
+                        <li class="profile-tab tab-active" data-tab="myEvents-information">
+                            <a>My Events</a>
                         </li>
                         <li>
-                            <a href="#">My Listings</a>
+                            <a target="_blank" href="{% url "eventManagement:hostHome" %}">Event Hosting</a>
+                        </li>
+                        <li class="profile-tab" data-tab="myBlog-information">
+                            <a>Blog</a>
                         </li>
                         <li>
                             <a href="{% url "accountManagement:userSettings" %}">Settings</a>
@@ -118,7 +122,7 @@ Profile Overview
                 </div>
             </div>
             <div class="main-content">
-                <div class="host-info">
+                <div class="host-info profile-tab-content" id="myEvents-information">
                     <div class="mchi-heading">
                         <h5>Host Your Event</h5>
                     </div>
@@ -139,6 +143,42 @@ Profile Overview
                             <div>
                                 <a target="_blank" href="{% url "eventManagement:hostHome" %}">Learn More</a>
                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- inline style to stop blogs briefly showing on page refresh -->
+                <div class="profile-tab-content" id="myBlog-information" style="display:none;">
+                    <div class="blog-tab">
+                        <div class="header">
+                            <div class="headerRow">
+                                <h3 class="heading">My Blog Posts</h3>
+                            </div>
+                            
+                            <div class="createBlog">
+                                <a target="_blank" href="{% url "blog:createBlog" %}">Create Blog</a>
+                            </div>
+                        </div>
+
+                        <div class="blogContainer">
+                            {% for blog in blogItems %}
+                            <a href="{% url "blog:blogView" blogId=blog.blogId %}" class="blogCard">
+                                <div class="blogHeader">
+                                    <img src="{{ blog.imageOne.url }}" />
+                                </div>
+                                <div class="blogBody">
+                                    <div class="blogType">
+                                        <h6>{{ blog.blogType }}</h6>
+                                    </div>
+                                    <div class="blogTitle">
+                                        <h4>{{ blog.title }}</h4>
+                                    </div>
+                                    <div class="blogDate">
+                                        <p>By {{ blog.created_by.first_name }} {{ blog.created_by.last_name }}</p>
+                                    </div>
+                                </div>
+                            </a> 
+                            {% endfor %}
                         </div>
                     </div>
                 </div>
