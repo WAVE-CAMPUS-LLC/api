@@ -422,12 +422,12 @@
 .blogType h6 {
   color: #008d95;
   font-family: Wanted-Black;
-  font-size: 22px;
+  font-size: 18px;
 }
 
 .blogTitle h4 {
   font-family: Wanted-Regular;
-  font-size: 27px;
+  font-size: 25px;
 
   white-space: nowrap; /* Prevent wrapping */
   overflow: hidden; /* Hide overflow content */
@@ -463,6 +463,8 @@
   flex-direction: row;
   justify-content: center;
   gap: 10px;
+  margin-top: 20px;
+  width: 122%;
 
   font-size: 24px;
   border-radius: 20px;
