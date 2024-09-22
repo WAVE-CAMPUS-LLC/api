@@ -1,0 +1,10 @@
+{% load static %}
+
+<link rel="stylesheet" type="text/css" href="{% static "/styles/sociaApp/extras/search-item.css" %}" />
+
+<div class="search-result-item">
+    <a class="search-result-info">
+        <h6>{{ friend.receiver.username }}</h6>
+        <p>{{ friend.first_name }}, {{ friend.last_name }}</p>
+    </a>
+</div>
