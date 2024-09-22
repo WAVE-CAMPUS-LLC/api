@@ -6,6 +6,8 @@ from django.http import Http404, HttpResponseBadRequest
 from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import get_user_model
+from django.http import JsonResponse, HttpResponseRedirect
+from django.template.loader import render_to_string 
 from accountManagementApp.models import UserProfile
 from django.contrib import messages
 from .models import FriendRequest, Crew, CrewMember
@@ -124,15 +126,12 @@ def publicProfileView(request, username):
 def send_friend_request(sender, receiver_username):
     receiver = get_object_or_404(UserProfile, user__username=receiver_username)
 
-    # First check if there's already an accepted friendship
     if sender.user_profile.is_friends_with(receiver.user):
         return False, "You are already friends."
 
-    # Check if there is already a pending request between these two users
     if sender.user_profile.has_pending_request(receiver.user):
         return False, "A friend request is already pending."
 
-    # Create a new friend request if none exists
     friend_request, created = FriendRequest.objects.get_or_create(
         sender=sender, receiver=receiver.user, defaults={"status": "pending"}
     )
@@ -193,4 +192,30 @@ def crewView(request, crewId):
     crew = Crew.objects.get(crewId=crewId)
     time = datetime.now().timestamp()
     crewMembers = CrewMember.objects.filter(crew=crew)
+    
+    if request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest':
+        query = request.GET.get('query', '')
+        
+        user_friends = FriendRequest.objects.filter(
+            Q(sender=request.user) | Q(receiver=request.user), status="accepted"
+        )
+
+        # Filter friends based on the search query (e.g., name)
+        results = user_friends.filter(
+            Q(sender__username__icontains=query) | Q(receiver__username__icontains=query)
+        )
+
+
+        # Render each result using the template
+        if results.exists():
+            results_html = []
+            for friend in results:
+                html = render_to_string('socialApp/extras/search-item.html', {'friend': friend})
+                results_html.append(html)
+            return JsonResponse({'results_html': results_html, 'no_results': False})
+        else:
+            no_results_html = render_to_string('socialApp/extras/no-result.html')
+            return JsonResponse({'results_html': [], 'no_results': True, 'no_results_html': no_results_html})
+        
+        
     return render(request, "socialApp/crews/crew.html", {'crew': crew, 'crewMembers': crewMembers, 'time': time})

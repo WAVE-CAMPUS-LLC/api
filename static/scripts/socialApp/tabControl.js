@@ -30,6 +30,7 @@ $(document).ready(function () {
 
   $("#collegeSearchContentBar").on("input", function () {
     var query = $(this).val();
+    var crewId = $("#crew-data").data("crew-id");
 
     if (query.trim() === "") {
       // If the search bar is empty, clear the results
@@ -37,7 +38,7 @@ $(document).ready(function () {
     } else {
       // If the search bar has input, perform the search
       $.ajax({
-        url: "/colleges/find/",
+        url: "/social/crew/" + crewId + "/",
         data: {
           query: query,
         },
@@ -49,6 +50,7 @@ $(document).ready(function () {
           if (data.no_results) {
             $(".searchCardBody").html(data.no_results_html);
           } else {
+            console.log(data.results_html);
             // Append each result to the search card body
             $.each(data.results_html, function (index, resultHtml) {
               $(".searchCardBody").append(resultHtml);
