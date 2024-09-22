@@ -50,7 +50,7 @@ My Social @{{ user.username }} — WAVE.
                         <p>Home</p>
                     </li>
                     <li role="button" type="button" class="social-tab" data-tab="friend-requests">
-                        <div id="friend-requests">
+                        <div id="friend-request">
                             <p>Friend Requests</p>
                             {% if pending_friend_requests %}
                                 <span id="number-of-requests">
@@ -180,7 +180,7 @@ My Social @{{ user.username }} — WAVE.
                                 </div>
                             </div>
                             <div class="cit-right">
-                                <form method="POST">
+                                <form method="POST" >
                                     <button class="accept" type="submit" role="button">
                                         <img src="{% static "/images/socialApp/socialHome/accept.svg" %}" alt="Accept Friend Request">
                                     </button>

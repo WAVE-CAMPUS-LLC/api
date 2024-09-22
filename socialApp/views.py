@@ -191,5 +191,6 @@ def createCrewView(request):
 @login_required
 def crewView(request, crewId):
     crew = Crew.objects.get(crewId=crewId)
+    time = datetime.now().timestamp()
     crewMembers = CrewMember.objects.filter(crew=crew)
-    return render(request, "socialApp/crews/crew.html", {'crew': crew, 'crewMembers': crewMembers})
+    return render(request, "socialApp/crews/crew.html", {'crew': crew, 'crewMembers': crewMembers, 'time': time})

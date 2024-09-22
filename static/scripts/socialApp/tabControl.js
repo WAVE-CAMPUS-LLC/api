@@ -1,57 +1,120 @@
-document.addEventListener('DOMContentLoaded', function () {
-    // Function to handle tab click
-    function handleTabClick(tab, tabContents) {
-        tab.forEach(tab => {
-            tab.classList.remove('tab-active');
-        });
-        this.classList.add('tab-active');
+$(document).ready(function () {
+  $("#collegeSearchBar").on("click", function () {
+    $("#collegeSearchCardModal").show();
+  });
 
-        // Logic to display corresponding content based on clicked tab
-        const tabId = this.getAttribute('data-tab');
-        showTabContent(tabContents, tabId);
+  $("#closeSearchModalButton").on("click", function () {
+    $("#collegeSearchCardModal").hide();
+    $(".searchCardBody").empty();
+    $("#collegeSearchContentBar").val("");
+  });
+
+  $(document).keydown(function (event) {
+    if (event.key == "Escape") {
+      $("#collegeSearchCardModal").hide();
+      $(".searchCardBody").empty();
+      $("#collegeSearchContentBar").val("");
     }
+  });
 
-    // Function to display corresponding content based on tab clicked
-    function showTabContent(contents, tabId) {
-        // Hide all tab contents
-        contents.forEach(content => {
-            content.style.display = 'none';
-        });
-
-        // Show the selected tab content
-        const selectedTabContent = document.getElementById(tabId);
-        if (selectedTabContent) {
-            selectedTabContent.style.display = 'block';
-        }
+  $(document).click(function (event) {
+    if (
+      !$(event.target).closest("#find-colleges").length &&
+      !$(event.target).closest(".searchCard").length
+    ) {
+      $("#collegeSearchCardModal").hide();
+      $(".searchCardBody").empty();
+      $("#collegeSearchContentBar").val("");
     }
+  });
 
-    // Initialize tab systems for each body section
-    initializeTabSystem('socialBody', 'social-tab', 'social-home-elements');
-    initializeTabSystem('pageBody', 'crewDetailsTab', 'crewTabInformation');
+  $("#collegeSearchContentBar").on("input", function () {
+    var query = $(this).val();
 
+    if (query.trim() === "") {
+      // If the search bar is empty, clear the results
+      $(".searchCardBody").empty();
+    } else {
+      // If the search bar has input, perform the search
+      $.ajax({
+        url: "/colleges/find/",
+        data: {
+          query: query,
+        },
+        dataType: "json",
+        success: function (data) {
+          $(".searchCardBody").empty(); // Clear previous results
 
-    // Function to initialize tab system for a specific body section
-    function initializeTabSystem(bodyId, tabClass, contentClass) {
-        const tabs = document.querySelectorAll(`#${bodyId} .${tabClass}`);
-        const tabContents = document.querySelectorAll(`#${bodyId} .${contentClass}`);
-
-        tabs.forEach(tab => {
-            tab.addEventListener('click', function () {
-                handleTabClick.call(this, tabs, tabContents);
+          // Append each result to the search card body
+          if (data.no_results) {
+            $(".searchCardBody").html(data.no_results_html);
+          } else {
+            // Append each result to the search card body
+            $.each(data.results_html, function (index, resultHtml) {
+              $(".searchCardBody").append(resultHtml);
             });
-        });
+          }
 
-        if (tabContents.length > 0) {
-            tabContents[0].style.display = 'block';
-        }
+          $("#collegeSearchCardModal").show(); // Show modal with results
+        },
+      });
+    }
+  });
+});
 
-        // Set the first tab as active by default in each body section
-        if (tabs.length > 0) {
-            tabs[0].classList.add('tab-active');
-            const defaultTabId = tabs[0].getAttribute('data-tab');
-            showTabContent(tabContents, defaultTabId);
-        }
+document.addEventListener("DOMContentLoaded", function () {
+  // Function to handle tab click
+  function handleTabClick(tab, tabContents) {
+    tab.forEach((tab) => {
+      tab.classList.remove("tab-active");
+    });
+    this.classList.add("tab-active");
+
+    // Logic to display corresponding content based on clicked tab
+    const tabId = this.getAttribute("data-tab");
+    showTabContent(tabContents, tabId);
+  }
+
+  // Function to display corresponding content based on tab clicked
+  function showTabContent(contents, tabId) {
+    // Hide all tab contents
+    contents.forEach((content) => {
+      content.style.display = "none";
+    });
+
+    // Show the selected tab content
+    const selectedTabContent = document.getElementById(tabId);
+    if (selectedTabContent) {
+      selectedTabContent.style.display = "block";
+    }
+  }
+
+  // Initialize tab systems for each body section
+  initializeTabSystem("socialBody", "social-tab", "social-home-elements");
+  initializeTabSystem("pageBody", "crewDetailsTab", "crewTabInformation");
+
+  // Function to initialize tab system for a specific body section
+  function initializeTabSystem(bodyId, tabClass, contentClass) {
+    const tabs = document.querySelectorAll(`#${bodyId} .${tabClass}`);
+    const tabContents = document.querySelectorAll(
+      `#${bodyId} .${contentClass}`
+    );
+
+    tabs.forEach((tab) => {
+      tab.addEventListener("click", function () {
+        handleTabClick.call(this, tabs, tabContents);
+      });
+    });
+
+    if (tabContents.length > 0) {
+      tabContents[0].style.display = "block";
     }
 
-
+    // Set the first tab as active by default in each body section
+    if (tabs.length > 0) {
+      tabs[0].classList.add("tab-active");
+      const defaultTabId = tabs[0].getAttribute("data-tab");
+      showTabContent(tabContents, defaultTabId);
+    }
+  }
 });
