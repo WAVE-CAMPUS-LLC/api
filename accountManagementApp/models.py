@@ -22,6 +22,8 @@ class UserProfile(models.Model):
     friends = models.ManyToManyField(
         "self", symmetrical=True, blank=True, related_name="related_friends"
     )
+    
+    is_campus_manager = models.BooleanField(default=False)
 
     class Meta:
         default_permissions = ()

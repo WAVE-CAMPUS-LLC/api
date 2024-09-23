@@ -15,6 +15,7 @@ from careerApp.models import CareerRoleApplication
 from eventManagementApp.models import HostApplication
 from collegeManagementApp.models import (
     College,
+    CollegeRequest,
     Organization,
     OrganizationMembership,
     Membership,
@@ -504,9 +505,10 @@ def adminFeedbackView(request):
 @admin_required
 def adminCollegeView(request):
     colleges = College.objects.annotate(member_count=Count("membership"))
+    requestedColleges = CollegeRequest.objects.all()
     # member_count = College.objects.annotate(member_count=Count('membership'))
     return render(
-        request, "adminDashboardApp/tabs/colleges.html", {"colleges": colleges}
+        request, "adminDashboardApp/tabs/colleges.html", {"colleges": colleges, "requestedColleges": requestedColleges}
     )
 
 
