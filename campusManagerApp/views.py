@@ -59,8 +59,3 @@ def accept_invite(request, token, collegeId):
         request.session["invite_token"] = token
         return redirect("authentication:join")
 
-
-def decline_invite(request, token):
-    invite = get_object_or_404(CampusManagerInvite, token=token, accepted=False)
-    invite.delete()  # Delete the invite if declined
-    return redirect("home")

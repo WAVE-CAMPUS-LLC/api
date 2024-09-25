@@ -1,8 +1,12 @@
 from django.contrib import admin
-from .models import College, Organization, Membership
+from .models import CollegeRequest, Organization, Membership
 
 
 # Register your models here.
+@admin.register(CollegeRequest)
+class CollegeRequestAdmin(admin.ModelAdmin):
+    list_display = ("name", "yourName", "yourEmail")
+
 class OrganizationAdmin(admin.ModelAdmin):
     list_display = (
         "name",
@@ -14,7 +18,6 @@ class OrganizationAdmin(admin.ModelAdmin):
         "contact_website",
         "instagram",
     )
-
 
 class MembershipAdmin(admin.ModelAdmin):
     list_display = ("user", "college", "date_joined")

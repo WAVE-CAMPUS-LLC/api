@@ -27,7 +27,7 @@ from collegeManagementApp.models import (
 )
 from campusManagerApp.models import CampusManagerInvite
 from .models import College
-from wave_v1 import settings
+from django.conf import settings
 from .models import Department, CareerRole, LoginHistoryModel, Newsroom
 from .forms import (
     CreateGroupForm,
@@ -513,7 +513,7 @@ def adminCollegeView(request):
     requestedColleges = CollegeRequest.objects.all()
 
     if request.method == "POST":
-        collegeForm = CollegeForm(request.POST)
+        collegeForm = CollegeForm(request.POST, request.FILES)
         college = collegeForm.save(commit=False)
         college.created_by = request.user
         try:
@@ -540,10 +540,12 @@ def adminCollegeView(request):
 @admin_required
 def adminCollegeDetailView(request, collegeId):
     college = get_object_or_404(College, collegeId=collegeId)
-    
+
+    action = request.POST.get("eventAction")
+
     if request.method == "POST":
         email = request.POST.get("inviteEmail")
-        
+
         if email:
             try:
                 send_invite(email, college)
@@ -552,9 +554,21 @@ def adminCollegeDetailView(request, collegeId):
                 messages.error(request, f"Error sending invite: {str(e)}")
         else:
             messages.error(request, "Please provide an email address")
-            
+
+        if action == "removeManager":
+            manager_email = request.POST.get("managerEmail") 
+            print(manager_email)
+            if manager_email:
+                try:
+                    manager = get_object_or_404(CustomUser, email=manager_email)
+                    college.managers.remove(manager)  # Remove the manager from the college
+                    messages.success(request, f"{manager.username} has been removed from managing the college.")
+                except Exception as e:
+                    messages.error(request, f"Error removing manager: {str(e)}")
+            else:
+                messages.error(request, "No manager ID provided.")
         return redirect("waveAdmin:collegeDetail", collegeId=collegeId)
-    
+
     return render(
         request,
         "adminDashboardApp/tabs/colleges/collegeInfo.html",
@@ -565,22 +579,23 @@ def adminCollegeDetailView(request, collegeId):
 def send_invite(email, college):
     # Check if an invite has already been sent
     invite, created = CampusManagerInvite.objects.get_or_create(
-        email=email, college=college,
-        defaults={'token': uuid.uuid4(), 'invited_at': timezone.now()}
+        email=email,
+        college=college,
+        defaults={"token": uuid.uuid4(), "invited_at": timezone.now()},
     )
-    
+
     if not created:
         # If the invite was already sent, don't send again
         raise Exception("An invite has already been sent to this email.")
-    
+
     # Generate invite link with token
     invite_link = f'{settings.SITE_URL}{reverse("campusManager:accept_invite", kwargs={"token": invite.token, "collegeId": college.collegeId})}'
-    
+
     # Send an email with the invite link
     send_mail(
-        'You have been invited to be a Campus Manager',
+        "You have been invited to be a Campus Manager",
         f"Click the link to accept: {invite_link}",
-        'admin@waveapp.com',
+        "admin@waveapp.com",
         [email],
         fail_silently=False,
     )

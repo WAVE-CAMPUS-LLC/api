@@ -213,3 +213,5 @@ class CollegeForm(forms.ModelForm):
 
         widgets = {"state": forms.Select(), "country": forms.Select()}
         
+        
+        

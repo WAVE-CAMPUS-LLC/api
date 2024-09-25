@@ -128,12 +128,16 @@ College Management — WAVE.
                             <div class="information-row">
                                 <h6 class="campus-info-heading">Campus Manager</h6>
                                 <p class="campus-info">
-                                    {% if college.manager %}
-                                    {{ college.manager.user.first_name }} {{ college.manager.user.last_name }} <a href="" target="_blank">@{{ college.manager.user.username }}</a>
+                                    {% if college.managers.exists %}
+                                        {% for manager in college.managers.all %}
+                                            <span>
+                                                {{ manager.first_name }} {{ manager.last_name }} <a href="" target="_blank">@{{ manager.username }}</a>
+                                            </span>
+                                            {% if not forloop.last %},{% endif %}
+                                        {% endfor %}
                                     {% else %}
-                                    No manager assigned.
+                                        No manager assigned.
                                     {% endif %}
-                                    
                                 </p>
                             </div>
 
@@ -373,21 +377,40 @@ College Management — WAVE.
                                     <h4>Current Managers</h4>
                                 </div>
                                 <div class="cMD-body">
-                                    <div class="managerCard">
-                                        <div class="displayInfo">
-                                            <div class="managerPfp">
-                                                <img src="{% static "/images/collegeManagementApp/pfp.jpg" %}" />
+                                    {% if college.managers.all %}
+                                        {% for manager in college.managers.all %}
+                                        <div class="managerCard">
+                                            <div class="displayInfo">
+                                                <div class="managerPfp">
+                                                    <img src="{% static "/images/collegeManagementApp/pfp.jpg" %}" />
+                                                </div>
+                                                <div class="managerBody">
+                                                    <h5>{{ manager.first_name }} {{ manager.last_name }}</h5>
+                                                    <p>
+                                                        <a href="{% url "social:publicProfile" username=manager.username %}">
+                                                            @{{ manager.username }}
+                                                        </a>
+                                                    </p>
+                                                </div>
                                             </div>
-                                            <div class="managerBody">
-                                                <h5>Enosh Lartey</h5>
-                                                <p>Managing since 2021</p>
+                                            
+                                            <div>
+                                                <form method="POST">
+                                                    {% csrf_token %}
+                                                    <input type="hidden" name="managerEmail" value="{{ manager.email }}">
+                                                    <button type="submit" class="removeManagerBtn" role="button" name="eventAction" value="removeManager">Remove</button>
+                                                </form>
                                             </div>
                                         </div>
-                                        
-                                        <div>
-                                            <button class="removeManagerBtn" type="button" role="button">Remove</button>
+                                        {% endfor %}
+                                    {% else %}
+                                        <div class="emptyContainer">
+                                            <div>
+                                                <img src="{% static "/images/collegeManagementApp/collegeInformation/empty-listing.svg" %}" />
+                                            </div>
+                                            <p>No assigned managers.</p>
                                         </div>
-                                    </div>
+                                    {% endif %}
                                 </div>
                             </div>
                         </div>

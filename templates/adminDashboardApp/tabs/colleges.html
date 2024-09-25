@@ -14,7 +14,7 @@ College Management — WAVE.
 {% block script %}
 <script type="text/javascript" src="{% static "scripts/collegeManagementApp/tabControl.js" %}"></script>
 <script type="text/javascript" src="{% static "scripts/collegeManagementApp/sectionControl.js" %}"></script>
-<script type="text/javascript" src="{% static "scripts/collegeManagementApp/logoPreview.js" %}"></script>
+<script type="text/javascript" src="{% static "scripts/collegeManagementApp/logoPreview.js" %}" defer></script>
 <script type="text/javascript" src="{% static "scripts/adminDashboardApp/createCollege.js" %}"></script>
 {% endblock script %}
 
@@ -86,7 +86,7 @@ College Management — WAVE.
                     </div>
 
                     <div class="request-colleges">
-                        {% if requestedCampuses %}
+                        {% if requestedColleges %}
                             {% for request in requestedColleges %}
                             <div id="requestedItem">
                                 <div class="item-info">
