@@ -18,7 +18,8 @@ from .forms import (
 )
 from django.contrib.auth import login, logout, authenticate
 from .models import CustomUser
-from adminDashboardApp.models import LoginHistoryModel
+from adminDashboardApp.models import College, LoginHistoryModel
+from campusManagerApp.models import CampusManagerInvite
 from django.contrib.auth.models import Group
 
 from wave_v1.decorators import (
@@ -28,14 +29,33 @@ from wave_v1.decorators import (
 
 # Create your views here.
 def joinView(request):
+    invite_token = request.session.get('invite_token')
+    invite_email = request.session.get('invite_email')
+    collegeId = request.session.get('collegeId')
+    
     if request.method == "POST":
         form = CustomUserJoinForm(request.POST)
         if form.is_valid():
-            print("Form is valid!")
             user = form.save()
             
             group, created = Group.objects.get_or_create(name="Member")
             user.groups.add(group)
+            
+            if invite_email and collegeId and invite_token:
+                college = College.objects.get(collegeId=collegeId)
+                college.managers.add(user)
+                
+                # Mark the invite as accepted
+                invite = CampusManagerInvite.objects.get(token=invite_token, email=invite_email, college=college)
+                invite.accepted = True
+                invite.save()
+                
+                del request.session['invite_email']
+                del request.session['collegeId']
+                del request.session['invite_token']
+                
+                login(request, user)
+                return redirect("campusManager:dashboard")
             
             login(request, user)
             return redirect("accountManagement:userAccount")

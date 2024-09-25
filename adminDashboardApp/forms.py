@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.models import Permission, Group
 from authenticationApp.models import CustomUser
-from .models import Department, CareerRole, Newsroom
+from .models import Department, CareerRole, Newsroom, College
 from django.utils.translation import gettext_lazy as translate
 
 
@@ -194,3 +194,22 @@ class UpdateImageThreeForm(forms.ModelForm):
         fields = [
             "imageThree",
         ]
+        
+        
+class CollegeForm(forms.ModelForm):
+    class Meta:
+        model = College
+        fields = [
+            "name",
+            "address",
+            "city",
+            "state",
+            "zip_code",
+            "country",
+            "logo",
+            "motto",
+            "contact_website",
+        ]
+
+        widgets = {"state": forms.Select(), "country": forms.Select()}
+        

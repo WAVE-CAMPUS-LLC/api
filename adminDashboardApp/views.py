@@ -3,10 +3,16 @@ from django.http import HttpResponseBadRequest
 from django.shortcuts import render, redirect, HttpResponse, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.template.loader import render_to_string
+from django.contrib import messages
 from django.utils.html import strip_tags
 from django.db.models import Count
 from django.core.mail import send_mail
 from django.contrib.auth.models import Group, Permission
+from django.urls import reverse
+from django.core.signing import Signer
+from django.utils import timezone
+import uuid
+
 
 from accountManagementApp.models import UserProfile
 from authenticationApp.models import CustomUser
@@ -14,13 +20,13 @@ from supportCenterApp.models import SupportTicket, FeedbackModel
 from careerApp.models import CareerRoleApplication
 from eventManagementApp.models import HostApplication
 from collegeManagementApp.models import (
-    College,
     CollegeRequest,
     Organization,
     OrganizationMembership,
     Membership,
 )
-
+from campusManagerApp.models import CampusManagerInvite
+from .models import College
 from wave_v1 import settings
 from .models import Department, CareerRole, LoginHistoryModel, Newsroom
 from .forms import (
@@ -38,6 +44,7 @@ from .forms import (
     UpdateImageOneForm,
     UpdateImageTwoForm,
     UpdateImageThreeForm,
+    CollegeForm,
 )
 from wave_v1.decorators import (
     admin_required,
@@ -273,9 +280,7 @@ def adminUserDetailedView(request, username):
             if suspend_form.is_valid():
                 hours = suspend_form.cleaned_data.get("hours", 0)
                 user_in_view.suspend(hours)
-                return redirect(
-                    "waveAdmin:user-detailed", username=username
-                )
+                return redirect("waveAdmin:user-detailed", username=username)
 
         elif action == "allow":
             user_in_view.remove_suspension_OR_ban()
@@ -506,9 +511,27 @@ def adminFeedbackView(request):
 def adminCollegeView(request):
     colleges = College.objects.annotate(member_count=Count("membership"))
     requestedColleges = CollegeRequest.objects.all()
-    # member_count = College.objects.annotate(member_count=Count('membership'))
+
+    if request.method == "POST":
+        collegeForm = CollegeForm(request.POST)
+        college = collegeForm.save(commit=False)
+        college.created_by = request.user
+        try:
+            user_profile = request.user.user_profile
+            college.manager = user_profile
+        except UserProfile.DoesNotExist:
+            pass
+        college.save()
+    else:
+        collegeForm = CollegeForm()
     return render(
-        request, "adminDashboardApp/tabs/colleges.html", {"colleges": colleges, "requestedColleges": requestedColleges}
+        request,
+        "adminDashboardApp/tabs/colleges.html",
+        {
+            "colleges": colleges,
+            "collegeForm": collegeForm,
+            "requestedColleges": requestedColleges,
+        },
     )
 
 
@@ -517,10 +540,49 @@ def adminCollegeView(request):
 @admin_required
 def adminCollegeDetailView(request, collegeId):
     college = get_object_or_404(College, collegeId=collegeId)
+    
+    if request.method == "POST":
+        email = request.POST.get("inviteEmail")
+        
+        if email:
+            try:
+                send_invite(email, college)
+                messages.success(request, "Invite sent successfully")
+            except Exception as e:
+                messages.error(request, f"Error sending invite: {str(e)}")
+        else:
+            messages.error(request, "Please provide an email address")
+            
+        return redirect("waveAdmin:collegeDetail", collegeId=collegeId)
+    
     return render(
         request,
         "adminDashboardApp/tabs/colleges/collegeInfo.html",
         {"college": college},
+    )
+
+
+def send_invite(email, college):
+    # Check if an invite has already been sent
+    invite, created = CampusManagerInvite.objects.get_or_create(
+        email=email, college=college,
+        defaults={'token': uuid.uuid4(), 'invited_at': timezone.now()}
+    )
+    
+    if not created:
+        # If the invite was already sent, don't send again
+        raise Exception("An invite has already been sent to this email.")
+    
+    # Generate invite link with token
+    invite_link = f'{settings.SITE_URL}{reverse("campusManager:accept_invite", kwargs={"token": invite.token, "collegeId": college.collegeId})}'
+    
+    # Send an email with the invite link
+    send_mail(
+        'You have been invited to be a Campus Manager',
+        f"Click the link to accept: {invite_link}",
+        'admin@waveapp.com',
+        [email],
+        fail_silently=False,
     )
 
 

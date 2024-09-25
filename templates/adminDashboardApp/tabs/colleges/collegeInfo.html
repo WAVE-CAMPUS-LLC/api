@@ -35,7 +35,7 @@ College Management — WAVE.
         <h2>{{ college.name }}</h2>
         <p>
             {% if college.created_by %}
-                Created by: {{ college.created_by.first_name }} {{ college.created_by.last_name }}
+                Created by {{ college.created_by.first_name }} {{ college.created_by.last_name }}
             {% else %}
                 Creator information not available.
             {% endif %}
@@ -50,6 +50,7 @@ College Management — WAVE.
                     <li class="adminCollegeInfoTab" data-tab="eventInformation">Events</li>
                     <li class="adminCollegeInfoTab" data-tab="organizationInformation">Organizations</li>
                     <li class="adminCollegeInfoTab" data-tab="memberInformation">Members</li>
+                    <li class="adminCollegeInfoTab" data-tab="managerInformation">Managers</li>
                 </ul>
             </div>
 
@@ -120,6 +121,22 @@ College Management — WAVE.
                                 </p>
                             </div>
                             
+                            <button type="button" role="button" class="edit-element">Edit</button>
+                        </div>
+
+                        <div class="edit-row">
+                            <div class="information-row">
+                                <h6 class="campus-info-heading">Campus Manager</h6>
+                                <p class="campus-info">
+                                    {% if college.manager %}
+                                    {{ college.manager.user.first_name }} {{ college.manager.user.last_name }} <a href="" target="_blank">@{{ college.manager.user.username }}</a>
+                                    {% else %}
+                                    No manager assigned.
+                                    {% endif %}
+                                    
+                                </p>
+                            </div>
+
                             <button type="button" role="button" class="edit-element">Edit</button>
                         </div>
                     </div>
@@ -330,6 +347,47 @@ College Management — WAVE.
                                 <div>
                                     <a>Manage</a>
                                     <a>View</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="managerInformation" class="adminCollegeTabInformation">
+                    <div class="tabInformationContainer">
+                        <div class="tabContainerHeader">
+                            <h3>Add & Remove Managers</h3>
+                            <p>Enter an email address to invite user to manage this campus.</p>
+                        </div>
+                        <div class="tabContainerBody">
+                            <div>
+                                <form method="POST" class="searchUserEmail">
+                                    {% csrf_token %}
+                                    <input type="email" name="inviteEmail" placeholder="Enter an email address to send an invite">
+                                    <button type="submit" role="button">Invite</button>
+                                </form>
+                            </div>
+
+                            <div class="currentManagersDisplay">
+                                <div class="cMD-heading">
+                                    <h4>Current Managers</h4>
+                                </div>
+                                <div class="cMD-body">
+                                    <div class="managerCard">
+                                        <div class="displayInfo">
+                                            <div class="managerPfp">
+                                                <img src="{% static "/images/collegeManagementApp/pfp.jpg" %}" />
+                                            </div>
+                                            <div class="managerBody">
+                                                <h5>Enosh Lartey</h5>
+                                                <p>Managing since 2021</p>
+                                            </div>
+                                        </div>
+                                        
+                                        <div>
+                                            <button class="removeManagerBtn" type="button" role="button">Remove</button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>

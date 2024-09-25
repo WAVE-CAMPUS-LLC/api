@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     "socialApp",
     "newsroomApp",
     "blogApp",
+    "campusManagerApp",
     "widget_tweaks"
 ]
 
@@ -69,6 +70,7 @@ ROOT_URLCONF = "wave_v1.urls"
 # ROOT_HOSTCONF = "wave_v1.hosts"
 # DEFAULT_HOST = "www"
 # PARENT_HOST = "localhost:8000"
+SITE_URL = "http://localhost:8000"
 
 
 TEMPLATES = [

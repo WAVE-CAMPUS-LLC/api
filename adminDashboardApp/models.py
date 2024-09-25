@@ -6,8 +6,8 @@ from django.core.exceptions import ValidationError
 from django.utils import timezone
 from django.utils.translation import gettext as _
 from django.contrib.auth.models import Group
+from django.apps import apps
 import uuid
-
 
 
 # Create your models here.
@@ -177,9 +177,12 @@ class Newsroom(models.Model):
     newsCategory = models.CharField(
         _("News Category"), max_length=20, choices=NEWS_TYPE_CHOICES, default=""
     )
-    
+
     urgencyLevel = models.CharField(
-        _("A headline news item or regular?"), max_length=20, choices=URGENCY_TYPE_CHOICES, default=""
+        _("A headline news item or regular?"),
+        max_length=20,
+        choices=URGENCY_TYPE_CHOICES,
+        default="",
     )
 
     headerImage = models.ImageField(
@@ -288,23 +291,22 @@ class College(models.Model):
     collegeId = models.UUIDField(
         primary_key=True, default=uuid.uuid4, editable=False, unique=True
     )
-    name = models.CharField(_("College name"), max_length=150)
-    address = models.CharField(_("Address"), max_length=500)
-    city = models.CharField(_("City"), max_length=20, default="")
-    state = models.CharField(
-        _("State"), max_length=2, choices=STATE_CHOICES, default=""
-    )
-    zip_code = models.CharField(_("ZIP Code"), max_length=5)
-    country = models.CharField(_("Country"), max_length=5, choices=COUNTRY_CHOICES)
+    name = models.CharField("College name", max_length=150)
+    address = models.CharField("Address", max_length=500)
+    city = models.CharField("City", max_length=20, default="")
+    state = models.CharField("State", max_length=2, choices=STATE_CHOICES, default="")
+    zip_code = models.CharField("ZIP Code", max_length=5)
+    country = models.CharField("Country", max_length=5, choices=COUNTRY_CHOICES)
 
     logo = models.ImageField(
-        _("Upload the college logo"), upload_to="college_logos/", blank=True, null=False
+        "Upload the college logo", upload_to="college_logos/", blank=True, null=False
     )
-    motto = models.CharField(_("What's your college's motto?"), max_length=200)
-
-    contact_website = models.URLField(_("College website"), blank=True, null=True)
-    email_domain = models.CharField(
-        _("College email domain"), max_length=100, blank=True
+    motto = models.CharField("What's your college's motto?", max_length=200)
+    contact_website = models.URLField("College website", blank=True, null=True)
+    email_domain = models.CharField("College email domain", max_length=100, blank=True)
+    
+    managers = models.ManyToManyField(
+        settings.AUTH_USER_MODEL, blank=True, related_name="managed_colleges"
     )
 
     created_by = models.ForeignKey(
@@ -314,9 +316,6 @@ class College(models.Model):
         blank=True,
         related_name="college_created",
     )
-    
-    
-    manager = models.OneToOneField('accountManagementApp.UserProfile', on_delete=models.SET_NULL, null=True, blank=True, related_name="college_managed")
 
     def __str__(self):
         return self.name
@@ -331,10 +330,10 @@ class College(models.Model):
     @staticmethod
     def extract_email_domain_from_website(url):
         parsed_url = urlparse(url)
-
         domain = parsed_url.netloc
         if domain.startswith("www."):
             domain = domain[4:]
         if not domain:
             raise ValidationError("Invalid link. Enter your college's website.")
         return domain
+
