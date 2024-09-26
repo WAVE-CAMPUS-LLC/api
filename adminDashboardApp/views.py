@@ -645,6 +645,18 @@ def adminCollegeOrgsView(request):
 @check_suspension
 @admin_required
 def adminNewsRoomView(request):
+    """
+    The function `adminNewsRoomView` retrieves all news articles from the Newsroom model and renders
+    them in the newsroom.html template for display in the admin dashboard.
+    
+    :param request: The `request` parameter in the `adminNewsRoomView` function is an object that
+    contains information about the current HTTP request, such as the request method, headers, user
+    session, and more. It is typically passed to view functions in Django to handle incoming requests
+    and generate appropriate responses
+    :return: The function `adminNewsRoomView` is returning a rendered template
+    "adminDashboardApp/tabs/newsroom.html" along with a context dictionary containing all the news items
+    retrieved from the Newsroom model.
+    """
     news = Newsroom.objects.all()
     return render(request, "adminDashboardApp/tabs/newsroom.html", {"news": news})
 

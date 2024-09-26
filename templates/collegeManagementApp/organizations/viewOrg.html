@@ -154,7 +154,7 @@
                                 {% if members %}
                                 <div class="collegeMembersContainer">
                                     {% for member in members %}
-                                    <a target="_blank" href="{% url "accountManagement:memberProfile" username=member.user.username %}" class="collegeMemberCard">
+                                    <a target="_blank" href="{% url "social:publicProfile" username=member.user.username %}" class="collegeMemberCard">
                                         <div class="memberPfp">
                                             <img src="{% static "/images/collegeManagementApp/pfp.jpg" %}" />
                                         </div>
