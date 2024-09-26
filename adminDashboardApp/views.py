@@ -512,7 +512,16 @@ def adminCollegeView(request):
     colleges = College.objects.annotate(member_count=Count("membership"))
     requestedColleges = CollegeRequest.objects.all()
 
+    action = request.POST.get("eventAction")
+    requestId = request.POST.get("requestId")
+
     if request.method == "POST":
+        if action == "collegeCreated":
+            if requestId:
+                college_request = get_object_or_404(CollegeRequest, requestId=requestId)
+                college_request.delete()
+            return redirect("waveAdmin:colleges")
+
         collegeForm = CollegeForm(request.POST, request.FILES)
         college = collegeForm.save(commit=False)
         college.created_by = request.user
@@ -522,6 +531,7 @@ def adminCollegeView(request):
         except UserProfile.DoesNotExist:
             pass
         college.save()
+
     else:
         collegeForm = CollegeForm()
     return render(
@@ -556,17 +566,26 @@ def adminCollegeDetailView(request, collegeId):
             messages.error(request, "Please provide an email address")
 
         if action == "removeManager":
-            manager_email = request.POST.get("managerEmail") 
-            print(manager_email)
+            manager_email = request.POST.get("managerEmail")
             if manager_email:
                 try:
                     manager = get_object_or_404(CustomUser, email=manager_email)
-                    college.managers.remove(manager)  # Remove the manager from the college
-                    messages.success(request, f"{manager.username} has been removed from managing the college.")
+                    college.managers.remove(manager)
+
+                    invite = CampusManagerInvite.objects.filter(
+                        email=manager_email, college=college, accepted=True
+                    ).first()
+
+                    if invite:
+                        invite.delete()
+                    messages.success(
+                        request,
+                        f"{manager.username} has been removed from managing the college.",
+                    )
                 except Exception as e:
                     messages.error(request, f"Error removing manager: {str(e)}")
             else:
-                messages.error(request, "No manager ID provided.")
+                messages.error(request, "No manager email provided.")
         return redirect("waveAdmin:collegeDetail", collegeId=collegeId)
 
     return render(
@@ -577,21 +596,35 @@ def adminCollegeDetailView(request, collegeId):
 
 
 def send_invite(email, college):
-    # Check if an invite has already been sent
-    invite, created = CampusManagerInvite.objects.get_or_create(
+    """
+    The function `send_invite` sends an invitation email to a user to become a Campus Manager at a
+    specific college, handling existing invites and generating a unique invite link.
+    
+    :param email: The `email` parameter in the `send_invite` function is the email address of the person
+    to whom the invitation will be sent
+    :param college: The `college` parameter in the `send_invite` function is likely an object
+    representing a college in your system. It seems to be used to associate the invite with a specific
+    college when creating a new invite and when generating the invite link
+    """
+    existing_invite = CampusManagerInvite.objects.filter(
+        email=email, college=college
+    ).first()
+
+    if existing_invite:
+        if existing_invite.accepted:
+            raise Exception(f"An invite has already been accepted by {email}.")
+        else:
+            existing_invite.delete()
+
+    new_invite = CampusManagerInvite.objects.create(
         email=email,
         college=college,
-        defaults={"token": uuid.uuid4(), "invited_at": timezone.now()},
+        token=uuid.uuid4(),
+        invited_at=timezone.now(),
     )
 
-    if not created:
-        # If the invite was already sent, don't send again
-        raise Exception("An invite has already been sent to this email.")
+    invite_link = f'{settings.SITE_URL}{reverse("campusManager:accept_invite", kwargs={"token": new_invite.token, "collegeId": college.collegeId})}'
 
-    # Generate invite link with token
-    invite_link = f'{settings.SITE_URL}{reverse("campusManager:accept_invite", kwargs={"token": invite.token, "collegeId": college.collegeId})}'
-
-    # Send an email with the invite link
     send_mail(
         "You have been invited to be a Campus Manager",
         f"Click the link to accept: {invite_link}",
@@ -620,6 +653,18 @@ def adminNewsRoomView(request):
 @check_suspension
 @admin_required
 def adminCreateNewsView(request):
+    """
+    This Python function handles the creation of news articles by processing form data and saving it to
+    the database.
+    
+    :param request: The `request` parameter in the `adminCreateNewsView` function is an HttpRequest
+    object that represents the current HTTP request. It contains information about the request made by
+    the client, such as the request method (GET, POST, etc.), request data, user session information,
+    and more. In this
+    :return: The `adminCreateNewsView` function returns a rendered HTML template named "createNews.html"
+    located in the "adminDashboardApp/tabs/newsroom" directory. The template is rendered with the
+    `createNewsForm` context variable, which contains the form for creating news.
+    """
     createNewsForm = CreateNewsForm(request.POST, request.FILES)
     if request.method == "POST":
         if createNewsForm.is_valid():
@@ -644,6 +689,18 @@ def adminCreateNewsView(request):
 @check_suspension
 @admin_required
 def adminEditNewsView(request, newsId):
+    """
+    This function is likely used to display a view for editing news articles by an admin.
+    
+    :param request: The `request` parameter in the `adminEditNewsView` function is typically an
+    HttpRequest object that represents the current request from the user. It contains information about
+    the request, such as the user's session, any data submitted through forms, and other metadata
+    related to the request. This parameter allows the
+    :param newsId: The `newsId` parameter in the `adminEditNewsView` function likely refers to the
+    unique identifier of the news article that the function is intended to edit. This parameter allows
+    the function to identify which specific news article is being edited within the administrative
+    interface
+    """
     newsItem = get_object_or_404(Newsroom, newsId=newsId)
 
     if request.method == "POST":

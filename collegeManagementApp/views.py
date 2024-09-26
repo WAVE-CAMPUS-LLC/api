@@ -110,7 +110,7 @@ def viewCollegeInformation(request, collegeId):
 
     college = get_object_or_404(College, collegeId=collegeId)
     members = UserProfile.objects.filter(college=college)
-    organizations = Organization.objects.filter(college=college)
+    organizations = Organization.objects.filter(college=college, status="Accepted")
 
     user_profile = None
     if request.user.is_authenticated:
@@ -246,6 +246,7 @@ def createOrg(request, collegeId):
             organization = orgForm.save(commit=False)
             organization.college = college
             organization.created_by = request.user
+            organization.status = "Pending"
             organization.save()
 
             return redirect("colleges:find")

@@ -94,8 +94,11 @@ College Management — WAVE.
                                     <p>Requested by: <span>{{ request.yourName }}</span></p>
                                 </div>
                                 <div class="item-action">
-                                    <button type="button" role="button" class="approve-request">Approve</button>
-                                    <button type="button" role="button" class="reject-request">Reject</button>
+                                    <form method="POST">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="requestId" value="{{ request.requestId }}">
+                                        <button type="submit" role="button" class="approve-request" name="eventAction" value="collegeCreated">Created</button>
+                                    </form>
                                 </div>
                             </div>
                             {% endfor %}

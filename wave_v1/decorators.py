@@ -1,6 +1,8 @@
 from functools import wraps
 from django.shortcuts import redirect, render
 from django.core.exceptions import PermissionDenied
+from django.contrib.auth.models import Group
+
 
 
 def admin_required(view_func):
@@ -94,18 +96,15 @@ def support(view_func):
     return wrapped_view
 
 
-def member_required(view_func):
-    def wrapped_view(request, *args, **kwargs):
-
-        if request.user.has_perms(
-            [
-                "adminDashboardApp.view_profile_overview",
-                "adminDashboardApp.view_account_settings",
-                "adminDashboardApp.view_support_portal",
-            ]
-        ):
-            return view_func(request, *args, **kwargs)
-        else:
+def group_required(group_name):
+    def decorator(view_func):
+        def wrapped_view(request, *args, **kwargs):
+            if request.user.is_authenticated:
+                # Check if the user is in the specified group
+                if Group.objects.filter(name=group_name, user=request.user).exists():
+                    return view_func(request, *args, **kwargs)
             return render(request, "extras/invalid/invalid.html")
 
-    return wrapped_view
+        return wrapped_view
+
+    return decorator

@@ -27,9 +27,15 @@ Campus Manager — WAVE.
     <div id="tabbingContent">
         <div id="tabControlHeader">
             <ul id="tabControl">
-                <li class="managerTab tab-active" data-tab="campusInformation">Assigned Campus(es)</li>
-                <li class="managerTab" data-tab="attentionInformation">Attention!</li>
-                <li  class="managerTab" data-tab="notificationInformation">Notifications</li>
+                <li class="managerTab tab-active" data-tab="campusInformation">
+                    {% if managed_colleges > 1 %}
+                    Assigned Campuses
+                    {% else %}
+                    Assigned Campus
+                    {% endif %} 
+                </li>
+                <li class="managerTab" data-tab="organizationInformation" title="View all organizations. Pending and approved!">Organizations</li>
+                <li  class="managerTab" data-tab="eventsInformation">Events</li>
             </ul>        
         </div>
     
@@ -64,13 +70,62 @@ Campus Manager — WAVE.
                     </div>
                 </div>
 
-                <div id="attentionInformation" class="campusManagerInformation">
+                <div id="organizationInformation" class="campusManagerInformation">
                     <div class="attentionInfoContainer">
-                        Requires attention
+                        <div class="tabHeader">
+                            <h4>Pending Organizations</h4>
+                            <p>Organizations are pending approval. Please review and approve them.</p>
+                        </div>
+                        <div class="tabBody">
+                            {% if pending_organizations %}
+                                {% for org in pending_organizations %}
+                                <div class="organizationCard">
+                                    <div class="organizationPreviewInfo">
+                                        <div class="organizationLogo">
+                                            <img src="{{ org.logo.url }}" alt="Organization Logo">
+                                        </div>
+                                        <div class="organizationBody">
+                                            <div class="organizationCardHeader">
+                                                <h5>{{ org.name }}</h5>
+                                            </div>
+                                            <div class="organizationCardBody">
+                                                <p class="organization-created">
+                                                    Created by: {{ org.created_by.first_name }} {{ org.created_by.last_name }} 
+                                                    <a href="{% url "social:publicProfile" username=org.created_by.username %}">
+                                                        {{ org.created_by.username }}
+                                                    </a>
+                                                </p>
+                                                <p class="organization-display">Created on: {{ org.date_added }}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <form method="POST" class="organizationManageRow">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="orgId" value="{{ org.orgId }}">
+                                        <div class="previewRow">
+                                            <button role="button" type="button" class="manage-button preview">Preview</button>
+                                        </div>
+                                        <div class="approvalAction">
+                                            <button role="button" type="submit" name="approvalAction" value="approveOrg" class="manage-button approve">Approve</button>
+                                            <button role="button" type="submit" name="approvalAction" value="declineOrg" class="manage-button decline">Decline</button>
+                                        </div>
+                                    </form>  
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                            <div class="emptyContainer">
+                                <div>
+                                    <img src="{% static "/images/collegeManagementApp/collegeInformation/empty-listing.svg" %}" />
+                                </div>
+                                <p>No pending organizations.</p>
+                            </div>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
     
-                <div id="notificationInformation" class="campusManagerInformation">
+                <div id="eventsInformation" class="campusManagerInformation">
                     <div class="notificationInfoContainer">
                         Notification Information
                     </div>

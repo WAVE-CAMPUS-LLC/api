@@ -10,6 +10,9 @@ from adminDashboardApp.models import College
 
 # Create your models here.
 class CollegeRequest(models.Model):
+    requestId = models.UUIDField(
+        primary_key=True, default=uuid.uuid4, editable=False, unique=True
+    )
     name = models.CharField(_("College Name"), max_length=150)
     yourName = models.CharField(_("Your Name"), max_length=100)
     yourEmail = models.EmailField(_("Your Email"), blank=False, null=False)
@@ -17,8 +20,17 @@ class CollegeRequest(models.Model):
     def __str__(self):
         return self.name
 
+
 class Organization(models.Model):
-    PRIVACY_CHOICES = [("Private", "Private"), ("Public", "Public")]
+    PRIVACY_CHOICES = [
+        ("Private", "Private"),
+        ("Public", "Public"),
+    ]
+    STATUS_CHOICES = [
+        ("Pending", "Pending"),
+        ("Accepted", "Accepted"),
+        ("Denied", "Denied"),
+    ]
 
     college = models.ForeignKey(
         College, on_delete=models.CASCADE, related_name="organizations"
@@ -27,17 +39,36 @@ class Organization(models.Model):
         primary_key=True, default=uuid.uuid4, editable=False, unique=True
     )
 
-    name = models.CharField(_("Organization name"),max_length=100)
-    description = models.TextField(_("Describe your org"),)
-    privacy = models.CharField(_("Organization privacy?"),max_length=30, choices=PRIVACY_CHOICES)
+    name = models.CharField(_("Organization name"), max_length=100)
+    description = models.TextField(
+        _("Describe your org"),
+    )
+    privacy = models.CharField(
+        _("Organization privacy?"), max_length=30, choices=PRIVACY_CHOICES
+    )
+    status = models.CharField(
+        _("Approval Status"), max_length=10, choices=STATUS_CHOICES, default="Pending"
+    )
+    logo = models.ImageField(
+        _("Upload an image to represent the org"),
+        upload_to="organization_logos/",
+        blank=True,
+        null=True,
+    )
 
-    logo = models.ImageField(_("Upload an image to represent the org"),upload_to="organization_logos/", blank=True, null=True)
+    contact_name = models.CharField(
+        _("Who can we contact? e.g. president, etc"), max_length=100
+    )
+    contact_email = models.EmailField(
+        _("What email can we contact?"),
+    )
+    contact_website = models.URLField(
+        _("Does the organization have a website?"), blank=True, null=True
+    )
 
-    contact_name = models.CharField(_("Who can we contact? e.g. president, etc"),max_length=100)
-    contact_email = models.EmailField(_("What email can we contact?"),)
-    contact_website = models.URLField(_("Does the organization have a website?"),blank=True, null=True)
-
-    instagram = models.CharField(_("Connect via Instagram"),max_length=50, blank=True, null=True)
+    instagram = models.CharField(
+        _("Connect via Instagram"), max_length=50, blank=True, null=True
+    )
 
     date_added = models.DateTimeField(auto_now_add=True, editable=False)
     date_modified = models.DateTimeField(auto_now=True)
@@ -65,19 +96,18 @@ class Membership(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     college = models.ForeignKey(College, on_delete=models.CASCADE)
     date_joined = models.DateTimeField(auto_now_add=True)
-    
+
     class Meta:
-        unique_together = ('user', 'college')
-        
+        unique_together = ("user", "college")
+
     def __str__(self):
-        return f'{self.user} - {self.college}'
-    
+        return f"{self.user} - {self.college}"
+
 
 class OrganizationMembership(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE)
     joined_on = models.DateTimeField(auto_now_add=True)
-    
-    
+
     class Meta:
-        unique_together = ('user', 'organization')
+        unique_together = ("user", "organization")

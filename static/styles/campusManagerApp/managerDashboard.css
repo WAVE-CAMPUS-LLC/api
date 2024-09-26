@@ -199,28 +199,116 @@
     text-decoration: underline;
 }
 
-/* Empty Container */
-.emptyContainer {
-    width: 100%;
-    border-radius: 20px;
-    padding-top: 70px;
-    padding-bottom: 70px;
-
+/* Pending Organizations */
+.attentionInfoContainer {
     display: flex;
-    justify-content: center;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.tabHeader {
+    display: flex;
+    justify-content: start;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.tabHeader h4 {
+    font-family: Wanted-Bold;
+    font-size: 20px;
+}
+
+.tabHeader p {
+    font-family: Wanted-Variable;
+    font-size: 15px;
+    color: rgba(128, 128, 128, 0.798);
+}
+
+/* Organization Card */
+.organizationCard {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.organizationPreviewInfo {
+    display: flex;
+    flex-direction: row;
+    gap: 30px;
+    align-items: center;
+}
+
+.organizationLogo img {
+    width: 100px;
+    height: 100px;
+    border-radius: 15px;
+}
+
+.organizationBody {
+    display: flex;
     flex-direction: column;
     gap: 10px;
-    align-items: center;
-
-    background-color: rgba(146, 146, 146, 0.096);
 }
 
-.emptyContainer img {
-    width: 60px;
+.organizationCardHeader h5 {
+    font-family: Wanted-SemiBold;
+    font-size: 25px;
 }
 
-.emptyContainer p {
+.organizationCardBody {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.organizationCardBody p {
     font-family: Wanted-Variable;
-    font-size: 16.5px;
-    color: black;
+    font-size: 15px;
+    color: rgba(128, 128, 128, 0.798);
+}
+
+.organizationManageRow {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    align-items: center;
+    height: 100%;
+}
+
+.approvalAction {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+    gap: 15px;
+}
+
+.manage-button {
+    padding: 12px;
+    border: 2px solid transparent;
+    color: white;
+    font-family: Wanted-Variable;
+    font-size: 18px;
+
+    text-decoration: none;
+
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    gap: 10px;
+    border-radius: 20px;
+    cursor: pointer;
+}
+
+.manage-button.preview {
+    background-color: #008d95;
+}
+
+.manage-button.approve {
+    background-color: #13d329;
+}
+
+.manage-button.decline {
+    background-color:  red;
 }

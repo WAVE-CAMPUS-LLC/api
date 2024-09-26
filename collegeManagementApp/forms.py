@@ -3,7 +3,6 @@ from .models import College, CollegeRequest, Organization
 
 
 class CollegeRequestForm(forms.ModelForm):
-    
     name = forms.CharField(
         label="College Name",
         widget=forms.TextInput(
@@ -14,7 +13,6 @@ class CollegeRequestForm(forms.ModelForm):
             }
         ),
     )
-    
     yourEmail = forms.EmailField(
         label="Your Email",
         widget=forms.EmailInput(
@@ -25,11 +23,10 @@ class CollegeRequestForm(forms.ModelForm):
             }
         ),
     )
+
     class Meta:
         model = CollegeRequest
         fields = ["name", "yourName", "yourEmail"]
-        
-        
 
 
 class JoinCollegeForm(forms.Form):
