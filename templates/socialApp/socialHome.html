@@ -10,7 +10,7 @@ My Social @{{ user.username }} — WAVE.
 {% endblock app_page_style %}
 
 {% block script %}
-<script type="text/javascript" src="{% static "scripts/socialApp/tabControl.js" %}" defer></script>
+<script type="text/javascript" src="{% static "scripts/socialApp/tabControl.js" %}?v={{ time }}" defer></script>
 {% endblock script %}
 
 
@@ -64,7 +64,18 @@ My Social @{{ user.username }} — WAVE.
                         </div>
                     </li>
                     <li role="button" type="button" class="social-tab" data-tab="invitations">
-                        <p>Invitations</p>
+                        <div id="crew-invitations">
+                            <p>Invitations</p>
+                            {% if pending_crew_requests %}
+                                <span id="number-of-requests">
+                                    {% if pending_crew_requests|length > 9 %}
+                                        9+
+                                    {% else %}
+                                        {{ pending_crew_requests|length }}
+                                    {% endif %}
+                                </span>
+                            {% endif %}
+                        </div>
                     </li>
                     <li role="button" type="button" class="social-tab" data-tab="my-crews">
                         <p>My Crews</p>
@@ -83,17 +94,24 @@ My Social @{{ user.username }} — WAVE.
                             <h4>My Friends</h4>
                         </div>
                         <div class="home-body">
+                            {% if not friends %}
+                            <div class="user-card" style="width: 300%;">
+                                <div class="user-names">
+                                    <h1>You currently don't have any friends. Try connecting with other users!</h1>
+                                </div>
+                            </div>
+                            {% endif %}
                             {% for friend in friends %}
                             <div class="user-card">
                                 <div class="user-pfp">
                                     <img src="{% static "images/socialApp/publicProfile/profile/E.L.png" %}" alt="Profile Picture" />
                                 </div>
                                 <div class="user-names">
-                                    <h1>{{ friend.sender.first_name }} {{ friend.sender.last_name }}</h1>
+                                    <h1>{{ friend.user.first_name }} {{ friend.user.last_name }}</h1>
                                     <p>Class of 28'</p>
                                 </div>
                                 <div class="user-actions">
-                                    <a target="_blank" href="{% url "social:publicProfile" username=friend.sender.username %}">View Social</a>
+                                    <a target="_blank" href="{% url "social:publicProfile" username=friend.user.username %}">View Social</a>
                                 </div>
                             </div>
                             {% endfor %}
@@ -169,30 +187,33 @@ My Social @{{ user.username }} — WAVE.
                         </h4>
                     </div>
                     <div class="crew-invitation-body">
+                        {% for request in pending_crew_requests %}
                         <div class="crew-invite-item">
                             <div class="cit-left">
                                 <div class="cit-pfp">
                                     <img src="{% static "/images/socialApp/publicProfile/profile/E.L.png" %}" alt="Profile Picture" />
                                 </div>
                                 <div class="cit-name">
-                                    <h5><span class="crew-name">Men In Black</span> has invited you!</h5>
-                                    <p>Invited by <a href="">@enoshlartey</a></p>
+                                    <h5><span class="crew-name">{{request.crew}}</span> has invited you!</h5>
+                                    <p>Invited by <a href="{% url "social:publicProfile" username=request.sender.username %}" target="_blank">
+                                        @{{request.sender.username}}</a>
+                                    </p>
                                 </div>
                             </div>
                             <div class="cit-right">
-                                <form method="POST" >
-                                    <button class="accept" type="submit" role="button">
+                                <form method="POST">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="crew_id" value="{{ request.crew.crewId }}" />
+                                    <button class="accept" type="submit" name="action" value="joinCrew" role="button">
                                         <img src="{% static "/images/socialApp/socialHome/accept.svg" %}" alt="Accept Friend Request">
                                     </button>
-                                </form>
-
-                                <form method="POST">
-                                    <button class="decline" type="submit" role="button">
+                                    <button class="decline" type="submit" name="action" value="declineCrew" role="button">
                                         <img src="{% static "/images/socialApp/socialHome/decline.svg" %}" alt="Decline Friend Request">
                                     </button>
                                 </form>
                             </div>
                         </div>
+                        {% endfor %}
                     </div>
                 </div>
             </div>

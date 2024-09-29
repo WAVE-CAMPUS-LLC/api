@@ -516,6 +516,12 @@
   align-items: center;
 }
 
+#crew-invitations {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
 #number-of-requests {
   background-color: red;
   color: white;

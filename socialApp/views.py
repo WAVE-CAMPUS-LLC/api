@@ -2,15 +2,18 @@ from http.client import HTTPResponse
 from os import name
 import re
 from datetime import datetime
+from turtle import st
 from django.http import Http404, HttpResponseBadRequest
 from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import get_user_model
 from django.http import JsonResponse, HttpResponseRedirect
+from django.template import RequestContext
 from django.template.loader import render_to_string 
 from accountManagementApp.models import UserProfile
 from django.contrib import messages
-from .models import FriendRequest, Crew, CrewMember
+from django.contrib.auth import login, logout, authenticate
+from .models import FriendRequest, Crew, CrewMember, CrewRequest
 from django.db.models import Q
 from .forms import createCrewForm
 
@@ -23,41 +26,63 @@ UserModel = get_user_model()
 # Create your views here.
 @login_required
 def socialHomeView(request):
+    user = get_object_or_404(UserProfile, user=request.user)
     my_crews = Crew.objects.filter(members__user=request.user)
     time = datetime.now().timestamp()
 
     pending_friend_requests = FriendRequest.objects.filter(
         receiver=request.user, status="pending"
     )
-    friends = FriendRequest.objects.filter(
-        Q(sender=request.user) | Q(receiver=request.user), status="accepted"
+    pending_crew_requests = CrewRequest.objects.filter(
+        receiver=request.user, status="pending"
     )
-
+                
+    friends = user.friends.all() 
+    
+    print("DEBUG: Friends of user ", list(friends))
+    
     if request.method == "POST":
         action = request.POST.get("action")
-        friend_request_id = request.POST.get("friend_request_id")
+        
+        if action == "acceptRequest":
+            friend_request_id = request.POST.get("friend_request_id")  
+            friend_request = FriendRequest.objects.get(requestId=friend_request_id, receiver=request.user)
+            sender = get_object_or_404(UserProfile, user=friend_request.sender)
+            user.friends.add(sender) 
+            sender.friends.add(user) 
+            friend_request.accept_request()
 
-        try:
-            friend_request = FriendRequest.objects.get(
-                requestId=friend_request_id, receiver=request.user
-            )
-
-            if action == "acceptRequest":
-                friend_request.acceptRequest()
-                messages.success(request, "Friend request accepted.")
-
-            elif action == "declineRequest":
-                friend_request.declineRequest()
-                messages.success(request, "Friend request declined.")
-
-        except FriendRequest.DoesNotExist:
-            messages.warning(request, "Friend request not found.")
-
+        elif action == "declineRequest":
+            friend_request_id = request.POST.get("friend_request_id")
+            friend_request = FriendRequest.objects.get(requestId=friend_request_id, receiver=request.user)
+            sender = get_object_or_404(UserProfile, user=friend_request.sender)
+            user.friends.remove(sender)
+            sender.friends.remove(user)
+            friend_request.decline_request()
+            
+        else:
+            crew_id = request.POST.get("crew_id")
+            crew_invite_action(request, crew_id, action)
+        
     return render(
         request,
         "socialApp/socialHome.html",
-        {"pending_friend_requests": pending_friend_requests, "friends": friends, "my_crews": my_crews, "time": time},
+        {"pending_friend_requests": pending_friend_requests, "pending_crew_requests": pending_crew_requests, "friends": friends, "my_crews": my_crews, "time": time},
     )
+
+def crew_invite_action(request, crew_id, action):
+    crew = get_object_or_404(Crew, crewId=crew_id)
+    crew_request = get_object_or_404(CrewRequest, crew=crew, receiver=request.user)
+    
+    if action == "joinCrew":
+        crew_request.accept_request()
+        CrewMember.objects.create(user=request.user, crew=crew)
+        messages.success(request, f'{request.user} joined the {crew.name} crew.')
+    elif action == "declineCrew":
+        crew_request.decline_request()
+        messages.success(request, f'{request.user} has declines the invite to join {crew.name} crew.')
+        
+    return redirect('social:home')
 
 
 def publicProfileView(request, username):
@@ -128,7 +153,7 @@ def send_friend_request(sender, receiver_username):
 
     if sender.user_profile.is_friends_with(receiver.user):
         return False, "You are already friends."
-
+    
     if sender.user_profile.has_pending_request(receiver.user):
         return False, "A friend request is already pending."
 
@@ -142,23 +167,24 @@ def send_friend_request(sender, receiver_username):
     return True, "Friend request sent successfully."
 
 
-def accept_friend_request(receiver, sender_username):
-    sender = get_object_or_404(UserProfile, user__username=sender_username)
+def send_crew_request(sender, receiver_username, crew_id):
+    sender = get_object_or_404(UserProfile, user__username=sender.user.username)
+    receiver = get_object_or_404(UserProfile, user__username=receiver_username)
+    crew = get_object_or_404(Crew, crewId=crew_id)
+    
+    # Ensure receiver isn't already in the crew
+    if CrewMember.objects.filter(crew=crew, user=receiver.user).exists():
+        return False, "User is already a member of the crew.", None
 
-    try:
-        friend_request = FriendRequest.objects.get(
-            sender=sender.user, receiver=receiver.user, status="pending"
-        )
-        friend_request.status = "accepted"
-        friend_request.save()
+    # Send a crew request
+    crew_request, created = CrewRequest.objects.get_or_create(
+        sender=sender.user, receiver=receiver.user, crew=crew, defaults={"status": "pending"}
+    )
 
-        receiver.friends.add(sender.user)
-        sender.friends.add(receiver.user)
+    if not created:
+        return False, "Crew request has already been sent.", crew_request
 
-        return True, "Friend request accepted"
-
-    except FriendRequest.DoesNotExist:
-        return False, "No pending request found"
+    return True, "Crew request sent successfully.", crew_request
 
 
 @login_required
@@ -189,33 +215,62 @@ def createCrewView(request):
 
 @login_required
 def crewView(request, crewId):
-    crew = Crew.objects.get(crewId=crewId)
-    time = datetime.now().timestamp()
+    user = get_object_or_404(UserProfile, user=request.user)
+    print(f"DEBUG: Logged in user: {user.user.username}")  # Debugging user
+
+    crew = get_object_or_404(Crew, crewId=crewId)
+    print(f"DEBUG: Crew fetched: {crew.name}")  # Debugging crew details
+
     crewMembers = CrewMember.objects.filter(crew=crew)
+    if not crewMembers:
+        print(f"DEBUG: No crew members found for crew {crewId}")  # Debugging crew members
+    else:
+        print(f"DEBUG: Crew members count: {crewMembers.count()}")
     
-    if request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest':
-        query = request.GET.get('query', '')
-        
-        user_friends = FriendRequest.objects.filter(
-            Q(sender=request.user) | Q(receiver=request.user), status="accepted"
-        )
+    friends = user.friends.all()
+    friends_not_in_crew = friends.exclude(user__in=crewMembers.values_list('user', flat=True))
+    time = datetime.now().timestamp()
+    print(f"DEBUG: Friends not in crew count: {friends_not_in_crew.count()}")
+    
+    if request.method == "POST":
+        action = request.POST.get("action")
+        inviteeUsername = request.POST.get("invitee_username")
+        if action == "crew_invite":
+            success, message, crew_request = send_crew_request(user, inviteeUsername, crewId)
+            print("DEBUG: POST request received")
+            
 
-        # Filter friends based on the search query (e.g., name)
-        results = user_friends.filter(
-            Q(sender__username__icontains=query) | Q(receiver__username__icontains=query)
-        )
+            if success:
+                messages.success(request, message)
+            else:
+                messages.warning(request, message)
+    else:
+        crew_request = None
+    
+    status = crew_request.status if crew_request else None
+        
+    return render(request, "socialApp/crews/crew.html", {'crew': crew, 'crewMembers': crewMembers, 'status': status, "friendsNotInCrew": friends_not_in_crew, 'time': time})
+
+    # if request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest':
+    #     query = request.GET.get('query', '')
+        
+    #     user_friends = user.friends.all()
+
+    #     # Filter friends based on the search query (e.g., name)
+    #     results = user_friends.filter(
+    #         Q(user__username__icontains=query) | 
+    #         Q(user__first_name__icontains=query) | 
+    #         Q(user__last_name__icontains=query)
+    #     )
 
 
-        # Render each result using the template
-        if results.exists():
-            results_html = []
-            for friend in results:
-                html = render_to_string('socialApp/extras/search-item.html', {'friend': friend})
-                results_html.append(html)
-            return JsonResponse({'results_html': results_html, 'no_results': False})
-        else:
-            no_results_html = render_to_string('socialApp/extras/no-result.html')
-            return JsonResponse({'results_html': [], 'no_results': True, 'no_results_html': no_results_html})
-        
-        
-    return render(request, "socialApp/crews/crew.html", {'crew': crew, 'crewMembers': crewMembers, 'time': time})
+    #     # Render each result using the template
+    #     if results.exists():
+    #         results_html = []
+    #         for friend in results:
+    #             html = render_to_string('socialApp/extras/search-item.html', {'friend': friend, "time": time, "crew": crew}, request=request)
+    #             results_html.append(html)
+    #         return JsonResponse({'results_html': results_html, 'no_results': False})
+    #     else:
+    #         no_results_html = render_to_string('socialApp/extras/no-result.html')
+    #         return JsonResponse({'results_html': [], 'no_results': True, 'no_results_html': no_results_html})

@@ -1,0 +1,59 @@
+.request-home-body {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  color: black;
+}
+
+.request-item {
+  display: flex;
+  flex-direction: row;
+  gap: 20px;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+}
+
+.request-left {
+  display: flex;
+  flex-direction: row;
+  gap: 20px;
+  align-items: center;
+}
+
+.request-pfp img {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+}
+
+.request-names {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.request-names h1 {
+  font-family: Wanted-Regular;
+  font-size: 22px;
+  color: black;
+}
+
+.request-names p {
+  font-family: Wanted-Variable;
+  font-size: 14px;
+  color: rgba(128, 128, 128, 0.459);
+}
+
+.request-actions {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+}
+
+.request-actions button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  border-radius: 50%;
+}

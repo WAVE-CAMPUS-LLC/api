@@ -1,10 +1,26 @@
 {% load static %}
+{% block app_page_style %}
+<link rel="stylesheet" type="text/css" href="{% static 'styles/socialApp/extras/search-item.css' %}?v={{time}}" />
+{% endblock app_page_style %}
 
-<link rel="stylesheet" type="text/css" href="{% static "/styles/sociaApp/extras/search-item.css" %}" />
-
-<div class="search-result-item">
-    <a class="search-result-info">
-        <h6>{{ friend.receiver.username }}</h6>
-        <p>{{ friend.first_name }}, {{ friend.last_name }}</p>
-    </a>
+<div class="request-home-body">
+  <div class="request-item">
+    <div class="request-left">
+      <div class="request-pfp">
+        <img src="{% static "images/socialApp/publicProfile/profile/E.L.png" %}" alt="Profile Picture" />
+      </div>
+      <div class="request-names">
+        <h1>{{ friend.user.first_name }} {{ friend.user.last_name }}</h1>
+      </div>
+    </div>
+    <div class="request-actions">
+      <form method="POST" action="{% url "social:crew" crewId=crew.crewId %}">
+        {% csrf_token %}
+        <input type="hidden" name="crew_invite " value="{{ request.requestId }}" />
+        <button class="accept" type="button" name="action" value="crew_invite" role="button">
+          Send Crew Invite
+        </button>
+      </form>
+    </div>
+  </div>
 </div>

@@ -146,9 +146,22 @@
 
 /* Members Tab */
 .memberContainer {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.memberDisplayContainer {
   display: flex;
   flex-direction: column;
   gap: 20px;
+
+  border-right: 2px solid black;
+}
+
+.memberDisplayContainer h4 {
+  font-family: Wanted-Bold;
+  font-size: 20px;
 }
 
 /* Page Search Section */
@@ -166,7 +179,7 @@
 }
 
 .find-college-name {
-  width: 50%;
+  width: 85%;
 
   display: flex;
   flex-direction: row;
@@ -258,10 +271,14 @@
 }
 
 #memberItem {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
   gap: 20px;
-  width: 100%;
+  align-items: center;
+  /* grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 20px;
+  width: 100%; */
 }
 
 .item-right {
@@ -294,8 +311,52 @@
   display: flex;
   flex-direction: column;
   gap: 5px;
+  text-decoration: none;
 }
 
+#memberItem a {
+  text-decoration: none;
+  color: black;
+  display: flex;
+  flex-direction: row;
+  gap: 30px;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.member-info h3 {
+  text-decoration: none;
+}
+
+.member-info p {
+  text-decoration: none;
+}
+
+.friendItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+}
+
+.friendInfoo {
+  display: flex;
+  flex-direction: row;
+  gap: 20px;
+
+  align-items: center;  
+}
+
+.friendPfp img {
+  width: 70px;
+  height: 70px;
+  border-radius: 70%;
+}
+
+.friendNames {
+  font-family: Wanted-Bold;
+  font-size: 20px;
+}
 .member-name {
   font-family: Wanted-Bold;
   font-size: 20px;
@@ -305,6 +366,20 @@
   font-family: Wanted-Variable;
   font-size: 16px;
   color: rgba(128, 128, 128, 0.798);
+}
+
+.inviteFriend {
+  cursor: pointer;
+  padding: 15px;
+  padding-top: 15px;
+  padding-bottom: 15px;
+  background-color: #008d95;
+  border: none;
+  border-radius: 15px;
+
+  font-family: Wanted-Regular;
+  font-size: 18px;
+  color: white;
 }
 
 .item-left {
@@ -404,4 +479,36 @@
   width: 100%;
   display: flex;
   justify-content: center;
+}
+
+.statusDisplay {
+  text-transform: capitalize;
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  align-items: center;
+
+  padding: 15px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  border-radius: 15px;
+
+  display: flex;
+  align-items: center;
+
+  font-family: Wanted-Medium;
+  font-size: 17px;
+
+}
+
+.statusDisplay.connected {
+  border: 2px solid #0fc70f;
+  color: white;    
+  background-color: #0fc70f;
+}
+
+.statusDisplay.pending {
+  border: 2px solid transparent;
+  color: white;
+  background-color: #008d95;
 }
