@@ -145,6 +145,13 @@
   width: 100%;
 }
 
+.crew-home-body {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  gap: 30px;
+}
+
 .create-crew {
   padding: 12.5px 15px;
   display: flex;
