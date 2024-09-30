@@ -23,9 +23,17 @@
 {% block body %}
 <div id="content-container">
     <div id="pageHeader">
-        <h3>
-            View your crew: {{ crew.name }}
-        </h3>
+        <div id="name-and-leave">
+            <h3>
+                {{ crew.name }}
+            </h3>
+            <form method="POST">
+                {% csrf_token %}
+                <button id="leave-crew" type="submit" name="action" value="leave_crew" role="button">
+                    Leave Crew
+                </button>
+            </form>
+        </div>
         <p>Invite your friends to join your crew and go to events with them!</p>
     </div>
 
@@ -163,6 +171,7 @@
                             </div>
                             {% endfor %}
                         </div>
+                        
                     </div>
                 </div>
             </div>

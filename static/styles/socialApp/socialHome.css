@@ -85,7 +85,7 @@
 .info-container {
   display: flex;
   flex-direction: column;
-  gap: 70px;
+  gap: 40px;
 }
 
 .info-container .row-one {
@@ -129,14 +129,16 @@
 
 .home-header {
   display: flex;
-  justify-content: start;
-  flex-direction: column;
+  justify-content: space-between;
+  flex-direction: row;
+  align-items: center;
   gap: 10px;
 }
 
 .home-header h4 {
   font-family: Wanted-ExtraBold;
   font-size: 25px;
+  width: 100%;
 }
 
 .create-crew-row {
@@ -372,6 +374,15 @@
 
 /* Crew Tab */
 
+.crew-home-body {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+  justify-content: space-between;
+  align-items: center;
+}
+
 .crew-item {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -428,6 +439,8 @@
 .crewI-right {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
+
 }
 
 .view-crew {
