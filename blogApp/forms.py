@@ -16,15 +16,17 @@ class createBlogForm(forms.ModelForm):
         ]
 
         widgets = {
+            "blogType": forms.Select(attrs={"required": True}),
+            "title": forms.TextInput(attrs={"required": True}),
             "body": forms.Textarea(
                 attrs={
-                    "class": "",
                     "rows": 5,
                     "cols": 40,
                     "autocomplete": "off",
                     "required": True,
                 }
-            )
+            ),
+            "imageOne": forms.ClearableFileInput(attrs={"required": True}),
         }
         
 class UpdateBlogTypeForm(forms.ModelForm):

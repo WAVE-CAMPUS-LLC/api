@@ -28,6 +28,33 @@
   gap: 5px;
 }
 
+#name-and-leave {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+
+#leave-crew {
+  padding: 10px 15px;
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  align-items: center;
+  color: white;
+
+  border-radius: 20px;
+  background-image: linear-gradient(to right, #d20d0dc3 0%, #ff0000 100%);
+  cursor: pointer;
+
+  font-family: Wanted-Variable;
+  font-size: 20px;
+
+  border: transparent;
+  text-decoration: none;
+}
+
 #pageHeader h3 {
   font-family: Wanted-Bold;
   font-size: 40px;

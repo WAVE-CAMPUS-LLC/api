@@ -1,4 +1,4 @@
-from http.client import HTTPResponse
+from calendar import c
 from os import name
 import re
 from datetime import datetime
@@ -17,18 +17,15 @@ from .models import FriendRequest, Crew, CrewMember, CrewRequest
 from django.db.models import Q
 from .forms import createCrewForm
 
-# Decorators to check user roles and permissions
-from wave_v1.decorators import member_required, check_suspension
-
 UserModel = get_user_model()
 
 
-# Create your views here.
 @login_required
 def socialHomeView(request):
     user = get_object_or_404(UserProfile, user=request.user)
     my_crews = Crew.objects.filter(members__user=request.user)
     time = datetime.now().timestamp()
+    friends = user.friends.all()
 
     pending_friend_requests = FriendRequest.objects.filter(
         receiver=request.user, status="pending"
@@ -37,10 +34,6 @@ def socialHomeView(request):
         receiver=request.user, status="pending"
     )
                 
-    friends = user.friends.all() 
-    
-    print("DEBUG: Friends of user ", list(friends))
-    
     if request.method == "POST":
         action = request.POST.get("action")
         
@@ -88,7 +81,6 @@ def crew_invite_action(request, crew_id, action):
 def publicProfileView(request, username):
     try:
         user = get_object_or_404(UserModel, username=username)
-        # Ensure user_profile exists or create it if it doesn't
         user_profile, created = UserProfile.objects.get_or_create(user=user)
 
         friend_request = FriendRequest.objects.filter(
@@ -172,11 +164,9 @@ def send_crew_request(sender, receiver_username, crew_id):
     receiver = get_object_or_404(UserProfile, user__username=receiver_username)
     crew = get_object_or_404(Crew, crewId=crew_id)
     
-    # Ensure receiver isn't already in the crew
     if CrewMember.objects.filter(crew=crew, user=receiver.user).exists():
         return False, "User is already a member of the crew.", None
 
-    # Send a crew request
     crew_request, created = CrewRequest.objects.get_or_create(
         sender=sender.user, receiver=receiver.user, crew=crew, defaults={"status": "pending"}
     )
@@ -189,8 +179,6 @@ def send_crew_request(sender, receiver_username, crew_id):
 
 @login_required
 def createCrewView(request):
-    pageName = "social"
-
     if request.method == "POST":
         crewForm = createCrewForm(request.POST)
 
@@ -216,34 +204,25 @@ def createCrewView(request):
 @login_required
 def crewView(request, crewId):
     user = get_object_or_404(UserProfile, user=request.user)
-    print(f"DEBUG: Logged in user: {user.user.username}")  # Debugging user
-
     crew = get_object_or_404(Crew, crewId=crewId)
-    print(f"DEBUG: Crew fetched: {crew.name}")  # Debugging crew details
-
     crewMembers = CrewMember.objects.filter(crew=crew)
-    if not crewMembers:
-        print(f"DEBUG: No crew members found for crew {crewId}")  # Debugging crew members
-    else:
-        print(f"DEBUG: Crew members count: {crewMembers.count()}")
     
     friends = user.friends.all()
     friends_not_in_crew = friends.exclude(user__in=crewMembers.values_list('user', flat=True))
     time = datetime.now().timestamp()
-    print(f"DEBUG: Friends not in crew count: {friends_not_in_crew.count()}")
     
     if request.method == "POST":
         action = request.POST.get("action")
         inviteeUsername = request.POST.get("invitee_username")
         if action == "crew_invite":
             success, message, crew_request = send_crew_request(user, inviteeUsername, crewId)
-            print("DEBUG: POST request received")
-            
-
             if success:
                 messages.success(request, message)
             else:
                 messages.warning(request, message)
+        elif action == "leave_crew":
+            leave_crew(request, crewId)
+            return redirect('social:home')
     else:
         crew_request = None
     
@@ -251,6 +230,22 @@ def crewView(request, crewId):
         
     return render(request, "socialApp/crews/crew.html", {'crew': crew, 'crewMembers': crewMembers, 'status': status, "friendsNotInCrew": friends_not_in_crew, 'time': time})
 
+def leave_crew(request, crewId):
+    crew = get_object_or_404(Crew, crewId=crewId)
+    crew_member = CrewMember.objects.get(crew=crew, user=request.user)
+    crew_member.delete()
+    crew_request_received = CrewRequest.objects.filter(crew=crew, receiver=request.user).first()
+    if crew_request_received:
+        crew_request_received.delete()
+    crew_request_sent = CrewRequest.objects.filter(crew=crew, sender=request.user).first()
+    if crew_request_sent:
+        crew_request_sent.delete()
+    messages.success(request, f'{request.user} has left the {crew.name} crew.')
+    crew_members = CrewMember.objects.filter(crew=crew)
+    if not crew_members.exists():
+        crew.delete()
+        messages.success(request, f'{crew.name} crew has been deleted.')
+    
     # if request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest':
     #     query = request.GET.get('query', '')
         
