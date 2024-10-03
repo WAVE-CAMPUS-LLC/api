@@ -95,20 +95,22 @@ My Social @{{ user.username }} — WAVE.
                         </div>
                         <div class="home-body">
                             {% if friends %}
-                            {% for friend in friends %}
-                            <div class="user-card">
-                                <div class="user-pfp">
-                                    <img src="{% static "images/socialApp/publicProfile/profile/E.L.png" %}" alt="Profile Picture" />
+                                {% for friend in friends %}
+                                <div class="user-card">
+                                    <div class="user-pfp">
+                                        <img src="{% static "images/socialApp/publicProfile/profile/E.L.png" %}" alt="Profile Picture" />
+                                    </div>
+                                    <div class="user-names">
+                                        <h1 class="userFullname">{{ friend.user.first_name }} {{ friend.user.last_name }}</h1>
+                                        <p>
+                                            @{{ friend.user.username }}
+                                        </p>
+                                    </div>
+                                    <div class="user-actions">
+                                        <a target="_blank" href="{% url "social:publicProfile" username=friend.user.username %}">View Social</a>
+                                    </div>
                                 </div>
-                                <div class="user-names">
-                                    <h1>{{ friend.user.first_name }} {{ friend.user.last_name }}</h1>
-                                    <p>Class of 28'</p>
-                                </div>
-                                <div class="user-actions">
-                                    <a target="_blank" href="{% url "social:publicProfile" username=friend.user.username %}">View Social</a>
-                                </div>
-                            </div>
-                            {% endfor %}
+                                {% endfor %}
                             {% else %}
                             <div class="emptyContainer">
                                 <div>
@@ -220,22 +222,6 @@ My Social @{{ user.username }} — WAVE.
                                             <img src="{% static "/images/socialApp/socialHome/decline.svg" %}" alt="Decline Friend Request">
                                         </button>
                                     </form>
-<<<<<<< HEAD
-                                </div>
-                            </div>
-                            {% endfor %}
-                        {% else %}
-                            <div class="emptyContainer">
-                                <div>
-                                    <img src="{% static "/images/collegeManagementApp/collegeInformation/empty-listing.svg" %}" />
-                                </div>
-                                <div>
-                                    <p>
-                                        Currently no crew invitations.
-                                    </p>
-                                </div>
-                            </div>
-=======
                                 </div>
                             </div>
                             {% endfor %}
@@ -252,7 +238,6 @@ My Social @{{ user.username }} — WAVE.
                                 </p>
                             </div>
                         </div>
->>>>>>> bd4bbab0ca8d9f2300a66f5e05ac6d51e110de8d
                         {% endif %}
                     </div>
                 </div>
@@ -280,10 +265,11 @@ My Social @{{ user.username }} — WAVE.
                                     </div>
                                     <div class="crew-name">
                                         <h5>{{ crew.name }}</h5>
-                                        <p>Created by: <a target="_blank" href="{% url "social:publicProfile" username=crew.created_by.username %}">@{{ crew.created_by }}</a></p>
+                                        <p>
+                                            Created by: {{ crew.created_by.first_name }} {{ crew.created_by.last_name }}
+                                        </p>
                                     </div>
                                 </div>
-<<<<<<< HEAD
                                 <div class="crewI-right">
                                     <a target="_blank" href="{% url "social:crew" crewId=crew.crewId %}" class="view-crew">View Crew</a>
                                 </div>
@@ -304,15 +290,6 @@ My Social @{{ user.username }} — WAVE.
                                         Share the WAVE.!
                                     </p>
                                 </div>
-=======
-                                <div class="crew-name">
-                                    <h5>{{ crew.name }}</h5>
-                                    <p>Created by: <a href="{% url "social:publicProfile" username=crew.created_by.username %}">@{{ crew.created_by }}</a></p>
-                                </div>
-                            </div>
-                            <div class="crewI-right">
-                                <a href="{% url "social:crew" crewId=crew.crewId %}" class="view-crew">View Crew</a>
->>>>>>> bd4bbab0ca8d9f2300a66f5e05ac6d51e110de8d
                             </div>
                         {% endif %}
                     </div>
