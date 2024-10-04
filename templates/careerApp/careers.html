@@ -15,13 +15,24 @@ Careers @ Wave.
 {% endblock script %}
 
 
-{% block pageHeader %}
-{% include "partials/headers/careersHeader.html" %}
-{% endblock pageHeader %}
+{% block header %}
+{% include "partials/nav-footer/nav/host/host_nav.html" %}
+{% endblock header %}
 
 
 {% block body %}
 <div id="content-container">
+    <div class="job-rowOne">
+        <div class="infoText">
+            <div class="text-holder">
+                <h3>Careers @ <span id="body-logo"> WAVE<span class="spot">.</span></h3>
+                <p>Build the future with us!</p>
+            </div>
+            <div class="image">
+                <img src="{% static "images\career\careerHome.png" %}" />
+            </div>
+        </div>
+    </div>
     <div id="jobs-header-info">
         <section id="jhi-One">
             <h4>Come, let's innovate! </h4>

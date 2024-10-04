@@ -112,7 +112,7 @@ class CrewRequest(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        unique_together = ("sender", "receiver")
+        unique_together = ("sender", "receiver", "crew")
         verbose_name = "Crew Request"
         verbose_name_plural = "Crew Requests"
 
