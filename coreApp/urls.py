@@ -7,6 +7,7 @@ app_name = "core"
 urlpatterns = [
     path("", views.indexView, name="index"),
     path("explore/", views.exploreView, name="explore"),
+    path("categories/", views.categoriesView, name="categories"),
     path("event/<uuid:eventId>/", views.eventDetailsView, name="eventDetails"),
     path("category/<str:name>/", views.categoryView, name="category"),
     path("load-more/", views.load_more_events, name="load_more_events"),

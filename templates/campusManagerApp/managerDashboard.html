@@ -20,7 +20,7 @@ Campus Manager — WAVE.
 {% block body %}
 <div id="content-container">
     <div id="pageHeader">
-        <h3>Welcome to the dashboard, Enosh!</h3>
+        <h3>Welcome to the dashboard, {{ request.user.first_name }}!</h3>
         <p>Manage campuses from your dashboard. </p>
     </div>
 
@@ -47,22 +47,30 @@ Campus Manager — WAVE.
                             {% for college_info in managed_colleges %}
                             <div id="college-card">
                                 <div id="college-logo">
-                                    <img src="{{ college_info.logo.url }}" alt="{{ college_info.name }} logo">
+                                    <img src="{{ college_info.college.logo.url }}" alt="{{ college_info.college.name }} logo">
                                 </div>
                                 <div id="college-body">
                                     <div id="college-card-header">
-                                        <h5>{{ college_info.name }}</h5>
+                                        <h5>{{ college_info.college.name }}</h5>
                                     </div>
                                     <div id="college-card-body">
                                         <p class="members-display">
                                             {{ college_info.member_count }} {% if college_info.member_count == 1 %}Member{% else %}Members{% endif %}
                                         </p>
-                                        <p class="organization-display">55 Organizations</p>
+                                        <p class="organization-display">
+                                            {% if college_info.organization_count > 1 %}
+                                            {{ college_info.organization_count }} Organizations
+                                            {% elif college_info.organization_count < 1 %}
+                                            {{ college_info.organization_count }} Organization
+                                            {% else %}
+                                            No Organizations
+                                            {% endif %}
+                                        </p>
                                     </div>
                                 </div>
 
                                 <div id="manage-row">
-                                    <button role="button" type="button" class="manage-button">Manage</button>
+                                    <a target="_blank" href="{% url "campusManager:campus" collegeId=college_info.college.collegeId %}" class="manage-college-btn">Manage</a>
                                 </div>
                             </div>
                             {% endfor %}

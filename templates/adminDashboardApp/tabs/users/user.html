@@ -71,6 +71,7 @@ WAVE. — Member Details
                             <p>
                                 {% for group in user_groups %}
                                 {{ group.name }}
+                                {% if not forLoop.last %}&{% endif %}
                                 {% endfor %}
                             </p>
                         </div>

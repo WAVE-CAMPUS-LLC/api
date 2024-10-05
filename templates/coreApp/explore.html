@@ -5,7 +5,7 @@
 
 
 {% block title %}
-See what's happening around you — WAVE.
+What's the wave?! — WAVE.
 {% endblock title %}
 
 {% block app_page_style %}
@@ -61,19 +61,7 @@ See what's happening around you — WAVE.
                     Categories
                 </div>
                 <div class="heading-controls">
-                    <button id="scroll-left" type="button" role="button">
-                        <img src="{% static "images/explore/arrow-left.svg" %}" alt="Scroll left">
-                    </button>
-
-                    <div id="section-indicator">
-                        <span class="indicator"></span>
-                        <span class="indicator active"></span>
-                        <span class="indicator"></span>
-                    </div>
-
-                    <button id="scroll-right" type="button" role="button">
-                        <img src="{% static "images/explore/arrow-right.svg" %}" alt="">
-                    </button>
+                    <a target="_blank" href="{% url "core:categories" %}">See More</a>
                 </div>
             </div>
 

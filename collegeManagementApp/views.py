@@ -63,7 +63,8 @@ def collegeCampusesView(request):
     college_members_info = []
     for college in colleges:
         member_count = UserProfile.objects.filter(college=college).count()
-        college_members_info.append({"college": college, "member_count": member_count})
+        organization_count = Organization.objects.filter(college=college).count()
+        college_members_info.append({"college": college, "member_count": member_count, "organization_count":organization_count})
 
     user_profile = None
     if request.user.is_authenticated:

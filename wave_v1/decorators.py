@@ -108,3 +108,17 @@ def group_required(group_name):
         return wrapped_view
 
     return decorator
+
+
+def campusManagerRequired(group_name):
+    def decorator(view_func):
+        def wrapped_view(request, *args, **kwargs):
+            if request.user.is_authenticated:
+                # Check if the user is in the specified group
+                if Group.objects.filter(name=group_name, user=request.user).exists():
+                    return view_func(request, *args, **kwargs)
+            return render(request, "extras/invalid/notAManager.html")
+
+        return wrapped_view
+
+    return decorator

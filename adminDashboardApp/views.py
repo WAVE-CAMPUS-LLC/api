@@ -559,6 +559,7 @@ def adminCollegeDetailView(request, collegeId):
         if email:
             try:
                 send_invite(email, college)
+                
                 messages.success(request, "Invite sent successfully")
             except Exception as e:
                 messages.error(request, f"Error sending invite: {str(e)}")
