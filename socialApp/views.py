@@ -2,6 +2,7 @@ from calendar import c
 from os import name
 import re
 from datetime import datetime
+from ssl import MemoryBIO
 from turtle import st
 from django.http import Http404, HttpResponseBadRequest
 from django.shortcuts import get_object_or_404, render, redirect
@@ -159,24 +160,6 @@ def send_friend_request(sender, receiver_username):
     return True, "Friend request sent successfully."
 
 
-def send_crew_request(sender, receiver_username, crew_id):
-    sender = get_object_or_404(UserProfile, user__username=sender.user.username)
-    receiver = get_object_or_404(UserProfile, user__username=receiver_username)
-    crew = get_object_or_404(Crew, crewId=crew_id)
-    
-    if CrewMember.objects.filter(crew=crew, user=receiver.user).exists():
-        return False, "User is already a member of the crew.", None
-
-    crew_request, created = CrewRequest.objects.get_or_create(
-        sender=sender.user, receiver=receiver.user, crew=crew, defaults={"status": "pending"}
-    )
-
-    if not created:
-        return False, "Crew request has already been sent.", crew_request
-
-    return True, "Crew request sent successfully.", crew_request
-
-
 @login_required
 def createCrewView(request):
     if request.method == "POST":
@@ -203,32 +186,61 @@ def createCrewView(request):
 
 @login_required
 def crewView(request, crewId):
+    time = datetime.now().timestamp()
     user = get_object_or_404(UserProfile, user=request.user)
     crew = get_object_or_404(Crew, crewId=crewId)
-    crewMembers = CrewMember.objects.filter(crew=crew)
     
+    crewMembers = CrewMember.objects.filter(crew=crew)
     friends = user.friends.all()
+    self_user = user.user
     friends_not_in_crew = friends.exclude(user__in=crewMembers.values_list('user', flat=True))
-    time = datetime.now().timestamp()
+    is_crew_owner = crew.created_by == request.user
     
     if request.method == "POST":
         action = request.POST.get("action")
-        inviteeUsername = request.POST.get("invitee_username")
         if action == "crew_invite":
+            inviteeUsername = request.POST.get("invitee_username")
             success, message, crew_request = send_crew_request(user, inviteeUsername, crewId)
             if success:
                 messages.success(request, message)
             else:
                 messages.warning(request, message)
+                
         elif action == "leave_crew":
             leave_crew(request, crewId)
+            return redirect('social:home')
+        
+        elif action == "delete_crew":
+            delete_crew(request, crewId)
+            return redirect('social:home')
+        
+        elif action == "kick_member":
+            member_username = request.POST.get("member")
+            kick_member(request, crewId, member_username)
             return redirect('social:home')
     else:
         crew_request = None
     
     status = crew_request.status if crew_request else None
         
-    return render(request, "socialApp/crews/crew.html", {'crew': crew, 'crewMembers': crewMembers, 'status': status, "friendsNotInCrew": friends_not_in_crew, 'time': time})
+    return render(request, "socialApp/crews/crew.html", {'crew': crew, 'self': self_user, 'crewMembers': crewMembers, 'status': status, "friendsNotInCrew": friends_not_in_crew, 'time': time, 'is_crew_owner': is_crew_owner})
+
+def send_crew_request(sender, receiver_username, crew_id):
+    sender = get_object_or_404(UserProfile, user__username=sender.user.username)
+    receiver = get_object_or_404(UserProfile, user__username=receiver_username)
+    crew = get_object_or_404(Crew, crewId=crew_id)
+    
+    if CrewMember.objects.filter(crew=crew, user=receiver.user).exists():
+        return False, "User is already a member of the crew.", None
+
+    crew_request, created = CrewRequest.objects.get_or_create(
+        sender=sender.user, receiver=receiver.user, crew=crew, defaults={"status": "pending"}
+    )
+
+    if not created:
+        return False, "Crew request has already been sent.", crew_request
+
+    return True, "Crew request sent successfully.", crew_request
 
 def leave_crew(request, crewId):
     crew = get_object_or_404(Crew, crewId=crewId)
@@ -245,6 +257,31 @@ def leave_crew(request, crewId):
     if not crew_members.exists():
         crew.delete()
         messages.success(request, f'{crew.name} crew has been deleted.')
+
+def delete_crew(request, crewId):
+    crew = get_object_or_404(Crew, crewId=crewId)
+    crew_requests = CrewRequest.objects.filter(crew=crew)
+    for crew_request in crew_requests:
+        crew_request.delete()
+    crew_members = CrewMember.objects.filter(crew=crew)
+    for crew_member in crew_members:
+        crew_member.delete()
+    crew.delete()
+    messages.success(request, f'{crew.name} crew has been deleted.')
+    
+def kick_member(request, crewId, member_username):
+    crew = get_object_or_404(Crew, crewId=crewId)
+    member = get_object_or_404(UserProfile, user__username=member_username)
+    crew_request_received = CrewRequest.objects.filter(crew=crew, receiver=member.user).first()
+    if crew_request_received:
+        crew_request_received.delete()
+    crew_request_sent = CrewRequest.objects.filter(crew=crew, sender=member.user).first()
+    if crew_request_sent:
+        crew_request_sent.delete()
+    crew_member = CrewMember.objects.get(crew=crew, user=member.user)
+    crew_member.delete()
+    messages.success(request, f'{member.user} has been kicked from the {crew.name} crew.')
+        
     
     # if request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest':
     #     query = request.GET.get('query', '')

@@ -27,12 +27,21 @@
             <h3>
                 {{ crew.name }}
             </h3>
+            {% if is_crew_owner %}
+            <form method="POST">
+                {% csrf_token %}
+                <button id="delete-crew" type="submit" name="action" value="delete_crew" role="button">
+                    Delete Crew
+                </button>
+            </form>
+            {% else %}
             <form method="POST">
                 {% csrf_token %}
                 <button id="leave-crew" type="submit" name="action" value="leave_crew" role="button">
                     Leave Crew
                 </button>
             </form>
+            {% endif %}
         </div>
         <p>Invite your friends to join your crew and go to events with them!</p>
     </div>
@@ -87,10 +96,28 @@
                                             <img src="{% static "/images/socialApp/publicProfile/profile/E.L.png" %}" alt="crew member" />
                                         </div>
                                         <div class="member-info">
-                                            <h3 class="member-name">{{ member.user.first_name }} {{ member.user.last_name }}</h3>
-                                            <p class="member-username">{{member.user.username}}</p>
+                                            <h3 class="member-name">
+                                                {{ member.user.first_name }} {{ member.user.last_name }}
+                                                {% if member.user == self %}
+                                                (you)
+                                                {% endif %}
+                                            </h3>
+                                            <p class="member-username">
+                                                {{member.user.username}}
+                                            </p>
                                         </div>
                                     </a>
+                                    {% if is_crew_owner and member.user != self %}
+                                    <div id="kickMemberButton">
+                                        <form method="POST">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="member" value="{{ member.user.username }}" />
+                                            <button id="kick-member" type="submit" name="action" value="kick_member" role="button">
+                                                Kick Member
+                                            </button>
+                                        </form>
+                                    </div>
+                                    {% endif %}
                                 </div>
                                 {% endfor %}
                             </div>

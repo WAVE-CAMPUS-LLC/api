@@ -90,3 +90,7 @@ class UserProfile(models.Model):
                 sender=other_user, receiver=self.user, status="declined"
             ).exists()
         )
+    
+    def is_crew_owner(self, crewId):
+        crew = get_object_or_404(Crew, crewId=crewId)
+        return crew.created_by == self.user

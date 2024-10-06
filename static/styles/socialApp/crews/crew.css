@@ -36,7 +36,7 @@
   gap: 20px;
 }
 
-#leave-crew {
+#leave-crew, #delete-crew, #kick-member {
   padding: 10px 15px;
   display: flex;
   flex-direction: row;
@@ -303,9 +303,10 @@
   justify-content: space-between;
   gap: 20px;
   align-items: center;
-  /* grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 20px;
-  width: 100%; */
+}
+
+#kickMemberButton {
+  padding: 20px;
 }
 
 .item-right {

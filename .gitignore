@@ -1,10 +1,68 @@
-.env
-.venv
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+.env/
+.virtualenv/
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Install packages
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+lib/
+lib64/
+parts/
+sdist/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg/
+*.whl
+
+# Pipenv
 Pipfile
 Pipfile.lock
-.vscode
-__pycache__/
-*.pyc
+
+# Poetry
+poetry.lock
+poetry.toml
+
+# PyInstaller
+# Usually these files are written by a python script from a template
+*.manifest
+*.spec
+
+# Django
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+media/
+
+# VS Code
+.vscode/
+
+# IntelliJ IDEA
+.idea/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# macOS
+.DS_Store
+
+# Linux
 *~
-*.swp
-.virtualenv/
+
+# Windows
+Thumbs.db
