@@ -217,7 +217,7 @@ def crewView(request, crewId):
         elif action == "kick_member":
             member_username = request.POST.get("member")
             kick_member(request, crewId, member_username)
-            return redirect('social:home')
+            return redirect('social:crew', crewId=crewId)
     else:
         crew_request = None
     
@@ -246,41 +246,30 @@ def leave_crew(request, crewId):
     crew = get_object_or_404(Crew, crewId=crewId)
     crew_member = CrewMember.objects.get(crew=crew, user=request.user)
     crew_member.delete()
-    crew_request_received = CrewRequest.objects.filter(crew=crew, receiver=request.user).first()
-    if crew_request_received:
-        crew_request_received.delete()
-    crew_request_sent = CrewRequest.objects.filter(crew=crew, sender=request.user).first()
-    if crew_request_sent:
-        crew_request_sent.delete()
-    messages.success(request, f'{request.user} has left the {crew.name} crew.')
+    CrewRequest.objects.filter(crew=crew, receiver=crew_member.user).delete()
+    CrewRequest.objects.filter(crew=crew, sender=crew_member.user).delete()
     crew_members = CrewMember.objects.filter(crew=crew)
     if not crew_members.exists():
         crew.delete()
         messages.success(request, f'{crew.name} crew has been deleted.')
+    messages.success(request, f'{request.user} has left the {crew.name} crew.')
+
 
 def delete_crew(request, crewId):
     crew = get_object_or_404(Crew, crewId=crewId)
-    crew_requests = CrewRequest.objects.filter(crew=crew)
-    for crew_request in crew_requests:
-        crew_request.delete()
-    crew_members = CrewMember.objects.filter(crew=crew)
-    for crew_member in crew_members:
-        crew_member.delete()
+    CrewRequest.objects.filter(crew=crew).delete()
+    CrewMember.objects.filter(crew=crew).delete()
     crew.delete()
     messages.success(request, f'{crew.name} crew has been deleted.')
     
 def kick_member(request, crewId, member_username):
     crew = get_object_or_404(Crew, crewId=crewId)
     member = get_object_or_404(UserProfile, user__username=member_username)
-    crew_request_received = CrewRequest.objects.filter(crew=crew, receiver=member.user).first()
-    if crew_request_received:
-        crew_request_received.delete()
-    crew_request_sent = CrewRequest.objects.filter(crew=crew, sender=member.user).first()
-    if crew_request_sent:
-        crew_request_sent.delete()
-    crew_member = CrewMember.objects.get(crew=crew, user=member.user)
-    crew_member.delete()
-    messages.success(request, f'{member.user} has been kicked from the {crew.name} crew.')
+    CrewRequest.objects.filter(crew=crew, receiver=member.user).delete()
+    CrewRequest.objects.filter(crew=crew, sender=member.user).delete()
+    CrewMember.objects.filter(crew=crew, user=member.user).delete()
+    messages.success(request, f'{member.user.username} has been kicked from the {crew.name} crew.')
+
         
     
     # if request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest':
