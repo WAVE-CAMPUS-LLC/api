@@ -14,19 +14,21 @@ from .forms import (
     VerifyCollegeJoinForm,
 )
 from .models import (
-    College,
     CollegeRequest,
     Membership,
     Organization,
     OrganizationMembership,
 )
+#TODO (Dave): for some reason the college management College model is not working properly. Using this for now.
+from adminDashboardApp.models import College
 from accountManagementApp.models import UserProfile
-
 
 # Create your views here.
 def collegeHomeView(request):
     pageName = "Colleges"
-    return render(request, "collegeManagementApp/home.html", {"pageName": pageName})
+    random_colleges = College.objects.order_by('?')[:3]
+    print(random_colleges)
+    return render(request, "collegeManagementApp/home.html", {"pageName": pageName, "random_colleges": random_colleges})
 
 
 def collegeCampusesView(request):

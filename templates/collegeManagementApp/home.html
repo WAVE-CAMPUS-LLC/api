@@ -89,50 +89,30 @@ Find your community! — WAVE. on Campus
         </div>
     
         <div class="last-cards">
+            {% for college in random_colleges %}
             <div class="college-cards">
-                <img src="{% static "/images/collegeManagementApp/collegeLogos/tennstate.png" %}" alt="Tennessee State University">
+                <img src="{{ college.logo.url }}" alt="{{ college.name }}" style="height: 65px; width: 110px">
                 <div class="college-info">
-                    Lorem ipsum dolor, sit amet consectetur adipisicing elit. 
-                    Consequatur qui dolorem consectetur aspernatur. Esse, eos ex quis delectus sunt deserunt quo? 
-                    Eveniet sed amet suscipit reprehenderit porro dolorum neque cum?
+                    "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.""
                 </div>
                 <div class="college-details">
-                    <h4>Enosh Lartey </h4>
-                    <p>Tennessee State University</p>
+                    <h4>Manager:</h4>
+            <p>
+                {% if college.managers.all %}
+                    {{ college.managers.first.get_full_name }} ({{ college.managers.first.email }})
+                {% else %}
+                    No manager assigned.
+                {% endif %}
+            </p>
+                    <p>{{ college.name }}</p>
                 </div>
             </div>
-    
-            <div class="college-cards">
-                <img src="{% static "/images/collegeManagementApp/collegeLogos/fisk.png" %}" alt="">
-                <div class="college-info">
-                    Lorem ipsum dolor, sit amet consectetur adipisicing elit. 
-                    Consequatur qui dolorem consectetur aspernatur. Esse, eos ex quis delectus sunt deserunt quo? 
-                    Eveniet sed amet suscipit reprehenderit porro dolorum neque cum?
-                </div>
-                <div class="college-details">
-                    <h4> Edmund Afunyah </h4>
-                    <p>Fisk University</p>
-                </div>
-            </div>
-    
-            <div class="college-cards">
-                <img src="{% static "/images/collegeManagementApp/collegeLogos/belmont.png" %}" alt="">
-                <div class="college-info">
-                    Lorem ipsum dolor, sit amet consectetur adipisicing elit. 
-                    Consequatur qui dolorem consectetur aspernatur. Esse, eos ex quis delectus sunt deserunt quo? 
-                    Eveniet sed amet suscipit reprehenderit porro dolorum neque cum?
-                </div>
-                <div class="college-details">
-                    <h4>Chigekwu Chukwuezi </h4>
-                    <p>Belmont Univeristy</p>
-                </div>
-            </div>
-    
+            {% endfor %}
         </div>
     </div>
 </div>
 
-<div id="colleges-footer-info">
+<div id="colleges-footer-info" style="position: relative; top: -60px">
     <h3>Be part of a community!</h3>
 </div>
 

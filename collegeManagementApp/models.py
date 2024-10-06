@@ -9,6 +9,29 @@ from adminDashboardApp.models import College
 
 
 # Create your models here.
+from django.db import models
+
+class College(models.Model):
+    name = models.CharField(max_length=200, db_column='College name')
+    address = models.CharField(max_length=255, db_column='Address')
+    city = models.CharField(max_length=100, db_column='City')
+    state = models.CharField(max_length=100, db_column='State')
+    zip_code = models.CharField(max_length=10, db_column='Zip Code')
+    country = models.CharField(max_length=100, db_column='Country')
+    motto = models.CharField(max_length=255, db_column="What's your college's motto?")
+    website = models.URLField(db_column='College website')
+    email_domain = models.CharField(max_length=100, db_column='College email domain')
+    logo = models.ImageField(upload_to='college_logos/', null=True, blank=True, db_column='Upload the college logo')
+
+    # Add the managers field to match the existing field in the database
+    managers = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='college_managers', blank=True)
+    
+    class Meta:
+        db_table = 'Colleges' 
+
+    def __str__(self):
+        return self.name
+
 class CollegeRequest(models.Model):
     requestId = models.UUIDField(
         primary_key=True, default=uuid.uuid4, editable=False, unique=True
