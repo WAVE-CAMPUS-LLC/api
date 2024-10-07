@@ -725,7 +725,7 @@ def send_email(request):
         message = data.get('message')
 
         email_params: resend.Emails.SendParams = {
-            "from": "WAVE Support <support@wavecampus.net>",
+            "from": "Support @ WAVE. <support@wavecampus.net>",
             "to": recipients,
             "subject": subject,
             "html": message,
