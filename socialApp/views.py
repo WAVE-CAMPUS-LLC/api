@@ -18,6 +18,9 @@ from .models import FriendRequest, Crew, CrewMember, CrewRequest
 from django.db.models import Q
 from .forms import createCrewForm
 
+# Decorators to check user roles and permissions
+from wave_v1.decorators import group_required, check_suspension
+
 UserModel = get_user_model()
 
 

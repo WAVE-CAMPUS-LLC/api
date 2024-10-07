@@ -30,6 +30,7 @@ wheels/
 *.whl
 
 # Pipenv
+venv/
 Pipfile
 Pipfile.lock
 

@@ -1,0 +1,190 @@
+/** Logo used in body's **/
+#body-logo {
+    font-family: Wanted-Black;
+}
+
+#body-logo .spot {
+    color: #008d95;
+}
+
+/** [End] Logo used in body's [End]**/
+
+#content-container {
+    padding-bottom: 70px;
+    padding-left: 100px;
+    padding-right: 100px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 70px;
+}
+
+/* Page Header */
+#pageHeader {
+    width: 100%;
+    display: flex;
+    justify-content: start;
+    flex-direction: column;
+    gap: 5px;
+}
+
+#pageHeader h3 {
+    font-family: Wanted-Bold;
+    font-size: 40px;
+}
+
+#pageHeader p {
+    font-family: Wanted-Variable;
+    font-size: 17px;
+    color: rgba(128, 128, 128, 0.798);
+}
+
+/* Page Body */
+#pageBody form {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.body-section {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+
+.section {
+    display: none;
+}
+
+.section.active {
+    display: block;
+}
+
+.section-container .section-title {
+    width: 100%;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.section-container .section-title p {
+    font-family: Wanted-Variable;
+    font-size: 17px;
+    color: rgba(128, 128, 128, 0.798);
+}
+
+.section-title p a {
+    color: #008d95;
+    text-decoration: underline;
+    font-family: Wanted-Regular;
+}
+
+.section-title {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+.section-title h4 {
+    font-family: Wanted-SemiBold;
+    font-size: 35px;
+
+
+}
+
+.section-input {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+.section-input input {
+    padding: 15px;
+
+    border-radius: 20px;
+    border: 1px solid rgba(9, 9, 9, 0.108);
+
+    font-family: Wanted-Regular;
+    font-size: 20px;
+
+    width: 50%;
+
+    /** Box Shadowing **/
+    -webkit-box-shadow: 2px 3px 21px 4px rgba(138, 138, 138, 0.108);
+    -moz-box-shadow: 2px 3px 21px 4px rgba(138, 138, 138, 0.108);
+    box-shadow: 2px 3px 21px 4px rgba(138, 138, 138, 0.026);
+}
+
+
+
+/* Next Previous Row */
+.nextPreviousRow {
+    width: 100%;
+
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#previousSectionButton {
+    font-family: Wanted-Regular;
+    font-size: 17px;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+
+    background: none;
+    border: none;
+
+    cursor: pointer;
+}
+
+#nextSubmitContainer {
+    display: flex;
+    justify-content: end;
+    width: 100%;
+}
+
+#nextSectionButton:disabled{
+    background-color: #8d9090;
+
+}
+
+#nextSectionButton,
+#submitButton {
+    background-color: #008d95;
+    padding: 15px;
+    border-radius: 15px;
+    border: none;
+
+    font-family: Wanted-Regular;
+    color: white;
+    font-size: 17px;
+
+    cursor: pointer;
+}
+
+.suggestions-box {
+    border: 1px solid #ccc;
+    max-height: 200px;
+    overflow-y: auto;
+    background-color: white;
+    position: absolute;
+    z-index: 1000;
+    width: 43%;
+    border-radius: 20px;
+}
+
+.suggestion-item {
+    padding: 12px;
+    cursor: pointer;
+}
+
+.suggestion-item:hover {
+    background-color: #f0f0f0;
+}

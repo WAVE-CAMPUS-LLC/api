@@ -1,0 +1,140 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}
+Campus Manager — WAVE.
+{% endblock title %}
+
+{% block app_page_style %}
+<link rel="stylesheet" type="text/css" href="{% static "/styles/campusManagerApp/managerCampusView.css" %}" />
+{% endblock app_page_style %}
+
+{% block script %}
+<script type="text/javascript" src="{% static "scripts/collegeManagementApp/tabControl.js" %}"></script>
+{% endblock script %}
+
+{% block header %}
+{% include "partials/nav-footer/nav/main_nav.html" %}
+{% endblock header %}
+
+{% block body %}
+<div id="content-container">
+    <div id="pageHeader">
+        <h3>Currently viewing {{ college.name }}</h3>
+        <p>Manage this campus in detail. Events, organizations, members.</p>
+    </div>
+
+
+    <div id="tabbingContent">
+        <div id="tabControlHeader">
+            <ul id="tabControl">
+                <li class="managerTab tab-active" data-tab="eventsInformation">
+                    Events
+                </li>
+                <li class="managerTab" data-tab="organizationInformation" title="View all organizations. Pending and approved!">Organizations</li>
+                <li  class="managerTab" data-tab="membersInformation">Members</li>
+            </ul>        
+        </div>
+    
+        <div id="tabBody">
+            <div id="tabBodyContent">
+                <div id="eventsInformation" class="campusManagerInformation">
+                    <div class="eventsInfoContainer">
+                        Events Container
+                    </div>
+                </div>
+
+                <div id="organizationInformation" class="campusManagerInformation">
+                    <div class="organizationInfoContainer">
+                        {% if organizations %}
+                        <div class="collegeOrgsGrid">
+                            {% for org in organizations %}
+                            <div class="organization-card">
+                                <div class="orgCard-image-container">
+                                    <img src="{{org.logo.url}}" class="orgCard-image"/>
+                                </div>
+                                <div class="orgCard-body-container">
+                                    <h3> {{ org.name }}</h3>
+                                    <div class="subBody-row">
+                                        <p id="privacyStatus">
+                                            {% if org.privacy == "Private" %}
+                                            {{ org.privacy }}
+                                            <img src="{% static "images/collegeManagementApp/private.svg" %}" />
+                                            {% elif org.privacy == "Public" %}
+                                            {{ org.privacy }}
+                                            <img src="{% static "images/collegeManagementApp/public.svg" %}" />
+                                            {% endif %}
+                                            
+                                        </p>
+
+                                        <p id="memberCounter">
+                                            505 Members
+                                        </p>
+                                    </div>
+                                    
+                                    <form method="POST" class="expandOrg" action="{% url 'campusManager:campus' collegeId=college.collegeId %}">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="organizationID" value="{{ org.orgId }}">
+                                        <button type="button" role="button" class="viewOrgButton">Expand</button>
+                                        <button type="submit" role="button" name="action" value="deleteOrganization" class="deleteOrgButton">Delete</button>
+                                    </form>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="emptyContainer">
+                            <div>
+                                <img src="{% static "/images/collegeManagementApp/collegeInformation/empty-listing.svg" %}" />
+                            </div>
+                            <div>
+                                <p>No organizations to display!</p>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                    </div>
+                </div>
+    
+                <div id="membersInformation" class="campusManagerInformation">
+                    <div class="membersInfoContainer">
+                        {% if collegeMembers %}
+                        <div class="collegeMembersContainer">
+                            {% for member in collegeMembers %}
+                            <div class="collegeMemberCard">
+                                <div class="memberPfp">
+                                    <img src="{% static "/images/collegeManagementApp/pfp.jpg" %}" />
+                                </div>
+                                <div class="memberBody">
+                                    <h5>{{member.user.first_name}} {{member.user.last_name}}</h5>
+                                    <p>@{{ member.user.username }}</p>
+                                </div>
+                                <div id="controlRow">
+                                    <a target="_blank" class="viewUserProfile" href="{% url "social:publicProfile" username=member.user.username %}">View</a>
+                                    <form method="POST" action="{% url 'campusManager:campus' collegeId=college.collegeId %}">
+                                        <input type="hidden" name="memberEmail" value="{{ member.user.email }}"/>
+                                        {% csrf_token %}
+                                        <button role="button" name="action" value="removeCampusMember" type="submit" class="removeUser">Remove</button>
+                                    </form>
+                                </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="emptyContainer">
+                            <div>
+                                <img src="{% static "/images/collegeManagementApp/collegeInformation/empty-listing.svg" %}" />
+                            </div>
+                            <div>
+                                <p>No members to display!</p>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+</div>
+{% endblock body %}

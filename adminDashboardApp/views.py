@@ -1,12 +1,22 @@
-from datetime import timedelta
+import resend
+import json
+from django.views.decorators.http import require_POST
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
 from django.http import HttpResponseBadRequest
 from django.shortcuts import render, redirect, HttpResponse, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.template.loader import render_to_string
+from django.contrib import messages
 from django.utils.html import strip_tags
 from django.db.models import Count
 from django.core.mail import send_mail
 from django.contrib.auth.models import Group, Permission
+from django.urls import reverse
+from django.core.signing import Signer
+from django.utils import timezone
+import uuid
+
 
 from accountManagementApp.models import UserProfile
 from authenticationApp.models import CustomUser
@@ -14,13 +24,14 @@ from supportCenterApp.models import SupportTicket, FeedbackModel
 from careerApp.models import CareerRoleApplication
 from eventManagementApp.models import HostApplication
 from collegeManagementApp.models import (
-    College,
+    CollegeRequest,
     Organization,
     OrganizationMembership,
     Membership,
 )
-
-from wave_v1 import settings
+from campusManagerApp.models import CampusManagerInvite
+from .models import College
+from django.conf import settings
 from .models import Department, CareerRole, LoginHistoryModel, Newsroom
 from .forms import (
     CreateGroupForm,
@@ -37,6 +48,7 @@ from .forms import (
     UpdateImageOneForm,
     UpdateImageTwoForm,
     UpdateImageThreeForm,
+    CollegeForm,
 )
 from wave_v1.decorators import (
     admin_required,
@@ -272,9 +284,7 @@ def adminUserDetailedView(request, username):
             if suspend_form.is_valid():
                 hours = suspend_form.cleaned_data.get("hours", 0)
                 user_in_view.suspend(hours)
-                return redirect(
-                    "waveAdmin:user-detailed", username=username
-                )
+                return redirect("waveAdmin:user-detailed", username=username)
 
         elif action == "allow":
             user_in_view.remove_suspension_OR_ban()
@@ -504,9 +514,38 @@ def adminFeedbackView(request):
 @admin_required
 def adminCollegeView(request):
     colleges = College.objects.annotate(member_count=Count("membership"))
-    # member_count = College.objects.annotate(member_count=Count('membership'))
+    requestedColleges = CollegeRequest.objects.all()
+
+    action = request.POST.get("eventAction")
+    requestId = request.POST.get("requestId")
+
+    if request.method == "POST":
+        if action == "collegeCreated":
+            if requestId:
+                college_request = get_object_or_404(CollegeRequest, requestId=requestId)
+                college_request.delete()
+            return redirect("waveAdmin:colleges")
+
+        collegeForm = CollegeForm(request.POST, request.FILES)
+        college = collegeForm.save(commit=False)
+        college.created_by = request.user
+        try:
+            user_profile = request.user.user_profile
+            college.manager = user_profile
+        except UserProfile.DoesNotExist:
+            pass
+        college.save()
+
+    else:
+        collegeForm = CollegeForm()
     return render(
-        request, "adminDashboardApp/tabs/colleges.html", {"colleges": colleges}
+        request,
+        "adminDashboardApp/tabs/colleges.html",
+        {
+            "colleges": colleges,
+            "collegeForm": collegeForm,
+            "requestedColleges": requestedColleges,
+        },
     )
 
 
@@ -515,10 +554,88 @@ def adminCollegeView(request):
 @admin_required
 def adminCollegeDetailView(request, collegeId):
     college = get_object_or_404(College, collegeId=collegeId)
+
+    action = request.POST.get("eventAction")
+
+    if request.method == "POST":
+        email = request.POST.get("inviteEmail")
+
+        if email:
+            try:
+                send_invite(email, college)
+                
+                messages.success(request, "Invite sent successfully")
+            except Exception as e:
+                messages.error(request, f"Error sending invite: {str(e)}")
+        else:
+            messages.error(request, "Please provide an email address")
+
+        if action == "removeManager":
+            manager_email = request.POST.get("managerEmail")
+            if manager_email:
+                try:
+                    manager = get_object_or_404(CustomUser, email=manager_email)
+                    college.managers.remove(manager)
+
+                    invite = CampusManagerInvite.objects.filter(
+                        email=manager_email, college=college, accepted=True
+                    ).first()
+
+                    if invite:
+                        invite.delete()
+                    messages.success(
+                        request,
+                        f"{manager.username} has been removed from managing the college.",
+                    )
+                except Exception as e:
+                    messages.error(request, f"Error removing manager: {str(e)}")
+            else:
+                messages.error(request, "No manager email provided.")
+        return redirect("waveAdmin:collegeDetail", collegeId=collegeId)
+
     return render(
         request,
         "adminDashboardApp/tabs/colleges/collegeInfo.html",
         {"college": college},
+    )
+
+
+def send_invite(email, college):
+    """
+    The function `send_invite` sends an invitation email to a user to become a Campus Manager at a
+    specific college, handling existing invites and generating a unique invite link.
+    
+    :param email: The `email` parameter in the `send_invite` function is the email address of the person
+    to whom the invitation will be sent
+    :param college: The `college` parameter in the `send_invite` function is likely an object
+    representing a college in your system. It seems to be used to associate the invite with a specific
+    college when creating a new invite and when generating the invite link
+    """
+    existing_invite = CampusManagerInvite.objects.filter(
+        email=email, college=college
+    ).first()
+
+    if existing_invite:
+        if existing_invite.accepted:
+            raise Exception(f"An invite has already been accepted by {email}.")
+        else:
+            existing_invite.delete()
+
+    new_invite = CampusManagerInvite.objects.create(
+        email=email,
+        college=college,
+        token=uuid.uuid4(),
+        invited_at=timezone.now(),
+    )
+
+    invite_link = f'{settings.SITE_URL}{reverse("campusManager:accept_invite", kwargs={"token": new_invite.token, "collegeId": college.collegeId})}'
+
+    send_mail(
+        "You have been invited to be a Campus Manager",
+        f"Click the link to accept: {invite_link}",
+        "admin@waveapp.com",
+        [email],
+        fail_silently=False,
     )
 
 
@@ -533,6 +650,18 @@ def adminCollegeOrgsView(request):
 @check_suspension
 @admin_required
 def adminNewsRoomView(request):
+    """
+    The function `adminNewsRoomView` retrieves all news articles from the Newsroom model and renders
+    them in the newsroom.html template for display in the admin dashboard.
+    
+    :param request: The `request` parameter in the `adminNewsRoomView` function is an object that
+    contains information about the current HTTP request, such as the request method, headers, user
+    session, and more. It is typically passed to view functions in Django to handle incoming requests
+    and generate appropriate responses
+    :return: The function `adminNewsRoomView` is returning a rendered template
+    "adminDashboardApp/tabs/newsroom.html" along with a context dictionary containing all the news items
+    retrieved from the Newsroom model.
+    """
     news = Newsroom.objects.all()
     return render(request, "adminDashboardApp/tabs/newsroom.html", {"news": news})
 
@@ -541,6 +670,18 @@ def adminNewsRoomView(request):
 @check_suspension
 @admin_required
 def adminCreateNewsView(request):
+    """
+    This Python function handles the creation of news articles by processing form data and saving it to
+    the database.
+    
+    :param request: The `request` parameter in the `adminCreateNewsView` function is an HttpRequest
+    object that represents the current HTTP request. It contains information about the request made by
+    the client, such as the request method (GET, POST, etc.), request data, user session information,
+    and more. In this
+    :return: The `adminCreateNewsView` function returns a rendered HTML template named "createNews.html"
+    located in the "adminDashboardApp/tabs/newsroom" directory. The template is rendered with the
+    `createNewsForm` context variable, which contains the form for creating news.
+    """
     createNewsForm = CreateNewsForm(request.POST, request.FILES)
     if request.method == "POST":
         if createNewsForm.is_valid():
@@ -565,6 +706,35 @@ def adminCreateNewsView(request):
 @check_suspension
 @admin_required
 def adminEditNewsView(request, newsId):
+    """
+    This function is likely used to display a view for editing news articles by an admin.
+    
+    :param request: The `request` parameter in the `adminEditNewsView` function is typically an
+    HttpRequest object that represents the current request from the user. It contains information about
+    the request, such as the user's session, any data submitted through forms, and other metadata
+    related to the request. This parameter allows the
+    :param newsId: The `newsId` parameter in the `adminEditNewsView` function likely refers to the
+    unique identifier of the news article that the function is intended to edit. This parameter allows
+    the function to identify which specific news article is being edited within the administrative
+    interface
+    """
+    """
+    The `adminEditNewsView` function in Python handles editing news items in an admin dashboard,
+    including updating various fields and forms based on user input.
+    
+    :param request: The `request` parameter in the `adminEditNewsView` function is an HttpRequest object
+    that represents the request made by a user to a Django web application. It contains information
+    about the request, such as the HTTP method used (GET, POST, etc.), any data sent in the request
+    (POST
+    :param newsId: The `newsId` parameter in the `adminEditNewsView` function is used to identify the
+    specific news item that the admin wants to edit. This parameter is passed in the URL and is used to
+    retrieve the corresponding news item from the database for editing
+    :return: The `adminEditNewsView` function returns a rendered template with forms for editing various
+    fields of a news item. The forms include fields for updating the news title, body, urgency level,
+    news category, header image, and three additional images. The function also handles POST requests to
+    update the news item based on the form field submitted. If the action is to delete the news item, it
+    deletes the
+    """
     newsItem = get_object_or_404(Newsroom, newsId=newsId)
 
     if request.method == "POST":
@@ -653,3 +823,71 @@ def adminEditNewsView(request, newsId):
             "imageThreeForm": imageThreeForm,
         },
     )
+
+
+@login_required
+@check_suspension
+@admin_required
+def adminEmailingView(request):
+    """
+    The `adminEmailingView` function retrieves all active user profiles and renders them in an emailing
+    template for the admin dashboard.
+    
+    :param request: The `request` parameter in the `adminEmailingView` function is an HttpRequest object
+    that represents the current HTTP request. It contains metadata about the request, such as the
+    request method, headers, user session information, and more. This parameter is typically passed to
+    Django view functions to handle incoming requests
+    :return: The `adminEmailingView` function is returning a rendered template "emailing.html" from the
+    "adminDashboardApp/tabs" directory. The context being passed to the template includes the queryset
+    of all UserProfile objects stored in the `activeUsers` variable.
+    """
+    activeUsers = UserProfile.objects.all()
+    return render(
+        request,
+        "adminDashboardApp/tabs/emailing.html",
+        {
+            "activeUsers": activeUsers,
+        },
+    )
+
+
+resend.api_key = settings.RESEND_API_KEY
+"""
+    This Python function sends an email using data from a POST request, with various decorators for
+    security and permission checks.
+    
+    :param request: The code snippet you provided is a Django view function for sending emails. Let me
+    explain the different decorators and the functionality of the view function:
+    :return: The `send_email` function returns a JSON response. If the email is successfully sent, it
+    returns a JSON response with `"success": True` and the email response data. If there is an error or
+    the email fails to send, it returns a JSON response with `"success": False` and an error message
+    indicating the reason for the failure.
+    """
+@csrf_exempt
+@require_POST
+@login_required
+@check_suspension
+@admin_required
+def send_email(request):
+    try:
+        data = json.loads(request.body)
+        recipients = data.get('recipients')
+        subject = data.get('subject')
+        message = data.get('message')
+
+        email_params: resend.Emails.SendParams = {
+            "from": "Support @ WAVE. <support@wavecampus.net>",
+            "to": recipients,
+            "subject": subject,
+            "html": message,
+        }
+
+        email_response = resend.Emails.send(email_params)
+
+        if email_response.get("id"):  
+            return JsonResponse({"success": True, "data": email_response})
+        else:
+            return JsonResponse({"success": False, "error": "Failed to send email."})
+
+    except Exception as e:
+        return JsonResponse({"success": False, "error": f"Error: {str(e)}"})

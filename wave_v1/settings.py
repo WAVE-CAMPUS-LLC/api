@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     "socialApp",
     "newsroomApp",
     "blogApp",
+    "campusManagerApp",
     "widget_tweaks"
 ]
 
@@ -69,6 +70,7 @@ ROOT_URLCONF = "wave_v1.urls"
 # ROOT_HOSTCONF = "wave_v1.hosts"
 # DEFAULT_HOST = "www"
 # PARENT_HOST = "localhost:8000"
+SITE_URL = "http://localhost:8000"
 
 
 TEMPLATES = [
@@ -108,6 +110,9 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = "larteyokle@gmail.com"
 EMAIL_HOST_PASSWORD = "lrxkfnqqxxkyzgct"
+
+# Resend Email Configurations
+RESEND_API_KEY = 're_UutAuVEz_34S8yutMqLPTUr5644vau6n9'
 
 
 # Password validation

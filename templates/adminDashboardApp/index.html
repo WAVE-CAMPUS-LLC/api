@@ -67,6 +67,38 @@ WAVE. — Management Dashboard
 
     <section class="content-section">
         <div class="section-header">
+            <h4>Data & Analytics</h4>
+        </div>
+
+        <div class="section-body">
+            <a id="optionCard" href="{% url 'waveAdmin:departments' %}">
+                <div id="oC-img">
+                    <img src="{% static "/images/admin/departments/optionDepartment.svg" %}" alt="Departments Management Dashboard">
+                </div>
+                <div id="oC-info">
+                    <div class="oci-content">
+                        <h3>Overview</h3>
+                        <p>Last Update: 5th March, 2024</p>
+                    </div>
+                </div>
+            </a>
+
+            <a id="optionCard" href="{% url 'waveAdmin:careers' %}">
+                <div id="oC-img">
+                    <img src="{% static "/images/admin/jobs/optionJobs.svg" %}" alt="Support Management Jobs">
+                </div>
+                <div id="oC-info">
+                    <div class="oci-content">
+                        <h3>Jobs</h3>
+                        <p>Last Update: 5th March, 2024</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </section>
+    
+    <section class="content-section">
+        <div class="section-header">
             <h4>Departments & Careers</h4>
         </div>
 
@@ -240,7 +272,7 @@ WAVE. — Management Dashboard
         </div>
 
         <div class="section-body">
-            <a id="optionCard" href="{% url 'waveAdmin:support' %}">
+            <a id="optionCard" href="{% url 'waveAdmin:emailing' %}">
                 <div id="oC-img">
                     <img src="{% static "/images/admin/emailMarketing/optionEmails.svg" %}" alt="Email Marketing">
                 </div>

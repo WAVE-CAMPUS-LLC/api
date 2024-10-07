@@ -1,21 +1,11 @@
 from django.contrib import admin
-from .models import College, Organization, Membership
+from .models import CollegeRequest, Organization, Membership
 
 
 # Register your models here.
-class CollegeAdmin(admin.ModelAdmin):
-    list_display = (
-        "name",
-        "address",
-        "city",
-        "state",
-        "zip_code",
-        "country",
-        "logo",
-        "motto",
-        "contact_website",
-    )
-
+@admin.register(CollegeRequest)
+class CollegeRequestAdmin(admin.ModelAdmin):
+    list_display = ("name", "yourName", "yourEmail")
 
 class OrganizationAdmin(admin.ModelAdmin):
     list_display = (
@@ -29,11 +19,9 @@ class OrganizationAdmin(admin.ModelAdmin):
         "instagram",
     )
 
-
 class MembershipAdmin(admin.ModelAdmin):
     list_display = ("user", "college", "date_joined")
 
 
-admin.site.register(College, CollegeAdmin)
 admin.site.register(Organization, OrganizationAdmin)
 admin.site.register(Membership, MembershipAdmin)

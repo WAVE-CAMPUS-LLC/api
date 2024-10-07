@@ -1,0 +1,40 @@
+{% extends "base/base.html" %}
+{% load static %}
+{% load date_tag %}
+{% load category_tag %}
+
+
+{% block title %}
+See what's happening around you — WAVE.
+{% endblock title %}
+
+{% block app_page_style %}
+<link rel="stylesheet" type="text/css" href="{% static "/styles/coreApp/categories.css" %}" />
+{% endblock app_page_style %}
+
+{% block script %}
+{% endblock script %}
+
+{% block header %}
+{% include "partials/nav-footer/nav/main_nav.html" %}
+{% endblock header %}
+
+{% block body %}
+<div id="content-container">
+    <div id="page-heading">
+        <h4>All Categories</h4>
+    </div>
+
+    <div id="categories-wrapper">
+        {% for value, display in exploreCategoryChoices %}
+        <div id="category" class="category-card">
+            <a href="{% url "core:category" name=display %}">
+                <div id="categoryName">
+                    <h4>{{ display }}</h4>
+                </div>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock body %}

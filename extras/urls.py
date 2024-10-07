@@ -6,10 +6,7 @@ app_name = "extras"
 
 
 urlpatterns = [
-    path("about/", views.aboutView, name="about"),  
-    
-    path("team/", views.teamView, name="team"),
-    
+    path("about/", views.aboutView, name="about"),      
     path("faq/", views.faqView, name="faq"),
     path("privacy/", views.privacyView, name="privacy"), 
     path("safety/", views.safetyView, name="safety"), 
