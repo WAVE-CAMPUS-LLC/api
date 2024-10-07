@@ -5,6 +5,8 @@
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <link rel="icon" href="{% static "/images/logo/favicon.ico" %}" type="image/x-icon">
+        <link rel="apple-touch-icon" href="{% static "/images/logo/apple-touch-icon.png" %}">
         <title>
             {% block title %}{% endblock title %}
         </title>
@@ -19,6 +21,7 @@
         <script type="text/javascript" src="//code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
         <script type="text/javascript" src="//cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.min.js"></script>
         <script type="text/javascript" src="{% static "scripts/base/redirectPage.js" %}" defer></script>
+        <script type="text/javascript" src="{% static "scripts/base/event/eventDetailsPricing.js" %}" defer></script>
 
     </head>
 

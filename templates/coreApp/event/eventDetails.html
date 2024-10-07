@@ -12,8 +12,7 @@
 
 {% block script %}
 <script type="text/javascript" src="{% static "scripts/coreApp/event/eventDetailsTabs.js" %}"></script>
-<script type="text/javascript" src="{% static "scripts/coreApp/event/eventDetailsTicketsTab.js" %}"></script>
-<script type="text/javascript" src="{% static "scripts/coreApp/event/slideshow.js" %}"></script>
+<script type="text/javascript" src="{% static "scripts/coreApp/event/eventDetailsTicketsTab.js" %}" defer></script>
 {% endblock script %}
 
 
@@ -31,7 +30,7 @@
         <div class="hosted-by">
             <p>
                 Hosted by {{ event.host.first_name }} {{ event.host.last_name }}
-                <a target="_blank" href="{% url "accountManagement:memberProfile" username=event.host.username %}">
+                <a target="_blank" href="{% url "social:publicProfile" username=event.host.username %}">
                    @ {{ event.host.username }}
                 </a>
             </p>
@@ -48,10 +47,17 @@
         <div id="contentContainerTabs">
             <div id="tabHeaderParent">
                 <ul id="tabHeader">
-                    <li class="eventDetailsTab tab-active" data-tab="eventDetails">Details</li>
-                    <li class="eventDetailsTab" data-tab="eventDescription">Description</li>
-                    <li class="eventDetailsTab" data-tab="eventTicketInformation">Ticketing</li>
-                    <li class="eventDetailsTab" data-tab="eventPhotosVideos">Photos</li>
+                    <li class="eventDetailsTab tab-active" data-tab="eventDetails">
+                        Details
+                    </li>
+                    {% if eventTickets %}
+                    <li class="eventDetailsTab" data-tab="eventTicketInformation">
+                        Ticketing
+                    </li>
+                    {% endif %}
+                    <li class="eventDetailsTab" data-tab="eventPhotosVideos">
+                        Photos
+                    </li>
                 </ul>
                 <div class="headerDivider">
                     <hr>
@@ -67,12 +73,15 @@
                                 <h5 class="event-title">
                                     {{ event.title }}
                                 </h5>
-                                <p class="eventTitleDated">{{ event.date|custom_date }} at {{ event.building_name}}</p>
                             </div>
 
                             <div class="event-details-location">
                                 
-                                <p class="event-dated-timed">{{ event.date }} at {{event.start_time|time:"g:i A" }}</p>
+                                <p class="event-dated-timed">{{ event.date|custom_date }} at {{event.start_time|time:"g:i A" }}</p>
+                            </div>
+
+                            <div>
+                                <p>@{{ event.building_name}}</p>
                             </div>
 
                             <div class="event-details-location-address">
@@ -82,157 +91,65 @@
                                 </p>
                             </div>
 
-                            <div class="google-map">
-                                <iframe
-                                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d6442.0794877577355!2d-86.83092992418085!3d36.16558747243483!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x8864612e29e63677%3A0xa3822085d95d0eb4!2sMartha%20M.%20Brown%20-%20Lois%20H.%20Daniel%20Library!5e0!3m2!1sen!2sus!4v1712885732026!5m2!1sen!2sus"
-                                    width="400" height="400" style="border:0;" allowfullscreen=""
-                                    loading="lazy"
-                                    referrerpolicy="no-referrer-when-downgrade"></iframe>
+                            <div class="eventDescription-body">
+                                <h6>Description</h6>
+                                {{ event.description }}
                             </div>
                         </div>
                     </div>
 
-                    <div id="eventDescription" class="description-body eventDetailsTabInformation">
-                        <div class="eventDescription-body">
-                            {{ event.description }}
-                        </div>
-                    </div>
-
+                    {% if eventTickets %}
                     <div id="eventTicketInformation" class="ticketinfo-body eventDetailsTabInformation">
                         <div class="eventTickets-body">
 
                             <div class="eventTicketBody-body">
-                                <div class="jit-role-tab defaulted">
+                                {% for tickets in eventTickets %}
+                                <div class="jit-role-tab {% if forloop.first %}defaulted{% endif %}">
                                     <div role="button" class="jit-tab-header">
-                                        <h3>General Admission - Tier 1</h3>
+                                        <h3>{{ tickets.ticket_name }}</h3>
                                     </div>
                                     <div class="jit-tab-body">
-                                        <p id="role-count">6 Open Roles</p>
-                                        <ul>
-                                            <li>
-                                                <a href="./careers/career.html">
-                                                    <div id="role-title">
-                                                        <p>Role</p>
-                                                        <p>Team</p>
-                                                        <p>Location (Type)</p>
-                                                    </div>
-                                                    <div id="role-info">
-                                                        <h6>Marketing Head</h6>
-                                                        <h6>Marketing</h6>
-                                                        <h6>Nashville, TN (Remote)</h6>
-                                                    </div>
-                                                </a>
-                                            </li>
-                                            <li>
-                                                <a href="./careers/career.html">
-                                                    <div id="role-title">
-                                                        <p>Role</p>
-                                                        <p>Team</p>
-                                                        <p>Location (Type)</p>
-                                                    </div>
-                                                    <div id="role-info">
-                                                        <h6>Marketing Head</h6>
-                                                        <h6>Marketing</h6>
-                                                        <h6>Nashville, TN (Remote)</h6>
-                                                    </div>
-                                                </a>
-                                            </li>
-                                            <li>
-                                                <a href="./careers/career.html">
-                                                    <div id="role-title">
-                                                        <p>Role</p>
-                                                        <p>Team</p>
-                                                        <p>Location (Type)</p>
-                                                    </div>
-                                                    <div id="role-info">
-                                                        <h6>Marketing Head</h6>
-                                                        <h6>Marketing</h6>
-                                                        <h6>Nashville, TN (Remote)</h6>
-                                                    </div>
-                                                </a>
-                                            </li>
-                                            <li>
-                                                <a href="./careers/career.html">
-                                                    <div id="role-title">
-                                                        <p>Role</p>
-                                                        <p>Team</p>
-                                                        <p>Location (Type)</p>
-                                                    </div>
-                                                    <div id="role-info">
-                                                        <h6>Marketing Head</h6>
-                                                        <h6>Marketing</h6>
-                                                        <h6>Nashville, TN (Remote)</h6>
-                                                    </div>
-                                                </a>
-                                            </li>
-                                        </ul>
+                                        <div class="ticket-body-container">
+                                            <div class="pricing-row">
+                                                <p>{{ tickets.ticket_type }}</p>
+                                                <p>${{ tickets.ticket_price }}</p>
+                                            </div>
+                                            <div class="description-row">
+                                                <p>{{ tickets.ticket_description }}</p>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-
-                                <div class="jit-role-tab">
-                                    <div role="button" class="jit-tab-header">
-                                        <h3>VIP</h3>
-                                    </div>
-                                    <div class="jit-tab-body">
-                                        <p id="role-count">6 Open Roles</p>
-                                        <ul>
-                                            <li>
-                                                <a href="./careers/career.html">
-                                                    <div id="role-title">
-                                                        <p>Role</p>
-                                                        <p>Team</p>
-                                                        <p>Location (Type)</p>
-                                                    </div>
-                                                    <div id="role-info">
-                                                        <h6>Marketing Head</h6>
-                                                        <h6>Marketing</h6>
-                                                        <h6>Nashville, TN (Remote)</h6>
-                                                    </div>
-                                                </a>
-                                            </li>
-                                        </ul>
-                                    </div>
-                                </div>
-
-                                <div class="jit-role-tab">
-                                    <div role="button" class="jit-tab-header">
-                                        <h3>Behind the curtains</h3>
-                                    </div>
-                                    <div class="jit-tab-body">
-                                        <p id="role-count">6 Open Roles</p>
-                                        <ul>
-                                            <li>
-                                                <a href="./careers/career.html">
-                                                    <div id="role-title">
-                                                        <p>Role</p>
-                                                        <p>Team</p>
-                                                        <p>Location (Type)</p>
-                                                    </div>
-                                                    <div id="role-info">
-                                                        <h6>Marketing Head</h6>
-                                                        <h6>Marketing</h6>
-                                                        <h6>Nashville, TN (Remote)</h6>
-                                                    </div>
-                                                </a>
-                                            </li>
-                                        </ul>
-                                    </div>
-                                </div>
+                                {% endfor %}
                             </div>
                         </div>
                     </div>
+                    {% endif %}
 
                     <div id="eventPhotosVideos" class="attachment-body eventDetailsTabInformation">
                         <div class="eventPhotosVideos-body">
                             <div id="slideshow-container" class="slideshow-container">
-                                {% for photo in body_photos %}
-                                    <img src="{{ photo }}" {% if forloop.first %}class="hidden-image"{% endif %} />
-                                {% endfor %}
+                                {% if event.body_photo_one %}
+                                <img src="{{ event.body_photo_one.url }}" />
+                                {% endif %}
+                                {% if event.body_photo_two %}
+                                <img src="{{ event.body_photo_two.url }}" />
+                                {% endif %}
+                                {% if event.body_photo_three %}
+                                <img src="{{ event.body_photo_three.url }}" />
+                                {% endif %}
+                                {% if event.body_photo_four %}
+                                <img src="{{ event.body_photo_four.url }}" />
+                                {% endif %}
+                                {% if event.body_photo_five %}   
+                                <img src="{{ event.body_photo_five.url }}" />
+                                {% endif %}
                             </div>
                         </div>
                     </div>
                 </div>
 
+                {% if eventTickets %}
                 <div class="ticket-purchase">
                     <div class="purchase-card">
                         <div class="pc-header">
@@ -245,94 +162,26 @@
 
                         <div class="pc-body">
                             <ul>
-                                <li>
+                                {% for ticket in eventTickets %}
+                                <li data-ticket-id="{{ ticket.privateTicketId }}" data-ticket-quantity="{{ ticket.ticket_quantity }}">
                                     <div class="ticket-type-info">
-                                        <h6 class="ticket-type">General Admission</h6>
-                                        <p>Available: 30</p>
+                                        <h6 class="ticket-type">{{ ticket.ticket_name }}</h6>
+                                        <p class="available-quantity" id="available-quantity-{{ ticket.privateTicketId }}">Available: {{ ticket.ticket_quantity }}</p>
                                     </div>
                                     <div class="ticket-cart">
-                                        <button role="button" type="button" id="remove-cart">
-                                            <img src="../../static/images/explore/events/card-remove.svg"
-                                                alt="Remove from cart">
+                                        <button role="button" type="button" class="cart-button-control" id="remove-cart-{{ ticket.privateTicketId }}" data-ticket-id="{{ ticket.privateTicketId }}">
+                                            <img src="{% static "images/eventManagementApp/event/removeTicket.svg" %}" alt="Remove from cart">
                                         </button>
                                         <div class="cart-information">
-                                            1
+                                            <p class="purchase-quantity" id="purchase-quantity-{{ ticket.privateTicketId }}">0</p>
                                         </div>
-                                        <button type="button" role="button" id="add-cart">
-                                            <img src="../../static/images/explore/events/cart-add.svg"
-                                                alt="Add to cart">
+                                        <button type="button" role="button" class="cart-button-control" id="add-cart-{{ ticket.privateTicketId }}" data-ticket-id="{{ ticket.privateTicketId }}">
+                                            <img src="{% static "images/eventManagementApp/event/addTicket.svg" %}" alt="Add to cart">
                                         </button>
                                     </div>
                                 </li>
-                                <div class="pcb-hr">
-                                    <hr>
-                                </div>
-                                <li>
-                                    <div class="ticket-type-info">
-                                        <h6 class="ticket-type">General Admission</h6>
-                                        <p>Available: 30</p>
-                                    </div>
-                                    <div class="ticket-cart">
-                                        <button role="button" type="button" id="remove-cart">
-                                            <img src="../../static/images/explore/events/card-remove.svg"
-                                                alt="Remove from cart">
-                                        </button>
-                                        <div class="cart-information">
-                                            1
-                                        </div>
-                                        <button type="button" role="button" id="add-cart">
-                                            <img src="../../static/images/explore/events/cart-add.svg"
-                                                alt="Add to cart">
-                                        </button>
-                                    </div>
-                                </li>
-                                <div class="pcb-hr">
-                                    <hr>
-                                </div>
-                                <li>
-                                    <div class="ticket-type-info">
-                                        <h6 class="ticket-type">General Admission</h6>
-                                        <p>Available: 30</p>
-                                    </div>
-                                    <div class="ticket-cart">
-                                        <button role="button" type="button" id="remove-cart">
-                                            <img src="../../static/images/explore/events/card-remove.svg"
-                                                alt="Remove from cart">
-                                        </button>
-                                        <div class="cart-information">
-                                            1
-                                        </div>
-                                        <button type="button" role="button" id="add-cart">
-                                            <img src="../../static/images/explore/events/cart-add.svg"
-                                                alt="Add to cart">
-                                        </button>
-                                    </div>
-                                </li>
-                                <div class="pcb-hr">
-                                    <hr>
-                                </div>
-                                <li>
-                                    <div class="ticket-type-info">
-                                        <h6 class="ticket-type">General Admission</h6>
-                                        <p>Available: 30</p>
-                                    </div>
-                                    <div class="ticket-cart">
-                                        <button role="button" type="button" id="remove-cart">
-                                            <img src="../../static/images/explore/events/card-remove.svg"
-                                                alt="Remove from cart">
-                                        </button>
-                                        <div class="cart-information">
-                                            1
-                                        </div>
-                                        <button type="button" role="button" id="add-cart">
-                                            <img src="../../static/images/explore/events/cart-add.svg"
-                                                alt="Add to cart">
-                                        </button>
-                                    </div>
-                                </li>
+                                {% endfor %}
                             </ul>
-
-
                         </div>
 
                         <div class="view-cart">
@@ -340,6 +189,7 @@
                         </div>
                     </div>
                 </div>
+                {% endif %}
             </div>
         </div>
     </div>

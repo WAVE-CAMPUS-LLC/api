@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import LoginHistoryModel, Department, CareerRole, Newsroom
+from .models import College, LoginHistoryModel, Department, CareerRole, Newsroom
 
 
 class DepartmentAdmin(admin.ModelAdmin):
@@ -13,6 +13,19 @@ class DepartmentAdmin(admin.ModelAdmin):
         "description",
     )
 
+@admin.register(College)
+class CollegeAdmin(admin.ModelAdmin):
+    list_display = (
+        "name",
+        "address",
+        "city",
+        "state",
+        "zip_code",
+        "country",
+        "logo",
+        "motto",
+        "contact_website",
+    )
 
 class CareersAdmin(admin.ModelAdmin):
     list_display = (

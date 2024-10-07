@@ -1,0 +1,240 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}
+My Social @{{ user.username }} — WAVE.
+{% endblock title %}
+
+{% block app_page_style %}
+<link rel="stylesheet" type="text/css" href="{% static "/styles/socialApp/socialHome.css" %}?v={{ time }}" />
+{% endblock app_page_style %}
+
+{% block script %}
+<script type="text/javascript" src="{% static "scripts/socialApp/tabControl.js" %}" defer></script>
+{% endblock script %}
+
+
+{% block header %}
+{% include "partials/nav-footer/nav/main_nav.html" %}
+{% endblock header %}
+
+
+{% block body %}
+<div id="content-container">
+    <div class="userHeader">
+        <div>
+            <div class="userPfp">
+                <img src="{% static "images/socialApp/publicProfile/profile/E.L.png" %}" alt="Profile Picture" />
+            </div>
+            <div class="userNames">
+                <h1>{{ user.first_name }} {{ user.last_name }}</h1>
+            </div>
+        </div>
+        
+        <div class="connectRow">
+            <button class="shareBtn" type="button" role="button">
+                <img src="{% static "images/socialApp/share-profile.svg" %}" />
+                Share Profile
+            </button>
+        </div>
+    </div>
+
+    <div class="social-body" id="socialBody">
+        <div class="manage-menu">
+            <div class="menu-header">
+                <h4>Manage Social</h4>
+            </div>
+            <div class="manage-list">
+                <ul>
+                    <li role="button" type="button" class="social-tab tab-active" data-tab="home">
+                        <p>Home</p>
+                    </li>
+                    <li role="button" type="button" class="social-tab" data-tab="friend-requests">
+                        <div id="friend-request">
+                            <p>Friend Requests</p>
+                            {% if pending_friend_requests %}
+                                <span id="number-of-requests">
+                                    {% if pending_friend_requests|length > 9 %}
+                                        9+
+                                    {% else %}
+                                        {{ pending_friend_requests|length }}
+                                    {% endif %}
+                                </span>
+                            {% endif %}
+                        </div>
+                    </li>
+                    <li role="button" type="button" class="social-tab" data-tab="invitations">
+                        <p>Invitations</p>
+                    </li>
+                    <li role="button" type="button" class="social-tab" data-tab="my-crews">
+                        <p>My Crews</p>
+                    </li>
+                    <li role="button" type="button" class="social-tab" data-tab="shared">
+                        <p>Shared</p>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class="display-info">
+            <div class="social-home-elements" id="home">
+                <div class="info-container">
+                    <div class="row-one">
+                        <div class="home-header">
+                            <h4>My Friends</h4>
+                        </div>
+                        <div class="home-body">
+                            {% for friend in friends %}
+                            <div class="user-card">
+                                <div class="user-pfp">
+                                    <img src="{% static "images/socialApp/publicProfile/profile/E.L.png" %}" alt="Profile Picture" />
+                                </div>
+                                <div class="user-names">
+                                    <h1>{{ friend.sender.first_name }} {{ friend.sender.last_name }}</h1>
+                                    <p>Class of 28'</p>
+                                </div>
+                                <div class="user-actions">
+                                    <a target="_blank" href="{% url "social:publicProfile" username=friend.sender.username %}">View Social</a>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="social-home-elements" id="friend-requests">
+                <div class="info-container">
+                    <div class="home-header">
+                        <h4>
+                            Friend Requests
+                        </h4>
+                    </div>
+                    {% if pending_friend_requests %}
+                    <div class="request-home-body">
+                        {% for request in pending_friend_requests %}
+                        <div class="request-item">
+                            <div class="request-left">
+                                <div class="request-pfp">
+                                    <img src="{% static "images/socialApp/publicProfile/profile/E.L.png" %}" alt="Profile Picture" />
+                                </div>
+                                <div class="request-names">
+                                    <h1>{{ request.sender.first_name }} {{ request.sender.last_name }}</h1>
+                                    <p>Sent at {{ request.created_at|date:"H:i A" }}</p>
+                                </div>
+                            </div>
+                            <div class="request-actions">
+                                <form method="POST">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="friend_request_id" value="{{ request.requestId }}">
+                                    <input type="hidden" name="action" value="acceptRequest">  
+                                    <button class="accept" type="submit" role="button">
+                                        <img src="{% static "/images/socialApp/socialHome/accept.svg" %}" alt="Accept Friend Request">
+                                    </button>
+                                    
+                                </form>
+
+                                <form method="POST">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="friend_request_id" value="{{ request.requestId }}">
+                                    <input type="hidden" name="action" value="declineRequest"> 
+                                    <button class="decline" type="submit" role="button">
+                                        <img src="{% static "/images/socialApp/socialHome/decline.svg" %}" alt="Decline Friend Request">
+                                    </button>
+                                </form>
+                            </div>
+                            
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="emptyContainer">
+                        <div>
+                            <img src="{% static "/images/collegeManagementApp/collegeInformation/empty-listing.svg" %}" />
+                        </div>
+                        <div>
+                            <p>
+                                Currently no friend requests. 
+                                <br>
+                                Let your friends know about WAVE.
+                            </p>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="social-home-elements" id="invitations">
+                <div class="info-container">
+                    <div class="home-header">
+                        <h4>
+                            Invitations
+                        </h4>
+                    </div>
+                    <div class="crew-invitation-body">
+                        <div class="crew-invite-item">
+                            <div class="cit-left">
+                                <div class="cit-pfp">
+                                    <img src="{% static "/images/socialApp/publicProfile/profile/E.L.png" %}" alt="Profile Picture" />
+                                </div>
+                                <div class="cit-name">
+                                    <h5><span class="crew-name">Men In Black</span> has invited you!</h5>
+                                    <p>Invited by <a href="">@enoshlartey</a></p>
+                                </div>
+                            </div>
+                            <div class="cit-right">
+                                <form method="POST" >
+                                    <button class="accept" type="submit" role="button">
+                                        <img src="{% static "/images/socialApp/socialHome/accept.svg" %}" alt="Accept Friend Request">
+                                    </button>
+                                </form>
+
+                                <form method="POST">
+                                    <button class="decline" type="submit" role="button">
+                                        <img src="{% static "/images/socialApp/socialHome/decline.svg" %}" alt="Decline Friend Request">
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="social-home-elements" id="my-crews">
+                <div class="info-container">
+                    <div class="home-header">
+                        <h4>
+                            My Crews
+                        </h4>
+                        <div class="create-crew-row">
+                            <a href="{% url "social:createCrew" %}" id="create-crew" class="create-crew" >
+                                <img src="{% static "/images/socialApp/socialHome/create-crew.svg" %}" alt="Create Crew">
+                                Create Crew
+                            </a>
+                        </div>
+                    </div>
+                    <div class="crew-home-body">
+                        {% for crew in my_crews %}
+                        <div class="crew-item">
+                            <div class="crewI-left">
+                                <div class="crew-pfp">
+                                    <img src="{% static "/images/socialApp/publicProfile/profile/E.L.png" %}" alt="Profile Picture" />
+                                </div>
+                                <div class="crew-name">
+                                    <h5>{{ crew.name }}</h5>
+                                    <p>Created by: <a target="_blank" href="{% url "social:publicProfile" username=crew.created_by.username %}">@{{ crew.created_by }}</a></p>
+                                </div>
+                            </div>
+                            <div class="crewI-right">
+                                <a target="_blank" href="{% url "social:crew" crewId=crew.crewId %}" class="view-crew">View Crew</a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            <div class="social-home-elements" id="shared">
+                <div class="info-container">
+                    Shared
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock body %}

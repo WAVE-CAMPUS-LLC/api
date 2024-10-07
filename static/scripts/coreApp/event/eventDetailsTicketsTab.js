@@ -1,10 +1,10 @@
 $(document).ready(function() {
     // Close all tab bodies except the default one
-    $('.jit-tab-body').not('.defaulted').hide(); // Hide instead of slideUp for initial state
-    
-    // Show the default tab body by sliding down
-    $('.defaulted').slideDown();
-    
+    $('.jit-tab-body').not('.defaulted').hide(); // Hide all except the default
+
+    // Show the default tab body by sliding down (no need for slideDown since it's already visible)
+    $('.jit-role-tab.defaulted .jit-tab-body').slideDown();
+
     $('.jit-tab-header').click(function() {
         // Close all tab bodies except the one being clicked
         $('.jit-tab-body').not($(this).next('.jit-tab-body')).slideUp();

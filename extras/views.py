@@ -7,12 +7,6 @@ def aboutView(request):
     pageName = "About"
     return render(request, "extras/company/about.html", {"pageName": pageName})
 
-
-def teamView(request):
-    pageName = "Our Team"
-    return render(request, "extras/company/team.html", {"pageName": pageName})
-
-
 def faqView(request):
     pageName = "Frequently Asked"
     return render(request, "extras/policy/faq.html", {"pageName": pageName})

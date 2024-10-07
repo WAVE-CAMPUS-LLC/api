@@ -3,7 +3,7 @@
 
 
 {% block title %}
-Settings
+Account Settings — WAVE.
 {% endblock title %}
 
 {% block app_page_style %}
@@ -18,12 +18,12 @@ Settings
 
 
 {% block header %}
-{% include "partials/nav-footer/nav/accountnav.html" %}
+{% include "partials/nav-footer/nav/main_nav.html" %}
 {% endblock header %}
 
 
 {% block body %}
-<div id="body">
+<div id="content-container">
     <div id="body-header">
         <h3>Profile Settings</h3>
     </div>
@@ -35,7 +35,7 @@ Settings
             Interests
         </div>
     </div>
-    <div id="content-container">
+    <div id="body-content-container">
         <div class="settings-tab-content" id="profile-information">
             <section id="personal-change" class="info-container">
                 <h6 class="ic-headers">Personal Information</h6>

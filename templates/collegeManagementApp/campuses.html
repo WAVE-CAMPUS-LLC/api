@@ -68,8 +68,8 @@ See all campuses — WAVE. on Campus
         <div id="header">
             <h6>College List</h6>
 
-            <a class="add-college" href="{% url "colleges:add" %}">
-                <img src="{% static "/images/collegeManagementApp/add.svg" %}" /><h5>Add College</h5>
+            <a class="add-college" href="{% url "colleges:request" %}">
+                <img src="{% static "/images/collegeManagementApp/add.svg" %}" /><h5>Request College</h5>
             </a>
         </div>
 
@@ -87,7 +87,15 @@ See all campuses — WAVE. on Campus
                         <p class="members-display">
                             {{ college_info.member_count }} {% if college_info.member_count == 1 %}Member{% else %}Members{% endif %}
                         </p>
-                        <p class="organization-display">55 Organizations</p>
+                        <p class="organization-display">
+                            {% if college_info.organization_count > 1 %}
+                            {{ college_info.organization_count }} Organizations
+                            {% elif college_info.organization_count == 1 %}
+                            {{ college_info.organization_count }} Organization
+                            {% else %}
+                            No Organizations
+                            {% endif %}
+                        </p>
                     </div>
                     <div id="college-card-footer">
                         {% if user_profile and user_profile.college == college_info.college %}

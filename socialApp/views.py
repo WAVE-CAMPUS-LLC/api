@@ -1,3 +1,221 @@
-from django.shortcuts import render
+from http.client import HTTPResponse
+from os import name
+import re
+from datetime import datetime
+from django.http import Http404, HttpResponseBadRequest
+from django.shortcuts import get_object_or_404, render, redirect
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth import get_user_model
+from django.http import JsonResponse, HttpResponseRedirect
+from django.template.loader import render_to_string 
+from accountManagementApp.models import UserProfile
+from django.contrib import messages
+from .models import FriendRequest, Crew, CrewMember
+from django.db.models import Q
+from .forms import createCrewForm
+
+# Decorators to check user roles and permissions
+from wave_v1.decorators import group_required, check_suspension
+
+UserModel = get_user_model()
+
 
 # Create your views here.
+@login_required
+def socialHomeView(request):
+    my_crews = Crew.objects.filter(members__user=request.user)
+    time = datetime.now().timestamp()
+
+    pending_friend_requests = FriendRequest.objects.filter(
+        receiver=request.user, status="pending"
+    )
+    friends = FriendRequest.objects.filter(
+        Q(sender=request.user) | Q(receiver=request.user), status="accepted"
+    )
+
+    if request.method == "POST":
+        action = request.POST.get("action")
+        friend_request_id = request.POST.get("friend_request_id")
+
+        try:
+            friend_request = FriendRequest.objects.get(
+                requestId=friend_request_id, receiver=request.user
+            )
+
+            if action == "acceptRequest":
+                friend_request.acceptRequest()
+                messages.success(request, "Friend request accepted.")
+
+            elif action == "declineRequest":
+                friend_request.declineRequest()
+                messages.success(request, "Friend request declined.")
+
+        except FriendRequest.DoesNotExist:
+            messages.warning(request, "Friend request not found.")
+
+    return render(
+        request,
+        "socialApp/socialHome.html",
+        {"pending_friend_requests": pending_friend_requests, "friends": friends, "my_crews": my_crews, "time": time},
+    )
+
+
+def publicProfileView(request, username):
+    try:
+        user = get_object_or_404(UserModel, username=username)
+        # Ensure user_profile exists or create it if it doesn't
+        user_profile, created = UserProfile.objects.get_or_create(user=user)
+
+        friend_request = FriendRequest.objects.filter(
+            (Q(sender=request.user) & Q(receiver=user))
+            | (Q(sender=user) & Q(receiver=request.user))
+        ).first()
+
+        friend_request_status = None
+        if friend_request:
+            friend_request_status = friend_request.status
+
+        is_profile = request.user == user
+
+        if request.method == "POST":
+            action = request.POST.get("action")
+            if action == "send_request":
+                success, message = send_friend_request(request.user, user_profile)
+
+                if success:
+                    messages.success(request, message)
+                    return redirect("social:publicProfile", username=username)
+                else:
+                    messages.warning(request, message)
+                    return redirect("social:publicProfile", username=username)
+            elif (
+                action == "cancel_request"
+                and friend_request
+                and friend_request_status == "pending"
+            ):
+                friend_request.delete()
+                messages.success(request, "Friend request canceled.")
+                friend_request_status = None
+                return redirect("social:publicProfile", username=username)
+
+            elif (
+                action == "remove_request"
+                and friend_request
+                and friend_request_status == "accepted"
+            ):
+                friend_request.delete()
+                messages.success(request, "Friend removed.")
+                friend_request_status = None
+                return redirect("social:publicProfile", username=username)
+
+    except Http404:
+        return render(request, "extras/invalid/invalid.html")
+
+    return render(
+        request,
+        "socialApp/publicProfile.html",
+        {
+            "user": user,
+            "user_profile": user_profile,
+            "friend_request_status": friend_request_status,
+            "is_profile": is_profile,
+        },
+    )
+
+
+def send_friend_request(sender, receiver_username):
+    receiver = get_object_or_404(UserProfile, user__username=receiver_username)
+
+    if sender.user_profile.is_friends_with(receiver.user):
+        return False, "You are already friends."
+
+    if sender.user_profile.has_pending_request(receiver.user):
+        return False, "A friend request is already pending."
+
+    friend_request, created = FriendRequest.objects.get_or_create(
+        sender=sender, receiver=receiver.user, defaults={"status": "pending"}
+    )
+
+    if not created:
+        return False, "Friend request has already been sent."
+
+    return True, "Friend request sent successfully."
+
+
+def accept_friend_request(receiver, sender_username):
+    sender = get_object_or_404(UserProfile, user__username=sender_username)
+
+    try:
+        friend_request = FriendRequest.objects.get(
+            sender=sender.user, receiver=receiver.user, status="pending"
+        )
+        friend_request.status = "accepted"
+        friend_request.save()
+
+        receiver.friends.add(sender.user)
+        sender.friends.add(receiver.user)
+
+        return True, "Friend request accepted"
+
+    except FriendRequest.DoesNotExist:
+        return False, "No pending request found"
+
+
+@login_required
+def createCrewView(request):
+    pageName = "social"
+
+    if request.method == "POST":
+        crewForm = createCrewForm(request.POST)
+
+        if crewForm.is_valid():
+            crew_instance = crewForm.save(commit=False)
+            crew_instance.created_by = request.user
+            crew_instance.save()
+
+            CrewMember.objects.create(
+                user=request.user,
+                crew=crew_instance,
+                is_admin=True,
+            )
+
+            return redirect("social:home")
+
+    else:
+        crewForm = createCrewForm()
+
+    return render(request, "socialApp/crews/createCrew.html", {"crewForm": crewForm})
+
+
+@login_required
+def crewView(request, crewId):
+    crew = Crew.objects.get(crewId=crewId)
+    time = datetime.now().timestamp()
+    crewMembers = CrewMember.objects.filter(crew=crew)
+    
+    if request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest':
+        query = request.GET.get('query', '')
+        
+        user_friends = FriendRequest.objects.filter(
+            Q(sender=request.user) | Q(receiver=request.user), status="accepted"
+        )
+
+        # Filter friends based on the search query (e.g., name)
+        results = user_friends.filter(
+            Q(sender__username__icontains=query) | Q(receiver__username__icontains=query)
+        )
+
+
+        # Render each result using the template
+        if results.exists():
+            results_html = []
+            for friend in results:
+                html = render_to_string('socialApp/extras/search-item.html', {'friend': friend})
+                results_html.append(html)
+            return JsonResponse({'results_html': results_html, 'no_results': False})
+        else:
+            no_results_html = render_to_string('socialApp/extras/no-result.html')
+            return JsonResponse({'results_html': [], 'no_results': True, 'no_results_html': no_results_html})
+        
+        
+    return render(request, "socialApp/crews/crew.html", {'crew': crew, 'crewMembers': crewMembers, 'time': time})
