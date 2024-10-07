@@ -64,10 +64,8 @@ class UserProfile(models.Model):
     def is_in_crew(self, crewId):
         receiver = get_object_or_404(CrewMember, user__username=self.user.username)
         if receiver is None:
-            print("User is not in any crew")
             return False
         else:
-            print("User is in a crew")
             return (
                 Crew.objects.filter(
                     crewId=crewId, members=receiver).exists()

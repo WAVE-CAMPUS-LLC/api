@@ -21,13 +21,14 @@
 
 
 {% block body %}
+{% if isInCrew %}
 <div id="content-container">
     <div id="pageHeader">
         <div id="name-and-leave">
             <h3>
                 {{ crew.name }}
             </h3>
-            {% if is_crew_owner %}
+            {% if isCrewOwner %}
             <form method="POST">
                 {% csrf_token %}
                 <button id="delete-crew" type="submit" name="action" value="delete_crew" role="button">
@@ -107,7 +108,7 @@
                                             </p>
                                         </div>
                                     </a>
-                                    {% if is_crew_owner and member.user != self %}
+                                    {% if isCrewOwner and member.user != self %}
                                     <div id="kickMemberButton">
                                         <form method="POST">
                                             {% csrf_token %}
@@ -162,7 +163,7 @@
                                     </div>
                                 </div>
                             </div>
-                            {% for friend in friendsNotInCrew %}
+                            {% for friend in pendingFriends %}
                             <div class="friendItem">
                                 <div class="friendInfoo">
                                     <div class="friendPfp">
@@ -173,19 +174,41 @@
                                     </div>
                                 </div>
                                 <div class="friendActions">
-                                    {% if status %}
-                                        {% if status == "pending" %}
-                                        <div class="statusDisplay pending">
-                                            <img src="{% static "/images/socialApp/pending.svg" %}" alt="Pending" />
-                                            <h2>{{ status }}</h2>
-                                        </div>
-                                        {% elif status == "delcined" %}
-                                        <div class="statusDisplay declined">
-                                            <img src="{% static "/images/socialApp/declined.svg" %}" alt="Declined" />
-                                            <h2>{{ status }}</h2>
-                                        </div>
-                                        {% endif %}
-                                    {% else %}
+                                    <div class="statusDisplay pending">
+                                        <img src="{% static "/images/socialApp/pending.svg" %}" alt="Pending" />
+                                        <h3> Pending </h3>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                            {% for friend in declinedFriends %}
+                            <div class="friendItem">
+                                <div class="friendInfoo">
+                                    <div class="friendPfp">
+                                        <img src="{% static "/images/socialApp/publicProfile/profile/E.L.png" %}" alt="Profile Picture" />
+                                    </div>
+                                    <div class="friendNames">
+                                        <h2>{{ friend.user.first_name }} {{ friend.user.last_name }}</h2>
+                                    </div>
+                                </div>
+                                <div class="friendActions">
+                                    <div id="declined-invite">
+                                        Declined Invite
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                            {% for friend in notInvitedFriends %}
+                            <div class="friendItem">
+                                <div class="friendInfoo">
+                                    <div class="friendPfp">
+                                        <img src="{% static "/images/socialApp/publicProfile/profile/E.L.png" %}" alt="Profile Picture" />
+                                    </div>
+                                    <div class="friendNames">
+                                        <h2>{{ friend.user.first_name }} {{ friend.user.last_name }}</h2>
+                                    </div>
+                                </div>
+                                <div class="friendActions">
                                     <form method="POST">
                                         {% csrf_token %}
                                         <input type="hidden" name="invitee_username" value="{{ friend.user.username }}" />
@@ -193,16 +216,20 @@
                                             Send Crew Invite
                                         </button>
                                     </form>
-                                    {% endif %}
                                 </div>
                             </div>
                             {% endfor %}
                         </div>
-                        
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+{% else %}
+<div id="notInCrewDisplay">
+    <h1 id="notInCrewTitle">You're currently not in this crew</h1>
+    <p id="notInCrewBody">Ask a current crew member to send you an invite!</p>
+</div>
+{% endif %}
 {% endblock body %}

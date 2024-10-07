@@ -55,6 +55,24 @@
   text-decoration: none;
 }
 
+#declined-invite {
+  padding: 10px 15px;
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  align-items: center;
+  color: white;
+
+  border-radius: 20px;
+  background-image: linear-gradient(to right, #d20d0dc3 0%, #ff0000 100%);
+
+  font-family: Wanted-Variable;
+  font-size: 20px;
+
+  border: transparent;
+  text-decoration: none;
+}
+
 #pageHeader h3 {
   font-family: Wanted-Bold;
   font-size: 40px;
@@ -309,6 +327,15 @@
   padding: 20px;
 }
 
+#notInCrewDisplay {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  justify-content: space-around;
+  align-items: center;
+  padding: 100px;
+}
+
 .item-right {
   grid-column: span 3 / span 3;
   display: flex;
@@ -388,6 +415,10 @@
 .member-name {
   font-family: Wanted-Bold;
   font-size: 20px;
+}
+
+#notInCrewTitle, #notInCrewBody {
+  font-family: Wanted-Bold;
 }
 
 .member-username {
