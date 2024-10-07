@@ -277,7 +277,7 @@
   font-size: 18px;
 }
 
-.home-body {
+.home-container {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   display: grid;
   gap: 30px;

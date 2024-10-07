@@ -93,24 +93,26 @@ My Social @{{ user.username }} — WAVE.
                         <div class="home-header">
                             <h4>My Friends</h4>
                         </div>
-                        <div class="home-body">
+                        <div>
                             {% if friends %}
-                                {% for friend in friends %}
-                                <div class="user-card">
-                                    <div class="user-pfp">
-                                        <img src="{% static "images/socialApp/publicProfile/profile/E.L.png" %}" alt="Profile Picture" />
+                                <div class="home-container">
+                                    {% for friend in friends %}
+                                    <div class="user-card">
+                                        <div class="user-pfp">
+                                            <img src="{% static "images/socialApp/publicProfile/profile/E.L.png" %}" alt="Profile Picture" />
+                                        </div>
+                                        <div class="user-names">
+                                            <h1 class="userFullname">{{ friend.user.first_name }} {{ friend.user.last_name }}</h1>
+                                            <p>
+                                                @{{ friend.user.username }}
+                                            </p>
+                                        </div>
+                                        <div class="user-actions">
+                                            <a target="_blank" href="{% url "social:publicProfile" username=friend.user.username %}">View Social</a>
+                                        </div>
                                     </div>
-                                    <div class="user-names">
-                                        <h1 class="userFullname">{{ friend.user.first_name }} {{ friend.user.last_name }}</h1>
-                                        <p>
-                                            @{{ friend.user.username }}
-                                        </p>
-                                    </div>
-                                    <div class="user-actions">
-                                        <a target="_blank" href="{% url "social:publicProfile" username=friend.user.username %}">View Social</a>
-                                    </div>
+                                    {% endfor %}
                                 </div>
-                                {% endfor %}
                             {% else %}
                             <div class="emptyContainer">
                                 <div>
@@ -118,9 +120,7 @@ My Social @{{ user.username }} — WAVE.
                                 </div>
                                 <div>
                                     <p>
-                                        Currently no friends. 
-                                        <br>
-                                        Share the WAVE.!
+                                        Currently, no friends. 
                                     </p>
                                 </div>
                             </div>
@@ -180,9 +180,7 @@ My Social @{{ user.username }} — WAVE.
                         </div>
                         <div>
                             <p>
-                                Currently no friend requests. 
-                                <br>
-                                Share the WAVE.!
+                                Currently, no friend requests. 
                             </p>
                         </div>
                     </div>
@@ -232,8 +230,6 @@ My Social @{{ user.username }} — WAVE.
                             </div>
                             <div>
                                 <p>
-                                    Currently no crew requests. 
-                                    <br>
                                     Create a crew and invite your friends!
                                 </p>
                             </div>
@@ -297,7 +293,21 @@ My Social @{{ user.username }} — WAVE.
             </div>
             <div class="social-home-elements" id="shared">
                 <div class="info-container">
-                    Shared
+                    <div class="home-header">
+                        <h4>
+                            Crew Invitations
+                        </h4>
+                    </div>
+                    <div class="emptyContainer">
+                        <div>
+                            <img src="{% static "/images/collegeManagementApp/collegeInformation/empty-listing.svg" %}" />
+                        </div>
+                        <div>
+                            <p>
+                                Currently, nothing shared.
+                            </p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
