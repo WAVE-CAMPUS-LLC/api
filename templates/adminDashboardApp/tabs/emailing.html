@@ -1,0 +1,116 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}
+Emailing — WAVE. Management Dashboard
+{% endblock title %}
+
+{% block app_page_style %}
+<link rel="stylesheet" type="text/css" href="{% static "/styles/adminDashboardApp/tabs/emailing.css" %}" />
+{% endblock app_page_style %}
+
+{% block script %}
+<script type="text/javascript" src="{% static "/scripts/adminDashboardApp/emailing/modalControl.js" %}" defer></script>
+{% endblock script %}
+
+
+{% block header %}
+{% include "partials/nav-footer/nav/admin_nav.html" %}
+{% endblock header %}
+
+{% block container_art %}
+<div id="container-art">
+    <div class="ticket-heading">
+        <div class="ticket-header">
+            <h3><a href="{% url 'waveAdmin:adminDashboard' %}">Management</a> > Emailing</h3>
+        </div>
+    </div>
+</div>
+{% endblock container_art %}
+
+
+
+
+{% block body %}
+<div id="content-container">
+    <div class="page-header">
+        <div class="page-heading">
+            <h2>Member Emailing</h2>
+        </div>
+    </div>
+
+    <div id="content-body">
+        <div class="search-filters">
+            <input type="search" placeholder="Find member by name or email" />
+        </div>
+
+        <div class="user-display">
+            <div class="select-all-row">
+                <button type="button" role="button" class="emailUser" id="emailAllButton">Email All</button>
+                <button type="button" role="button" class="emailUser emailSelected" id="emailSelectedButton">Email Selected</button>
+            </div>
+            {% for active in activeUsers %}
+            <div class="user-item">
+                <div class="firstSection">
+                    <button class="selectButton" type="button" role="button">
+                        <input type="checkbox" class="userCheckbox" data-email="{{ active.user.email }}" />
+                    </button>
+                    <div class="user_Fullname">
+                        <p>{{ active.user.first_name }} {{ active.user.last_name }}</p>
+                    </div>
+                </div>
+                <div class="secondSection">
+                    <button type="button" class="emailUser singleEmailButton" data-email="{{ active.user.email }}">
+                        Email
+                    </button>
+                </div>
+
+                <div class="thirdSection">
+                    <p class="user_Email">{{ active.user.email }}</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <div id="emailModal">
+        <div class="emailModalBg">
+            <form class="emailModalCard" method="POST" action="{% url "waveAdmin:resend-emailing" %}">
+                {% csrf_token %}
+                <div class="modalHeader">
+                    <h4>Compose an email</h4>
+
+                    <button role="button" type="button" id="contentCardClose-button">
+                        <img src="{% static "images/career/jobAppClose.svg" %}" alt="Minimize Card">
+                    </button>
+                </div>
+
+                <div class="modalBody">
+                    <div class="senderRecipient">
+                        <div class="fields">
+                            <p>To</p>
+                            <input type="text" id="emailToField" />
+                        </div>
+                        <div class="fields">
+                            <p>From</p>
+                            <input type="text" value="support@wavecampus.net" />
+                        </div>
+                        <div class="fields">
+                            <p>Subject</p>
+                            <input type="text"  id="emailSubject" />
+                        </div>
+                    </div>
+
+                    <div class="sendBody">
+                        <textarea id="emailMessage"></textarea>
+                    </div>
+
+                    <div class="sendButton">
+                        <button class="sendEmailButton" role="button" type="submit">Send Email</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock body %}

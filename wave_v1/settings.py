@@ -111,6 +111,9 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = "larteyokle@gmail.com"
 EMAIL_HOST_PASSWORD = "lrxkfnqqxxkyzgct"
 
+# Resend Email Configurations
+RESEND_API_KEY = 're_UutAuVEz_34S8yutMqLPTUr5644vau6n9'
+
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
