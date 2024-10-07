@@ -227,9 +227,6 @@
     </div>
 </div>
 {% else %}
-<div id="notInCrewDisplay">
-    <h1 id="notInCrewTitle">You're currently not in this crew</h1>
-    <p id="notInCrewBody">Ask a current crew member to send you an invite!</p>
-</div>
+{% include "extras/invalid/notCrewMember.html" %}
 {% endif %}
 {% endblock body %}
