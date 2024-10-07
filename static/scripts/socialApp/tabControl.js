@@ -1,4 +1,18 @@
 $(document).ready(function () {
+  $("#deleteCrew").on("click", function () {
+    $("#postDeleteCrewConfirm").show();
+    $("#postDeleteCrewCancel").show();
+    $("#postDeleteCrewText").show();
+    $("#deleteCrew").hide();
+  });
+
+  $("#cancelDelete").on("click", function () {
+    $("#deleteCrew").show();
+    $("#postDeleteCrewConfirm").hide();
+    $("#postDeleteCrewCancel").hide();
+    $("#postDeleteCrewText").hide();
+  });
+
   $("#collegeSearchBar").on("click", function () {
     $("#collegeSearchCardModal").show();
   });

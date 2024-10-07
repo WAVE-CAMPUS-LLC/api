@@ -29,12 +29,25 @@
                 {{ crew.name }}
             </h3>
             {% if isCrewOwner %}
-            <form method="POST">
-                {% csrf_token %}
-                <button id="delete-crew" type="submit" name="action" value="delete_crew" role="button">
+            <div id="confirmDeleteOptions">
+                <button id="deleteCrew">
                     Delete Crew
                 </button>
-            </form>
+                <p id="postDeleteCrewText" style="display: none;">Are you sure you want to delete this crew?</p>
+                <div id="postDeleteCrewConfirm" style="display: none;">
+                    <form method="POST">
+                        {% csrf_token %}
+                        <button id="delete-crew" type="submit" name="action" value="delete_crew" role="button">
+                            Confirm
+                        </button>
+                    </form>
+                </div>
+                <div id="postDeleteCrewCancel" style="display: none;">
+                    <button id="cancelDelete">
+                        Cancel
+                    </button>
+                </div>
+            </div>
             {% else %}
             <form method="POST">
                 {% csrf_token %}

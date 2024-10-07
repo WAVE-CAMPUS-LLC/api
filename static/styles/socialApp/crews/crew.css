@@ -36,7 +36,7 @@
   gap: 20px;
 }
 
-#leave-crew, #delete-crew, #kick-member {
+#leave-crew, #deleteCrew, #kick-member, #delete-crew {
   padding: 10px 15px;
   display: flex;
   flex-direction: row;
@@ -71,6 +71,33 @@
 
   border: transparent;
   text-decoration: none;
+}
+
+#cancelDelete {
+  padding: 10px 15px;
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  align-items: center;
+  color: white;
+  cursor: pointer;
+
+  border-radius: 20px;
+  background-image: linear-gradient(to right, #008d95bc 0%, #13c9d3 100%);
+
+  font-family: Wanted-Variable;
+  font-size: 20px;
+
+  border: transparent;
+  text-decoration: none;
+}
+
+#confirmDeleteOptions {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
 }
 
 #pageHeader h3 {
