@@ -7,7 +7,7 @@ from .forms import UpdateContactInfo, UpdatePersonalInfo, UpdateProfileForm
 from .models import UserProfile
 
 # Decorators to check user roles and permissions
-from wave_v1.decorators import member_required, check_suspension
+from wave_v1.decorators import group_required, check_suspension
 from blogApp.models import Blog
 
 UserModel = get_user_model()
@@ -16,7 +16,7 @@ UserModel = get_user_model()
 # Create your views here.
 @login_required(login_url="authentication:login")
 @check_suspension
-@member_required
+@group_required("Member")
 def profileView(request):
     blogItems = Blog.objects.filter(created_by=request.user)
     
@@ -25,7 +25,7 @@ def profileView(request):
 
 @login_required(login_url="authentication:login")
 @check_suspension
-@member_required
+@group_required("Member")
 def settingsView(request):
     user = request.user
     personal_form = UpdatePersonalInfo(instance=user)
@@ -92,12 +92,3 @@ class ChangePasswordView(SuccessMessageMixin, PasswordChangeView):
 
     success_url = reverse_lazy("accountManagement:userAccount")
 
-
-def memberView(request, username):
-    try:
-        user = get_object_or_404(UserModel, username=username)
-
-    except Http404:
-        return render(request, "extras/invalid/invalid.html")
-
-    return render(request, "accountManagementApp/publicProfile.html", {"user": user})

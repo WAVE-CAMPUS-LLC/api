@@ -1,0 +1,246 @@
+#content-container {
+    width: 100%;
+
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+
+    padding-left: 100px;
+    padding-right: 100px;
+}
+
+.userHeader {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    width: 100%;
+    height: auto;
+
+    padding: 20px;
+}
+
+.userPfp {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.userPfp img {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+}
+
+.userNames {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.userNames h1 {
+    font-family: Wanted-Bold;
+    font-size: 30px;
+}
+
+.userNames h2 {
+    font-family: Wanted-Regular;
+    font-size: 20px;
+    color: rgba(0, 0, 0, 0.504);
+}
+
+.connectBtn {
+    padding: 12.5px 15px;
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    align-items: center;
+    color: white;
+
+    border-radius: 20px;
+    background-image: linear-gradient(to right, #007d84c3 0%, #13c9d3 100%);
+    cursor: pointer;
+
+    font-family: Wanted-Medium;
+    font-size: 22px;
+
+    border: transparent;
+}
+
+.cancelBtn, 
+.removeBtn {
+    padding: 12.5px 15px;
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    align-items: center;
+    color: white;
+
+    border-radius: 15px;
+    background-color: red;
+    cursor: pointer;
+
+    font-family: Wanted-Medium;
+    font-size: 17px;
+
+    border: transparent;
+}
+
+.connectBtn:hover {
+    background-color: #008d95;
+}
+
+/* Action Form Design */
+.actionForm {
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+
+}
+
+.cant-connect {
+    font-family: Wanted-Variable;
+    font-size: 17px;
+    color: red;
+}
+
+.statusDisplay {
+    text-transform: capitalize;
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    align-items: center;
+
+    padding: 15px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    border-radius: 15px;
+
+    display: flex;
+    align-items: center;
+
+    font-family: Wanted-Medium;
+    font-size: 17px;
+
+    background-color: white;
+}
+
+.actionForm .statusDisplay.connected {
+    border: 2px solid #0fc70f;
+    color: #0fc70f;    
+}
+
+.actionForm .statusDisplay.pending {
+    border: 2px solid #ffff00;
+    color: #ffff00;
+}
+
+/* Social Body */
+.social-body {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 50px;
+}
+
+.verified-info {
+    width: 30%;
+    height: auto;
+
+    border: 1px solid rgba(0, 0, 0, 0.038);
+    border-radius: 20px;
+
+    -webkit-box-shadow: 2px 3px 21px 4px rgba(136, 136, 136, 0.257);
+    -moz-box-shadow: 2px 3px 21px 4px rgba(136, 136, 136, 0.257);
+    box-shadow: 2px 3px 21px 4px rgba(136, 136, 136, 0.257);
+
+    padding: 40px;
+}
+
+.verified-indicator {
+    width: 15px;
+    height: 15px;
+    background-color: grey;
+    border: 1px solid grey;
+    border-radius: 50%;
+}
+
+.verified-indicator.verified {
+    background-color: lime;
+    border: 1px solid lime;
+}
+
+.verified-indicator.unverified {
+    background-color: red;
+    border: 1px solid red;
+}
+
+.verified-indicator.inactive {
+    background-color: yellow;
+    border: 1px solid yellow;
+}
+
+.social-info {
+    width: 70%;
+
+    border: 1px solid rgba(0, 0, 0, 0.038);
+    border-radius: 20px;
+
+    -webkit-box-shadow: 2px 3px 21px 4px rgba(136, 136, 136, 0.257);
+    -moz-box-shadow: 2px 3px 21px 4px rgba(136, 136, 136, 0.257);
+    box-shadow: 2px 3px 21px 4px rgba(136, 136, 136, 0.257);
+
+    padding: 40px;
+
+}
+
+.verified-info,
+.social-info {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.verified-info h4,
+.social-info h4 {
+    font-family: Wanted-ExtraBold;
+    font-size: 25px;
+}
+
+.viContainer,
+.siContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.viContainer ul,
+.siContainer ul {
+    list-style-type: none;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+}
+
+.viContainer ul li,
+.siContainer ul li {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    gap: 12px;
+    align-items: center;
+
+    font-family: Wanted-Variable;
+    font-size: 17px;
+}
+
+.viContainer ul li img,
+.siContainer ul li img {
+    width: 30px;
+    height: 30px;
+}

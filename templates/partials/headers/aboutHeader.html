@@ -9,7 +9,7 @@
                 <a href="{% url "core:index" %}">WAVE<span>.</span></a>
             </div>
             <div id="page-name">
-                <a href="{% host_url "extras:about" host 'www' %}">{{ pageName }}</a>
+                <a href="{% url "extras:about" %}">{{ pageName }}</a>
             </div>
         </div>
         <div class="support-links">
@@ -18,7 +18,7 @@
                 <li><a href="{% url "eventManagement:hostHome" %}">Host Event</a></li>
                 <li><a href="{% url "extras:safety" %}">Safety</a></li>
                 <li><span>|</span></li>
-                <li><a id="support" href="{% host_url "support:home" %}">Support</a></li>
+                <li><a id="support" href="{% url "support:home" %}">Support</a></li>
             </ul>
         </div>
     </nav>

@@ -151,12 +151,12 @@
 .headerDivider {
     width: 100%;
     display: flex;
-    justify-content: center;
-    padding-top: 20px;
+    justify-content: start;
+    padding-top: 10px;
 }
 
 .headerDivider hr {
-    width: 70%;
+    width: 50%;
     border: 2px solid #91919189;
     border-radius: 10px;
 }
@@ -166,8 +166,7 @@
 
     display: flex;
     flex-direction: row;
-    justify-content: space-between;
-    gap: 10px;
+    gap: 30px;
 
     width: 100%;
     padding-bottom: 5px;
@@ -194,9 +193,9 @@
 }
 
 .eventDetailsTab.tab-active {
-    background-color: #008d95;
+    background-image: linear-gradient(to right, #007d84c3 0%, #13c9d3 100%);
 
-    border: 1px solid #008d95;
+    border: 1px solid transparent;
     border-radius: 15px;
     color: white;
 }
@@ -221,7 +220,6 @@
 .eventTitleDate .event-title {
     font-family: Wanted-Black;
     font-size: 45px;
-    text-decoration: underline;
 }
 
 .eventTitleDated {
@@ -429,29 +427,17 @@
 }
 
 .slideshow-container {
-    max-height: 500px;
-    max-width: 600px;
-    height: 100%;
-
-    position: relative;
-    margin: auto;
-    overflow: hidden;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 35px;
+    /* Added a value for the gap property */
 }
 
 .slideshow-container img {
     height: 100%;
-    width: auto;
-    max-height: 500px;
-    max-width: 600px;
-    border-radius: 15px;
-}
+    width: 100%;
 
-.hidden-image {
-    display: none;
+    border-radius: 15px;
 }
 
 /* Event Additional Information Tab */
@@ -483,8 +469,8 @@
 .eventTicketBody-body {
     width: 100%;
     display: flex;
-    justify-content: center;
-    align-items: center;
+    justify-content: start;
+    align-items: start;
     flex-direction: column;
     gap: 20px;
 }
@@ -498,21 +484,46 @@
     font-size: 24px;
     padding: 15px 20px;
     border-radius: 20px;
-    border-color: #00000000;
-    background-color: #008d95;
+    border-color: #008d95;
+    background: linear-gradient(270deg, #007d84c3, #13c9d3);
+    background-size: 400% 400%;
+    /* This creates a larger gradient to animate over */
     color: white;
     cursor: pointer;
+    animation: gradientAnimation 10s ease infinite;
+    /* Animates over 10 seconds, loops infinitely */
+}
+
+@keyframes gradientAnimation {
+    0% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+
+    100% {
+        background-position: 0% 50%;
+    }
 }
 
 .jit-tab-body {
-    border: 4px solid black;
+    border: 4px solid #008d95;
     border-bottom-left-radius: 20px;
     border-bottom-right-radius: 20px;
     margin: 0 20px;
     padding: 20px;
     display: none;
-    /* Hide tab body by default */
 }
+
+.ticket-body-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+
 
 
 
@@ -582,11 +593,6 @@
     font-size: 17px;
 }
 
-.ticket-type-info p {
-    font-family: Wanted-Regular;
-    font-size: 15px;
-    color: #676767;
-}
 
 .ticket-cart {
     display: flex;
@@ -597,17 +603,16 @@
     font-family: Wanted-Bold;
 }
 
-#remove-cart,
-#add-cart {
+.cart-button-control {
     background: none;
     border: none;
 
     cursor: pointer;
 }
 
-#remove-cart img,
-#add-cart img {
+.cart-button-control img {
     width: 25px;
+    height: 25px;
 }
 
 .pcb-hr {
@@ -630,13 +635,15 @@
 
 .view-cart button {
     padding: 15px;
-    border: 1px solid #008d95;
+    border: 1px solid transparent;
     border-radius: 15px;
-    background-color: #008d95;
+    background-image: linear-gradient(to right, #007d84c3 0%, #13c9d3 100%);
     color: white;
 
     font-family: Wanted-SemiBold;
     font-size: 17px;
+    cursor: pointer;
+    width: 60%;
 }
 
 
@@ -748,4 +755,35 @@
     display: flex;
     justify-content: end;
     color: #008d95;
+}
+
+/* Event Ticketing Information */
+.pricing-row {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    width: 100%;
+
+    font-family: Wanted-Variable;
+    font-size: 18px;
+}
+
+.description-row {
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+    gap: 20px;
+    width: 100%;
+
+    font-family: Wanted-Variable;
+    font-size: 18px;
+}
+
+.purchase-quantity, 
+.available-quantity {
+    font-family: Wanted-Variable;
+    font-size: 18px;
+    color: #676767;
 }

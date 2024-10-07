@@ -7,35 +7,57 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import HttpResponseRedirect, JsonResponse
 
-from .forms import CollegeForm, JoinCollegeForm, OrganizationForm, VerifyCollegeJoinForm
-from .models import College, Membership, Organization, OrganizationMembership
+from .forms import (
+    CollegeRequestForm,
+    JoinCollegeForm,
+    OrganizationForm,
+    VerifyCollegeJoinForm,
+)
+from .models import (
+    CollegeRequest,
+    Membership,
+    Organization,
+    OrganizationMembership,
+)
+#TODO (Dave): for some reason the college management College model is not working properly. Using this for now.
+from adminDashboardApp.models import College
 from accountManagementApp.models import UserProfile
-
 
 # Create your views here.
 def collegeHomeView(request):
     pageName = "Colleges"
-    return render(request, "collegeManagementApp/home.html", {"pageName": pageName})
+    random_colleges = College.objects.order_by('?')[:3]
+    print(random_colleges)
+    return render(request, "collegeManagementApp/home.html", {"pageName": pageName, "random_colleges": random_colleges})
 
 
 def collegeCampusesView(request):
     pageName = "Colleges"
 
-    if request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest':
-        query = request.GET.get('query', '')
+    if request.META.get("HTTP_X_REQUESTED_WITH") == "XMLHttpRequest":
+        query = request.GET.get("query", "")
         results = College.objects.filter(name__icontains=query)
 
         # Render each result using the template
         if results.exists():
             results_html = []
             for college in results:
-                html = render_to_string('collegeManagementApp/extras/search-item.html', {'college': college})
+                html = render_to_string(
+                    "collegeManagementApp/extras/search-item.html", {"college": college}
+                )
                 results_html.append(html)
-            return JsonResponse({'results_html': results_html, 'no_results': False})
+            return JsonResponse({"results_html": results_html, "no_results": False})
         else:
-            no_results_html = render_to_string('collegeManagementApp/extras/no-result.html')
-            return JsonResponse({'results_html': [], 'no_results': True, 'no_results_html': no_results_html})
-
+            no_results_html = render_to_string(
+                "collegeManagementApp/extras/no-result.html"
+            )
+            return JsonResponse(
+                {
+                    "results_html": [],
+                    "no_results": True,
+                    "no_results_html": no_results_html,
+                }
+            )
 
     colleges = College.objects.all()
 
@@ -43,15 +65,13 @@ def collegeCampusesView(request):
     college_members_info = []
     for college in colleges:
         member_count = UserProfile.objects.filter(college=college).count()
-        college_members_info.append({"college": college, "member_count": member_count})
+        organization_count = Organization.objects.filter(college=college).count()
+        college_members_info.append({"college": college, "member_count": member_count, "organization_count":organization_count})
 
     user_profile = None
     if request.user.is_authenticated:
         user_profile = UserProfile.objects.filter(user=request.user).first()
 
-
-    
-    
     return render(
         request,
         "collegeManagementApp/campuses.html",
@@ -62,27 +82,30 @@ def collegeCampusesView(request):
         },
     )
 
-# def collegeCampusesSearch(request):
-    
 
-@login_required
-def addCollegeView(request):
+
+def requestCollege(request):
     pageName = "Colleges"
 
     if request.method == "POST":
-        collegeForm = CollegeForm(request.POST, request.FILES)
+        collegeRequestForm = CollegeRequestForm(request.POST)
 
-        if collegeForm.is_valid():
-            collegeForm.save()
-
+        if collegeRequestForm.is_valid():
+            collegeRequestForm.save()
+            messages.success(
+                request,
+                "Your request has been submitted. We will get back to you soon.",
+            )
             return redirect("colleges:find")
     else:
-        collegeForm = CollegeForm()
+        collegeRequestForm = CollegeRequestForm()
+
     return render(
         request,
-        "collegeManagementApp/add.html",
-        {"pageName": pageName, "collegeForm": collegeForm},
+        "collegeManagementApp/requestCollege.html",
+        {"pageName": pageName, "collegeRequestForm": collegeRequestForm},
     )
+
 
 @login_required
 def viewCollegeInformation(request, collegeId):
@@ -90,7 +113,7 @@ def viewCollegeInformation(request, collegeId):
 
     college = get_object_or_404(College, collegeId=collegeId)
     members = UserProfile.objects.filter(college=college)
-    organizations = Organization.objects.filter(college=college)
+    organizations = Organization.objects.filter(college=college, status="Accepted")
 
     user_profile = None
     if request.user.is_authenticated:
@@ -226,6 +249,7 @@ def createOrg(request, collegeId):
             organization = orgForm.save(commit=False)
             organization.college = college
             organization.created_by = request.user
+            organization.status = "Pending"
             organization.save()
 
             return redirect("colleges:find")
@@ -247,9 +271,13 @@ def viewOrganization(request, collegeId, orgId):
     is_member = OrganizationMembership.objects.filter(
         user=request.user, organization=organization
     ).exists()
-    
-    member_count = OrganizationMembership.objects.filter(organization=organization).count()
-    members = OrganizationMembership.objects.filter(organization=organization).select_related('user')
+
+    member_count = OrganizationMembership.objects.filter(
+        organization=organization
+    ).count()
+    members = OrganizationMembership.objects.filter(
+        organization=organization
+    ).select_related("user")
 
     return render(
         request,
@@ -259,8 +287,8 @@ def viewOrganization(request, collegeId, orgId):
             "college": college,
             "organization": organization,
             "is_member": is_member,
-            "member_count":member_count,
-            "members": members
+            "member_count": member_count,
+            "members": members,
         },
     )
 

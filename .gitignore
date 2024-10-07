@@ -1,6 +1,6 @@
 .env
-virtualenv/
 .venv
+venv/
 Pipfile
 Pipfile.lock
 .vscode

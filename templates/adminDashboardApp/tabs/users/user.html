@@ -41,7 +41,7 @@ WAVE. — Member Details
             <div id="user-details">
                 <div id="user-full_name">
                     <h3>{{ user.first_name }} {{ user.last_name }}</h3>
-                    <p><a href="{% url "accountManagement:memberProfile" username=user.username %} " target="_blank">@ {{ user.username }}</a></p>
+                    <p><a href="{% url "social:publicProfile" username=user.username %} " target="_blank">@ {{ user.username }}</a></p>
                 </div>
 
                 <div id="user-detailed_view">
@@ -71,6 +71,7 @@ WAVE. — Member Details
                             <p>
                                 {% for group in user_groups %}
                                 {{ group.name }}
+                                {% if not forLoop.last %}&{% endif %}
                                 {% endfor %}
                             </p>
                         </div>

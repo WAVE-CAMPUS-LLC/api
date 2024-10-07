@@ -38,7 +38,7 @@ def blogCreateView(request):
     return render(request, "blogApp/createBlog.html", {"pageName": pageName, "createBlogForm":blogForm})
 
 def blogView(request, blogId):
-    pageName = "blogView"
+    pageName = "blog"
     blogItem = get_object_or_404(Blog, blogId=blogId)
     time = datetime.now().timestamp()
     

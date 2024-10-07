@@ -1,23 +1,32 @@
 from django import forms
-from .models import College, Organization
+from .models import College, CollegeRequest, Organization
 
 
-class CollegeForm(forms.ModelForm):
+class CollegeRequestForm(forms.ModelForm):
+    name = forms.CharField(
+        label="College Name",
+        widget=forms.TextInput(
+            attrs={
+                "class": "form-control",
+                "placeholder": "Tennessee State University, Fisk University, etc.",
+                "required": "required",
+            }
+        ),
+    )
+    yourEmail = forms.EmailField(
+        label="Your Email",
+        widget=forms.EmailInput(
+            attrs={
+                "class": "form-control",
+                "placeholder": "example@college.edu",
+                "required": "required",
+            }
+        ),
+    )
+
     class Meta:
-        model = College
-        fields = [
-            "name",
-            "address",
-            "city",
-            "state",
-            "zip_code",
-            "country",
-            "logo",
-            "motto",
-            "contact_website",
-        ]
-
-        widgets = {"state": forms.Select(), "country": forms.Select()}
+        model = CollegeRequest
+        fields = ["name", "yourName", "yourEmail"]
 
 
 class JoinCollegeForm(forms.Form):
