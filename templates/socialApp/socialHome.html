@@ -10,7 +10,7 @@ My Social @{{ user.username }} — WAVE.
 {% endblock app_page_style %}
 
 {% block script %}
-<script type="text/javascript" src="{% static "scripts/socialApp/tabControl.js" %}" defer></script>
+<script type="text/javascript" src="{% static "scripts/socialApp/tabControl.js" %}?v={{ time }}" defer></script>
 {% endblock script %}
 
 
@@ -64,7 +64,18 @@ My Social @{{ user.username }} — WAVE.
                         </div>
                     </li>
                     <li role="button" type="button" class="social-tab" data-tab="invitations">
-                        <p>Invitations</p>
+                        <div id="crew-invitations">
+                            <p>Crew Invitations</p>
+                            {% if pending_crew_requests %}
+                                <span id="number-of-requests">
+                                    {% if pending_crew_requests|length > 9 %}
+                                        9+
+                                    {% else %}
+                                        {{ pending_crew_requests|length }}
+                                    {% endif %}
+                                </span>
+                            {% endif %}
+                        </div>
                     </li>
                     <li role="button" type="button" class="social-tab" data-tab="my-crews">
                         <p>My Crews</p>
@@ -82,21 +93,38 @@ My Social @{{ user.username }} — WAVE.
                         <div class="home-header">
                             <h4>My Friends</h4>
                         </div>
-                        <div class="home-body">
-                            {% for friend in friends %}
-                            <div class="user-card">
-                                <div class="user-pfp">
-                                    <img src="{% static "images/socialApp/publicProfile/profile/E.L.png" %}" alt="Profile Picture" />
+                        <div>
+                            {% if friends %}
+                                <div class="home-container">
+                                    {% for friend in friends %}
+                                    <div class="user-card">
+                                        <div class="user-pfp">
+                                            <img src="{% static "images/socialApp/publicProfile/profile/E.L.png" %}" alt="Profile Picture" />
+                                        </div>
+                                        <div class="user-names">
+                                            <h1 class="userFullname">{{ friend.user.first_name }} {{ friend.user.last_name }}</h1>
+                                            <p>
+                                                @{{ friend.user.username }}
+                                            </p>
+                                        </div>
+                                        <div class="user-actions">
+                                            <a target="_blank" href="{% url "social:publicProfile" username=friend.user.username %}">View Social</a>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
                                 </div>
-                                <div class="user-names">
-                                    <h1>{{ friend.sender.first_name }} {{ friend.sender.last_name }}</h1>
-                                    <p>Class of 28'</p>
+                            {% else %}
+                            <div class="emptyContainer">
+                                <div>
+                                    <img src="{% static "/images/collegeManagementApp/collegeInformation/empty-listing.svg" %}" />
                                 </div>
-                                <div class="user-actions">
-                                    <a target="_blank" href="{% url "social:publicProfile" username=friend.sender.username %}">View Social</a>
+                                <div>
+                                    <p>
+                                        Currently, no friends. 
+                                    </p>
                                 </div>
                             </div>
-                            {% endfor %}
+                            {% endif %}
                         </div>
                     </div>
                 </div>
@@ -152,9 +180,7 @@ My Social @{{ user.username }} — WAVE.
                         </div>
                         <div>
                             <p>
-                                Currently no friend requests. 
-                                <br>
-                                Let your friends know about WAVE.
+                                Currently, no friend requests. 
                             </p>
                         </div>
                     </div>
@@ -165,34 +191,50 @@ My Social @{{ user.username }} — WAVE.
                 <div class="info-container">
                     <div class="home-header">
                         <h4>
-                            Invitations
+                            Crew Invitations
                         </h4>
                     </div>
                     <div class="crew-invitation-body">
-                        <div class="crew-invite-item">
-                            <div class="cit-left">
-                                <div class="cit-pfp">
-                                    <img src="{% static "/images/socialApp/publicProfile/profile/E.L.png" %}" alt="Profile Picture" />
+                        {% if pending_crew_requests %}
+                            {% for request in pending_crew_requests %}
+                            <div class="crew-invite-item">
+                                <div class="cit-left">
+                                    <div class="cit-pfp">
+                                        <img src="{% static "/images/socialApp/publicProfile/profile/E.L.png" %}" alt="Profile Picture" />
+                                    </div>
+                                    <div class="cit-name">
+                                        <h5><span class="crew-name">{{request.crew}}</span> has invited you!</h5>
+                                        <p>Invited by <a href="{% url "social:publicProfile" username=request.sender.username %}" target="_blank">
+                                            @{{request.sender.username}}</a>
+                                        </p>
+                                    </div>
                                 </div>
-                                <div class="cit-name">
-                                    <h5><span class="crew-name">Men In Black</span> has invited you!</h5>
-                                    <p>Invited by <a href="">@enoshlartey</a></p>
+                                <div class="cit-right">
+                                    <form method="POST">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="crew_id" value="{{ request.crew.crewId }}" />
+                                        <button class="accept" type="submit" name="action" value="joinCrew" role="button">
+                                            <img src="{% static "/images/socialApp/socialHome/accept.svg" %}" alt="Accept Friend Request">
+                                        </button>
+                                        <button class="decline" type="submit" name="action" value="declineCrew" role="button">
+                                            <img src="{% static "/images/socialApp/socialHome/decline.svg" %}" alt="Decline Friend Request">
+                                        </button>
+                                    </form>
                                 </div>
                             </div>
-                            <div class="cit-right">
-                                <form method="POST" >
-                                    <button class="accept" type="submit" role="button">
-                                        <img src="{% static "/images/socialApp/socialHome/accept.svg" %}" alt="Accept Friend Request">
-                                    </button>
-                                </form>
-
-                                <form method="POST">
-                                    <button class="decline" type="submit" role="button">
-                                        <img src="{% static "/images/socialApp/socialHome/decline.svg" %}" alt="Decline Friend Request">
-                                    </button>
-                                </form>
+                            {% endfor %}
+                        {% else %}
+                        <div class="emptyContainer">
+                            <div>
+                                <img src="{% static "/images/collegeManagementApp/collegeInformation/empty-listing.svg" %}" />
+                            </div>
+                            <div>
+                                <p>
+                                    Create a crew and invite your friends!
+                                </p>
                             </div>
                         </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -210,28 +252,62 @@ My Social @{{ user.username }} — WAVE.
                         </div>
                     </div>
                     <div class="crew-home-body">
-                        {% for crew in my_crews %}
-                        <div class="crew-item">
-                            <div class="crewI-left">
-                                <div class="crew-pfp">
-                                    <img src="{% static "/images/socialApp/publicProfile/profile/E.L.png" %}" alt="Profile Picture" />
+                        {% if my_crews %}
+                            {% for crew in my_crews %}
+                            <div class="crew-item">
+                                <div class="crewI-left">
+                                    <div class="crew-pfp">
+                                        <img src="{% static "/images/socialApp/publicProfile/profile/E.L.png" %}" alt="Profile Picture" />
+                                    </div>
+                                    <div class="crew-name">
+                                        <h5>{{ crew.name }}</h5>
+                                        <p>
+                                            Created by: {{ crew.created_by.first_name }} {{ crew.created_by.last_name }}
+                                        </p>
+                                    </div>
                                 </div>
-                                <div class="crew-name">
-                                    <h5>{{ crew.name }}</h5>
-                                    <p>Created by: <a target="_blank" href="{% url "social:publicProfile" username=crew.created_by.username %}">@{{ crew.created_by }}</a></p>
+                                <div class="crewI-right">
+                                    <a target="_blank" href="{% url "social:crew" crewId=crew.crewId %}" class="view-crew">View Crew</a>
                                 </div>
                             </div>
-                            <div class="crewI-right">
-                                <a target="_blank" href="{% url "social:crew" crewId=crew.crewId %}" class="view-crew">View Crew</a>
+                            {% if not forLoop.last %}
+                            <hr/>
+                            {% endif %}
+                            {% endfor %}
+                        {% else %}
+                            <div class="emptyContainer">
+                                <div>
+                                    <img src="{% static "/images/collegeManagementApp/collegeInformation/empty-listing.svg" %}" />
+                                </div>
+                                <div>
+                                    <p>
+                                        Currently no friend requests. 
+                                        <br>
+                                        Share the WAVE.!
+                                    </p>
+                                </div>
                             </div>
-                        </div>
-                        {% endfor %}
+                        {% endif %}
                     </div>
                 </div>
             </div>
             <div class="social-home-elements" id="shared">
                 <div class="info-container">
-                    Shared
+                    <div class="home-header">
+                        <h4>
+                            Crew Invitations
+                        </h4>
+                    </div>
+                    <div class="emptyContainer">
+                        <div>
+                            <img src="{% static "/images/collegeManagementApp/collegeInformation/empty-listing.svg" %}" />
+                        </div>
+                        <div>
+                            <p>
+                                Currently, nothing shared.
+                            </p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

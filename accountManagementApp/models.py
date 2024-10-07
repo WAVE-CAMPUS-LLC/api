@@ -1,9 +1,11 @@
+import re
 from django.db import models
+from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext_lazy as translate
 from django.conf import settings
 from django.contrib.auth.models import Group
 from collegeManagementApp.models import College
-from socialApp.models import FriendRequest
+from socialApp.models import CrewMember, CrewRequest, FriendRequest, Crew
 
 
 # Create your models here.
@@ -20,7 +22,7 @@ class UserProfile(models.Model):
         College, null=True, blank=True, on_delete=models.SET_NULL
     )
     friends = models.ManyToManyField(
-        "self", symmetrical=True, blank=True, related_name="related_friends"
+        "self", symmetrical=True, blank=True
     )
     
     is_campus_manager = models.BooleanField(default=False)
@@ -60,3 +62,35 @@ class UserProfile(models.Model):
                 sender=other_user, receiver=self.user, status="declined"
             ).exists()
         )
+        
+    def is_in_crew(self, crewId):
+        receiver = get_object_or_404(CrewMember, user__username=self.user.username)
+        if receiver is None:
+            return False
+        else:
+            return (
+                Crew.objects.filter(
+                    crewId=crewId, members=receiver).exists()
+            )
+        
+    def has_pending_crew_request(self, other_user):
+        return (
+            CrewRequest.objects.filter(
+                sender=self.user, receiver=other_user, status="pending"
+            ).exists() or CrewRequest.objects.filter(
+                sender=other_user, receiver=self.user, status="pending"
+            ).exists()
+        )
+            
+    def has_declined_crew_request(self, other_user):
+        return (
+            CrewRequest.objects.filter(
+                sender=self.user, receiver=other_user, status="declined"
+            ).exists() or CrewRequest.objects.filter(
+                sender=other_user, receiver=self.user, status="declined"
+            ).exists()
+        )
+    
+    def is_crew_owner(self, crewId):
+        crew = get_object_or_404(Crew, crewId=crewId)
+        return crew.created_by == self.user

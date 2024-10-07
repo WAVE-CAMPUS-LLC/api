@@ -1,0 +1,26 @@
+{% load static %}
+
+{% block app_page_style %}
+<link rel="stylesheet" type="text/css" href="{% static "/styles/extras/invalid/invalid.css" %}" />
+{% endblock app_page_style %}
+
+
+<main>
+    <div id="body-content">
+        <div id="bcContainer">
+            <h2>
+                You cannot view this crew!
+            </h2>
+            <p>
+                Ask a current crew members to invite you. 
+            </p>
+            <div id="bcLinks">
+                <a href="{% url "social:home" %}">The Social</a>
+                <span>•</span>
+                <a href="#">Our Status</a>
+                <span>•</span>
+                <a href="{% url "support:home" %}">Support</a>
+            </div>
+        </div>
+    </div>
+</main>

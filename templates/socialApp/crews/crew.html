@@ -21,11 +21,29 @@
 
 
 {% block body %}
+{% if isInCrew %}
 <div id="content-container">
     <div id="pageHeader">
-        <h3>
-            View your crew: {{ crew.name }}
-        </h3>
+        <div id="name-and-leave">
+            <h3>
+                {{ crew.name }}
+            </h3>
+            {% if isCrewOwner %}
+            <form method="POST">
+                {% csrf_token %}
+                <button id="delete-crew" type="submit" name="action" value="delete_crew" role="button">
+                    Delete Crew
+                </button>
+            </form>
+            {% else %}
+            <form method="POST">
+                {% csrf_token %}
+                <button id="leave-crew" type="submit" name="action" value="leave_crew" role="button">
+                    Leave Crew
+                </button>
+            </form>
+            {% endif %}
+        </div>
         <p>Invite your friends to join your crew and go to events with them!</p>
     </div>
 
@@ -69,58 +87,135 @@
 
                 <div id="memberInformation" class="crewTabInformation">
                     <div class="memberContainer">
-                        <div id="pageSearch">
-                            <div id="find-colleges">
-                                <div class="find-college-name">
-                                    <div class="febc-img">
-                                        <img src="{% static "images/explore/find.svg" %}" alt="Find College">
-                                    </div>
-                                    <input type="text" name="" id="collegeSearchBar" placeholder="Find college by name" autocomplete="off">
-                                </div>
-                            </div>
-                    
-                            <div id="collegeSearchCardModal">
-                                <div class="searchCardContainer">
-                                    <div class="searchCard">
-                                        <div class="searchCardHeader">
-                                            <div id="searchCardHeading">
-                                                <h6>Search for a friend</h6>
-                                                <button type="button" role="button" id="closeSearchModalButton">
-                                                    <img src="{% static '/images/admin/roles/modalClose.svg' %}" alt="">
-                                                    <p>CLOSE</p>
-                                                </button>
-                                            </div>
-                                            <div id="searchBarRow">
-                                                <div class="find-college-card-name">
-                                                    <div class="febc-img">
-                                                        <img src="{% static "images/explore/find.svg" %}" alt="Find College">
-                                                    </div>
-                                                    <div id="crew-data" data-crew-id="{{ crew.crewId }}"></div>
-                                                    <input type="text" name="" id="collegeSearchContentBar" placeholder="Find your friend by their name" autofocus autocomplete="off">
-                                                </div>
-                                            </div>
+                        <div class="memberDisplayContainer">
+                            <h4>Current Crew Members</h4>
+                            <div class="memberDisplay">
+                                {% for member in crewMembers %}
+                                <div id="memberItem">
+                                    <a target="_blank" href="{% url "social:publicProfile" username=member.user.username %}">
+                                        <div class="ir-pfp">
+                                            <img src="{% static "/images/socialApp/publicProfile/profile/E.L.png" %}" alt="crew member" />
                                         </div>
-                    
-                                        <div class="searchCardBody"></div>
+                                        <div class="member-info">
+                                            <h3 class="member-name">
+                                                {{ member.user.first_name }} {{ member.user.last_name }}
+                                                {% if member.user == self %}
+                                                (you)
+                                                {% endif %}
+                                            </h3>
+                                            <p class="member-username">
+                                                {{member.user.username}}
+                                            </p>
+                                        </div>
+                                    </a>
+                                    {% if isCrewOwner and member.user != self %}
+                                    <div id="kickMemberButton">
+                                        <form method="POST">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="member" value="{{ member.user.username }}" />
+                                            <button id="kick-member" type="submit" name="action" value="kick_member" role="button">
+                                                Kick Member
+                                            </button>
+                                        </form>
                                     </div>
+                                    {% endif %}
                                 </div>
+                                {% endfor %}
                             </div>
                         </div>
-
-                        <div class="memberDisplay">
-                            {% for member in crewMembers %}
-                            <div id="memberItem">
-                                <div class="item-right">
-                                    <div class="ir-pfp">
-                                        <img src="{% static "/images/socialApp/publicProfile/profile/E.L.png" %}" alt="crew member" />
-                                    </div>
-                                    <div class="member-info">
-                                        <h3 class="member-name">{{ member.user.first_name }} {{ member.user.last_name }}</h3>
-                                        <p class="member-username">@enoshlartey</p>
+                        
+                        <div class="freindsContainer">
+                            <div id="pageSearch">
+                                <div id="find-colleges">
+                                    <div class="find-college-name">
+                                        <div class="febc-img">
+                                            <img src="{% static "images/explore/find.svg" %}" alt="Find College">
+                                        </div>
+                                        <input type="text" name="" id="collegeSearchBar" placeholder="Find your friend by their name" autocomplete="off">
                                     </div>
                                 </div>
-                                <div class="item-left">
-                                    <a target="_blank" href="{% url "social:publicProfile" username=member.user.username %}">View Crew Member</a>
+                        
+                                
+                                <div id="collegeSearchCardModal">
+                                    <div class="searchCardContainer">
+                                        <div class="searchCard">
+                                            <div class="searchCardHeader">
+                                                <div id="searchCardHeading">
+                                                    <h6>Search for a friend</h6>
+                                                    <button type="button" role="button" id="closeSearchModalButton">
+                                                        <img src="{% static '/images/admin/roles/modalClose.svg' %}" alt="">
+                                                        <p>CLOSE</p>
+                                                    </button>
+                                                </div>
+                                                <div id="searchBarRow">
+                                                    <div class="find-college-card-name">
+                                                        <div class="febc-img">
+                                                            <img src="{% static "images/explore/find.svg" %}" alt="Find College">
+                                                        </div>
+                                                        <div id="crew-data" data-crew-id="{{ crew.crewId }}"></div>
+                                                        <input type="text" name="" id="collegeSearchContentBar" placeholder="Find your friend by their name" autofocus autocomplete="off">
+                                                    </div>
+                                                </div>
+                                            </div>
+                        
+                                            <div class="searchCardBody"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% for friend in pendingFriends %}
+                            <div class="friendItem">
+                                <div class="friendInfoo">
+                                    <div class="friendPfp">
+                                        <img src="{% static "/images/socialApp/publicProfile/profile/E.L.png" %}" alt="Profile Picture" />
+                                    </div>
+                                    <div class="friendNames">
+                                        <h2>{{ friend.user.first_name }} {{ friend.user.last_name }}</h2>
+                                    </div>
+                                </div>
+                                <div class="friendActions">
+                                    <div class="statusDisplay pending">
+                                        <img src="{% static "/images/socialApp/pending.svg" %}" alt="Pending" />
+                                        <h3> Pending </h3>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                            {% for friend in declinedFriends %}
+                            <div class="friendItem">
+                                <div class="friendInfoo">
+                                    <div class="friendPfp">
+                                        <img src="{% static "/images/socialApp/publicProfile/profile/E.L.png" %}" alt="Profile Picture" />
+                                    </div>
+                                    <div class="friendNames">
+                                        <h2>{{ friend.user.first_name }} {{ friend.user.last_name }}</h2>
+                                    </div>
+                                </div>
+                                <div class="friendActions">
+                                    <div id="declined-invite">
+                                        Declined Invite
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                            {% for friend in notInvitedFriends %}
+                            <div class="friendItem">
+                                <div class="friendInfoo">
+                                    <div class="friendPfp">
+                                        <img src="{% static "/images/socialApp/publicProfile/profile/E.L.png" %}" alt="Profile Picture" />
+                                    </div>
+                                    <div class="friendNames">
+                                        <h2>{{ friend.user.first_name }} {{ friend.user.last_name }}</h2>
+                                    </div>
+                                </div>
+                                <div class="friendActions">
+                                    <form method="POST">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="invitee_username" value="{{ friend.user.username }}" />
+                                        <button class="inviteFriend" type="submit" name="action" value="crew_invite" role="button">
+                                            Send Crew Invite
+                                        </button>
+                                    </form>
                                 </div>
                             </div>
                             {% endfor %}
@@ -131,4 +226,7 @@
         </div>
     </div>
 </div>
+{% else %}
+{% include "extras/invalid/notCrewMember.html" %}
+{% endif %}
 {% endblock body %}
