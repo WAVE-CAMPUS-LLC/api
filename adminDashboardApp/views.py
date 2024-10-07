@@ -1,4 +1,8 @@
-from datetime import timedelta
+import resend
+import json
+from django.views.decorators.http import require_POST
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
 from django.http import HttpResponseBadRequest
 from django.shortcuts import render, redirect, HttpResponse, get_object_or_404
 from django.contrib.auth.decorators import login_required
@@ -272,9 +276,7 @@ def adminUserDetailedView(request, username):
             if suspend_form.is_valid():
                 hours = suspend_form.cleaned_data.get("hours", 0)
                 user_in_view.suspend(hours)
-                return redirect(
-                    "waveAdmin:user-detailed", username=username
-                )
+                return redirect("waveAdmin:user-detailed", username=username)
 
         elif action == "allow":
             user_in_view.remove_suspension_OR_ban()
@@ -565,6 +567,23 @@ def adminCreateNewsView(request):
 @check_suspension
 @admin_required
 def adminEditNewsView(request, newsId):
+    """
+    The `adminEditNewsView` function in Python handles editing news items in an admin dashboard,
+    including updating various fields and forms based on user input.
+    
+    :param request: The `request` parameter in the `adminEditNewsView` function is an HttpRequest object
+    that represents the request made by a user to a Django web application. It contains information
+    about the request, such as the HTTP method used (GET, POST, etc.), any data sent in the request
+    (POST
+    :param newsId: The `newsId` parameter in the `adminEditNewsView` function is used to identify the
+    specific news item that the admin wants to edit. This parameter is passed in the URL and is used to
+    retrieve the corresponding news item from the database for editing
+    :return: The `adminEditNewsView` function returns a rendered template with forms for editing various
+    fields of a news item. The forms include fields for updating the news title, body, urgency level,
+    news category, header image, and three additional images. The function also handles POST requests to
+    update the news item based on the form field submitted. If the action is to delete the news item, it
+    deletes the
+    """
     newsItem = get_object_or_404(Newsroom, newsId=newsId)
 
     if request.method == "POST":
@@ -653,3 +672,71 @@ def adminEditNewsView(request, newsId):
             "imageThreeForm": imageThreeForm,
         },
     )
+
+
+@login_required
+@check_suspension
+@admin_required
+def adminEmailingView(request):
+    """
+    The `adminEmailingView` function retrieves all active user profiles and renders them in an emailing
+    template for the admin dashboard.
+    
+    :param request: The `request` parameter in the `adminEmailingView` function is an HttpRequest object
+    that represents the current HTTP request. It contains metadata about the request, such as the
+    request method, headers, user session information, and more. This parameter is typically passed to
+    Django view functions to handle incoming requests
+    :return: The `adminEmailingView` function is returning a rendered template "emailing.html" from the
+    "adminDashboardApp/tabs" directory. The context being passed to the template includes the queryset
+    of all UserProfile objects stored in the `activeUsers` variable.
+    """
+    activeUsers = UserProfile.objects.all()
+    return render(
+        request,
+        "adminDashboardApp/tabs/emailing.html",
+        {
+            "activeUsers": activeUsers,
+        },
+    )
+
+
+resend.api_key = settings.RESEND_API_KEY
+"""
+    This Python function sends an email using data from a POST request, with various decorators for
+    security and permission checks.
+    
+    :param request: The code snippet you provided is a Django view function for sending emails. Let me
+    explain the different decorators and the functionality of the view function:
+    :return: The `send_email` function returns a JSON response. If the email is successfully sent, it
+    returns a JSON response with `"success": True` and the email response data. If there is an error or
+    the email fails to send, it returns a JSON response with `"success": False` and an error message
+    indicating the reason for the failure.
+    """
+@csrf_exempt
+@require_POST
+@login_required
+@check_suspension
+@admin_required
+def send_email(request):
+    try:
+        data = json.loads(request.body)
+        recipients = data.get('recipients')
+        subject = data.get('subject')
+        message = data.get('message')
+
+        email_params: resend.Emails.SendParams = {
+            "from": "WAVE Support <support@wavecampus.net>",
+            "to": recipients,
+            "subject": subject,
+            "html": message,
+        }
+
+        email_response = resend.Emails.send(email_params)
+
+        if email_response.get("id"):  
+            return JsonResponse({"success": True, "data": email_response})
+        else:
+            return JsonResponse({"success": False, "error": "Failed to send email."})
+
+    except Exception as e:
+        return JsonResponse({"success": False, "error": f"Error: {str(e)}"})

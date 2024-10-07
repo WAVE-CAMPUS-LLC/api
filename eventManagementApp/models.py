@@ -3,7 +3,6 @@ from django.db import models
 from django.utils.translation import gettext as _
 from django.utils import timezone
 from django.conf import settings
-from multiupload.fields import MultiImageField
 
 
 class HostApplication(models.Model):
