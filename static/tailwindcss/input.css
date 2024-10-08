@@ -1,0 +1,186 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+@import '../styles/accountManagementApp/partials/passwordChange.css';
+@import '../styles/accountManagementApp/profileManagement.css';
+@import '../styles/accountManagementApp/profileSettings.css';
+@import '../styles/accountManagementApp/publicProfile.css';
+
+@import '../styles/adminDashboardApp/index.css';
+@import '../styles/adminDashboardApp/tabs/applications.css';
+@import '../styles/adminDashboardApp/tabs/careers.css';
+@import '../styles/adminDashboardApp/tabs/colleges.css';
+@import '../styles/adminDashboardApp/tabs/dashboard.css';
+@import '../styles/adminDashboardApp/tabs/departments.css';
+@import '../styles/adminDashboardApp/tabs/emailing.css';
+@import '../styles/adminDashboardApp/tabs/feedback.css';
+@import '../styles/adminDashboardApp/tabs/newsroom.css';
+@import '../styles/adminDashboardApp/tabs/financial.css';
+@import '../styles/adminDashboardApp/tabs/roles.css';
+@import '../styles/adminDashboardApp/tabs/support.css';
+@import '../styles/adminDashboardApp/tabs/users.css';
+@import '../styles/adminDashboardApp/tabs/careers/careerDetails.css';
+@import '../styles/adminDashboardApp/tabs/colleges/collegeInfo.css';
+@import '../styles/adminDashboardApp/tabs/departments/departmentDetails.css';
+@import '../styles/adminDashboardApp/tabs/newsroom/createNews.css';
+@import '../styles/adminDashboardApp/tabs/newsroom/editNews.css';
+@import '../styles/adminDashboardApp/tabs/users/user.css';
+
+@import '../styles/authenticationApp/forgot_password.css';
+@import '../styles/authenticationApp/join.css';
+@import '../styles/authenticationApp/login.css';
+@import '../styles/authenticationApp/passwordReset/newPassword.css';
+
+@import '../styles/base/base.css';
+
+@import '../styles/blogApp/blogHome.css';
+@import '../styles/blogApp/blogItem.css';
+@import '../styles/blogApp/createBlog.css';
+@import '../styles/blogApp/editBlog.css';
+
+@import '../styles/campusManagerApp/managerCampusView.css';
+@import '../styles/campusManagerApp/managerDashboard.css';
+
+@import '../styles/careerApp/careerJobDetails.css';
+@import '../styles/careerApp/careers.css';
+
+@import '../styles/collegeManagementApp/add.css';
+@import '../styles/collegeManagementApp/campuses.css';
+@import '../styles/collegeManagementApp/collegeInformation.css';
+@import '../styles/collegeManagementApp/createCampusOrg.css';
+@import '../styles/collegeManagementApp/home.css';
+@import '../styles/collegeManagementApp/joinCollege.css';
+
+
+@layer utilities {
+    .negative-gap {
+        gap: 5px;
+    }
+
+    .gradient-btn {
+        padding: 15px 20px;
+        border: 2px solid transparent;
+        border-right-color: #13c9d3;
+        border-left-color: #008d95bc;
+        color: white;
+
+        font-family: Wanted-Regular;
+        text-decoration: none;
+
+        display: flex;
+        align-items: center;
+        flex-direction: row;
+        gap: 10px;
+        border-radius: 20px;
+        background-image: linear-gradient(to right, #008d95bc 0%, #13c9d3 100%);
+        cursor: pointer;
+        justify-content: center;
+    }
+
+    .gradient-btn-hover {
+        background-color: #007379;
+    }
+
+    .small-gt-btn {
+        padding-top: 5px;
+        padding-bottom: 5px;
+        padding-left: 13px;
+        padding-right: 13px;
+        border: 2px solid transparent;
+        border-right-color: #13c9d3;
+        border-left-color: #008d95bc;
+        color: white;
+
+        text-decoration: none;
+
+        display: flex;
+        align-items: center;
+        font-family: Wanted-Medium;
+        flex-direction: row;
+        gap: 10px;
+        border-radius: 12px;
+        background-image: linear-gradient(to right, #008d95bc 0%, #13c9d3 100%);
+        cursor: pointer;
+        justify-content: center;
+    }
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    scrollbar-width: none;
+}
+
+::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+}
+
+
+@font-face {
+    font-family: "Wanted-ExtraBlack";
+    src: url("../../fonts/Wanted/WantedSans-ExtraBlack-BF65baf133c4859.otf") format("opentype");
+}
+
+@font-face {
+    font-family: "Wanted-Black";
+    src: url("../../fonts/Wanted/WantedSans-Black-BF65baf1369b817.otf") format("opentype");
+}
+
+@font-face {
+    font-family: "Wanted-ExtraBold";
+    src: url("../../fonts/Wanted/WantedSans-ExtraBold-BF65baf137317a5.otf") format("opentype");
+}
+
+@font-face {
+    font-family: "Wanted-SemiBold";
+    src: url("../../fonts/Wanted/WantedSans-SemiBold-BF65baf13722853.otf") format("opentype");
+}
+
+@font-face {
+    font-family: "Wanted-Bold";
+    src: url("../../fonts/Wanted/WantedSans-Bold-BF65baf135d5a25.otf") format("opentype");
+}
+
+@font-face {
+    font-family: "Wanted-Medium";
+    src: url("../../fonts/Wanted/WantedSans-Medium-BF65baf1388963b.otf") format("opentype");
+}
+
+@font-face {
+    font-family: "Wanted-Regular";
+    src: url("../../fonts/Wanted/WantedSans-Regular-BF65baf13579965.otf") format("opentype");
+}
+
+@font-face {
+    font-family: "Wanted-Variable";
+    src: url("../../fonts/Wanted/WantedSansVariable-BF65baf13a24667.ttf") format("truetype");
+}
+
+
+/** Logo used in body's **/
+#body-logo {
+    font-family: Wanted-Black;
+}
+
+#body-logo .spot {
+    color: #008d95;
+}
+
+
+
+/* Footer shadow */
+footer {
+    max-width: 100vw;
+    -webkit-box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.085);
+    -moz-box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.16);
+    box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.061);
+}
+
+.no-scroll {
+    overflow: hidden;
+    height: 100%;
+}
