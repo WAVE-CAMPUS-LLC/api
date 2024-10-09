@@ -5,7 +5,7 @@ __pycache__/
 
 # Virtual environments
 .venv/
-.env/
+.env
 .virtualenv/
 env/
 venv/
@@ -67,3 +67,7 @@ media/
 
 # Windows
 Thumbs.db
+
+
+# Node JS 
+node_modules/
