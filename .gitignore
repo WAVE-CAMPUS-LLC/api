@@ -71,3 +71,7 @@ Thumbs.db
 
 # Node JS 
 node_modules/
+
+# Package files
+package-lock.json
+package.json
