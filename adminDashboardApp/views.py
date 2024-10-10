@@ -29,10 +29,10 @@ from collegeManagementApp.models import (
     OrganizationMembership,
     Membership,
 )
+from blogApp.models import Blog
 from campusManagerApp.models import CampusManagerInvite
-from .models import College
 from django.conf import settings
-from .models import Department, CareerRole, LoginHistoryModel, Newsroom
+from .models import Department, CareerRole, LoginHistoryModel, Newsroom, College
 from .forms import (
     CreateGroupForm,
     UpdateGroupForm,
@@ -824,6 +824,12 @@ def adminEditNewsView(request, newsId):
         },
     )
 
+@login_required
+@check_suspension
+@admin_required
+def adminBlogView(request):
+    blogs = Blog.objects.all()
+    return render(request, "adminDashboardApp/tabs/blogs.html", {"blogs": blogs})
 
 @login_required
 @check_suspension
