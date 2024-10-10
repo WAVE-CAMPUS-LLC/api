@@ -12,13 +12,15 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 
 from pathlib import Path
 import os
-import environ
+from urllib.parse import urlparse
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+from dotenv import load_dotenv
 
-env = environ.Env()
-environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
+load_dotenv()
+DATABASE_URL = os.getenv("DATABASE_URL")
 
 
 # Quick-start development settings - unsuitable for production
@@ -106,17 +108,37 @@ WSGI_APPLICATION = "wave_v1.wsgi.application"
 #     }
 # }
 
+# DATABASES = {
+#     "default": {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': env('POSTGRES_DATABASE'),
+#         'USER': env('POSTGRES_USER'),
+#         'PASSWORD': env('POSTGRES_PASSWORD'),
+#         'HOST': env('POSTGRES_HOST'),
+#         'PORT': env('POSTGRES_DATABASE_PORT', default='5432'),
+#         'OPTIONS': {
+#             'sslmode': 'require',
+#         },
+#     }
+# }
+
+
+
+if DATABASE_URL is None:
+    raise ValueError("DATABASE_URL environment variable not set")
+
+# Parse the DATABASE_URL
+tmpPostgres = urlparse(DATABASE_URL)
+
+# Ensure that all components are handled as strings
 DATABASES = {
-    "default": {
+    'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': env('POSTGRES_DATABASE'),
-        'USER': env('POSTGRES_USER'),
-        'PASSWORD': env('POSTGRES_PASSWORD'),
-        'HOST': env('POSTGRES_HOST'),
-        'PORT': env('POSTGRES_DATABASE_PORT', default='5432'),
-        'OPTIONS': {
-            'sslmode': 'require',
-        },
+        'NAME': str(tmpPostgres.path.lstrip('/')),  # Convert to string and remove leading slash
+        'USER': str(tmpPostgres.username),
+        'PASSWORD': str(tmpPostgres.password),
+        'HOST': str(tmpPostgres.hostname),
+        'PORT': str(tmpPostgres.port) if tmpPostgres.port else '',
     }
 }
 
