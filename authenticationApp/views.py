@@ -29,6 +29,18 @@ from wave_v1.decorators import (
 
 # Create your views here.
 def joinView(request):
+    """
+    The `joinView` function handles user registration, group assignment, and invite acceptance in a
+    Django web application.
+    
+    :param request: The `request` parameter in the `joinView` function is an object that contains
+    information about the current HTTP request. It includes details such as the request method (GET,
+    POST, etc.), session data, user authentication details, and form data submitted by the user. In this
+    function, the `
+    :return: The `joinView` function returns a rendered HTML template named "join.html" along with a
+    form object as context data. The form object is either a new instance of `CustomUserJoinForm` if the
+    request method is not POST, or a form instance populated with POST data if the form is valid.
+    """
     invite_token = request.session.get('invite_token')
     invite_email = request.session.get('invite_email')
     collegeId = request.session.get('collegeId')

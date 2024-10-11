@@ -1,4 +1,14 @@
 document.addEventListener("DOMContentLoaded", function () {
+  // $("#showTestPopup").on("click", function () {
+  //   $("#preferencesModal").show();
+  //   $("#showTestPopup").hide();
+  // });
+
+  $("#closeCreateCollegeModalButton").on("click", function () {
+    $("#preferencesModal").hide();
+    $("#showTestPopup").show();
+  });
+
   // Initialize tab systems for each body section
   initializeTabSystem("cc-sub-body", "profile-tab", "profile-tab-content");
 

@@ -6,7 +6,7 @@ Profile Overview
 {% endblock title %}
 
 {% block app_page_style %}
-<link rel="stylesheet" type="text/css" href="{% static "/styles/accountManagementApp/profileManagement.css" %}" />
+<link rel="stylesheet" type="text/css" href="{% static "/styles/accountManagementApp/profileOverview.css" %}" />
 {% endblock app_page_style %}
 
 {% block script %}
@@ -19,11 +19,17 @@ Profile Overview
 {% endblock header %}
 
 
+
 {% block body %}
+{% if not userRequest.user_preferences_completed %}
+{% include "accountManagementApp/extras/preferences.html" %}
+{% endif %}
+
 <div id="body-content">
     <div id="body-header">
         <h3>Welcome, {{ user.first_name }}!</h3>
     </div>
+    
     <div id="content-container">
         <div class="cc-user-card">
             <div id="heading">
@@ -186,4 +192,6 @@ Profile Overview
         </div>
     </div>
 </div>
+
+
 {% endblock body %}

@@ -3,7 +3,12 @@ from django.http import Http404, HttpResponseBadRequest
 from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import get_user_model
-from .forms import UpdateContactInfo, UpdatePersonalInfo, UpdateProfileForm
+from .forms import (
+    UserProfileForm,
+    UpdateContactInfo,
+    UpdatePersonalInfo,
+    UpdateProfileForm,
+)
 from .models import UserProfile
 
 # Decorators to check user roles and permissions
@@ -18,9 +23,44 @@ UserModel = get_user_model()
 @check_suspension
 @group_required("Member")
 def profileView(request):
-    blogItems = Blog.objects.filter(created_by=request.user)
-    
-    return render(request, "accountManagementApp/profileManagement.html", {"blogItems":blogItems})
+    userRequest = request.user
+    updateUserProfileForm = UserProfileForm(
+        request.POST or None, request.FILES or None, instance=userRequest.user_profile
+    )
+    blogItems = Blog.objects.filter(created_by=userRequest)
+
+    if request.method == "POST":
+        if updateUserProfileForm.is_valid():
+            updateUserProfileForm.save()
+
+            if all(
+                [
+                    getattr(userRequest.profile, field)
+                    for field in updateUserProfileForm.fields
+                    if updateUserProfileForm.fields[field].required
+                ]
+            ):
+                userRequest.user_preferences_completed = True
+            else:
+                userRequest.user_preferences_completed = False
+
+            userRequest.save()
+            return redirect("accountManagement:userAccount")
+        else:
+            print(updateUserProfileForm.errors)
+
+    else:
+        updateUserProfileForm = UserProfileForm(instance=userRequest.user_profile)
+
+    return render(
+        request,
+        "accountManagementApp/profileOverview.html",
+        {
+            "blogItems": blogItems,
+            "userRequest": userRequest,
+            "updateUserProfileForm": updateUserProfileForm,
+        },
+    )
 
 
 @login_required(login_url="authentication:login")
@@ -91,4 +131,3 @@ class ChangePasswordView(SuccessMessageMixin, PasswordChangeView):
         return result
 
     success_url = reverse_lazy("accountManagement:userAccount")
-
