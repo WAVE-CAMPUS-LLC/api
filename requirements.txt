@@ -15,6 +15,7 @@ idna==3.10
 kombu==5.3.7
 pillow==10.4.0
 prompt_toolkit==3.0.47
+psycopg2-binary==2.9.9s
 python-dateutil==2.9.0.post0
 redis==5.0.5
 requests==2.32.3

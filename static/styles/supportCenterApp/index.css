@@ -134,3 +134,36 @@
     font-family: Wanted-Regular;
     font-size: 15.5px;
 }
+#chat-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+}
+
+#bottom-right-image {
+    width: 40px; /* Adjust as needed */
+    height: 40px; /* Adjust as needed */
+}
+
+#chat-tooltip {
+    position: absolute;
+    bottom: 50px; /* Adjust as needed to position above the image */
+    right: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+    white-space: nowrap;
+    font-size: 12px;
+    visibility: hidden; /* Initially hidden */
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+#chat-container:hover #chat-tooltip {
+    visibility: visible;
+    opacity: 1;
+}
