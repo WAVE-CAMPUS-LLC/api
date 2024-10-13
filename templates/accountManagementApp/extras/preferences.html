@@ -1,10 +1,14 @@
 {% load static %}
+{% load widget_tweaks %}
+
 
 {% block app_page_style %}
 <link rel="stylesheet" type="text/css" href="{% static "/styles/accountManagementApp/extras/preferences.css" %}" />
 {% endblock app_page_style %}
 
 <script type="text/javascript" src="{% static "/scripts/accountManagementApp/extras/sectionControl.js" %}" defer></script>
+<script type="text/javascript" src="{% static "/scripts/accountManagementApp/extras/photoPreview.js" %}"></script>
+<script type="text/javascript" src="{% static "/scripts/accountManagementApp/extras/eventTypeSelectors.js" %}" defer></script>
 
 
 <div id="preferencesModal" class="preferencesModal">
@@ -19,107 +23,16 @@
             <div class="preferencesCardBody">
                 <section class="section active">
                     <div class="section-container body-section">
-                        <div class="section-title">
-                            <h4>Personal Information</h4>
-                        </div>
-                        <div class="section-body">
-                            <div class"section-question">
-                                <input type="hidden" name="action" value="profile_picture">
-                                <div class="section-input">
-                                    <p>Upload a profile picture</p>
-                                    <label for="profilePicture" class="formLabel">
-                                        <input type="file" 
-                                            name="profilePicture"
-                                            id="profilePicture" 
-                                            class="profilePictureInput"
-                                            accept="image/*" />
-                                    </label>
-                                </div>
-                            </div>
-                            <div class"section-question">
-                                <input type="hidden" name="action" value="birthday">
-                                <div class="section-input">
-                                    <p>{{ updateUserProfileForm.status.label }}</p>
-                                    <label class="formLabel">
-                                        {{ updateUserProfileForm.status }}
-                                    </label>
-                                </div>
-                            </div>
-                            <div class"section-question">
-                                <input type="hidden" name="action" value="birthday">
-                                <div class="section-input">
-                                    <p>When's your birthday?</p>
-                                    <label class="formLabel">
-                                        <div id="birthdayInputs">
-                                            <input type="date" name="{{ form.birthday_month.html_name }}" id="{{ form.birthday_month.auto_id }}" class="birthdayMonth" placeholder="Month (12)" autocomplete="off" required>
-                                        </div>
-                                    </label>
-                                </div>
-                            </div>
-                            <div class"section-question">
-                                <input type="hidden" name="action" value="state">
-                                <div class="section-input">
-                                    <p>Where are you from?</p>
-                                    <label for="state" class="formLabel">
-                                        <input type="text" 
-                                            name="state"
-                                            id="state" />
-                                    </label>
-                                </div>
-                            </div>
-                            <div class"section-question">
-                                <input type="hidden" name="action" value="in-college">
-                                <div class="section-input">
-                                    <p>Are you in college?</p>
-                                    <label for="in_college" class="formLabel">
-                                    <select name="in-college" id="in-college-input" required>
-                                        <option value="Yes" selected>Yes</option>
-                                        <option value="No" selected>No</option>
-                                    </select>
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-        
-                <section class="section">
-                    <div class="section-container body-section">
-                        <div class="section-title">
-                            <h4>About your college</h4>
-                        </div>
-                        <div class="section-body">
-                            <div class"section-question">
-                                <input type="hidden" name="action" value="college_name">
-                                <div class="section-input">
-                                    <p>Whats the name of your college?</p>
-                                    <label for="college_name" class="formLabel">
-                                        <input type="text" 
-                                            name="college_name"
-                                            id="college_name" />
-                                    </label>
-                                </div>
-                            </div>
-                            <div class"section-question"> 
-                                <input type="hidden" name="action" value="grad_year">
-                                <div class="section-input">
-                                    <p>What year do you graduate / graduated? </p>
-                                    <label for="grad_year" class="formLabel">
-                                        <input type="text" 
-                                            name="grad_year"
-                                            id="grad_year" />
-                                    </label>
-                                </div>
-                            </div>
-                            <div class"section-question">
-                                <input type="hidden" name="action" value="college_major">
-                                <div class="section-input">
-                                    <p>What is your major? </p>
-                                    <label for="college_major" class="formLabel">
-                                        <input type="text"
-                                            name="college_major"s
-                                            id="college_major" />
-                                    </label>
+                        <div class="section-question">
+                            <input type="hidden" name="action" value="profile_picture">
+                            <div class="section-input">
+                                <h4>Upload a profile picture</h4>
+                                <div class="profile-picture-intake">
+                                    <!--Image Preview Element-->
+                                    <img id="profile-picture-preview" src="#" alt="Profile Photo Preview">
+                                    <!-- Button that triggers the image upload. -->
+                                    <button class="upload-profile-picture" type="button" id="profile-picture-upload-btn" onclick="document.getElementById('{{updateUserProfileForm.profile_photo.auto_id}}').click();">Upload</button>
+                                    {{updateUserProfileForm.profile_photo|add_class:"hidden"}}
                                 </div>
                             </div>
                         </div>
@@ -128,46 +41,13 @@
 
                 <section class="section">
                     <div class="section-container body-section">
-                        <div class="section-title">
-                            <h4>Event Preferences</h4>
-                        </div>
-                        <div class="section-body">
-                            <div class"section-question">
-                                <input type="hidden" name="action" value="event_type">
-                                <div class="section-input">
-                                    <p>What type of events do you like?</p>
-                                    <label for="event_type" class="formLabel">
-                                        <input type="text" 
-                                            name="event_type"
-                                            id="event_type" />
-                                    </label>
-                                </div>
-                            </div>
-                            <div class"section-question">
-                                <input type="hidden" name="action" value="event_size">
-                                <div class="section-input">
-                                    <p>What event size do you enjoy most?</p>
-                                    <label for="event_size" class="formLabel">
-                                        <select name="event_size" id="event_size" required>
-                                            <option value="Small" selected>Small</option>
-                                            <option value="Medium" selected>Medium</option>
-                                            <option value="Large" selected>Large</option>
-                                        </select>
-                                    </label>
-                                </div>
-                            </div>
-                            <div class"section-question">
-                                <input type="hidden" name="action" value="ticket_price">
-                                <div class="section-input">
-                                    <p>What's your budget lookin' like?</p>
-                                    <label for="ticket_price" class="formLabel">
-                                        <select name="ticket_price" id="ticket_price" required>
-                                            <option value="Cheap" selected>Cheap</option>
-                                            <option value="Modest" selected>Modest</option>
-                                            <option value="Expensive" selected>Expensive</option>
-                                        </select>
-                                    </label>
-                                </div>
+                        <div class"section-question">
+                            <input type="hidden" name="action" value="birthday">
+                            <div class="section-input">
+                                <h4>{{ updateUserProfileForm.birthday.label }}</h4>
+                                <label for="birthday" class="formLabel">
+                                    {{ updateUserProfileForm.birthday }}
+                                </label>
                             </div>
                         </div>
                     </div>
@@ -175,77 +55,169 @@
 
                 <section class="section">
                     <div class="section-container body-section">
-                        <div class="section-title">
-                            <h4>Event Preferences</h4>
-                        </div>
-                        <div class="section-body">
-                            <div class"section-question">
-                                <input type="hidden" name="action" value="greek_events">
-                                <div class="section-input">
-                                    <p>Do you want events related to greek?</p>
-                                    <label for="greek_events" class="formLabel">
-                                        <select name="greek_events" id="greek_events" required>
-                                            <option value="Yes" selected>Yes</option>
-                                            <option value="No" selected>No</option>
-                                        </select>
-                                    </label>
-                                </div>
-                            </div>
-                            <div class"section-question">
-                                <input type="hidden" name="action" value="music_events">
-                                <div class="section-input">
-                                    <p>Do you want events related to music?</p>
-                                    <label for="music_events" class="formLabel">
-                                        <select name="music_events" id="music_events" required>
-                                            <option value="Yes" selected>Yes</option>
-                                            <option value="No" selected>No</option>
-                                        </select>
-                                    </label>
-                                </div>
-                            </div>
-                            <div class"section-question">
-                                <input type="hidden" name="action" value="sport_events">
-                                <div class="section-input">
-                                    <p>Do you want events related to sports?</p>
-                                    <label for="sport_events" class="formLabel">
-                                        <select name="sport_events" id="sport_events" required>
-                                            <option value="Yes" selected>Yes</option>
-                                            <option value="No" selected>No</option>
-                                        </select>
-                                    </label>
-                                </div>
-                            </div>
-                            <div class"section-question">
-                                <input type="hidden" name="action" value="entertainment_events">
-                                <div class="section-input">
-                                    <p>Do you want events related to entertainment?</p>
-                                    <label for="entertainment_events" class="formLabel">
-                                        <select name="entertainment_events" id="entertainment_events" required>
-                                            <option value="Yes" selected>Yes</option>
-                                            <option value="No" selected>No</option>
-                                        </select>
-                                    </label>
-                                </div>
+                        <div class"section-question">
+                            <input type="hidden" name="action" value="college_name">
+                            <div class="section-input">
+                                <h4>{{ updateUserProfileForm.status.label }}</h4>
+                                <label for="college_name" class="formLabel">
+                                    {{ updateUserProfileForm.status }}
+                                </label>
                             </div>
                         </div>
                     </div>
                 </section>
-        
+
                 <section class="section">
                     <div class="section-container body-section">
-                        <div class="section-title">
-                            <h4>{{ collegeRequestForm.yourEmail.label }}</h4>
-                        </div>
-                        <div class="section-input">
-                            {{ collegeRequestForm.yourEmail }}
+                        <div class"section-question">
+                            <input type="hidden" name="action" value="college_name">
+                            <div class="section-input">
+                                <h4>
+                                    {{ updateUserProfileForm.gender.label }}
+                                </h4>
+                                <label for="college_name" class="formLabel">
+                                    {{ updateUserProfileForm.gender }}
+                                </label>
+                            </div>
                         </div>
                     </div>
                 </section>
-    
+                
                 <section class="section">
                     <div class="section-container body-section">
-                        <div class="section-title">
-                            <h4>We hear you! <br/> Expect to see your school soon!</h4>
+                        <div class"section-question">
+                            <input type="hidden" name="action" value="college_name">
+                            <div class="section-input">
+                                <h4>
+                                    {{ updateUserProfileForm.home_state.label }}
+                                    <br/>
+                                    <p class="optional-field">optional</p>
+                                </h4>
+                                <label for="home_state" class="formLabel">
+                                    {{ updateUserProfileForm.home_state }}
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <div class="section-container body-section">
+                        <div class"section-question">
+                            <input type="hidden" name="action" value="college_name">
+                            <div class="section-input">
+                                <h4>
+                                    {{ updateUserProfileForm.college_name.label }}
+                                    <br/>
+                                    <p class="optional-field">optional</p>
+                                </h4>
+                                <label for="college_name" class="formLabel">
+                                    {{ updateUserProfileForm.college_name }}
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <div class="section-container body-section">
+                        <div class"section-question">
+                            <input type="hidden" name="action" value="college_name">
+                            <div class="section-input">
+                                <h4>
+                                    {{ updateUserProfileForm.major.label }}
+                                    <br/>
+                                    <p class="optional-field">optional</p>
+                                </h4>
+                                <label for="major" class="formLabel">
+                                    {{ updateUserProfileForm.major }}
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <div class="section-container body-section">
+                        <div class"section-question">
+                            <input type="hidden" name="action" value="graduation_year">
+                            <div class="section-input">
+                                <h4>
+                                    {{ updateUserProfileForm.graduation_year.label }}
+                                    <br/>
+                                    <p class="optional-field">optional</p>
+                                </h4>
+                                <label for="grauduation_year" class="formLabel">
+                                    {{ updateUserProfileForm.graduation_year }}
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                
+                <section class="section">
+                    <div class="section-container body-section">
+                        <div class"section-question">
+                            <input type="hidden" name="action" value="event_size">
+                            <div class="section-input">
+                                <h4>
+                                    {{ updateUserProfileForm.event_size.label }}
+                                    <br/>
+                                    <p class="required-field">required</p>
+                                </h4>
+                                <label for="event_size" class="formLabel">
+                                    {{ updateUserProfileForm.event_size }}
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <div class="section-container body-section">
+                        <div class"section-question">
+                            <input type="hidden" name="action" value="event_size">
+                            <div class="section-input">
+                                <h4>
+                                    {{ updateUserProfileForm.event_types.label }}
+                                    <br/>
+                                    <p class="required-field">required</p>
+                                </h4>
+                                <label for="{{ updateUserProfileForm.event_types.id_for_label }}" class="formLabel">
+                                    <div class="eventTypeSelectorButtons">
+                                        {% for choice_value, choice_label in updateUserProfileForm.event_types.field.choices %}
+                                            <div class="optionals">
+                                                <input type="checkbox" id="{{ updateUserProfileForm.event_types.id_for_label }}_{{ forloop.counter }}" name="{{ updateUserProfileForm.event_types.html_name }}" value="{{ choice_value }}">
+                                                <label for="{{ updateUserProfileForm.event_types.id_for_label }}_{{ forloop.counter }}">{{ choice_label }}</label>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <div class="section-container body-section">
+                        <div class"section-question">
+                            <input type="hidden" name="action" value="event_size">
+                            <div class="section-input">
+                                <h4>
+                                    Communication Preferences
+                                    <br/>
+                                    <p class="required-field">required</p>
+                                </h4>
+
+                                <label for="{{ updateUserProfileForm.email_communication.id_for_label }}" class="comms-choice">
+                                    {{ updateUserProfileForm.email_communication }} 
+                                    <span class="comms-text">{{ updateUserProfileForm.email_communication.label }}</span>
+                                </label>
+                                <label for="{{ updateUserProfileForm.text_communication.id_for_label }}" class="comms-choice">
+                                    {{ updateUserProfileForm.text_communication }} 
+                                    <span class="comms-text">{{ updateUserProfileForm.text_communication.label }}</span>
+                                </label>
+                            </div>
                         </div>
                     </div>
                 </section>

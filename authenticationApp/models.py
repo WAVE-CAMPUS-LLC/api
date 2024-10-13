@@ -16,13 +16,7 @@ from .managers import CustomUserManager
 
 
 # Create your models here.
-class CustomUser(AbstractBaseUser, PermissionsMixin):
-    GENDER_OPTIONS = [
-        ('Male', 'Male'),
-        ('Female', 'Female'),
-        ('Other', 'Other')
-    ]
-    
+class CustomUser(AbstractBaseUser, PermissionsMixin):    
     first_name = models.CharField(
         _("First Name"),
         max_length=50,
