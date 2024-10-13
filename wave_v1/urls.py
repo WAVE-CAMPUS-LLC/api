@@ -35,6 +35,7 @@ urlpatterns = [
     path("", include("socialApp.urls")),
     path("manager/", include("campusManagerApp.urls")),
     path("blog/", include("blogApp.urls")),
+    path('chat/', include('supportCenterApp.urls')),
     path("admin/", admin.site.urls),
 ]
 

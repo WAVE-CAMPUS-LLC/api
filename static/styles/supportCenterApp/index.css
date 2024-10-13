@@ -167,3 +167,36 @@
     visibility: visible;
     opacity: 1;
 }
+
+/* Speech bubble styling */
+.speech-bubble {
+    display: none; /* Hidden by default */
+    position: absolute;
+    bottom: 50px; /* Position it directly above the image */
+    left: 50%; /* Center the bubble horizontally */
+    transform: translateX(-50%);
+    background-color: #333;
+    color: white;
+    padding: 10px;
+    border-radius: 5px;
+    font-size: 12px;
+    text-align: center;
+    width: 150px;
+    z-index: 1000;
+}
+
+.speech-bubble::after {
+    content: '';
+    position: absolute;
+    bottom: -10px; /* Arrow pointing down */
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 10px;
+    border-style: solid;
+    border-color: #333 transparent transparent transparent; /* Triangle for arrow */
+}
+
+/* Show the speech bubble on hover */
+#bottomRightImage:hover + .speech-bubble {
+    display: block;
+}
