@@ -90,6 +90,7 @@
 
 .section.active {
     display: block;
+    width: 100%;
 }
 
 .section-container {
@@ -99,6 +100,10 @@
     align-items: center;
     gap: 30px;
     height: 100%;
+    width: 100%;
+}
+
+.section-question {
     width: 100%;
 }
 
@@ -155,6 +160,10 @@
     border-radius: 10px;
     font-family: Wanted-Variable;
     font-size: 16px;
+}
+
+.comms-choice input {
+    width: 20px;
 }
 
 .profilePictureInput {

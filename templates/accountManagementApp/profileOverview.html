@@ -21,10 +21,6 @@ Profile Overview
 
 
 {% block body %}
-{% if not userRequest.user_preferences_completed %}
-{% include "accountManagementApp/extras/preferences.html" %}
-{% endif %}
-
 <div id="body-content">
     <div id="body-header">
         <h3>Welcome, {{ user.first_name }}!</h3>
@@ -35,7 +31,7 @@ Profile Overview
             <div id="heading">
                 <div>
                     <h4>{{ user.first_name }} {{ user.last_name }}</h4>
-                    <p>Joined {{ user.date_joined }}</p>
+                    <p>@{{ user.username }}</p>
                 </div>
                 <div id="edit">
                     <a href="{% url "accountManagement:userSettings"%}#personal-change">Edit</a>
@@ -48,8 +44,8 @@ Profile Overview
                         <p> {{ user.email }}</p>
                     </div>
                     <div class="phone">
-                        <h6>Phone Number</h6>
-                        <p>{{ user.phone_number }}</p>
+                        <h6>Joined</h6>
+                        <p>{{ user.date_joined }}</p>
                     </div>
                 </div>
                 <div id="edit">

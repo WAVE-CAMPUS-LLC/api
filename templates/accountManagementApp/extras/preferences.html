@@ -1,3 +1,5 @@
+{% extends "base/base.html" %}
+
 {% load static %}
 {% load widget_tweaks %}
 
@@ -6,19 +8,23 @@
 <link rel="stylesheet" type="text/css" href="{% static "/styles/accountManagementApp/extras/preferences.css" %}" />
 {% endblock app_page_style %}
 
+{% block script %}
 <script type="text/javascript" src="{% static "/scripts/accountManagementApp/extras/sectionControl.js" %}" defer></script>
 <script type="text/javascript" src="{% static "/scripts/accountManagementApp/extras/photoPreview.js" %}"></script>
 <script type="text/javascript" src="{% static "/scripts/accountManagementApp/extras/eventTypeSelectors.js" %}" defer></script>
+<script type="text/javascript" src="{% static "/scripts/accountManagementApp/extras/submitSection.js" %}" defer></script>
+{% endblock script %}
 
 
+{% block auth_body %}
 <div id="preferencesModal" class="preferencesModal">
     <div class="preferencesContainer">
         <div class="preferencesCardHeader">
-            <button type="button" role="button" id="closeCreateCollegeModalButton" class="closePreferencesModalButton">
+            <a href="{% url "accountManagement:userAccount" %}" type="button" role="button" id="closeCreateCollegeModalButton" class="closePreferencesModalButton">
                 <img src="{% static '/images/admin/roles/modalClose.svg' %}" alt="Close create college modal">
-            </button>
+            </a>
         </div>
-        <form method="POST" action="" enctype="multipart/form-data" class="preferencesCard">
+        <form method="POST" action="{% url "accountManagement:userPreferences" %}" id="profilePreferencesForm" enctype="multipart/form-data" class="preferencesCard">
             {% csrf_token %}
             <div class="preferencesCardBody">
                 <section class="section active">
@@ -200,11 +206,11 @@
 
                 <section class="section">
                     <div class="section-container body-section">
-                        <div class"section-question">
+                        <div class="section-question">
                             <input type="hidden" name="action" value="event_size">
                             <div class="section-input">
                                 <h4>
-                                    Communication Preferences
+                                    How would you like us to communicate with you?
                                     <br/>
                                     <p class="required-field">required</p>
                                 </h4>
@@ -234,3 +240,4 @@
         </form>
     </div>
 </div>
+{% endblock auth_body %}

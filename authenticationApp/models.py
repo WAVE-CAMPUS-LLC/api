@@ -42,19 +42,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         unique=True,
         help_text=(_("Username")),
     )
-    phone_number = models.CharField(
-        _("Phone Number"),
-        max_length=15,
-        blank=False,
-        null=False,
-        unique=False,
-        help_text=(_("Phone Number")),
-    )
     
-    # Birthday Information
-    birthday_day = models.PositiveIntegerField(_("Day"), null=True, blank=True)
-    birthday_month = models.PositiveIntegerField(_("Month"), null=True, blank=True)
-    birthday_year = models.PositiveIntegerField(_("Year"), null=True, blank=True)
 
     date_joined = models.DateField(auto_now_add=True)
 
@@ -103,13 +91,11 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         "first_name",
         "last_name",
         "username",
-        "phone_number",
     ]
     
-    # user_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
 
     class Meta:
-        default_permissions = () # Removing default permissions
+        default_permissions = ()
         
         
         verbose_name = "Member Account"

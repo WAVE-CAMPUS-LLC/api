@@ -1,5 +1,5 @@
 from http.client import HTTPResponse
-from django.http import Http404, HttpResponseBadRequest
+from django.http import Http404, HttpResponseBadRequest, JsonResponse
 from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import get_user_model
@@ -24,42 +24,37 @@ UserModel = get_user_model()
 @group_required("Member")
 def profileView(request):
     userRequest = request.user
-    updateUserProfileForm = UserProfileForm(
-        request.POST or None, request.FILES or None, instance=userRequest.user_profile
-    )
     blogItems = Blog.objects.filter(created_by=userRequest)
 
-    if request.method == "POST":
-        if updateUserProfileForm.is_valid():
-            updateUserProfileForm.save()
-
-            if all(
-                [
-                    getattr(userRequest.profile, field)
-                    for field in updateUserProfileForm.fields
-                    if updateUserProfileForm.fields[field].required
-                ]
-            ):
-                userRequest.user_preferences_completed = True
-            else:
-                userRequest.user_preferences_completed = False
-
-            userRequest.save()
-            return redirect("accountManagement:userAccount")
-        else:
-            print(updateUserProfileForm.errors)
-
-    else:
-        updateUserProfileForm = UserProfileForm(instance=userRequest.user_profile)
-
+    
     return render(
         request,
         "accountManagementApp/profileOverview.html",
         {
             "blogItems": blogItems,
             "userRequest": userRequest,
-            "updateUserProfileForm": updateUserProfileForm,
         },
+    )
+    
+
+@login_required(login_url="authentication:login")
+@check_suspension
+@group_required("Member")
+def profilePreferences(request):
+    user = request.user
+    profile = UserProfile.objects.get(user=user)
+    profile_form = UserProfileForm(instance=profile)
+
+    if request.method == "POST":
+        form = UserProfileForm(request.POST, instance=profile)
+        if form.is_valid():
+            form.save()
+            return redirect("accountManagement:userAccount")
+
+    return render(
+        request,
+        "accountManagementApp/extras/preferences.html",
+        {"updateUserProfileForm": profile_form, "user": user},
     )
 
 

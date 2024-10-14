@@ -70,7 +70,7 @@ def joinView(request):
                 return redirect("campusManager:dashboard")
             
             login(request, user)
-            return redirect("accountManagement:userAccount")
+            return redirect("accountManagement:userPreferences")
         else:
             print(form.errors)
     else:
