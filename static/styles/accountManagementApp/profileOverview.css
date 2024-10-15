@@ -41,9 +41,41 @@
 
 .cc-user-card #heading {
   display: flex;
-  flex-direction: row;
-  justify-content: space-between;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.heading-edit {
+  display: flex;
+  justify-content: start;
   align-items: center;
+
+  font-family: Wanted-Regular;
+  font-size: 13px;
+  margin-top: 5px;
+}
+
+.heading-edit a {
+  color: #008d95;
+  text-decoration: none;
+}
+
+.fNamePfp .info {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.fNamePfp {
+  display: flex;
+  flex-direction: row;
+  gap: 20px;
+}
+
+.pfp img {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
 }
 
 .cc-user-card #heading h4 {

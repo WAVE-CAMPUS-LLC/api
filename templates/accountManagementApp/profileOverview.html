@@ -29,12 +29,17 @@ Profile Overview
     <div id="content-container">
         <div class="cc-user-card">
             <div id="heading">
-                <div>
-                    <h4>{{ user.first_name }} {{ user.last_name }}</h4>
-                    <p>@{{ user.username }}</p>
-                </div>
-                <div id="edit">
-                    <a href="{% url "accountManagement:userSettings"%}#personal-change">Edit</a>
+                <div class="fNamePfp">
+                    <div class="pfp">
+                        <img src="{{ userProfile.profile_photo.url }}" />
+                    </div>
+                    <div class="info">
+                        <h4>{{ user.first_name }} {{ user.last_name }}</h4>
+                        <p>@{{ user.username }}</p>
+                        <div class="heading-edit">
+                            <a href="{% url "accountManagement:userSettings"%}#personal-change">Edit</a>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div id="summary">

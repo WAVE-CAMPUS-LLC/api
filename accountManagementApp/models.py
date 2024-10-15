@@ -5,6 +5,7 @@ from django.utils.translation import gettext_lazy as _
 from django.conf import settings
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils import timezone
+from .utils import generate_profile_picture
 from django.contrib.auth.models import Group
 from collegeManagementApp.models import College
 from socialApp.models import CrewMember, CrewRequest, FriendRequest, Crew
@@ -149,10 +150,12 @@ class UserProfile(models.Model):
     )
     profile_photo = models.ImageField(
         _("Upload a profile picture"),
-        upload_to="profile/pfp/",
-        null=False,
+        upload_to="profile/profilePictures/",
+        null=True,
         blank=True,
     )
+    
+    
     home_state = models.CharField(
         "What's your home state?", max_length=2, choices=STATE_CHOICES, default=""
     )
@@ -194,6 +197,9 @@ class UserProfile(models.Model):
         return self.user.username
 
     def save(self, *args, **kwargs):
+        if not self.profile_photo:
+            initials = f'{self.user.first_name[0]}{self.user.last_name[0]}'.upper()
+            self.profile_photo.save(f'{self.user.username}_profile.png', generate_profile_picture(initials), save=False)
         super().save(*args, **kwargs)
 
     def is_friends_with(self, other_user):
