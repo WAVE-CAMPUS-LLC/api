@@ -16,13 +16,7 @@ from .managers import CustomUserManager
 
 
 # Create your models here.
-class CustomUser(AbstractBaseUser, PermissionsMixin):
-    GENDER_OPTIONS = [
-        ('Male', 'Male'),
-        ('Female', 'Female'),
-        ('Other', 'Other')
-    ]
-    
+class CustomUser(AbstractBaseUser, PermissionsMixin):    
     first_name = models.CharField(
         _("First Name"),
         max_length=50,
@@ -48,19 +42,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         unique=True,
         help_text=(_("Username")),
     )
-    phone_number = models.CharField(
-        _("Phone Number"),
-        max_length=15,
-        blank=False,
-        null=False,
-        unique=False,
-        help_text=(_("Phone Number")),
-    )
     
-    # Birthday Information
-    birthday_day = models.PositiveIntegerField(_("Day"), null=True, blank=True)
-    birthday_month = models.PositiveIntegerField(_("Month"), null=True, blank=True)
-    birthday_year = models.PositiveIntegerField(_("Year"), null=True, blank=True)
 
     date_joined = models.DateField(auto_now_add=True)
 
@@ -76,6 +58,9 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     suspension_end_date = models.DateTimeField(null=True, blank=True)
 
     user_preferences_completed = models.BooleanField(default=False, null=False)
+    
+    # User Preferences Field
+    user_preferences_completed = models.BooleanField(default=False)
     
     def suspend(self, hours):
         suspend_group, created = Group.objects.get_or_create(name="Suspend")
@@ -108,13 +93,11 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         "first_name",
         "last_name",
         "username",
-        "phone_number",
     ]
     
-    # user_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
 
     class Meta:
-        default_permissions = () # Removing default permissions
+        default_permissions = ()
         
         
         verbose_name = "Member Account"

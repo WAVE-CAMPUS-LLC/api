@@ -14,15 +14,6 @@ class CustomUserJoinForm(UserCreationForm):
     password1 = forms.CharField(label="Password", widget=forms.PasswordInput)
     password2 = forms.CharField(label="Confirm Password", widget=forms.PasswordInput)
 
-    birthday_day = forms.IntegerField(
-        label="Day", min_value=1, max_value=31, required=False
-    )
-    birthday_month = forms.IntegerField(
-        label="Month", min_value=1, max_value=12, required=False
-    )
-    birthday_year = forms.IntegerField(
-        label="Year", min_value=1950, max_value=2010, required=False
-    )
 
     class Meta:
         model = CustomUser
@@ -31,10 +22,6 @@ class CustomUserJoinForm(UserCreationForm):
             "last_name",
             "email",
             "username",
-            "phone_number",
-            "birthday_day",
-            "birthday_month",
-            "birthday_year",
             "password1",
             "password2",
         )
@@ -88,30 +75,10 @@ class CustomUserJoinForm(UserCreationForm):
             raise ValidationError("Can contain only letters, spaces, or hyphens.")
         return last_name.strip()
 
-    def clean_birthday(self):
-        birthday_day = self.cleaned_data.get("birthday_day")
-        birthday_month = self.cleaned_data.get("birthday_month")
-        birthday_year = self.cleaned_data.get("birthday_year")
-
-        if any([birthday_day, birthday_month, birthday_year]):
-            if not all([birthday_day, birthday_month, birthday_year]):
-                raise ValidationError("Enter a valid birthday.")
-
-            try:
-                datetime.date(birthday_year, birthday_month, birthday_day)
-            except ValueError:
-                raise ValidationError("Enter a valid birthday.")
-
-        return self.cleaned_data
 
     def save(self, commit=True):
         user = super().save(commit=False)
-        birthday_day = self.cleaned_data.get("birthday_day")
-        birthday_month = self.cleaned_data.get("birthday_month")
-        birthday_year = self.cleaned_data.get("birthday_year")
-
-        if all([birthday_day, birthday_month, birthday_year]):
-            user.birthday = datetime.date(birthday_year, birthday_month, birthday_day)
+        
 
         if commit:
             user.save()
@@ -127,7 +94,6 @@ class CustomUserChangeForm(UserChangeForm):
             "last_name",
             "email",
             "username",
-            "phone_number",
         )
 
 

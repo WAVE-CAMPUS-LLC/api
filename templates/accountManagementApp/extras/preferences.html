@@ -1,0 +1,243 @@
+{% extends "base/base.html" %}
+
+{% load static %}
+{% load widget_tweaks %}
+
+
+{% block app_page_style %}
+<link rel="stylesheet" type="text/css" href="{% static "/styles/accountManagementApp/extras/preferences.css" %}" />
+{% endblock app_page_style %}
+
+{% block script %}
+<script type="text/javascript" src="{% static "/scripts/accountManagementApp/extras/sectionControl.js" %}" defer></script>
+<script type="text/javascript" src="{% static "/scripts/accountManagementApp/extras/photoPreview.js" %}"></script>
+<script type="text/javascript" src="{% static "/scripts/accountManagementApp/extras/eventTypeSelectors.js" %}" defer></script>
+<script type="text/javascript" src="{% static "/scripts/accountManagementApp/extras/submitSection.js" %}" defer></script>
+{% endblock script %}
+
+
+{% block auth_body %}
+<div id="preferencesModal" class="preferencesModal">
+    <div class="preferencesContainer">
+        <div class="preferencesCardHeader">
+            <a href="{% url "accountManagement:userAccount" %}" type="button" role="button" id="closeCreateCollegeModalButton" class="closePreferencesModalButton">
+                <img src="{% static '/images/admin/roles/modalClose.svg' %}" alt="Close create college modal">
+            </a>
+        </div>
+        <form method="POST" action="{% url "accountManagement:userPreferences" %}" id="profilePreferencesForm" enctype="multipart/form-data" class="preferencesCard">
+            {% csrf_token %}
+            <div class="preferencesCardBody">
+                <section class="section active">
+                    <div class="section-container body-section">
+                        <div class="section-question">
+                            <input type="hidden" name="action" value="profile_picture">
+                            <div class="section-input">
+                                <h4>Upload a profile picture</h4>
+                                <div class="profile-picture-intake">
+                                    <!--Image Preview Element-->
+                                    <img id="profile-picture-preview" src="#" alt="Profile Photo Preview">
+                                    <!-- Button that triggers the image upload. -->
+                                    <button class="upload-profile-picture" type="button" id="profile-picture-upload-btn" onclick="document.getElementById('{{updateUserProfileForm.profile_photo.auto_id}}').click();">Upload</button>
+                                    {{updateUserProfileForm.profile_photo|add_class:"hidden"}}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <div class="section-container body-section">
+                        <div class"section-question">
+                            <input type="hidden" name="action" value="birthday">
+                            <div class="section-input">
+                                <h4>{{ updateUserProfileForm.birthday.label }}</h4>
+                                <label for="birthday" class="formLabel">
+                                    {{ updateUserProfileForm.birthday }}
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <div class="section-container body-section">
+                        <div class"section-question">
+                            <input type="hidden" name="action" value="college_name">
+                            <div class="section-input">
+                                <h4>{{ updateUserProfileForm.status.label }}</h4>
+                                <label for="college_name" class="formLabel">
+                                    {{ updateUserProfileForm.status }}
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <div class="section-container body-section">
+                        <div class"section-question">
+                            <input type="hidden" name="action" value="college_name">
+                            <div class="section-input">
+                                <h4>
+                                    {{ updateUserProfileForm.gender.label }}
+                                </h4>
+                                <label for="college_name" class="formLabel">
+                                    {{ updateUserProfileForm.gender }}
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                
+                <section class="section">
+                    <div class="section-container body-section">
+                        <div class"section-question">
+                            <input type="hidden" name="action" value="college_name">
+                            <div class="section-input">
+                                <h4>
+                                    {{ updateUserProfileForm.home_state.label }}
+                                    <br/>
+                                    <p class="optional-field">optional</p>
+                                </h4>
+                                <label for="home_state" class="formLabel">
+                                    {{ updateUserProfileForm.home_state }}
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <div class="section-container body-section">
+                        <div class"section-question">
+                            <input type="hidden" name="action" value="college_name">
+                            <div class="section-input">
+                                <h4>
+                                    {{ updateUserProfileForm.college_name.label }}
+                                    <br/>
+                                    <p class="optional-field">optional</p>
+                                </h4>
+                                <label for="college_name" class="formLabel">
+                                    {{ updateUserProfileForm.college_name }}
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <div class="section-container body-section">
+                        <div class"section-question">
+                            <input type="hidden" name="action" value="college_name">
+                            <div class="section-input">
+                                <h4>
+                                    {{ updateUserProfileForm.major.label }}
+                                    <br/>
+                                    <p class="optional-field">optional</p>
+                                </h4>
+                                <label for="major" class="formLabel">
+                                    {{ updateUserProfileForm.major }}
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <div class="section-container body-section">
+                        <div class"section-question">
+                            <input type="hidden" name="action" value="graduation_year">
+                            <div class="section-input">
+                                <h4>
+                                    {{ updateUserProfileForm.graduation_year.label }}
+                                    <br/>
+                                    <p class="optional-field">optional</p>
+                                </h4>
+                                <label for="grauduation_year" class="formLabel">
+                                    {{ updateUserProfileForm.graduation_year }}
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                
+                <section class="section">
+                    <div class="section-container body-section">
+                        <div class"section-question">
+                            <input type="hidden" name="action" value="event_size">
+                            <div class="section-input">
+                                <h4>
+                                    {{ updateUserProfileForm.event_size.label }}
+                                    <br/>
+                                    <p class="required-field">required</p>
+                                </h4>
+                                <label for="event_size" class="formLabel">
+                                    {{ updateUserProfileForm.event_size }}
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <div class="section-container body-section">
+                        <div class"section-question">
+                            <input type="hidden" name="action" value="event_size">
+                            <div class="section-input">
+                                <h4>
+                                    {{ updateUserProfileForm.event_types.label }}
+                                    <br/>
+                                    <p class="required-field">required</p>
+                                </h4>
+                                <label for="{{ updateUserProfileForm.event_types.id_for_label }}" class="formLabel">
+                                    <div class="eventTypeSelectorButtons">
+                                        {% for choice_value, choice_label in updateUserProfileForm.event_types.field.choices %}
+                                            <div class="optionals">
+                                                <input type="checkbox" id="{{ updateUserProfileForm.event_types.id_for_label }}_{{ forloop.counter }}" name="{{ updateUserProfileForm.event_types.html_name }}" value="{{ choice_value }}">
+                                                <label for="{{ updateUserProfileForm.event_types.id_for_label }}_{{ forloop.counter }}">{{ choice_label }}</label>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <div class="section-container body-section">
+                        <div class="section-question">
+                            <input type="hidden" name="action" value="event_size">
+                            <div class="section-input">
+                                <h4>
+                                    How would you like us to communicate with you?
+                                    <br/>
+                                    <p class="required-field">required</p>
+                                </h4>
+
+                                <label for="{{ updateUserProfileForm.email_communication.id_for_label }}" class="comms-choice">
+                                    {{ updateUserProfileForm.email_communication }} 
+                                    <span class="comms-text">{{ updateUserProfileForm.email_communication.label }}</span>
+                                </label>
+                                <label for="{{ updateUserProfileForm.text_communication.id_for_label }}" class="comms-choice">
+                                    {{ updateUserProfileForm.text_communication }} 
+                                    <span class="comms-text">{{ updateUserProfileForm.text_communication.label }}</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <div class="nextPreviousRow">
+                <button type="button" role="button" id="previousSectionButton">Previous</button>
+    
+                <div id="nextSubmitContainer">
+                    <button type="button" role="button" id="nextSectionButton">Next</button>
+                    <button type="submit" role="button" id="submitButton">Submit</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock auth_body %}

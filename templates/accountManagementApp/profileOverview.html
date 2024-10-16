@@ -6,7 +6,7 @@ Profile Overview
 {% endblock title %}
 
 {% block app_page_style %}
-<link rel="stylesheet" type="text/css" href="{% static "/styles/accountManagementApp/profileManagement.css" %}" />
+<link rel="stylesheet" type="text/css" href="{% static "/styles/accountManagementApp/profileOverview.css" %}" />
 {% endblock app_page_style %}
 
 {% block script %}
@@ -19,20 +19,27 @@ Profile Overview
 {% endblock header %}
 
 
+
 {% block body %}
 <div id="body-content">
     <div id="body-header">
         <h3>Welcome, {{ user.first_name }}!</h3>
     </div>
+    
     <div id="content-container">
         <div class="cc-user-card">
             <div id="heading">
-                <div>
-                    <h4>{{ user.first_name }} {{ user.last_name }}</h4>
-                    <p>Joined {{ user.date_joined }}</p>
-                </div>
-                <div id="edit">
-                    <a href="{% url "accountManagement:userSettings"%}#personal-change">Edit</a>
+                <div class="fNamePfp">
+                    <div class="pfp">
+                        <img src="{{ userProfile.profile_photo.url }}" />
+                    </div>
+                    <div class="info">
+                        <h4>{{ user.first_name }} {{ user.last_name }}</h4>
+                        <p>@{{ user.username }}</p>
+                        <div class="heading-edit">
+                            <a href="{% url "accountManagement:userSettings"%}#personal-change">Edit</a>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div id="summary">
@@ -42,8 +49,8 @@ Profile Overview
                         <p> {{ user.email }}</p>
                     </div>
                     <div class="phone">
-                        <h6>Phone Number</h6>
-                        <p>{{ user.phone_number }}</p>
+                        <h6>Joined</h6>
+                        <p>{{ user.date_joined }}</p>
                     </div>
                 </div>
                 <div id="edit">
@@ -186,4 +193,6 @@ Profile Overview
         </div>
     </div>
 </div>
+
+
 {% endblock body %}
