@@ -12,18 +12,12 @@
 <script type="text/javascript" src="{% static "/scripts/accountManagementApp/extras/sectionControl.js" %}" defer></script>
 <script type="text/javascript" src="{% static "/scripts/accountManagementApp/extras/photoPreview.js" %}"></script>
 <script type="text/javascript" src="{% static "/scripts/accountManagementApp/extras/eventTypeSelectors.js" %}" defer></script>
-<script type="text/javascript" src="{% static "/scripts/accountManagementApp/extras/submitSection.js" %}" defer></script>
 {% endblock script %}
 
 
 {% block auth_body %}
 <div id="preferencesModal" class="preferencesModal">
     <div class="preferencesContainer">
-        <div class="preferencesCardHeader">
-            <a href="{% url "accountManagement:userAccount" %}" type="button" role="button" id="closeCreateCollegeModalButton" class="closePreferencesModalButton">
-                <img src="{% static '/images/admin/roles/modalClose.svg' %}" alt="Close create college modal">
-            </a>
-        </div>
         <form method="POST" action="{% url "accountManagement:userPreferences" %}" id="profilePreferencesForm" enctype="multipart/form-data" class="preferencesCard">
             {% csrf_token %}
             <div class="preferencesCardBody">

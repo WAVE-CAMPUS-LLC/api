@@ -31,7 +31,11 @@ Profile Overview
             <div id="heading">
                 <div class="fNamePfp">
                     <div class="pfp">
+                        {% if userProfile.profile_photo %}
                         <img src="{{ userProfile.profile_photo.url }}" />
+                        {% else %}
+                        <img src="{% static "/images/logo/android-chrome-512x512.png" %}" />
+                        {% endif %}
                     </div>
                     <div class="info">
                         <h4>{{ user.first_name }} {{ user.last_name }}</h4>

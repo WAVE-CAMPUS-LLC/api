@@ -30,7 +30,7 @@ def generate_profile_picture(initials):
     
     # Calculate x and y position for centering the text
     text_x = (imgSize[0] - text_width) / 2 + 5
-    text_y = (imgSize[1] - text_height) / 2 - 35
+    text_y = (imgSize[1] - text_height) / 2 - 30
     d.text((text_x, text_y), initials, fill="white", font=font)
     
     temp_image = BytesIO()

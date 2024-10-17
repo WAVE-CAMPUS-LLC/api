@@ -60,6 +60,8 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     # User Preferences Field
     user_preferences_completed = models.BooleanField(default=False)
     
+    email_verified = models.BooleanField(default=False)
+    
     def suspend(self, hours):
         suspend_group, created = Group.objects.get_or_create(name="Suspend")
         member_group = Group.objects.get(name="Member")
