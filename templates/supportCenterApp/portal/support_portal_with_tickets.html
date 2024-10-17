@@ -91,7 +91,7 @@ Support Portal — Wave.
                         </div>
                         <div id="row-three">
                             <div id="rw-btn-container">
-                                <a href="" class="rbc-btn">View</a>
+                                <a href="{% url "support:viewTicket" ticket_id=closed_ticket.ticket_id %}" class="rbc-btn">View</a>
                             </div>
                         </div>
                     </div>

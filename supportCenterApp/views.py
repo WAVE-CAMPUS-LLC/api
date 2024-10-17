@@ -2,23 +2,34 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import ensure_csrf_cookie
 from .forms import SupportTicketForm, FeedbackForm
-from .models import SupportTicket
+from .models import SupportTicket, SupportTicketMessage
 from django.http import JsonResponse
 from openai import OpenAI
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.feature_extraction.text import TfidfVectorizer
 import numpy as np
 from django.views.decorators.csrf import csrf_exempt
+from django.shortcuts import get_object_or_404
 import json
 import os
 from difflib import SequenceMatcher
 
 # Hardcoded platform-specific questions
+# When adding a question take special care to add unique keywords that are not present in other questions. 
+# Also for keywords that are likely to appear in other questions but are not necessarily the keywords for the question, 
+# add those questions to the end of the list because our algorithm does a sequential search. This is of course very crude but
+# it is a simple way to ensure that the most relevant question is returned. Our algorithm will be improved in the future when we have more resources to purchase more tokens from OpenAI. 
+
 hardcoded_questions = [
     {
         "question": "How can I reset my password?",
         "answer": "You can reset your password by clicking the 'Forgot Password' link on the login page.",
         "keywords": ["reset", "password"],
+    },
+    {
+        "question": "Is there a mobile app version of WAVE?",
+        "answer": "We don't yet have a mobile app, but we are working on it! Stay tuned for updates.",
+        "keywords": ["mobile", "app"],
     },
     {
         "question": "How do I cancel my subscription?",
@@ -41,14 +52,9 @@ hardcoded_questions = [
         "keywords": ["contact", "support", "help"],
     },
     {
-        "question": "What is WAVE?",
-        "answer": "WAVE is a platform designed to revolutionize campus entertainment by providing seamless event ticketing and management solutions.",
-        "keywords": ["WAVE"],
-    },
-    {
         "question": "How do I create an account?",
         "answer": "To create an account, go to the sign-up page, fill in your details, and submit the form.",
-        "keywords": ["create", "account", "sign up", "register"],
+        "keywords": [ "account", "sign up", "register"],
     },
     {
         "question": "How do I purchase event tickets?",
@@ -58,7 +64,7 @@ hardcoded_questions = [
     {
         "question": "Can I attend events on other campuses?",
         "answer": "Yes! WAVE allows students to attend events on any participating campus across the country.",
-        "keywords": ["other campuses"],
+        "keywords": ["other campuses", "other colleges",],
     },
     {
         "question": "How do QR codes work for event entry?",
@@ -69,6 +75,11 @@ hardcoded_questions = [
         "question": "What is a Crew?",
         "answer": "The Crew System allows you to form groups with friends to attend events together. You can invite friends to your crew by searching for their profiles and simply clicking the 'Invite to Crew' button.",
         "keywords": ["Crew"],
+    },
+     {
+        "question": "What is WAVE?",
+        "answer": "WAVE is a platform designed to revolutionize campus entertainment by providing seamless event ticketing and management solutions.",
+        "keywords": ["WAVE"],
     },
 ]
 
@@ -85,7 +96,12 @@ greetings = [
     "How's it going?",
     "hey chat",
     "Can I ask you a question?",
-]
+    "Thanks",
+    "Thank you",
+    "Thanks for the help",
+    "Good",
+    "Great",
+    ]
 
 
 def find_keywords_in_question(user_question, predefined_question):
@@ -142,7 +158,7 @@ def chat_with_gpt(request):
         similarities = cosine_similarity(user_vector, predefined_vectors).flatten()
         max_similarity = np.max(similarities)
         best_match_index = np.argmax(similarities)
-
+        print(max_similarity, best_match_index)
         similarity_threshold = 0.7  # You can adjust this threshold
 
         if max_similarity > similarity_threshold:
@@ -200,6 +216,18 @@ def supportTicket(request):
         form = SupportTicketForm()
     return render(request, "supportCenterApp/ticket/createTicket.html", {"form": form})
 
+@login_required(login_url="authentication:login")
+def send_ticket_reply(request, ticket_id):
+    ticket = get_object_or_404(SupportTicket, ticket_id=ticket_id)
+    if request.method == 'POST':
+        message = request.POST.get('message')
+        if message:
+            SupportTicketMessage.objects.create(
+                ticket=ticket,
+                sender=request.user,
+                message=message
+            )
+    return redirect('support:viewTicket', ticket_id=ticket_id)
 
 def userFeedback(request):
     if request.method == "POST":

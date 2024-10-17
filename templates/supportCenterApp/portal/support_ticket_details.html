@@ -33,23 +33,20 @@ WAVE. — Ticket #{{ticket.ticket_id}}
 
 
 {% block body %}
-<div id="ticket-info-container">
+<div id="ticket-info-container" style = "position: relative; top: -300px">
     <div id="tic-canvas-container">
         <canvas id="canvas-basic-testing"></canvas>
     </div>
     <div id="tic-progress-bar">
         <div id="progress-bar">
             <div class="circle-container">
-                <div class="circle filled" data-label="Created"></div>
+                <div class="circle {% if ticket.status == 'Open' %}filled{% endif %}" data-label="Created"></div>
             </div>
             <div class="circle-container">
-                <div class="circle" data-label="Reviewing"></div>
+                <div class="circle {% if ticket.status == 'review' %}filled{% endif %}" data-label="Under Review"></div>
             </div>
             <div class="circle-container">
-                <div class="circle" data-label="Updated"></div>
-            </div>
-            <div class="circle-container">
-                <div class="circle" data-label="Complete"></div>
+                <div class="circle {% if ticket.status == 'Closed' %}filled{% endif %}" data-label="Complete"></div>
             </div>
         </div>
     </div>
@@ -91,8 +88,14 @@ WAVE. — Ticket #{{ticket.ticket_id}}
                     </div>
                 </div>
                 <div id="status-body">
-                    <span id="status-update">In Progress</span>
-                    <span id="status-background"></span>
+                    <span id="status-update">
+                        {% if ticket.status == 'Closed' %}
+                            Complete
+                        {% else %}
+                            In Progress
+                        {% endif %}
+                    </span>
+                    <span id="status-background" {% if ticket.status == 'Closed' %}style="background-color: #4DAF50;"{% endif %}></span>
                 </div>
             </div>
         </div>
@@ -140,81 +143,49 @@ WAVE. — Ticket #{{ticket.ticket_id}}
     <div id="conversation-container">
         <div id="convo-container-elements">
             <div id="cce-heading">
-                <h4>Admin Reply</h4>
+                <h4>Messages</h4>
                 <div class="id-header-menu-btn" role="button">
                     <img src="{% static "images/support/portals/ticket-details/ticket-menu-dots.svg" %}"
                         alt="More Information Button" srcset="">
                 </div>
             </div>
             <div id="cce-body">
+                {% for message in ticket.messages.all %}
                 <div id="conversation-bubble">
                     <div id="convo-body">
-                        Refresh your page and click the Lorem ipsum dolor sit amet consectetur adipisicing
-                        elit. Ipsa tenetur reiciendis, qui sunt nemo culpa. Neque, veniam? Officia dolor velit
-                        aliquid architecto accusamus vel dicta minus, inventore alias saepe obcaecati?
-                        Refresh your page and click the Lorem ipsum dolor sit amet consectetur adipisicing elit.
-                        Ipsa tenetur reiciendis, qui sunt nemo culpa. Neque, veniam? Officia dolor velit aliquid
-                        architecto accusamus vel dicta minus, inventore alias saepe obcaecati?
+                        {{ message.message }}
                     </div>
-
                     <div id="admin-timestamp">
                         <div id="admin-info">
-                            <h6 id="name">Edmund</h6>
+                            <h6 id="name">{{ message.sender.username }}</h6>
                             <div id="role-info">
                                 <img src="{% static "images/support/portals/ticket-details/admin-verified.svg" %}"
                                         alt="Verified User">
-                                <p class="role">Admin</p>
+                                <p class="role">{% if message.sender.is_staff %}Admin{% else %}User{% endif %}</p>
                             </div>
                         </div>
-                        <div id="time-info">4:34 PM</div>
+                        <div id="time-info">{{ message.sent_at|date:"P" }}</div>
                     </div>
                 </div>
-
                 <div id="convo-divider">
                     <hr>
                 </div>
-
-                <div id="conversation-bubble">
-                    <div id="convo-body">
-                        Refresh your page and click the Lorem ipsum dolor sit amet consectetur adipisicing
-                        elit. Ipsa tenetur reiciendis, qui sunt nemo culpa. Neque, veniam? Officia dolor velit
-                        aliquid architecto accusamus vel dicta minus, inventore alias saepe obcaecati?
-                        Refresh your page and click the Lorem ipsum dolor sit amet consectetur adipisicing elit.
-                        Ipsa tenetur reiciendis, qui sunt nemo culpa. Neque, veniam? Officia dolor velit aliquid
-                        architecto accusamus vel dicta minus, inventore alias saepe obcaecati?
-                    </div>
-
-                    <div id="admin-timestamp">
-                        <div id="admin-info">
-                            <h6 id="name">Me</h6>
-                        </div>
-                        <div id="time-info">5:00 PM</div>
-                    </div>
-                </div>
-            </div>
-            <div id="cce-reply-end">
-                <div id="conversation-input">
-                    <div class="button-one">
-                        <button role="button">
-                            <img src="{% static "images/support/portals/ticket-details/paper-clip.svg" %}" alt="" srcset="">
-                        </button>
-                    </div>
-                    
-                    
-                    <input type="text" name="chat-reply" id="chat-reply" placeholder="Send a reply">
-
-                    <div class="button-two">
-                        <button role="button">
-                            <img src="{% static "images/support/portals/ticket-details/send-plane.svg" %}" alt="Send Reply" srcset="">
-                        </button>
-                    </div>
-                    
-                    
-                </div>
+                {% endfor %}
             </div>
         </div>
+    </div>    
+    {% if ticket.status != 'Closed' %}
+    <div id="conversation-input">
+        <form method="post" action="{% url 'support:send_ticket_reply' ticket.ticket_id %}" style="display: flex; align-items: center; gap: 10px;">
+            {% csrf_token %}
+            <input type="text" name="message" id="chat-reply" placeholder="Send a reply" style="flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 4px; width: 600px;"/>
+            <button type="submit" style="background: none; border: none; padding: 0; cursor: pointer;">
+                <img src="{% static 'images/support/portals/ticket-details/send-plane.svg' %}" alt="Send Reply" style="width: 24px; height: 24px;">
+            </button>
+        </form>
     </div>
-
+    {% endif %}
+    {% if ticket.status == 'Closed' %}
     <div id="ticket-control">
         <div id="ticket-control-container">
             <div id="complete-ticket" role="button">
@@ -222,11 +193,11 @@ WAVE. — Ticket #{{ticket.ticket_id}}
                 <p>Complete</p>
             </div>
         </div>
-
     </div>
+    {% endif %}
 </div>
 
-<div id="appreciation-div">
+<div id="appreciation-div" style="position:relative; top: -200px;">
     <h3>We appreciate your patience!</h3>
 </div>
 {% endblock body %}
