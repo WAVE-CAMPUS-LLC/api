@@ -24,6 +24,20 @@ Profile Overview
 <div id="body-content">
     <div id="body-header">
         <h3>Welcome, {{ user.first_name }}!</h3>
+        {% if userRequest.email_verified == False or userRequest.user_preferences_completed == False %}
+        <div id="missing-info">
+            <p>Click to complete:</p>
+            <div class="missing-subDiv">
+                {% if userRequest.email_verified == False %}
+                <a href="{% url "authentication:generateVerification" %}" class="missing profile">Verify Account</a>
+                {% endif %}
+
+                {% if userRequest.user_preferences_completed == False %}
+                <a href="{% url "accountManagement:userPreferences" %}" class="missing preferences">Complete Profile</a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
     </div>
     
     <div id="content-container">

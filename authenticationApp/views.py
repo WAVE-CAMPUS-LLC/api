@@ -75,6 +75,17 @@ def joinView(request):
     return render(request, "authenticationApp/join.html", {"form": form})
 
 
+@login_required
+def startVerificationProcess(request):
+    group, created = Group.objects.get_or_create(name="Unverified Email")
+    user = request.user
+    user.groups.add(group)
+    user.save()
+    generateVerficationLink(request, user)
+    return render(request, "authenticationApp/verify/verificationLinkSent.html")
+
+
+
 def generateVerficationLink(request, user):
     signer = TimestampSigner()
     token = signer.sign(user.email)
