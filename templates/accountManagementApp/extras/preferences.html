@@ -10,7 +10,7 @@
 
 {% block script %}
 <script type="text/javascript" src="{% static "/scripts/accountManagementApp/extras/sectionControl.js" %}" defer></script>
-<script type="text/javascript" src="{% static "/scripts/accountManagementApp/extras/photoPreview.js" %}"></script>
+<script type="text/javascript" src="{% static "/scripts/accountManagementApp/extras/photoPreview.js" %}" defer></script>
 <script type="text/javascript" src="{% static "/scripts/accountManagementApp/extras/eventTypeSelectors.js" %}" defer></script>
 {% endblock script %}
 
@@ -27,11 +27,11 @@
                             <input type="hidden" name="action" value="profile_picture">
                             <div class="section-input">
                                 <h4>Upload a profile picture</h4>
-                                <div class="profile-picture-intake">
+                                <div class="header-photo-intake">
                                     <!--Image Preview Element-->
-                                    <img id="profile-picture-preview" src="#" alt="Profile Photo Preview">
+                                    <img id="header-photo-preview" src="{{ profile.profile_photo.url }}" alt="Header Photo Preview">
                                     <!-- Button that triggers the image upload. -->
-                                    <button class="upload-profile-picture" type="button" id="profile-picture-upload-btn" onclick="document.getElementById('{{updateUserProfileForm.profile_photo.auto_id}}').click();">Upload</button>
+                                    <button class="upload-profile-picture" type="button" onclick="document.getElementById('{{updateUserProfileForm.profile_photo.auto_id}}').click();">Upload photo</button>
                                     {{updateUserProfileForm.profile_photo|add_class:"hidden"}}
                                 </div>
                             </div>

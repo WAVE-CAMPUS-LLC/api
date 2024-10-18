@@ -11,6 +11,8 @@
   width: 100%;
   display: flex;
   justify-content: start;
+  flex-direction: column;
+  gap: 10px;
 }
 
 #body-header h3 {
@@ -19,6 +21,44 @@
   font-family: Wanted-ExtraBold;
   font-size: 45px;
   font-weight: 900;
+}
+
+/* Missing Info */
+#missing-info {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+}
+
+#missing-info p {
+  font-family: Wanted-Variable;
+  font-size: 15px;
+  color: black;
+}
+
+.missing-subDiv {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+}
+
+.missing {
+  border: 1px solid transparent;
+  background-color: red;
+  padding: 5px;
+  padding-left: 10px;
+  padding-right: 10px;
+  font-family: Wanted-Variable;
+  font-size: 13px;
+  text-decoration: none;
+  border-radius: 15px;
+  color: white;
+}
+
+.missing:hover {
+  text-decoration: underline;
 }
 
 /** Body Content - Body Content Container **/
