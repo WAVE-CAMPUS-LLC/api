@@ -36,11 +36,11 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='membership',
             name='college',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='collegeManagementApp.college'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='adminDashboardApp.college'),
         ),
         migrations.AlterField(
             model_name='organization',
             name='college',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='organizations', to='collegeManagementApp.college'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='organizations', to='adminDashboardApp.college'),
         ),
     ]

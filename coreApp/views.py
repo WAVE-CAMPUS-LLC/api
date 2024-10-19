@@ -44,6 +44,7 @@ def exploreView(request):
         event_type = category["event_type"]
         display_name = dict(Event.EXPLORE_TYPE_CHOICES).get(event_type, event_type)
         trending_category_choices.append((event_type, display_name))
+    print(trending_category_choices)
 
     if len(trending_category_choices) < 4:
         remaining_choices = list(set(Event.EXPLORE_TYPE_CHOICES) - set(trending_category_choices))

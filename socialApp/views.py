@@ -64,7 +64,7 @@ def socialHomeView(request):
     return render(
         request,
         "socialApp/socialHome.html",
-        {"pending_friend_requests": pending_friend_requests, "pending_crew_requests": pending_crew_requests, "friends": friends, "my_crews": my_crews, "time": time},
+        {"pending_friend_requests": pending_friend_requests, 'user_profile':user, "pending_crew_requests": pending_crew_requests, "friends": friends, "my_crews": my_crews, "time": time},
     )
 
 def crew_invite_action(request, crew_id, action):
