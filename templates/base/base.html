@@ -10,7 +10,8 @@
         <title>
             {% block title %}{% endblock title %}
         </title>
-        <link rel="stylesheet" type="text/css" href="{% static "/styles/base/base.css" %}" />
+        <link rel="stylesheet" type="text/css" href="{% static "/tailwindcss/input.css" %}" />
+        <link rel="stylesheet" type="text/css" href="{% static "/tailwindcss/output.css" %}" />
         {% block app_page_style %}{% endblock app_page_style %}
         {% block script %}{% endblock script %}
         <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
@@ -26,7 +27,7 @@
     </head>
 
     {% block auth_body %}
-    <div id="html-content">
+    <div id="html-content" class="flex flex-col gap-[70px] overflow-y-auto h-full">
         {% block pageHeader %}
         <header>
             {% block header %}{% endblock header %}
@@ -40,7 +41,7 @@
         </body>
 
         {% block footer %}
-        <footer id="footer">
+        <footer id="footer" class="w-full border-t border-t-[#82828251]">
             {% include "partials/nav-footer/footer/footer.html" %}
         </footer>
         {% endblock footer %}

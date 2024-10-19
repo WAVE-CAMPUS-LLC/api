@@ -14,79 +14,91 @@ WAVE. — Explore a new wave of events. Tick them off your bucketlist!
 {% endblock header %}
 
 {% block body %}
-<div id="content-container">
-    <section id="cc-hime1">
-        <div id="cc-hime1-info">
-            <div id="cc-hime1-info-cont">
-                <div id="cch1i-header">
-                    <h1>
-                        Create lasting memories with <span id="body-logo">WAVE<span class="spot">.</span></span>
+<div id="content-container" class="w-full flex flex-col tracking-wide">
+    <section class="w-full h-full py-16 xs:px-5 xsm:px-7 after-xsm:px-9 sm:px-11 md:px-16 lg:px-24 xl:px-36 2xl:px-44 3xl:px-52 flex justify-center items-center flex-col xs:flex-col xsm:flex-col after-xsm:flex-col xxsm:flex-col sm:flex-col md:flex-col pre-lg:flex-row gap-20">
+        <div class="flex flex-col w-full">
+            <div class="flex justify-center flex-col gap-5 w-full">
+                <div class="text-black w-full">
+                    <h1 class="font-Wanted-Bold text-1xl pre-lg:text-3.5xl">
+                        Create 
+                        <span class="hidden after-xsm:inline">lasting</span> 
+                        memories with 
+                        <span id="body-logo">
+                            WAV<span class="spot">E</span>.
+                        </span>
                     </h1>
-                    <p>Purchase ticket, be there, live in the moment.</p>
+                    <p class="font-Wanted-Variable xxsm:font-Wanted-Regular text-Base sm:text-Medium font-thin">Purchase ticket, be there, live in the moment.</p>
                 </div>
 
-                <div id="cch1i-body">
-                    <div class="cch1i-body-search-container">
-                        <input type="text" name="" id="" placeholder="Enter event category">
-                        <div class="cch1ibsc-img">
-                            <img src="{% static "/images/home/home-explore-icon.svg" %}" alt="Explore Events">
+                <div class="flex flex-col gap-6 w-full">
+                    <div class="w-full 2xl:w-1/2 border-2 border-[#62626200] rounded-2xl bg-[#ffffff07] cursor-text flex flex-row items-center">
+                        <input type="text" name="" id="" placeholder="Enter event category" class="w-full h-full p-4 text-Semi-Medium font-Wanted-Regular text-black border-none rounded-l-2xl outline-none">
+                        <div class="flex justify-center p-2.5 pl-0.5">
+                            <img src="{% static "/images/home/home-explore-icon.svg" %}" alt="Explore Events" >
                         </div>
                     </div>
-                    <button type="button" role="button" onclick="redirectToPage({% url "core:explore" %})">View Events</button>
+                    <button type="button" role="button" class="w-full after-xsm:w-1/2 pre-lg:w-3/5 lg:w-2/5 p-3 border rounded-2xl border-black bg-black text-white font-Wanted-Medium text-Semi-Medium cursor-pointer" onclick="redirectToPage({% url "core:explore" %})">View Events</button>
                 </div>
             </div>
         </div>
-        <div id="cc-hime1-img">
-            <video autoplay muted loop playsinline>
+        <div id="cc-hime1-img" class="w-full h-full xs:max-w-[500px] md:max-w-[550px] xs:max-h-[500px] md:max-h-[550px] overflow-hidden">
+            <video autoplay muted loop playsinline class="rounded-3xl w-full h-full max-h-[500px] object-cover">
                 <source src="{% static 'videos/homecoming.mov' %}" type="video/mp4">
                 Your browser does not support the video tag.
             </video>
         </div>
     </section>
 
-    <section id="cc-hime2">
-        <div id="cc-hime2-img">
-            <img src="{% static "/images/home/homecoming.JPG" %}" alt="Create lasting memories">
+    <section class="w-full h-full py-16 xs:px-5 xsm:px-7 after-xsm:px-9 sm:px-11 md:px-16 lg:px-24 xl:px-36 2xl:px-44 3xl:px-52 flex justify-center items-center flex-col-reverse xs:flex-col-reverse xsm:flex-col-reverse after-xsm:flex-col-reverse xxsm:flex-col-reverse sm:flex-col-reverse md:flex-col-reverse pre-lg:flex-row gap-20 bg-black text-white">
+        <div class="w-full h-full xs:max-w-[500px] md:max-w-[500px] xs:max-h-[500px] md:max-h-[500px] overflow-hidden">
+            <img src="{% static "/images/home/homecoming.JPG" %}" alt="Create lasting memories" class="rounded-3xl w-full h-full max-h-[500px] object-cover">
         </div>
-        <div id="cc-hime1-info">
-            <div id="cc-hime2-info-cont">
-                <div id="cch2i-header">
-                    <h1>Join your campus, or create it!</h1>
-                    <p>
+        <div>
+            <div class="flex flex-col gap-10">
+                <div class="flex flex-col gap-4">
+                    <h1 class="font-Wanted-Bold text-1xl pre-lg:text-3.5xl">Join your campus, or create it!</h1>
+                    <p class="font-Wanted-Variable xxsm:font-Wanted-Regular text-Base sm:text-Medium font-thin">
                         Join your college campus to see all ongoing events. If it doesn't exist, create it and invite your friends!
                     </p>
                 </div>
 
-                <div id="cch2i-body">
-                    <a id="partnerships" href="{% url "colleges:find" %}">Find Campus</a>
-                    <a id="joining" href="{% url "authentication:join" %}">Not a member? Join Us</a>
+                <div class="flex flex-col xxsm:flex-row gap-6 xxsm:gap-[45px] pre-lg:gap-6 items-start xxsm:items-center justify-start xxsm:justify-center pre-lg:justify-start">
+                    <a id="partnerships" href="{% url "colleges:find" %}" class="p-4 bg-white text-black border rounded-2xl text-Semi-Medium font-Wanted-Medium hover:text-[#008d95]">Find Campus</a>
+                    <a id="joining" href="{% url "authentication:join" %}" class="font-Wanted-Regular underline underline-offset-[10px] hover:decoration-[#008d95]">Not a member? Join Us</a>
                 </div>
             </div>
         </div>
     </section>
 
     <!-- Section 3 -->
-    <section id="cc-hime3">
-        <div id="cc-hime3-info">
-            <div id="cc-hime3-info-cont">
-                <div id="cch3i-header">
-                    <h1>Discover a world of possibilities with <span id="body-logo">WAVE<span class="spot">.</span></h1>
-                    <p>Experience seamless event management and unforgettable moments.</p>
-                </div>
-                <div id="cch3i-body">
-                    <ul>
-                        <li>Effortlessly create and manage events</li>
-                        <li>Access real-time analytics and insights</li>
-                        <li>Receive dedicated support and assistance</li>
-                    </ul>
-                    <a href="{% url "authentication:join" %}" target="_blank" type="button" role="button">Get Started</a>
-                    <!-- Host events information page -->
-                </div>
+    <section class="w-full h-full py-16 xs:px-5 xsm:px-7 after-xsm:px-9 sm:px-11 md:px-16 lg:px-24 xl:px-36 2xl:px-44 3xl:px-52 flex justify-center items-center flex-col xs:flex-col xsm:flex-col after-xsm:flex-col xxsm:flex-col sm:flex-col md:flex-col pre-lg:flex-row gap-20 text-black">
+        <div  class="flex flex-col gap-3">
+            <div class="flex flex-col gap-4">
+                <h1 class="font-Wanted-Bold text-1xl pre-lg:text-3.5xl">Discover a world of possibilities with <span id="body-logo">WAV<span class="spot">E</span>.</h1>
+                <p class="font-Wanted-Regular xxsm:font-Wanted-Medium text-Medium sm:text-Large font-thin">Experience seamless event management and unforgettable moments.</p>
+            </div>
+            <div class="flex flex-col gap-9">
+                <ul class="list-disc font-Wanted-Variable xxsm:font-Wanted-Regular text-Base sm:text-Medium font-thin px-9">
+                    <li>Effortlessly create and manage events</li>
+                    <li>Access real-time analytics and insights</li>
+                    <li>Receive dedicated support and assistance</li>
+                </ul>
+                <a href="{% url "authentication:join" %}" type="button" role="button" class="w-full after-xsm:w-1/2 pre-lg:w-3/5 lg:w-2/5 p-3 border rounded-2xl border-black text-center bg-black text-white font-Wanted-Medium text-Semi-Medium cursor-pointer">Get Started</a>
             </div>
         </div>
         <div id="cc-hime3-img">
-            <img src="{% static "/images/home/scanning.png" %}" alt="Create lasting memories">
+            <img src="{% static "/images/home/scanning.png" %}" class="rounded-3xl xs:max-h-[400px] md:max-h-[500px] pre-lg:max-h-[850px]" alt="Create lasting memories">
         </div>
     </section>
+
+    <div class="flex flex-col w-full justify-center gap-8 text-center font-Wanted-Bold text-1xl mt-10 xs:px-5 xsm:px-7 after-xsm:px-9 sm:px-11 md:px-16 lg:px-24">
+        <h3>Ready to explore <span id="body-logo">WAV<span class="spot">E</span>.</span>?</h3>
+        <div id="catchphrase-link" class="w-full">
+            <a href="{% url "core:explore" %}"
+                class="text-white font-Wanted-SemiBold text-Pre-Xl border border-black bg-black rounded-3xl p-5 px-8 w-2/5"><span
+                    class="hidden xsm:inline-block">Let's</span>
+                Explore!</a>
+        </div>
+    </div>
 </div>
 {% endblock body %}
