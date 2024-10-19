@@ -67,16 +67,18 @@ What's the wave?! — WAVE.
 
             <div class="row-body" id="row-body">
                 {% for value, display in exploreCategoryChoices %}
-                <div class="category-card">
-                    <a target="_blank" href="{% url "core:category" name=display %}">
-                        <div class="category-icon">
-                            <img src="{% static exploreCategoryImages|get_category:value %}" alt="Category: {{display}}">
+                    {% if display %}
+                        <div class="category-card">
+                            <a target="_blank" href="{% url 'core:category' name=display %}">
+                                <div class="category-icon">
+                                    <img src="{% static exploreCategoryImages|get_category:value %}" alt="Category: {{ display }}">
+                                </div>
+                                <div class="category-name">
+                                    <h2>{{ display }}</h2>
+                                </div>
+                            </a>
                         </div>
-                        <div class="category-name">
-                            <h2>{{display}}</h2>
-                        </div>
-                    </a>
-                </div>
+                    {% endif %}
                 {% endfor %}
             </div>
         </div>
@@ -85,7 +87,7 @@ What's the wave?! — WAVE.
             <div class="row-body event-row-body" id="events-container">
                 {% for event in events %}
                 {% if event.status == "live" %}
-                <a target="_blank" href="{% url "core:eventDetails" eventId=event.eventId %}" class="category-event-card">
+                <a href="{% url "core:eventDetails" eventId=event.eventId %}" class="category-event-card">
                     <div class="category-image">
                         <img src="{{event.header_photo.url}}" alt="">
                     </div>
