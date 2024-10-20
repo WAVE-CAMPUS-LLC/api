@@ -181,7 +181,7 @@
                                     {% for member in collegeMembers %}
                                     <a target="_blank" href="{% url "social:publicProfile" username=member.user.username %}" class="collegeMemberCard">
                                         <div class="memberPfp">
-                                            <img src="{% static "/images/collegeManagementApp/pfp.jpg" %}" />
+                                            <img src="{{ user_profile.profile_photo.url }}" />
                                         </div>
                                         <div class="memberBody">
                                             <h5>{{member.user.first_name}} {{member.user.last_name}}</h5>

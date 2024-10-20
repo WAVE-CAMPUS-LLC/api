@@ -23,7 +23,7 @@
     <div class="userHeader">
         <div>
             <div class="userPfp">
-                <img src="{% static "images/socialApp/publicProfile/profile/E.L.png" %}" alt="Profile Picture" />
+                <img src="{{ user_profile.profile_photo.url }}" alt="Profile Picture" />
             </div>
             <div class="userNames">
                 <h1>{{ user.first_name }} {{ user.last_name }}</h1>

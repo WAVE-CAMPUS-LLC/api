@@ -1,0 +1,10 @@
+{% extends "base/base.html" %}
+
+{% block auth_body %}
+<h2>Verification Link Expired</h2>
+<p>Your email verification link has expired. Please click the button below to receive a new verification link.</p>
+<form method="post" action="{% url 'authentication:resendVerification' %}">
+    {% csrf_token %}
+    <button type="submit">Resend Verification Link</button>
+</form>
+{% endblock auth_body %}

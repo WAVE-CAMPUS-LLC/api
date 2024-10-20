@@ -135,39 +135,7 @@ WAVE — Join Us!
                 </label>
             </div>
 
-            <div id="rowFive">
-                <label for="{{ form.phone_number.id_for_label }}">
-                    <div>
-                        {{ form.phone_number.label }}
-                        <span id="errorContainer">
-                            <div>
-                                <p id="phoneLiveValidationError"></p>
-                                <p id="phoneLiveValidationValid"></p>
-                            </div>
-                        </span>
-                    </div>
-                    <input type="{{ form.phone_number.field.widget.input_type }}" placeholder="XXXXXXXXXX" name="{{ form.phone_number.html_name }}" id="{{ form.phone_number.auto_id }}" class="" maxlength="10" minlength="10" autocomplete="off" class="phoneNumber">
-                </label>
-            </div>
-
-            <div id="rowSix">
-                <label for="birthday">
-                    <div>
-                        Birthday
-                        <span id="errorContainer">
-                            <div>
-                                <p id="birthdayLiveValidationError"></p>
-                                <p id="birthdayLiveValidationValid"></p>
-                            </div>
-                        </span>
-                    </div>
-                    <div id="birthdayInputs">
-                        <input type="{{ form.birthday_month.field.widget.input_type }}" name="{{ form.birthday_month.html_name }}" id="{{ form.birthday_month.auto_id }}" class="birthdayMonth" placeholder="Month (12)" autocomplete="off" required>
-                        <input type="{{ form.birthday_day.field.widget.input_type }}" name="{{ form.birthday_day.html_name }}" id="{{ form.birthday_day.auto_id }}" class="birthdayMonth" placeholder="Day (30)" autocomplete="off" required>
-                        <input type="{{ form.birthday_year.field.widget.input_type }}" name="{{ form.birthday_year.html_name }}" id="{{ form.birthday_year.auto_id }}" class="birthdayMonth" placeholder="Year (2004)" autocomplete="off" required>
-                    </div>
-                </label>
-            </div>
+            
 
             <div id="signupComplete">
                 <button type="submit" id="proceedBtn">Proceed</button>

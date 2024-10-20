@@ -72,6 +72,8 @@ MIDDLEWARE = [
     "authenticationApp.middleware.RedirectAuthenticatedUsersMiddleware",
 ]
 
+# CSRF_FAILURE_VIEW = 'wave_v1.middleware.csrf_handlers.csrf_failure'
+
 ROOT_URLCONF = "wave_v1.urls"
 # ROOT_HOSTCONF = "wave_v1.hosts"
 # DEFAULT_HOST = "www"
