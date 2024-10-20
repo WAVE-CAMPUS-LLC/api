@@ -1,0 +1,26 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}
+Not a member of {{ college.name }} | WAVE.
+{% endblock title %}
+
+{% block app_page_style %}
+<link rel="stylesheet" type="text/css" href="{% static "/styles/extras/invalid/invalid.css" %}" />
+{% endblock app_page_style %}
+
+{% block header %}
+{% include "partials/nav-footer/nav/main_nav.html" %}
+{% endblock header %}
+
+{% block body %}
+<main>
+    <div id="body-content">
+        <h2>You are not a member of {{ college.name }}</h2>
+        <p>To view more information about this college, you need to join.</p>
+    </div>
+</main>
+{% endblock body %}
+
+{% block footer %}
+{% endblock footer %}

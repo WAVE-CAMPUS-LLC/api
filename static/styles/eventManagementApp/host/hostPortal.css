@@ -1,10 +1,10 @@
 /* Body Content */
 #body-content {
-	display: flex;
-	flex-direction: column;
-	gap: 70px;
-	padding-left: 100px;
-	padding-right: 100px;
+    display: flex;
+    flex-direction: column;
+    gap: 70px;
+    padding-left: 100px;
+    padding-right: 100px;
 }
 
 /* Page Heading */
@@ -40,7 +40,7 @@
     cursor: pointer;
 
     border-radius: 20px;
-    background-image: linear-gradient(to right,  #007d84c3 0%, #13c9d3 100%);
+    background-image: linear-gradient(to right, #007d84c3 0%, #13c9d3 100%);
 }
 
 .createEventBtn:hover {
@@ -63,7 +63,7 @@
     gap: 15px;
 }
 
-.dashboard-tab{
+.dashboard-tab {
     cursor: pointer;
     font-family: Wanted-Variable;
     border: 1px solid grey;
@@ -188,11 +188,17 @@
 
 .ticketing-delete {
     display: flex;
-    justify-content: space-between;
-    flex-direction: row;
-    align-items: center;
+    flex-direction: column;
+    gap: 15px;
 
     width: 100%;
+}
+
+.ticketing-delete .sub-row {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .ticketing-link {
@@ -202,6 +208,35 @@
     color: white;
     text-decoration: none;
     font-family: Wanted-Regular;
+}
+
+.display-on-college {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+}
+
+input[type="checkbox"] {
+    appearance: none;
+}
+
+.checkbox {
+    position: absolute;
+    height: 20px;
+    border-radius: 5px;
+    border: 2px solid grey;
+    width: 20px;
+    transition: 100ms ease-in;
+    cursor: pointer;
+}
+
+.display-on-college label {
+    margin-right: 20px;
+}
+
+input:checked+.checkbox {
+    background: #008d95;
+    border: 2px solid #008d95;
 }
 
 .event-delete button {
