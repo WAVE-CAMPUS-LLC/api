@@ -4,7 +4,8 @@ from . import views
 app_name = "waveAdmin"
 
 urlpatterns = [
-    path("", views.adminPortalView, name="adminDashboard"),
+    path("", views.analytics_view, name="adminDashboard"),
+    path('analytics/', views.analytics_view, name='analytics'),
     path("dashboard/", views.adminDashboardView, name="dashboard"),
     path("departments/", views.adminDepartmentView, name="departments"),
     path(

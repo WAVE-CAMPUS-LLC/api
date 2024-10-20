@@ -55,6 +55,14 @@ from wave_v1.decorators import (
     superAdmin_required,
     check_suspension,
 )
+from .models import UserActivity
+from django.shortcuts import render
+from django.db.models import Count
+
+def analytics_view(request):
+    logins_per_user = UserActivity.objects.filter(action='login').values('user__username').annotate(total=Count('id'))
+
+    return render(request, 'adminDashboardApp/analytics.html', {'logins_per_user': logins_per_user})
 
 
 # Create your views here.

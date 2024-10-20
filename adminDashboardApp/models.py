@@ -6,11 +6,20 @@ from django.core.exceptions import ValidationError
 from django.utils import timezone
 from django.utils.translation import gettext as _
 from django.contrib.auth.models import Group
+from django.contrib.auth.models import User
 from django.apps import apps
 import uuid
 
 
 # Create your models here.
+
+class UserActivity(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    action = models.CharField(max_length=100)
+    timestamp = models.DateTimeField()
+
+    def __str__(self):
+        return f'{self.user} - {self.action} at {self.timestamp}'
 
 
 class Department(models.Model):

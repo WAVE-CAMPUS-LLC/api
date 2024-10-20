@@ -70,6 +70,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "authenticationApp.middleware.RedirectAuthenticatedUsersMiddleware",
+    "adminDashboardApp.middleware.UserRequestMiddleware",
 ]
 
 # CSRF_FAILURE_VIEW = 'wave_v1.middleware.csrf_handlers.csrf_failure'

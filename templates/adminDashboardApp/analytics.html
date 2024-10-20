@@ -1,0 +1,6 @@
+<h1>Logins Per User</h1>
+<ul>
+    {% for entry in logins_per_user %}
+        <li>{{ entry.user__username }}: {{ entry.total }} logins</li>
+    {% endfor %}
+</ul>
