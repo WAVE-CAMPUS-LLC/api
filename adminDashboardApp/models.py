@@ -20,6 +20,15 @@ class UserActivity(models.Model):
 
     def __str__(self):
         return f'{self.user} - {self.action} at {self.timestamp}'
+    
+    
+class GlobalUserStats(models.Model):
+    total_logins = models.PositiveIntegerField(default=0)
+    total_logouts = models.PositiveIntegerField(default=0)
+
+    def __str__(self):
+        return f"Total Logins: {self.total_logins}, Total Logouts: {self.total_logouts}"
+
 
 
 class Department(models.Model):

@@ -9,14 +9,15 @@ from django.contrib.auth.decorators import login_required
 from django.template.loader import render_to_string
 from django.contrib import messages
 from django.utils.html import strip_tags
+from django.db import models
 from django.db.models import Count
+from django.db.models.functions import TruncDay, TruncWeek, TruncMonth
 from django.core.mail import send_mail
 from django.contrib.auth.models import Group, Permission
 from django.urls import reverse
 from django.core.signing import Signer
 from django.utils import timezone
 import uuid
-
 
 from accountManagementApp.models import UserProfile
 from authenticationApp.models import CustomUser
@@ -32,7 +33,7 @@ from collegeManagementApp.models import (
 from blogApp.models import Blog
 from campusManagerApp.models import CampusManagerInvite
 from django.conf import settings
-from .models import Department, CareerRole, LoginHistoryModel, Newsroom, College
+from .models import Department, CareerRole, LoginHistoryModel, Newsroom, College, GlobalUserStats, UserActivity
 from .forms import (
     CreateGroupForm,
     UpdateGroupForm,
@@ -905,7 +906,27 @@ def send_email(request):
 @check_suspension
 @group_required("Admin")
 def analytics_view(request):
-    logins_per_user = UserActivity.objects.filter(action='login').values('user__username').annotate(total=Count('id'))
-    logout_per_user = UserActivity.objects.filter(action='logout').values('user__username').annotate(total=Count('id'))
+    # Group by day
+    daily_data = UserActivity.objects.values(date=TruncDay('timestamp')).annotate(
+        logins=Count('id', filter=models.Q(action='login')),
+        logouts=Count('id', filter=models.Q(action='logout'))
+    )
 
-    return render(request, 'adminDashboardApp/analytics.html', {'logins_per_user': logins_per_user, 'logout_per_user': logout_per_user})
+    # Group by week
+    weekly_data = UserActivity.objects.values(date=TruncWeek('timestamp')).annotate(
+        logins=Count('id', filter=models.Q(action='login')),
+        logouts=Count('id', filter=models.Q(action='logout'))
+    )
+
+    # Group by month
+    monthly_data = UserActivity.objects.values(date=TruncMonth('timestamp')).annotate(
+        logins=Count('id', filter=models.Q(action='login')),
+        logouts=Count('id', filter=models.Q(action='logout'))
+    )
+
+    context = {
+        'daily_data': daily_data,
+        'weekly_data': weekly_data,
+        'monthly_data': monthly_data,
+    }
+    return render(request, 'adminDashboardApp/analytics.html', context)

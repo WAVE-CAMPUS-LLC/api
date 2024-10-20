@@ -23,9 +23,6 @@ WAVE. — Management Dashboard
 </div>
 {% endblock container_art %}
 
-
-
-
 {% block body %}
 <div id="content-container">
     <div class="page-heading">
@@ -33,30 +30,133 @@ WAVE. — Management Dashboard
     </div>
 
     <div id="analytics-container">
+        <!-- Daily Logins and Logouts Chart -->
         <div class="analytic-item">
-            <h1 class="analytic-header">Logins Per User</h1>
-            <ul>
-                {% for entry in logins_per_user %}
-                    {% if entry.total == 1 %}
-                        <li>{{ entry.user__username }}: {{ entry.total }} login</li>
-                    {% else %}
-                        <li>{{ entry.user__username }}: {{ entry.total }} logins</li>
-                    {% endif %}
-                {% endfor %}
-            </ul>
+            <h1 class="analytic-header">Logins and Logouts (Daily)</h1>
+            <canvas id="dailyChart"></canvas>
         </div>
+        
+        <!-- Weekly Logins and Logouts Chart -->
         <div class="analytic-item">
-            <h1 class="analytic-header">Logouts Per User</h1>
-            <ul>
-                {% for entry in logout_per_user %}
-                    {% if entry.total == 1 %}
-                        <li>{{ entry.user__username }}: {{ entry.total }} logout</li>
-                    {% else %}
-                        <li>{{ entry.user__username }}: {{ entry.total }} logouts</li>
-                    {% endif %}
-                {% endfor %}
-            </ul>
+            <h1 class="analytic-header">Logins and Logouts (Weekly)</h1>
+            <canvas id="weeklyChart"></canvas>
+        </div>
+
+        <!-- Monthly Logins and Logouts Chart -->
+        <div class="analytic-item">
+            <h1 class="analytic-header">Logins and Logouts (Monthly)</h1>
+            <canvas id="monthlyChart"></canvas>
         </div>
     </div>
 </div>
+
+<!-- Include Chart.js from CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    // Fetch the data from the Django context for daily data
+    const dailyLabels = [{% for entry in daily_data %}"{{ entry.date|date:'Y-m-d' }}"{% if not forloop.last %}, {% endif %}{% endfor %}];
+    const dailyLogins = [{% for entry in daily_data %}{{ entry.logins }}{% if not forloop.last %}, {% endif %}{% endfor %}];
+    const dailyLogouts = [{% for entry in daily_data %}{{ entry.logouts }}{% if not forloop.last %}, {% endif %}{% endfor %}];
+
+    // Fetch the data from the Django context for weekly data
+    const weeklyLabels = [{% for entry in weekly_data %}"{{ entry.date|date:'Y-m-d' }}"{% if not forloop.last %}, {% endif %}{% endfor %}];
+    const weeklyLogins = [{% for entry in weekly_data %}{{ entry.logins }}{% if not forloop.last %}, {% endif %}{% endfor %}];
+    const weeklyLogouts = [{% for entry in weekly_data %}{{ entry.logouts }}{% if not forloop.last %}, {% endif %}{% endfor %}];
+
+    // Fetch the data from the Django context for monthly data
+    const monthlyLabels = [{% for entry in monthly_data %}"{{ entry.date|date:'Y-m' }}"{% if not forloop.last %}, {% endif %}{% endfor %}];
+    const monthlyLogins = [{% for entry in monthly_data %}{{ entry.logins }}{% if not forloop.last %}, {% endif %}{% endfor %}];
+    const monthlyLogouts = [{% for entry in monthly_data %}{{ entry.logouts }}{% if not forloop.last %}, {% endif %}{% endfor %}];
+
+    // Create Daily Chart
+    const dailyCtx = document.getElementById('dailyChart').getContext('2d');
+    const dailyChart = new Chart(dailyCtx, {
+        type: 'line',
+        data: {
+            labels: dailyLabels,
+            datasets: [
+                {
+                    label: 'Logins (Daily)',
+                    data: dailyLogins,
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    fill: false,
+                },
+                {
+                    label: 'Logouts (Daily)',
+                    data: dailyLogouts,
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    fill: false,
+                }
+            ]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    // Create Weekly Chart
+    const weeklyCtx = document.getElementById('weeklyChart').getContext('2d');
+    const weeklyChart = new Chart(weeklyCtx, {
+        type: 'line',
+        data: {
+            labels: weeklyLabels,
+            datasets: [
+                {
+                    label: 'Logins (Weekly)',
+                    data: weeklyLogins,
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    fill: false,
+                },
+                {
+                    label: 'Logouts (Weekly)',
+                    data: weeklyLogouts,
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    fill: false,
+                }
+            ]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    // Create Monthly Chart
+    const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
+    const monthlyChart = new Chart(monthlyCtx, {
+        type: 'line',
+        data: {
+            labels: monthlyLabels,
+            datasets: [
+                {
+                    label: 'Logins (Monthly)',
+                    data: monthlyLogins,
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    fill: false,
+                },
+                {
+                    label: 'Logouts (Monthly)',
+                    data: monthlyLogouts,
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    fill: false,
+                }
+            ]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+</script>
 {% endblock body %}
