@@ -1,8 +1,7 @@
 from django import forms
 from .models import HostApplication, Event, EventTicket
 from django.utils.translation import gettext_lazy as _
-
-# from multiupload.fields import MultiImageField
+from adminDashboardApp.models import College
 
 
 class HostApplicationForm(forms.ModelForm):
@@ -93,7 +92,6 @@ class EventForm(forms.ModelForm):
             "country": forms.Select(),
             "status": forms.HiddenInput(),
         }
-
 
 class EventTicketForm(forms.ModelForm):
     class Meta:

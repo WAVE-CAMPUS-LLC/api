@@ -19,16 +19,23 @@ from .models import (
     Organization,
     OrganizationMembership,
 )
-#TODO (Dave): for some reason the college management College model is not working properly. Using this for now.
+
+# TODO (Dave): for some reason the college management College model is not working properly. Using this for now.
 from adminDashboardApp.models import College
 from accountManagementApp.models import UserProfile
+from eventManagementApp.models import Event
+
 
 # Create your views here.
 def collegeHomeView(request):
     pageName = "Colleges"
-    random_colleges = College.objects.order_by('?')[:3]
+    random_colleges = College.objects.order_by("?")[:3]
     print(random_colleges)
-    return render(request, "collegeManagementApp/home.html", {"pageName": pageName, "random_colleges": random_colleges})
+    return render(
+        request,
+        "collegeManagementApp/home.html",
+        {"pageName": pageName, "random_colleges": random_colleges},
+    )
 
 
 def collegeCampusesView(request):
@@ -66,7 +73,13 @@ def collegeCampusesView(request):
     for college in colleges:
         member_count = UserProfile.objects.filter(college=college).count()
         organization_count = Organization.objects.filter(college=college).count()
-        college_members_info.append({"college": college, "member_count": member_count, "organization_count":organization_count})
+        college_members_info.append(
+            {
+                "college": college,
+                "member_count": member_count,
+                "organization_count": organization_count,
+            }
+        )
 
     user_profile = None
     if request.user.is_authenticated:
@@ -81,7 +94,6 @@ def collegeCampusesView(request):
             "user_profile": user_profile,
         },
     )
-
 
 
 def requestCollege(request):
@@ -112,12 +124,15 @@ def viewCollegeInformation(request, collegeId):
     pageName = "Colleges"
 
     college = get_object_or_404(College, collegeId=collegeId)
+    
+    user_profile = UserProfile.objects.filter(user=request.user).first()
+
     members = UserProfile.objects.filter(college=college)
     organizations = Organization.objects.filter(college=college, status="Accepted")
 
-    user_profile = None
-    if request.user.is_authenticated:
-        user_profile = UserProfile.objects.filter(user=request.user).first()
+    events = Event.objects.filter(
+        display_event_on_college=True, host__user_profile__college=college
+    )
 
     return render(
         request,
@@ -128,6 +143,7 @@ def viewCollegeInformation(request, collegeId):
             "collegeMembers": members,
             "user_profile": user_profile,
             "organizations": organizations,
+            "events": events,
         },
     )
 
@@ -235,12 +251,30 @@ def exitCollege(request, collegeId):
 def createOrg(request, collegeId):
     pageName = "Colleges"
     college = get_object_or_404(College, collegeId=collegeId)
+    
+    if not request.user.is_authenticated:
+        return render(
+            request,
+            "collegeManagementApp/extras/notAMemberOfCollege.html",
+            {"college": college, "pageName": pageName},
+        )
+        
+    user_profile = UserProfile.objects.filter(user=request.user).first()
+
+    if user_profile and user_profile.college != college:
+        return render(
+            request,
+            "collegeManagementApp/extras/notAMemberOfCollege.html",
+            {"college": college, "pageName": pageName},
+        )
 
     if not Membership.objects.filter(user=request.user, college=college).exists():
         messages.error(
             request, "You must be a member of this college to create an organization."
         )
         return redirect("colleges:find")
+    
+    
 
     if request.method == "POST":
         orgForm = OrganizationForm(request.POST, request.FILES)
@@ -266,6 +300,28 @@ def createOrg(request, collegeId):
 def viewOrganization(request, collegeId, orgId):
     pageName = "Colleges"
     college = get_object_or_404(College, collegeId=collegeId)
+    
+    if not request.user.is_authenticated:
+        return render(
+            request,
+            "collegeManagementApp/extras/notAMemberOfCollege.html",
+            {"college": college, "pageName": pageName},
+        )
+        
+    user_profile = UserProfile.objects.filter(user=request.user).first()
+
+    if user_profile and user_profile.college != college:
+        return render(
+            request,
+            "collegeManagementApp/extras/notAMemberOfCollege.html",
+            {"college": college, "pageName": pageName},
+        )
+
+    if not Membership.objects.filter(user=request.user, college=college).exists():
+        messages.error(
+            request, "You must be a member of this college to create an organization."
+        )
+        return redirect("colleges:find")
     organization = get_object_or_404(Organization, orgId=orgId, college=college)
 
     is_member = OrganizationMembership.objects.filter(

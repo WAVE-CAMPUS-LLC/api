@@ -1,6 +1,62 @@
-<h1>Logins Per User</h1>
-<ul>
-    {% for entry in logins_per_user %}
-        <li>{{ entry.user__username }}: {{ entry.total }} logins</li>
-    {% endfor %}
-</ul>
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}
+WAVE. — Management Dashboard
+{% endblock title %}
+
+{% block app_page_style %}
+<link rel="stylesheet" type="text/css" href="{% static "/styles/adminDashboardApp/tabs/analytics.css" %}" />
+{% endblock app_page_style %}
+
+{% block header %}
+{% include "partials/nav-footer/nav/admin_nav.html" %}
+{% endblock header %}
+
+{% block container_art %}
+<div id="container-art">
+    <div class="ticket-heading">
+        <div class="ticket-header">
+            <h3><a href="{% url 'waveAdmin:adminDashboard' %}">Management</a> > Analytics</h3>
+        </div>
+    </div>
+</div>
+{% endblock container_art %}
+
+
+
+
+{% block body %}
+<div id="content-container">
+    <div class="page-heading">
+        <h2>App Analytics</h2>
+    </div>
+
+    <div id="analytics-container">
+        <div class="analytic-item">
+            <h1 class="analytic-header">Logins Per User</h1>
+            <ul>
+                {% for entry in logins_per_user %}
+                    {% if entry.total == 1 %}
+                        <li>{{ entry.user__username }}: {{ entry.total }} login</li>
+                    {% else %}
+                        <li>{{ entry.user__username }}: {{ entry.total }} logins</li>
+                    {% endif %}
+                {% endfor %}
+            </ul>
+        </div>
+        <div class="analytic-item">
+            <h1 class="analytic-header">Logouts Per User</h1>
+            <ul>
+                {% for entry in logout_per_user %}
+                    {% if entry.total == 1 %}
+                        <li>{{ entry.user__username }}: {{ entry.total }} logout</li>
+                    {% else %}
+                        <li>{{ entry.user__username }}: {{ entry.total }} logouts</li>
+                    {% endif %}
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock body %}
