@@ -32,26 +32,6 @@ Create your event — WAVE.
 
     <form method="POST" id="eventForm" enctype="multipart/form-data" data-event-id="{{ event.eventId }}" action="{% url 'eventManagement:eventCreationProcess' event.eventId %}">
         {% csrf_token %}
-
-        {% comment %} {% if eventForm.non_field_errors %}
-            <div class="error">
-                {% for error in eventForm.non_field_errors %}
-                    <p>{{ error }}</p>
-                {% endfor %}
-            </div>
-        {% endif %}
-
-        <!-- Loop through all fields and display errors -->
-        {% for field in eventForm %}
-            {% if field.errors %}
-                <div class="error">
-                    <p>{{ field.label }}:</p>
-                    {% for error in field.errors %}
-                        <p>{{ error }}</p>
-                    {% endfor %}
-                </div>
-            {% endif %}
-        {% endfor %} {% endcomment %}
         <div id="section-container">
             <section id="stage-section">
                 <input type="hidden" class="section-title" value="Stage 1 - Talk about the event — WAVE." />
@@ -86,7 +66,7 @@ Create your event — WAVE.
                 </div>
             </section>
 
-            <section id="stage-section">
+            <section id="stage-section" class="scrollable">
                 <input type="hidden" class="section-title" value="Stage 1 — Select event type   — WAVE." />
                 <div class="stageSection-container-col">
                     <div class="section-question">
@@ -104,7 +84,6 @@ Create your event — WAVE.
                         <div class="type-input">
                             {% for value, display in eventTypeChoices %}
                             <div type="button" role="button" class="type-selector" onclick="selectEventTypeOption('{{ value }}')" data-value="{{ value }}">
-                                <img src="{% static eventTypeImages|get_item:value %}" />
                                 <h6>{{display}}</h6>
                             </div>
                             {% endfor %}
@@ -167,22 +146,30 @@ Create your event — WAVE.
             </section>
 
             <section id="stage-section">
-                <input type="hidden" class="section-title" value="Invite-only, private or public?  — WAVE." />
+                <input type="hidden" class="section-title" value="Discoverable or restricted? — WAVE." />
                 <div class="stageSection-container-col">
                     <div class="section-question">
                         {{ eventForm.privacy.label }}
                     </div>
         
                     <div class="section-intake">
-                        <select id="{{ eventForm.privacy.id_for_label }}" name="{{ eventForm.privacy.html_name }}">
+                        <select id="event-privacy-select" name="event_privacy">
                             {% for value, display in eventForm.privacy.field.choices %}
-                                <option value="{{ value }}" {% if eventForm.privacy.value == value %}selected{% endif %}>{{ display }}</option>
+                                <option value="{{ value }}">{{ display }}</option>
                             {% endfor %}
                         </select>
+
+                        <div class="type-input">
+                            {% for value, display in eventForm.privacy.field.choices %}
+                            <div type="button" role="button" class="type-selector" onclick="selectEventPrivacyOption('{{ value }}')" data-value="{{ value }}">
+                                <h6>{{display}}</h6>
+                            </div>
+                            {% endfor %}
+                        </div>
                     </div>
                 </div>
             </section>
-
+            
             <section id="stage-section">
                 <input type="hidden" class="section-title" value="Event Location  — WAVE." />
                 <div class="stageSection-container-col">

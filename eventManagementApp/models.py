@@ -67,9 +67,8 @@ class Event(models.Model):
     ]
 
     PRIVACY_CHOICES = [
-        ("Invite-Only", "Invite-Only"),
-        ("Public", "Public"),
-        ("Private", "Private"),
+        ("Discoverable", "Discoverable"),
+        ("Restricted", "Restricted"),
     ]
 
     COUNTRY_CHOICES = [("United States", "United States")]
@@ -98,44 +97,48 @@ class Event(models.Model):
     )
 
     EVENT_TYPE_CHOICES = [
-        ("music", "music"),
-        ("party", "party"),
-        ("concert", "concert"),
-        ("sports", "sports"),
-        ("games", "games"),
-        ("greek", "greek"),
+        ("sports", "Sports"),
+        ("social", "Social"),
+        ("networking", "Networking"),
+        ("greek", "Greek"),
+        ("music", "Music"),
+        ("conference", "Conference"),
+        ("workshop", "Workshop"),
+        ("exhibition", "Exhibition"),
+        ("technology", "Technology"),
+        ("health", "Health"),
+        ("fundraiser", "Fundraiser"),
+        ("volunteer", "Volunteer"),
+        ("fashion", "Fashion"),
+        ("adventure", "Adventure"),
+        ("spiritual", "Spiritual"),
+        ("academic", "Academic"),
+        ("photography", "Photography"),
+        ("art", "Art"),
+        ("dance", "Dance"),
     ]
-
-    EVENT_IMG_PATH = "images/eventManagementApp/host/images/selectors/"
-
-    EVENT_TYPE_IMAGES = {
-        "music": f"{EVENT_IMG_PATH}music.svg",
-        "party": f"{EVENT_IMG_PATH}party.svg",
-        "concert": f"{EVENT_IMG_PATH}concert.svg",
-        "sports": f"{EVENT_IMG_PATH}sports.svg",
-        "games": f"{EVENT_IMG_PATH}games.svg",
-        "greek": f"{EVENT_IMG_PATH}greek.png",
-    }
 
     EXPLORE_TYPE_CHOICES = [
-        ("music", "music"),
-        ("party", "party"),
-        ("concert", "concert"),
-        ("sports", "sports"),
-        ("games", "games"),
-        ("greek", "greek"),
+        ("sports", "Sports"),
+        ("social", "Social"),
+        ("networking", "Networking"),
+        ("greek", "Greek"),
+        ("music", "Music"),
+        ("conference", "Conference"),
+        ("workshop", "Workshop"),
+        ("exhibition", "Exhibition"),
+        ("technology", "Technology"),
+        ("health", "Health"),
+        ("fundraiser", "Fundraiser"),
+        ("volunteer", "Volunteer"),
+        ("fashion", "Fashion"),
+        ("adventure", "Adventure"),
+        ("spiritual", "Spiritual"),
+        ("academic", "Academic"),
+        ("photography", "Photography"),
+        ("art", "Art"),
+        ("dance", "Dance"),
     ]
-
-    EXPLORE_CATEGORY_IMG_PATH = "images/explore/categories/"
-
-    EXPLORE_CATEGORY_TYPE_IMAGES = {
-        "music": f"{EXPLORE_CATEGORY_IMG_PATH}music.png",
-        "party": f"{EXPLORE_CATEGORY_IMG_PATH}party.png",
-        "concert": f"{EXPLORE_CATEGORY_IMG_PATH}concert.png",
-        "sports": f"{EXPLORE_CATEGORY_IMG_PATH}sports.png",
-        "games": f"{EXPLORE_CATEGORY_IMG_PATH}games.png",
-        "greek": f"{EXPLORE_CATEGORY_IMG_PATH}greek.png",
-    }
 
     event_type = models.CharField(
         _("What type of event is it?"),
@@ -158,11 +161,11 @@ class Event(models.Model):
         _("Describe your event"), null=False, blank=True, default=""
     )
     privacy = models.CharField(
-        _("Would this event be invite-only, private, or public?"),
+        _("Would this event be discoverable or restricted?"),
         max_length=20,
         choices=PRIVACY_CHOICES,
         null=False,
-        blank=True,
+        blank=False,
         default="",
     )
 
@@ -174,9 +177,13 @@ class Event(models.Model):
         default="",
         choices=COUNTRY_CHOICES,
     )
+    
     building_name = models.CharField(
         _("Building Name"), max_length=250, null=False, blank=False, default=""
     )
+    
+    display_event_on_college = models.BooleanField(_("Do you want this event displayed on your campus?"), default=False)
+    
     street = models.CharField(
         _("Street address"), max_length=500, null=False, blank=True, default=""
     )
@@ -228,12 +235,6 @@ class Event(models.Model):
     body_photo_five = models.ImageField(
         _("Fifth"), upload_to="event_images/body/five/", null=False, blank=False
     )
-
-    def get_event_type_image(self):
-        return self.EVENT_TYPE_IMAGES.get(
-            self.event_type,
-            "images/eventManagementApp/host/images/selectors/default.svg",
-        )
 
     def __str__(self):
         return self.title
