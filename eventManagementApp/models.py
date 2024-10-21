@@ -68,7 +68,14 @@ class Event(models.Model):
 
     PRIVACY_CHOICES = [
         ("Discoverable", "Discoverable"),
-        ("Restricted", "Restricted"),
+        ("Invite-Only", "Restricted (To All)"),
+        ("Restricted (To College)", "Restricted (To College)"),
+        ("Restricted (To Org)", "Restricted (To Org)"),
+    ]
+
+    DISCOVERABLE_CHOICES = [
+        ("Open to Anyone", "Open to Anyone"),
+        ("RSVP Required", "RSVP Required"),
     ]
 
     COUNTRY_CHOICES = [("United States", "United States")]
@@ -162,13 +169,20 @@ class Event(models.Model):
     )
     privacy = models.CharField(
         _("Would this event be discoverable or restricted?"),
-        max_length=20,
+        max_length=23,
         choices=PRIVACY_CHOICES,
         null=False,
         blank=False,
         default="",
     )
-
+    discoverability = models.CharField(
+        _("Should this event be open to anyone or RSVP-only?"),
+        max_length=20,
+        choices=DISCOVERABLE_CHOICES,
+        null=False,
+        blank=False,
+        default="",
+    )
     country = models.CharField(
         _("Country"),
         max_length=100,
@@ -177,13 +191,15 @@ class Event(models.Model):
         default="",
         choices=COUNTRY_CHOICES,
     )
-    
+
     building_name = models.CharField(
         _("Building Name"), max_length=250, null=False, blank=False, default=""
     )
-    
-    display_event_on_college = models.BooleanField(_("Do you want this event displayed on your campus?"), default=False)
-    
+
+    display_event_on_college = models.BooleanField(
+        _("Do you want this event displayed on your campus?"), default=False
+    )
+
     street = models.CharField(
         _("Street address"), max_length=500, null=False, blank=True, default=""
     )
