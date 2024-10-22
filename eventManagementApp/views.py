@@ -1,3 +1,4 @@
+from datetime import datetime
 from django.shortcuts import get_object_or_404, redirect, render
 from django.http import JsonResponse
 from django.contrib import messages
@@ -59,7 +60,7 @@ def hostApplyView(request):
 @group_required("Host")
 def hostPortalView(request):
     event = Event.objects.filter(host=request.user)
-    
+
     user_profile = UserProfile.objects.get(user=request.user)
     is_in_college = user_profile.college is not None
 
@@ -73,13 +74,21 @@ def hostPortalView(request):
             )
             event_to_delete.delete()
             return redirect("eventManagement:hostPortal")
-        
-        if 'displayOnCollege' in request.POST:
-            event_to_update = get_object_or_404(Event, eventId=event_id, host=request.user)
-            event_to_update.display_event_on_college = request.POST['displayOnCollege'] == 'True'  # Check for 'true'
+
+        if "displayOnCollege" in request.POST:
+            event_to_update = get_object_or_404(
+                Event, eventId=event_id, host=request.user
+            )
+            event_to_update.display_event_on_college = (
+                request.POST["displayOnCollege"] == "True"
+            )  # Check for 'true'
             event_to_update.save()
             return redirect("eventManagement:hostPortal")
-    return render(request, "eventManagementApp/host/hostPortal.html", {"events": event, "isInCollege": is_in_college})
+    return render(
+        request,
+        "eventManagementApp/host/hostPortal.html",
+        {"events": event, "isInCollege": is_in_college},
+    )
 
 
 @login_required
@@ -107,11 +116,11 @@ def hostCreateEventGenerator(request):
 def eventCreationProcess(request, eventId):
     event = get_object_or_404(Event, eventId=eventId)
     event_type_choices = Event.EVENT_TYPE_CHOICES
-    
-    
 
     if request.method == "POST":
-        eventForm = EventForm(request.POST, request.FILES, instance=event)
+        eventForm = EventForm(
+            request.POST, request.FILES, instance=event, user=request.user
+        )
         go_live = request.POST.get("goLiveInput") == "1"
 
         if eventForm.is_valid():
@@ -129,7 +138,7 @@ def eventCreationProcess(request, eventId):
 
             return redirect("eventManagement:eventOverview", eventId=eventId)
     else:
-        eventForm = EventForm()
+        eventForm = EventForm(user=request.user, instance=event)
 
     return render(
         request,
@@ -140,6 +149,62 @@ def eventCreationProcess(request, eventId):
             "eventTypeChoices": event_type_choices,
         },
     )
+
+
+@login_required
+@group_required("Host")
+def save_event_progress(request, eventId):
+    if request.method == "POST":
+        # Retrieve the event object
+        event = get_object_or_404(
+            Event, eventId=eventId
+        )  # Use `id` to match your model field
+
+        # Handling all relevant fields
+        event.status = request.POST.get("status", "incomplete")
+        event.title = request.POST.get("title", "")
+        event.event_type = request.POST.get("event_type", "")
+
+        # Handling date and time fields
+        date_str = request.POST.get("date", "")
+        start_time_str = request.POST.get("start_time", "")
+        end_time_str = request.POST.get("end_time", "")
+
+        if date_str:
+            event.date = datetime.strptime(date_str, "%Y-%m-%d").date()
+
+        if start_time_str:
+            event.start_time = datetime.strptime(start_time_str, "%H:%M").time()
+
+        if end_time_str:
+            event.end_time = datetime.strptime(end_time_str, "%H:%M").time()
+
+        event.description = request.POST.get("description", "")
+        event.privacy = request.POST.get("privacy", "")
+        event.discoverability_level = request.POST.get("discoverability_level", "")
+        event.country = request.POST.get("country", "")
+        event.building_name = request.POST.get("building_name", "")
+        event.street_address = request.POST.get("street_address", "")
+        event.apt_suite_unit = request.POST.get("apt_suite_unit", "")
+        event.city = request.POST.get("city", "")
+        event.state = request.POST.get("state", "")
+        event.zip_code = request.POST.get("zip_code", "")
+        event.contact_email = request.POST.get("contact_email", "")
+        event.contact_phone = request.POST.get("contact_phone", "")
+        event.contact_website = request.POST.get("contact_website", "")
+        event.contact_instagram = request.POST.get("contact_instagram", "")
+        event.header_photo = request.FILES.get("header_photo", None)
+        event.body_photo_one = request.FILES.get("body_photo_one", None)
+        event.body_photo_two = request.FILES.get("body_photo_two", None)
+        event.body_photo_three = request.FILES.get("body_photo_three", None)
+        event.body_photo_four = request.FILES.get("body_photo_four", None)
+        event.body_photo_five = request.FILES.get("body_photo_five", None)
+
+        event.save()  # Save changes to the database
+
+        return JsonResponse({"success": True})
+
+    return JsonResponse({"error": "Invalid request"}, status=400)
 
 
 @login_required
@@ -169,7 +234,7 @@ def eventTicketingOverview(request, eventId):
             new_ticket = eventTicketForm.save(commit=False)
             new_ticket.event = event
             new_ticket.save()
-            
+
             return redirect("eventManagement:ticketingOverview", eventId=eventId)
     else:
         eventTicketForm = EventTicketForm()

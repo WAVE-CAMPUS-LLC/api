@@ -13,7 +13,7 @@ Create your event — WAVE.
 {% endblock app_page_style %}
 
 {% block script %}
-<script type="text/javascript" src="{% static "scripts/eventManagementApp/host/eventCreationProcess.js" %}"></script>
+<script type="text/javascript" src="{% static "scripts/eventManagementApp/host/eventCreationProcess.js" %}" defer></script>
 <script type="text/javascript" src="{% static "scripts/eventManagementApp/host/photoPreview.js" %}"></script>
 <script type="text/javascript" src="{% static "scripts/eventManagementApp/host/eventTypeSelect.js" %}" defer></script>
 {% endblock script %}
@@ -169,6 +169,51 @@ Create your event — WAVE.
                     </div>
                 </div>
             </section>
+
+            {% if eventForm.discoverability_level %}
+            <section id="stage-section">
+                <input type="hidden" class="section-title" value="Describe your event — WAVE." />
+                <div class="stageSection-container-col">
+                    <div class="section-question">
+                        {{ eventForm.discoverability_level.label }}
+                    </div>
+        
+                    <div class="section-intake">
+                       {{ eventForm.discoverability_level }}
+                    </div>
+                </div>
+            </section>
+            {% endif %}
+
+            {% if eventForm.restricted_college %}
+            <section id="stage-section">
+                <input type="hidden" class="section-title" value="Describe your event — WAVE." />
+                <div class="stageSection-container-col">
+                    <div class="section-question">
+                        {{ eventForm.restricted_college.label }}
+                    </div>
+        
+                    <div class="section-intake">
+                        <input type="{{ eventForm.restricted_college.field.widget.input_type }}" id="{{ eventForm.restricted_college.auto_id }}" name="{{ eventForm.restricted_college.html_name }}" />
+                    </div>
+                </div>
+            </section>
+            {% endif %}
+
+            {% if eventForm.restricted_organization %}
+            <section id="stage-section">
+                <input type="hidden" class="section-title" value="Describe your event — WAVE." />
+                <div class="stageSection-container-col">
+                    <div class="section-question">
+                        {{ eventForm.restricted_organization.label }}
+                    </div>
+        
+                    <div class="section-intake">
+                        <input type="{{ eventForm.restricted_organization.field.widget.input_type }}" id="{{ eventForm.restricted_organization.auto_id }}" name="{{ eventForm.restricted_organization.html_name }}" />
+                    </div>
+                </div>
+            </section>
+            {% endif %}
             
             <section id="stage-section">
                 <input type="hidden" class="section-title" value="Event Location  — WAVE." />
@@ -374,7 +419,7 @@ Create your event — WAVE.
             </section>
         </div>
 
-        <div id="creation-control">
+        <div id="creation-control" data-save-url="{% url 'eventManagement:save_event_progress' event.eventId %}">
             <div class="previousbtn-container">
                 <button id="previous-sectionbtn" class="previous-section" type="button">Previous</button>
             </div>

@@ -18,6 +18,7 @@ urlpatterns = [
         views.eventCreationProcess,
         name="eventCreationProcess",
     ),
+    path('event/save-progress/<uuid:eventId>/', views.save_event_progress, name='save_event_progress'),
     path(
         "event/overview/<uuid:eventId>/",
         views.eventCreatedOverview,
