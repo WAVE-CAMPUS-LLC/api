@@ -71,10 +71,6 @@ class EventForm(forms.ModelForm):
             "start_time",
             "end_time",
             "description",
-            "privacy",
-            "discoverability_level",
-            "restricted_college",
-            "restricted_organization",
             "country",
             "building_name",
             "street",
@@ -100,39 +96,38 @@ class EventForm(forms.ModelForm):
             "status": forms.HiddenInput(),
         }
 
-    def __init__(self, *args, **kwargs):
-        user = kwargs.pop("user", None)
-        privacy = kwargs.pop("privacy", None)
-        super(EventForm, self).__init__(*args, **kwargs)
+    # def __init__(self, *args, **kwargs):
+    #     user = kwargs.pop("user", None)
+    #     privacy = kwargs.pop("privacy", None)
+    #     super(EventForm, self).__init__(*args, **kwargs)
 
-        if user:
-            # Check if user has a college
-            user_profile = UserProfile.objects.filter(user=user).first()
-            if user_profile and user_profile.college:
-                # User is in a college, show college restriction option
-                self.fields["restricted_college"].queryset = College.objects.filter(
-                    collegeId=user_profile.college.collegeId
-                )
-            else:
-                # User is not in a college, remove college restriction option
-                self.fields.pop("restricted_college")
+    #     # if user:
+    #     #     # Check if user has a college
+    #     #     user_profile = UserProfile.objects.filter(user=user).first()
+    #     #     if user_profile and user_profile.college:
+    #     #         # User is in a college, show college restriction option
+    #     #         self.fields["restricted_college"].queryset = College.objects.filter(
+    #     #             collegeId=user_profile.college.collegeId
+    #     #         )
+    #     #     else:
+    #     #         # User is not in a college, remove college restriction option
+    #     #         self.fields.pop("restricted_college")
 
-            # Check if user has organizations
-            organizations = OrganizationMembership.objects.filter(
-                user=user
-            ).select_related("organization")
-            if organizations.exists():
-                # Show organizations in the queryset
-                self.fields["restricted_organization"].queryset = (
-                    Organization.objects.filter(
-                        orgId__in=organizations.values_list("organization", flat=True)
-                    )
-                )
-            else:
-                # User has no organizations, remove organization restriction option
-                self.fields.pop("restricted_organization")
-            if privacy != "discoverable":
-                self.fields.pop("discoverability_level")
+    #     #     # Check if user has organizations
+    #     #     organizations = OrganizationMembership.objects.filter(
+    #     #         user=user
+    #     #     ).select_related("organization")
+    #     #     if organizations.exists():
+    #     #         # Show organizations in the queryset
+    #     #         self.fields["restricted_organization"].queryset = (
+    #     #             Organization.objects.filter(
+    #     #                 orgId__in=organizations.values_list("organization", flat=True)
+    #     #             )
+    #     #         )
+    #     #     else:
+    #     #         # User has no organizations, remove organization restriction option
+    #     #         self.fields.pop("restricted_organization")
+            
 
 
 class EventTicketForm(forms.ModelForm):

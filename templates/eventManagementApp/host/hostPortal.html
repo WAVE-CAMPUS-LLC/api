@@ -34,61 +34,59 @@ Host Dashboard | WAVE.
     <div id="portal-body">
         <div class="control-row">
             <div role="button" type="button" class="dashboard-tab tab-active" data-tab="live-events">Live</div>
-            <div role="button" type="button" class="dashboard-tab" data-tab="upcoming-events">Upcoming</div>
-            <div role="button" type="button" class="dashboard-tab" data-tab="archived-events">Archived</div>
+            <div role="button" type="button" class="dashboard-tab" data-tab="incomplete-events">Incomplete</div>
+            <div role="button" type="button" class="dashboard-tab" data-tab="past-events">Past</div>
         </div>
 
         <div id="portal-body-content">
             <div class="pbc-element-content" id="live-events">
-                {% if events %}
+                {% if liveEvents %}
                 <div id="event-container">
-                    {% for event in events %}
-                        {% if event.status == "live" %}
-                        <div id="port-event-display">
-                            <div class="event-image">
-                                <img src="{{event.header_photo.url}}" />
-                            </div>
-                            <div class="event-information">
-                                <h5>
-                                    {{ event.title }}
-                                </h5>
-                                <div class="event-view">
-                                    <span class="view-containers">
-                                        <a target="_blank" href="{% url "eventManagement:eventOverview" eventId=event.eventId %}">Host View</a>
-                                        <a target="_blank" href="{% url "core:eventDetails" eventId=event.eventId %}">Public View</a>
-                                    </span>
-                                </div>
-                            </div>
-                            <div class="ticketing-delete">
-                                {% if isInCollege %}
-                                <form class="display-on-college" method="POST" id="college-display-form">
-                                    {% csrf_token %}
-                                    <p>Display on college?</p>
-                                    <input type="hidden" name="event_id" value="{{ event.eventId }}">
-                                    <label>
-                                        <input id="displayOnCollegeCheckbox" type="checkbox" name="displayOnCollege" value="true" {% if event.display_event_on_college %} checked {% endif %}>
-                                        <span class="checkbox" />
-                                    </label>
-                                </form>
-                                {% endif %}
-
-                                <div class="sub-row">
-                                    <div class="ticketing">
-                                        <a class="ticketing-link" href="{% url "eventManagement:ticketingOverview" eventId=event.eventId %}">Event Ticketing</a>
-                                    </div>
-
-                                    <div class="event-delete">
-                                        <form method="POST">
-                                            {% csrf_token %}
-                                            <input type="hidden" name="event_id" value="{{ event.eventId }}">
-                                            <button type="submit" role="button" name="eventAction" value="deleteEvent">Delete</button>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
-                            
+                    {% for event in liveEvents %}
+                    <div id="port-event-display">
+                        <div class="event-image">
+                            <img src="{{event.header_photo.url}}" />
                         </div>
-                        {% endif %}
+                        <div class="event-information">
+                            <h5>
+                                {{ event.title }}
+                            </h5>
+                            <div class="event-view">
+                                <span class="view-containers">
+                                    <a target="_blank" href="{% url "eventManagement:eventOverview" eventId=event.eventId %}">Host View</a>
+                                    <a target="_blank" href="{% url "core:eventDetails" eventId=event.eventId %}">Public View</a>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="ticketing-delete">
+                            {% if isInCollege %}
+                            <form class="display-on-college" method="POST" id="college-display-form">
+                                {% csrf_token %}
+                                <p>Display on college?</p>
+                                <input type="hidden" name="event_id" value="{{ event.eventId }}">
+                                <label>
+                                    <input id="displayOnCollegeCheckbox" type="checkbox" name="displayOnCollege" value="true" {% if event.display_event_on_college %} checked {% endif %}>
+                                    <span class="checkbox" />
+                                </label>
+                            </form>
+                            {% endif %}
+
+                            <div class="sub-row">
+                                <div class="ticketing">
+                                    <a class="ticketing-link" href="{% url "eventManagement:ticketingOverview" eventId=event.eventId %}">Event Ticketing</a>
+                                </div>
+
+                                <div class="event-delete">
+                                    <form method="POST">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="event_id" value="{{ event.eventId }}">
+                                        <button type="submit" role="button" name="eventAction" value="deleteEvent">Delete</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        
+                    </div>
                     {% endfor %}
                 </div>
                 {% else %}
@@ -99,17 +97,47 @@ Host Dashboard | WAVE.
                 {% endif %}
             </div>
 
-            <div class="pbc-element-content" id="upcoming-events">
+            <div class="pbc-element-content" id="incomplete-events">
+                {% if incompleteEvents %}
+                <div id="event-container">
+                    {% for event in incompleteEvents %}
+                        <div id="port-event-display">
+                            <div class="event-image">
+                                {% if not event.header_photo %}
+                                <img src="{% static "/images/eventManagementApp/host/incomplete_event.png" %}" />
+                                {% else %}
+                                <img src="{{event.header_photo.url}}" />
+                                {% endif %}
+                            </div>
+                            <div class="event-information">
+                                <h5>
+                                    {% if not event.title %}
+                                    Incomplete Event
+                                    {% else %}
+                                    {{ event.title }}
+                                    {% endif %}
+                                </h5>
+                                <div class="event-view">
+                                    <span class="view-containers">
+                                        <a href="{% url "eventManagement:eventCreationProcess" eventId=event.eventId %}">Finish setup</a>
+                                    </span>
+                                </div>
+                            </div>                            
+                        </div>
+                    {% endfor %}
+                </div>
+                {% else %}
                 <div class="empty-pcb">
                     <img class="empty-image" src="{% static "/images/eventManagementApp/host/empty-listing.svg" %}" />
-                    <p>You currently have no upcoming events to display!</p>
+                    <p>You currently have no incomplete events to display!</p>
                 </div>
+                {% endif %}
             </div>
 
-            <div class="pbc-element-content" id="archived-events">
+            <div class="pbc-element-content" id="past-events">
                 <div class="empty-pcb">
                     <img class="empty-image" src="{% static "/images/eventManagementApp/host/empty-listing.svg" %}" />
-                    <p>You currently have no archived events to display!</p>
+                    <p>You currently have no past events to display!</p>
                 </div>
             </div>
         </div>

@@ -33,7 +33,8 @@ Create your event — WAVE.
     <form method="POST" id="eventForm" enctype="multipart/form-data" data-event-id="{{ event.eventId }}" action="{% url 'eventManagement:eventCreationProcess' event.eventId %}">
         {% csrf_token %}
         <div id="section-container">
-            <section id="stage-section">
+            {% comment %} Stage 1 {% endcomment %}
+            <section id="stage-section" data-validate="false">
                 <input type="hidden" class="section-title" value="Stage 1 - Talk about the event — WAVE." />
                 <div class="stageSection-container-row">
                     <div id="section-description">
@@ -53,7 +54,7 @@ Create your event — WAVE.
                 </diV>
             </section>
 
-            <section id="stage-section">
+            <section id="stage-section" data-validate="true">
                 <input type="hidden" class="section-title" value="Stage 1 - Title your event — WAVE." />
                 <div class="stageSection-container-col">
                     <div class="section-question">
@@ -66,7 +67,7 @@ Create your event — WAVE.
                 </div>
             </section>
 
-            <section id="stage-section" class="scrollable">
+            <section id="stage-section" class="scrollable" data-validate="true">
                 <input type="hidden" class="section-title" value="Stage 1 — Select event type   — WAVE." />
                 <div class="stageSection-container-col">
                     <div class="section-question">
@@ -92,7 +93,7 @@ Create your event — WAVE.
                 </div>
             </section>
 
-            <section id="stage-section">
+            <section id="stage-section" data-validate="true">
                 <input type="hidden" class="section-title" value="Stage 1 - Choose date — WAVE." />
                 <div class="stageSection-container-col">
                     <div class="section-question">
@@ -109,7 +110,7 @@ Create your event — WAVE.
                 </div>
             </section>
 
-            <section id="stage-section">
+            <section id="stage-section" data-validate="true">
                 <input type="hidden" class="section-title" value="Stage 1 - Choose time — WAVE." />
                 <div class="stageSection-container-col">
                     <div class="section-question">
@@ -132,7 +133,7 @@ Create your event — WAVE.
                 </div>
             </section>
 
-            <section id="stage-section">
+            <section id="stage-section"  data-validate="true">
                 <input type="hidden" class="section-title" value="Describe your event — WAVE." />
                 <div class="stageSection-container-col">
                     <div class="section-question">
@@ -143,79 +144,29 @@ Create your event — WAVE.
                         <textarea id="{{ eventForm.description.id_for_label }}" name="{{ eventForm.description.html_name }}"/></textarea>
                     </div>
                 </div>
-            </section>
-
-            <section id="stage-section">
-                <input type="hidden" class="section-title" value="Discoverable or restricted? — WAVE." />
-                <div class="stageSection-container-col">
-                    <div class="section-question">
-                        {{ eventForm.privacy.label }}
-                    </div>
-        
-                    <div class="section-intake">
-                        <select id="event-privacy-select" name="event_privacy">
-                            {% for value, display in eventForm.privacy.field.choices %}
-                                <option value="{{ value }}">{{ display }}</option>
-                            {% endfor %}
-                        </select>
-
-                        <div class="type-input">
-                            {% for value, display in eventForm.privacy.field.choices %}
-                            <div type="button" role="button" class="type-selector" onclick="selectEventPrivacyOption('{{ value }}')" data-value="{{ value }}">
-                                <h6>{{display}}</h6>
-                            </div>
-                            {% endfor %}
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            {% if eventForm.discoverability_level %}
-            <section id="stage-section">
-                <input type="hidden" class="section-title" value="Describe your event — WAVE." />
-                <div class="stageSection-container-col">
-                    <div class="section-question">
-                        {{ eventForm.discoverability_level.label }}
-                    </div>
-        
-                    <div class="section-intake">
-                       {{ eventForm.discoverability_level }}
-                    </div>
-                </div>
-            </section>
-            {% endif %}
-
-            {% if eventForm.restricted_college %}
-            <section id="stage-section">
-                <input type="hidden" class="section-title" value="Describe your event — WAVE." />
-                <div class="stageSection-container-col">
-                    <div class="section-question">
-                        {{ eventForm.restricted_college.label }}
-                    </div>
-        
-                    <div class="section-intake">
-                        <input type="{{ eventForm.restricted_college.field.widget.input_type }}" id="{{ eventForm.restricted_college.auto_id }}" name="{{ eventForm.restricted_college.html_name }}" />
-                    </div>
-                </div>
-            </section>
-            {% endif %}
-
-            {% if eventForm.restricted_organization %}
-            <section id="stage-section">
-                <input type="hidden" class="section-title" value="Describe your event — WAVE." />
-                <div class="stageSection-container-col">
-                    <div class="section-question">
-                        {{ eventForm.restricted_organization.label }}
-                    </div>
-        
-                    <div class="section-intake">
-                        <input type="{{ eventForm.restricted_organization.field.widget.input_type }}" id="{{ eventForm.restricted_organization.auto_id }}" name="{{ eventForm.restricted_organization.html_name }}" />
-                    </div>
-                </div>
-            </section>
-            {% endif %}
+            </section>          
             
-            <section id="stage-section">
+            {% comment %} Stage 2 {% endcomment %}
+            <section id="stage-section" data-validate="false">
+                <input type="hidden" class="section-title" value="Stage 2 - Provide event ticketing information — WAVE." />
+                <div class="stageSection-container-row">
+                    <div id="section-description">
+                        <h3>Stage 2</h3>
+                        <h4>
+                            Location Information
+                        </h4>
+                        <p>
+                            Where is the event taking place? Provide the address.
+                        </p>
+                    </div>
+            
+                    <div id="section-image">
+                        <img src="{% static "images/eventManagementApp/host/images/contact.png" %}" />
+                    </div>
+                </diV>
+            </section>
+            
+            <section id="stage-section" data-validate="true">
                 <input type="hidden" class="section-title" value="Event Location  — WAVE." />
                 <div class="stageSection-container-col">
                     <div class="section-question">
@@ -270,7 +221,8 @@ Create your event — WAVE.
                 </div>
             </section>
             
-            <section id="stage-section">
+            {% comment %} Stage 3 {% endcomment %}
+            <section id="stage-section" data-validate="false">
                 <input type="hidden" class="section-title" value="Stage 2 - Provide event ticketing information — WAVE." />
                 <div class="stageSection-container-row">
                     <div id="section-description">
@@ -289,7 +241,7 @@ Create your event — WAVE.
                 </diV>
             </section>
 
-            <section id="stage-section">
+            <section id="stage-section" data-validate="true">
                 <input type="hidden" class="section-title" value="Tickets made available  — WAVE." />
                 <div class="stageSection-container-col">
                     <div class="section-question">
@@ -329,7 +281,7 @@ Create your event — WAVE.
                 </div>
             </section>
             
-            <section id="stage-section">
+            <section id="stage-section" data-validate="false">
                 <input type="hidden" class="section-title" value="Stage 2 - Provide event ticketing information — WAVE." />
                 <div class="stageSection-container-row">
                     <div id="section-description">
@@ -348,7 +300,7 @@ Create your event — WAVE.
                 </diV>
             </section>
 
-            <section id="stage-section">
+            <section id="stage-section" data-validate="true">
                 <input type="hidden" class="section-title" value="Tickets made available  — WAVE." />
                 <div class="stageSection-container-col">
                     <div class="section-question">
@@ -368,7 +320,7 @@ Create your event — WAVE.
                 </div>
             </section>
 
-            <section id="stage-section">
+            <section id="stage-section" data-validate="true">
                 <input type="hidden" class="section-title" value="Tickets made available  — WAVE." />
                 <div class="stageSection-container-col">
                     <div class="section-question">
@@ -410,7 +362,7 @@ Create your event — WAVE.
                 </div>
             </section>
 
-            <section id="stage-section">
+            <section id="stage-section" data-validate="true">
                 <input type="hidden" class="section-title" value="Go live!  — WAVE." />
                 <div class="stage-final">
                     <input type="hidden" id="goLiveInput" name="goLiveInput" value="0">

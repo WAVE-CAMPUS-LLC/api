@@ -59,7 +59,8 @@ def hostApplyView(request):
 @login_required
 @group_required("Host")
 def hostPortalView(request):
-    event = Event.objects.filter(host=request.user)
+    live_event = Event.objects.filter(host=request.user, status="live")
+    incomplete_event = Event.objects.filter(host=request.user, status="incomplete")
 
     user_profile = UserProfile.objects.get(user=request.user)
     is_in_college = user_profile.college is not None
@@ -87,7 +88,7 @@ def hostPortalView(request):
     return render(
         request,
         "eventManagementApp/host/hostPortal.html",
-        {"events": event, "isInCollege": is_in_college},
+        {"liveEvents": live_event, 'incompleteEvents':incomplete_event, "isInCollege": is_in_college},
     )
 
 
@@ -119,7 +120,7 @@ def eventCreationProcess(request, eventId):
 
     if request.method == "POST":
         eventForm = EventForm(
-            request.POST, request.FILES, instance=event, user=request.user
+            request.POST, request.FILES, instance=event
         )
         go_live = request.POST.get("goLiveInput") == "1"
 
@@ -138,7 +139,7 @@ def eventCreationProcess(request, eventId):
 
             return redirect("eventManagement:eventOverview", eventId=eventId)
     else:
-        eventForm = EventForm(user=request.user, instance=event)
+        eventForm = EventForm(instance=event)
 
     return render(
         request,
@@ -180,8 +181,6 @@ def save_event_progress(request, eventId):
             event.end_time = datetime.strptime(end_time_str, "%H:%M").time()
 
         event.description = request.POST.get("description", "")
-        event.privacy = request.POST.get("privacy", "")
-        event.discoverability_level = request.POST.get("discoverability_level", "")
         event.country = request.POST.get("country", "")
         event.building_name = request.POST.get("building_name", "")
         event.street_address = request.POST.get("street_address", "")

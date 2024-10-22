@@ -606,6 +606,12 @@
     background-color: #008d95;
 }
 
+.next-section:disabled {
+    background-color: #aeaeaeab;
+    border: 1px solid #aeaeaeab;
+    color: white;
+    cursor: not-allowed;
+}
 
 
 #suggestions {

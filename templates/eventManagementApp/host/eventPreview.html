@@ -223,11 +223,25 @@
             <div class="information">
                 <p>Body Photos</p>
                 <div class="body-photo">
+                    {% if event.body_photo_one %}
                     <img src="{{ event.body_photo_one.url }}" />
+                    {% endif %}
+
+                    {% if event.body_photo_two %}
                     <img src="{{ event.body_photo_two.url }}" />
+                    {% endif %}
+                    
+                    {% if event.body_photo_three %}
                     <img src="{{ event.body_photo_three.url }}" />
+                    {% endif %}
+                    
+                    {% if event.body_photo_four %}
                     <img src="{{ event.body_photo_four.url }}" />
+                    {% endif %}
+                    
+                    {% if event.body_photo_five %}
                     <img src="{{ event.body_photo_five.url }}" />
+                    {% endif %}
                 </div>
             </div>
             <div class="edit">
