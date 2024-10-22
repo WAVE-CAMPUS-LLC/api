@@ -50,24 +50,23 @@ from .forms import (
     UpdateImageThreeForm,
     CollegeForm,
 )
-from wave_v1.decorators import (
-    admin_required,
-    superAdmin_required,
+from wave_v1.decorators import (    
     check_suspension,
+    group_required
 )
 
 
 # Create your views here.
 @login_required(login_url="authentication:login")
 @check_suspension
-@admin_required
+@group_required("Admin")
 def adminPortalView(request):
     return render(request, "adminDashboardApp/index.html")
 
 
 @login_required(login_url="authentication:login")
 @check_suspension
-@admin_required
+@group_required("Admin")
 def adminDashboardView(request):
     return render(request, "adminDashboardApp/tabs/dashboard.html")
 
@@ -75,7 +74,7 @@ def adminDashboardView(request):
 # Department Management
 @login_required(login_url="authentication:login")
 @check_suspension
-@admin_required
+@group_required("Admin")
 def adminDepartmentView(request):
     """
     The `adminDepartmentView` function checks if the user is a superuser, processes a form submission to
@@ -109,7 +108,7 @@ def adminDepartmentView(request):
 
 @login_required(login_url="authentication:login")
 @check_suspension
-@admin_required
+@group_required("Admin")
 def adminDepartmentDetailedView(request, departmentID, department_name):
     """
     The function `adminDepartmentDetailedView` handles detailed view and management of department
@@ -187,7 +186,7 @@ def adminDepartmentDetailedView(request, departmentID, department_name):
 
 @login_required(login_url="authentication:login")
 @check_suspension
-@admin_required
+@group_required("Admin")
 def adminApplicationsView(request):
     hostApplications = HostApplication.objects.all()
 
@@ -251,14 +250,14 @@ def sendHostDenyEmail(applicantEmail):
 
 @login_required(login_url="authentication:login")
 @check_suspension
-@admin_required
+@group_required("Admin")
 def adminEventsView(request):
     return render(request, "adminDashboardApp/tabs/events.html")
 
 
 @login_required(login_url="authentication:login")
 @check_suspension
-@admin_required
+@group_required("Admin")
 def adminUsersView(request):
     # Going into the CustomUser database which holds all the users and fetching them to be displayed.
     total_users = CustomUser.objects.all()
@@ -267,7 +266,7 @@ def adminUsersView(request):
 
 @login_required(login_url="authentication:login")
 @check_suspension
-@admin_required
+@group_required("Admin")
 def adminUserDetailedView(request, username):
     user_in_view = get_object_or_404(CustomUser, username=username)
     user_profile = UserProfile.objects.get(user=user_in_view)
@@ -319,7 +318,7 @@ def adminUserDetailedView(request, username):
 
 @login_required(login_url="authentication:login")
 @check_suspension
-@admin_required
+@group_required("Admin")
 def adminRoleView(request):
     createGroup = CreateGroupForm()
     all_groups = Group.objects.all()
@@ -367,7 +366,7 @@ def adminRoleView(request):
 
 @login_required(login_url="authentication:login")
 @check_suspension
-@admin_required
+@group_required("Admin")
 def adminCareersView(request):
     # Querying every single career role.
     all_career_roles = CareerRole.objects.all()
@@ -380,7 +379,7 @@ def adminCareersView(request):
 
 @login_required(login_url="authentication:login")
 @check_suspension
-@admin_required
+@group_required("Admin")
 def adminCareerDetailView(request, roleID):
     """
     The `adminCareerDetailView` function handles viewing and managing career details for admin users,
@@ -451,14 +450,14 @@ def sendDeniedApplicantEmail(applicantEmail):
 
 @login_required(login_url="authentication:login")
 @check_suspension
-@admin_required
+@group_required("Admin")
 def adminFinanceView(request):
     return render(request, "adminDashboardApp/tabs/financial.html")
 
 
 @login_required(login_url="authentication:login")
 @check_suspension
-@admin_required
+@group_required("Admin")
 def adminSupportView(request):
     all_support_tickets = SupportTicket.objects.all()
 
@@ -484,7 +483,7 @@ def adminSupportView(request):
 
 @login_required(login_url="authentication:login")
 @check_suspension
-@admin_required
+@group_required("Admin")
 def adminFeedbackView(request):
     """
     The `adminFeedbackView` function displays feedback offers for superusers and redirects
@@ -511,7 +510,7 @@ def adminFeedbackView(request):
 
 @login_required
 @check_suspension
-@admin_required
+@group_required("Admin")
 def adminCollegeView(request):
     colleges = College.objects.annotate(member_count=Count("membership"))
     requestedColleges = CollegeRequest.objects.all()
@@ -551,7 +550,7 @@ def adminCollegeView(request):
 
 @login_required
 @check_suspension
-@admin_required
+@group_required("Admin")
 def adminCollegeDetailView(request, collegeId):
     college = get_object_or_404(College, collegeId=collegeId)
 
@@ -641,14 +640,14 @@ def send_invite(email, college):
 
 @login_required
 @check_suspension
-@admin_required
+@group_required("Admin")
 def adminCollegeOrgsView(request):
     return render(request, "adminDashboardApp/tabs/organizations.html")
 
 
 @login_required
 @check_suspension
-@admin_required
+@group_required("Admin")
 def adminNewsRoomView(request):
     """
     The function `adminNewsRoomView` retrieves all news articles from the Newsroom model and renders
@@ -668,7 +667,7 @@ def adminNewsRoomView(request):
 
 @login_required
 @check_suspension
-@admin_required
+@group_required("Admin")
 def adminCreateNewsView(request):
     """
     This Python function handles the creation of news articles by processing form data and saving it to
@@ -704,7 +703,7 @@ def adminCreateNewsView(request):
 
 @login_required
 @check_suspension
-@admin_required
+@group_required("Admin")
 def adminEditNewsView(request, newsId):
     """
     This function is likely used to display a view for editing news articles by an admin.
@@ -827,7 +826,7 @@ def adminEditNewsView(request, newsId):
 
 @login_required
 @check_suspension
-@admin_required
+@group_required("Admin")
 def adminEmailingView(request):
     """
     The `adminEmailingView` function retrieves all active user profiles and renders them in an emailing
@@ -867,7 +866,7 @@ resend.api_key = settings.RESEND_API_KEY
 @require_POST
 @login_required
 @check_suspension
-@admin_required
+@group_required("Admin")
 def send_email(request):
     try:
         data = json.loads(request.body)

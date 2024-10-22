@@ -1,0 +1,67 @@
+body {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+}
+
+
+#navHeader {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    padding-top: 30px;
+}
+
+#logo {
+    font-family: Easy-Grotesk-Black;
+    font-size: 40px;
+}
+
+#logo a {
+    color: black;
+    text-decoration: none;
+}
+
+#logo a span {
+    color: #008d95;
+}
+
+#joinCardContainer {
+    /** Centering the card in the middle of the page **/
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    padding-top: 150px;
+    padding-bottom: 10px;
+
+    flex-direction: column; /** Making elements be displayed in rows. **/
+    row-gap: 20px; /** Adding a gap between elements horizontally. **/
+
+    /** Taking up full page width and height. **/
+    max-width: 100vw;
+    max-height: 100vh;
+    width: 100%;
+    height: 100%;
+
+    overflow-y: auto;
+}
+
+.display-info {
+    font-family: Wanted-Bold;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.display-info h3 {
+    display: flex;
+    justify-content: center;
+    text-align: center;
+}
+
+.redirectText {
+    font-family: Wanted-Variable;
+    font-size: 15px;
+    text-align: center;
+}

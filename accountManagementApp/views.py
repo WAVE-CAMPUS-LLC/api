@@ -26,7 +26,9 @@ def profileView(request):
     userRequest = request.user
     blogItems = Blog.objects.filter(created_by=userRequest)
     userProfile = UserProfile.objects.get(user=userRequest)
-
+    print(userProfile.profile_photo)
+    print(userRequest.email_verified)
+    print(userRequest.user_preferences_completed)
     
     return render(
         request,
@@ -46,17 +48,19 @@ def profilePreferences(request):
     user = request.user
     profile = UserProfile.objects.get(user=user)
     profile_form = UserProfileForm(instance=profile)
+    
 
     if request.method == "POST":
-        form = UserProfileForm(request.POST, instance=profile)
+        form = UserProfileForm(request.POST, request.FILES, instance=profile)
         if form.is_valid():
+            user.user_preferences_completed = True
             form.save()
             return redirect("accountManagement:userAccount")
 
     return render(
         request,
         "accountManagementApp/extras/preferences.html",
-        {"updateUserProfileForm": profile_form, "user": user},
+        {"updateUserProfileForm": profile_form, "user": user, "profile":profile},
     )
 
 

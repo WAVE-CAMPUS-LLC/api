@@ -62,59 +62,34 @@
                                         Create Event
                                     </a>
                                 </div>
+                                {% if events %}
                                 <div class="collegeEventContainer">
+                                    
+                                    {% for event in events %}
                                     <a target="_blank" href="" class="category-event-card">
                                         <div class="category-image">
                                             <img src="{% static "images/explore/display.png" %}" alt="">
                                         </div>
                                         <div class="category-event-name">
-                                            <h2 id="eventTitle">Event Demo</h2>
+                                            <h2 id="eventTitle">{{ event.title }}</h2>
                                             <div class="eventSubInfo">
-                                                <p id="eventLocation">Hosted by @enoshlartey</p>
+                                                <p id="eventLocation">Hosted by @{{ event.host.username }}</p>
                                                 <p id="eventDate">28th July, 2024</p>
                                             </div>
                                         </div>
                                     </a>
-    
-                                    <a target="_blank" href="" class="category-event-card">
-                                        <div class="category-image">
-                                            <img src="{% static "images/explore/display.png" %}" alt="">
-                                        </div>
-                                        <div class="category-event-name">
-                                            <h2 id="eventTitle">Event Demo</h2>
-                                            <div class="eventSubInfo">
-                                                <p id="eventLocation">Hosted by @enoshlartey</p>
-                                                <p id="eventDate">28th July, 2024</p>
-                                            </div>
-                                        </div>
-                                    </a>
-    
-                                    <a target="_blank" href="" class="category-event-card">
-                                        <div class="category-image">
-                                            <img src="{% static "images/explore/display.png" %}" alt="">
-                                        </div>
-                                        <div class="category-event-name">
-                                            <h2 id="eventTitle">Event Demo</h2>
-                                            <div class="eventSubInfo">
-                                                <p id="eventLocation">Hosted by @enoshlartey</p>
-                                                <p id="eventDate">28th July, 2024</p>
-                                            </div>
-                                        </div>
-                                    </a>
-    
-                                    <a target="_blank" href="" class="category-event-card">
-                                        <div class="category-image">
-                                            <img src="{% static "images/explore/display.png" %}" alt="">
-                                        </div>
-                                        <div class="category-event-name">
-                                            <h2 id="eventTitle">Event Demo</h2>
-                                            <div class="eventSubInfo">
-                                                <p id="eventLocation">Hosted by @enoshlartey</p>
-                                                <p id="eventDate">28th July, 2024</p>
-                                            </div>
-                                        </div>
-                                    </a>
+                                    {% endfor %}
                                 </div>
+                                {% else %}
+                                    <div class="emptyContainer">
+                                        <div>
+                                            <img src="{% static "/images/collegeManagementApp/collegeInformation/empty-listing.svg" %}" />
+                                        </div>
+                                        <div>
+                                            <p>No events on this campus!</p>
+                                        </div>
+                                    </div>
+                                    {% endif %}
                             </div>
                         </div>
                         
@@ -181,7 +156,7 @@
                                     {% for member in collegeMembers %}
                                     <a target="_blank" href="{% url "social:publicProfile" username=member.user.username %}" class="collegeMemberCard">
                                         <div class="memberPfp">
-                                            <img src="{% static "/images/collegeManagementApp/pfp.jpg" %}" />
+                                            <img src="{{ user_profile.profile_photo.url }}" />
                                         </div>
                                         <div class="memberBody">
                                             <h5>{{member.user.first_name}} {{member.user.last_name}}</h5>

@@ -171,11 +171,14 @@
 }
 
 /* Section: Profile Information */
-.profile-picture-intake {
-    height: 20%;
+.header-photo-intake {
+    height: 80%;
     width: 80%;
 
-    padding: 50px;
+    padding: 100px;
+    padding-bottom: 50px;
+    padding-left: 50px;
+    padding-right: 50px;
     border: 2px solid #aeaeaeab;
     border-radius: 20px;
 
@@ -185,13 +188,15 @@
     flex-direction: column;
     gap: 20px;
 }
-#profile-picture-preview {
+
+#header-photo-preview {
     max-width: 100%;
     display: none;
     height: auto;
-    max-height: 200px;
+    max-height: 400px;
     border-radius: 20px;
 }
+
 
 .upload-profile-picture {
     border: 1px solid transparent;

@@ -2,8 +2,10 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.http import JsonResponse
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from wave_v1.decorators import group_required
 
 
+from accountManagementApp.models import UserProfile
 from .forms import EventTicketForm, HostApplicationForm, EventForm
 from .models import (
     EventTicket,
@@ -54,8 +56,12 @@ def hostApplyView(request):
 
 
 @login_required
+@group_required("Host")
 def hostPortalView(request):
     event = Event.objects.filter(host=request.user)
+    
+    user_profile = UserProfile.objects.get(user=request.user)
+    is_in_college = user_profile.college is not None
 
     if request.method == "POST":
         action = request.POST.get("eventAction")
@@ -67,20 +73,29 @@ def hostPortalView(request):
             )
             event_to_delete.delete()
             return redirect("eventManagement:hostPortal")
-    return render(request, "eventManagementApp/host/hostPortal.html", {"events": event})
+        
+        if 'displayOnCollege' in request.POST:
+            event_to_update = get_object_or_404(Event, eventId=event_id, host=request.user)
+            event_to_update.display_event_on_college = request.POST['displayOnCollege'] == 'True'  # Check for 'true'
+            event_to_update.save()
+            return redirect("eventManagement:hostPortal")
+    return render(request, "eventManagementApp/host/hostPortal.html", {"events": event, "isInCollege": is_in_college})
 
 
 @login_required
+@group_required("Host")
 def hostGuideView(request):
     return render(request, "eventManagementApp/host/hostGuide.html")
 
 
 @login_required
+@group_required("Host")
 def hostCreateEvent(request):
     return render(request, "eventManagementApp/host/createEvent.html")
 
 
 @login_required
+@group_required("Host")
 def hostCreateEventGenerator(request):
     event = Event.objects.create(host=request.user)
 
@@ -88,10 +103,12 @@ def hostCreateEventGenerator(request):
 
 
 @login_required
+@group_required("Host")
 def eventCreationProcess(request, eventId):
     event = get_object_or_404(Event, eventId=eventId)
     event_type_choices = Event.EVENT_TYPE_CHOICES
-    event_type_images = Event.EVENT_TYPE_IMAGES
+    
+    
 
     if request.method == "POST":
         eventForm = EventForm(request.POST, request.FILES, instance=event)
@@ -121,12 +138,12 @@ def eventCreationProcess(request, eventId):
             "event": event,
             "eventForm": eventForm,
             "eventTypeChoices": event_type_choices,
-            "eventTypeImages": event_type_images,
         },
     )
 
 
 @login_required
+@group_required("Host")
 def eventCreatedOverview(request, eventId):
     event = get_object_or_404(Event, eventId=eventId)
     if request.method == "POST":
@@ -141,6 +158,7 @@ def eventCreatedOverview(request, eventId):
 
 
 @login_required
+@group_required("Host")
 def eventTicketingOverview(request, eventId):
     event = get_object_or_404(Event, eventId=eventId)
     eventTicket = EventTicket.objects.filter(event=event)

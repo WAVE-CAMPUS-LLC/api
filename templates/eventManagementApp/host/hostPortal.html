@@ -11,7 +11,8 @@ Host Dashboard | WAVE.
 {% endblock app_page_style %}
 
 {% block script %}
-<script type="text/javascript" src="{% static "scripts/eventManagementApp/host/hostPortal.js" %}"></script>
+<script type="text/javascript" src="{% static "scripts/eventManagementApp/host/hostPortal.js" %}" defer></script>
+<script type="text/javascript" src="{% static "scripts/eventManagementApp/host/displayOnCollege.js" %}" defer></script>
 {% endblock script %}
 
 
@@ -51,11 +52,7 @@ Host Dashboard | WAVE.
                                 <h5>
                                     {{ event.title }}
                                 </h5>
-                                <p>{{ event.date }}</p>
                                 <div class="event-view">
-                                    <h6>
-                                        View Event
-                                    </h6>
                                     <span class="view-containers">
                                         <a target="_blank" href="{% url "eventManagement:eventOverview" eventId=event.eventId %}">Host View</a>
                                         <a target="_blank" href="{% url "core:eventDetails" eventId=event.eventId %}">Public View</a>
@@ -63,16 +60,30 @@ Host Dashboard | WAVE.
                                 </div>
                             </div>
                             <div class="ticketing-delete">
-                                <div class="ticketing">
-                                    <a class="ticketing-link" href="{% url "eventManagement:ticketingOverview" eventId=event.eventId %}">Event Ticketing</a>
-                                </div>
+                                {% if isInCollege %}
+                                <form class="display-on-college" method="POST" id="college-display-form">
+                                    {% csrf_token %}
+                                    <p>Display on college?</p>
+                                    <input type="hidden" name="event_id" value="{{ event.eventId }}">
+                                    <label>
+                                        <input id="displayOnCollegeCheckbox" type="checkbox" name="displayOnCollege" value="true" {% if event.display_event_on_college %} checked {% endif %}>
+                                        <span class="checkbox" />
+                                    </label>
+                                </form>
+                                {% endif %}
 
-                                <div class="event-delete">
-                                    <form method="POST">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="event_id" value="{{ event.eventId }}">
-                                        <button type="submit" role="button" name="eventAction" value="deleteEvent">Delete</button>
-                                    </form>
+                                <div class="sub-row">
+                                    <div class="ticketing">
+                                        <a class="ticketing-link" href="{% url "eventManagement:ticketingOverview" eventId=event.eventId %}">Event Ticketing</a>
+                                    </div>
+
+                                    <div class="event-delete">
+                                        <form method="POST">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="event_id" value="{{ event.eventId }}">
+                                            <button type="submit" role="button" name="eventAction" value="deleteEvent">Delete</button>
+                                        </form>
+                                    </div>
                                 </div>
                             </div>
                             
