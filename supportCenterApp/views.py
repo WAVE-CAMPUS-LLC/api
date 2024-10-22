@@ -101,6 +101,9 @@ greetings = [
     "Thanks for the help",
     "Good",
     "Great",
+    "I need help",
+    "Can you help me?",
+    "I have a question"
     ]
 
 
