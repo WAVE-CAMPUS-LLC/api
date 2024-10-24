@@ -51,12 +51,6 @@ Host Dashboard | WAVE.
                             <h5>
                                 {{ event.title }}
                             </h5>
-                            <div class="event-view">
-                                <span class="view-containers">
-                                    <a target="_blank" href="{% url "eventManagement:eventOverview" eventId=event.eventId %}">Host View</a>
-                                    <a target="_blank" href="{% url "core:eventDetails" eventId=event.eventId %}">Public View</a>
-                                </span>
-                            </div>
                         </div>
                         <div class="ticketing-delete">
                             {% if isInCollege %}
@@ -73,15 +67,11 @@ Host Dashboard | WAVE.
 
                             <div class="sub-row">
                                 <div class="ticketing">
-                                    <a class="ticketing-link" href="{% url "eventManagement:ticketingOverview" eventId=event.eventId %}">Event Ticketing</a>
+                                    <a class="ticketing-link" href="{% url "eventManagement:eventManagement" eventId=event.eventId %}">Event Ticketing</a>
                                 </div>
 
-                                <div class="event-delete">
-                                    <form method="POST">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="event_id" value="{{ event.eventId }}">
-                                        <button type="submit" role="button" name="eventAction" value="deleteEvent">Delete</button>
-                                    </form>
+                                <div class="privacy">
+                                    <a class="ticketing-link" href="{% url "eventManagement:eventManagement" eventId=event.eventId %}">Privacy Settings</a>
                                 </div>
                             </div>
                         </div>

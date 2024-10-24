@@ -88,7 +88,11 @@ def hostPortalView(request):
     return render(
         request,
         "eventManagementApp/host/hostPortal.html",
-        {"liveEvents": live_event, 'incompleteEvents':incomplete_event, "isInCollege": is_in_college},
+        {
+            "liveEvents": live_event,
+            "incompleteEvents": incomplete_event,
+            "isInCollege": is_in_college,
+        },
     )
 
 
@@ -119,9 +123,7 @@ def eventCreationProcess(request, eventId):
     event_type_choices = Event.EVENT_TYPE_CHOICES
 
     if request.method == "POST":
-        eventForm = EventForm(
-            request.POST, request.FILES, instance=event
-        )
+        eventForm = EventForm(request.POST, request.FILES, instance=event)
         go_live = request.POST.get("goLiveInput") == "1"
 
         if eventForm.is_valid():
@@ -209,8 +211,10 @@ def save_event_progress(request, eventId):
 
 @login_required
 @group_required("Host")
-def eventCreatedOverview(request, eventId):
+def eventManagement(request, eventId):
     event = get_object_or_404(Event, eventId=eventId)
+    user_profile = UserProfile.objects.get(user=request.user)
+    is_in_college = user_profile.college is not None
     if request.method == "POST":
         action = request.POST.get("eventAction")
 
@@ -218,7 +222,9 @@ def eventCreatedOverview(request, eventId):
             event.delete()
             return redirect("eventManagement:hostPortal")
     return render(
-        request, "eventManagementApp/host/eventPreview.html", {"event": event}
+        request,
+        "eventManagementApp/host/eventManagement.html",
+        {"event": event, "isInCollege": is_in_college, "userProfile": user_profile},
     )
 
 

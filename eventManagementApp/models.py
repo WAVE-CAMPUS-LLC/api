@@ -98,13 +98,8 @@ class Event(models.Model):
         ("Org Only", "Org Only"),
     ]
 
-    DISCOVERABLE_CHOICES = [
-        ("Open to Anyone", "Open to Anyone"),
-        ("RSVP Required", "RSVP Required"),
-    ]
-
     COUNTRY_CHOICES = [("United States", "United States")]
-    
+
     EXPLORE_TYPE_CHOICES = [
         ("sports", "Sports"),
         ("social", "Social"),
@@ -126,7 +121,6 @@ class Event(models.Model):
         ("art", "Art"),
         ("dance", "Dance"),
     ]
-    
 
     eventId = models.UUIDField(
         primary_key=True, default=uuid.uuid4, editable=False, unique=True
@@ -135,7 +129,7 @@ class Event(models.Model):
     host = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="events"
     )
-    
+
     status = models.CharField(
         max_length=20,
         choices=STATUS_CHOICES,
@@ -160,7 +154,7 @@ class Event(models.Model):
         blank=True,
         default="",
     )
-    
+
     date = models.DateField(
         _("Choose date"), null=True, blank=True, default=timezone.now
     )
@@ -181,31 +175,7 @@ class Event(models.Model):
         blank=True,
         default="",
     )
-    discoverability_level = models.CharField(
-        _("Should this event be open to anyone or RSVP-only?"),
-        max_length=20,
-        choices=DISCOVERABLE_CHOICES,
-        null=True,
-        blank=True,
-        default="",
-    )
-    
-    restricted_college = models.ForeignKey(
-        College,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="restricted_events"
-    )
-    
-    restricted_organization = models.ForeignKey(
-        Organization,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="restricted_events"
-    )
-    
+
     country = models.CharField(
         _("Country"),
         max_length=100,
@@ -220,13 +190,16 @@ class Event(models.Model):
     )
 
     display_event_on_college = models.BooleanField(
-        _("Do you want this event displayed on your campus?"), null=True, blank=True, default=False
+        _("Do you want this event displayed on your campus?"),
+        null=True,
+        blank=True,
+        default=False,
     )
 
     street = models.CharField(
         _("Street address"), max_length=500, null=True, blank=True, default=""
     )
-    
+
     apt_suite_unit = models.CharField(
         _("Appt, suite, unit (optional)"),
         max_length=150,
@@ -234,7 +207,7 @@ class Event(models.Model):
         null=True,
         default="",
     )
-    
+
     city = models.CharField(
         _("City / town"), max_length=100, null=True, blank=True, default=""
     )
@@ -279,6 +252,39 @@ class Event(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class EventPrivacy(models.Model):
+    event = models.OneToOneField(
+        "Event", on_delete=models.CASCADE, related_name="privacy_details"
+    )
+
+    DISCOVERABILITY_CHOICES = [
+        ("open", "Open to Anyone"),
+        ("rsvp", "RSVP Required"),
+    ]
+
+    RESTRICTION_CHOICES = [
+        ("invite_only", "Invite Only"),
+        ("college", "Restricted to College"),
+        ("organization", "Restricted to Organization"),
+    ]
+
+    discoverability_level = models.CharField(
+        max_length=10, choices=DISCOVERABILITY_CHOICES, blank=True, null=True
+    )
+    restriction_type = models.CharField(
+        max_length=20, choices=RESTRICTION_CHOICES, blank=True, null=True
+    )
+    restricted_college = models.ForeignKey(
+        College, on_delete=models.SET_NULL, blank=True, null=True
+    )
+    restricted_organization = models.ForeignKey(
+        Organization, on_delete=models.SET_NULL, blank=True, null=True
+    )
+
+    def __str__(self):
+        return f"{self.event.title} Privacy Settings"
 
 
 class EventTicket(models.Model):
