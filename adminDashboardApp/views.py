@@ -50,6 +50,7 @@ from .forms import (
     UpdateImageThreeForm,
     CollegeForm,
 )
+from supportCenterApp.models import SupportTicket, SupportTicketMessage
 from wave_v1.decorators import (    
     check_suspension,
     group_required
@@ -890,3 +891,32 @@ def send_email(request):
 
     except Exception as e:
         return JsonResponse({"success": False, "error": f"Error: {str(e)}"})
+
+@login_required
+def admin_ticket_details(request, ticket_id):
+    ticket = get_object_or_404(SupportTicket, ticket_id=ticket_id)
+    return render(request, 'adminDashboardApp/tabs/admin_ticket_details.html', {'ticket': ticket})
+
+@login_required
+def admin_send_ticket_reply(request, ticket_id):
+    ticket = get_object_or_404(SupportTicket, ticket_id=ticket_id)
+    if request.method == 'POST':
+        message = request.POST.get('message')
+        if message:
+            SupportTicketMessage.objects.create(
+                ticket=ticket,
+                sender=request.user,
+                message=message
+            )
+    return redirect('waveAdmin:admin_ticket_details', ticket_id=ticket_id)
+
+@login_required
+def toggle_ticket_status(request, ticket_id):
+    ticket = get_object_or_404(SupportTicket, ticket_id=ticket_id)
+    if request.method == 'POST':
+        if ticket.status == 'Closed':
+            ticket.status = 'Open'
+        else:
+            ticket.status = 'Closed'
+        ticket.save()
+        return redirect('waveAdmin:admin_ticket_details', ticket_id=ticket_id)

@@ -36,5 +36,8 @@ urlpatterns = [
     path("newsroom/<uuid:newsId>/edit/", views.adminEditNewsView, name="editNews"),
     
     path("emailing/", views.adminEmailingView, name="emailing"),
-    path("send_emailwith_resend/", views.send_email, name="resend-emailing")
+    path("send_emailwith_resend/", views.send_email, name="resend-emailing"),
+    path('ticket/<str:ticket_id>/', views.admin_ticket_details, name='admin_ticket_details'),
+    path('send_ticket_reply/<str:ticket_id>/', views.admin_send_ticket_reply, name='admin_send_ticket_reply'),
+    path('toggle_ticket_status/<str:ticket_id>/', views.toggle_ticket_status, name='toggle_ticket_status'),
 ]

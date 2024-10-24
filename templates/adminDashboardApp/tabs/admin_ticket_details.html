@@ -1,0 +1,59 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}
+WAVE. — Admin Ticket #{{ ticket.ticket_id }}
+{% endblock title %}
+
+{% block app_page_style %}
+<link rel="stylesheet" type="text/css" href="{% static "/styles/adminDashboardApp/tabs/admin_ticket_details.css" %}" />
+{% endblock app_page_style %}
+
+{% block script %}
+{% endblock script %}
+
+{% block header %}
+{% include "partials/nav-footer/nav/admin_nav.html" %}
+{% endblock header %}
+
+{% block container_art %}
+<div id="container-art">
+    <div class="ticket-heading">
+        <div class="ticket-header">
+            <h3>Admin Support Ticket ID: #{{ ticket.ticket_id }} </h3>
+        </div>
+    </div>
+</div>
+{% endblock container_art %}
+
+{% block body %}
+<div id="ticket-info-container">
+    <h3>Support Ticket ID: #{{ ticket.ticket_id }}</h3>
+    <form method="post" action="{% url 'waveAdmin:toggle_ticket_status' ticket.ticket_id %}" style="display: inline;">
+        {% csrf_token %}
+        {% if ticket.status == 'Closed' %}
+        <button type="submit" style="position: relative; top: -40px; background-color: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; float: right;">Reopen Ticket</button>
+        {% else %}
+        <button type="submit" style="position: relative; top: -40px; background-color: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; float: right;">Close Ticket</button>
+        {% endif %}
+    </form>
+    <p style="margin-top: 10px;"> <strong>Status:</strong> {{ ticket.status }}</p>
+    <p style="margin-top: 10px;"><strong>Description:</strong> {{ ticket.description }}</p>
+
+    <h4 style="margin-top: 30px;">Messages</h4>
+    <div id="messages">
+        {% for message in ticket.messages.all %}
+        <div class="message {% if message.sender == request.user %}sender{% else %}receiver{% endif %}">
+            <p><strong>{{ message.sender.username }}:</strong> {{ message.message }}</p>
+            <span>{{ message.sent_at }}</span>
+        </div>
+        {% endfor %}
+    </div>
+
+    <form method="post" action="{% url 'waveAdmin:admin_send_ticket_reply' ticket.ticket_id %}">
+        {% csrf_token %}
+        <textarea style="font-family: Arial, Helvetica, sans-serif;" name="message" placeholder="Type your message here"></textarea>
+        <button style="width: 100px" type="submit">Send</button>
+    </form>
+</div>
+{% endblock body %}

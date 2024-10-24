@@ -81,7 +81,7 @@ Support Portal — Wave.
                     </div>
                     <div id="card-info">
                         <div id="row-one">
-                            <h6>Last Updated: <span>30 mins ago</span></h6>
+                            <h6>Last Updated: <span>{{ closed_ticket.time_elapsed_since_created }}</span></h6>
                             <p id="ticket-id">{{ closed_ticket.ticket_id }}</p>
                         </div>
                         <div id="row-two">
