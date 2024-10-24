@@ -70,9 +70,6 @@ What's the wave?! — WAVE.
                     {% if display %}
                         <div class="category-card">
                             <a target="_blank" href="{% url 'core:category' name=display %}">
-                                <div class="category-icon">
-                                    <img src="{% static exploreCategoryImages|get_category:value %}" alt="Category: {{ display }}">
-                                </div>
                                 <div class="category-name">
                                     <h2>{{ display }}</h2>
                                 </div>

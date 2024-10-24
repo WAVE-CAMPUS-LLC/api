@@ -51,8 +51,6 @@ def exploreView(request):
         additional_choices = random.sample(remaining_choices, 4 - len(trending_category_choices))
         trending_category_choices += additional_choices
         
-    explore_category_images = Event.EXPLORE_CATEGORY_TYPE_IMAGES
-
     return render(
         request,
         "coreApp/explore.html",
@@ -61,7 +59,6 @@ def exploreView(request):
             "events": initial_events,
             "trending_events": trending_events,
             "exploreCategoryChoices": trending_category_choices,
-            "exploreCategoryImages": explore_category_images,
         },
     )
 

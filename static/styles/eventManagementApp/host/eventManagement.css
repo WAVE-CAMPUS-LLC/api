@@ -1,0 +1,176 @@
+/* Body Content */
+#body-content {
+    display: flex;
+    flex-direction: column;
+    gap: 70px;
+    padding-left: 100px;
+    padding-right: 100px;
+}
+
+/* Page Heading */
+
+.page-heading {
+    font-family: Wanted-SemiBold;
+    font-size: 30px;
+
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Event Delete Button */
+.event-delete button {
+    background-color: red;
+    color: white;
+    border: transparent;
+
+    padding: 15px 12px;
+    border-radius: 15px;
+
+    font-family: Wanted-Regular;
+    font-size: 15px;
+
+    cursor: pointer;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+}
+
+.event-delete button img {
+    width: 23px;
+    height: 23px;
+}
+
+/* Portal Body */
+#portal-body {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+}
+
+/* Page Body Content - Control row. */
+
+.control-row {
+    display: flex;
+    flex-direction: row;
+    gap: 15px;
+}
+
+.dashboard-tab {
+    cursor: pointer;
+    font-family: Wanted-Variable;
+    border: 1px solid grey;
+    padding: 5px;
+    border-radius: 13px;
+    width: 10%;
+
+    display: flex;
+    justify-content: center;
+}
+
+.dashboard-tab.tab-active {
+    border: 1px solid #007379;
+    font-family: Wanted-Variable;
+    color: white;
+    background-color: #007379;
+}
+
+.tab-summary {
+    font-family: Wanted-Variable;
+    font-size: 15.5px;
+    color: rgba(0, 0, 0, 0.764);
+}
+
+.container-information {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+}
+
+/* Page Body Content: Content Container */
+.overview-container {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+
+    width: 100%;
+}
+
+.overview-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.overview-fields h3 {
+    font-family: Wanted-Bold;
+    font-size: 18px;
+}
+
+.overview-fields p {
+    font-family: Wanted-Variable;
+    font-size: 23px;
+    text-transform: capitalize;
+}
+
+.flyer-image {
+    max-width: 400px;
+    max-height: 400px;
+    width: 100%;
+    border-radius: 20px;
+    height: 100%;
+}
+
+.body-image-container {
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+}
+
+.body-image-container img {
+    max-width: 300px;
+    max-height: 300px;
+    height: 100%;
+    width: 100%;
+    border-radius: 30px;
+}
+
+.time-row,
+.privacy-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+/* Privacy Tab */
+.display-on-college {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    font-family: Wanted-Variable;
+    font-size: 25px;
+}
+
+.display-on-college input[type="checkbox"] {
+    appearance: none;
+}
+
+.checkbox {
+    position: absolute;
+    height: 30px;
+    border-radius: 50%;
+    border: 2px solid grey;
+    width: 30px;
+    transition: 100ms ease-in;
+    cursor: pointer;
+}
+
+.display-on-college label {
+    margin-right: 20px;
+}
+
+input:checked+.checkbox {
+    background: #008d95;
+    border: 2px solid #008d95;
+}
