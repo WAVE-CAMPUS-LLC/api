@@ -192,6 +192,7 @@ def eventCreationProcess(request, eventId):
             return redirect("eventManagement:eventManagement", eventId=eventId)
     else:
         eventForm = EventForm(instance=event)
+        return redirect("eventManagement:eventOverview", eventId=eventId)
 
     return render(
         request,

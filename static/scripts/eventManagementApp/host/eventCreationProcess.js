@@ -4,10 +4,12 @@ $(document).ready(function () {
     const saveUrl = document.getElementById('creation-control').dataset.saveUrl;
     const nextButton = $('#next-sectionbtn');
 
+    nextButton.hide();
 
     function displaySection(index) {
         sections.hide();
         $(sections[index]).show();
+        validateCurrentSection();
     }
 
     displaySection(currentSectionIndex);
@@ -70,4 +72,29 @@ $(document).ready(function () {
             }
         });
     }
+
+    function validateCurrentSection() {
+        const currentSection = $(sections[currentSectionIndex]);
+        let isValid = true;
+
+        currentSection.find('input, textarea, select').each(function () {
+            if ($(this).prop('required') && !$(this).val()) {
+                isValid = false;
+            }
+        });
+
+        if (isValid) {
+            nextButton.show();  
+        } else {
+            nextButton.hide(); 
+        }
+
+        if (currentSectionIndex === sections.length - 1) {
+            nextButton.hide(); 
+        }
+    }
+
+    $('input, textarea, select').on('input change', function () {
+        validateCurrentSection(); 
+    });
 });
