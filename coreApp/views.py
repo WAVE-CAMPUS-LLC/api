@@ -13,32 +13,21 @@ def indexView(request):
 
 
 def exploreView(request):
-    """
-    The `exploreView` function in Python retrieves initial events, trending events, and trending
-    categories for display on an explore page in a web application.
-    
-    :param request: The `exploreView` function is a Django view that renders an "explore.html" template
-    with various context data. Here's a breakdown of the parameters used in the function:
-    :return: The `exploreView` function returns a rendered template named "coreApp/explore.html" with
-    the following context data:
-    - "page": containing the value "explore"
-    - "events": containing the initial 6 events loaded from the database
-    - "trending_events": containing the trending events with a status of "live" ordered by date
-    - "exploreCategoryChoices": a
-    """
     pageName = "explore"
 
     # Load initial 6 events
-    initial_events = Event.objects.all()[:7]
-    trending_events = Event.objects.filter(status="live").order_by("date")[:3]
+    initial_events = Event.objects.filter(status="live", privacy="Discoverable")[:7]
+    trending_events = Event.objects.filter(
+        status="live", privacy="Discoverable"
+    ).order_by("date")[:3]
 
     trending_categories = (
-        Event.objects.values("event_type")
+        Event.objects.filter(status="live", privacy="Discoverable")
+        .values("event_type")
         .annotate(event_count=Count("event_type"))
-        .order_by("-event_count")[:4]  
+        .order_by("-event_count")[:4]
     )
-    
-    
+
     trending_category_choices = []
     for category in trending_categories:
         event_type = category["event_type"]
@@ -47,10 +36,14 @@ def exploreView(request):
     print(trending_category_choices)
 
     if len(trending_category_choices) < 4:
-        remaining_choices = list(set(Event.EXPLORE_TYPE_CHOICES) - set(trending_category_choices))
-        additional_choices = random.sample(remaining_choices, 4 - len(trending_category_choices))
+        remaining_choices = list(
+            set(Event.EXPLORE_TYPE_CHOICES) - set(trending_category_choices)
+        )
+        additional_choices = random.sample(
+            remaining_choices, 4 - len(trending_category_choices)
+        )
         trending_category_choices += additional_choices
-        
+
     return render(
         request,
         "coreApp/explore.html",
@@ -82,7 +75,9 @@ def load_more_events(request):
     offset = int(request.GET.get("offset", 7))
     limit = 3
 
-    more_events = Event.objects.all()[offset : offset + limit]
+    more_events = Event.objects.filter(status="live", privacy="Discoverable")[
+        offset : offset + limit
+    ]
     events_data = []
     for event in more_events:
         events_data.append(
@@ -100,7 +95,7 @@ def load_more_events(request):
             }
         )
 
-    has_more = Event.objects.count() > (offset + limit)
+    has_more = Event.objects.filter(status="live", privacy="Discoverable").count() > (offset + limit)
 
     return JsonResponse({"events": events_data, "has_more": has_more})
 

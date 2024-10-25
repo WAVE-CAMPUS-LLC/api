@@ -71,6 +71,7 @@ class EventForm(forms.ModelForm):
             "start_time",
             "end_time",
             "description",
+            "privacy",
             "country",
             "building_name",
             "street",
@@ -91,7 +92,6 @@ class EventForm(forms.ModelForm):
         ]
 
         widgets = {
-            "privacy": forms.Select(attrs={"class": "event-privacy"}),
             "country": forms.Select(),
             "status": forms.HiddenInput(),
         }
@@ -127,7 +127,6 @@ class EventForm(forms.ModelForm):
     #     #     else:
     #     #         # User has no organizations, remove organization restriction option
     #     #         self.fields.pop("restricted_organization")
-            
 
 
 class EventTicketForm(forms.ModelForm):

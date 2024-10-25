@@ -90,7 +90,7 @@
 }
 
 /* Page Body Content: Content Container */
-.overview-container {
+.tab-information-body {
     display: flex;
     flex-direction: column;
     gap: 30px;
@@ -98,18 +98,18 @@
     width: 100%;
 }
 
-.overview-fields {
+.body-row {
     display: flex;
     flex-direction: column;
     gap: 5px;
 }
 
-.overview-fields h3 {
-    font-family: Wanted-Bold;
+.body-row h3 {
+    font-family: Wanted-ExtraBold;
     font-size: 18px;
 }
 
-.overview-fields p {
+.body-row p {
     font-family: Wanted-Variable;
     font-size: 23px;
     text-transform: capitalize;
@@ -118,9 +118,9 @@
 .flyer-image {
     max-width: 400px;
     max-height: 400px;
-    width: 100%;
+    width: auto;
     border-radius: 20px;
-    height: 100%;
+    height: auto;
 }
 
 .body-image-container {

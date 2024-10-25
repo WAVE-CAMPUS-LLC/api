@@ -47,7 +47,7 @@ Manage {{ event.title }} | WAVE.
 
         <div id="portal-body-content">
             <div class="pbc-element-content" id="event-information">
-                <div class="overview-container">
+                <div class="tab-information-body">
                     <div class="tab-summary">
                         <p>
                             This tab provides an overview of all the key information 
@@ -58,53 +58,39 @@ Manage {{ event.title }} | WAVE.
                             <br/>To make changes to the event information, simply click on the "Edit" button to update the details as needed.
                         </p>
                     </div>
-                    <div class="overview-fields">
+                    <div class="body-row">
                         <h3>Title</h3>
                         <p>{{ event.title }}</p>
                     </div>
-                    <div class="overview-fields">
+                    <div class="body-row">
                         <h3>Type of Event</h3>
                         <p>{{ event.event_type }}</p>
                     </div>
-                    <div class="overview-fields">
+                    <div class="body-row">
                         <h3>Event Date</h3>
                         <p>{{ event.date }}</p>
                     </div>
                     <div class="time-row">
-                        <div class="overview-fields">
+                        <div class="body-row">
                             <h3>Start Time</h3>
                             <p>{{ event.start_time }}</p>
                         </div>
-                        <div class="overview-fields">
+                        <div class="body-row">
                             <h3>End Time</h3>
                             <p>{{ event.end_time }}</p>
                         </div>
                     </div>
-                    <div class="overview-fields">
+                    <div class="body-row">
                         <h3>Description</h3>
                         <p>{{ event.description }}</p>
                     </div>
                     <div class="privacy-row">
-                        <div class="overview-fields">
+                        <div class="body-row">
                             <h3>Privacy</h3>
                             <p>{{ event.privacy }}</p>
                         </div>
-                        <div class="overview-fields">
-                            <h3>Discoverability Level</h3>
-                            <p>{{ event.discoverability_level }}</p>
-                        </div>
                     </div>
-                    <div class="privacy-row">
-                        <div class="overview-fields">
-                            <h3>Displaying event in</h3>
-                            <p>{{ event.restricted_college }}</p>
-                        </div>
-                        <div class="overview-fields">
-                            <h3>Displaying event in organization </h3>
-                            <p>{{ event.restricted_organization }}</p>
-                        </div>
-                    </div>
-                    <div class="overview-fields">
+                    <div class="body-row">
                         <h3>Location</h3>
                         <p>
                             {{ event.building_name }}, 
@@ -118,12 +104,12 @@ Manage {{ event.title }} | WAVE.
                             {{ event.zip_code }}
                         </p>
                     </div>
-                    <div class="overview-fields">
+                    <div class="body-row">
                         <h3>Flyer Image</h3>
                         <img class="flyer-image" src="{{ event.header_photo.url }}" />
                     </div>
                     {% if event.body_photo_one or event.body_photo_two or event.body_photo_three or event.body_photo_four or event.body_photo_five %}
-                    <div class="overview-fields">
+                    <div class="body-row">
                         <h3>Extra Images</h3>
                         <div class="body-image-container">
                             {% if event.body_photo_one %}
@@ -160,16 +146,46 @@ Manage {{ event.title }} | WAVE.
                     </div>
 
                     <div class="tab-information-body">
+                        <div class="body-row">
+                            <h3>Current Privacy Setting</h3>
+                            <p>{{ event.privacy }}</p>
+                        </div>
+
                         {% if isInCollege %}
+                        <div class="body-row">
+                            <h3>Do you want to display this event in your college?</h3>
                             <form class="display-on-college" method="POST" id="college-display-form">
                                 {% csrf_token %}
-                                <p>Display event in your college ({{userProfile.college}})?</p>
+                                <p>The event will be displayed in {{userProfile.college}}?</p>
                                 <input type="hidden" name="event_id" value="{{ event.eventId }}">
                                 <label>
                                     <input id="displayOnCollegeCheckbox" type="checkbox" name="displayOnCollege" value="true" {% if event.display_event_on_college %} checked {% endif %}>
                                     <span class="checkbox" />
                                 </label>
                             </form>
+                        </div>
+                        {% endif %}
+
+                        {% if event.privacy == "Discoverable" %}
+                        <div class="body-row">
+                            <h3>Your event is currently</h3>
+                            <p>{{ eventPrivacy.discoverability_level }}</p>
+                        </div>
+                        {% elif event.privacy == "Invite Only" %}
+                        <div class="body-row">
+                            <h3>Your event has been set to </h3>
+                            <p>{{ eventPrivacy.invite_only_level }}</p>
+                        </div>
+                        {% elif event.privacy == "Private (CoLLege)" %}
+                        <div class="body-row">
+                            <h3>Your event is currently</h3>
+                            <p>{{ eventPrivacy.restricted_college }}</p>
+                        </div>
+                        {% elif event.privacy == "Private (Organization)" %}
+                        <div class="body-row">
+                            <h3>Your event is currently restricted to</h3>
+                            <p>{{ eventPrivacy.restricted_organization }}</p>
+                        </div>
                         {% endif %}
                         
                     </div>

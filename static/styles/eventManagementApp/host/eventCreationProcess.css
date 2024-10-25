@@ -172,7 +172,7 @@
     display: none;
 }
 
-#event-privacy-select {
+#privacy-type-select {
     display: none;
 }
 
@@ -183,7 +183,8 @@
     width: 60%;
 }
 
-.type-selector {
+.type-selector,
+.privacy-selector {
     border-left: 6px solid #008d95;
 
     text-transform: capitalize;
@@ -204,23 +205,21 @@
 }
 
 
-.type-selector.selected {
+.type-selector.selected, 
+.privacy-selector.selected {
     border-color: #008d95;
     background-color: #008d9553;
     
 }
 
-.type-selector img {
-    width: 50px;
-    height: 50px;
-}
-
-.type-selector h6 {
+.type-selector h6, 
+.privacy-selector h6 {
     font-family: Wanted-Bold;
     font-size: 20px;
 }
 
-.type-selector:hover {
+.type-selector:hover, 
+.privacy-selector:hover {
     border-left: 6px solid #008d9f;
     background-color: #008d9553;
 }

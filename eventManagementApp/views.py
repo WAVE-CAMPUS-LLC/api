@@ -7,12 +7,14 @@ from wave_v1.decorators import group_required
 
 
 from accountManagementApp.models import UserProfile
+from collegeManagementApp.models import Organization, OrganizationMembership
 from .forms import EventTicketForm, HostApplicationForm, EventForm
 from .models import (
     EventTicket,
     EventType,
     HostApplication,
     Event,
+    EventPrivacy
 )
 
 
@@ -121,6 +123,7 @@ def hostCreateEventGenerator(request):
 def eventCreationProcess(request, eventId):
     event = get_object_or_404(Event, eventId=eventId)
     event_type_choices = Event.EVENT_TYPE_CHOICES
+    privacy_choices = Event.PRIVACY_CHOICES
 
     if request.method == "POST":
         eventForm = EventForm(request.POST, request.FILES, instance=event)
@@ -133,13 +136,60 @@ def eventCreationProcess(request, eventId):
             if go_live:
                 event_status = "live"
                 event.status = event_status
-                event.save()
+                
                 messages.success(request, "Event is live!")
+                
+                user_profile = event.host.user_profile
+                organization_membership = OrganizationMembership.objects.filter(user=event.host).first()
+                
+                if event.privacy == "Discoverable":
+                    event_privacy = EventPrivacy.objects.create(
+                        event=event,
+                        discoverability_level="Open to anyone",
+                        invite_only_level=None,
+                        restricted_college=None,
+                        restricted_organization=None,
+                    )
+                    event_privacy.save()
+                    
+                elif event.privacy == "Invite Only":
+                    event_privacy = EventPrivacy.objects.create(
+                        event=event,
+                        discoverability_level=None,
+                        invite_only_level="Invite Only",
+                        restricted_college=None,
+                        restricted_organization=None,
+                    )
+                    event_privacy.save()
+                    
+                elif event.privacy == "Private (College)":
+                    event_privacy = EventPrivacy.objects.create(
+                        event=event,
+                        discoverability_level=None,
+                        invite_only_level=None,
+                        restricted_college=event.host.user_profile.college,
+                        restricted_organization=None,
+                    )
+                    event.display_event_on_college = True
+                    event_privacy.save()
+                    
+                elif event.privacy == "Private (Organization)" and organization_membership:
+                    event_privacy = EventPrivacy.objects.create(
+                        event=event,
+                        discoverability_level=None,
+                        invite_only_level=None,
+                        restricted_college=None,
+                        restricted_organization=organization_membership.organization,
+                    )
+                    event_privacy.save()
+                    
+                event.save()
+                return redirect("eventManagement:eventManagement", eventId=eventId)
 
             else:
                 event.save()
 
-            return redirect("eventManagement:eventOverview", eventId=eventId)
+            return redirect("eventManagement:eventManagement", eventId=eventId)
     else:
         eventForm = EventForm(instance=event)
 
@@ -150,6 +200,7 @@ def eventCreationProcess(request, eventId):
             "event": event,
             "eventForm": eventForm,
             "eventTypeChoices": event_type_choices,
+            "privacyChoices": privacy_choices,
         },
     )
 
@@ -183,6 +234,7 @@ def save_event_progress(request, eventId):
             event.end_time = datetime.strptime(end_time_str, "%H:%M").time()
 
         event.description = request.POST.get("description", "")
+        event.privacy = request.POST.get("privacy", "")
         event.country = request.POST.get("country", "")
         event.building_name = request.POST.get("building_name", "")
         event.street_address = request.POST.get("street_address", "")
@@ -214,16 +266,29 @@ def eventManagement(request, eventId):
     event = get_object_or_404(Event, eventId=eventId)
     user_profile = UserProfile.objects.get(user=request.user)
     is_in_college = user_profile.college is not None
+    event_privacy = EventPrivacy.objects.get(event=event)
+    
+    
     if request.method == "POST":
         action = request.POST.get("eventAction")
 
         if action == "deleteEvent":
             event.delete()
             return redirect("eventManagement:hostPortal")
+        
+        if "displayOnCollege" in request.POST:
+            event_to_update = get_object_or_404(
+                Event, eventId=event.eventId, host=request.user
+            )
+            event_to_update.display_event_on_college = (
+                request.POST["displayOnCollege"] == "True"
+            )  # Check for 'true'
+            event_to_update.save()
+            return redirect("eventManagement:eventManagement", eventId=eventId)
     return render(
         request,
         "eventManagementApp/host/eventManagement.html",
-        {"event": event, "isInCollege": is_in_college, "userProfile": user_profile},
+        {"event": event, "isInCollege": is_in_college, "userProfile": user_profile, "eventPrivacy": event_privacy},
     )
 
 

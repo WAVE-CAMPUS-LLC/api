@@ -232,13 +232,12 @@
 
 /* Category Card */
 .category-card {
-    border: 4px solid #000000;
+    border-left: 6px solid #008d95;
     padding: 30px;
     padding-bottom: 15px;
     padding-top: 15px;
-    border-radius: 20px;
 
-    font-family: Wanted-Bold;
+    font-family: Wanted-Variable;
     background-color: white;
     color: black;
 
@@ -259,7 +258,9 @@
     -webkit-box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.289);
     -moz-box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.289);
     box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.289);
-    border: 4px solid #008d95;
+    border-left: 6px solid #008d95;
+    border-top-right-radius: 20px;
+    border-bottom-right-radius: 20px;
 }
 
 .category-icon {

@@ -144,7 +144,32 @@ Create your event — WAVE.
                         <textarea id="{{ eventForm.description.id_for_label }}" name="{{ eventForm.description.html_name }}"/></textarea>
                     </div>
                 </div>
-            </section>          
+            </section>      
+            
+            <section id="stage-section" data-validate="true">
+                <input type="hidden" class="section-title" value="Set your event privacy — WAVE." />
+                <div class="stageSection-container-col">
+                    <div class="section-question">
+                        {{ eventForm.privacy.label }}
+                    </div>
+        
+                    <div class="section-intake">
+                        <select id="privacy-type-select" name="privacy">
+                            {% for value, display in privacyChoices %}
+                            <option value="{{ value }}">{{ display }}</option>
+                            {% endfor %}
+                        </select>
+
+                        <div class="type-input">
+                            {% for value, display in privacyChoices %}
+                            <div type="button" role="button" class="privacy-selector" onclick="selectPrivacyTypeOption('{{ value }}')" data-value="{{ value }}">
+                                <h6>{{display}}</h6>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </section>
             
             {% comment %} Stage 2 {% endcomment %}
             <section id="stage-section" data-validate="false">

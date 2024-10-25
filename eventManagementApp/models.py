@@ -2,6 +2,8 @@ import uuid
 from django.db import models
 from django.utils.translation import gettext as _
 from django.utils import timezone
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from django.conf import settings
 from adminDashboardApp.models import College
 
@@ -70,39 +72,39 @@ class Event(models.Model):
     ]
 
     EVENT_TYPE_CHOICES = [
-        ("sports", "Sports"),
-        ("social", "Social"),
-        ("networking", "Networking"),
-        ("greek", "Greek"),
-        ("music", "Music"),
-        ("conference", "Conference"),
-        ("workshop", "Workshop"),
-        ("exhibition", "Exhibition"),
-        ("technology", "Technology"),
-        ("health", "Health"),
-        ("fundraiser", "Fundraiser"),
-        ("volunteer", "Volunteer"),
-        ("fashion", "Fashion"),
-        ("adventure", "Adventure"),
-        ("spiritual", "Spiritual"),
-        ("academic", "Academic"),
-        ("photography", "Photography"),
-        ("art", "Art"),
-        ("dance", "Dance"),
+        ("Sports", "Sports"),
+        ("Social", "Social"),
+        ("Networking", "Networking"),
+        ("Greek", "Greek"),
+        ("Music", "Music"),
+        ("Conference", "Conference"),
+        ("Workshop", "Workshop"),
+        ("Exhibition", "Exhibition"),
+        ("Technology", "Technology"),
+        ("Health", "Health"),
+        ("Fundraiser", "Fundraiser"),
+        ("Volunteer", "Volunteer"),
+        ("Fashion", "Fashion"),
+        ("Adventure", "Adventure"),
+        ("Spiritual", "Spiritual"),
+        ("Academic", "Academic"),
+        ("Photography", "Photography"),
+        ("Art", "Art"),
+        ("Dance", "Dance"),
     ]
 
     PRIVACY_CHOICES = [
         ("Discoverable", "Discoverable"),
         ("Invite Only", "Invite Only"),
-        ("College Only", "College Only"),
-        ("Org Only", "Org Only"),
+        ("Private (College)", "Private (College)"),
+        ("Private (Organization)", "Private (Organization)"),
     ]
 
     COUNTRY_CHOICES = [("United States", "United States")]
 
     EXPLORE_TYPE_CHOICES = [
-        ("sports", "Sports"),
         ("social", "Social"),
+        ("sports", "Sports"),
         ("networking", "Networking"),
         ("greek", "Greek"),
         ("music", "Music"),
@@ -253,6 +255,9 @@ class Event(models.Model):
     def __str__(self):
         return self.title
 
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+
 
 class EventPrivacy(models.Model):
     event = models.OneToOneField(
@@ -260,21 +265,19 @@ class EventPrivacy(models.Model):
     )
 
     DISCOVERABILITY_CHOICES = [
-        ("open", "Open to Anyone"),
-        ("rsvp", "RSVP Required"),
+        ("Open to anyone", "Open to anyone"),
+        ("RSVP Required", "RSVP Required"),
     ]
 
-    RESTRICTION_CHOICES = [
-        ("invite_only", "Invite Only"),
-        ("college", "Restricted to College"),
-        ("organization", "Restricted to Organization"),
+    INVITE_ONLY_CHOICES = [
+        ("Invite Only", "Invite Only"),
     ]
 
     discoverability_level = models.CharField(
-        max_length=10, choices=DISCOVERABILITY_CHOICES, blank=True, null=True
+        max_length=14, choices=DISCOVERABILITY_CHOICES, blank=True, null=True
     )
-    restriction_type = models.CharField(
-        max_length=20, choices=RESTRICTION_CHOICES, blank=True, null=True
+    invite_only_level = models.CharField(
+        max_length=20, choices=INVITE_ONLY_CHOICES, blank=True, null=True
     )
     restricted_college = models.ForeignKey(
         College, on_delete=models.SET_NULL, blank=True, null=True

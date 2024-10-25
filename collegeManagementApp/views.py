@@ -23,7 +23,7 @@ from .models import (
 # TODO (Dave): for some reason the college management College model is not working properly. Using this for now.
 from adminDashboardApp.models import College
 from accountManagementApp.models import UserProfile
-from eventManagementApp.models import Event
+from eventManagementApp.models import Event, EventPrivacy
 
 
 # Create your views here.
@@ -124,7 +124,7 @@ def viewCollegeInformation(request, collegeId):
     pageName = "Colleges"
 
     college = get_object_or_404(College, collegeId=collegeId)
-    
+
     user_profile = UserProfile.objects.filter(user=request.user).first()
 
     members = UserProfile.objects.filter(college=college)
@@ -133,6 +133,20 @@ def viewCollegeInformation(request, collegeId):
     events = Event.objects.filter(
         display_event_on_college=True, host__user_profile__college=college
     )
+
+    events_restricted_to_college = Event.objects.filter(
+        privacy="Private (College)",
+        privacy_details__restricted_college=college,
+        status="live",
+    )
+
+    display_events_on_college = Event.objects.filter(
+        display_event_on_college=True,
+        host__user_profile__college=college,
+        status="live",
+    )
+
+    events = (events_restricted_to_college | display_events_on_college).distinct()
 
     return render(
         request,
@@ -251,14 +265,14 @@ def exitCollege(request, collegeId):
 def createOrg(request, collegeId):
     pageName = "Colleges"
     college = get_object_or_404(College, collegeId=collegeId)
-    
+
     if not request.user.is_authenticated:
         return render(
             request,
             "collegeManagementApp/extras/notAMemberOfCollege.html",
             {"college": college, "pageName": pageName},
         )
-        
+
     user_profile = UserProfile.objects.filter(user=request.user).first()
 
     if user_profile and user_profile.college != college:
@@ -273,8 +287,6 @@ def createOrg(request, collegeId):
             request, "You must be a member of this college to create an organization."
         )
         return redirect("colleges:find")
-    
-    
 
     if request.method == "POST":
         orgForm = OrganizationForm(request.POST, request.FILES)
@@ -300,14 +312,14 @@ def createOrg(request, collegeId):
 def viewOrganization(request, collegeId, orgId):
     pageName = "Colleges"
     college = get_object_or_404(College, collegeId=collegeId)
-    
+
     if not request.user.is_authenticated:
         return render(
             request,
             "collegeManagementApp/extras/notAMemberOfCollege.html",
             {"college": college, "pageName": pageName},
         )
-        
+
     user_profile = UserProfile.objects.filter(user=request.user).first()
 
     if user_profile and user_profile.college != college:
@@ -335,6 +347,12 @@ def viewOrganization(request, collegeId, orgId):
         organization=organization
     ).select_related("user")
 
+    # Get events restricted to this organization
+    restricted_events = Event.objects.filter(
+        privacy="Private (Organization)", 
+        privacy_details__restricted_organization=organization
+    )
+
     return render(
         request,
         "collegeManagementApp/organizations/viewOrg.html",
@@ -345,6 +363,7 @@ def viewOrganization(request, collegeId, orgId):
             "is_member": is_member,
             "member_count": member_count,
             "members": members,
+            "events": restricted_events,
         },
     )
 
