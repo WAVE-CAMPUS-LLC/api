@@ -170,6 +170,19 @@ Create your event — WAVE.
                     </div>
                 </div>
             </section>
+
+            <section id="stage-section" data-validate="true">
+                <input required type="hidden" class="section-title" value="Stage 1 - What's your preferred ticketing system? — WAVE." />
+                <div class="stageSection-container-col">
+                    <div class="section-question">
+                        {{ eventForm.ticketing.label }}
+                    </div>
+        
+                    <div class="section-intake">
+                        {{ eventForm.ticketing }}
+                    </div>
+                </div>
+            </section>
             
             {% comment %} Stage 2 {% endcomment %}
             <section id="stage-section" data-validate="false">

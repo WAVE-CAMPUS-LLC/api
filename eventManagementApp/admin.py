@@ -21,6 +21,7 @@ class EventAdmin(admin.ModelAdmin):
         "end_time",
         "description",
         "privacy",
+        "ticketing",
         "country",
         "building_name",
         "street",
@@ -38,8 +39,8 @@ class EventAdmin(admin.ModelAdmin):
 class EventPrivacyAdmin(admin.ModelAdmin):
     list_display = (
         "event",
-        "discoverability_level",
-        "invite_only_level",
+        "display_on_explore",
+        "require_invitation",
         "restricted_college",
         "restricted_organization"
     )

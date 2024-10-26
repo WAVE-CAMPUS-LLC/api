@@ -100,6 +100,12 @@ class Event(models.Model):
         ("Private (Organization)", "Private (Organization)"),
     ]
 
+    TICKET_CHOICES = [
+        ("RSVP Required", "RSVP Required"),
+        ("Tickets Required", "Tickets Required"),
+        ("Invite Required", "Invite Required"),
+    ]
+
     COUNTRY_CHOICES = [("United States", "United States")]
 
     EXPLORE_TYPE_CHOICES = [
@@ -123,11 +129,10 @@ class Event(models.Model):
         ("art", "Art"),
         ("dance", "Dance"),
     ]
-
     eventId = models.UUIDField(
         primary_key=True, default=uuid.uuid4, editable=False, unique=True
     )
-    # publicId = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+
     host = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="events"
     )
@@ -176,6 +181,15 @@ class Event(models.Model):
         null=True,
         blank=True,
         default="",
+    )
+
+    ticketing = models.CharField(
+        _("Select your preferred ticketing system"),
+        max_length=16,
+        choices=TICKET_CHOICES,
+        null=True,
+        blank=True,
+        default="Open to anyone",
     )
 
     country = models.CharField(
@@ -263,21 +277,17 @@ class EventPrivacy(models.Model):
     event = models.OneToOneField(
         "Event", on_delete=models.CASCADE, related_name="privacy_details"
     )
-
-    DISCOVERABILITY_CHOICES = [
-        ("Open to anyone", "Open to anyone"),
-        ("RSVP Required", "RSVP Required"),
-    ]
-
-    INVITE_ONLY_CHOICES = [
-        ("Invite Only", "Invite Only"),
-    ]
-
-    discoverability_level = models.CharField(
-        max_length=14, choices=DISCOVERABILITY_CHOICES, blank=True, null=True
+    display_on_explore = models.BooleanField(
+        _("Do you want this event displayed on the explore page?"),
+        null=True,
+        blank=True,
+        default=False,
     )
-    invite_only_level = models.CharField(
-        max_length=20, choices=INVITE_ONLY_CHOICES, blank=True, null=True
+    require_invitation = models.BooleanField(
+        _("Require invitation?"),
+        null=True,
+        blank=True,
+        default=False,
     )
     restricted_college = models.ForeignKey(
         College, on_delete=models.SET_NULL, blank=True, null=True

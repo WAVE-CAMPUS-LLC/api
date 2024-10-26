@@ -126,7 +126,7 @@ def eventCreationProcess(request, eventId):
     privacy_choices = Event.PRIVACY_CHOICES
 
     if request.method == "POST":
-        eventForm = EventForm(request.POST, request.FILES, instance=event)
+        eventForm = EventForm(request.POST, request.FILES, instance=event, user=request.user)
         go_live = request.POST.get("goLiveInput") == "1"
 
         if eventForm.is_valid():
@@ -145,8 +145,8 @@ def eventCreationProcess(request, eventId):
                 if event.privacy == "Discoverable":
                     event_privacy = EventPrivacy.objects.create(
                         event=event,
-                        discoverability_level="Open to anyone",
-                        invite_only_level=None,
+                        display_on_explore=True,
+                        require_invitation=False,
                         restricted_college=None,
                         restricted_organization=None,
                     )
@@ -155,18 +155,19 @@ def eventCreationProcess(request, eventId):
                 elif event.privacy == "Invite Only":
                     event_privacy = EventPrivacy.objects.create(
                         event=event,
-                        discoverability_level=None,
-                        invite_only_level="Invite Only",
+                        display_on_explore=False,
+                        require_invitation=True,
                         restricted_college=None,
                         restricted_organization=None,
                     )
+                    event.ticketing = "Invite Required"
                     event_privacy.save()
                     
                 elif event.privacy == "Private (College)":
                     event_privacy = EventPrivacy.objects.create(
                         event=event,
-                        discoverability_level=None,
-                        invite_only_level=None,
+                        display_on_explore=False,
+                        require_invitation=False,
                         restricted_college=event.host.user_profile.college,
                         restricted_organization=None,
                     )
@@ -176,8 +177,8 @@ def eventCreationProcess(request, eventId):
                 elif event.privacy == "Private (Organization)" and organization_membership:
                     event_privacy = EventPrivacy.objects.create(
                         event=event,
-                        discoverability_level=None,
-                        invite_only_level=None,
+                        display_on_explore=False,
+                        require_invitation=False,
                         restricted_college=None,
                         restricted_organization=organization_membership.organization,
                     )
@@ -191,8 +192,7 @@ def eventCreationProcess(request, eventId):
 
             return redirect("eventManagement:eventManagement", eventId=eventId)
     else:
-        eventForm = EventForm(instance=event)
-        return redirect("eventManagement:eventOverview", eventId=eventId)
+        eventForm = EventForm(instance=event, user=request.user)
 
     return render(
         request,

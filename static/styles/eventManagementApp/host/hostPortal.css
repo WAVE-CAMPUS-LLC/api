@@ -137,6 +137,11 @@
 .event-information h5 {
     font-family: Wanted-Medium;
     font-size: 25px;
+    white-space: nowrap; /* Prevent wrapping */
+    overflow: hidden; /* Hide overflow content */
+    text-overflow: ellipsis; /* Show ellipsis for overflow text */
+    width: 100%;
+    text-align: left;
 }
 
 .event-information p {

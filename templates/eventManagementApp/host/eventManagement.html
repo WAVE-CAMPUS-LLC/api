@@ -192,7 +192,41 @@ Manage {{ event.title }} | WAVE.
                 </div>
             </div>
 
-            <div class="pbc-element-content" id="event-ticketing">Ticketing</div>
+            <div class="pbc-element-content" id="event-ticketing">
+                <div class="container-information">
+                    <div class="tab-information-body">
+                        {% if eventPrivacy.require_invitation == True %}
+                        <div class="inviteSystem">
+                            <div class="systemHeader">
+                                <h3>Invite your favourite people to the event!</h3>
+                                <p>Enter their emails separated by a comma, type up your invitation message, then hit send!</p>
+                            </div>
+
+                            <form id="inviteForm" class="inviteForm">
+                                <div class="inviteFormField">
+                                    <label for="inviteEmails">To</label>
+                                    <input type="text" id="inviteEmails" name="inviteEmails" placeholder="Emails" />
+                                </div>
+
+                                <div class="inviteFormField">
+                                    <label for="inviteSubject">Subject</label>
+                                    <input type="text" id="inviteEmails" name="inviteEmails" placeholder="Subject" />
+                                </div>
+
+                                <div class="inviteFormField">
+                                    <label for="inviteSubject">Message</label>
+                                    <textarea id="inviteSubject" name="inviteSubject"  value="You have been invited to {{ event.title }}! Please view the attached PDF file for your ticket in QR Code format."></textarea>
+                                </div>
+
+                                <div class="sendButton">
+                                    <button type="submit" class="sendInvitesButton" role="button" name="eventAction" value="sendInvites">Send Invites</button>
+                                </div>
+                            </form>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
