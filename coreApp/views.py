@@ -3,7 +3,13 @@ from django.http import JsonResponse
 import random
 from django.db.models import Count
 
-from eventManagementApp.models import Event, EventTicket
+from eventManagementApp.models import (
+    Event,
+    EventTicket,
+    EventPrivacy,
+    InviteEventOption,
+)
+from collegeManagementApp.models import OrganizationMembership
 
 
 # Create your views here.
@@ -95,25 +101,102 @@ def load_more_events(request):
             }
         )
 
-    has_more = Event.objects.filter(status="live", privacy="Discoverable").count() > (offset + limit)
+    has_more = Event.objects.filter(status="live", privacy="Discoverable").count() > (
+        offset + limit
+    )
 
     return JsonResponse({"events": events_data, "has_more": has_more})
 
 
-def eventDetailsView(request, eventId):
+def eventDetailsView(request, eventId, token=None):
     pageName = "eventDetails"
     event = get_object_or_404(Event, eventId=eventId)
     eventTickets = EventTicket.objects.filter(event=event)
+    eventprivacy = EventPrivacy.objects.get(event=event)
 
-    return render(
-        request,
-        "coreApp/event/eventDetails.html",
-        {
-            "page": pageName,
-            "event": event,
-            "eventTickets": eventTickets,
-        },
-    )
+    if eventprivacy.require_invitation:
+        if token:
+            invitation = get_object_or_404(InviteEventOption, token=token)
+            return render(
+                request,
+                "coreApp/event/eventDetails.html",
+                {
+                    "page": pageName,
+                    "event": event,
+                    "eventTickets": eventTickets,
+                },
+            )
+        else:
+            return render(
+                request,
+                "extras/invalid/eventInvalid.html",
+                {
+                    "page": pageName,
+                    "event": event,
+                    "eventTickets": eventTickets,
+                },
+            )
+
+    elif eventprivacy.restricted_college:
+        if request.user.user_profile.college == eventprivacy.restricted_college:
+            return render(
+                request,
+                "coreApp/event/eventDetails.html",
+                {
+                    "page": pageName,
+                    "event": event,
+                    "eventTickets": eventTickets,
+                },
+            )
+        else:
+            return render(
+                request,
+                "extras/invalid/eventCollegePrivacy.html",
+                {
+                    "page": pageName,
+                    "event": event,
+                    "eventTickets": eventTickets,
+                    "eventPrivacy": eventprivacy,
+                },
+            )
+            
+    elif eventprivacy.restricted_organization:
+        userOrgRelation = OrganizationMembership.objects.filter(
+            user=request.user, organization=eventprivacy.restricted_organization
+        )
+        
+        if userOrgRelation.exists():
+            return render(
+                request,
+                "coreApp/event/eventDetails.html",
+                {
+                    "page": pageName,
+                    "event": event,
+                    "eventTickets": eventTickets,
+                },
+            )
+        else:
+            return render(
+                request,
+                "extras/invalid/eventOrganizationPrivacy.html",
+                {
+                    "page": pageName,
+                    "event": event,
+                    "eventTickets": eventTickets,
+                    "eventPrivacy": eventprivacy,
+                },
+            )
+
+    else:
+        return render(
+            request,
+            "coreApp/event/eventDetails.html",
+            {
+                "page": pageName,
+                "event": event,
+                "eventTickets": eventTickets,
+            },
+        )
 
 
 def categoryView(request, name):

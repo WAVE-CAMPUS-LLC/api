@@ -47,5 +47,5 @@ class EventPrivacyAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Event, EventAdmin)
-admin.site.register(EventPrivacy, EventPrivacyAdmin)    
+admin.site.register(EventPrivacy, EventPrivacyAdmin)   
 admin.site.register(HostApplication, HostApplicationAdmin)

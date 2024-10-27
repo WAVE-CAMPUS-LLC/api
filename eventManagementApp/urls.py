@@ -26,5 +26,4 @@ urlpatterns = [
     ),
     path(
         "event/<uuid:eventId>/ticketing/home/", views.eventTicketingOverview, name="ticketingOverview"
-    ),
-]
+    )]

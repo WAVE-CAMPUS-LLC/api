@@ -3,6 +3,7 @@ from django.db import models
 from django.utils.translation import gettext as _
 from django.utils import timezone
 from django.db.models.signals import post_save
+from datetime import timedelta
 from django.dispatch import receiver
 from django.conf import settings
 from adminDashboardApp.models import College
@@ -102,7 +103,6 @@ class Event(models.Model):
 
     TICKET_CHOICES = [
         ("RSVP Required", "RSVP Required"),
-        ("Tickets Required", "Tickets Required"),
         ("Invite Required", "Invite Required"),
     ]
 
@@ -336,3 +336,18 @@ class EventTicket(models.Model):
 
     def __str__(self):
         return f"{self.ticket_name} for {self.event.title}"
+        
+        
+class InviteEventOption(models.Model):
+    event  = models.ForeignKey(Event, on_delete=models.CASCADE)
+    email = models.EmailField()
+    token = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    
+    def save(self, *args, **kwargs):
+        if not self.expires_at:
+            time_now = timezone.now()
+            delta = timedelta(hours=48)
+            self.expires_at = time_now + delta
+        super().save(*args, **kwargs)

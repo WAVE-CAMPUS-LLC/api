@@ -202,20 +202,21 @@ Manage {{ event.title }} | WAVE.
                                 <p>Enter their emails separated by a comma, type up your invitation message, then hit send!</p>
                             </div>
 
-                            <form id="inviteForm" class="inviteForm">
+                            <form id="inviteForm" class="inviteForm" method="post">
+                                {% csrf_token %}
                                 <div class="inviteFormField">
-                                    <label for="inviteEmails">To</label>
-                                    <input type="text" id="inviteEmails" name="inviteEmails" placeholder="Emails" />
+                                    {{ invitationForm.invite_emails.label_tag }}
+                                    {{ invitationForm.invite_emails }}
                                 </div>
 
                                 <div class="inviteFormField">
-                                    <label for="inviteSubject">Subject</label>
-                                    <input type="text" id="inviteEmails" name="inviteEmails" placeholder="Subject" />
+                                    {{ invitationForm.invite_subject.label_tag }}
+                                    {{ invitationForm.invite_subject }}
                                 </div>
 
                                 <div class="inviteFormField">
-                                    <label for="inviteSubject">Message</label>
-                                    <textarea id="inviteSubject" name="inviteSubject"  value="You have been invited to {{ event.title }}! Please view the attached PDF file for your ticket in QR Code format."></textarea>
+                                    {{ invitationForm.invite_message.label_tag }}
+                                    {{ invitationForm.invite_message }}
                                 </div>
 
                                 <div class="sendButton">

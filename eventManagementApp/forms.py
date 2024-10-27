@@ -97,25 +97,32 @@ class EventForm(forms.ModelForm):
             "status": forms.HiddenInput(),
         }
         
-    # def __init__(self, *args, **kwargs):
-    #     user = kwargs.pop("user", None)
-    #     super().__init__(*args, **kwargs)
-        
-    #     PRIVACY_CHOICES = [
-    #         ("Discoverable", "Discoverable"),
-    #         ("Invite Only", "Invite Only"),
-    #     ]
-        
-    #     if user:
-    #         user_profile = UserProfile.objects.filter(user=user).first()
-    #         if user_profile and user_profile.college:
-    #             PRIVACY_CHOICES.append(("College Only", "College Only"))
-            
-    #         organizations = OrganizationMembership.objects.filter(user=user)
-    #         if organizations.exists():
-    #             PRIVACY_CHOICES.append(("Organization Only", "Organization Only"))
-                
-    #     self.fields["privacy"].choices = PRIVACY_CHOICES
+class InvitationForm(forms.Form):
+    invite_emails = forms.CharField(
+        widget=forms.TextInput(attrs={
+            'id': 'inviteEmails',
+            'placeholder': 'Enter email addresses separated by commas!',
+            # temporary
+            'value': 'enoshlartey3@gmail.com, michaelabate819@gmail.com'
+        }),
+        label="To"
+    )
+    invite_subject = forms.CharField(
+        widget=forms.TextInput(attrs={
+            'id': 'inviteSubject',
+            'placeholder': 'Set your subject line!',
+            'value': 'Help me test WAVE!!'
+        }),
+        label="Subject"
+    )
+    invite_message = forms.CharField(
+        widget=forms.Textarea(attrs={
+            'id': 'inviteMessage',
+            'value': 'You have been invited to {{ event.title }}! Please view the attached PDF file for your ticket in QR Code format.',
+        }),
+        label="Message",
+        initial='You have been invited to an event! Please check the details in the attachment.'
+    )
 
 class EventTicketForm(forms.ModelForm):
     class Meta:
