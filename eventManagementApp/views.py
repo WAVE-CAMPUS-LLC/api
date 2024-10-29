@@ -20,6 +20,7 @@ from .models import (
     Event,
     EventPrivacy,
     InviteEventOption,
+    RSVPTicket
 )
 
 
@@ -278,7 +279,8 @@ def eventManagement(request, eventId):
     user_profile = UserProfile.objects.get(user=request.user)
     is_in_college = user_profile.college is not None
     event_privacy = EventPrivacy.objects.get(event=event)
-
+    rsvp_list = RSVPTicket.objects.filter(event=event)
+    
     if request.method == "POST":
         action = request.POST.get("eventAction")
         invitationForm = InvitationForm(request.POST)
@@ -286,6 +288,12 @@ def eventManagement(request, eventId):
         if action == "deleteEvent":
             event.delete()
             return redirect("eventManagement:hostPortal")
+        
+        if action == 'removefromRSVPlist':
+            rsvp_id = request.POST.get('rsvp_id')
+            rsvp = get_object_or_404(RSVPTicket, ticket_id=rsvp_id)
+            rsvp.delete()
+            return redirect("eventManagement:eventManagement", eventId=eventId)
 
         if "displayOnCollege" in request.POST:
             event_to_update = get_object_or_404(
@@ -344,6 +352,7 @@ def eventManagement(request, eventId):
             "userProfile": user_profile,
             "eventPrivacy": event_privacy,
             "invitationForm": invitationForm,
+            "rsvpList": rsvp_list
         },
     )
 

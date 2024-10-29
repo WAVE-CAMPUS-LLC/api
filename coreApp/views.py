@@ -1,14 +1,15 @@
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, render, redirect
 from django.http import JsonResponse
 import random
 from django.db.models import Count
 
 from eventManagementApp.models import (
     Event,
-    EventTicket,
+    RSVPTicket,
     EventPrivacy,
     InviteEventOption,
 )
+from .forms import RSVPForm
 from collegeManagementApp.models import OrganizationMembership
 
 
@@ -111,8 +112,20 @@ def load_more_events(request):
 def eventDetailsView(request, eventId, token=None):
     pageName = "eventDetails"
     event = get_object_or_404(Event, eventId=eventId)
-    eventTickets = EventTicket.objects.filter(event=event)
     eventprivacy = EventPrivacy.objects.get(event=event)
+    
+    rsvpForm = RSVPForm() if event.ticketing == "RSVP Required" else None
+    
+    if request.method == "POST":
+        action = request.POST.get("eventAction")
+        
+        if action == "RSVP":
+            rsvpForm = RSVPForm(request.POST)
+            if rsvpForm.is_valid():
+                rsvp_ticket = rsvpForm.save(commit=False)
+                rsvp_ticket.event = event 
+                rsvp_ticket.save()
+                return redirect("core:rsvpConfirm")
 
     if eventprivacy.require_invitation:
         if token:
@@ -123,7 +136,8 @@ def eventDetailsView(request, eventId, token=None):
                 {
                     "page": pageName,
                     "event": event,
-                    "eventTickets": eventTickets,
+                    "eventPrivacy": eventprivacy,
+                    "rsvpForm": rsvpForm,
                 },
             )
         else:
@@ -133,7 +147,7 @@ def eventDetailsView(request, eventId, token=None):
                 {
                     "page": pageName,
                     "event": event,
-                    "eventTickets": eventTickets,
+                    "eventPrivacy": eventprivacy
                 },
             )
 
@@ -145,7 +159,7 @@ def eventDetailsView(request, eventId, token=None):
                 {
                     "page": pageName,
                     "event": event,
-                    "eventTickets": eventTickets,
+                    "rsvpForm": rsvpForm,
                 },
             )
         else:
@@ -155,7 +169,6 @@ def eventDetailsView(request, eventId, token=None):
                 {
                     "page": pageName,
                     "event": event,
-                    "eventTickets": eventTickets,
                     "eventPrivacy": eventprivacy,
                 },
             )
@@ -172,7 +185,7 @@ def eventDetailsView(request, eventId, token=None):
                 {
                     "page": pageName,
                     "event": event,
-                    "eventTickets": eventTickets,
+                    "rsvpForm": rsvpForm,
                 },
             )
         else:
@@ -182,7 +195,6 @@ def eventDetailsView(request, eventId, token=None):
                 {
                     "page": pageName,
                     "event": event,
-                    "eventTickets": eventTickets,
                     "eventPrivacy": eventprivacy,
                 },
             )
@@ -194,7 +206,7 @@ def eventDetailsView(request, eventId, token=None):
             {
                 "page": pageName,
                 "event": event,
-                "eventTickets": eventTickets,
+                "rsvpForm": rsvpForm,
             },
         )
 
@@ -216,3 +228,7 @@ def categoryView(request, name):
             "events": category_events,
         },
     )
+
+
+def rsvpConfirm(request):
+    return render(request, "extras/confirmations/RSVPConfirm.html")

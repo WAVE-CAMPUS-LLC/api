@@ -124,6 +124,7 @@ class InvitationForm(forms.Form):
         initial='You have been invited to an event! Please check the details in the attachment.'
     )
 
+
 class EventTicketForm(forms.ModelForm):
     class Meta:
         model = EventTicket

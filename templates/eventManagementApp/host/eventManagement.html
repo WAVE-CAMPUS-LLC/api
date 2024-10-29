@@ -194,8 +194,12 @@ Manage {{ event.title }} | WAVE.
 
             <div class="pbc-element-content" id="event-ticketing">
                 <div class="container-information">
+                    <div class="body-row">
+                        <h3>Your set your event ticketing to:</h3>
+                        <p>{{ event.ticketing}}</p>
+                    </div>
                     <div class="tab-information-body">
-                        {% if eventPrivacy.require_invitation == True %}
+                        {% if event.ticketing == "Invite Required" %}
                         <div class="inviteSystem">
                             <div class="systemHeader">
                                 <h3>Invite your favourite people to the event!</h3>
@@ -224,7 +228,45 @@ Manage {{ event.title }} | WAVE.
                                 </div>
                             </form>
                         </div>
+                        {% elif event.ticketing == "RSVP Required" %}
+                        <div class="body-row">
+                            <div class="rsvpHeading">
+                                <h4>RSVP List</h4>
+                            </div>
+                            
+                            <div class="rsvpList">
+                                {% if rsvpList %}
+                                <ul>
+                                    {% for rsvp in rsvpList %}
+                                    <li class="rsvpUser">
+                                        <form method="post">
+                                            {% csrf_token %}
+                                            <div class="rsvpUserInfo">
+                                                <div class="userName">{{ rsvp.first_name }} {{ rsvp.last_name }}</div>
+                                                <div class="userEmail">
+                                                    {{ rsvp.email }}
+                                                </div>
+                                            </div>
+                                            <input type="hidden" name="rsvp_id" value="{{ rsvp.ticket_id }}">
+                                            <div class="rsvpButton">
+                                                <button type="submit" name="eventAction" value="removefromRSVPlist" id="removeRSVP">Remove from list</button>
+                                            </div>
+                                        </form>
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                                {% else %}
+                                <div class="empty-pcb">
+                                    <img class="empty-image" src="{% static "/images/eventManagementApp/host/empty-listing.svg" %}" />
+                                    <p>There's no one on the RSVP list. Invite your friends!!</p>
+                                </div>
+                                {% endif %}
+                                
+                            </div>
+                        </div>
                         {% endif %}
+
+
                     </div>
                 </div>
             </div>

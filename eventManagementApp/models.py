@@ -104,6 +104,7 @@ class Event(models.Model):
     TICKET_CHOICES = [
         ("RSVP Required", "RSVP Required"),
         ("Invite Required", "Invite Required"),
+        ("Paid/Free", "Paid/Free"),
     ]
 
     COUNTRY_CHOICES = [("United States", "United States")]
@@ -189,7 +190,7 @@ class Event(models.Model):
         choices=TICKET_CHOICES,
         null=True,
         blank=True,
-        default="Open to anyone",
+        default="Paid/Free",
     )
 
     country = models.CharField(
@@ -300,6 +301,34 @@ class EventPrivacy(models.Model):
         return f"{self.event.title} Privacy Settings"
 
 
+class InviteEventOption(models.Model):
+    event = models.ForeignKey(Event, on_delete=models.CASCADE)
+    email = models.EmailField()
+    token = models.UUIDField(
+        primary_key=True, default=uuid.uuid4, editable=False, unique=True
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+
+    def save(self, *args, **kwargs):
+        if not self.expires_at:
+            time_now = timezone.now()
+            delta = timedelta(hours=48)
+            self.expires_at = time_now + delta
+        super().save(*args, **kwargs)
+
+
+class RSVPTicket(models.Model):
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="rsvp_tickets")
+    email = models.EmailField(_("Email"), max_length=254)
+    first_name = models.CharField(_("First Name"), max_length=50)
+    last_name = models.CharField(_("Last Name"), max_length=50)
+    created_at = models.DateTimeField(auto_now_add=True)
+    ticket_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    
+    def __str__(self):
+        return f"{self.first_name} {self.last_name} RSVP'd for {self.event.title}"
+
 class EventTicket(models.Model):
     TYPE_CHOICES = [
         ("Free", "Free"),
@@ -336,18 +365,3 @@ class EventTicket(models.Model):
 
     def __str__(self):
         return f"{self.ticket_name} for {self.event.title}"
-        
-        
-class InviteEventOption(models.Model):
-    event  = models.ForeignKey(Event, on_delete=models.CASCADE)
-    email = models.EmailField()
-    token = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, unique=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    expires_at = models.DateTimeField()
-    
-    def save(self, *args, **kwargs):
-        if not self.expires_at:
-            time_now = timezone.now()
-            delta = timedelta(hours=48)
-            self.expires_at = time_now + delta
-        super().save(*args, **kwargs)

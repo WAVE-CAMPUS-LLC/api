@@ -195,7 +195,6 @@
 .eventDetailsTab.tab-active {
     background-image: linear-gradient(to right, #007d84c3 0%, #13c9d3 100%);
 
-    border: 1px solid transparent;
     border-radius: 15px;
     color: white;
 }
@@ -263,6 +262,11 @@
 
     display: flex;
     align-items: center;
+}
+
+.ticketBodyHeader {
+    font-family: Wanted-Bold;
+    font-size: 28px;
 }
 
 /* Details Information Tab */
@@ -476,7 +480,7 @@
 }
 
 .jit-role-tab {
-    width: 60%;
+    width: 80%;
 }
 
 .jit-tab-header {
@@ -487,11 +491,23 @@
     border-color: #008d95;
     background: linear-gradient(270deg, #007d84c3, #13c9d3);
     background-size: 400% 400%;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
     /* This creates a larger gradient to animate over */
     color: white;
     cursor: pointer;
     animation: gradientAnimation 10s ease infinite;
     /* Animates over 10 seconds, loops infinitely */
+}
+
+.jit-tab-header p {
+    font-family: Wanted-Variable;
+    font-size: 12px;
+    display: flex;
+    height: 100%;
+    align-items: center;
 }
 
 @keyframes gradientAnimation {
@@ -517,10 +533,101 @@
     display: none;
 }
 
+.jtb-container {
+    display: flex;
+    flex-direction: column;
+    gap: 35px;
+}
+
 .ticket-body-container {
     display: flex;
     flex-direction: column;
     gap: 20px;
+}
+
+.rsvp-card-header {
+    font-family: Wanted-Bold;
+    font-size: 30px;
+
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}
+
+#rsvpForm {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+}
+
+.submit-group {
+    display: flex;
+    justify-content: center;
+
+    width: 100%;
+}
+
+.reserveButton {
+    padding: 15px;
+    border: 1px solid transparent;
+    border-radius: 15px;
+    background-image: linear-gradient(to right, #007d84c3 0%, #13c9d3 100%);
+    color: white;
+
+    font-family: Wanted-SemiBold;
+    font-size: 17px;
+    cursor: pointer;
+    width: 60%;
+}
+
+.form-email {
+    width: 100%;
+
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.form-email input {
+    width: 100%;
+    padding: 15px;
+
+    border-radius: 12px;
+    border: 1px solid rgba(0, 0, 0, 0.153);
+
+    font-family: Wanted-Variable;
+    font-size: 15px;
+}
+
+#rsvpForm .form-group label {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    width: 100%;
+}
+
+#rsvpForm .form-group p {
+    font-family: Wanted-Variable;
+    font-size: 15px;
+    color: black;
+}
+
+#rsvpForm .form-group input {
+    width: 100%;
+    padding: 15px;
+
+    border-radius: 12px;
+    border: 1px solid rgba(0, 0, 0, 0.153);
+
+
+    font-family: Wanted-Variable;
+    font-size: 15px;
 }
 
 
@@ -781,7 +888,7 @@
     font-size: 18px;
 }
 
-.purchase-quantity, 
+.purchase-quantity,
 .available-quantity {
     font-family: Wanted-Variable;
     font-size: 18px;
