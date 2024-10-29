@@ -9,6 +9,7 @@ from eventManagementApp.models import (
     EventPrivacy,
     InviteEventOption,
 )
+from accountManagementApp.models import UserProfile
 from .forms import RSVPForm
 from collegeManagementApp.models import OrganizationMembership
 
@@ -27,7 +28,20 @@ def exploreView(request):
     trending_events = Event.objects.filter(
         status="live", privacy="Discoverable"
     ).order_by("date")[:3]
-
+    
+    # Retrieve the user profile and invited events
+    user_profile = UserProfile.objects.get(user=request.user)
+    invited_events = user_profile.invited_events.filter(status="live")
+    invitations = user_profile.invitations.all()
+    invited_events_with_tokens = []
+    for event in invited_events:
+        token = None
+        for invite in invitations:
+            if invite.event == event:
+                token = invite.token
+                break
+        invited_events_with_tokens.append((event, token))
+    
     trending_categories = (
         Event.objects.filter(status="live", privacy="Discoverable")
         .values("event_type")
@@ -59,6 +73,7 @@ def exploreView(request):
             "events": initial_events,
             "trending_events": trending_events,
             "exploreCategoryChoices": trending_category_choices,
+            "invited_events_with_tokens": invited_events_with_tokens,
         },
     )
 

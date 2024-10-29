@@ -5,6 +5,8 @@ from django.utils.translation import gettext_lazy as _
 from django.conf import settings
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils import timezone
+
+from eventManagementApp.models import Event, InviteEventOption
 from .utils import generate_profile_picture
 from django.contrib.auth.models import Group
 from collegeManagementApp.models import College
@@ -187,6 +189,10 @@ class UserProfile(models.Model):
     # Communication Preferences
     email_communication = models.BooleanField(_("Email notifications"), default=True)
     text_communication = models.BooleanField(_("Text notifications"), default=True)
+    
+    # Invited Events
+    invited_events = models.ManyToManyField(Event, related_name="invited_events", blank=True)
+    invitations = models.ManyToManyField(InviteEventOption, related_name="invitations", blank=True)
 
     class Meta:
         default_permissions = ()

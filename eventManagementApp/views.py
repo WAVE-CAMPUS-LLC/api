@@ -312,10 +312,12 @@ def eventManagement(request, eventId):
             emailList = [email.strip() for email in emails.split(",")]
 
             for email in emailList:
-                invitation = InviteEventOption(event=event, email=email)
+                invitation = InviteEventOption.objects.create(event=event, email=email)
+                user_profile.invited_events.add(event)
+                user_profile.invitations.add(invitation)
+                print(user_profile.invited_events.all())
                 # invitation.generate_token()
                 invitation.save()
-                print(invitation.token)
 
                 invitation_link = request.build_absolute_uri(
                     reverse(
