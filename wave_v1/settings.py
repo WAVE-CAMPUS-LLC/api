@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     "extras",
     "careerApp",
     "eventManagementApp",
+    "eventTicketsApp",
     "supportCenterApp",
     "collegeManagementApp",
     "socialApp",

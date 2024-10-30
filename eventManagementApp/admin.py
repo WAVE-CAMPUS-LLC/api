@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import HostApplication, Event, EventPrivacy, RSVPTicket, PaidFreeTicket
+from .models import HostApplication, Event, EventPrivacy
+from eventTicketsApp.models import RSVPTicket, PaidFreeTicket
 
 
 # Register your models here.
@@ -56,7 +57,7 @@ class RSVPTicketAdmin(admin.ModelAdmin):
         "created_at",
         "ticket_id",
     )
-    
+
 
 class PaidFreeTicketAdmin(admin.ModelAdmin):
     list_display = (

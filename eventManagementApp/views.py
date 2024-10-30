@@ -13,18 +13,19 @@ from django.urls import reverse
 from accountManagementApp.models import UserProfile
 from collegeManagementApp.models import Organization, OrganizationMembership
 from .forms import (
-    EventTicketForm,
     HostApplicationForm,
     EventForm,
-    InvitationForm,
-    PaidFreeTicketForm,
 )
+
+from eventTicketsApp.forms import InvitationForm, PaidFreeTicketForm
 from .models import (
-    PaidFreeTicket,
     EventType,
     HostApplication,
     Event,
     EventPrivacy,
+)
+
+from eventTicketsApp.models import (
     InviteEventOption,
     RSVPTicket,
     PaidFreeTicket,
