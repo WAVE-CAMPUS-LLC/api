@@ -5,4 +5,7 @@ class SupportcenterappConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
     name = "supportCenterApp"
     verbose_name = "Support Center"
+
+    def ready(self):
+        import supportCenterApp.signals
     

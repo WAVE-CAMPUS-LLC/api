@@ -261,3 +261,8 @@ def viewTicket(request, ticket_id):
         "supportCenterApp/portal/support_ticket_details.html",
         {"ticket": ticket},
     )
+
+def ticket_messages(request, ticket_id):
+    ticket = SupportTicket.objects.get(ticket_id=ticket_id)
+    messages = ticket.messages.all()
+    return render(request, "partials/messages.html", {"messages": messages})

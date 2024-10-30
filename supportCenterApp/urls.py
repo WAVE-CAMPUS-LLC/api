@@ -10,4 +10,5 @@ urlpatterns = [
     path('chat/', views.chat_with_gpt, name='chat_with_gpt'),
     path('portal/ticket/<str:ticket_id>/', views.viewTicket, name="viewTicket"),
     path('portal/ticket/<str:ticket_id>/reply/', views.send_ticket_reply, name='send_ticket_reply'),
+    path('ticket/<str:ticket_id>/messages/', views.ticket_messages, name='ticket_messages'),
 ]

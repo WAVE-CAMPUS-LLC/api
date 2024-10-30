@@ -96,7 +96,7 @@ textarea {
 }
 
 button {
-    background-color: black;
+    background-color: #008D95;
     color: white;
     padding: 10px 20px;
     border: none;
@@ -104,6 +104,7 @@ button {
     cursor: pointer;
     font-size: 14px;
     margin-top: 10px;
+    width: 400px;
 }
 
 button:hover {

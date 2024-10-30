@@ -37,6 +37,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    "daphne",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -58,6 +59,7 @@ INSTALLED_APPS = [
     "campusManagerApp",
     "widget_tweaks",
     'storages',
+    'channels',
 ]
 
 MIDDLEWARE = [
@@ -93,6 +95,12 @@ TEMPLATES = [
     },
 ]
 
+ASGI_APPLICATION = 'wave_v1.asgi.application'  
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer"  #TODO: Change to Redis for production
+    }
+}
 WSGI_APPLICATION = "wave_v1.wsgi.application"
 
 # Database
