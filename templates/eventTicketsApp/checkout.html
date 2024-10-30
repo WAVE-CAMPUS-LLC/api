@@ -1,0 +1,28 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}
+WAVE — Join Us!
+{% endblock title %}
+
+{% block app_page_style %}
+<link rel="stylesheet" type="text/css" href="{% static "/styles/authenticationApp/join.css" %}" />
+{% endblock app_page_style %}
+
+{% block script %}
+<script type="text/javascript" src="{% static "/scripts/authenticationApp/join/joinValidations.js" %}"></script>
+{% endblock script %}
+
+
+{% block auth_body %}
+<main id="joinCardContainer">
+    <header id="navHeader">
+        <div id="logo">
+            <a href="{% url "core:index" %}">WAVE<span>.</span></a>
+        </div>
+    </header>
+    {{ cart }}
+    {{ total_amount }}
+</main>
+
+{% endblock auth_body %}

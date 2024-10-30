@@ -191,6 +191,7 @@
                             </div>
 
                             <div id="jit-tab-container" class="jit-tab-container">
+                                <input type="hidden" id="save-url" value="{% url 'eventTickets:updateCart' %}" />
                                 {% for ticket in paidFreeTickets %}
                                 <div class="jit-role-tab">
                                     <div role="button" class="jit-tab-header">
@@ -296,7 +297,9 @@
 
                             <div class="checkoutRow" id="checkoutRow">
                                 <div class="checkoutRowContainer">
-                                    <button id="checkoutButton" class="checkoutButton" role="button" name="eventAction" value="Checkout">
+                                    <input type="hidden" id="checkout-url" value="{% url 'eventTickets:checkout' %}">
+
+                                    <button id="checkoutButton" data-save-url="{% url 'eventTickets:updateCart' %}" class="checkoutButton" role="button" name="eventAction" value="Checkout" onclick="returnCheckout()">
                                         Checkout -
                                         <span id="checkoutTotal">$0.00</span>
                                     </button>
