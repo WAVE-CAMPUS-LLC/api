@@ -23,6 +23,16 @@
 
 
 {% block body %}
+{% if existingRSVP %}
+<div class="rsvp-card-header-warning">
+    <h3>This email has already been submitted! Try a different one.</h3>
+</div>
+{% endif %}
+{% if newRSVP %}
+<div class="rsvp-card-header-success">
+    <h3>You have reserved a place for the event. Check your email for confirmation.</h3>
+</div>
+{% endif %}
 <div id="content-container">
     <div class="page-header">
         <div class="event-title">

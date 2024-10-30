@@ -567,6 +567,25 @@
     width: 100%;
 }
 
+.rsvp-card-header-warning {
+    font-family: Wanted-Bold;
+    font-size: 30px;
+    color: crimson;
+
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}
+.rsvp-card-header-success {
+    font-family: Wanted-Bold;
+    font-size: 30px;
+    color: green;
+
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}
+
 #rsvpForm {
     display: flex;
     flex-direction: column;

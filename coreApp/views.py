@@ -142,12 +142,41 @@ def eventDetailsView(request, eventId, token=None):
         action = request.POST.get("eventAction")
         
         if action == "RSVP":
-            rsvpForm = RSVPForm(request.POST)
-            if rsvpForm.is_valid():
-                rsvp_ticket = rsvpForm.save(commit=False)
-                rsvp_ticket.event = event 
-                rsvp_ticket.save()
-                return redirect("core:rsvpConfirm")
+            user_email = request.POST.get("email")
+            existing_rsvp = RSVPTicket.objects.filter(event=event, email=user_email).first()
+
+            if existing_rsvp:
+                return render(
+                    request,
+                    "coreApp/event/eventDetails.html",
+                    {
+                        "page": pageName,
+                        "event": event,
+                        "eventPrivacy": eventprivacy,
+                        "rsvpForm": rsvpForm,
+                        "paidFreeTickets": eventPaidFreeTickets,
+                        "existingRSVP": True,
+                    },
+                )
+                
+            else:
+                rsvpForm = RSVPForm(request.POST)
+                if rsvpForm.is_valid():
+                    rsvp_ticket = rsvpForm.save(commit=False)
+                    rsvp_ticket.event = event 
+                    rsvp_ticket.save()
+                    return render(
+                        request,
+                        "coreApp/event/eventDetails.html",
+                        {
+                            "page": pageName,
+                            "event": event,
+                            "eventPrivacy": eventprivacy,
+                            "rsvpForm": rsvpForm,
+                            "paidFreeTickets": eventPaidFreeTickets,
+                            "newRSVP": True,
+                        },
+                    )
 
     if eventprivacy.require_invitation:
         if token:

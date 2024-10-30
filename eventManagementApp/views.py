@@ -324,7 +324,6 @@ def eventManagement(request, eventId):
                 invitation = InviteEventOption.objects.create(event=event, email=email)
                 user_profile.invited_events.add(event)
                 user_profile.invitations.add(invitation)
-                print(user_profile.invited_events.all())
                 # invitation.generate_token()
                 invitation.save()
 
