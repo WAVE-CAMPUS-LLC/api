@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import HostApplication, Event, EventPrivacy, RSVPTicket
+from .models import HostApplication, Event, EventPrivacy, RSVPTicket, PaidFreeTicket
 
 
 # Register your models here.
@@ -56,9 +56,23 @@ class RSVPTicketAdmin(admin.ModelAdmin):
         "created_at",
         "ticket_id",
     )
+    
+
+class PaidFreeTicketAdmin(admin.ModelAdmin):
+    list_display = (
+        "event",
+        "ticket_id",
+        "ticket_type",
+        "ticket_name",
+        "ticket_price",
+        "ticket_quantity",
+        "ticket_description",
+        # "created_at",
+    )
 
 
 admin.site.register(Event, EventAdmin)
 admin.site.register(EventPrivacy, EventPrivacyAdmin)
 admin.site.register(RSVPTicket, RSVPTicketAdmin)
+admin.site.register(PaidFreeTicket, PaidFreeTicketAdmin)
 admin.site.register(HostApplication, HostApplicationAdmin)

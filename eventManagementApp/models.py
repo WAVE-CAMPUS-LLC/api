@@ -102,9 +102,9 @@ class Event(models.Model):
     ]
 
     TICKET_CHOICES = [
+        ("Paid/Free", "Paid/Free"),
         ("RSVP Required", "RSVP Required"),
         ("Invite Required", "Invite Required"),
-        ("Paid/Free", "Paid/Free"),
     ]
 
     COUNTRY_CHOICES = [("United States", "United States")]
@@ -319,26 +319,30 @@ class InviteEventOption(models.Model):
 
 
 class RSVPTicket(models.Model):
-    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="rsvp_tickets")
+    event = models.ForeignKey(
+        Event, on_delete=models.CASCADE, related_name="rsvp_tickets"
+    )
     email = models.EmailField(_("Email"), max_length=254)
     first_name = models.CharField(_("First Name"), max_length=50)
     last_name = models.CharField(_("Last Name"), max_length=50)
+    display_on_guestlist = models.BooleanField(_("Do you want to be displayed on the guest list?"), default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     ticket_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
-    
+
     def __str__(self):
         return f"{self.first_name} {self.last_name} RSVP'd for {self.event.title}"
 
-class EventTicket(models.Model):
+
+class PaidFreeTicket(models.Model):
     TYPE_CHOICES = [
         ("Free", "Free"),
         ("Priced", "Priced"),
     ]
 
     event = models.ForeignKey(
-        Event, verbose_name=_("Related Event"), on_delete=models.CASCADE
+        Event, verbose_name=_("Related Event"), on_delete=models.CASCADE, related_name="tickets"
     )
-    privateTicketId = models.UUIDField(
+    ticket_id = models.UUIDField(
         primary_key=True, default=uuid.uuid4, editable=False, unique=True
     )
     ticket_name = models.CharField(_("Ticket Name"), max_length=50)
@@ -357,11 +361,22 @@ class EventTicket(models.Model):
         _("Describe ticket. Are there any perks?"), max_length=300
     )
     ticket_quantity = models.PositiveIntegerField(
-        _("How many tickets should be made available?")
+        _("How many tickets should be made available?"), default=1
     )
+    ticket_sold = models.PositiveIntegerField(_("Tickets Sold"), default=0, null=True, blank=True)
+    # created_at = models.DateTimeField(auto_now_add=True)
+
 
     class Meta:
         unique_together = ("event", "ticket_name")
 
     def __str__(self):
         return f"{self.ticket_name} for {self.event.title}"
+    
+    def available_tickets(self):
+        return self.ticket_quantity - self.ticket_sold
+    
+    def save(self, *args, **kwargs):
+        if self.ticket_type == "Paid" and not self.ticket_price:
+            raise ValueError("Ticket price must be set for paid tickets")
+        super().save(*args, **kwargs)

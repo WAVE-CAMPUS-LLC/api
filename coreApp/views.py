@@ -8,6 +8,7 @@ from eventManagementApp.models import (
     RSVPTicket,
     EventPrivacy,
     InviteEventOption,
+    PaidFreeTicket
 )
 from .forms import RSVPForm
 from collegeManagementApp.models import OrganizationMembership
@@ -113,8 +114,10 @@ def eventDetailsView(request, eventId, token=None):
     pageName = "eventDetails"
     event = get_object_or_404(Event, eventId=eventId)
     eventprivacy = EventPrivacy.objects.get(event=event)
+    eventPaidFreeTickets = PaidFreeTicket.objects.filter(event=event)
     
     rsvpForm = RSVPForm() if event.ticketing == "RSVP Required" else None
+    rsvp_guests = RSVPTicket.objects.filter(event=event, display_on_guestlist=True)
     
     if request.method == "POST":
         action = request.POST.get("eventAction")
@@ -138,6 +141,7 @@ def eventDetailsView(request, eventId, token=None):
                     "event": event,
                     "eventPrivacy": eventprivacy,
                     "rsvpForm": rsvpForm,
+                    "paidFreeTickets": eventPaidFreeTickets,
                 },
             )
         else:
@@ -160,6 +164,7 @@ def eventDetailsView(request, eventId, token=None):
                     "page": pageName,
                     "event": event,
                     "rsvpForm": rsvpForm,
+                    "paidFreeTickets": eventPaidFreeTickets,
                 },
             )
         else:
@@ -186,6 +191,7 @@ def eventDetailsView(request, eventId, token=None):
                     "page": pageName,
                     "event": event,
                     "rsvpForm": rsvpForm,
+                    "paidFreeTickets": eventPaidFreeTickets,
                 },
             )
         else:
@@ -207,6 +213,7 @@ def eventDetailsView(request, eventId, token=None):
                 "page": pageName,
                 "event": event,
                 "rsvpForm": rsvpForm,
+                "paidFreeTickets": eventPaidFreeTickets,
             },
         )
 

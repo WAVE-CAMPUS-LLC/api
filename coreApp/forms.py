@@ -6,4 +6,4 @@ from eventManagementApp.models import RSVPTicket
 class RSVPForm(forms.ModelForm):
     class Meta:
         model = RSVPTicket
-        fields = ["email", "first_name", "last_name"]
+        fields = ["email", "first_name", "last_name", "display_on_guestlist"]

@@ -457,6 +457,13 @@
     font-size: 17px;
 }
 
+.guestlistDisplay {
+    display: flex;
+    justify-content: center;
+    flex-direction: row;
+    gap: 20px;
+}
+
 
 /* Event Ticket Information Tab */
 .eventTicket-header {
@@ -481,6 +488,12 @@
 
 .jit-role-tab {
     width: 80%;
+}
+
+.jit-tab-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
 }
 
 .jit-tab-header {
@@ -630,267 +643,163 @@
     font-size: 15px;
 }
 
+.display-group {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    font-family: Wanted-Variable;
+    font-size: 15px;
+    align-items: center;
+}
+
+#rsvpForm .display-group label {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.custom-toggle {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 34px;
+}
+
+.custom-toggle input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.custom-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #868686;
+    transition: 0.4s;
+}
+
+.custom-slider:before {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: 0.4s;
+}
+
+input:checked+.custom-slider {
+    background-color: #008d95;
+}
+
+input:focus+.custom-slider {
+    box-shadow: 0 0 1px #008d95;
+}
+
+input:checked+.custom-slider:before {
+    transform: translateX(26px);
+}
+
+/* Rounded sliders */
+.custom-slider.custom-round {
+    border-radius: 34px;
+}
+
+.custom-slider.custom-round:before {
+    border-radius: 50%;
+}
 
 
 
+/* Event Ticketing Information Tab: Paid/Free */
+.ticket-description-body {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
 
-/* Purchase Tickets Section */
-.purchase-card {
+.priceType {
+    display: flex;
+    justify-content: start;
+}
+
+.priceType {
+    font-family: Wanted-Bold;
+    font-size: 20px;
+}
+
+.ticket-description-body p {
+    font-family: Wanted-Variable;
+    font-size: 17px;
+}
+
+.addRemoveTickets {
+    display: flex;
+    flex-direction: row;
+    gap: 2px;
+    align-items: center;
+}
+
+.currentTicketAmount {
+    width: 50px;
+    height: 30px;
+    font-family: Wanted-Variable;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.addRemoveTickets button {
+    border: none;
+    background: none;
+    cursor: pointer;
+}
+
+
+.ticket-header-info {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+
+/* Side Panel (Cart) */
+.ticketCartContent {
+    width: 35%;
+}
+
+.ticketCartContentCard {
     width: 100%;
     height: auto;
 
     border-radius: 15px;
     padding: 25px;
 
-    border: 2px solid rgba(0, 0, 0, 0.038);
+    border: 1px solid rgba(82, 82, 82, 0.475);
     border-radius: 15px;
-    -webkit-box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.061);
-    -moz-box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.061);
-    box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.061);
+    -webkit-box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.259);
+    -moz-box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.259);
+    box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.259);
 
     display: flex;
     flex-direction: column;
     gap: 10px;
 }
 
-.pc-header {
+.cartHeader {
+    display: flex;
+    justify-content: center;
     font-family: Wanted-Bold;
-    font-size: 30px;
-
-    text-align: center;
-}
-
-.pc-divider {
-    display: flex;
-    justify-content: center;
-}
-
-.pc-divider hr {
-    border: 2px solid #8f8f8fa3;
-    width: 50%;
-    border-radius: 10px;
-}
-
-.pc-body {
-    margin-top: 20px;
-}
-
-.pc-body ul {
-    list-style-type: none;
-
-    display: flex;
-    flex-direction: column;
-    gap: 30px;
-}
-
-.pc-body ul li {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-}
-
-.ticket-type-info {
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-}
-
-.ticket-type-info h6 {
-    font-family: Wanted-SemiBold;
-    font-size: 17px;
+    font-size: 25px;
 }
 
 
-.ticket-cart {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 15px;
 
-    font-family: Wanted-Bold;
-}
-
-.cart-button-control {
-    background: none;
-    border: none;
-
-    cursor: pointer;
-}
-
-.cart-button-control img {
-    width: 25px;
-    height: 25px;
-}
-
-.pcb-hr {
-    width: 100%;
-    display: flex;
-    justify-content: center;
-}
-
-.pcb-hr hr {
-    width: 60%;
-    border: 1.5px solid #8f8f8fa3;
-}
-
-.view-cart {
-    display: flex;
-    justify-content: center;
-
-    margin-top: 30px;
-}
-
-.view-cart button {
-    padding: 15px;
-    border: 1px solid transparent;
-    border-radius: 15px;
-    background-image: linear-gradient(to right, #007d84c3 0%, #13c9d3 100%);
-    color: white;
-
-    font-family: Wanted-SemiBold;
-    font-size: 17px;
-    cursor: pointer;
-    width: 60%;
-}
-
-
-/* People also viewed */
-#recommended-events {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-}
-
-.people-viewed {
-    font-size: 30px;
-    font-family: Wanted-SemiBold;
-}
-
-.suggested-events-container {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 20px;
-}
-
-.category-event-card {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-
-
-    cursor: pointer;
-
-    padding: 10px;
-}
-
-.category-event-card:hover {
-    -webkit-box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.289);
-    -moz-box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.289);
-    box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.289);
-    border: none;
-    border-radius: 20px;
-}
-
-.category-event-card a {
-    text-decoration: none;
-    color: black;
-
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-}
-
-.category-image {
-    width: 100%;
-}
-
-.category-image img {
-    width: 100%;
-    height: 100%;
-
-    border-radius: 20px;
-}
-
-.category-event-name {
-    font-family: Wanted-SemiBold;
-    font-size: 15px;
-
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-}
-
-.eventSubInfo {
-    display: flex;
-    flex-direction: column;
-    gap: 7px;
-
-    font-family: Wanted-Regular;
-    color: rgba(66, 66, 66, 0.575);
-}
-
-#eventType {
-    display: flex;
-    flex-direction: row;
-    gap: 20px;
-}
-
-#eventType a {
-
-    border: 2px solid transparent;
-    color: #008d95;
-    border-radius: 15px;
-
-    font-family: Wanted-Medium;
-    letter-spacing: 1px;
-
-    text-decoration: none;
-
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 5px;
-
-
-}
-
-#eventType a:hover {
-    text-decoration: underline;
-}
-
-.eventSubPrice {
-    display: flex;
-    justify-content: end;
-    color: #008d95;
-}
-
-/* Event Ticketing Information */
-.pricing-row {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    gap: 20px;
-    width: 100%;
-
-    font-family: Wanted-Variable;
-    font-size: 18px;
-}
-
-.description-row {
-    display: flex;
-    flex-direction: column;
-    align-items: start;
-    gap: 20px;
-    width: 100%;
-
-    font-family: Wanted-Variable;
-    font-size: 18px;
-}
-
-.purchase-quantity,
-.available-quantity {
-    font-family: Wanted-Variable;
-    font-size: 18px;
-    color: #676767;
-}

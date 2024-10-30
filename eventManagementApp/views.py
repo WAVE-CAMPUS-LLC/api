@@ -12,15 +12,22 @@ from django.urls import reverse
 
 from accountManagementApp.models import UserProfile
 from collegeManagementApp.models import Organization, OrganizationMembership
-from .forms import EventTicketForm, HostApplicationForm, EventForm, InvitationForm
+from .forms import (
+    EventTicketForm,
+    HostApplicationForm,
+    EventForm,
+    InvitationForm,
+    PaidFreeTicketForm,
+)
 from .models import (
-    EventTicket,
+    PaidFreeTicket,
     EventType,
     HostApplication,
     Event,
     EventPrivacy,
     InviteEventOption,
-    RSVPTicket
+    RSVPTicket,
+    PaidFreeTicket,
 )
 
 
@@ -280,17 +287,19 @@ def eventManagement(request, eventId):
     is_in_college = user_profile.college is not None
     event_privacy = EventPrivacy.objects.get(event=event)
     rsvp_list = RSVPTicket.objects.filter(event=event)
-    
+    paid_free_tickets = PaidFreeTicket.objects.filter(event=event)
+
     if request.method == "POST":
         action = request.POST.get("eventAction")
         invitationForm = InvitationForm(request.POST)
+        paidFreeForm = PaidFreeTicketForm(request.POST)
 
         if action == "deleteEvent":
             event.delete()
             return redirect("eventManagement:hostPortal")
-        
-        if action == 'removefromRSVPlist':
-            rsvp_id = request.POST.get('rsvp_id')
+
+        if action == "removefromRSVPlist":
+            rsvp_id = request.POST.get("rsvp_id")
             rsvp = get_object_or_404(RSVPTicket, ticket_id=rsvp_id)
             rsvp.delete()
             return redirect("eventManagement:eventManagement", eventId=eventId)
@@ -328,7 +337,7 @@ def eventManagement(request, eventId):
                 )
                 emailMessageHtml = render_to_string(
                     "emailTemplates/eventManagementApp/host/inviteAttendees.html",
-                    {"body": message, "invitationLink":invitation_link},
+                    {"body": message, "invitationLink": invitation_link},
                 )
                 send_mail(
                     subject=subject,
@@ -340,8 +349,16 @@ def eventManagement(request, eventId):
                 )
             return redirect("eventManagement:eventManagement", eventId=eventId)
 
+        if action == "createPaidFreeTicket" and paidFreeForm.is_valid():
+            new_ticket = paidFreeForm.save(commit=False)
+            new_ticket.event = event
+            new_ticket.save()
+            return redirect("eventManagement:eventManagement", eventId=eventId)
+        else:
+            print(paidFreeForm.errors)
     else:
         invitationForm = InvitationForm()
+        paidFreeForm = PaidFreeTicketForm()
 
     return render(
         request,
@@ -352,34 +369,8 @@ def eventManagement(request, eventId):
             "userProfile": user_profile,
             "eventPrivacy": event_privacy,
             "invitationForm": invitationForm,
-            "rsvpList": rsvp_list
-        },
-    )
-
-
-@login_required
-@group_required("Host")
-def eventTicketingOverview(request, eventId):
-    event = get_object_or_404(Event, eventId=eventId)
-    eventTicket = EventTicket.objects.filter(event=event)
-    eventTicketForm = EventTicketForm(request.POST)
-
-    if request.method == "POST":
-        if eventTicketForm.is_valid():
-            new_ticket = eventTicketForm.save(commit=False)
-            new_ticket.event = event
-            new_ticket.save()
-
-            return redirect("eventManagement:ticketingOverview", eventId=eventId)
-    else:
-        eventTicketForm = EventTicketForm()
-
-    return render(
-        request,
-        "eventManagementApp/host/event/ticketing/ticketingOverview.html",
-        {
-            "event": event,
-            "eventTickets": eventTicket,
-            "eventTicketForm": eventTicketForm,
+            "rsvpList": rsvp_list,
+            "paidFreeForm": paidFreeForm,
+            "paidFreeTickets": paid_free_tickets,
         },
     )

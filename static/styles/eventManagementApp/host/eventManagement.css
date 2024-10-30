@@ -282,6 +282,7 @@ input:checked+.checkbox {
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    text-transform: none;
     gap: 10px;
 
     font-family: Wanted-Variable;
@@ -294,6 +295,27 @@ input:checked+.checkbox {
 
 .empty-image {
     width: 60px;
+}
+
+.empty-pcb button {
+    padding: 12px;
+    border: 1px solid transparent;
+    justify-content: center;
+    color: white;
+    border-left-color: #008d95bc;
+    border-right-color: #13c9d3;
+
+    font-family: Wanted-Regular;
+    font-size: 16px;
+    text-decoration: none;
+
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    gap: 10px;
+    border-radius: 15px;
+    background-image: linear-gradient(to right, #008d95bc 0%, #13c9d3 100%);
+    cursor: pointer;
 }
 
 /* RSVP Ticketing */
@@ -318,6 +340,11 @@ input:checked+.checkbox {
     display: flex;
     flex-direction: column;
     gap: 10px;
+}
+
+.guestlistDisplay {
+    font-family: Wanted-Variable;
+    font-size: 12px;
 }
 
 .rsvpUser form{
@@ -358,5 +385,213 @@ input:checked+.checkbox {
     flex-direction: row;
     gap: 10px;
     border-radius: 15px;
+    cursor: pointer;
+}
+
+
+/* Free/Paid Ticketing */
+.ticketingHeader {
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.ticketingHeading h4 {
+    font-family: Wanted-ExtraBold;
+    font-size: 30px;
+    display: flex;
+    justify-content: start;
+}
+
+.createTicketButtonRow {
+    display: flex;
+    justify-content: end;
+}
+
+.createTicketButton {
+    padding: 12px;
+    border: 1px solid transparent;
+    justify-content: center;
+    color: white;
+    border-left-color: #008d95bc;
+    border-right-color: #13c9d3;
+
+    font-family: Wanted-Regular;
+    font-size: 16px;
+    text-decoration: none;
+
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    gap: 10px;
+    border-radius: 15px;
+    background-image: linear-gradient(to right, #008d95bc 0%, #13c9d3 100%);
+    cursor: pointer;
+}
+
+#ticketCreationModal {
+    display: none;
+
+    background-color: rgba(0, 0, 0, 0.037);
+
+    -webkit-backdrop-filter: blur(2px) saturate(1.7);
+    backdrop-filter: blur(2px) saturate(1.7);
+
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1005;
+
+    width: 100%;
+    height: 100%;
+
+    cursor: default;
+}
+
+
+.ticketCreationModalContainer {
+    width: 100%;
+    height: 100%;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.ticketCreationCard {
+    width: 60%;
+    height: auto;
+
+    background-color: white;
+    -webkit-box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.085);
+    -moz-box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.16);
+    box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.061);
+
+    border-radius: 20px;
+    padding: 20px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    overflow-y: auto;
+}
+
+.ticketCreationHeader {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.ticketCreationHeading {
+    width: 100%;
+    display: flex;
+    
+    flex-direction: column;
+}
+
+.ticketCreationHeading h3 {
+    font-family: Wanted-ExtraBold;
+    font-size: 30px;
+}
+
+.ticketCreationHeading p {
+    font-family: Wanted-Variable;
+    font-size: 17px;
+    color: rgba(0, 0, 0, 0.548);
+}
+
+.closeTicketCreationButtonRow {
+    width: 100%;
+    display: flex;
+    justify-content: end;
+    align-items: center;
+}
+
+#closeCreateTicketModalButton {
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+.ticketCreationBody {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.ticketCreationBody input, 
+.ticketCreationBody select{
+    width: 100%;
+    border: 1px solid rgba(130, 130, 130, 0.204);
+    -webkit-box-shadow: 0px 2px 7px 0px rgba(216, 216, 216, 0.264);
+    box-shadow: 0px 2px 7px 0px rgba(216, 216, 216, 0.264);
+    -moz-box-shadow: 0px 2px 7px 0px rgba(216, 216, 216, 0.264);
+    border-radius: 15px;
+    padding: 15px;
+
+    font-size: 15px;
+    font-family: Wanted-Variable;
+}
+
+.ticketCreationBody textarea {
+    width: 100%;
+    min-height: 100px;
+    border: 1px solid rgba(130, 130, 130, 0.204);
+    -webkit-box-shadow: 0px 2px 7px 0px rgba(216, 216, 216, 0.264);
+    box-shadow: 0px 2px 7px 0px rgba(216, 216, 216, 0.264);
+    -moz-box-shadow: 0px 2px 7px 0px rgba(216, 216, 216, 0.264);
+    border-radius: 15px;
+    padding: 15px;
+
+    font-size: 15px;
+    font-family: Wanted-Variable;
+}
+
+.creationRow {
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+}
+
+.ticketCreationBody label {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    width: 100%;
+}
+
+.ticketCreationBody label p {
+    font-family: Wanted-Variable;
+    font-size: 17px;
+    color: grey;
+}
+
+.creationSubmitRow {
+    display: flex;
+    justify-content: end;
+    width: 100%;
+}
+
+.createPaidTicketButton {
+    padding: 12px;
+    border: 1px solid transparent;
+    justify-content: center;
+    color: white;
+    border-left-color: #008d95bc;
+    border-right-color: #13c9d3;
+
+    font-family: Wanted-Regular;
+    font-size: 16px;
+    text-decoration: none;
+
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    gap: 10px;
+    border-radius: 15px;
+    background-image: linear-gradient(to right, #008d95bc 0%, #13c9d3 100%);
     cursor: pointer;
 }

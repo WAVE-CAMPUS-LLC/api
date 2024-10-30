@@ -11,8 +11,11 @@ Manage {{ event.title }} | WAVE.
 {% endblock app_page_style %}
 
 {% block script %}
-<script type="text/javascript" src="{% static "scripts/eventManagementApp/host/eventManage/tabControl.js" %}" defer></script>
-<script type="text/javascript" src="{% static "scripts/eventManagementApp/host/displayOnCollege.js" %}" defer></script>
+    <script type="text/javascript" src="{% static "scripts/eventManagementApp/host/eventManage/tabControl.js" %}" defer></script>
+    {% if isInCollege %}
+    <script type="text/javascript" src="{% static "scripts/eventManagementApp/host/displayOnCollege.js" %}" defer></script>
+    {% endif %}
+    <script type="text/javascript" src="{% static "scripts/eventManagementApp/host/eventManage/createTicketDisplay.js" %}" defer></script>
 {% endblock script %}
 
 
@@ -165,29 +168,6 @@ Manage {{ event.title }} | WAVE.
                             </form>
                         </div>
                         {% endif %}
-
-                        {% if event.privacy == "Discoverable" %}
-                        <div class="body-row">
-                            <h3>Your event is currently</h3>
-                            <p>{{ eventPrivacy.discoverability_level }}</p>
-                        </div>
-                        {% elif event.privacy == "Invite Only" %}
-                        <div class="body-row">
-                            <h3>Your event has been set to </h3>
-                            <p>{{ eventPrivacy.invite_only_level }}</p>
-                        </div>
-                        {% elif event.privacy == "Private (CoLLege)" %}
-                        <div class="body-row">
-                            <h3>Your event is currently</h3>
-                            <p>{{ eventPrivacy.restricted_college }}</p>
-                        </div>
-                        {% elif event.privacy == "Private (Organization)" %}
-                        <div class="body-row">
-                            <h3>Your event is currently restricted to</h3>
-                            <p>{{ eventPrivacy.restricted_organization }}</p>
-                        </div>
-                        {% endif %}
-                        
                     </div>
                 </div>
             </div>
@@ -238,6 +218,7 @@ Manage {{ event.title }} | WAVE.
                                 {% if rsvpList %}
                                 <ul>
                                     {% for rsvp in rsvpList %}
+                                    <hr/>
                                     <li class="rsvpUser">
                                         <form method="post">
                                             {% csrf_token %}
@@ -245,6 +226,13 @@ Manage {{ event.title }} | WAVE.
                                                 <div class="userName">{{ rsvp.first_name }} {{ rsvp.last_name }}</div>
                                                 <div class="userEmail">
                                                     {{ rsvp.email }}
+                                                </div>
+                                                <div class="guestlistDisplay">
+                                                    {% if rsvp.display_on_guestlist == True %}
+                                                    {{ rsvp.first_name }} opted to be displayed on the guestlist.
+                                                    {% else %}
+                                                    {{ rsvp.first_name }} opted not to be displayed on the guestlist.
+                                                    {% endif %}
                                                 </div>
                                             </div>
                                             <input type="hidden" name="rsvp_id" value="{{ rsvp.ticket_id }}">
@@ -264,12 +252,107 @@ Manage {{ event.title }} | WAVE.
                                 
                             </div>
                         </div>
+                        {% elif event.ticketing == "Paid/Free" %}
+                        <div class="body-row">
+                            <div class="ticketingHeader">
+                                <div class="ticketingHeading">
+                                    <h4>
+                                        {% if paidFreeTickets %}
+                                        Manage your tickets here!
+                                        {% else %}
+                                        Create tickets for users to purchase!
+                                        {% endif %}
+                                    </h4>
+                                </div>
+                                <div class="createTicketButtonRow">
+                                    <button type="button" class="createTicketButton" id="createTicketButtonFirst" role="button">
+                                        <img src="{% static "/images/eventManagementApp/host/host_ticket.svg" %}" />
+                                        Create Ticket
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="ticketingBody">
+                                {% if paidFreeTickets %}
+                                <div class="createdTicketsContainer">
+                                    {% for ticket in paidFreeTickets %}
+                                    <div class="ticketCards">
+                                        {{ ticket.ticket_name }}
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                {% else %}
+                                <div class="empty-pcb">
+                                    <img class="empty-image" src="{% static "/images/eventManagementApp/host/empty-listing.svg" %}" />
+                                    <p>You haven't created any tickets. </p>
+                                    <button type="button" class="createTicketButton" id="createTicketButtonSecond" role="button">
+                                        <img src="{% static "/images/eventManagementApp/host/host_ticket.svg" %}" />
+                                        Create Ticket
+                                    </button>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
                         {% endif %}
-
-
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+</div>
+
+<div class="ticketCreationModal" id="ticketCreationModal">
+    <div class="ticketCreationModalContainer">
+        <div class="ticketCreationCard">
+            <div class="ticketCreationHeader">
+                <div class="ticketCreationHeading">
+                    <h3>Create a ticket</h3>
+                    <p>Setup a ticket for users to gain access!</p>
+                </div>
+
+                <div class="closeTicketCreationButtonRow">
+                    <button type="button" role="button" id="closeCreateTicketModalButton" class="closeticketCreationModalButton">
+                        <img src="{% static '/images/admin/roles/modalClose.svg' %}" alt="Close create ticket tab">
+                    </button>
+                </div>
+                
+            </div>
+
+            <form class="ticketCreationBody" method="post">
+                {% csrf_token %}
+                <div class="creationRow">
+                    <label for="{{ paidFreeForm.ticket_name.id_for_label }}">
+                        <p>{{ paidFreeForm.ticket_name.label }}</p>
+                        {{ paidFreeForm.ticket_name }}
+                    </label>
+                    <label for="{{ paidFreeForm.ticket_type.id_for_label }}">
+                        <p>{{ paidFreeForm.ticket_type.label }}</p>
+                        {{ paidFreeForm.ticket_type }}
+                    </label>
+                </div>
+
+                <div class="creationRow">
+                    <label for="{{ paidFreeForm.ticket_price.id_for_label }}">
+                        <p>{{ paidFreeForm.ticket_price.label }}</p>
+                        {{ paidFreeForm.ticket_price }}
+                    </label>
+                    <label for="{{ paidFreeForm.ticket_quantity.id_for_label }}">
+                        <p>{{ paidFreeForm.ticket_quantity.label }}</p>
+                        {{ paidFreeForm.ticket_quantity }}
+                    </label>
+                </div>
+
+                <div class="creationRow">
+                    <label for="{{ paidFreeForm.ticket_description.id_for_label }}">
+                        <p>{{ paidFreeForm.ticket_description.label }}</p>
+                        {{ paidFreeForm.ticket_description }}
+                    </label>
+                </div>
+
+                <div class="creationSubmitRow">
+                    <button type="submit" class="createPaidTicketButton" role="button" name="eventAction" value="createPaidFreeTicket">Create Ticket</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
