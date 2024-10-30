@@ -329,9 +329,14 @@
     box-shadow: 2px 3px 21px 4px rgba(170, 170, 170, 0.075);
 }
 
+.invited-header {
+    font-family: Wanted-Bold;
+    font-size: 30px;
+}
+
 .category-image img {
-    width: 100%;
-    height: 100%;
+    width: 355px;
+    height: 448px;
 
     border-radius: 20px;
     object-fit: cover;
@@ -344,7 +349,7 @@
     display: flex;
     flex-direction: column;
     justify-content: center;
-    align-items: center;
+    align-items: start;
     gap: 5px;
 
     width: 100%;
@@ -375,11 +380,26 @@
 .eventSubInfo {
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: start;
     gap: 1px;
+    width: 100%;
 
     font-family: Wanted-Variable;
     color: rgba(66, 66, 66, 0.575);
+}
+
+#eventHost {
+    display: flex;
+    flex-direction: row;
+    justify-content: start;
+}
+
+#eventDate {
+    width: 100%;
+    display: flex;
+    justify-content: end;
+    font-family: Wanted-Bold;
+    font-size: 20px;
 }
 
 #eventType {

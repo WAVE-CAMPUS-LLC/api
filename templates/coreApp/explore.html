@@ -79,24 +79,26 @@ What's the wave?! — WAVE.
             </div>
         </div>
 
-        <div class="row-body event-row-body" id="events-container">
-            {% if invited_events_with_tokens %}
-            <h3>Events you are personally invited to!</h3>
-                {% for event, token in invited_events_with_tokens %}
-                <a href="{% url "core:eventDetails_withToken" eventId=event.eventId token=token %}" class="category-event-card">
-                    <div class="category-image">
-                        <img src="{{event.header_photo.url}}" alt="">
-                    </div>
-                    <div class="category-event-name">
-                        <h2 id="eventTitle">{{ event.title }}</h2>
-                        <div class="eventSubInfo">
-                            <p id="eventLocation">Hosted by @{{ event.host.username }}</p>
-                            <p id="eventDate">{{ event.date }}</p>
+        <div id="categories-row" class="row-container">
+            <h3 class="invited-header">Personally Invited Events</h3>
+            <div class="row-body event-row-body" id="events-container">
+                {% if invited_events_with_tokens %}
+                    {% for event, token in invited_events_with_tokens %}
+                    <a href="{% url "core:eventDetails_withToken" eventId=event.eventId token=token %}" class="category-event-card">
+                        <div class="category-image">
+                            <img src="{{event.header_photo.url}}" alt="">
                         </div>
-                    </div>
-                </a>
-                {% endfor %}
-            {% endif %}
+                        <div class="category-event-name">
+                            <h2 id="eventTitle">{{ event.title }}</h2>
+                            <div class="eventSubInfo">
+                                <p id="eventHost">Hosted by @{{ event.host.username }}</p>
+                                <p id="eventDate">{{ event.date }}</p>
+                            </div>
+                        </div>
+                    </a>
+                    {% endfor %}
+                {% endif %}
+            </div>
         </div>
 
         <div id="categories-row" class="row-container">
