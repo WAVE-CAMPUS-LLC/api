@@ -1,17 +1,33 @@
+from datetime import datetime
 from django.shortcuts import get_object_or_404, redirect, render
 from django.http import JsonResponse
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
+from django.core.mail import send_mail
 from wave_v1.decorators import group_required
+from django.urls import reverse
 
 
 from accountManagementApp.models import UserProfile
-from .forms import EventTicketForm, HostApplicationForm, EventForm
+from collegeManagementApp.models import Organization, OrganizationMembership
+from .forms import (
+    EventTicketForm,
+    HostApplicationForm,
+    EventForm,
+    InvitationForm,
+    PaidFreeTicketForm,
+)
 from .models import (
-    EventTicket,
+    PaidFreeTicket,
     EventType,
     HostApplication,
     Event,
+    EventPrivacy,
+    InviteEventOption,
+    RSVPTicket,
+    PaidFreeTicket,
 )
 
 
@@ -58,8 +74,9 @@ def hostApplyView(request):
 @login_required
 @group_required("Host")
 def hostPortalView(request):
-    event = Event.objects.filter(host=request.user)
-    
+    live_event = Event.objects.filter(host=request.user, status="live")
+    incomplete_event = Event.objects.filter(host=request.user, status="incomplete")
+
     user_profile = UserProfile.objects.get(user=request.user)
     is_in_college = user_profile.college is not None
 
@@ -73,13 +90,25 @@ def hostPortalView(request):
             )
             event_to_delete.delete()
             return redirect("eventManagement:hostPortal")
-        
-        if 'displayOnCollege' in request.POST:
-            event_to_update = get_object_or_404(Event, eventId=event_id, host=request.user)
-            event_to_update.display_event_on_college = request.POST['displayOnCollege'] == 'True'  # Check for 'true'
+
+        if "displayOnCollege" in request.POST:
+            event_to_update = get_object_or_404(
+                Event, eventId=event_id, host=request.user
+            )
+            event_to_update.display_event_on_college = (
+                request.POST["displayOnCollege"] == "True"
+            )  # Check for 'true'
             event_to_update.save()
             return redirect("eventManagement:hostPortal")
-    return render(request, "eventManagementApp/host/hostPortal.html", {"events": event, "isInCollege": is_in_college})
+    return render(
+        request,
+        "eventManagementApp/host/hostPortal.html",
+        {
+            "liveEvents": live_event,
+            "incompleteEvents": incomplete_event,
+            "isInCollege": is_in_college,
+        },
+    )
 
 
 @login_required
@@ -107,8 +136,7 @@ def hostCreateEventGenerator(request):
 def eventCreationProcess(request, eventId):
     event = get_object_or_404(Event, eventId=eventId)
     event_type_choices = Event.EVENT_TYPE_CHOICES
-    
-    
+    privacy_choices = Event.PRIVACY_CHOICES
 
     if request.method == "POST":
         eventForm = EventForm(request.POST, request.FILES, instance=event)
@@ -121,15 +149,68 @@ def eventCreationProcess(request, eventId):
             if go_live:
                 event_status = "live"
                 event.status = event_status
-                event.save()
+
                 messages.success(request, "Event is live!")
+
+                user_profile = event.host.user_profile
+                organization_membership = OrganizationMembership.objects.filter(
+                    user=event.host
+                ).first()
+
+                if event.privacy == "Discoverable":
+                    event_privacy = EventPrivacy.objects.create(
+                        event=event,
+                        display_on_explore=True,
+                        require_invitation=False,
+                        restricted_college=None,
+                        restricted_organization=None,
+                    )
+                    event_privacy.save()
+
+                elif event.privacy == "Invite Only":
+                    event_privacy = EventPrivacy.objects.create(
+                        event=event,
+                        display_on_explore=False,
+                        require_invitation=True,
+                        restricted_college=None,
+                        restricted_organization=None,
+                    )
+                    event.ticketing = "Invite Required"
+                    event_privacy.save()
+
+                elif event.privacy == "Private (College)":
+                    event_privacy = EventPrivacy.objects.create(
+                        event=event,
+                        display_on_explore=False,
+                        require_invitation=False,
+                        restricted_college=event.host.user_profile.college,
+                        restricted_organization=None,
+                    )
+                    event.display_event_on_college = True
+                    event_privacy.save()
+
+                elif (
+                    event.privacy == "Private (Organization)"
+                    and organization_membership
+                ):
+                    event_privacy = EventPrivacy.objects.create(
+                        event=event,
+                        display_on_explore=False,
+                        require_invitation=False,
+                        restricted_college=None,
+                        restricted_organization=organization_membership.organization,
+                    )
+                    event_privacy.save()
+
+                event.save()
+                return redirect("eventManagement:eventManagement", eventId=eventId)
 
             else:
                 event.save()
 
-            return redirect("eventManagement:eventOverview", eventId=eventId)
+            return redirect("eventManagement:eventManagement", eventId=eventId)
     else:
-        eventForm = EventForm()
+        eventForm = EventForm(instance=event)
 
     return render(
         request,
@@ -138,48 +219,159 @@ def eventCreationProcess(request, eventId):
             "event": event,
             "eventForm": eventForm,
             "eventTypeChoices": event_type_choices,
+            "privacyChoices": privacy_choices,
         },
     )
 
 
 @login_required
 @group_required("Host")
-def eventCreatedOverview(request, eventId):
-    event = get_object_or_404(Event, eventId=eventId)
+def save_event_progress(request, eventId):
     if request.method == "POST":
-        action = request.POST.get("eventAction")
+        # Retrieve the event object
+        event = get_object_or_404(
+            Event, eventId=eventId
+        )  # Use `id` to match your model field
 
-        if action == "deleteEvent":
-            event.delete()
-            return redirect("eventManagement:hostPortal")
-    return render(
-        request, "eventManagementApp/host/eventPreview.html", {"event": event}
-    )
+        # Handling all relevant fields
+        event.status = request.POST.get("status", "incomplete")
+        event.title = request.POST.get("title", "")
+        event.event_type = request.POST.get("event_type", "")
+
+        # Handling date and time fields
+        date_str = request.POST.get("date", "")
+        start_time_str = request.POST.get("start_time", "")
+        end_time_str = request.POST.get("end_time", "")
+
+        if date_str:
+            event.date = datetime.strptime(date_str, "%Y-%m-%d").date()
+
+        if start_time_str:
+            event.start_time = datetime.strptime(start_time_str, "%H:%M").time()
+
+        if end_time_str:
+            event.end_time = datetime.strptime(end_time_str, "%H:%M").time()
+
+        event.description = request.POST.get("description", "")
+        event.privacy = request.POST.get("privacy", "")
+        event.country = request.POST.get("country", "")
+        event.building_name = request.POST.get("building_name", "")
+        event.street_address = request.POST.get("street_address", "")
+        event.apt_suite_unit = request.POST.get("apt_suite_unit", "")
+        event.city = request.POST.get("city", "")
+        event.state = request.POST.get("state", "")
+        event.zip_code = request.POST.get("zip_code", "")
+        event.contact_email = request.POST.get("contact_email", "")
+        event.contact_phone = request.POST.get("contact_phone", "")
+        event.contact_website = request.POST.get("contact_website", "")
+        event.contact_instagram = request.POST.get("contact_instagram", "")
+        event.header_photo = request.FILES.get("header_photo", None)
+        event.body_photo_one = request.FILES.get("body_photo_one", None)
+        event.body_photo_two = request.FILES.get("body_photo_two", None)
+        event.body_photo_three = request.FILES.get("body_photo_three", None)
+        event.body_photo_four = request.FILES.get("body_photo_four", None)
+        event.body_photo_five = request.FILES.get("body_photo_five", None)
+
+        event.save()  # Save changes to the database
+
+        return JsonResponse({"success": True})
+
+    return JsonResponse({"error": "Invalid request"}, status=400)
 
 
 @login_required
 @group_required("Host")
-def eventTicketingOverview(request, eventId):
+def eventManagement(request, eventId):
     event = get_object_or_404(Event, eventId=eventId)
-    eventTicket = EventTicket.objects.filter(event=event)
-    eventTicketForm = EventTicketForm(request.POST)
+    user_profile = UserProfile.objects.get(user=request.user)
+    is_in_college = user_profile.college is not None
+    event_privacy = EventPrivacy.objects.get(event=event)
+    rsvp_list = RSVPTicket.objects.filter(event=event)
+    paid_free_tickets = PaidFreeTicket.objects.filter(event=event)
 
     if request.method == "POST":
-        if eventTicketForm.is_valid():
-            new_ticket = eventTicketForm.save(commit=False)
+        action = request.POST.get("eventAction")
+        invitationForm = InvitationForm(request.POST)
+        paidFreeForm = PaidFreeTicketForm(request.POST)
+
+        if action == "deleteEvent":
+            event.delete()
+            return redirect("eventManagement:hostPortal")
+
+        if action == "removefromRSVPlist":
+            rsvp_id = request.POST.get("rsvp_id")
+            rsvp = get_object_or_404(RSVPTicket, ticket_id=rsvp_id)
+            rsvp.delete()
+            return redirect("eventManagement:eventManagement", eventId=eventId)
+
+        if "displayOnCollege" in request.POST:
+            event_to_update = get_object_or_404(
+                Event, eventId=event.eventId, host=request.user
+            )
+            event_to_update.display_event_on_college = (
+                request.POST["displayOnCollege"] == "True"
+            )  # Check for 'true'
+            event_to_update.save()
+            return redirect("eventManagement:eventManagement", eventId=eventId)
+
+        if action == "sendInvites" and invitationForm.is_valid():
+            emails = invitationForm.cleaned_data["invite_emails"]
+            subject = invitationForm.cleaned_data["invite_subject"]
+            message = invitationForm.cleaned_data["invite_message"]
+            emailList = [email.strip() for email in emails.split(",")]
+
+            for email in emailList:
+                invitation = InviteEventOption.objects.create(event=event, email=email)
+                user_profile.invited_events.add(event)
+                user_profile.invitations.add(invitation)
+                # invitation.generate_token()
+                invitation.save()
+
+                invitation_link = request.build_absolute_uri(
+                    reverse(
+                        "core:eventDetails_withToken",
+                        kwargs={
+                            "eventId": str(eventId),
+                            "token": invitation.token,
+                        },
+                    )
+                )
+                emailMessageHtml = render_to_string(
+                    "emailTemplates/eventManagementApp/host/inviteAttendees.html",
+                    {"body": message, "invitationLink": invitation_link},
+                )
+                send_mail(
+                    subject=subject,
+                    message=message,
+                    from_email=None,
+                    fail_silently=False,
+                    recipient_list=[email],
+                    html_message=emailMessageHtml,
+                )
+            return redirect("eventManagement:eventManagement", eventId=eventId)
+
+        if action == "createPaidFreeTicket" and paidFreeForm.is_valid():
+            new_ticket = paidFreeForm.save(commit=False)
             new_ticket.event = event
             new_ticket.save()
-            
-            return redirect("eventManagement:ticketingOverview", eventId=eventId)
+            return redirect("eventManagement:eventManagement", eventId=eventId)
+        else:
+            print(paidFreeForm.errors)
     else:
-        eventTicketForm = EventTicketForm()
+        invitationForm = InvitationForm()
+        paidFreeForm = PaidFreeTicketForm()
 
     return render(
         request,
-        "eventManagementApp/host/event/ticketing/ticketingOverview.html",
+        "eventManagementApp/host/eventManagement.html",
         {
             "event": event,
-            "eventTickets": eventTicket,
-            "eventTicketForm": eventTicketForm,
+            "isInCollege": is_in_college,
+            "userProfile": user_profile,
+            "eventPrivacy": event_privacy,
+            "invitationForm": invitationForm,
+            "rsvpList": rsvp_list,
+            "paidFreeForm": paidFreeForm,
+            "paidFreeTickets": paid_free_tickets,
         },
     )

@@ -48,14 +48,41 @@
             <div id="contentContainerTabs">
                 <div id="tabHeaderParent">
                     <ul id="tabHeader">
-                        <li class="collegeDetailsTab tab-active" data-tab="overviewInformation">Overview</li>
-                        <li class="collegeDetailsTab" data-tab="eventInformation">Current Events</li>
+                        <li class="collegeDetailsTab tab-active" data-tab="eventInformation">Events</li>
+                        <li class="collegeDetailsTab" data-tab="overviewInformation">Overview</li>
                         <li class="collegeDetailsTab" data-tab="memberInformation">Members</li>
                     </ul>
                 </div>
 
                 <div id="tabBody">
                     <div id="tabBodyContent">
+                        <div id="eventInformation" class="events-body collegeTabInformation">
+                            <div class="collegeTabInformationRow">
+                                {% comment %} <div class="createEventRow">
+                                    <a class="createEventButton" href="{% url "" %}">
+                                        <img src="{% static "/images/collegeManagementApp/add.svg" %}" />
+                                        Create Event
+                                    </a>
+                                </div> {% endcomment %}
+                                <div class="collegeEventContainer">
+                                    {% for event in events %}
+                                    <a target="_blank" href="{% url "core:eventDetails" eventId=event.eventId %}" class="category-event-card">
+                                        <div class="category-image">
+                                            <img src="{{ event.header_photo.url }}" alt="">
+                                        </div>
+                                        <div class="category-event-name">
+                                            <h2 id="eventTitle">{{ event.title }}</h2>
+                                            <div class="eventSubInfo">
+                                                <p id="eventLocation">@{{ event.host.username }}</p>
+                                                <p id="eventDate">{{ event.date }}</p>
+                                            </div>
+                                        </div>
+                                    </a>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+
                         <div id="overviewInformation" class="overview-body collegeTabInformation">
                             <div class="collegeTabInformationRow">
                                 <div class="descriptionRow">
@@ -81,70 +108,6 @@
                                 <div class="descriptionRow">
                                     <h3>Email</h3>
                                     <p>{{ organization.contact_website }}</p>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div id="eventInformation" class="events-body collegeTabInformation">
-                            <div class="collegeTabInformationRow">
-                                <div class="createEventRow">
-                                    <a class="createEventButton" href="">
-                                        <img src="{% static "/images/collegeManagementApp/add.svg" %}" />
-                                        Create Event
-                                    </a>
-                                </div>
-                                <div class="collegeEventContainer">
-                                    <a target="_blank" href="" class="category-event-card">
-                                        <div class="category-image">
-                                            <img src="{% static "images/explore/display.png" %}" alt="">
-                                        </div>
-                                        <div class="category-event-name">
-                                            <h2 id="eventTitle">Event Demo</h2>
-                                            <div class="eventSubInfo">
-                                                <p id="eventLocation">Hosted by @enoshlartey</p>
-                                                <p id="eventDate">28th July, 2024</p>
-                                            </div>
-                                        </div>
-                                    </a>
-    
-                                    <a target="_blank" href="" class="category-event-card">
-                                        <div class="category-image">
-                                            <img src="{% static "images/explore/display.png" %}" alt="">
-                                        </div>
-                                        <div class="category-event-name">
-                                            <h2 id="eventTitle">Event Demo</h2>
-                                            <div class="eventSubInfo">
-                                                <p id="eventLocation">Hosted by @enoshlartey</p>
-                                                <p id="eventDate">28th July, 2024</p>
-                                            </div>
-                                        </div>
-                                    </a>
-    
-                                    <a target="_blank" href="" class="category-event-card">
-                                        <div class="category-image">
-                                            <img src="{% static "images/explore/display.png" %}" alt="">
-                                        </div>
-                                        <div class="category-event-name">
-                                            <h2 id="eventTitle">Event Demo</h2>
-                                            <div class="eventSubInfo">
-                                                <p id="eventLocation">Hosted by @enoshlartey</p>
-                                                <p id="eventDate">28th July, 2024</p>
-                                            </div>
-                                        </div>
-                                    </a>
-    
-                                    <a target="_blank" href="" class="category-event-card">
-                                        <div class="category-image">
-                                            <img src="{% static "images/explore/display.png" %}" alt="">
-                                        </div>
-                                        <div class="category-event-name">
-                                            <h2 id="eventTitle">Event Demo</h2>
-                                            <div class="eventSubInfo">
-                                                <p id="eventLocation">Hosted by @enoshlartey</p>
-                                                <p id="eventDate">28th July, 2024</p>
-                                            </div>
-                                        </div>
-                                    </a>
                                 </div>
                             </div>
                         </div>

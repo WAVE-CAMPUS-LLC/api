@@ -1,0 +1,8 @@
+{% extends "base/base.html" %}
+
+{% block auth_body %}
+<h2>You are invited!</h2>
+<p>{{ body }}</p>
+<a href="{{ invitationLink }}">Get ticket for this event!</a>
+<p>Link expires in 48 hours</p>
+{% endblock auth_body %}

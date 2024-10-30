@@ -1,9 +1,18 @@
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, render, redirect
 from django.http import JsonResponse
 import random
 from django.db.models import Count
 
-from eventManagementApp.models import Event, EventTicket
+from eventManagementApp.models import (
+    Event,
+    RSVPTicket,
+    EventPrivacy,
+    InviteEventOption,
+    PaidFreeTicket
+)
+from accountManagementApp.models import UserProfile
+from .forms import RSVPForm
+from collegeManagementApp.models import OrganizationMembership
 
 
 # Create your views here.
@@ -13,32 +22,38 @@ def indexView(request):
 
 
 def exploreView(request):
-    """
-    The `exploreView` function in Python retrieves initial events, trending events, and trending
-    categories for display on an explore page in a web application.
-    
-    :param request: The `exploreView` function is a Django view that renders an "explore.html" template
-    with various context data. Here's a breakdown of the parameters used in the function:
-    :return: The `exploreView` function returns a rendered template named "coreApp/explore.html" with
-    the following context data:
-    - "page": containing the value "explore"
-    - "events": containing the initial 6 events loaded from the database
-    - "trending_events": containing the trending events with a status of "live" ordered by date
-    - "exploreCategoryChoices": a
-    """
     pageName = "explore"
 
     # Load initial 6 events
-    initial_events = Event.objects.all()[:7]
-    trending_events = Event.objects.filter(status="live").order_by("date")[:3]
-
+    initial_events = Event.objects.filter(status="live", privacy="Discoverable")[:7]
+    trending_events = Event.objects.filter(
+        status="live", privacy="Discoverable"
+    ).order_by("date")[:3]
+    
+    # Retrieve the user profile and invited events
+    try:
+        user_profile = UserProfile.objects.get(user=request.user)
+        invited_events = user_profile.invited_events.filter(status="live")
+        invitations = user_profile.invitations.all()
+        invited_events_with_tokens = []
+        for event in invited_events:
+            token = None
+            for invite in invitations:
+                if invite.event == event:
+                    token = invite.token
+                    break
+            invited_events_with_tokens.append((event, token))
+    except (TypeError, AttributeError, UserProfile.DoesNotExist):
+        user_profile = None
+        invited_events_with_tokens = None
+    
     trending_categories = (
-        Event.objects.values("event_type")
+        Event.objects.filter(status="live", privacy="Discoverable")
+        .values("event_type")
         .annotate(event_count=Count("event_type"))
-        .order_by("-event_count")[:4]  
+        .order_by("-event_count")[:4]
     )
-    
-    
+
     trending_category_choices = []
     for category in trending_categories:
         event_type = category["event_type"]
@@ -47,11 +62,13 @@ def exploreView(request):
     print(trending_category_choices)
 
     if len(trending_category_choices) < 4:
-        remaining_choices = list(set(Event.EXPLORE_TYPE_CHOICES) - set(trending_category_choices))
-        additional_choices = random.sample(remaining_choices, 4 - len(trending_category_choices))
+        remaining_choices = list(
+            set(Event.EXPLORE_TYPE_CHOICES) - set(trending_category_choices)
+        )
+        additional_choices = random.sample(
+            remaining_choices, 4 - len(trending_category_choices)
+        )
         trending_category_choices += additional_choices
-        
-    explore_category_images = Event.EXPLORE_CATEGORY_TYPE_IMAGES
 
     return render(
         request,
@@ -61,7 +78,7 @@ def exploreView(request):
             "events": initial_events,
             "trending_events": trending_events,
             "exploreCategoryChoices": trending_category_choices,
-            "exploreCategoryImages": explore_category_images,
+            "invited_events_with_tokens": invited_events_with_tokens,
         },
     )
 
@@ -85,7 +102,9 @@ def load_more_events(request):
     offset = int(request.GET.get("offset", 7))
     limit = 3
 
-    more_events = Event.objects.all()[offset : offset + limit]
+    more_events = Event.objects.filter(status="live", privacy="Discoverable")[
+        offset : offset + limit
+    ]
     events_data = []
     for event in more_events:
         events_data.append(
@@ -103,25 +122,148 @@ def load_more_events(request):
             }
         )
 
-    has_more = Event.objects.count() > (offset + limit)
+    has_more = Event.objects.filter(status="live", privacy="Discoverable").count() > (
+        offset + limit
+    )
 
     return JsonResponse({"events": events_data, "has_more": has_more})
 
 
-def eventDetailsView(request, eventId):
+def eventDetailsView(request, eventId, token=None):
     pageName = "eventDetails"
     event = get_object_or_404(Event, eventId=eventId)
-    eventTickets = EventTicket.objects.filter(event=event)
+    eventprivacy = EventPrivacy.objects.get(event=event)
+    eventPaidFreeTickets = PaidFreeTicket.objects.filter(event=event)
+    
+    rsvpForm = RSVPForm() if event.ticketing == "RSVP Required" else None
+    rsvp_guests = RSVPTicket.objects.filter(event=event, display_on_guestlist=True)
+    
+    if request.method == "POST":
+        action = request.POST.get("eventAction")
+        
+        if action == "RSVP":
+            user_email = request.POST.get("email")
+            existing_rsvp = RSVPTicket.objects.filter(event=event, email=user_email).first()
 
-    return render(
-        request,
-        "coreApp/event/eventDetails.html",
-        {
-            "page": pageName,
-            "event": event,
-            "eventTickets": eventTickets,
-        },
-    )
+            if existing_rsvp:
+                return render(
+                    request,
+                    "coreApp/event/eventDetails.html",
+                    {
+                        "page": pageName,
+                        "event": event,
+                        "eventPrivacy": eventprivacy,
+                        "rsvpForm": rsvpForm,
+                        "paidFreeTickets": eventPaidFreeTickets,
+                        "existingRSVP": True,
+                    },
+                )
+                
+            else:
+                rsvpForm = RSVPForm(request.POST)
+                if rsvpForm.is_valid():
+                    rsvp_ticket = rsvpForm.save(commit=False)
+                    rsvp_ticket.event = event 
+                    rsvp_ticket.save()
+                    return render(
+                        request,
+                        "coreApp/event/eventDetails.html",
+                        {
+                            "page": pageName,
+                            "event": event,
+                            "eventPrivacy": eventprivacy,
+                            "rsvpForm": rsvpForm,
+                            "paidFreeTickets": eventPaidFreeTickets,
+                            "newRSVP": True,
+                        },
+                    )
+
+    if eventprivacy.require_invitation:
+        if token:
+            invitation = get_object_or_404(InviteEventOption, token=token)
+            return render(
+                request,
+                "coreApp/event/eventDetails.html",
+                {
+                    "page": pageName,
+                    "event": event,
+                    "eventPrivacy": eventprivacy,
+                    "rsvpForm": rsvpForm,
+                    "paidFreeTickets": eventPaidFreeTickets,
+                },
+            )
+        else:
+            return render(
+                request,
+                "extras/invalid/eventInvalid.html",
+                {
+                    "page": pageName,
+                    "event": event,
+                    "eventPrivacy": eventprivacy
+                },
+            )
+
+    elif eventprivacy.restricted_college:
+        if request.user.user_profile.college == eventprivacy.restricted_college:
+            return render(
+                request,
+                "coreApp/event/eventDetails.html",
+                {
+                    "page": pageName,
+                    "event": event,
+                    "rsvpForm": rsvpForm,
+                    "paidFreeTickets": eventPaidFreeTickets,
+                },
+            )
+        else:
+            return render(
+                request,
+                "extras/invalid/eventCollegePrivacy.html",
+                {
+                    "page": pageName,
+                    "event": event,
+                    "eventPrivacy": eventprivacy,
+                },
+            )
+            
+    elif eventprivacy.restricted_organization:
+        userOrgRelation = OrganizationMembership.objects.filter(
+            user=request.user, organization=eventprivacy.restricted_organization
+        )
+        
+        if userOrgRelation.exists():
+            return render(
+                request,
+                "coreApp/event/eventDetails.html",
+                {
+                    "page": pageName,
+                    "event": event,
+                    "rsvpForm": rsvpForm,
+                    "paidFreeTickets": eventPaidFreeTickets,
+                },
+            )
+        else:
+            return render(
+                request,
+                "extras/invalid/eventOrganizationPrivacy.html",
+                {
+                    "page": pageName,
+                    "event": event,
+                    "eventPrivacy": eventprivacy,
+                },
+            )
+
+    else:
+        return render(
+            request,
+            "coreApp/event/eventDetails.html",
+            {
+                "page": pageName,
+                "event": event,
+                "rsvpForm": rsvpForm,
+                "paidFreeTickets": eventPaidFreeTickets,
+            },
+        )
 
 
 def categoryView(request, name):
@@ -141,3 +283,7 @@ def categoryView(request, name):
             "events": category_events,
         },
     )
+
+
+def rsvpConfirm(request):
+    return render(request, "extras/confirmations/RSVPConfirm.html")

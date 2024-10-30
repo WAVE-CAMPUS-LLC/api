@@ -251,7 +251,7 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    gap: 5px;
+    gap: 15px;
 
     width: 100%;
 
@@ -283,8 +283,8 @@
 
 .eventSubInfo {
     display: flex;
-    flex-direction: column;
-    gap: 1px;
+    flex-direction: row;
+    justify-content: space-between;
     width: 100%;
 
     font-family: Wanted-Variable;
