@@ -1,0 +1,359 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+
+{% block title %}
+Manage {{ event.title }} | WAVE.
+{% endblock title %}
+
+{% block app_page_style %}
+<link rel="stylesheet" type="text/css" href="{% static "/styles/eventManagementApp/host/eventManagement.css" %}" />
+{% endblock app_page_style %}
+
+{% block script %}
+    <script type="text/javascript" src="{% static "scripts/eventManagementApp/host/eventManage/tabControl.js" %}" defer></script>
+    {% if isInCollege %}
+    <script type="text/javascript" src="{% static "scripts/eventManagementApp/host/displayOnCollege.js" %}" defer></script>
+    {% endif %}
+    <script type="text/javascript" src="{% static "scripts/eventManagementApp/host/eventManage/createTicketDisplay.js" %}" defer></script>
+{% endblock script %}
+
+
+{% block header %}
+{% include "partials/nav-footer/nav/host/host_portal.html" %}
+{% endblock header %}
+
+
+{% block body %}
+<div id="body-content">
+    <div class="page-heading">
+        <h2>Manage: {{ event.title }}<h2>
+        <div class="event-delete">
+            <form method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="event_id" value="{{ event.eventId }}">
+                
+                <button type="submit" role="button" name="eventAction" value="deleteEvent">
+                    <img src="{% static "/images/eventManagementApp/host/delete.svg" %}" />
+                    Delete
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div id="portal-body">
+        <div class="control-row">
+            <div role="button" type="button" class="dashboard-tab tab-active" data-tab="event-information">Overview</div>
+            <div role="button" type="button" class="dashboard-tab" data-tab="event-privacy">Privacy</div>
+            <div role="button" type="button" class="dashboard-tab" data-tab="event-ticketing">Ticketing</div>
+        </div>
+
+        <div id="portal-body-content">
+            <div class="pbc-element-content" id="event-information">
+                <div class="tab-information-body">
+                    <div class="tab-summary">
+                        <p>
+                            This tab provides an overview of all the key information 
+                            related to your event, including the event's title, date, 
+                            time, location, and description. 
+                            <br/>You can also view important details 
+                            like the event's privacy settings, discoverability level, and any associated images. 
+                            <br/>To make changes to the event information, simply click on the "Edit" button to update the details as needed.
+                        </p>
+                    </div>
+                    <div class="body-row">
+                        <h3>Title</h3>
+                        <p>{{ event.title }}</p>
+                    </div>
+                    <div class="body-row">
+                        <h3>Type of Event</h3>
+                        <p>{{ event.event_type }}</p>
+                    </div>
+                    <div class="body-row">
+                        <h3>Event Date</h3>
+                        <p>{{ event.date }}</p>
+                    </div>
+                    <div class="time-row">
+                        <div class="body-row">
+                            <h3>Start Time</h3>
+                            <p>{{ event.start_time }}</p>
+                        </div>
+                        <div class="body-row">
+                            <h3>End Time</h3>
+                            <p>{{ event.end_time }}</p>
+                        </div>
+                    </div>
+                    <div class="body-row">
+                        <h3>Description</h3>
+                        <p>{{ event.description }}</p>
+                    </div>
+                    <div class="privacy-row">
+                        <div class="body-row">
+                            <h3>Privacy</h3>
+                            <p>{{ event.privacy }}</p>
+                        </div>
+                    </div>
+                    <div class="body-row">
+                        <h3>Location</h3>
+                        <p>
+                            {{ event.building_name }}, 
+                            <br/> 
+                            {{ event.street }}, 
+                            {% if event.apt_suite_unit %}{{ event.apt_suite_unit }},{% endif %} 
+                            <br/>
+                            {{ event.city }}, 
+                            <br/>
+                            {{ event.state }}, 
+                            {{ event.zip_code }}
+                        </p>
+                    </div>
+                    <div class="body-row">
+                        <h3>Flyer Image</h3>
+                        <img class="flyer-image" src="{{ event.header_photo.url }}" />
+                    </div>
+                    {% if event.body_photo_one or event.body_photo_two or event.body_photo_three or event.body_photo_four or event.body_photo_five %}
+                    <div class="body-row">
+                        <h3>Extra Images</h3>
+                        <div class="body-image-container">
+                            {% if event.body_photo_one %}
+                            <img src="{{ event.body_photo_one.url }}" />
+                            {% endif %}
+                            {% if event.body_photo_two %}
+                            <img src="{{ event.body_photo_two.url }}" />
+                            {% endif %}
+                            {% if event.body_photo_three %}
+                            <img src="{{ event.body_photo_three.url }}" />
+                            {% endif %}
+                            {% if event.body_photo_four %}
+                            <img src="{{ event.body_photo_four.url }}" />
+                            {% endif %}
+                            {% if event.body_photo_five %}
+                            <img src="{{ event.body_photo_five.url }}" />
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="pbc-element-content" id="event-privacy">
+                <div class="container-information">
+                    <div class="tab-summary">
+                        <p>
+                            Here, you can review whether your event is displayed within your college, if it's discoverable globally on the explore page, or if it's restricted to a specific organization. 
+                            
+                            These settings control who can view and access your event. 
+                            <br/>
+                            To make changes to the event privacy, simply click on the "Edit" button to update the details as needed.
+                        </p>
+                    </div>
+
+                    <div class="tab-information-body">
+                        <div class="body-row">
+                            <h3>Current Privacy Setting</h3>
+                            <p>{{ event.privacy }}</p>
+                        </div>
+
+                        {% if isInCollege %}
+                        <div class="body-row">
+                            <h3>Do you want to display this event in your college?</h3>
+                            <form class="display-on-college" method="POST" id="college-display-form">
+                                {% csrf_token %}
+                                <p>The event will be displayed in {{userProfile.college}}?</p>
+                                <input type="hidden" name="event_id" value="{{ event.eventId }}">
+                                <label>
+                                    <input id="displayOnCollegeCheckbox" type="checkbox" name="displayOnCollege" value="true" {% if event.display_event_on_college %} checked {% endif %}>
+                                    <span class="checkbox" />
+                                </label>
+                            </form>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="pbc-element-content" id="event-ticketing">
+                <div class="container-information">
+                    <div class="body-row">
+                        <h3>Your set your event ticketing to:</h3>
+                        <p>{{ event.ticketing}}</p>
+                    </div>
+                    <div class="tab-information-body">
+                        {% if event.ticketing == "Invite Required" %}
+                        <div class="inviteSystem">
+                            <div class="systemHeader">
+                                <h3>Invite your favourite people to the event!</h3>
+                                <p>Enter their emails separated by a comma, type up your invitation message, then hit send!</p>
+                            </div>
+
+                            <form id="inviteForm" class="inviteForm" method="post">
+                                {% csrf_token %}
+                                <div class="inviteFormField">
+                                    {{ invitationForm.invite_emails.label_tag }}
+                                    {{ invitationForm.invite_emails }}
+                                </div>
+
+                                <div class="inviteFormField">
+                                    {{ invitationForm.invite_subject.label_tag }}
+                                    {{ invitationForm.invite_subject }}
+                                </div>
+
+                                <div class="inviteFormField">
+                                    {{ invitationForm.invite_message.label_tag }}
+                                    {{ invitationForm.invite_message }}
+                                </div>
+
+                                <div class="sendButton">
+                                    <button type="submit" class="sendInvitesButton" role="button" name="eventAction" value="sendInvites">Send Invites</button>
+                                </div>
+                            </form>
+                        </div>
+                        {% elif event.ticketing == "RSVP Required" %}
+                        <div class="body-row">
+                            <div class="rsvpHeading">
+                                <h4>RSVP List</h4>
+                            </div>
+                            
+                            <div class="rsvpList">
+                                {% if rsvpList %}
+                                <ul>
+                                    {% for rsvp in rsvpList %}
+                                    <hr/>
+                                    <li class="rsvpUser">
+                                        <form method="post">
+                                            {% csrf_token %}
+                                            <div class="rsvpUserInfo">
+                                                <div class="userName">{{ rsvp.first_name }} {{ rsvp.last_name }}</div>
+                                                <div class="userEmail">
+                                                    {{ rsvp.email }}
+                                                </div>
+                                                <div class="guestlistDisplay">
+                                                    {% if rsvp.display_on_guestlist == True %}
+                                                    {{ rsvp.first_name }} opted to be displayed on the guestlist.
+                                                    {% else %}
+                                                    {{ rsvp.first_name }} opted not to be displayed on the guestlist.
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                            <input type="hidden" name="rsvp_id" value="{{ rsvp.ticket_id }}">
+                                            <div class="rsvpButton">
+                                                <button type="submit" name="eventAction" value="removefromRSVPlist" id="removeRSVP">Remove from list</button>
+                                            </div>
+                                        </form>
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                                {% else %}
+                                <div class="empty-pcb">
+                                    <img class="empty-image" src="{% static "/images/eventManagementApp/host/empty-listing.svg" %}" />
+                                    <p>There's no one on the RSVP list. Invite your friends!!</p>
+                                </div>
+                                {% endif %}
+                                
+                            </div>
+                        </div>
+                        {% elif event.ticketing == "Paid/Free" %}
+                        <div class="body-row">
+                            <div class="ticketingHeader">
+                                <div class="ticketingHeading">
+                                    <h4>
+                                        {% if paidFreeTickets %}
+                                        Manage your tickets here!
+                                        {% else %}
+                                        Create tickets for users to purchase!
+                                        {% endif %}
+                                    </h4>
+                                </div>
+                                <div class="createTicketButtonRow">
+                                    <button type="button" class="createTicketButton" id="createTicketButtonFirst" role="button">
+                                        <img src="{% static "/images/eventManagementApp/host/host_ticket.svg" %}" />
+                                        Create Ticket
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="ticketingBody">
+                                {% if paidFreeTickets %}
+                                <div class="createdTicketsContainer">
+                                    {% for ticket in paidFreeTickets %}
+                                    <div class="ticketCards">
+                                        {{ ticket.ticket_name }}
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                {% else %}
+                                <div class="empty-pcb">
+                                    <img class="empty-image" src="{% static "/images/eventManagementApp/host/empty-listing.svg" %}" />
+                                    <p>You haven't created any tickets. </p>
+                                    <button type="button" class="createTicketButton" id="createTicketButtonSecond" role="button">
+                                        <img src="{% static "/images/eventManagementApp/host/host_ticket.svg" %}" />
+                                        Create Ticket
+                                    </button>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="ticketCreationModal" id="ticketCreationModal">
+    <div class="ticketCreationModalContainer">
+        <div class="ticketCreationCard">
+            <div class="ticketCreationHeader">
+                <div class="ticketCreationHeading">
+                    <h3>Create a ticket</h3>
+                    <p>Setup a ticket for users to gain access!</p>
+                </div>
+
+                <div class="closeTicketCreationButtonRow">
+                    <button type="button" role="button" id="closeCreateTicketModalButton" class="closeticketCreationModalButton">
+                        <img src="{% static '/images/admin/roles/modalClose.svg' %}" alt="Close create ticket tab">
+                    </button>
+                </div>
+                
+            </div>
+
+            <form class="ticketCreationBody" method="post">
+                {% csrf_token %}
+                <div class="creationRow">
+                    <label for="{{ paidFreeForm.ticket_name.id_for_label }}">
+                        <p>{{ paidFreeForm.ticket_name.label }}</p>
+                        {{ paidFreeForm.ticket_name }}
+                    </label>
+                    <label for="{{ paidFreeForm.ticket_type.id_for_label }}">
+                        <p>{{ paidFreeForm.ticket_type.label }}</p>
+                        {{ paidFreeForm.ticket_type }}
+                    </label>
+                </div>
+
+                <div class="creationRow">
+                    <label for="{{ paidFreeForm.ticket_price.id_for_label }}">
+                        <p>{{ paidFreeForm.ticket_price.label }}</p>
+                        {{ paidFreeForm.ticket_price }}
+                    </label>
+                    <label for="{{ paidFreeForm.ticket_quantity.id_for_label }}">
+                        <p>{{ paidFreeForm.ticket_quantity.label }}</p>
+                        {{ paidFreeForm.ticket_quantity }}
+                    </label>
+                </div>
+
+                <div class="creationRow">
+                    <label for="{{ paidFreeForm.ticket_description.id_for_label }}">
+                        <p>{{ paidFreeForm.ticket_description.label }}</p>
+                        {{ paidFreeForm.ticket_description }}
+                    </label>
+                </div>
+
+                <div class="creationSubmitRow">
+                    <button type="submit" class="createPaidTicketButton" role="button" name="eventAction" value="createPaidFreeTicket">Create Ticket</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock body %}

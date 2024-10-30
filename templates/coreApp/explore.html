@@ -15,7 +15,6 @@ What's the wave?! — WAVE.
 {% block script %}
 <script type="text/javascript" src="{% static "scripts/coreApp/eventCountdown.js" %}"></script>
 <script type="text/javascript" src="{% static "scripts/coreApp/trendingSlideshow.js" %}"></script>
-<script type="text/javascript" src="{% static "scripts/coreApp/categoryScroll.js" %}"></script>
 <script type="text/javascript" src="{% static "scripts/coreApp/explore/categoryCarousel.js" %}"></script>
 <script type="text/javascript" src="{% static "scripts/coreApp/explore/loadMoreEvents.js" %}"></script>
 {% endblock script %}
@@ -70,9 +69,6 @@ What's the wave?! — WAVE.
                     {% if display %}
                         <div class="category-card">
                             <a target="_blank" href="{% url 'core:category' name=display %}">
-                                <div class="category-icon">
-                                    <img src="{% static exploreCategoryImages|get_category:value %}" alt="Category: {{ display }}">
-                                </div>
                                 <div class="category-name">
                                     <h2>{{ display }}</h2>
                                 </div>
@@ -84,22 +80,44 @@ What's the wave?! — WAVE.
         </div>
 
         <div id="categories-row" class="row-container">
+            <h3 class="invited-header">Personally Invited Events</h3>
+            <div class="row-body event-row-body" id="events-container">
+                {% if invited_events_with_tokens %}
+                    {% for event, token in invited_events_with_tokens %}
+                    <a href="{% url "core:eventDetails_withToken" eventId=event.eventId token=token %}" class="category-event-card">
+                        <div class="category-image">
+                            <img src="{{event.header_photo.url}}" alt="">
+                        </div>
+                        <div class="category-event-name">
+                            <h2 id="eventTitle">{{ event.title }}</h2>
+                            <div class="eventSubInfo">
+                                <p id="eventHost">Hosted by @{{ event.host.username }}</p>
+                                <p id="eventDate">{{ event.date }}</p>
+                            </div>
+                        </div>
+                    </a>
+                    {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+
+        <div id="categories-row" class="row-container">
             <div class="row-body event-row-body" id="events-container">
                 {% for event in events %}
-                {% if event.status == "live" %}
-                <a href="{% url "core:eventDetails" eventId=event.eventId %}" class="category-event-card">
-                    <div class="category-image">
-                        <img src="{{event.header_photo.url}}" alt="">
-                    </div>
-                    <div class="category-event-name">
-                        <h2 id="eventTitle">{{ event.title }}</h2>
-                        <div class="eventSubInfo">
-                            <p id="eventLocation">Hosted by @{{ event.host.username }}</p>
-                            <p id="eventDate">{{ event.date }}</p>
+                    {% if event.status == "live" %}
+                    <a href="{% url "core:eventDetails" eventId=event.eventId %}" class="category-event-card">
+                        <div class="category-image">
+                            <img src="{{event.header_photo.url}}" alt="">
                         </div>
-                    </div>
-                </a>
-                {% endif %}
+                        <div class="category-event-name">
+                            <h2 id="eventTitle">{{ event.title }}</h2>
+                            <div class="eventSubInfo">
+                                <p id="eventLocation">Hosted by @{{ event.host.username }}</p>
+                                <p id="eventDate">{{ event.date }}</p>
+                            </div>
+                        </div>
+                    </a>
+                    {% endif %}
                 {% endfor %}
             </div>
 

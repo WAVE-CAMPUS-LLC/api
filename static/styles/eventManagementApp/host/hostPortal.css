@@ -113,6 +113,7 @@
     box-shadow: 2px 3px 21px 4px rgba(170, 170, 170, 0.075);
 
     padding: 20px;
+    padding-bottom: 30px;
 
     cursor: pointer;
 }
@@ -136,6 +137,11 @@
 .event-information h5 {
     font-family: Wanted-Medium;
     font-size: 25px;
+    white-space: nowrap; /* Prevent wrapping */
+    overflow: hidden; /* Hide overflow content */
+    text-overflow: ellipsis; /* Show ellipsis for overflow text */
+    width: 100%;
+    text-align: left;
 }
 
 .event-information p {
@@ -189,7 +195,7 @@
 .ticketing-delete {
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    gap: 30px;
 
     width: 100%;
 }
@@ -214,6 +220,7 @@
     width: 100%;
     display: flex;
     justify-content: space-between;
+    font-family: Wanted-Variable;
 }
 
 input[type="checkbox"] {
