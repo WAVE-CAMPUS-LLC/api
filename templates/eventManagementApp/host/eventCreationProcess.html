@@ -63,6 +63,9 @@ Create your event — WAVE.
         
                     <div class="section-intake">
                         <input required type="{{ eventForm.title.field.widget.input_type }}" name="{{ eventForm.title.html_name }}" id="{{ eventForm.title.auto_id }}" class="text-input" placeholder="E.g. Back to school bash!" />
+                        <div id="title-error">
+                            div for title message
+                        </div>
                     </div>
                 </div>
             </section>
@@ -103,8 +106,11 @@ Create your event — WAVE.
                     <div class="section-intake">
                         <div class="date-intake">
                             <label for="{{ eventForm.date.id_for_label }}">
-                                <input required type="{{ eventForm.date.field.widget.input_type }}" id="{{ eventForm.date.auto_id }}" name="{{ eventForm.date.html_name }}" />
+                                <input required type="{{ eventForm.date.field.widget.input_type }}" id="{{ eventForm.date.auto_id }}" name="{{ eventForm.date.html_name }}" class="date-input"/>
                             </label>
+                        </div>
+                        <div id="date-error">
+                            div for date error
                         </div>
                     </div>
                 </div>
@@ -121,13 +127,16 @@ Create your event — WAVE.
                         <div class="time-intake">
                             <label for="{{ eventForm.start_time.id_for_label }}">
                                 <p>{{ eventForm.start_time.label }}</p>
-                                <input required type="{{ eventForm.start_time.field.widget.input_type }}" id="{{ eventForm.start_time.auto_id }}" name="{{ eventForm.start_time.html_name }}" />
+                                <input required type="{{ eventForm.start_time.field.widget.input_type }}" id="{{ eventForm.start_time.auto_id }}" name="{{ eventForm.start_time.html_name }}" class="start-time-input" />
                             </label>
 
                             <label for="{{ eventForm.end_time.id_for_label }}">
                                 <p>{{ eventForm.end_time.label }}</p>
-                                <input required type="{{ eventForm.end_time.field.widget.input_type }}" id="{{ eventForm.end_time.auto_id }}" name="{{ eventForm.end_time.html_name }}" />
+                                <input required type="{{ eventForm.end_time.field.widget.input_type }}" id="{{ eventForm.end_time.auto_id }}" name="{{ eventForm.end_time.html_name }}" class="end-time-input" />
                             </label>
+                        </div>
+                        <div id="time-error">
+                            End time must be within 12 hours of start time.
                         </div>
                     </div>
                 </div>
@@ -141,7 +150,10 @@ Create your event — WAVE.
                     </div>
         
                     <div class="section-intake">
-                        <textarea required id="{{ eventForm.description.id_for_label }}" name="{{ eventForm.description.html_name }}"/></textarea>
+                        <textarea required id="{{ eventForm.description.id_for_label }}" name="{{ eventForm.description.html_name }}" class="body-input"/></textarea>
+                        <div id="body-error">
+                            div for description error
+                        </div>
                     </div>
                 </div>
             </section>      

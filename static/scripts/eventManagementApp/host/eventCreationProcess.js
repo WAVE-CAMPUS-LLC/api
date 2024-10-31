@@ -83,6 +83,87 @@ $(document).ready(function () {
             }
         });
 
+        if(currentSectionIndex === 1) {
+            currentSection.find('.text-input').each(function () {
+                const len = $(this).val().length;
+                if (len == 0 ) {
+                    $("#title-error").hide();
+                } else if (len < 4) {
+                    isValid = false;
+                    $("#title-error").text("Title needs to be longer.").show();
+                } else if (len > 100) {
+                    isValid = false;
+                    $("#title-error").text("Title needs to be shorter.").show();
+                } else {
+                    $("#title-error").hide();
+                }
+            });
+        } else if (currentSectionIndex === 3) {
+            currentSection.find('.date-input').each(function () {
+                const len = $(this).val().length;
+                const selectedDate = new Date($(this).val());
+                const currentDate = new Date();
+                const futureLimitDate = new Date(currentDate);
+                
+                futureLimitDate.setFullYear(currentDate.getFullYear() + 1);
+                currentDate.setHours(-24, 0, 0, 0); 
+    
+                if (len == 0) {
+                    $("#date-error").hide();
+                } else if (selectedDate.getTime() < currentDate.getTime()) {
+                    isValid = false;
+                    $("#date-error").text("Date cannot be in the past.").show();
+                } else if (selectedDate.getTime() > futureLimitDate.getTime()) {
+                    isValid = false;
+                    $("#date-error").text("Date cannot be in more than a year into the future.").show();
+                } else {
+                    $("#date-error").hide();
+                }
+            });
+        } else if (currentSectionIndex === 4) {
+            currentSection.find('.start-time-input').each(function () {
+                const startTime = $('.start-time-input').val();
+                const endTime = $('.end-time-input').val();
+        
+                if (startTime.length === 0 || endTime.length === 0) {
+                    $("#time-error").hide();
+                } else {
+                    const today = new Date();
+                    const start = new Date(today.toDateString() + ' ' + startTime);
+                    let end = new Date(today.toDateString() + ' ' + endTime);
+        
+                    if (end < start) {
+                        end.setHours(end.getHours() + 24);
+                    }
+        
+                    const hourDifference = (end - start) / (1000 * 60 * 60);
+        
+                    if (hourDifference > 12) {
+                        isValid = false;
+                        $("#time-error").show();
+                    } else {
+                        $("#time-error").hide();
+                    }
+                }
+            });
+        } else if (currentSectionIndex === 5) {
+            currentSection.find('.body-input').each(function () {
+                const len = $(this).val().length;
+                
+                if (len == 0 ) {
+                    $("#body-error").hide();
+                } else if (len < 10) {
+                    isValid = false;
+                    $("#body-error").text("Description needs to be longer.").show();
+                } else if (len > 5000) {
+                    isValid = false;
+                    $("#body-error").text("Description needs to be shorter.").show();
+                } else {
+                    $("#body-error").hide();
+                }
+            });
+        }
+
         if (isValid) {
             nextButton.show();  
         } else {
