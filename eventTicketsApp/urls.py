@@ -6,5 +6,5 @@ app_name = "eventTickets"
 
 urlpatterns = [
     path('checkout/', views.checkoutView, name="checkout"),
-    path(r"cart/update/", views.updateCart, name="updateCart"),
+    path("cart/update/", views.updateCartView, name="updateCart"),
 ]

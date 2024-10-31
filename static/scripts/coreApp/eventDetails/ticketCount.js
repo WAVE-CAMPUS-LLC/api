@@ -54,6 +54,48 @@ document.addEventListener('DOMContentLoaded', function () {
             console.log("Total Amount:", totalAmount);
         }
     }
+    const saveUrl = document.getElementById('save-url').value;
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                // Check if this cookie string begins with the name we want
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    function saveCartToServer() {
+        fetch(saveUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify(cart)
+        })
+            .then(response => {
+                if (!response.ok) {
+                    console.error("Failed to save cart:", response.statusText);
+                }
+            })
+            .catch(error => console.error("Error saving cart:", error));
+    }
+
+    // Function to update the displayed quantity for a ticket in the UI
+    function updateTicketAmountDisplay(ticketId) {
+        const ticketAmountSpan = document.querySelector(`.currentTicketAmount[data-ticket-id="${ticketId}"]`);
+        if (ticketAmountSpan) {
+            ticketAmountSpan.textContent = cart[ticketId] ? cart[ticketId].quantity : 0;
+        }
+    }
 
     // Function to add a ticket to the cart
     function addTicket(ticketId, ticketName, ticketPrice) {
@@ -63,6 +105,12 @@ document.addEventListener('DOMContentLoaded', function () {
             cart[ticketId].quantity += 1;
         }
         updateCartDisplay();
+        updateTicketAmountDisplay(ticketId);
+        saveCartToServer();
+    }
+
+    function getCSRFToken() {
+        return document.querySelector('[name=csrfmiddlewaretoken]').value;
     }
 
     // Function to remove a ticket from the cart
@@ -74,62 +122,8 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
         updateCartDisplay();
-    }
-
-    // Function to handle checkout
-    function handleCheckout() {
-        // Prepare data to send to the server
-        const checkoutData = {
-            cart: cart,
-            total: calculateTotal(), // Calculate the total amount
-        };
-
-        // Send the data to the server using fetch
-        fetch('/checkout/', { // Replace with your actual checkout URL
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getCSRFToken(), // Include CSRF token for security
-            },
-            body: JSON.stringify(checkoutData),
-        })
-            .then(response => response.json())
-            .then(data => {
-                // Handle the response from the server
-                if (data.success) {
-                    // Redirect to the payment page or show success message
-                    window.location.href = data.redirect_url; // Redirect to the payment page
-                } else {
-                    // Handle errors
-                    alert(data.message || 'An error occurred. Please try again.');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('An error occurred. Please try again.');
-            });
-    }
-
-    // Function to calculate total amount
-    function calculateTotal() {
-        let totalAmount = 0;
-        for (let ticketId in cart) {
-            const ticket = cart[ticketId];
-            totalAmount += ticket.price * ticket.quantity;
-        }
-        return totalAmount;
-    }
-
-    // Function to get CSRF token from the cookie
-    function getCSRFToken() {
-        const cookies = document.cookie.split(';');
-        for (let cookie of cookies) {
-            const [name, value] = cookie.trim().split('=');
-            if (name === 'csrftoken') {
-                return value;
-            }
-        }
-        return '';
+        updateTicketAmountDisplay(ticketId);
+        saveCartToServer();
     }
 
     // Event listeners for the Add and Remove buttons
@@ -149,9 +143,15 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // Add an event listener for the checkout button
-    document.getElementById("checkoutButton").addEventListener("click", handleCheckout);
-
     // Initial call to set up the cart display
     updateCartDisplay();
+
+
+    
+
 });
+
+function returnCheckout() {
+    const checkoutUrl = document.getElementById('checkout-url').value;
+    window.location.href = checkoutUrl;
+}
