@@ -26,26 +26,27 @@
 
     </head>
 
-    {% block auth_body %}
-    <div id="html-content">
-        {% block pageHeader %}
-        <header>
-            {% block header %}{% endblock header %}
+    {% block checkout_body %}
+        {% block auth_body %}
+        <div id="html-content">
+            {% block pageHeader %}
+            <header>
+                {% block header %}{% endblock header %}
 
-            {% block container_art %}{% endblock container_art %}
-        </header>
-        {% endblock pageHeader %}
-    
-        <body id="body">
-            {% block body %}{% endblock body %}
-        </body>
+                {% block container_art %}{% endblock container_art %}
+            </header>
+            {% endblock pageHeader %}
+        
+            <body id="body">
+                {% block body %}{% endblock body %}
+            </body>
 
-        {% block footer %}
-        <footer id="footer">
-            {% include "partials/nav-footer/footer/footer.html" %}
-        </footer>
-        {% endblock footer %}
-    </div>
-    {% endblock auth_body %}
-    
+            {% block footer %}
+            <footer id="footer">
+                {% include "partials/nav-footer/footer/footer.html" %}
+            </footer>
+            {% endblock footer %}
+        </div>
+        {% endblock auth_body %}
+    {% endblock checkout_body %}
 </html>

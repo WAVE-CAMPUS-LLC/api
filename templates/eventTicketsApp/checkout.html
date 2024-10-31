@@ -6,23 +6,103 @@ WAVE — Join Us!
 {% endblock title %}
 
 {% block app_page_style %}
-<link rel="stylesheet" type="text/css" href="{% static "/styles/authenticationApp/join.css" %}" />
+<link rel="stylesheet" type="text/css" href="{% static "/styles/eventTicketsApp/checkout.css" %}" />
 {% endblock app_page_style %}
 
 {% block script %}
-<script type="text/javascript" src="{% static "/scripts/authenticationApp/join/joinValidations.js" %}"></script>
+<script type="text/javascript" src="" defer></script>
 {% endblock script %}
 
 
-{% block auth_body %}
-<main id="joinCardContainer">
-    <header id="navHeader">
-        <div id="logo">
-            <a href="{% url "core:index" %}">WAVE<span>.</span></a>
-        </div>
-    </header>
-    {{ cart }}
-    {{ total_amount }}
-</main>
+{% block checkout_body %}
+<div class="checkout-container">
+    <main>
+        <div class="checkout-card">
+            <div class="checkout-information">
+                <div class="ci-header">
+                    <div id="logo">
+                        <a href="{% url 'core:index' %}">
+                            WAV<span>E</span>.
+                        </a>
+                    </div>
+                </div>
 
-{% endblock auth_body %}
+                <div class="ci-body-information-row-one">
+                    <h3>1. Personal Information</h3>
+                    <div class="ci-body-information">
+                        <div class="ci-body-row">
+                            <label>
+                                <p>First Name</p>
+                                <input type="text" name="first_name" id="first_name" required>
+                            </label>
+                            <label>
+                                <p>Last Name</p>
+                                <input type="text" name="last_name" id="last_name" required>
+                            </label>
+                        </div>
+                        <div class="ci-body-row">
+                            <label>
+                                <p>Email</p>
+                                <input type="email" name="email" id="email" required>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="ci-body-information-row-one">
+                    <h3>2. Payment Information</h3>
+                    <div class="ci-body-information">
+                        <div class="ci-body-row">
+                            <label>
+                                <p>Card Number</p>
+                                <input type="text" name="first_name" id="first_name" required>
+                            </label>
+                        </div>
+                        <div class="ci-body-row">
+                            <label>
+                                <p>Expiry Date</p>
+                                <input type="text" name="email" id="email" required>
+                            </label>
+                            <label>
+                                <p>CVV</p>
+                                <input type="text" name="email" id="email" required>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="checkout-items">
+                <div class="tickets-display">
+                    {% for ticket_id, ticket in cart.items %}
+                    <div class="checkout-item">
+                        <div class="ticket-nqp">
+                            <div class="ticket-name-quantity">
+                                <p>{{ ticket.name }}</p>
+                                <p>x{{ ticket.quantity }}</p>
+                            </div>
+                            <div class="ticket-price">
+                                <p>${{ ticket.price }} each</p>
+                            </div>
+                        </div>         
+                        <div class="sub-total">
+                            <p>$ {{ ticket.price|floatformat:2 }}</p>
+                        </div>             
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="checkout-total">
+                    <div class="total-row">
+                        <p>Total</p>
+                        <p>${{ total_amount|floatformat:2 }}</p>
+                    </div>
+                    <button class="pay-button" id="payButton" type="button" role="button">Pay Now</button>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+
+{% endblock checkout_body %}
