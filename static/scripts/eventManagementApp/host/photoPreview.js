@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', function () {
-    const headerPhotoInput = document.getElementById("id_header_photo");
+    const headerPhotoInput = document.getElementById("photo-input");
     const headerPhotoPreview = document.getElementById('header-photo-preview');
 
     headerPhotoInput.addEventListener('change', function (event) {

@@ -162,20 +162,78 @@ $(document).ready(function () {
                     $("#body-error").hide();
                 }
             });
+        } else if (currentSectionIndex === 9) {
+            currentSection.find('.building-input').each(function () {
+                const len = $(this).val().length;
+                
+                if (len > 100) {
+                    isValid = false;
+                    $("#building-error").show();
+                } else {
+                    $("#building-error").hide();
+                }
+            });
+            currentSection.find('.street-input').each(function () {
+                const len = $(this).val().length;
+                
+                if (len > 100) {
+                    isValid = false;
+                    $("#street-error").show();
+                } else {
+                    $("#street-error").hide();
+                }
+            });
+            currentSection.find('.apt-input').each(function () {
+                const len = $(this).val().length;
+                
+                if (len > 100) {
+                    isValid = false;
+                    $("#apt-error").show();
+                } else {
+                    $("#apt-error").hide();
+                }
+            });
+            currentSection.find('.city-input').each(function () {
+                const len = $(this).val().length;
+                
+                if (len > 50) {
+                    isValid = false;
+                    $("#city-error").show();
+                } else {
+                    $("#city-error").hide();
+                }
+            });
+            currentSection.find('.zip-input').each(function () {
+                const len = $(this).val().length;
+                
+                if (len < 5 && len > 0) {
+                    isValid = false;
+                    $("#zip-error").show();
+                } else {
+                    $("#zip-error").hide();
+                }
+            });
+        } else if (currentSectionIndex === 13) {
+            currentSection.find('#photo-input').each(function () {
+                const headerPhotoInput = document.getElementById('photo-input');
+                if (!headerPhotoInput.files.length) {
+                    isValid = false;
+                }
+            });
         }
 
-        if (isValid) {
+        if (isValid && !(currentSectionIndex === sections.length - 1)) {
             nextButton.show();  
         } else {
-            nextButton.hide(); 
-        }
-
-        if (currentSectionIndex === sections.length - 1) {
             nextButton.hide(); 
         }
     }
 
     $('input, textarea, select').on('input change', function () {
         validateCurrentSection(); 
+    });
+
+    $('#photo-input').on('change', function () {
+        validateCurrentSection();
     });
 });

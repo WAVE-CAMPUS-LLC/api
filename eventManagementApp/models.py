@@ -109,6 +109,59 @@ class Event(models.Model):
     ]
 
     COUNTRY_CHOICES = [("United States", "United States")]
+    
+    STATE_CHOICES = [
+        ("AL", "Alabama"),
+        ("AK", "Alaska"),
+        ("AZ", "Arizona"),
+        ("AR", "Arkansas"),
+        ("CA", "California"),
+        ("CO", "Colorado"),
+        ("CT", "Connecticut"),
+        ("DE", "Delaware"),
+        ("FL", "Florida"),
+        ("GA", "Georgia"),
+        ("HI", "Hawaii"),
+        ("ID", "Idaho"),
+        ("IL", "Illinois"),
+        ("IN", "Indiana"),
+        ("IA", "Iowa"),
+        ("KS", "Kansas"),
+        ("KY", "Kentucky"),
+        ("LA", "Louisiana"),
+        ("ME", "Maine"),
+        ("MD", "Maryland"),
+        ("MA", "Massachusetts"),
+        ("MI", "Michigan"),
+        ("MN", "Minnesota"),
+        ("MS", "Mississippi"),
+        ("MO", "Missouri"),
+        ("MT", "Montana"),
+        ("NE", "Nebraska"),
+        ("NV", "Nevada"),
+        ("NH", "New Hampshire"),
+        ("NJ", "New Jersey"),
+        ("NM", "New Mexico"),
+        ("NY", "New York"),
+        ("NC", "North Carolina"),
+        ("ND", "North Dakota"),
+        ("OH", "Ohio"),
+        ("OK", "Oklahoma"),
+        ("OR", "Oregon"),
+        ("PA", "Pennsylvania"),
+        ("RI", "Rhode Island"),
+        ("SC", "South Carolina"),
+        ("SD", "South Dakota"),
+        ("TN", "Tennessee"),
+        ("TX", "Texas"),
+        ("UT", "Utah"),
+        ("VT", "Vermont"),
+        ("VA", "Virginia"),
+        ("WA", "Washington"),
+        ("WV", "West Virginia"),
+        ("WI", "Wisconsin"),
+        ("WY", "Wyoming"),
+    ]
 
     EXPLORE_TYPE_CHOICES = [
         ("social", "Social"),
@@ -177,7 +230,7 @@ class Event(models.Model):
         _("Describe your event"), null=True, blank=True, default=""
     )
     privacy = models.CharField(
-        _("Is this a public event or restricted event?"),
+        _("Determine the visibility of your event."),
         max_length=23,
         choices=PRIVACY_CHOICES,
         null=True,
@@ -186,11 +239,11 @@ class Event(models.Model):
     )
 
     ticketing = models.CharField(
-        _("Select your preferred ticketing system"),
+        _("What type of ticketing do you want?"),
         max_length=16,
         choices=TICKET_CHOICES,
         null=True,
-        blank=True,
+        blank=False,
         default="Paid/Free",
     )
 
@@ -198,7 +251,7 @@ class Event(models.Model):
         _("Country"),
         max_length=100,
         null=True,
-        blank=True,
+        blank=False,
         default="",
         choices=COUNTRY_CHOICES,
     )
@@ -230,7 +283,12 @@ class Event(models.Model):
         _("City / town"), max_length=100, null=True, blank=True, default=""
     )
     state = models.CharField(
-        _("State"), max_length=100, null=True, blank=True, default=""
+        _("State"), 
+        max_length=100, 
+        null=True, 
+        blank=False, 
+        default="", 
+        choices=STATE_CHOICES
     )
     zip_code = models.CharField(
         _("ZIP code"), max_length=6, null=True, blank=True, default=""
