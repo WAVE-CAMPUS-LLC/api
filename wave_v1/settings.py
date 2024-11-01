@@ -30,7 +30,7 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 SECRET_KEY = "django-insecure--7u2gz^jrm@-(e)w%@6d8b4r8f*t5ba&7yss#$xyp4-^a4nho%"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG =True
+DEBUG = True
 
 ALLOWED_HOSTS = []
 
@@ -58,7 +58,8 @@ INSTALLED_APPS = [
     "newsroomApp",
     "blogApp",
     "campusManagerApp",
-    "widget_tweaks"
+    "widget_tweaks",
+    "qr_code",
 ]
 
 MIDDLEWARE = [
@@ -126,7 +127,6 @@ WSGI_APPLICATION = "wave_v1.wsgi.application"
 # }
 
 
-
 if DATABASE_URL is None:
     raise ValueError("DATABASE_URL environment variable not set")
 
@@ -135,13 +135,15 @@ tmpPostgres = urlparse(DATABASE_URL)
 
 # Ensure that all components are handled as strings
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': str(tmpPostgres.path.lstrip('/')),  # Convert to string and remove leading slash
-        'USER': str(tmpPostgres.username),
-        'PASSWORD': str(tmpPostgres.password),
-        'HOST': str(tmpPostgres.hostname),
-        'PORT': str(tmpPostgres.port) if tmpPostgres.port else '',
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": str(
+            tmpPostgres.path.lstrip("/")
+        ),  # Convert to string and remove leading slash
+        "USER": str(tmpPostgres.username),
+        "PASSWORD": str(tmpPostgres.password),
+        "HOST": str(tmpPostgres.hostname),
+        "PORT": str(tmpPostgres.port) if tmpPostgres.port else "",
     }
 }
 
@@ -155,7 +157,7 @@ EMAIL_HOST_USER = "larteyokle@gmail.com"
 EMAIL_HOST_PASSWORD = "lrxkfnqqxxkyzgct"
 
 # Resend Email Configurations
-RESEND_API_KEY = 're_UutAuVEz_34S8yutMqLPTUr5644vau6n9'
+RESEND_API_KEY = "re_UutAuVEz_34S8yutMqLPTUr5644vau6n9"
 
 
 # Password validation

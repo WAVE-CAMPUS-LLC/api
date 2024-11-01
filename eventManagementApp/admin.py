@@ -1,6 +1,6 @@
 from django.contrib import admin
 from .models import HostApplication, Event, EventPrivacy
-from eventTicketsApp.models import RSVPTicket, PaidFreeTicket
+from eventTicketsApp.models import RSVPTicket, PaidFreeTicket, Ticket
 
 
 # Register your models here.
@@ -70,6 +70,21 @@ class PaidFreeTicketAdmin(admin.ModelAdmin):
         "ticket_description",
         # "created_at",
     )
+    
+    
+class TicketAdmin(admin.ModelAdmin):
+    list_display = (
+        "ticketId",
+        "user",
+        "guestFirstName",
+        "guestLastName",
+        "guestEmail",
+        "event",
+        "status",
+        "created_at",
+    )
+    
+admin.site.register(Ticket, TicketAdmin)
 
 
 admin.site.register(Event, EventAdmin)

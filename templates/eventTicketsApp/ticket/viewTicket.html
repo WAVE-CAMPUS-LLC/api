@@ -1,0 +1,61 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}
+WAVE — Welcome back!
+{% endblock title %}
+
+{% block app_page_style %}
+<link rel="stylesheet" type="text/css" href="{% static "/styles/eventTicketsApp/ticket/viewTicket.css" %}" />
+{% endblock app_page_style %}
+
+{% block script %}
+{% endblock script %}
+
+{% block checkout_body %}
+<div class="ticket-container">
+    <main class="ticket-card">
+        <div class="ticket-event-information">
+            <div class="tei-header">
+                <div id="logo">
+                    <a href="{% url 'core:index' %}">
+                        WAV<span>E</span>.
+                    </a>
+                </div>
+            </div>
+            <div class="event-information">
+                <div class="ei-header">
+                    <h1>For you, {% if ticket.user %}{{ ticket.user.first_name }}{% else %}{{ ticket.guestFirstName }}{% endif %}</h1>
+                    <h3>{{ event.title }}</h3>
+                </div>
+                <div class="ei-body">
+                    <div>
+                        <p class="eib-location">
+                            {{ event.building_name }}, 
+                            <br> 
+                            {{ event.street }}, 
+                            <br> 
+                            {{ event.city }}, {{ event.state }} {{ event.zip_code }}
+
+                            <a href="" class="go-to-location">Locate</a>
+                        </p>
+                    </div>
+                </div>
+
+                <div class="host-name">
+                    <p>Hosted by <a target="_blank" href="{% url "social:publicProfile" username=event.host.username %}">@{{ event.host.username }}</a>
+                </div>
+            </div>
+            <div class="marketing-phrase">
+                <p>Enjoy! Take pictures for us to repost!</p>
+            </div>
+        </div>
+
+        <div class="ticket-event-qr">
+            <div class="qr-code-container">
+                <img src="{% static "/images/eventTicketsApp/3abd7c0d-fda5-431c-a3b5-387ba49777c6.png" %}" />
+            </div>
+        </div>
+    </main>
+</div>
+{% endblock checkout_body %}
