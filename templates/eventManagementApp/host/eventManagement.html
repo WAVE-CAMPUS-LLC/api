@@ -12,10 +12,15 @@ Manage {{ event.title }} | WAVE.
 
 {% block script %}
     <script type="text/javascript" src="{% static "scripts/eventManagementApp/host/eventManage/tabControl.js" %}" defer></script>
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <script type="text/javascript" src="{% static "scripts/eventTicketsApp/eventManagementScanner/scanner.js" %}" defer></script>
     {% if isInCollege %}
     <script type="text/javascript" src="{% static "scripts/eventManagementApp/host/displayOnCollege.js" %}" defer></script>
     {% endif %}
+
+    {% if event.ticketing == "Paid/Free" %}
     <script type="text/javascript" src="{% static "scripts/eventManagementApp/host/eventManage/createTicketDisplay.js" %}" defer></script>
+    {% endif %}
 {% endblock script %}
 
 
@@ -46,6 +51,7 @@ Manage {{ event.title }} | WAVE.
             <div role="button" type="button" class="dashboard-tab tab-active" data-tab="event-information">Overview</div>
             <div role="button" type="button" class="dashboard-tab" data-tab="event-privacy">Privacy</div>
             <div role="button" type="button" class="dashboard-tab" data-tab="event-ticketing">Ticketing</div>
+            <div role="button" type="button" class="dashboard-tab" data-tab="event-scanner">QR Scanner</div>
         </div>
 
         <div id="portal-body-content">
@@ -294,6 +300,34 @@ Manage {{ event.title }} | WAVE.
                             </div>
                         </div>
                         {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="pbc-element-content" id="event-scanner">
+                <div class="event-scanner-container">
+                    <div class="scannerHeader">
+                        <h3>Ticket Scanner</h3>
+                        <p>Scan tickets to check-in users!</p>
+                    </div>
+
+                    <div id="scanner-container" class="scanner-container">
+                        <button type="button" role="button" class="startScanningButton" id="startScanningButton">
+                            <img src="{% static "/images/eventTicketsApp/icons/scanner.svg" %}" />
+                            Start Scanning
+                        </button>
+                    </div>
+
+
+                    <div class="scanner-display" id="scanner-display">
+                        <div class="scanner-display-container">
+                            <div class="scanned-ticket-status">
+                                <h3 class="ticket-status valid">Enosh Lartey: Valid</h3>
+                            </div>
+    
+                            <div id="qrReader" class="qrReader"></div>
+                        </div>
+                        
                     </div>
                 </div>
             </div>
