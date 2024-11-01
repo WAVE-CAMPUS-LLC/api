@@ -166,9 +166,9 @@ Create your event — WAVE.
                     </div>
         
                     <div class="section-intake">
-                        <select id="privacy-type-select" name="privacy">
+                        <select id="privacy-type-select" name="privacy" class="event-type-event">
                             {% for value, display in privacyChoices %}
-                            <option value="{{ value }}">{{ display }}</option>
+                            <option value="{{ value }}" >{{ display }}</option>
                             {% endfor %}
                         </select>
 
@@ -180,6 +180,18 @@ Create your event — WAVE.
                             {% endfor %}
                         </div>
                     </div>
+                    {% comment %} <div class="discoverable-explanation">
+                        <p>**Discoverable events are visible to everyone and shown on the explore page</p>
+                    </div>
+                    <div class="invite-only-explanation">
+                        <p>**Invite-only events are visible to no-one except the people you invite</p>
+                    </div>
+                    <div class="private-college-explanation">
+                        <p>**Private college events are only visible to others in your college</p>
+                    </div>
+                    <div class="private-org-explanation">
+                        <p>**Private organization events are only visible to others in your org</p>
+                    </div> {% endcomment %}
                 </div>
             </section>
 
@@ -231,41 +243,59 @@ Create your event — WAVE.
                                 <p>{{ eventForm.country.label }}</p>
                                 <select required id="{{ eventForm.country.id_for_label }}" name="{{ eventForm.country.html_name }}">
                                     {% for countryValue, countryDisplay in eventForm.country.field.choices %}
-                                        <option value="{{ countryValue }}" {% if eventForm.country.countryValue == value %}selected{% endif %}>{{ countryDisplay }}</option>
+                                    <option value="{{ countryValue }}" {% if eventForm.country.countryValue == value %}selected{% endif %}>{{ countryDisplay }}</option>
                                     {% endfor %}
                                 </select>
+                                <p style="color: yellowgreen;">*Only events in the United States are currently supported</p>
                             </label>
                         </div>
                         
                         <div class="address-intake">
                             <label for="{{ eventForm.building_name.id_for_label }}">
                                 <p>{{ eventForm.building_name.label }}</p>
-                                <input required type="{{ eventForm.building_name.field.widget.input_type }}" id="{{ eventForm.building_name.auto_id }}" name="{{ eventForm.building_name.html_name }}" />
+                                <input required class="building-input" type="{{ eventForm.building_name.field.widget.input_type }}" id="{{ eventForm.building_name.auto_id }}" name="{{ eventForm.building_name.html_name }}" />
+                                <div id="building-error">
+                                    Please provide a shorter name.
+                                </div>
                             </label>
 
                             <label for="{{ eventForm.street.id_for_label }}">
                                 <p>{{ eventForm.street.label }}</p>
-                                <input required type="{{ eventForm.street.field.widget.input_type }}" id="{{ eventForm.street.auto_id }}" name="{{ eventForm.street.html_name }}" />
+                                <input required class="street-input" type="{{ eventForm.street.field.widget.input_type }}" id="{{ eventForm.street.auto_id }}" name="{{ eventForm.street.html_name }}" />
+                                <div id="street-error">
+                                    Please provide a shorter street address.
+                                </div>
                             </label>
 
                             <label for="{{ eventForm.apt_suite_unit.id_for_label }}">
                                 <p>{{ eventForm.apt_suite_unit.label }}</p>
-                                <input type="{{ eventForm.apt_suite_unit.field.widget.input_type }}" id="{{ eventForm.apt_suite_unit.auto_id }}" name="{{ eventForm.apt_suite_unit.html_name }}" />
+                                <input class="apt-input" type="{{ eventForm.apt_suite_unit.field.widget.input_type }}" id="{{ eventForm.apt_suite_unit.auto_id }}" name="{{ eventForm.apt_suite_unit.html_name }}" />
+                                <div id="apt-error">
+                                    Please provide a shorter apt/suit/unit address.
+                                </div>
                             </label>
 
                             <label for="{{ eventForm.city.id_for_label }}">
                                 <p>{{ eventForm.city.label }}</p>
-                                <input required type="{{ eventForm.city.field.widget.input_type }}" id="{{ eventForm.city.auto_id }}" name="{{ eventForm.city.html_name }}" />
+                                <input required class="city-input" type="{{ eventForm.city.field.widget.input_type }}" id="{{ eventForm.city.auto_id }}" name="{{ eventForm.city.html_name }}" />
+                                <div id="city-error">
+                                    Please provide a shorter city/town name.
+                                </div>
                             </label>
 
                             <label for="{{ eventForm.state.id_for_label }}">
                                 <p>{{ eventForm.state.label }}</p>
-                                <input required type="{{ eventForm.state.field.widget.input_type }}" id="{{ eventForm.state.auto_id }}" name="{{ eventForm.state.html_name }}" />
+                                <div class="state-intake">
+                                    {{ eventForm.state }}
+                                </div>
                             </label>
 
                             <label for="{{ eventForm.zip_code.id_for_label }}">
                                 <p>{{ eventForm.zip_code.label }}</p>
-                                <input required type="{{ eventForm.zip_code.field.widget.input_type }}" id="{{ eventForm.zip_code.auto_id }}" name="{{ eventForm.zip_code.html_name }}" />
+                                <input required class="zip-input" type="number" id="{{ eventForm.zip_code.auto_id }}" name="{{ eventForm.zip_code.html_name }}" maxlength="5" minlength="5" pattern="\d{5}" oninput="this.value = this.value.slice(0, 5)" />
+                                <div id="zip-error">
+                                    Zip code needs to be 5 digits.
+                                </div>
                             </label>
                         </div>
                     </div>
@@ -293,7 +323,7 @@ Create your event — WAVE.
             </section>
 
             <section id="stage-section" data-validate="true">
-                <input required type="hidden" class="section-title" value="Tickets made available  — WAVE." />
+                <input type="hidden" class="section-title" value="Tickets made available  — WAVE." />
                 <div class="stageSection-container-col">
                     <div class="section-question">
                         Contact information
@@ -303,29 +333,29 @@ Create your event — WAVE.
                     <div class="ticket-section-intake">
                         <div class="ticket-type-row">
                             <label for="{{ eventForm.contact_email.id_for_label }}">
-                                <p>{{ eventForm.contact_email.label }}</p>
-                                <input required type="{{ eventForm.contact_email.field.widget.input_type }}" id="{{ eventForm.contact_email.auto_id }}" name="{{ eventForm.contact_email.html_name }}" />
+                                <p>{{ eventForm.contact_email.label }} (optional) </p>
+                                <input type="{{ eventForm.contact_email.field.widget.input_type }}" id="{{ eventForm.contact_email.auto_id }}" name="{{ eventForm.contact_email.html_name }}" />
                             </label>
                         </div>
 
                         <div class="ticket-type-row">
                             <label for="{{ eventForm.contact_phone.id_for_label }}">
-                                <p>{{ eventForm.contact_phone.label }}</p>
-                                <input required type="{{ eventForm.contact_phone.field.widget.input_type }}" id="{{ eventForm.contact_phone.auto_id }}" name="{{ eventForm.contact_phone.html_name }}" />
+                                <p>{{ eventForm.contact_phone.label }} (optional) </p>
+                                <input type="{{ eventForm.contact_phone.field.widget.input_type }}" id="{{ eventForm.contact_phone.auto_id }}" name="{{ eventForm.contact_phone.html_name }}" />
                             </label>
                         </div>
 
                         <div class="ticket-type-row">
                             <label for="{{ eventForm.contact_website.id_for_label }}">
-                                <p>{{ eventForm.contact_website.label }}</p>
-                                <input required type="{{ eventForm.contact_website.field.widget.input_type }}" id="{{ eventForm.contact_website.auto_id }}" name="{{ eventForm.contact_website.html_name }}" />
+                                <p>{{ eventForm.contact_website.label }} (optional) </p>
+                                <input type="{{ eventForm.contact_website.field.widget.input_type }}" id="{{ eventForm.contact_website.auto_id }}" name="{{ eventForm.contact_website.html_name }}" />
                             </label>
                         </div>
 
                         <div class="ticket-type-row">
                             <label for="{{ eventForm.contact_instagram.id_for_label }}">
-                                <p>{{ eventForm.contact_instagram.label }}</p>
-                                <input required type="{{ eventForm.contact_instagram.field.widget.input_type }}" id="{{ eventForm.contact_instagram.auto_id }}" name="{{ eventForm.contact_instagram.html_name }}" />
+                                <p>{{ eventForm.contact_instagram.label }} (optional) </p>
+                                <input type="{{ eventForm.contact_instagram.field.widget.input_type }}" id="{{ eventForm.contact_instagram.auto_id }}" name="{{ eventForm.contact_instagram.html_name }}" />
                             </label>
                         </div>
                     </div>
@@ -361,11 +391,9 @@ Create your event — WAVE.
         
                     <div class="section-intake">
                         <div class="header-photo-intake">
-                            <!--Image Preview Element-->
                             <img id="header-photo-preview" src="#" alt="Header Photo Preview">
-                            <!-- Button that triggers the image upload. -->
-                            <button class="upload-header-photo" type="button" onclick="document.getElementById('{{eventForm.header_photo.auto_id}}').click();">Upload photo</button>
-                            {{eventForm.header_photo|add_class:"hidden"}}
+                            <button class="upload-header-photo" type="button" onclick="document.getElementById('photo-input').click();">Upload photo</button>
+                            {{ eventForm.header_photo|add_class:"hidden"|attr:"id:photo-input" }}
                         </div>
                     </div>
                 </div>
