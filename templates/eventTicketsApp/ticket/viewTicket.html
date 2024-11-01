@@ -1,5 +1,6 @@
 {% extends "base/base.html" %}
 {% load static %}
+{% load qr_code %}
 
 {% block title %}
 WAVE — Welcome back!
@@ -53,7 +54,11 @@ WAVE — Welcome back!
 
         <div class="ticket-event-qr">
             <div class="qr-code-container">
-                <img src="{% static "/images/eventTicketsApp/3abd7c0d-fda5-431c-a3b5-387ba49777c6.png" %}" />
+                {% if ticket.qrCodeImage %}
+                <img src="{{ticket.qrCodeImage.url}}" alt="Ticket QR Code" />
+                {% else %}
+                <img src="{% qr_from_text ticket.qrCodeData %}" alt="Ticket QR Code" />
+                {% endif %}
             </div>
         </div>
     </main>

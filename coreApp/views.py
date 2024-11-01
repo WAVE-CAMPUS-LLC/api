@@ -167,15 +167,17 @@ def eventDetailsView(request, eventId, token=None):
                     rsvp_ticket = rsvpForm.save(commit=False)
                     rsvp_ticket.event = event
                     rsvp_ticket.save()
-                    
+
                     guestFirstName = rsvp_ticket.first_name
                     guestLastName = rsvp_ticket.last_name
                     guestEmail = rsvp_ticket.email
-                    
+
                     user = request.user if request.user.is_authenticated else None
-                    
-                    generateTicket(request, user, event, guestFirstName, guestLastName, guestEmail)
-                    
+
+                    generateTicket(
+                        request, event, user, guestFirstName, guestLastName, guestEmail
+                    )
+
                     return render(
                         request,
                         "coreApp/event/eventDetails.html",

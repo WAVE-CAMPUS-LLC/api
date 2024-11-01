@@ -5,6 +5,8 @@ from django.template.loader import render_to_string
 from django.conf import settings
 from django.urls import reverse
 import uuid
+from io import BytesIO
+from django.core.files import File
 import json
 import os
 from qr_code.qrcode import maker
@@ -47,25 +49,19 @@ def updateCartView(request):
 def viewTicket(request, mainId):
     ticket = get_object_or_404(Ticket, mainId=mainId)
     event = ticket.event
-
-    # Check if the logged-in user owns the ticket
-    if request.user.is_authenticated and ticket.user == request.user:
-        return render(request, "eventTicketsApp/ticket/viewTicket.html", {"ticket": ticket, "event": event})
-
-    # Check if guestEmail parameter matches the ticket's guestEmail
-    guest_email_parameter = request.GET.get('guestEmail')
-    if guest_email_parameter and guest_email_parameter == ticket.guestEmail:
-        return render(request, "eventTicketsApp/ticket/viewTicket.html", {"ticket": ticket, "event": event})
-
-    # Redirect to invalid page if access is not allowed
-    return render(request, "extras/invalid/invalid.html")
+    if ticket:
+        return render(
+            request, "eventTicketsApp/ticket/viewTicket.html", {"ticket": ticket, "event": event}
+        )
+    else:
+        return redirect("core:explore")
 
 
 def generateTicket(
-    request, user, event, guestFirstName=None, guestLastName=None, guestEmail=None
+    request, event, user=None, guestFirstName=None, guestLastName=None, guestEmail=None
 ):
     ticket = Ticket(
-        user=user,
+        user=user if user and user.is_authenticated else None,
         event=event,
         guestFirstName=guestFirstName,
         guestLastName=guestLastName,
@@ -89,23 +85,13 @@ def generateTicket(
         qr_code_image = maker.make_qr_code_image(
             data=qr_data, qr_code_options=qr_code_options, force_text=True
         )
+        
+        image_io = BytesIO(qr_code_image)
+        ticket.qrCodeImage.save(f"{ticket.ticketId}.png", File(image_io), save=True)
+        
 
-        # Define the path to save the QR code
-        qr_code_path = f"media/qr_codes/{ticket.ticketId}.png"
-        os.makedirs(os.path.dirname(qr_code_path), exist_ok=True)
-
-        # Save the QR code image as bytes
-        with open(qr_code_path, "wb") as f:
-            f.write(qr_code_image)  # Write the bytes directly to the file
-
-        # Update the ticket with the QR code path
-        ticket.qrCodeData = qr_code_path
         ticket.save()
-
-        # Update the ticket with the QR code path
-        ticket.qrCodeData = qr_code_path
-        ticket.save()
-
+        
         ticketMainId = ticket.mainId
         ticketLink = request.build_absolute_uri(
             reverse("eventTickets:viewTicket", kwargs={"mainId": ticketMainId})

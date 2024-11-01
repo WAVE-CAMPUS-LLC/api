@@ -70,8 +70,8 @@ class PaidFreeTicketAdmin(admin.ModelAdmin):
         "ticket_description",
         # "created_at",
     )
-    
-    
+
+
 class TicketAdmin(admin.ModelAdmin):
     list_display = (
         "ticketId",
@@ -82,8 +82,10 @@ class TicketAdmin(admin.ModelAdmin):
         "event",
         "status",
         "created_at",
+        "qrCodeImage",
     )
-    
+
+
 admin.site.register(Ticket, TicketAdmin)
 
 

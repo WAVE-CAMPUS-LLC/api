@@ -23,12 +23,13 @@ class Ticket(models.Model):
         primary_key=True, default=uuid.uuid4, editable=False, unique=True
     )
     ticketId = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
-    user = models.ForeignKey("authenticationApp.CustomUser", on_delete=models.CASCADE)
+    user = models.ForeignKey("authenticationApp.CustomUser", on_delete=models.CASCADE, null=True, blank=True)
     guestFirstName = models.CharField(max_length=50, blank=True, null=True)
     guestLastName = models.CharField(max_length=50, blank=True, null=True)
     guestEmail = models.EmailField(max_length=254, blank=True, null=True)
     event = models.ForeignKey("eventManagementApp.Event", on_delete=models.CASCADE)
     qrCodeData = models.TextField(blank=True, null=True)
+    qrCodeImage = models.ImageField(upload_to='qr_codes/', blank=True, null=True)
     status = models.CharField(max_length=10, choices=TICKET_STATUS_CHOICES, default="Valid")
     created_at = models.DateTimeField(auto_now_add=True)
     
