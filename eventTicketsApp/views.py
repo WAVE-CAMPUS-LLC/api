@@ -51,7 +51,9 @@ def viewTicket(request, mainId):
     event = ticket.event
     if ticket:
         return render(
-            request, "eventTicketsApp/ticket/viewTicket.html", {"ticket": ticket, "event": event}
+            request,
+            "eventTicketsApp/ticket/viewTicket.html",
+            {"ticket": ticket, "event": event},
         )
     else:
         return redirect("core:explore")
@@ -69,15 +71,25 @@ def generateTicket(
     )
     ticket.save()
 
-    qr_data = (
-        f"Ticket ID: {ticket.ticketId} | Event: {event.title} | Status: {ticket.status} | Attendee: {ticket.guestFirstName} {ticket.guestLastName}"
-    )
+    qr_data = json.dumps({
+        "ticketId": str(ticket.ticketId),
+        "eventId": str(event.eventId),
+        "status": ticket.status,
+        "guestFirstName": guestFirstName if guestFirstName else None,
+        "guestLastName": guestLastName if guestLastName else None,
+        "guestEmail": guestEmail if guestEmail else None,
+        "userFirstName": user.first_name if user else None,
+        "userLastName": user.last_name if user else None,
+        "userEmail": user.email if user else None,
+    })
 
     qr_code_options = QRCodeOptions(
         size=200,
         border=4,
-        error_correction="H",
+        error_correction="M",
         image_format="png",
+        dark_color="#000000",
+        light_color="#ffffff",
     )
 
     try:
@@ -85,13 +97,12 @@ def generateTicket(
         qr_code_image = maker.make_qr_code_image(
             data=qr_data, qr_code_options=qr_code_options, force_text=True
         )
-        
+
         image_io = BytesIO(qr_code_image)
         ticket.qrCodeImage.save(f"{ticket.ticketId}.png", File(image_io), save=True)
-        
 
         ticket.save()
-        
+
         ticketMainId = ticket.mainId
         ticketLink = request.build_absolute_uri(
             reverse("eventTickets:viewTicket", kwargs={"mainId": ticketMainId})
@@ -103,7 +114,7 @@ def generateTicket(
             subject = f"Your Ticket for {event.title}"
             qrCodeHtml = render_to_string(
                 "emailTemplates/eventTicketsApp/ticketQRCode.html",
-                {"ticketLink":ticketLink, "event": event},
+                {"ticketLink": ticketLink, "event": event},
             )
             message = f"Thank you for your purchase!\n" f"Your QR code is attached."
             from_email = settings.DEFAULT_FROM_EMAIL
@@ -120,3 +131,38 @@ def generateTicket(
     except Exception as e:
         print(f"Error generating QR code: {e}")
     return ticket
+
+
+def verifyTicket(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            print(request.body)
+            ticketId = data.get("ticketId")
+            eventId = data.get("eventId")
+            status = data.get("status")
+            
+            if not all([ticketId, eventId, status]):
+                return JsonResponse({"valid": False, "message": "Invalid ticket data"}, status=400)
+            
+            try:
+                ticket = Ticket.objects.get(ticketId=ticketId, event__eventId=eventId)
+            except Ticket.DoesNotExist:
+                return JsonResponse({"valid": False, "message": "Ticket not found."}, status=404)
+            
+            if ticket.status != "Valid":
+                return JsonResponse({"valid": False, "message": "Ticket already used or invalid."}, status=400)
+                
+                
+                
+            ticket.status = "Scanned"
+            ticket.save()
+            return JsonResponse({"valid": True, "message": f'{ticket.guestFirstName} {ticket.guestLastName}: Valid'})
+            
+        except json.JSONDecodeError:
+            return JsonResponse({"valid": False, "message": "Invalid JSON format"}, status=400)
+        except Exception as e:
+            print(f'Error verifying ticket: {e}')
+            return JsonResponse({"valid": False, "message": f"An error occurred: {e}"}, status=500)
+        
+    return JsonResponse({"valid":False, "message": "Invalid request method"}, status=405)

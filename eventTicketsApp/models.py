@@ -6,6 +6,7 @@ from django.db.models.signals import post_save
 from datetime import timedelta
 from django.dispatch import receiver
 from django.conf import settings
+import json
 
 
 # from eventManagementApp.models import Event
@@ -15,8 +16,8 @@ from django.conf import settings
 class Ticket(models.Model):
     TICKET_STATUS_CHOICES = [
         ("Valid", "Valid"),
-        ("Redeemed", "Redeemed"),
-        ("Cancelled", "Cancelled"),
+        ("Scanned", "Scanned"),
+        ("Invalid", "Invalid"),
     ]
 
     mainId = models.UUIDField(
@@ -37,7 +38,27 @@ class Ticket(models.Model):
         if self.user:
             return f"Ticket {self.ticketId} for {self.event.title} - {self.status} (User: {self.user.username})"
         return f"Ticket {self.ticketId} for {self.event.title} - {self.status} (Guest: {self.guestFirstName} {self.guestLastName})"
+    
+    def save(self, *args, **kwargs):
+        if not self.qrCodeData:
+            self.qrCodeData = self.generate_qr_code_data()
+        super().save(*args, **kwargs)
 
+    def generate_qr_code_data(self):
+        """
+        Generates JSON data to be embedded in the QR code.
+        """
+        qr_data = {
+            "ticketId": str(self.ticketId),
+            "eventId": str(self.event.eventId),
+            "guestFirstName": self.guestFirstName  if self.guestFirstName else None,
+            "guestLastName": self.guestLastName if self.guestLastName else None,
+            "guestEmail": self.guestEmail if self.guestEmail else None,
+            "userFirstName": self.user.first_name if self.user else None,
+            "userLastName": self.user.last_name if self.user else None,
+            "userEmail": self.user.email if self.user else None,
+        }
+        return json.dumps(qr_data)
 
 class InviteEventOption(models.Model):
     event = models.ForeignKey("eventManagementApp.Event", on_delete=models.CASCADE)
