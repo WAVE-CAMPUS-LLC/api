@@ -34,6 +34,7 @@ urlpatterns = [
     path("newsroom/", views.adminNewsRoomView, name="newsroom"),
     path("newsroom/create/", views.adminCreateNewsView, name="createNews"),
     path("newsroom/<uuid:newsId>/edit/", views.adminEditNewsView, name="editNews"),
+    path("blog/", views.adminBlogView, name="newsroom"),
     
     path("emailing/", views.adminEmailingView, name="emailing"),
     path("send_emailwith_resend/", views.send_email, name="resend-emailing"),
