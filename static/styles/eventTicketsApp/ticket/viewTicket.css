@@ -1,0 +1,177 @@
+/* Logo Design */
+#logo {
+    font-family: Wanted-Black;
+    font-size: 30px;
+}
+
+#logo a {
+    color: #000000;
+    text-decoration: none;
+}
+
+#logo a span {
+    color: #008d95;
+}
+
+/* Block Checkout Body */
+.ticket-container {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    align-items: center;
+    justify-content: center;
+
+    overflow: hidden;
+
+    height: 100%;
+
+    padding: 30px;
+}
+
+main {
+    width: 80%;
+    height: 100%;
+
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    display: grid;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #e0e0e082;
+    border-radius: 20px;
+    box-shadow: 0 0 10px rgba(89, 89, 89, 0.279);
+
+    padding: 30px;
+}
+
+.ticket-event-information {
+    width: 100%;
+    height: 100%;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.tei-header {
+    width: 100%;
+
+    display: flex;
+    flex-direction: row;
+    justify-content: start;
+}
+
+.event-information {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.ei-header {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.ei-header h1 {
+    font-family: Wanted-Black;
+    font-size: 40px;
+    color: #008d95;
+}
+
+.ei-header h3 {
+    font-family: Wanted-ExtraBold;
+    font-size: 25px;
+    color: #000000;
+    white-space: nowrap;
+    /* Prevent wrapping */
+    overflow: hidden;
+    /* Hide overflow content */
+    text-overflow: ellipsis;
+    /* Show ellipsis for overflow text */
+    width: 100%;
+    text-align: left;
+}
+
+.ei-body {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    justify-content: space-between;
+    height: 100%;
+}
+
+.eib-location {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+
+    font-family: Wanted-Variable;
+    font-size: 14px;
+}
+
+.go-to-location {
+    font-family: Wanted-Variable;
+    color: #008d95;
+
+    text-decoration: underline;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.eib-date {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+
+    font-family: Wanted-Medium;
+    font-size: 14px;
+}
+
+.host-name {
+    font-family: Wanted-Variable;
+    font-size: 14px;
+}
+
+.host-name a {
+    color: #008d95;
+    text-decoration: underline;
+}
+
+.marketing-phrase {
+    width: 100%;
+    display: flex;
+    justify-content: start;
+}
+
+.marketing-phrase p {
+    font-family: Wanted-Black;
+    font-size: 17px;
+
+    color: #008d95;
+    font-style: italic;
+}
+
+/* Ticket Event QR Code */
+.ticket-event-qr {
+    height: 100%;
+}
+
+.qr-code-container {
+    height: 100%;
+    width: 100%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.qr-code-container img {
+    width: 100%;
+    height: 100%;
+
+    max-width: 300px;
+    max-height: 300px;
+
+    border-radius: 20px;
+}

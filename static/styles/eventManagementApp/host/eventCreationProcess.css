@@ -142,7 +142,29 @@
     gap: 25px;
 }
 
-.section-intake {
+#title-error, 
+#date-error, 
+#time-error, 
+#body-error {
+    color: red;
+    font-family: Wanted-Regular;
+    font-size: 18px;
+    padding: 15px;
+}
+
+#building-error,
+#street-error,
+#apt-error,
+#city-error,
+#zip-error {
+    color: red;
+    font-family: Wanted-Regular;
+    font-size: 15px;
+    padding: 5px;
+}
+
+.section-intake,
+.state-intake {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -172,7 +194,7 @@
     display: none;
 }
 
-#event-privacy-select {
+#privacy-type-select {
     display: none;
 }
 
@@ -183,7 +205,8 @@
     width: 60%;
 }
 
-.type-selector {
+.type-selector,
+.privacy-selector {
     border-left: 6px solid #008d95;
 
     text-transform: capitalize;
@@ -204,23 +227,21 @@
 }
 
 
-.type-selector.selected {
+.type-selector.selected, 
+.privacy-selector.selected {
     border-color: #008d95;
     background-color: #008d9553;
     
 }
 
-.type-selector img {
-    width: 50px;
-    height: 50px;
-}
-
-.type-selector h6 {
+.type-selector h6, 
+.privacy-selector h6 {
     font-family: Wanted-Bold;
     font-size: 20px;
 }
 
-.type-selector:hover {
+.type-selector:hover, 
+.privacy-selector:hover {
     border-left: 6px solid #008d9f;
     background-color: #008d9553;
 }
@@ -283,6 +304,16 @@
     font-size: 22px;
 }
 
+.state-intake select {
+    width: 100%;
+    border: 2px solid #8988887f;
+    border-radius: 20px;
+    padding: 15px;
+    
+    font-family: Wanted-Regular;
+    font-size: 18px;
+}
+
 .event-privacy {
     border: 2px solid #8988887f;
     border-radius: 20px;
@@ -303,13 +334,15 @@
     gap: 35px;
 }
 
-.country-intake {
+.country-intake, 
+.state-intake {
     display: flex;
     justify-content: start;
     align-items: start;
 }
 
-.country-intake label{
+.country-intake label, 
+.state-intake label{
     display: flex;
     flex-direction: column;
     align-items: start;
@@ -318,6 +351,7 @@
 }
 
 .country-intake label p,
+.state-intake label p,
 .address-intake label p {
     font-family: Wanted-Variable;
     font-size: 14px;
@@ -325,6 +359,7 @@
 }
 
 .address-intake,
+.state-intake,
 .country-intake {
     display: flex;
     flex-direction: column;
@@ -335,6 +370,7 @@
 }
 
 .address-intake label,
+.state-intake label,
 .country-intake label {
     display: flex;
     flex-direction: column;
@@ -344,7 +380,8 @@
 }
 
 .address-intake label input,
-.country-intake label select {
+.country-intake label select,
+.state-intake label select {
     width: 100%;
     padding: 15px;
     border-radius: 15px;
@@ -606,6 +643,12 @@
     background-color: #008d95;
 }
 
+.next-section:disabled {
+    background-color: #aeaeaeab;
+    border: 1px solid #aeaeaeab;
+    color: white;
+    cursor: not-allowed;
+}
 
 
 #suggestions {

@@ -1,7 +1,9 @@
 from django import forms
-from .models import HostApplication, Event, EventTicket
+from .models import HostApplication, Event
 from django.utils.translation import gettext_lazy as _
 from adminDashboardApp.models import College
+from accountManagementApp.models import UserProfile
+from collegeManagementApp.models import OrganizationMembership, Organization
 
 
 class HostApplicationForm(forms.ModelForm):
@@ -60,6 +62,7 @@ class EventForm(forms.ModelForm):
 
     class Meta:
         model = Event
+
         fields = [
             "status",
             "title",
@@ -69,6 +72,7 @@ class EventForm(forms.ModelForm):
             "end_time",
             "description",
             "privacy",
+            "ticketing",
             "country",
             "building_name",
             "street",
@@ -87,19 +91,8 @@ class EventForm(forms.ModelForm):
             "body_photo_four",
             "body_photo_five",
         ]
+
         widgets = {
-            "privacy": forms.Select(attrs={"class": "event-privacy"}),
             "country": forms.Select(),
             "status": forms.HiddenInput(),
         }
-
-class EventTicketForm(forms.ModelForm):
-    class Meta:
-        model = EventTicket
-        fields = [
-            "ticket_name",
-            "ticket_type",
-            "ticket_price",
-            "ticket_description",
-            "ticket_quantity",
-        ]

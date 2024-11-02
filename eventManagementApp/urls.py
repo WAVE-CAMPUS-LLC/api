@@ -19,11 +19,13 @@ urlpatterns = [
         name="eventCreationProcess",
     ),
     path(
-        "event/overview/<uuid:eventId>/",
-        views.eventCreatedOverview,
-        name="eventOverview",
+        "event/save-progress/<uuid:eventId>/",
+        views.save_event_progress,
+        name="save_event_progress",
     ),
     path(
-        "event/<uuid:eventId>/ticketing/home/", views.eventTicketingOverview, name="ticketingOverview"
+        "event/<uuid:eventId>/manage/",
+        views.eventManagement,
+        name="eventManagement",
     ),
 ]

@@ -5,6 +5,9 @@ from django.utils.translation import gettext_lazy as _
 from django.conf import settings
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils import timezone
+
+from eventManagementApp.models import Event
+from eventTicketsApp.models import InviteEventOption
 from .utils import generate_profile_picture
 from django.contrib.auth.models import Group
 from collegeManagementApp.models import College
@@ -126,10 +129,9 @@ class UserProfile(models.Model):
         ("Medium (50-100 people)", "Medium (50-100 people)"),
         ("Large (100+ people)", "Large (100+ people)"),
     ]
-    
 
     user = models.OneToOneField(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="user_profile"
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="user_profile", null=True
     )
     group = models.ManyToManyField(Group, related_name="user_group")
     college = models.ForeignKey(
@@ -154,8 +156,7 @@ class UserProfile(models.Model):
         null=True,
         blank=True,
     )
-    
-    
+
     home_state = models.CharField(
         "What's your home state?", max_length=2, choices=STATE_CHOICES, default=""
     )
@@ -182,11 +183,21 @@ class UserProfile(models.Model):
         choices=EVENT_SIZE_CHOICES,
         default="Medium (50-100 people)",
     )
-    eventTypes = models.ManyToManyField("EventTypePreferences", related_name="user_preferences")
-    
+    eventTypes = models.ManyToManyField(
+        "EventTypePreferences", related_name="user_preferences"
+    )
+
     # Communication Preferences
     email_communication = models.BooleanField(_("Email notifications"), default=True)
     text_communication = models.BooleanField(_("Text notifications"), default=True)
+
+    # Invited Events
+    invited_events = models.ManyToManyField(
+        Event, related_name="invited_events", blank=True
+    )
+    invitations = models.ManyToManyField(
+        InviteEventOption, related_name="invitations", blank=True
+    )
 
     class Meta:
         default_permissions = ()
@@ -198,8 +209,12 @@ class UserProfile(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.profile_photo:
-            initials = f'{self.user.first_name[0]}{self.user.last_name[0]}'.upper()
-            self.profile_photo.save(f'{self.user.username}_profile.png', generate_profile_picture(initials), save=False)
+            initials = f"{self.user.first_name[0]}{self.user.last_name[0]}".upper()
+            self.profile_photo.save(
+                f"{self.user.username}_profile.png",
+                generate_profile_picture(initials),
+                save=False,
+            )
         super().save(*args, **kwargs)
 
     def is_friends_with(self, other_user):

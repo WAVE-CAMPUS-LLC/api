@@ -13,6 +13,7 @@
 {% block script %}
 <script type="text/javascript" src="{% static "scripts/coreApp/event/eventDetailsTabs.js" %}"></script>
 <script type="text/javascript" src="{% static "scripts/coreApp/event/eventDetailsTicketsTab.js" %}" defer></script>
+<script type="text/javascript" src="{% static "scripts/coreApp/eventDetails/ticketCount.js" %}" defer></script>
 {% endblock script %}
 
 
@@ -22,6 +23,16 @@
 
 
 {% block body %}
+{% if existingRSVP %}
+<div class="rsvp-card-header-warning">
+    <h3>This email has already been submitted! Try a different one.</h3>
+</div>
+{% endif %}
+{% if newRSVP %}
+<div class="rsvp-card-header-success">
+    <h3>You have reserved a place for the event. Check your email for confirmation.</h3>
+</div>
+{% endif %}
 <div id="content-container">
     <div class="page-header">
         <div class="event-title">
@@ -47,14 +58,15 @@
         <div id="contentContainerTabs">
             <div id="tabHeaderParent">
                 <ul id="tabHeader">
-                    <li class="eventDetailsTab tab-active" data-tab="eventDetails">
-                        Details
+                    <li class="eventDetailsTab tab-active" data-tab="eventDescription">
+                        Description
                     </li>
-                    {% if eventTickets %}
+                    {% if paidFreeTickets or event.ticketing == "RSVP Required" %}
                     <li class="eventDetailsTab" data-tab="eventTicketInformation">
                         Ticketing
                     </li>
                     {% endif %}
+
                     <li class="eventDetailsTab" data-tab="eventPhotosVideos">
                         Photos
                     </li>
@@ -67,7 +79,7 @@
 
             <div id="tabBody">
                 <div id="tabBodyContent">
-                    <div id="eventDetails" class="details-body eventDetailsTabInformation">
+                    <div id="eventDescription" class="details-body eventDetailsTabInformation">
                         <div class="eventDetails-body">
                             <div class="eventTitleDate">
                                 <h5 class="event-title">
@@ -95,36 +107,135 @@
                                 <h6>Description</h6>
                                 {{ event.description }}
                             </div>
+
+                            <hr/>
+                            {% comment %} <div class="guestlistDisplay">
+                                <div class="guestListImage">
+                                    <img src="{{}}" />
+                                </div>
+                            </div>
+
+                            <hr/> {% endcomment %}
+
+                            <div class="hostInformation">
+                                <div>
+                                    <h6>Hosted by {{ event.host.username }}</h6>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    {% if eventTickets %}
+                    {% if paidFreeTickets or event.ticketing == "RSVP Required" %}
                     <div id="eventTicketInformation" class="ticketinfo-body eventDetailsTabInformation">
                         <div class="eventTickets-body">
-
-                            <div class="eventTicketBody-body">
-                                {% for tickets in eventTickets %}
-                                <div class="jit-role-tab {% if forloop.first %}defaulted{% endif %}">
+                            {% if event.ticketing == "RSVP Required" %}
+                            <div class="ticketBodyHeader">
+                                <h3>You are required to reserve your place</h3>
+                            </div>
+                            <div id="jit-tab-container">
+                                <div class="jit-role-tab">
                                     <div role="button" class="jit-tab-header">
-                                        <h3>{{ tickets.ticket_name }}</h3>
+                                        <h3>Reserve your place</h3>
+                                        <p>Tap to RSVP</p>
                                     </div>
-                                    <div class="jit-tab-body">
-                                        <div class="ticket-body-container">
-                                            <div class="pricing-row">
-                                                <p>{{ tickets.ticket_type }}</p>
-                                                <p>${{ tickets.ticket_price }}</p>
+                                    <div class="jit-tab-body defaulted">
+                                        <div class="jtb-container">
+                                            <div class="rsvp-card-header">
+                                                <h6>Enter your details below</h6>
                                             </div>
-                                            <div class="description-row">
-                                                <p>{{ tickets.ticket_description }}</p>
+                                            
+    
+                                            <form id="rsvpForm" method="post">
+                                                {% csrf_token %}
+                                                <div class="form-group">
+                                                    <label for="{{ rsvpForm.first_name.id_for_label }}">
+                                                        <p>{{ rsvpForm.first_name.label }}</p>
+                                                        {{ rsvpForm.first_name }}
+                                                    </label>
+                                                    <label for="{{ rsvpForm.last_name.id_for_label }}">
+                                                        <p>{{ rsvpForm.last_name.label }}</p>
+                                                        {{ rsvpForm.last_name }}
+                                                    </label>
+                                                </div>
+
+                                                <div class="form-group">
+                                                    <label for="{{ rsvpForm.email.id_for_label }}">
+                                                        <p>{{ rsvpForm.email.label }}</p>
+                                                        {{ rsvpForm.email }}
+                                                    </label>
+                                                </div>
+
+                                                {% if request.user.is_authenticated %}
+                                                <div class="display-group">
+                                                    <p>{{ rsvpForm.display_on_guestlist.label }}</p>
+                                                    <label for="{{ rsvpForm.display_on_guestlist.id_for_label }}" class="custom-toggle">
+                                                        {{ rsvpForm.display_on_guestlist }}
+                                                        <span class="custom-slider custom-round"></span>
+                                                    </label>
+                                                </div>
+                                                {% endif %}
+
+                                                <div class="submit-group">
+                                                    <button type="submit" class="reserveButton" role="button" name="eventAction" value="RSVP">Reserve</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                
+                                
+                            </div>
+                            {% elif event.ticketing == "Paid/Free" and paidFreeTickets %}
+                            <div class="ticketBodyHeader">
+                                <h3>Purchase your ticket</h3>
+                            </div>
+
+                            <div id="jit-tab-container" class="jit-tab-container">
+                                <input type="hidden" id="save-url" value="{% url 'eventTickets:updateCart' %}" />
+                                {% for ticket in paidFreeTickets %}
+                                <div class="jit-role-tab">
+                                    <div role="button" class="jit-tab-header">
+                                        <h3>{{ ticket.ticket_name }}</h3>
+                                        <p>Tap to see more</p>
+                                    </div>
+
+                                    <div class="jit-tab-body defaulted">
+                                        <div class="jtb-container">
+                                            <div class="ticket-description-body">
+                                                <div class="ticket-header-info">
+                                                    <h6 class="priceType">
+                                                        {% if ticket.ticket_type == "Paid" %}
+                                                        ${{ ticket.ticket_price }}
+                                                        {% elif ticket.ticket_type == "Free" %}
+                                                        Free
+                                                        {% endif %}
+                                                    </h6>
+
+                                                    <div class="addRemoveTickets">
+                                                        <button class="removeTicket" id="removeTicketButton" data-ticket-id="{{ ticket.ticket_id }}" data-ticket-name="{{ ticket.ticket_name }}" data-ticket-price="{{ ticket.ticket_price }}" role="button" name="eventAction" value="Remove Ticket">
+                                                            <img src="{% static "images/eventManagementApp/event/removeTicket.svg" %}" alt="-1 Ticket" />
+                                                        </button>
+                                                        <span class="currentTicketAmount" id="currentTicketAmount" data-ticket-id="{{ ticket.ticket_id }}">0</span>
+                                                        <button class="addTicket" id="addTicketButton" name="eventAction" data-ticket-id="{{ ticket.ticket_id }}" data-ticket-name="{{ ticket.ticket_name }}" data-ticket-price="{{ ticket.ticket_price }}" value="Add Ticket" onclick="">
+                                                            <img src="{% static "images/eventManagementApp/event/addTicket.svg" %}" alt="+1 Ticket" />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                
+
+                                                <p>{{ ticket.ticket_description }}</p>
                                             </div>
+                                            
                                         </div>
                                     </div>
                                 </div>
                                 {% endfor %}
                             </div>
+                            {% endif %}
                         </div>
                     </div>
                     {% endif %}
+                    
 
                     <div id="eventPhotosVideos" class="attachment-body eventDetailsTabInformation">
                         <div class="eventPhotosVideos-body">
@@ -149,43 +260,51 @@
                     </div>
                 </div>
 
-                {% if eventTickets %}
-                <div class="ticket-purchase">
-                    <div class="purchase-card">
-                        <div class="pc-header">
-                            <h6>Available Tickets</h6>
+                {% if event.ticketing == "Paid/Free" and paidFreeTickets %}
+                <div id="ticketCartContent" class="ticketCartContent">
+                    <div class="ticketCartContentCard">
+                        <div class="cartHeader">
+                            <h3>Your Cart</h3>
                         </div>
+                        <div class="cartBody">
+                            <div id="emptyCart" class="emptyCart">
+                                <div class="emptyCartContainer">
+                                    <img src="{% static "/images/coreApp/careerDetails/empty-cart.svg" %}" />
+                                    <p>Cart is empty</p>
+                                </div>
+                            </div>
 
-                        <div class="pc-divider">
-                            <hr>
-                        </div>
-
-                        <div class="pc-body">
-                            <ul>
-                                {% for ticket in eventTickets %}
-                                <li data-ticket-id="{{ ticket.privateTicketId }}" data-ticket-quantity="{{ ticket.ticket_quantity }}">
-                                    <div class="ticket-type-info">
-                                        <h6 class="ticket-type">{{ ticket.ticket_name }}</h6>
-                                        <p class="available-quantity" id="available-quantity-{{ ticket.privateTicketId }}">Available: {{ ticket.ticket_quantity }}</p>
-                                    </div>
-                                    <div class="ticket-cart">
-                                        <button role="button" type="button" class="cart-button-control" id="remove-cart-{{ ticket.privateTicketId }}" data-ticket-id="{{ ticket.privateTicketId }}">
-                                            <img src="{% static "images/eventManagementApp/event/removeTicket.svg" %}" alt="Remove from cart">
-                                        </button>
-                                        <div class="cart-information">
-                                            <p class="purchase-quantity" id="purchase-quantity-{{ ticket.privateTicketId }}">0</p>
+                            <div id="cartItems" class="cartItems" style="display: none;">
+                                <div id="cartItemContainer" class="cartItemContainer">
+                                    <div class="cartItem">
+                                        <span class="cartItemName">Ticket Name Placeholder</span>
+                                        <div class="priceQuantity">
+                                            <span class="cartItemCount">
+                                                Quantity: 
+                                                <span id="ticketCountPlaceholder">
+                                                    0
+                                                </span>
+                                            </span>
+                                            <span class="cartItemPrice">
+                                                <span id="ticketPricePlaceholder">
+                                                    $0.00
+                                                </span>
+                                            </span>
                                         </div>
-                                        <button type="button" role="button" class="cart-button-control" id="add-cart-{{ ticket.privateTicketId }}" data-ticket-id="{{ ticket.privateTicketId }}">
-                                            <img src="{% static "images/eventManagementApp/event/addTicket.svg" %}" alt="Add to cart">
-                                        </button>
                                     </div>
-                                </li>
-                                {% endfor %}
-                            </ul>
-                        </div>
+                                </div>
+                            </div>
 
-                        <div class="view-cart">
-                            <button type="button" role="button">View Cart</button>
+                            <div class="checkoutRow" id="checkoutRow">
+                                <div class="checkoutRowContainer">
+                                    <input type="hidden" id="checkout-url" value="{% url 'eventTickets:checkout' %}">
+
+                                    <button id="checkoutButton" data-save-url="{% url 'eventTickets:updateCart' %}" class="checkoutButton" role="button" name="eventAction" value="Checkout" onclick="returnCheckout()">
+                                        Checkout -
+                                        <span id="checkoutTotal">$0.00</span>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

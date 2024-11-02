@@ -232,13 +232,12 @@
 
 /* Category Card */
 .category-card {
-    border: 4px solid #000000;
+    border-left: 6px solid #008d95;
     padding: 30px;
     padding-bottom: 15px;
     padding-top: 15px;
-    border-radius: 20px;
 
-    font-family: Wanted-Bold;
+    font-family: Wanted-Variable;
     background-color: white;
     color: black;
 
@@ -259,7 +258,9 @@
     -webkit-box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.289);
     -moz-box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.289);
     box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.289);
-    border: 4px solid #008d95;
+    border-left: 6px solid #008d95;
+    border-top-right-radius: 20px;
+    border-bottom-right-radius: 20px;
 }
 
 .category-icon {
@@ -328,9 +329,14 @@
     box-shadow: 2px 3px 21px 4px rgba(170, 170, 170, 0.075);
 }
 
+.invited-header {
+    font-family: Wanted-Bold;
+    font-size: 30px;
+}
+
 .category-image img {
     width: 100%;
-    height: 100%;
+    height: 448px;
 
     border-radius: 20px;
     object-fit: cover;
@@ -343,7 +349,7 @@
     display: flex;
     flex-direction: column;
     justify-content: center;
-    align-items: center;
+    align-items: start;
     gap: 5px;
 
     width: 100%;
@@ -374,11 +380,26 @@
 .eventSubInfo {
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: start;
     gap: 1px;
+    width: 100%;
 
     font-family: Wanted-Variable;
     color: rgba(66, 66, 66, 0.575);
+}
+
+#eventHost {
+    display: flex;
+    flex-direction: row;
+    justify-content: start;
+}
+
+#eventDate {
+    width: 100%;
+    display: flex;
+    justify-content: end;
+    font-family: Wanted-Bold;
+    font-size: 20px;
 }
 
 #eventType {

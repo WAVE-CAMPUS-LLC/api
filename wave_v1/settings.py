@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     "extras",
     "careerApp",
     "eventManagementApp",
+    "eventTicketsApp",
     "supportCenterApp",
     "collegeManagementApp",
     "socialApp",
@@ -58,6 +59,7 @@ INSTALLED_APPS = [
     "blogApp",
     "campusManagerApp",
     "widget_tweaks",
+    "qr_code",,
     'storages',
     'channels',
 ]
@@ -128,7 +130,6 @@ WSGI_APPLICATION = "wave_v1.wsgi.application"
 # }
 
 
-
 if DATABASE_URL is None:
     raise ValueError("DATABASE_URL environment variable not set")
 
@@ -137,13 +138,15 @@ tmpPostgres = urlparse(DATABASE_URL)
 
 # Ensure that all components are handled as strings
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': str(tmpPostgres.path.lstrip('/')),  # Convert to string and remove leading slash
-        'USER': str(tmpPostgres.username),
-        'PASSWORD': str(tmpPostgres.password),
-        'HOST': str(tmpPostgres.hostname),
-        'PORT': str(tmpPostgres.port) if tmpPostgres.port else '',
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": str(
+            tmpPostgres.path.lstrip("/")
+        ),  # Convert to string and remove leading slash
+        "USER": str(tmpPostgres.username),
+        "PASSWORD": str(tmpPostgres.password),
+        "HOST": str(tmpPostgres.hostname),
+        "PORT": str(tmpPostgres.port) if tmpPostgres.port else "",
     }
 }
 
@@ -158,6 +161,7 @@ EMAIL_HOST_PASSWORD = "lrxkfnqqxxkyzgct"
 
 # Resend Email Configurations
 RESEND_API_KEY = 're_UutAuVEz_34S8yutMqLPTUr5644vau6n9'
+
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
