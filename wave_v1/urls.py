@@ -33,12 +33,15 @@ urlpatterns = [
     path("", include("careerApp.urls")),
     path("", include("newsroomApp.urls")),
     path("", include("socialApp.urls")),
+    path("", include("eventTicketsApp.urls")),
     path("manager/", include("campusManagerApp.urls")),
     path("blog/", include("blogApp.urls")),
+    path('chat/', include('supportCenterApp.urls')),
     path("admin/", admin.site.urls),
 ]
 
 handler404 = "extras.views.error_404"
 
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+# Using s3 for media storage
+#if settings.DEBUG:
+#    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

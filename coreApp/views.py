@@ -5,14 +5,14 @@ from django.db.models import Count
 
 from eventManagementApp.models import (
     Event,
-    RSVPTicket,
     EventPrivacy,
     InviteEventOption,
-    PaidFreeTicket
 )
+from eventTicketsApp.models import RSVPTicket, PaidFreeTicket
 from accountManagementApp.models import UserProfile
 from .forms import RSVPForm
 from collegeManagementApp.models import OrganizationMembership
+from eventTicketsApp.views import generateTicket
 
 
 # Create your views here.
@@ -29,7 +29,7 @@ def exploreView(request):
     trending_events = Event.objects.filter(
         status="live", privacy="Discoverable"
     ).order_by("date")[:3]
-    
+
     # Retrieve the user profile and invited events
     try:
         user_profile = UserProfile.objects.get(user=request.user)
@@ -46,7 +46,7 @@ def exploreView(request):
     except (TypeError, AttributeError, UserProfile.DoesNotExist):
         user_profile = None
         invited_events_with_tokens = None
-    
+
     trending_categories = (
         Event.objects.filter(status="live", privacy="Discoverable")
         .values("event_type")
@@ -134,16 +134,18 @@ def eventDetailsView(request, eventId, token=None):
     event = get_object_or_404(Event, eventId=eventId)
     eventprivacy = EventPrivacy.objects.get(event=event)
     eventPaidFreeTickets = PaidFreeTicket.objects.filter(event=event)
-    
+
     rsvpForm = RSVPForm() if event.ticketing == "RSVP Required" else None
     rsvp_guests = RSVPTicket.objects.filter(event=event, display_on_guestlist=True)
-    
+
     if request.method == "POST":
         action = request.POST.get("eventAction")
-        
+
         if action == "RSVP":
             user_email = request.POST.get("email")
-            existing_rsvp = RSVPTicket.objects.filter(event=event, email=user_email).first()
+            existing_rsvp = RSVPTicket.objects.filter(
+                event=event, email=user_email
+            ).first()
 
             if existing_rsvp:
                 return render(
@@ -158,13 +160,24 @@ def eventDetailsView(request, eventId, token=None):
                         "existingRSVP": True,
                     },
                 )
-                
+
             else:
                 rsvpForm = RSVPForm(request.POST)
                 if rsvpForm.is_valid():
                     rsvp_ticket = rsvpForm.save(commit=False)
-                    rsvp_ticket.event = event 
+                    rsvp_ticket.event = event
                     rsvp_ticket.save()
+
+                    guestFirstName = rsvp_ticket.first_name
+                    guestLastName = rsvp_ticket.last_name
+                    guestEmail = rsvp_ticket.email
+
+                    user = request.user if request.user.is_authenticated else None
+
+                    generateTicket(
+                        request, event, user, guestFirstName, guestLastName, guestEmail
+                    )
+
                     return render(
                         request,
                         "coreApp/event/eventDetails.html",
@@ -196,11 +209,7 @@ def eventDetailsView(request, eventId, token=None):
             return render(
                 request,
                 "extras/invalid/eventInvalid.html",
-                {
-                    "page": pageName,
-                    "event": event,
-                    "eventPrivacy": eventprivacy
-                },
+                {"page": pageName, "event": event, "eventPrivacy": eventprivacy},
             )
 
     elif eventprivacy.restricted_college:
@@ -225,12 +234,12 @@ def eventDetailsView(request, eventId, token=None):
                     "eventPrivacy": eventprivacy,
                 },
             )
-            
+
     elif eventprivacy.restricted_organization:
         userOrgRelation = OrganizationMembership.objects.filter(
             user=request.user, organization=eventprivacy.restricted_organization
         )
-        
+
         if userOrgRelation.exists():
             return render(
                 request,

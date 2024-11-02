@@ -9,6 +9,7 @@ from django.conf import settings
 from adminDashboardApp.models import College
 
 from collegeManagementApp.models import Organization
+from eventTicketsApp.models import InviteEventOption
 
 
 class HostApplication(models.Model):
@@ -108,6 +109,59 @@ class Event(models.Model):
     ]
 
     COUNTRY_CHOICES = [("United States", "United States")]
+    
+    STATE_CHOICES = [
+        ("AL", "Alabama"),
+        ("AK", "Alaska"),
+        ("AZ", "Arizona"),
+        ("AR", "Arkansas"),
+        ("CA", "California"),
+        ("CO", "Colorado"),
+        ("CT", "Connecticut"),
+        ("DE", "Delaware"),
+        ("FL", "Florida"),
+        ("GA", "Georgia"),
+        ("HI", "Hawaii"),
+        ("ID", "Idaho"),
+        ("IL", "Illinois"),
+        ("IN", "Indiana"),
+        ("IA", "Iowa"),
+        ("KS", "Kansas"),
+        ("KY", "Kentucky"),
+        ("LA", "Louisiana"),
+        ("ME", "Maine"),
+        ("MD", "Maryland"),
+        ("MA", "Massachusetts"),
+        ("MI", "Michigan"),
+        ("MN", "Minnesota"),
+        ("MS", "Mississippi"),
+        ("MO", "Missouri"),
+        ("MT", "Montana"),
+        ("NE", "Nebraska"),
+        ("NV", "Nevada"),
+        ("NH", "New Hampshire"),
+        ("NJ", "New Jersey"),
+        ("NM", "New Mexico"),
+        ("NY", "New York"),
+        ("NC", "North Carolina"),
+        ("ND", "North Dakota"),
+        ("OH", "Ohio"),
+        ("OK", "Oklahoma"),
+        ("OR", "Oregon"),
+        ("PA", "Pennsylvania"),
+        ("RI", "Rhode Island"),
+        ("SC", "South Carolina"),
+        ("SD", "South Dakota"),
+        ("TN", "Tennessee"),
+        ("TX", "Texas"),
+        ("UT", "Utah"),
+        ("VT", "Vermont"),
+        ("VA", "Virginia"),
+        ("WA", "Washington"),
+        ("WV", "West Virginia"),
+        ("WI", "Wisconsin"),
+        ("WY", "Wyoming"),
+    ]
 
     EXPLORE_TYPE_CHOICES = [
         ("social", "Social"),
@@ -176,7 +230,7 @@ class Event(models.Model):
         _("Describe your event"), null=True, blank=True, default=""
     )
     privacy = models.CharField(
-        _("Is this a public event or restricted event?"),
+        _("Determine the visibility of your event."),
         max_length=23,
         choices=PRIVACY_CHOICES,
         null=True,
@@ -185,11 +239,11 @@ class Event(models.Model):
     )
 
     ticketing = models.CharField(
-        _("Select your preferred ticketing system"),
+        _("What type of ticketing do you want?"),
         max_length=16,
         choices=TICKET_CHOICES,
         null=True,
-        blank=True,
+        blank=False,
         default="Paid/Free",
     )
 
@@ -197,7 +251,7 @@ class Event(models.Model):
         _("Country"),
         max_length=100,
         null=True,
-        blank=True,
+        blank=False,
         default="",
         choices=COUNTRY_CHOICES,
     )
@@ -229,7 +283,12 @@ class Event(models.Model):
         _("City / town"), max_length=100, null=True, blank=True, default=""
     )
     state = models.CharField(
-        _("State"), max_length=100, null=True, blank=True, default=""
+        _("State"), 
+        max_length=100, 
+        null=True, 
+        blank=False, 
+        default="", 
+        choices=STATE_CHOICES
     )
     zip_code = models.CharField(
         _("ZIP code"), max_length=6, null=True, blank=True, default=""
@@ -301,82 +360,3 @@ class EventPrivacy(models.Model):
         return f"{self.event.title} Privacy Settings"
 
 
-class InviteEventOption(models.Model):
-    event = models.ForeignKey(Event, on_delete=models.CASCADE)
-    email = models.EmailField()
-    token = models.UUIDField(
-        primary_key=True, default=uuid.uuid4, editable=False, unique=True
-    )
-    created_at = models.DateTimeField(auto_now_add=True)
-    expires_at = models.DateTimeField()
-
-    def save(self, *args, **kwargs):
-        if not self.expires_at:
-            time_now = timezone.now()
-            delta = timedelta(hours=48)
-            self.expires_at = time_now + delta
-        super().save(*args, **kwargs)
-
-
-class RSVPTicket(models.Model):
-    event = models.ForeignKey(
-        Event, on_delete=models.CASCADE, related_name="rsvp_tickets"
-    )
-    email = models.EmailField(_("Email"), max_length=254)
-    first_name = models.CharField(_("First Name"), max_length=50)
-    last_name = models.CharField(_("Last Name"), max_length=50)
-    display_on_guestlist = models.BooleanField(_("Do you want to be displayed on the guest list?"), default=False)
-    created_at = models.DateTimeField(auto_now_add=True)
-    ticket_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
-
-    def __str__(self):
-        return f"{self.first_name} {self.last_name} RSVP'd for {self.event.title}"
-
-
-class PaidFreeTicket(models.Model):
-    TYPE_CHOICES = [
-        ("Free", "Free"),
-        ("Priced", "Priced"),
-    ]
-
-    event = models.ForeignKey(
-        Event, verbose_name=_("Related Event"), on_delete=models.CASCADE, related_name="tickets"
-    )
-    ticket_id = models.UUIDField(
-        primary_key=True, default=uuid.uuid4, editable=False, unique=True
-    )
-    ticket_name = models.CharField(_("Ticket Name"), max_length=50)
-    ticket_type = models.CharField(
-        _("Pricing Type"),
-        max_length=6,
-        null=False,
-        blank=False,
-        default="Free",
-        choices=TYPE_CHOICES,
-    )
-    ticket_price = models.DecimalField(
-        _("Ticket Price"), max_digits=10, decimal_places=2, null=True, blank=True
-    )
-    ticket_description = models.TextField(
-        _("Describe ticket. Are there any perks?"), max_length=300
-    )
-    ticket_quantity = models.PositiveIntegerField(
-        _("How many tickets should be made available?"), default=1
-    )
-    ticket_sold = models.PositiveIntegerField(_("Tickets Sold"), default=0, null=True, blank=True)
-    # created_at = models.DateTimeField(auto_now_add=True)
-
-
-    class Meta:
-        unique_together = ("event", "ticket_name")
-
-    def __str__(self):
-        return f"{self.ticket_name} for {self.event.title}"
-    
-    def available_tickets(self):
-        return self.ticket_quantity - self.ticket_sold
-    
-    def save(self, *args, **kwargs):
-        if self.ticket_type == "Paid" and not self.ticket_price:
-            raise ValueError("Ticket price must be set for paid tickets")
-        super().save(*args, **kwargs)

@@ -1,7 +1,7 @@
 from django import forms
 from django.utils.translation import gettext_lazy as _
 
-from eventManagementApp.models import RSVPTicket
+from eventTicketsApp.models import RSVPTicket
 
 class RSVPForm(forms.ModelForm):
     class Meta:

@@ -13,21 +13,23 @@ from django.urls import reverse
 from accountManagementApp.models import UserProfile
 from collegeManagementApp.models import Organization, OrganizationMembership
 from .forms import (
-    EventTicketForm,
     HostApplicationForm,
     EventForm,
-    InvitationForm,
-    PaidFreeTicketForm,
 )
+
+from eventTicketsApp.forms import InvitationForm, PaidFreeTicketForm
 from .models import (
-    PaidFreeTicket,
     EventType,
     HostApplication,
     Event,
     EventPrivacy,
+)
+
+from eventTicketsApp.models import (
     InviteEventOption,
     RSVPTicket,
     PaidFreeTicket,
+    Ticket
 )
 
 
@@ -301,7 +303,9 @@ def eventManagement(request, eventId):
         if action == "removefromRSVPlist":
             rsvp_id = request.POST.get("rsvp_id")
             rsvp = get_object_or_404(RSVPTicket, ticket_id=rsvp_id)
+            ticket = get_object_or_404(Ticket, guestEmail=rsvp.email, event=event)
             rsvp.delete()
+            ticket.delete()
             return redirect("eventManagement:eventManagement", eventId=eventId)
 
         if "displayOnCollege" in request.POST:

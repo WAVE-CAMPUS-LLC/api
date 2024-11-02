@@ -61,9 +61,12 @@
                     <li class="eventDetailsTab tab-active" data-tab="eventDescription">
                         Description
                     </li>
+                    {% if paidFreeTickets or event.ticketing == "RSVP Required" %}
                     <li class="eventDetailsTab" data-tab="eventTicketInformation">
                         Ticketing
                     </li>
+                    {% endif %}
+
                     <li class="eventDetailsTab" data-tab="eventPhotosVideos">
                         Photos
                     </li>
@@ -122,6 +125,7 @@
                         </div>
                     </div>
 
+                    {% if paidFreeTickets or event.ticketing == "RSVP Required" %}
                     <div id="eventTicketInformation" class="ticketinfo-body eventDetailsTabInformation">
                         <div class="eventTickets-body">
                             {% if event.ticketing == "RSVP Required" %}
@@ -181,12 +185,13 @@
                 
                                 
                             </div>
-                            {% elif event.ticketing == "Paid/Free" %}
+                            {% elif event.ticketing == "Paid/Free" and paidFreeTickets %}
                             <div class="ticketBodyHeader">
                                 <h3>Purchase your ticket</h3>
                             </div>
 
                             <div id="jit-tab-container" class="jit-tab-container">
+                                <input type="hidden" id="save-url" value="{% url 'eventTickets:updateCart' %}" />
                                 {% for ticket in paidFreeTickets %}
                                 <div class="jit-role-tab">
                                     <div role="button" class="jit-tab-header">
@@ -229,6 +234,8 @@
                             {% endif %}
                         </div>
                     </div>
+                    {% endif %}
+                    
 
                     <div id="eventPhotosVideos" class="attachment-body eventDetailsTabInformation">
                         <div class="eventPhotosVideos-body">
@@ -253,7 +260,7 @@
                     </div>
                 </div>
 
-                {% if event.ticketing == "Paid/Free" %}
+                {% if event.ticketing == "Paid/Free" and paidFreeTickets %}
                 <div id="ticketCartContent" class="ticketCartContent">
                     <div class="ticketCartContentCard">
                         <div class="cartHeader">
@@ -290,7 +297,9 @@
 
                             <div class="checkoutRow" id="checkoutRow">
                                 <div class="checkoutRowContainer">
-                                    <button id="checkoutButton" class="checkoutButton" role="button" name="eventAction" value="Checkout">
+                                    <input type="hidden" id="checkout-url" value="{% url 'eventTickets:checkout' %}">
+
+                                    <button id="checkoutButton" data-save-url="{% url 'eventTickets:updateCart' %}" class="checkoutButton" role="button" name="eventAction" value="Checkout" onclick="returnCheckout()">
                                         Checkout -
                                         <span id="checkoutTotal">$0.00</span>
                                     </button>

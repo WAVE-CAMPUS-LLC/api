@@ -83,18 +83,157 @@ $(document).ready(function () {
             }
         });
 
-        if (isValid) {
-            nextButton.show();  
-        } else {
-            nextButton.hide(); 
+        if(currentSectionIndex === 1) {
+            currentSection.find('.text-input').each(function () {
+                const len = $(this).val().length;
+                if (len == 0 ) {
+                    $("#title-error").hide();
+                } else if (len < 4) {
+                    isValid = false;
+                    $("#title-error").text("Title needs to be longer.").show();
+                } else if (len > 100) {
+                    isValid = false;
+                    $("#title-error").text("Title needs to be shorter.").show();
+                } else {
+                    $("#title-error").hide();
+                }
+            });
+        } else if (currentSectionIndex === 3) {
+            currentSection.find('.date-input').each(function () {
+                const len = $(this).val().length;
+                const selectedDate = new Date($(this).val());
+                const currentDate = new Date();
+                const futureLimitDate = new Date(currentDate);
+                
+                futureLimitDate.setFullYear(currentDate.getFullYear() + 1);
+                currentDate.setHours(-24, 0, 0, 0); 
+    
+                if (len == 0) {
+                    $("#date-error").hide();
+                } else if (selectedDate.getTime() < currentDate.getTime()) {
+                    isValid = false;
+                    $("#date-error").text("Date cannot be in the past.").show();
+                } else if (selectedDate.getTime() > futureLimitDate.getTime()) {
+                    isValid = false;
+                    $("#date-error").text("Date cannot be in more than a year into the future.").show();
+                } else {
+                    $("#date-error").hide();
+                }
+            });
+        } else if (currentSectionIndex === 4) {
+            currentSection.find('.start-time-input').each(function () {
+                const startTime = $('.start-time-input').val();
+                const endTime = $('.end-time-input').val();
+        
+                if (startTime.length === 0 || endTime.length === 0) {
+                    $("#time-error").hide();
+                } else {
+                    const today = new Date();
+                    const start = new Date(today.toDateString() + ' ' + startTime);
+                    let end = new Date(today.toDateString() + ' ' + endTime);
+        
+                    if (end < start) {
+                        end.setHours(end.getHours() + 24);
+                    }
+        
+                    const hourDifference = (end - start) / (1000 * 60 * 60);
+        
+                    if (hourDifference > 12) {
+                        isValid = false;
+                        $("#time-error").show();
+                    } else {
+                        $("#time-error").hide();
+                    }
+                }
+            });
+        } else if (currentSectionIndex === 5) {
+            currentSection.find('.body-input').each(function () {
+                const len = $(this).val().length;
+                
+                if (len == 0 ) {
+                    $("#body-error").hide();
+                } else if (len < 10) {
+                    isValid = false;
+                    $("#body-error").text("Description needs to be longer.").show();
+                } else if (len > 5000) {
+                    isValid = false;
+                    $("#body-error").text("Description needs to be shorter.").show();
+                } else {
+                    $("#body-error").hide();
+                }
+            });
+        } else if (currentSectionIndex === 9) {
+            currentSection.find('.building-input').each(function () {
+                const len = $(this).val().length;
+                
+                if (len > 100) {
+                    isValid = false;
+                    $("#building-error").show();
+                } else {
+                    $("#building-error").hide();
+                }
+            });
+            currentSection.find('.street-input').each(function () {
+                const len = $(this).val().length;
+                
+                if (len > 100) {
+                    isValid = false;
+                    $("#street-error").show();
+                } else {
+                    $("#street-error").hide();
+                }
+            });
+            currentSection.find('.apt-input').each(function () {
+                const len = $(this).val().length;
+                
+                if (len > 100) {
+                    isValid = false;
+                    $("#apt-error").show();
+                } else {
+                    $("#apt-error").hide();
+                }
+            });
+            currentSection.find('.city-input').each(function () {
+                const len = $(this).val().length;
+                
+                if (len > 50) {
+                    isValid = false;
+                    $("#city-error").show();
+                } else {
+                    $("#city-error").hide();
+                }
+            });
+            currentSection.find('.zip-input').each(function () {
+                const len = $(this).val().length;
+                
+                if (len < 5 && len > 0) {
+                    isValid = false;
+                    $("#zip-error").show();
+                } else {
+                    $("#zip-error").hide();
+                }
+            });
+        } else if (currentSectionIndex === 13) {
+            currentSection.find('#photo-input').each(function () {
+                const headerPhotoInput = document.getElementById('photo-input');
+                if (!headerPhotoInput.files.length) {
+                    isValid = false;
+                }
+            });
         }
 
-        if (currentSectionIndex === sections.length - 1) {
+        if (isValid && !(currentSectionIndex === sections.length - 1)) {
+            nextButton.show();  
+        } else {
             nextButton.hide(); 
         }
     }
 
     $('input, textarea, select').on('input change', function () {
         validateCurrentSection(); 
+    });
+
+    $('#photo-input').on('change', function () {
+        validateCurrentSection();
     });
 });
