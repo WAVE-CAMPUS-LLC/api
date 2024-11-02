@@ -59,7 +59,7 @@ INSTALLED_APPS = [
     "blogApp",
     "campusManagerApp",
     "widget_tweaks",
-    "qr_code",,
+    "qr_code",
     'storages',
     'channels',
 ]
