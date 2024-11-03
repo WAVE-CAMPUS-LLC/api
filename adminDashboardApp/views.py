@@ -828,7 +828,7 @@ def adminEditNewsView(request, newsId):
 
 @login_required
 @check_suspension
-@admin_required
+@group_required("Admin")
 def adminBlogView(request):
     blogs = Blog.objects.all()
     return render(request, "adminDashboardApp/tabs/blogs.html", {"blogs": blogs})
