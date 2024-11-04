@@ -1,0 +1,22 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block app_page_style %}
+<link rel="stylesheet" type="text/css" href="{% static "/styles/eventTicketsApp/checkoutSession/paymentFailed.css" %}" />
+{% endblock app_page_style %}
+
+{% block body %}
+
+<div id="content-container">
+    <div id="payment-failed-container">
+        <div id="payment-failed-content">
+            <div id="payment-failed-header">
+                <h1>Payment Failed</h1>
+            </div>
+            <div id="payment-failed-body">
+                <p>Unfortunatley, your payment did not go through. Please try again!</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock body %}

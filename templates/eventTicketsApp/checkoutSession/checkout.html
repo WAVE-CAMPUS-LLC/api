@@ -6,7 +6,7 @@ WAVE — Join Us!
 {% endblock title %}
 
 {% block app_page_style %}
-<link rel="stylesheet" type="text/css" href="{% static "/styles/eventTicketsApp/checkout.css" %}" />
+<link rel="stylesheet" type="text/css" href="{% static "/styles/eventTicketsApp/checkoutSession/checkout.css" %}" />
 {% endblock app_page_style %}
 
 {% block script %}
@@ -92,13 +92,16 @@ WAVE — Join Us!
                     {% endfor %}
                 </div>
 
-                <div class="checkout-total">
-                    <div class="total-row">
-                        <p>Total</p>
-                        <p>${{ total_amount|floatformat:2 }}</p>
+                <form method="post" action="{% url 'eventTickets:checkout' %}">
+                    {% csrf_token %}
+                    <div class="checkout-total">
+                        <div class="total-row">
+                            <p>Total</p>
+                            <p>${{ total_amount|floatformat:2 }}</p>
+                        </div>
+                        <button class="pay-button" id="payButton" type="submit">Pay Now</button>
                     </div>
-                    <button class="pay-button" id="payButton" type="button" role="button">Pay Now</button>
-                </div>
+                </form>                
             </div>
         </div>
     </main>

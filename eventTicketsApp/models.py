@@ -147,3 +147,14 @@ class PaidFreeTicket(models.Model):
         if self.ticket_type == "Paid" and not self.ticket_price:
             raise ValueError("Ticket price must be set for paid tickets")
         super().save(*args, **kwargs)
+
+class UserPayment(models.Model):
+    user = models.ForeignKey("authenticationApp.CustomUser", on_delete=models.CASCADE)
+    success = models.BooleanField(default=False)
+    stripe_checkout_id = models.CharField(max_length=500)
+    
+    @receiver(post_save, sender="authenticationApp.CustomUser")
+    def create_user_payment(sender, instance, created, **kwargs):
+        if created:
+            UserPayment.objects.create(user=instance)
+        

@@ -27,12 +27,16 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure--7u2gz^jrm@-(e)w%@6d8b4r8f*t5ba&7yss#$xyp4-^a4nho%"
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
 ALLOWED_HOSTS = []
+
+# Stripe API Key (Test)
+STRIPE_SECRET_KEY = os.getenv("STRIPE_SK")
+STRIPE_WEBHOOK_SECRET_TEST = os.getenv("STRIPE_WEBHOOK_SK")
 
 
 # Application definition

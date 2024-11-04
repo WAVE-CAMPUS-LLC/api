@@ -1,36 +1,117 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.conf import settings
 from django.urls import reverse
+from django.views.decorators.csrf import csrf_exempt
 import uuid
 from io import BytesIO
 from django.core.files import File
 import json
 import os
+import time
 from qr_code.qrcode import maker
 from qr_code.qrcode.utils import QRCodeOptions
-from .models import Ticket
+import stripe
+from .models import Ticket, UserPayment
 
-
-# Create your views here.
 def checkoutView(request):
+    stripe.api_key = settings.STRIPE_SECRET_KEY
     cart = request.session.get("cart", {})
-
     total_amount = sum(ticket["price"] * ticket["quantity"] for ticket in cart.values())
 
-    # if request.method == 'POST':
-    #     # Handle the form submission for payment
-    #     payment_info = request.POST
-    #     if process_payment(payment_info):  # Implement your payment processing logic
-    #         return redirect('payment_success')  # Change this to your success page URL
-    #     return render(request, "eventTicketsApp/checkout.html", {'error': 'Payment processing failed.', 'cart': cart, 'total_amount': total_amount})
+    if request.method == "POST":
+        try:
+            customer = stripe.Customer.create(
+                metadata={
+                    'user_id': str(request.user.id),
+                    'username': request.user.username,
+                }
+            )
+
+            line_items = []
+            for ticket_id, ticket in cart.items():
+                line_items.append({
+                    'price_data': {
+                        'currency': 'usd',
+                        'product_data': {
+                            'name': 'Event Ticket',
+                        },
+                        'unit_amount': int(ticket["price"] * 100), 
+                    },
+                    'quantity': ticket["quantity"],
+                })
+
+            checkout_session = stripe.checkout.Session.create(
+                payment_method_types=["card"],
+                line_items=line_items,
+                mode='payment',
+                success_url="http://127.0.0.1:8000/paymentSuccessful/?session_id={CHECKOUT_SESSION_ID}",
+                cancel_url="http://127.0.0.1:8000/paymentFailed/",
+                customer=customer.id,
+            )
+
+            return redirect(checkout_session.url, code=303)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+
     return render(
         request,
-        "eventTicketsApp/checkout.html",
+        "eventTicketsApp/checkoutSession/checkout.html",
         {"cart": cart, "total_amount": total_amount},
     )
+
+
+
+def paymentSuccessful(request):
+    stripe.api_key = settings.STRIPE_SECRET_KEY
+    checkout_session_id = request.GET.get('session_id', None) 
+    if checkout_session_id:
+        session = stripe.checkout.Session.retrieve(checkout_session_id)
+        customer = stripe.Customer.retrieve(session.customer)
+        
+        user_payment = UserPayment.objects.create(
+            user=request.user,
+            stripe_checkout_id=checkout_session_id,
+        )
+        user_payment.save()
+        customer_username = customer.metadata.get('username')
+        return render(request, "eventTicketsApp/checkoutSession/paymentSuccessful.html", {"customer": customer, "customerUsername": customer_username})
+    return JsonResponse({"error": "Session ID not provided."}, status=400)
+
+
+def paymentFailed(request):
+    return render(request, "eventTicketsApp/checkoutSession/paymentFailed.html")
+
+
+@csrf_exempt
+def stripeWebhook(request):
+    stripe.api_key = settings.STRIPE_SECRET_KEY
+    time.sleep(10)
+    payload = request.body
+    signature_header = request.META.get("HTTP_STRIPE_SIGNATURE")
+    if not signature_header:
+        print("Signature header missing")
+        return HttpResponse(status=400)
+    event = None
+    try: 
+        event = stripe.Webhook.construct_event(
+            payload, signature_header, settings.STRIPE_WEBHOOK_SECRET_TEST
+        )
+    except ValueError as e:
+        return HttpResponse(status=400)
+    except stripe.error.SignatureVerificationError as e:
+        return HttpResponse(status=400)
+    if event["type"] == "checkout.session.completed":
+        session = event["data"]["object"]
+        session_id = session.get("id", None)
+        time.sleep(15)
+        user_payment = UserPayment.objects.get(stripe_checkout_id=session_id)
+        line_items = stripe.checkout.Session.list_line_items(session_id, limit=1)
+        user_payment.success = True
+        user_payment.save()
+    return HttpResponse(status=200)
 
 
 def updateCartView(request):
