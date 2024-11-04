@@ -1,5 +1,7 @@
 import resend
 import json
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
@@ -29,10 +31,10 @@ from collegeManagementApp.models import (
     OrganizationMembership,
     Membership,
 )
+from blogApp.models import Blog
 from campusManagerApp.models import CampusManagerInvite
-from .models import College
 from django.conf import settings
-from .models import Department, CareerRole, LoginHistoryModel, Newsroom
+from .models import Department, CareerRole, LoginHistoryModel, Newsroom, College
 from .forms import (
     CreateGroupForm,
     UpdateGroupForm,
@@ -50,6 +52,7 @@ from .forms import (
     UpdateImageThreeForm,
     CollegeForm,
 )
+from supportCenterApp.models import SupportTicket, SupportTicketMessage
 from wave_v1.decorators import (    
     check_suspension,
     group_required
@@ -823,6 +826,12 @@ def adminEditNewsView(request, newsId):
         },
     )
 
+@login_required
+@check_suspension
+@group_required("Admin")
+def adminBlogView(request):
+    blogs = Blog.objects.all()
+    return render(request, "adminDashboardApp/tabs/blogs.html", {"blogs": blogs})
 
 @login_required
 @check_suspension
@@ -890,3 +899,64 @@ def send_email(request):
 
     except Exception as e:
         return JsonResponse({"success": False, "error": f"Error: {str(e)}"})
+
+@login_required
+def admin_ticket_details(request, ticket_id):
+    ticket = get_object_or_404(SupportTicket, ticket_id=ticket_id)
+    return render(request, 'adminDashboardApp/tabs/admin_ticket_details.html', {'ticket': ticket})
+
+@login_required
+def admin_send_ticket_reply(request, ticket_id):
+    ticket = get_object_or_404(SupportTicket, ticket_id=ticket_id)
+    if request.method == 'POST':
+        message = request.POST.get('message')
+        if message:
+            SupportTicketMessage.objects.create(
+                ticket=ticket,
+                sender=request.user,
+                message=message
+            )
+    return redirect('waveAdmin:admin_ticket_details', ticket_id=ticket_id)
+
+@login_required
+def toggle_ticket_status(request, ticket_id):
+    ticket = get_object_or_404(SupportTicket, ticket_id=ticket_id)
+    if request.method == 'POST':
+        if ticket.status == 'Closed':
+            ticket.status = 'Open'
+        else:
+            ticket.status = 'Closed'
+        ticket.save()
+        return redirect('waveAdmin:admin_ticket_details', ticket_id=ticket_id)
+
+def ticket_messages(request, ticket_id):
+    ticket = SupportTicket.objects.get(ticket_id=ticket_id)
+    messages = ticket.messages.all()
+    return render(request, "partials/messages.html", {"messages": messages})
+
+@login_required
+def admin_send_ticket_reply(request, ticket_id):
+    ticket = get_object_or_404(SupportTicket, ticket_id=ticket_id)
+    if request.method == 'POST':
+        message = request.POST.get('message')
+        if message:
+            # Save the message to the database
+            new_message = SupportTicketMessage.objects.create(
+                ticket=ticket,
+                sender=request.user,
+                message=message,
+                sent_at=timezone.now()
+            )
+
+            # Send the message to the WebSocket group
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                f"chat_{ticket_id}",
+                {
+                    "type": "new_message",
+                    "message": new_message.message,
+                    "sender": new_message.sender.username,
+                    "sent_at": new_message.sent_at.strftime("%Y-%m-%d %H:%M:%S"),
+                }
+            )
+    return redirect('waveAdmin:admin_ticket_details', ticket_id=ticket_id)

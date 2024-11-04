@@ -134,3 +134,69 @@
     font-family: Wanted-Regular;
     font-size: 15.5px;
 }
+#chat-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+}
+
+#bottom-right-image {
+    width: 40px; /* Adjust as needed */
+    height: 40px; /* Adjust as needed */
+}
+
+#chat-tooltip {
+    position: absolute;
+    bottom: 50px; /* Adjust as needed to position above the image */
+    right: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+    white-space: nowrap;
+    font-size: 12px;
+    visibility: hidden; /* Initially hidden */
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+#chat-container:hover #chat-tooltip {
+    visibility: visible;
+    opacity: 1;
+}
+
+/* Speech bubble styling */
+.speech-bubble {
+    display: none; /* Hidden by default */
+    position: absolute;
+    bottom: 50px; /* Position it directly above the image */
+    left: 50%; /* Center the bubble horizontally */
+    transform: translateX(-50%);
+    background-color: #333;
+    color: white;
+    padding: 10px;
+    border-radius: 5px;
+    font-size: 12px;
+    text-align: center;
+    width: 150px;
+    z-index: 1000;
+}
+
+.speech-bubble::after {
+    content: '';
+    position: absolute;
+    bottom: -10px; /* Arrow pointing down */
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 10px;
+    border-style: solid;
+    border-color: #333 transparent transparent transparent; /* Triangle for arrow */
+}
+
+/* Show the speech bubble on hover */
+#bottomRightImage:hover + .speech-bubble {
+    display: block;
+}

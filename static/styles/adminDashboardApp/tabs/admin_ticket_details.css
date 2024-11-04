@@ -1,0 +1,112 @@
+/* General Styles */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 0;
+}
+
+/* Container Art */
+#container-art {
+    color: white;
+    padding: 20px;
+    text-align: center;
+}
+
+.ticket-heading {
+    margin: 0;
+}
+
+.ticket-header h3 {
+    margin: 0;
+    font-size: 24px;
+}
+
+/* Ticket Info Container */
+#ticket-info-container {
+    background-color: white;
+    padding: 20px;
+    margin: 20px auto;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    width: 1500px; /* Set width to 1500px */
+}
+
+#ticket-info-container h3 {
+    margin-top: 0;
+    font-size: 22px;
+    color: #333;
+}
+
+#ticket-info-container p {
+    font-size: 16px;
+    color: #666;
+}
+
+/* Messages Section */
+#messages {
+    margin-top: 20px;
+}
+
+.message {
+    padding: 10px;
+    border-radius: 4px;
+    margin-bottom: 10px;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+    max-width: 70%;
+    clear: both;
+}
+
+.message.sender {
+    background-color: #f9f9f9;
+    float: right;
+}
+
+.message.receiver {
+    background-color: #e0e0e0;
+    float: left;
+}
+
+.message p {
+    margin: 0;
+    font-size: 14px;
+    color: #333;
+}
+
+.message span {
+    display: block;
+    font-size: 12px;
+    color: #999;
+    margin-top: 5px;
+}
+
+/* Reply Form */
+form {
+    margin-top: 20px;
+}
+
+textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+    resize: vertical;
+    min-height: 50px;
+}
+
+button {
+    background-color: #008D95;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-top: 10px;
+    width: 400px;
+}
+
+button:hover {
+    background-color: #0056b3;
+}

@@ -32,6 +32,10 @@ class SupportTicket(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     ticket_id = models.CharField(max_length=10, unique=True, default=generate_unique_ticket_id)
     
+     # New fields for admin reply
+    reply = models.TextField(_("Admin Reply"), max_length=2000, blank=True, null=True)
+    replied_at = models.DateTimeField(_("Replied At"), blank=True, null=True)
+
     class Meta:
         default_permissions = () # Removing default permissions
         verbose_name = "Member Support Ticket"
@@ -41,6 +45,9 @@ class SupportTicket(models.Model):
         # We generate a unique Identifier(ID) before saving the form to create the ticket. 
         if not self.ticket_id:
             self.ticket_id = generate_unique_ticket_id()
+        # We update the replied_at field with the time the timestamp is added.
+        if self.reply and not self.replied_at:
+            self.replied_at = timezone.now()
         return super().save(*args, **kwargs)
     
     def __str__(self):
@@ -98,7 +105,18 @@ class SupportTicket(models.Model):
             else:
                 return f'{days} days ago'
             
-            
+class SupportTicketMessage(models.Model):
+    ticket = models.ForeignKey(SupportTicket, on_delete=models.CASCADE, related_name="messages")
+    sender = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True)
+    message = models.TextField()
+    sent_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        ordering = ['sent_at']  # Display messages in the order they were sent
+
+    def __str__(self):
+        return f"Message by {self.sender} on {self.sent_at}"
+           
             
 # A model for the feedback page. 
 class FeedbackModel(models.Model):

@@ -12,6 +12,9 @@ ENV/
 env.bak/
 venv.bak/
 
+#Environment variables 
+.env
+
 # Install packages
 *.egg
 *.egg-info/
@@ -69,3 +72,7 @@ Thumbs.db
 
 # Node JS 
 node_modules/
+
+# Package files
+package-lock.json
+package.json
