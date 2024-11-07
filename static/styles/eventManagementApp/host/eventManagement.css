@@ -699,6 +699,13 @@ input:checked+.checkbox {
 .ticket-status.valid {
     background-color: rgb(0, 220, 7);
     background-image: none;
+    color: white;
+}
+
+.ticket-status.invalid {
+    background-color: rgb(255, 0, 0);
+    background-image: none;
+    color: white;
 }
 
 .qrReader {

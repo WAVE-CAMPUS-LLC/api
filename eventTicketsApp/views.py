@@ -146,9 +146,9 @@ def generateTicket(
     ticket = Ticket(
         user=user if user and user.is_authenticated else None,
         event=event,
-        guestFirstName=guestFirstName,
-        guestLastName=guestLastName,
-        guestEmail=guestEmail,
+        guestFirstName=guestFirstName if guestFirstName else user.first_name if user else None,
+        guestLastName=guestLastName if guestLastName else user.last_name if user else None,
+        guestEmail=guestEmail if guestEmail else user.email if user else None,
     )
     ticket.save()
 
