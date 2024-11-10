@@ -34,7 +34,8 @@ function startQrScan() {
       { facingMode: "environment" },
       config,
       (decodedText, decodedResult) => {
-        alert("QR Code Content: " + decodedText);
+        // alert("QR Code Content: " + decodedText);
+        // console.log("Decoded QR Code Content:", decodedText);
         verifyTicket(decodedText);
       },
       (errorMessage) => {
@@ -46,7 +47,7 @@ function startQrScan() {
     });
 }
 
-function verifyTicket(ticketData) {
+function verifyTicket(ticketData, qrReader) {
   const ticketObject = JSON.parse(ticketData);
 
   if (!ticketObject.ticketId || !ticketObject.eventId || !ticketObject.status) {
@@ -64,22 +65,35 @@ function verifyTicket(ticketData) {
   })
     .then((response) => response.json())
     .then((data) => {
-      const name = "";
-      if (data.ticketData.userFirstName) {
-        name = data.ticketData.userFirstName;
-      } else {
-        name = data.ticketData.guestFirstName;
+      let name = "";
+      if (data.ticketData) {
+        if (data.ticketData.guestFirstName && data.ticketData.guestLastName) {
+          name = data.ticketData.guestFirstName + " " + data.ticketData.guestLastName;
+        } else if (data.ticketData.userFirstName && data.ticketData.userLastName) {
+          name = data.ticketData.userFirstName + " " + data.ticketData.userLastName;
+        }
       }
-      console.log(data.ticketData);
+
       if (data.valid) {
-        const ticketStatus = document.querySelector(".ticket-status.valid");
-        ticketStatus.style.display = "block";
+        const ticketStatus = document.querySelector(".ticket-status-valid");
         ticketStatus.textContent = name + ": Valid";
-      } else {
-        const ticketStatus = document.querySelector(".ticket-status.invalid");
         ticketStatus.style.display = "block";
+      } else {
+        const ticketStatus = document.querySelector(".ticket-status-invalid");
         ticketStatus.textContent = name + ": Invalid";
+        ticketStatus.style.display = "block";
       }
+
+      // Hide status after a delay, restart scan for next ticket
+      setTimeout(() => {
+        document.querySelector(".ticket-status-valid").style.display = "none";
+        document.querySelector(".ticket-status-invalid").style.display = "none";
+
+        // Stop and restart the scanner
+        qrReader.stop().then(() => {
+          startQrScan(); // Restart the scanner for the next ticket
+        });
+      }, 3000); // Adjust delay as needed
     })
     .catch((error) => {
       console.error("Error verifying ticket:", error);

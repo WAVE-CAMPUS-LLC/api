@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse, HttpResponse
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
+from django.contrib.auth.decorators import login_required
 from django.conf import settings
 from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
@@ -15,38 +16,60 @@ from qr_code.qrcode import maker
 from qr_code.qrcode.utils import QRCodeOptions
 import stripe
 from .models import Ticket, UserPayment
+from eventManagementApp.models import Event
 
+
+@login_required
 def checkoutView(request):
     stripe.api_key = settings.STRIPE_SECRET_KEY
     cart = request.session.get("cart", {})
     total_amount = sum(ticket["price"] * ticket["quantity"] for ticket in cart.values())
-
+    
+    
+    if request.user.is_authenticated:
+        request.session["checkout_user_info"] = {
+            "username": request.user.username,
+            "email": request.user.email,
+            "first_name": request.user.first_name,
+            "last_name": request.user.last_name,
+        }
+    else:
+        guest_info = {
+            "first_name": request.POST.get("first_name", None),
+            "last_name": request.POST.get("last_name", None),
+            "email": request.POST.get("email", None),
+        }
+        
+        request.session["checkout_guest_info"] = guest_info
+    
     if request.method == "POST":
         try:
             customer = stripe.Customer.create(
                 metadata={
-                    'user_id': str(request.user.id),
-                    'username': request.user.username,
+                    "user_id": str(request.user.id),
+                    "username": request.user.username,
                 }
             )
 
             line_items = []
             for ticket_id, ticket in cart.items():
-                line_items.append({
-                    'price_data': {
-                        'currency': 'usd',
-                        'product_data': {
-                            'name': 'Event Ticket',
+                line_items.append(
+                    {
+                        "price_data": {
+                            "currency": "usd",
+                            "product_data": {
+                                "name": "Event Ticket",
+                            },
+                            "unit_amount": int(ticket["price"] * 100),
                         },
-                        'unit_amount': int(ticket["price"] * 100), 
-                    },
-                    'quantity': ticket["quantity"],
-                })
+                        "quantity": ticket["quantity"],
+                    }
+                )
 
             checkout_session = stripe.checkout.Session.create(
                 payment_method_types=["card"],
                 line_items=line_items,
-                mode='payment',
+                mode="payment",
                 success_url="http://127.0.0.1:8000/paymentSuccessful/?session_id={CHECKOUT_SESSION_ID}",
                 cancel_url="http://127.0.0.1:8000/paymentFailed/",
                 customer=customer.id,
@@ -62,22 +85,49 @@ def checkoutView(request):
         {"cart": cart, "total_amount": total_amount},
     )
 
-
-
+@login_required
 def paymentSuccessful(request):
     stripe.api_key = settings.STRIPE_SECRET_KEY
-    checkout_session_id = request.GET.get('session_id', None) 
+    checkout_session_id = request.GET.get("session_id", None)
     if checkout_session_id:
         session = stripe.checkout.Session.retrieve(checkout_session_id)
         customer = stripe.Customer.retrieve(session.customer)
-        
+
         user_payment = UserPayment.objects.create(
             user=request.user,
             stripe_checkout_id=checkout_session_id,
         )
+        user_payment.success = True
         user_payment.save()
-        customer_username = customer.metadata.get('username')
-        return render(request, "eventTicketsApp/checkoutSession/paymentSuccessful.html", {"customer": customer, "customerUsername": customer_username})
+        
+        user_info = request.session.get("checkout_user_info", {})
+        cart = request.session.get("cart", {})
+        
+        for ticket_id, ticket in cart.items():
+            eventId = ticket.get("eventId")
+            if eventId:
+                event = Event.objects.get(eventId=eventId)
+            
+                for _ in range(ticket["quantity"]):
+                    generateTicket(
+                        request=request,
+                        event=event,
+                        user=request.user if request.user.is_authenticated else None,
+                        guestFirstName=user_info.get("first_name"),
+                        guestLastName=user_info.get("last_name"),
+                        guestEmail=user_info.get("email"),
+                    )
+            else:
+                print(f'Event ID not found for ticket: {ticket}')
+        del request.session["cart"]
+        del request.session["checkout_user_info"]
+        
+        customer_username = customer.metadata.get("username")
+        return render(
+            request,
+            "eventTicketsApp/checkoutSession/paymentSuccessful.html",
+            {"customer": customer, "customerUsername": customer_username},
+        )
     return JsonResponse({"error": "Session ID not provided."}, status=400)
 
 
@@ -86,6 +136,7 @@ def paymentFailed(request):
 
 
 @csrf_exempt
+@login_required
 def stripeWebhook(request):
     stripe.api_key = settings.STRIPE_SECRET_KEY
     time.sleep(10)
@@ -95,7 +146,7 @@ def stripeWebhook(request):
         print("Signature header missing")
         return HttpResponse(status=400)
     event = None
-    try: 
+    try:
         event = stripe.Webhook.construct_event(
             payload, signature_header, settings.STRIPE_WEBHOOK_SECRET_TEST
         )
@@ -146,23 +197,29 @@ def generateTicket(
     ticket = Ticket(
         user=user if user and user.is_authenticated else None,
         event=event,
-        guestFirstName=guestFirstName if guestFirstName else user.first_name if user else None,
-        guestLastName=guestLastName if guestLastName else user.last_name if user else None,
+        guestFirstName=(
+            guestFirstName if guestFirstName else user.first_name if user else None
+        ),
+        guestLastName=(
+            guestLastName if guestLastName else user.last_name if user else None
+        ),
         guestEmail=guestEmail if guestEmail else user.email if user else None,
     )
     ticket.save()
 
-    qr_data = json.dumps({
-        "ticketId": str(ticket.ticketId),
-        "eventId": str(event.eventId),
-        "status": ticket.status,
-        "guestFirstName": guestFirstName if guestFirstName else None,
-        "guestLastName": guestLastName if guestLastName else None,
-        "guestEmail": guestEmail if guestEmail else None,
-        "userFirstName": user.first_name if user else None,
-        "userLastName": user.last_name if user else None,
-        "userEmail": user.email if user else None,
-    })
+    qr_data = json.dumps(
+        {
+            "ticketId": str(ticket.ticketId),
+            "eventId": str(event.eventId),
+            "status": ticket.status,
+            "guestFirstName": guestFirstName if guestFirstName else None,
+            "guestLastName": guestLastName if guestLastName else None,
+            "guestEmail": guestEmail if guestEmail else None,
+            "userFirstName": user.first_name if user else None,
+            "userLastName": user.last_name if user else None,
+            "userEmail": user.email if user else None,
+        }
+    )
 
     qr_code_options = QRCodeOptions(
         size=200,
@@ -222,28 +279,182 @@ def verifyTicket(request):
             ticketId = data.get("ticketId")
             eventId = data.get("eventId")
             status = data.get("status")
-            
+
             if not all([ticketId, eventId, status]):
-                return JsonResponse({"valid": False, "message": "Invalid ticket data"}, status=400)
-            
+                return JsonResponse(
+                    {"valid": False, "message": "Invalid ticket data"}, status=400
+                )
+
             try:
                 ticket = Ticket.objects.get(ticketId=ticketId, event__eventId=eventId)
             except Ticket.DoesNotExist:
-                return JsonResponse({"valid": False, "message": "Ticket not found."}, status=404)
-            
-            if ticket.status != "Valid":
-                return JsonResponse({"valid": False, "message": "Ticket already used or invalid."}, status=400)
-                
-                
-                
+                return JsonResponse(
+                    {
+                        "valid": False,
+                        "message": "Ticket not found.",
+                    },
+                    status=404,
+                )
+
+            if ticket.status == "Scanned":
+                return JsonResponse(
+                    {
+                        "valid": False,
+                        "message": "Ticket already scanned.",
+                        "ticketData": {
+                            "guestFirstName": (
+                                ticket.guestFirstName
+                                if ticket.guestFirstName
+                                else ticket.user.first_name
+                            ),
+                            "guestLastName": (
+                                ticket.guestLastName
+                                if ticket.guestLastName
+                                else ticket.user.last_name
+                            ),
+                            "userFirstName": (
+                                ticket.user.first_name if ticket.user else None
+                            ),
+                            "userLastName": (
+                                ticket.user.last_name if ticket.user else None
+                            ),
+                            "status": (ticket.status),
+                        },
+                    },
+                    status=400,
+                )
+
+            elif ticket.status == "Invalid":
+                return JsonResponse(
+                    {
+                        "valid": False,
+                        "message": "Ticket already scanned.",
+                        "ticketData": {
+                            "guestFirstName": (
+                                ticket.guestFirstName
+                                if ticket.guestFirstName
+                                else ticket.user.first_name
+                            ),
+                            "guestLastName": (
+                                ticket.guestLastName
+                                if ticket.guestLastName
+                                else ticket.user.last_name
+                            ),
+                            "userFirstName": (
+                                ticket.user.first_name if ticket.user else None
+                            ),
+                            "userLastName": (
+                                ticket.user.last_name if ticket.user else None
+                            ),
+                            "status": (ticket.status),
+                        },
+                    },
+                    status=400,
+                )
+
             ticket.status = "Scanned"
             ticket.save()
-            return JsonResponse({"valid": True, "message": f'{ticket.guestFirstName} {ticket.guestLastName}: Valid'})
-            
+            return JsonResponse(
+                {
+                    "valid": True,
+                    "message": f"{ticket.guestFirstName} {ticket.guestLastName}: Valid",
+                    "ticketData": {
+                        "guestFirstName": (
+                            ticket.guestFirstName
+                            if ticket.guestFirstName
+                            else ticket.user.first_name
+                        ),
+                        "guestLastName": (
+                            ticket.guestLastName
+                            if ticket.guestLastName
+                            else ticket.user.last_name
+                        ),
+                        "userFirstName": (
+                            ticket.user.first_name if ticket.user else None
+                        ),
+                        "userLastName": (
+                            ticket.user.last_name if ticket.user else None
+                        ),
+                        "status": (ticket.status),
+                    },
+                }
+            )
+
         except json.JSONDecodeError:
-            return JsonResponse({"valid": False, "message": "Invalid JSON format"}, status=400)
+            return JsonResponse(
+                {
+                    "valid": False,
+                    "message": "Invalid JSON format",
+                    "ticketData": {
+                        "guestFirstName": (
+                            ticket.guestFirstName
+                            if ticket.guestFirstName
+                            else ticket.user.first_name
+                        ),
+                        "guestLastName": (
+                            ticket.guestLastName
+                            if ticket.guestLastName
+                            else ticket.user.last_name
+                        ),
+                        "userFirstName": (
+                            ticket.user.first_name if ticket.user else None
+                        ),
+                        "userLastName": (
+                            ticket.user.last_name if ticket.user else None
+                        ),
+                        "status": (ticket.status),
+                    },
+                },
+                status=400,
+            )
         except Exception as e:
-            print(f'Error verifying ticket: {e}')
-            return JsonResponse({"valid": False, "message": f"An error occurred: {e}"}, status=500)
-        
-    return JsonResponse({"valid":False, "message": "Invalid request method"}, status=405)
+            print(f"Error verifying ticket: {e}")
+            return JsonResponse(
+                {
+                    "valid": False,
+                    "message": f"An error occurred: {e}",
+                    "ticketData": {
+                        "guestFirstName": (
+                            ticket.guestFirstName
+                            if ticket.guestFirstName
+                            else ticket.user.first_name
+                        ),
+                        "guestLastName": (
+                            ticket.guestLastName
+                            if ticket.guestLastName
+                            else ticket.user.last_name
+                        ),
+                        "userFirstName": (
+                            ticket.user.first_name if ticket.user else None
+                        ),
+                        "userLastName": (
+                            ticket.user.last_name if ticket.user else None
+                        ),
+                        "status": (ticket.status),
+                    },
+                },
+                status=500,
+            )
+
+    return JsonResponse(
+        {
+            "valid": False,
+            "message": "Invalid request method",
+            "ticketData": {
+                "guestFirstName": (
+                    ticket.guestFirstName
+                    if ticket.guestFirstName
+                    else ticket.user.first_name
+                ),
+                "guestLastName": (
+                    ticket.guestLastName
+                    if ticket.guestLastName
+                    else ticket.user.last_name
+                ),
+                "userFirstName": (ticket.user.first_name if ticket.user else None),
+                "userLastName": (ticket.user.last_name if ticket.user else None),
+                "status": (ticket.status),
+            },
+        },
+        status=405,
+    )

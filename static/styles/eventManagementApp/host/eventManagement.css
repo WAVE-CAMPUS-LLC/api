@@ -696,16 +696,22 @@ input:checked+.checkbox {
     justify-content: center;
 }
 
-.ticket-status.valid {
+.ticket-status-valid {
     background-color: rgb(0, 220, 7);
     background-image: none;
     color: white;
+    display: none;
+    width: 100%;
+    text-align: center;
 }
 
-.ticket-status.invalid {
+.ticket-status-invalid {
     background-color: rgb(255, 0, 0);
     background-image: none;
     color: white;
+    display: none;
+    width: 100%;
+    text-align: center;
 }
 
 .qrReader {
