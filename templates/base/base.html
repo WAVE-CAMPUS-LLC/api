@@ -45,12 +45,13 @@
                 {% block body %}{% endblock body %}
             </body>
 
-        {% block footer %}
-        <footer id="footer">
-            {% include "partials/nav-footer/footer/footer.html" %}
-        </footer>
-        {% endblock footer %}
-    </div>
-    {% endblock auth_body %}
+            {% block footer %}
+            <footer id="footer">
+                {% include "partials/nav-footer/footer/footer.html" %}
+            </footer>
+            {% endblock footer %}
+        </div>
+        {% endblock auth_body %}
+    {% endblock checkout_body %}
     
 </html>

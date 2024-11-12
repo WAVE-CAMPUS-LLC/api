@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', function () {
         // Show the selected tab content
         const selectedTabContent = document.getElementById(tabId);
         if (selectedTabContent) {
-            selectedTabContent.style.display = 'block';
+            selectedTabContent.classList.add = 'block';
         }
     }
 
@@ -41,7 +41,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
         if (tabContents.length > 0) {
-            tabContents[0].style.display = 'block';
+            tabContents[0].classList.add = 'block';
         }
 
         // Set the first tab as active by default in each body section

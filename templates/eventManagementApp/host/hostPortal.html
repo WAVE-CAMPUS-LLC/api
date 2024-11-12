@@ -22,33 +22,33 @@ Host Dashboard | WAVE.
 
 
 {% block body %}
-<div id="body-content">
-    <div class="page-heading">
-        <h2>Good to see you, {{ request.user.first_name }}!<h2>
-        <a href="{% url "eventManagement:hostCreateEvent"%}" class="createEventBtn">
+<div class="flex flex-col gap-[70px] px-[20px] after-xsm:px-[30px] xxsm:px-[60px] sm:px-[70px] md:px-[60px] pre-lg:px-[70px] lg:px-[100px] xl:px-[140px] 2xl:px-[200px] 3xl:px-[300px]">
+    <div class="font-Wanted-Bold text-[25px] after-xsm:text-[30px] sm:text-[38px] pre-lg:text-[45px] flex flex-col md:flex-row gap-6 justify-between items-end">
+        <h2 class="w-full md:w-auto text-start">Good to see you, {{ request.user.first_name }}!<h2>
+        <a href="{% url "eventManagement:hostCreateEvent"%}" class="p-[10px] xxsm:py-[12.5px] xxsm:px-[15px] border border-transparent border-r-gradient-start border-l-gradient-end text-white font-Wanted-Bold no-underline flex items-center gap-[10px] text-[15px] xxsm:text-[17px] sm:text-[18.5px] md:text-[20px] xl:text-[25px] rounded-[20px] cursor-pointer bg-gradient-to-r from-gradient-start to-gradient-end hover:bg-[#007379]">
             <img src="{% static "/images/eventManagementApp/host/host_ticket.svg" %}" />
             Create Event
         </a>
     </div>
 
-    <div id="portal-body">
-        <div class="control-row">
-            <div role="button" type="button" class="dashboard-tab tab-active" data-tab="live-events">Live</div>
-            <div role="button" type="button" class="dashboard-tab" data-tab="incomplete-events">Incomplete</div>
-            <div role="button" type="button" class="dashboard-tab" data-tab="past-events">Past</div>
+    <div id="portal-body" class="flex flex-col gap-[40px]">
+        <div class="flex flex-wrap gap-[15px]">
+            <div role="button" type="button" class="dashboard-tab cursor-pointer font-Wanted-Variable border border-gray-400 p-[5px] rounded-[13px] px-3 flex justify-center active:border-[#007379]" data-tab="live-events">Live</div>
+            <div role="button" type="button" class="dashboard-tab cursor-pointer font-Wanted-Variable border border-gray-400 p-[5px] rounded-[13px] px-3 flex justify-center active:border-[#007379]" data-tab="incomplete-events">Incomplete</div>
+            <div role="button" type="button" class="dashboard-tab cursor-pointer font-Wanted-Variable border border-gray-400 p-[5px] rounded-[13px] px-3 flex justify-center active:border-[#007379]" data-tab="past-events">Past</div>
         </div>
 
         <div id="portal-body-content">
-            <div class="pbc-element-content" id="live-events">
+            <div class="flex justify-center md:justify-start" id="live-events">
                 {% if liveEvents %}
-                <div id="event-container">
+                <div id="event-container" class="flex max-w-[340px] min-w-[340px] gap-[30px] p-[20px]">
                     {% for event in liveEvents %}
-                    <div id="port-event-display">
+                    <div id="port-event-display" class="flex flex-col gap-[15px] font-Wanted-SemiBold text-[15px] w-full border border-rgba(113, 113, 113, 0.182) rounded-[20px] box-shadow: 2px 3px 21px 4px rgba(170, 170, 170, 0.075); p-[20px] cursor-pointer">
                         <div class="event-image">
-                            <img src="{{event.header_photo.url}}" />
+                            <img src="{{event.header_photo.url}}" class="max-w-[350px] max-h-[350px] min-h-[258px] w-full h-full rounded-[15px] mx-auto" />
                         </div>
-                        <div class="event-information">
-                            <h5>
+                        <div class="flex flex-col gap-[0px]">
+                            <h5 class="font-Wanted-Bold text-[25px]">
                                 {{ event.title }}
                             </h5>
                         </div>
@@ -125,7 +125,7 @@ Host Dashboard | WAVE.
             </div>
 
             <div class="pbc-element-content" id="past-events">
-                <div class="empty-pcb">
+                <div class="w-full flex flex-col justify-center items-center gap-[10px] font-Wanted-Variable bg-customGray4 p-[50px] rounded-[20px]">
                     <img class="empty-image" src="{% static "/images/eventManagementApp/host/empty-listing.svg" %}" />
                     <p>You currently have no past events to display!</p>
                 </div>
