@@ -15,6 +15,7 @@ from collegeManagementApp.models import Organization, OrganizationMembership
 from .forms import (
     HostApplicationForm,
     EventForm,
+    EventTitleForm
 )
 
 from eventTicketsApp.forms import InvitationForm, PaidFreeTicketForm
@@ -290,11 +291,20 @@ def eventManagement(request, eventId):
     event_privacy = EventPrivacy.objects.get(event=event)
     rsvp_list = RSVPTicket.objects.filter(event=event)
     paid_free_tickets = PaidFreeTicket.objects.filter(event=event)
+    
+    #edit forms
+    eventTitleForm = EventTitleForm(instance=event)
 
     if request.method == "POST":
         action = request.POST.get("eventAction")
         invitationForm = InvitationForm(request.POST)
         paidFreeForm = PaidFreeTicketForm(request.POST)
+        
+        if action == "saveEventTitle":
+            form = EventTitleForm(request.POST, instance=event)
+            if form.is_valid():
+                form.save()
+            return redirect("eventManagement:eventManagement", eventId=eventId)
 
         if action == "deleteEvent":
             event.delete()
@@ -364,6 +374,7 @@ def eventManagement(request, eventId):
     else:
         invitationForm = InvitationForm()
         paidFreeForm = PaidFreeTicketForm()
+        eventTitleForm = EventTitleForm(instance=event)
 
     return render(
         request,
@@ -377,5 +388,6 @@ def eventManagement(request, eventId):
             "rsvpList": rsvp_list,
             "paidFreeForm": paidFreeForm,
             "paidFreeTickets": paid_free_tickets,
+            "eventTitleForm": eventTitleForm,
         },
     )

@@ -96,3 +96,12 @@ class EventForm(forms.ModelForm):
             "country": forms.Select(),
             "status": forms.HiddenInput(),
         }
+
+
+class EventTitleForm(forms.ModelForm):
+    title = forms.CharField(max_length=200, required=False)
+        
+    class Meta:
+        model = Event
+        fields = ["title"]  
+        
