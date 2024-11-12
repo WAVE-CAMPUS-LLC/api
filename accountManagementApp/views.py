@@ -106,7 +106,6 @@ def settingsView(request):
             "contact_form": contact_form,
             "profile_form": profile_form,
             "user": user,
-            "phone_number": user.phone_number,
         },
     )
 

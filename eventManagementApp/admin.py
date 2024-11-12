@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import HostApplication, Event, EventTicket
+from .models import HostApplication, Event, EventPrivacy
+from eventTicketsApp.models import RSVPTicket, PaidFreeTicket, Ticket
 
 
 # Register your models here.
@@ -21,6 +22,7 @@ class EventAdmin(admin.ModelAdmin):
         "end_time",
         "description",
         "privacy",
+        "ticketing",
         "country",
         "building_name",
         "street",
@@ -35,9 +37,60 @@ class EventAdmin(admin.ModelAdmin):
         "header_photo",
     )
 
-# class EventTicketAdmin(admin.ModelAdmin):
-#     list_display = ('event', 'type_name', 'type_quantity')
+
+class EventPrivacyAdmin(admin.ModelAdmin):
+    list_display = (
+        "event",
+        "display_on_explore",
+        "require_invitation",
+        "restricted_college",
+        "restricted_organization",
+    )
+
+
+class RSVPTicketAdmin(admin.ModelAdmin):
+    list_display = (
+        "event",
+        "email",
+        "first_name",
+        "last_name",
+        "created_at",
+        "ticket_id",
+    )
+
+
+class PaidFreeTicketAdmin(admin.ModelAdmin):
+    list_display = (
+        "event",
+        "ticket_id",
+        "ticket_type",
+        "ticket_name",
+        "ticket_price",
+        "ticket_quantity",
+        "ticket_description",
+        # "created_at",
+    )
+
+
+class TicketAdmin(admin.ModelAdmin):
+    list_display = (
+        "ticketId",
+        "user",
+        "guestFirstName",
+        "guestLastName",
+        "guestEmail",
+        "event",
+        "status",
+        "created_at",
+        "qrCodeImage",
+    )
+
+
+admin.site.register(Ticket, TicketAdmin)
+
 
 admin.site.register(Event, EventAdmin)
-# admin.site.register(EventTicket, EventTicketAdmin)
+admin.site.register(EventPrivacy, EventPrivacyAdmin)
+admin.site.register(RSVPTicket, RSVPTicketAdmin)
+admin.site.register(PaidFreeTicket, PaidFreeTicketAdmin)
 admin.site.register(HostApplication, HostApplicationAdmin)

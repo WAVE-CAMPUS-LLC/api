@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block title %}
-WAVE. — Management Dashboard
+WAVE. — Admin Ticket #{{ ticket.ticket_id }}
 {% endblock title %}
 
 {% block app_page_style %}
@@ -12,7 +12,6 @@ WAVE. — Management Dashboard
 {% block script %}
 {% endblock script %}
 
-
 {% block header %}
 {% include "partials/nav-footer/nav/admin_nav.html" %}
 {% endblock header %}
@@ -21,14 +20,11 @@ WAVE. — Management Dashboard
 <div id="container-art">
     <div class="ticket-heading">
         <div class="ticket-header">
-            <h3><a href="{% url 'waveAdmin:adminDashboard' %}">Management</a> > Support</h3>
+            <h3>Admin Support Ticket ID: #{{ ticket.ticket_id }} </h3>
         </div>
     </div>
 </div>
 {% endblock container_art %}
-
-
-
 
 {% block body %}
 <div id="information-container">
@@ -37,7 +33,9 @@ WAVE. — Management Dashboard
             <div id="ich-search">
                 <form action="" method="GET">
                     <input type="search" name="support-ticket-search" id="support-ticket-search" placeholder="Search tickets with ID#">
-                    <button type="submit">Search</button>
+                    <button type="submit" style="padding: 10px 20px; background-color: black; color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 14px; margin-left: 10px;">
+                        Search
+                    </button>
                 </form>
             </div>
             <div id="ich-filter">
@@ -64,18 +62,18 @@ WAVE. — Management Dashboard
     <div id="information-container-body">
         <div id="active-tickets">
             <div id="active-tickets-heading">
-                <h5>Active Support Tickets</h5>
+                <h5>Active Support Tickets: {{ active_tickets|length }}</h5>
             </div>
 
             <div id="active-tickets-body">
-                {% for active__tickets in active_tickets %}
+                {% for active_ticket in active_tickets %}
                 <div id="tickets">
                     <div id="priority" class="high"></div>
                     <div id="body">
                         <div id="ticket-id-status">
                             <div id="tis-id">
                                 <div id="title">Ticket ID</div>  
-                                <div id="tid-body">#<span>{{ active__tickets.ticket_id }}</span> </div>
+                                <div id="tid-body">#<span>{{ active_ticket.ticket_id }}</span> </div>
                             </div>
                             <div id="tis-status">
                                 <div id="title">Status</div>  
@@ -84,23 +82,25 @@ WAVE. — Management Dashboard
                         </div>
                         <div id="user-name">
                             <div id="title">Full Name</div>
-                            <div id="tid-body"><span>{{ active__tickets.user.first_name }} {{ active__tickets.user.last_name }}</span></div>  
+                            <div id="tid-body"><span>{{ active_ticket.user.first_name }} {{ active_ticket.user.last_name }}</span></div>  
                         </div>
                         <div id="user-id">
                             <div id="title">User ID</div>
-                            <div id="tid-body"><span>{{ active__tickets.user.user_id }}</span></div> 
+                            <div id="tid-body"><span>{{ active_ticket.user.user_id }}</span></div> 
                         </div>
                         <div id="user-email">
                             <div id="title">Email Address</div>
-                            <div id="tid-body"><span>{{ active__tickets.email }}</span></div>
+                            <div id="tid-body"><span>{{ active_ticket.email }}</span></div>
                         </div>
                         <div id="time-created">
-                            <div>Created <span>{{ active__tickets.time_elapsed_since_created }}</span></div>
+                            <div>Created <span>{{ active_ticket.time_elapsed_since_created }}</span></div>
                         </div>
                     </div>
                     <div id="goto">
                         <button title="Expand Ticket">
-                            <img src="{% static '/images/admin/support/expand-card.svg' %}" alt="Expand Support Ticket">
+                            <a href="{% url 'waveAdmin:admin_ticket_details' active_ticket.ticket_id %}" title="Expand Ticket">
+                                <img src="{% static '/images/admin/support/expand-card.svg' %}" alt="Expand Support Ticket">
+                            </a>
                         </button>
                     </div>
                 </div>
@@ -109,47 +109,49 @@ WAVE. — Management Dashboard
         </div>
         <div id="inactive-tickets">
             <div id="inactive-tickets-heading">
-                <h5>Inactive Support Tickets</h5>
+                <h5>Inactive Support Tickets: {{ inactive_tickets|length }}</h5>
             </div>
 
             <div id="inactive-tickets-body">
-                {% for inactive__tickets in inactive_tickets %}
+                {% for inactive_ticket in inactive_tickets %}
                 <div id="tickets">
                     <div id="priority" class="high"></div>
                     <div id="body">
                         <div id="ticket-id-status">
                             <div id="tis-id">
                                 <div id="title">Ticket ID</div>  
-                                <div id="tid-body">#<span>{{ inactive__tickets.ticket_id }}</span> </div>
+                                <div id="tid-body">#<span>{{ inactive_ticket.ticket_id }}</span> </div>
                             </div>
                             <div id="tis-status">
                                 <div id="title">Status</div>  
-                                <div id="tid-body"><span>Active</span> </div>
+                                <div id="tid-body"><span>Inactive</span> </div>
                             </div>
                         </div>
                         <div id="user-name">
                             <div id="title">Full Name</div>
-                            <div id="tid-body"><span>{{ inactive__tickets.user.first_name }} {{ inactive__tickets.user.last_name }}</span></div>  
+                            <div id="tid-body"><span>{{ inactive_ticket.user.first_name }} {{ inactive_ticket.user.last_name }}</span></div>  
                         </div>
                         <div id="user-id">
                             <div id="title">User ID</div>
-                            <div id="tid-body"><span>{{ inactive__tickets.user.user_id }}</span></div> 
+                            <div id="tid-body"><span>{{ inactive_ticket.user.user_id }}</span></div> 
                         </div>
                         <div id="user-email">
                             <div id="title">Email Address</div>
-                            <div id="tid-body"><span>{{ inactive__tickets.email }}</span></div>
+                            <div id="tid-body"><span>{{ inactive_ticket.email }}</span></div>
                         </div>
                         <div id="time-created">
-                            <div>Created <span>{{ inactive__tickets.time_elapsed_since_created }}</span></div>
+                            <div>Created <span>{{ inactive_ticket.time_elapsed_since_created }}</span></div>
                         </div>
                     </div>
                     <div id="goto">
                         <button title="Expand Ticket">
-                            <img src="{% static '/images/admin/support/expand-card.svg' %}" alt="Expand Support Ticket">
+                            <a href="{% url 'waveAdmin:admin_ticket_details' inactive_ticket.ticket_id %}" title="Expand Ticket">
+                                <img src="{% static '/images/admin/support/expand-card.svg' %}" alt="Expand Support Ticket">
+                            </a>
                         </button>
                     </div>
                 </div>
-            {% endfor %}
+                {% endfor %}
             </div>
         </div>
     </div>

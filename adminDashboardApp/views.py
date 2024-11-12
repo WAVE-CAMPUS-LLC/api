@@ -1,5 +1,7 @@
 import resend
 import json
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
@@ -29,10 +31,10 @@ from collegeManagementApp.models import (
     OrganizationMembership,
     Membership,
 )
+from blogApp.models import Blog
 from campusManagerApp.models import CampusManagerInvite
-from .models import College
 from django.conf import settings
-from .models import Department, CareerRole, LoginHistoryModel, Newsroom
+from .models import Department, CareerRole, LoginHistoryModel, Newsroom, College
 from .forms import (
     CreateGroupForm,
     UpdateGroupForm,
@@ -50,24 +52,24 @@ from .forms import (
     UpdateImageThreeForm,
     CollegeForm,
 )
-from wave_v1.decorators import (
-    admin_required,
-    superAdmin_required,
+from supportCenterApp.models import SupportTicket, SupportTicketMessage
+from wave_v1.decorators import (    
     check_suspension,
+    group_required
 )
 
 
 # Create your views here.
 @login_required(login_url="authentication:login")
 @check_suspension
-@admin_required
+@group_required("Admin")
 def adminPortalView(request):
     return render(request, "adminDashboardApp/index.html")
 
 
 @login_required(login_url="authentication:login")
 @check_suspension
-@admin_required
+@group_required("Admin")
 def adminDashboardView(request):
     return render(request, "adminDashboardApp/tabs/dashboard.html")
 
@@ -75,7 +77,7 @@ def adminDashboardView(request):
 # Department Management
 @login_required(login_url="authentication:login")
 @check_suspension
-@admin_required
+@group_required("Admin")
 def adminDepartmentView(request):
     """
     The `adminDepartmentView` function checks if the user is a superuser, processes a form submission to
@@ -109,7 +111,7 @@ def adminDepartmentView(request):
 
 @login_required(login_url="authentication:login")
 @check_suspension
-@admin_required
+@group_required("Admin")
 def adminDepartmentDetailedView(request, departmentID, department_name):
     """
     The function `adminDepartmentDetailedView` handles detailed view and management of department
@@ -187,7 +189,7 @@ def adminDepartmentDetailedView(request, departmentID, department_name):
 
 @login_required(login_url="authentication:login")
 @check_suspension
-@admin_required
+@group_required("Admin")
 def adminApplicationsView(request):
     hostApplications = HostApplication.objects.all()
 
@@ -251,14 +253,14 @@ def sendHostDenyEmail(applicantEmail):
 
 @login_required(login_url="authentication:login")
 @check_suspension
-@admin_required
+@group_required("Admin")
 def adminEventsView(request):
     return render(request, "adminDashboardApp/tabs/events.html")
 
 
 @login_required(login_url="authentication:login")
 @check_suspension
-@admin_required
+@group_required("Admin")
 def adminUsersView(request):
     # Going into the CustomUser database which holds all the users and fetching them to be displayed.
     total_users = CustomUser.objects.all()
@@ -267,7 +269,7 @@ def adminUsersView(request):
 
 @login_required(login_url="authentication:login")
 @check_suspension
-@admin_required
+@group_required("Admin")
 def adminUserDetailedView(request, username):
     user_in_view = get_object_or_404(CustomUser, username=username)
     user_profile = UserProfile.objects.get(user=user_in_view)
@@ -319,7 +321,7 @@ def adminUserDetailedView(request, username):
 
 @login_required(login_url="authentication:login")
 @check_suspension
-@admin_required
+@group_required("Admin")
 def adminRoleView(request):
     createGroup = CreateGroupForm()
     all_groups = Group.objects.all()
@@ -367,7 +369,7 @@ def adminRoleView(request):
 
 @login_required(login_url="authentication:login")
 @check_suspension
-@admin_required
+@group_required("Admin")
 def adminCareersView(request):
     # Querying every single career role.
     all_career_roles = CareerRole.objects.all()
@@ -380,7 +382,7 @@ def adminCareersView(request):
 
 @login_required(login_url="authentication:login")
 @check_suspension
-@admin_required
+@group_required("Admin")
 def adminCareerDetailView(request, roleID):
     """
     The `adminCareerDetailView` function handles viewing and managing career details for admin users,
@@ -451,14 +453,14 @@ def sendDeniedApplicantEmail(applicantEmail):
 
 @login_required(login_url="authentication:login")
 @check_suspension
-@admin_required
+@group_required("Admin")
 def adminFinanceView(request):
     return render(request, "adminDashboardApp/tabs/financial.html")
 
 
 @login_required(login_url="authentication:login")
 @check_suspension
-@admin_required
+@group_required("Admin")
 def adminSupportView(request):
     all_support_tickets = SupportTicket.objects.all()
 
@@ -484,7 +486,7 @@ def adminSupportView(request):
 
 @login_required(login_url="authentication:login")
 @check_suspension
-@admin_required
+@group_required("Admin")
 def adminFeedbackView(request):
     """
     The `adminFeedbackView` function displays feedback offers for superusers and redirects
@@ -511,7 +513,7 @@ def adminFeedbackView(request):
 
 @login_required
 @check_suspension
-@admin_required
+@group_required("Admin")
 def adminCollegeView(request):
     colleges = College.objects.annotate(member_count=Count("membership"))
     requestedColleges = CollegeRequest.objects.all()
@@ -551,7 +553,7 @@ def adminCollegeView(request):
 
 @login_required
 @check_suspension
-@admin_required
+@group_required("Admin")
 def adminCollegeDetailView(request, collegeId):
     college = get_object_or_404(College, collegeId=collegeId)
 
@@ -641,14 +643,14 @@ def send_invite(email, college):
 
 @login_required
 @check_suspension
-@admin_required
+@group_required("Admin")
 def adminCollegeOrgsView(request):
     return render(request, "adminDashboardApp/tabs/organizations.html")
 
 
 @login_required
 @check_suspension
-@admin_required
+@group_required("Admin")
 def adminNewsRoomView(request):
     """
     The function `adminNewsRoomView` retrieves all news articles from the Newsroom model and renders
@@ -668,7 +670,7 @@ def adminNewsRoomView(request):
 
 @login_required
 @check_suspension
-@admin_required
+@group_required("Admin")
 def adminCreateNewsView(request):
     """
     This Python function handles the creation of news articles by processing form data and saving it to
@@ -704,7 +706,7 @@ def adminCreateNewsView(request):
 
 @login_required
 @check_suspension
-@admin_required
+@group_required("Admin")
 def adminEditNewsView(request, newsId):
     """
     This function is likely used to display a view for editing news articles by an admin.
@@ -824,10 +826,16 @@ def adminEditNewsView(request, newsId):
         },
     )
 
+@login_required
+@check_suspension
+@group_required("Admin")
+def adminBlogView(request):
+    blogs = Blog.objects.all()
+    return render(request, "adminDashboardApp/tabs/blogs.html", {"blogs": blogs})
 
 @login_required
 @check_suspension
-@admin_required
+@group_required("Admin")
 def adminEmailingView(request):
     """
     The `adminEmailingView` function retrieves all active user profiles and renders them in an emailing
@@ -867,7 +875,7 @@ resend.api_key = settings.RESEND_API_KEY
 @require_POST
 @login_required
 @check_suspension
-@admin_required
+@group_required("Admin")
 def send_email(request):
     try:
         data = json.loads(request.body)
@@ -891,3 +899,64 @@ def send_email(request):
 
     except Exception as e:
         return JsonResponse({"success": False, "error": f"Error: {str(e)}"})
+
+@login_required
+def admin_ticket_details(request, ticket_id):
+    ticket = get_object_or_404(SupportTicket, ticket_id=ticket_id)
+    return render(request, 'adminDashboardApp/tabs/admin_ticket_details.html', {'ticket': ticket})
+
+@login_required
+def admin_send_ticket_reply(request, ticket_id):
+    ticket = get_object_or_404(SupportTicket, ticket_id=ticket_id)
+    if request.method == 'POST':
+        message = request.POST.get('message')
+        if message:
+            SupportTicketMessage.objects.create(
+                ticket=ticket,
+                sender=request.user,
+                message=message
+            )
+    return redirect('waveAdmin:admin_ticket_details', ticket_id=ticket_id)
+
+@login_required
+def toggle_ticket_status(request, ticket_id):
+    ticket = get_object_or_404(SupportTicket, ticket_id=ticket_id)
+    if request.method == 'POST':
+        if ticket.status == 'Closed':
+            ticket.status = 'Open'
+        else:
+            ticket.status = 'Closed'
+        ticket.save()
+        return redirect('waveAdmin:admin_ticket_details', ticket_id=ticket_id)
+
+def ticket_messages(request, ticket_id):
+    ticket = SupportTicket.objects.get(ticket_id=ticket_id)
+    messages = ticket.messages.all()
+    return render(request, "partials/messages.html", {"messages": messages})
+
+@login_required
+def admin_send_ticket_reply(request, ticket_id):
+    ticket = get_object_or_404(SupportTicket, ticket_id=ticket_id)
+    if request.method == 'POST':
+        message = request.POST.get('message')
+        if message:
+            # Save the message to the database
+            new_message = SupportTicketMessage.objects.create(
+                ticket=ticket,
+                sender=request.user,
+                message=message,
+                sent_at=timezone.now()
+            )
+
+            # Send the message to the WebSocket group
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                f"chat_{ticket_id}",
+                {
+                    "type": "new_message",
+                    "message": new_message.message,
+                    "sender": new_message.sender.username,
+                    "sent_at": new_message.sent_at.strftime("%Y-%m-%d %H:%M:%S"),
+                }
+            )
+    return redirect('waveAdmin:admin_ticket_details', ticket_id=ticket_id)

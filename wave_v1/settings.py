@@ -30,14 +30,14 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 SECRET_KEY = "django-insecure--7u2gz^jrm@-(e)w%@6d8b4r8f*t5ba&7yss#$xyp4-^a4nho%"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG =True
+DEBUG = True
 
 ALLOWED_HOSTS = []
-
 
 # Application definition
 
 INSTALLED_APPS = [
+    "daphne",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -51,13 +51,17 @@ INSTALLED_APPS = [
     "extras",
     "careerApp",
     "eventManagementApp",
+    "eventTicketsApp",
     "supportCenterApp",
     "collegeManagementApp",
     "socialApp",
     "newsroomApp",
     "blogApp",
     "campusManagerApp",
-    "widget_tweaks"
+    "widget_tweaks",
+    "qr_code",
+    'storages',
+    'channels',
 ]
 
 MIDDLEWARE = [
@@ -75,11 +79,7 @@ MIDDLEWARE = [
 # CSRF_FAILURE_VIEW = 'wave_v1.middleware.csrf_handlers.csrf_failure'
 
 ROOT_URLCONF = "wave_v1.urls"
-# ROOT_HOSTCONF = "wave_v1.hosts"
-# DEFAULT_HOST = "www"
-# PARENT_HOST = "localhost:8000"
 SITE_URL = "http://localhost:8000"
-
 
 TEMPLATES = [
     {
@@ -97,11 +97,23 @@ TEMPLATES = [
     },
 ]
 
+ASGI_APPLICATION = 'wave_v1.asgi.application'  
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer"  #TODO: Change to Redis for production
+    }
+}
 WSGI_APPLICATION = "wave_v1.wsgi.application"
-
 
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
+
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "db.sqlite3",
+    }
+}
 
 # DATABASES = {
 #     "default": {
@@ -125,7 +137,6 @@ WSGI_APPLICATION = "wave_v1.wsgi.application"
 # }
 
 
-
 if DATABASE_URL is None:
     raise ValueError("DATABASE_URL environment variable not set")
 
@@ -134,13 +145,15 @@ tmpPostgres = urlparse(DATABASE_URL)
 
 # Ensure that all components are handled as strings
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': str(tmpPostgres.path.lstrip('/')),  # Convert to string and remove leading slash
-        'USER': str(tmpPostgres.username),
-        'PASSWORD': str(tmpPostgres.password),
-        'HOST': str(tmpPostgres.hostname),
-        'PORT': str(tmpPostgres.port) if tmpPostgres.port else '',
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": str(
+            tmpPostgres.path.lstrip("/")
+        ),  # Convert to string and remove leading slash
+        "USER": str(tmpPostgres.username),
+        "PASSWORD": str(tmpPostgres.password),
+        "HOST": str(tmpPostgres.hostname),
+        "PORT": str(tmpPostgres.port) if tmpPostgres.port else "",
     }
 }
 
@@ -175,9 +188,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 AUTH_USER_MODEL = "authenticationApp.CustomUser"
-
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
@@ -190,10 +201,8 @@ USE_I18N = True
 
 USE_TZ = True
 
-
 # Login Link
 LOGIN_URL = "authentication:login"
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
@@ -202,13 +211,32 @@ STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 STATIC_URL = "/static/"
 STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
 
+# Media files (Images, Videos, GIFs) now served from Amazon S3
+# --------------------------------------------
 
-# Media files (Images, Videos, GIFs)
-MEDIA_URL = "/media/"
-MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+# Remove local MEDIA_ROOT since media files are now served from S3
+# MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
+# AWS S3 bucket configurations
+AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
+AWS_STORAGE_BUCKET_NAME = os.getenv('AWS_BUCKET_NAME')
+AWS_S3_REGION_NAME = os.getenv('AWS_REGION', default='us-east-2')
+AWS_S3_SIGNATURE_VERSION = 's3v4'
+AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
+AWS_S3_OBJECT_PARAMETERS = {
+    'CacheControl': 'max-age=86400',
+}
+AWS_S3_FILE_OVERWRITE = False  # Prevent overwriting files with the same name
+AWS_DEFAULT_ACL = None         # Use the default bucket ACL
+AWS_S3_VERIFY = True           # Verify SSL certificates
+
+# Use django-storages to handle media files with S3
+DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+
+# Set the S3 URL for media
+MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/media/'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
-
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

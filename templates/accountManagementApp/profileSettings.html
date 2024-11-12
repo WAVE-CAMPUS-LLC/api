@@ -129,7 +129,7 @@ Account Settings — WAVE.
 
             <hr class="cc-divider" />
 
-            <section id="phone-change" class="info-container">
+            {% comment %} <section id="phone-change" class="info-container">
                 <h6 class="ic-headers">Phone Number</h6>
                 <form method="post" action="{% url "accountManagement:userSettings" %}">
                     {% csrf_token %}
@@ -151,7 +151,7 @@ Account Settings — WAVE.
                 </form>
             </section>
 
-            <hr class="cc-divider" />
+            <hr class="cc-divider" /> {% endcomment %}
 
             <section id="location-change" class="info-container">
                 <h6 class="ic-headers">Location</h6>

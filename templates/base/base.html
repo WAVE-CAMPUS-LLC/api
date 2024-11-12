@@ -1,4 +1,7 @@
 {% load static %}
+{% load qr_code %}
+{% load date_tag %}
+{% load widget_tweaks %}
 <!DOCTYPE html>
 <html lang="en"> 
     <head>
@@ -17,6 +20,7 @@
         <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        
 
         <script type="text/javascript" src="//code.jquery.com/jquery-1.11.0.min.js"></script>
         <script type="text/javascript" src="//code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
@@ -26,22 +30,23 @@
 
     </head>
 
-    {% block auth_body %}
-    <div id="html-content" class="flex flex-col gap-[70px] overflow-y-auto h-full">
-        {% block pageHeader %}
-        <header>
-            {% block header %}{% endblock header %}
+    {% block checkout_body %}
+        {% block auth_body %}
+        <div id="html-content" class="flex flex-col gap-[70px] overflow-y-auto h-full">
+            {% block pageHeader %}
+            <header>
+                {% block header %}{% endblock header %}
 
-            {% block container_art %}{% endblock container_art %}
-        </header>
-        {% endblock pageHeader %}
-    
-        <body id="body">
-            {% block body %}{% endblock body %}
-        </body>
+                {% block container_art %}{% endblock container_art %}
+            </header>
+            {% endblock pageHeader %}
+        
+            <body id="body">
+                {% block body %}{% endblock body %}
+            </body>
 
         {% block footer %}
-        <footer id="footer" class="w-full border-t border-t-[#82828251]">
+        <footer id="footer">
             {% include "partials/nav-footer/footer/footer.html" %}
         </footer>
         {% endblock footer %}

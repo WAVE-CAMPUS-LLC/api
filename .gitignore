@@ -12,6 +12,9 @@ ENV/
 env.bak/
 venv.bak/
 
+#Environment variables 
+.env
+
 # Install packages
 *.egg
 *.egg-info/
@@ -47,7 +50,6 @@ poetry.toml
 local_settings.py
 db.sqlite3
 db.sqlite3-journal
-media/
 
 # VS Code
 .vscode/
@@ -68,4 +70,6 @@ media/
 Thumbs.db
 node_modules/
 
+# Package files
 package-lock.json
+package.json
