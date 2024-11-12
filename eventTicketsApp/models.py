@@ -39,6 +39,9 @@ class Ticket(models.Model):
             return f"Ticket {self.ticketId} for {self.event.title} - {self.status} (User: {self.user.username})"
         return f"Ticket {self.ticketId} for {self.event.title} - {self.status} (Guest: {self.guestFirstName} {self.guestLastName})"
     
+    class Meta:
+        default_permissions = ()
+    
     def save(self, *args, **kwargs):
         if not self.qrCodeData:
             self.qrCodeData = self.generate_qr_code_data()

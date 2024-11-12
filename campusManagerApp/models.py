@@ -19,5 +19,8 @@ class CampusManagerInvite(models.Model):
 
     def __str__(self):
         return f"Invite to {self.email} for {self.college.name}"
+    
+    class Meta:
+        default_permissions = ()
 
 
