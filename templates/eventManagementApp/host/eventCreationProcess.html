@@ -26,8 +26,8 @@ Create your event — WAVE.
 {% block body %}
 <div id="body-content" class="flex flex-col px-[10px] after-xsm:px-[20px] xxsm:px-[35px] sm:px-[40px] md:px-[40px] pre-lg:px-[50px] lg:px-[80px] xl:px-[150px] 2xl:px-[200px] 3xl:-[300px] gap-[70px]">
     <div class="flex justify-between">
-        <a href="{% url "eventManagement:hostPortal" %}" class="bg-[#ff0707] text-white font-Wanted-Regular text-Large p-4 rounded-3xl w-[10%] flex justify-center hover:bg-[#CE0000]">Exit</a>
-        <a href="{% url "eventManagement:hostHome" %}" target="_blank" class="bg-transparent text-black font-Wanted-Regular text-Large p-4 rounded-3xl w-[10%] flex justify-center border border-gray-600 hover:bg-[#007379] hover:text-white hover:border-[#007379]">Faq's</a>
+        <a href="{% url "eventManagement:hostPortal" %}" class="bg-[#ff0707] text-white font-Wanted-Regular text-Large p-3 rounded-2xl w-[10%] flex justify-center hover:bg-[#CE0000]">Exit</a>
+        <a href="{% url "eventManagement:hostHome" %}" target="_blank" class="bg-transparent text-black font-Wanted-Regular text-Large p-3 rounded-2xl w-[10%] flex justify-center border border-gray-600 hover:bg-[#007379] hover:text-white hover:border-[#007379]">Faq's</a>
     </div>
 
     <form method="POST" id="eventForm" class="flex flex-col gap-10" enctype="multipart/form-data" data-event-id="{{ event.eventId }}" action="{% url 'eventManagement:eventCreationProcess' event.eventId %}">
@@ -49,7 +49,7 @@ Create your event — WAVE.
                     </div>
             
                     <div id="section-image" class="w-[40%] flex items-center justify-center">
-                        <img class="w-[400px] h-[400px] rounded-3xl" src="{% static "images/eventManagementApp/host/images/createEvent.png" %}" />
+                        <img class="w-[400px] h-[400px] rounded-2xl" src="{% static "images/eventManagementApp/host/images/createEvent.png" %}" />
                     </div>
                 </diV>
             </section>
@@ -62,8 +62,8 @@ Create your event — WAVE.
                     </div>
         
                     <div class="section-intake flex flex-col w-full items-center justify-center">
-                        <input required type="{{ eventForm.title.field.widget.input_type }}" name="{{ eventForm.title.html_name }}" id="{{ eventForm.title.auto_id }}" class="text-input p-4 rounded-3xl border border-[#0909091c] font-Wanted-Regular text-Large w-1/2 shadow-form-shadow" placeholder="E.g. Back to school bash!" />
-                        <div id="title-error" class="text-[#FF0000] font-Wanted-Regular text-Medium p-4 hidden">
+                        <input required type="{{ eventForm.title.field.widget.input_type }}" name="{{ eventForm.title.html_name }}" id="{{ eventForm.title.auto_id }}" class="text-input p-3 rounded-2xl border border-[#0909091c] font-Wanted-Regular text-Large w-1/2 shadow-form-shadow" placeholder="E.g. Back to school bash!" />
+                        <div id="title-error" class="text-[#FF0000] font-Wanted-Regular text-Medium p-3 hidden">
                             Error
                         </div>
                     </div>
@@ -106,10 +106,10 @@ Create your event — WAVE.
                     <div class="section-intake flex flex-col w-full items-center justify-center">
                         <div class="w-1/2 flex justify-center flex-col items-center gap-10">
                             <label for="{{ eventForm.date.id_for_label }}" class="w-full flex flex-col gap-1">
-                                <input required type="{{ eventForm.date.field.widget.input_type }}" id="{{ eventForm.date.auto_id }}" name="{{ eventForm.date.html_name }}" class="date-input border-2 border-[#0909091c] rounded-3xl p-5 font-Wanted-Regular text-Pre-Xl"/>
+                                <input required type="{{ eventForm.date.field.widget.input_type }}" id="{{ eventForm.date.auto_id }}" name="{{ eventForm.date.html_name }}" class="date-input border-2 border-[#0909091c] rounded-2xl p-5 font-Wanted-Regular text-Pre-Xl"/>
                             </label>
                         </div>
-                        <div id="date-error"  class="text-[#FF0000] font-Wanted-Regular text-Medium p-4 hidden"></div>
+                        <div id="date-error"  class="text-[#FF0000] font-Wanted-Regular text-Medium p-3 hidden"></div>
                     </div>
                 </div>
             </section>
@@ -125,15 +125,15 @@ Create your event — WAVE.
                         <div class="w-1/2 flex justify-center flex-col items-center gap-10">
                             <label for="{{ eventForm.start_time.id_for_label }}" class="w-full flex flex-col gap-1">
                                 <p class="font-Wanted-Variable text-Base text-[#797878]">{{ eventForm.start_time.label }}</p>
-                                <input required type="{{ eventForm.start_time.field.widget.input_type }}" id="{{ eventForm.start_time.auto_id }}" name="{{ eventForm.start_time.html_name }}" class="start-time-input border-2 border-[#0909091c] rounded-3xl p-5 font-Wanted-Regular text-Pre-Xl" />
+                                <input required type="{{ eventForm.start_time.field.widget.input_type }}" id="{{ eventForm.start_time.auto_id }}" name="{{ eventForm.start_time.html_name }}" class="start-time-input border-2 border-[#0909091c] rounded-2xl p-5 font-Wanted-Regular text-Pre-Xl" />
                             </label>
 
                             <label for="{{ eventForm.end_time.id_for_label }}" class="w-full flex flex-col gap-1">
                                 <p class="font-Wanted-Variable text-Base text-[#797878]">{{ eventForm.end_time.label }}</p>
-                                <input required type="{{ eventForm.end_time.field.widget.input_type }}" id="{{ eventForm.end_time.auto_id }}" name="{{ eventForm.end_time.html_name }}" class="end-time-input border-2 border-[#0909091c] rounded-3xl p-5 font-Wanted-Regular text-Pre-Xl" />
+                                <input required type="{{ eventForm.end_time.field.widget.input_type }}" id="{{ eventForm.end_time.auto_id }}" name="{{ eventForm.end_time.html_name }}" class="end-time-input border-2 border-[#0909091c] rounded-2xl p-5 font-Wanted-Regular text-Pre-Xl" />
                             </label>
                         </div>
-                        <div id="time-error" class="text-[#FF0000] font-Wanted-Regular text-Medium p-4 hidden"></div>
+                        <div id="time-error" class="text-[#FF0000] font-Wanted-Regular text-Medium p-3 hidden"></div>
                     </div>
                 </div>
             </section>
@@ -146,8 +146,8 @@ Create your event — WAVE.
                     </div>
         
                     <div class="section-intake flex flex-col w-full items-center justify-center">
-                        <textarea required id="{{ eventForm.description.id_for_label }}" name="{{ eventForm.description.html_name }}" class="body-input w-[80%] min-h-[300px] border-2 border-[#0909091c] rounded-3xl p-5 font-Wanted-Variable text-Medium"/></textarea>
-                        <div id="body-error" class="text-[#FF0000] font-Wanted-Regular text-Medium p-4 hidden"></div>
+                        <textarea required id="{{ eventForm.description.id_for_label }}" name="{{ eventForm.description.html_name }}" class="body-input w-[80%] min-h-[300px] border-2 border-[#0909091c] rounded-2xl p-5 font-Wanted-Variable text-Medium"/></textarea>
+                        <div id="body-error" class="text-[#FF0000] font-Wanted-Regular text-Medium p-3 hidden"></div>
                     </div>
                 </div>
             </section>      
@@ -186,7 +186,7 @@ Create your event — WAVE.
                     </div>
         
                     <div class="flex justify-center items-center flex-col w-full">
-                        {{ eventForm.ticketing|add_class:"w-[60%] border-2 border-[#0909091c] rounded-3xl p-4 font-Wanted-Regular text-Pre-Xl" }}
+                        {{ eventForm.ticketing|add_class:"w-[60%] border-2 border-[#0909091c] rounded-2xl p-3 font-Wanted-Regular text-Pre-Xl" }}
                     </div>
                 </div>
             </section>
@@ -206,7 +206,7 @@ Create your event — WAVE.
                     </div>
             
                     <div id="section-image" class="w-[40%] flex items-center justify-center">
-                        <img class="w-[400px] h-[400px] rounded-3xl" src="{% static "images/eventManagementApp/host/images/contact.png" %}" />
+                        <img class="w-[400px] h-[400px] rounded-2xl" src="{% static "images/eventManagementApp/host/images/contact.png" %}" />
                     </div>
                 </diV>
             </section>
@@ -220,10 +220,10 @@ Create your event — WAVE.
                     </div>
         
                     <div class="flex flex-col gap-9">
-                        <div class="flex justify-start items-start">
-                            <label class="flex flex-col items-start gap-1">
+                        <div class="flex justify-center items-start w-full">
+                            <label class="flex flex-col items-center gap-1 w-1/2">
                                 <p class="font-Wanted-Variable text-Small text-[#4e4e4e]">{{ eventForm.country.label }}</p>
-                                <select required id="{{ eventForm.country.id_for_label }}" name="{{ eventForm.country.html_name }}" class="w-full p-4 rounded-2xl border-2 border-[#8988887f] font-Wanted-Regular font-Wanted-Regular text-Large">
+                                <select required id="{{ eventForm.country.id_for_label }}" name="{{ eventForm.country.html_name }}" class="w-full p-3 rounded-2xl border-2 border-[#8988887f] font-Wanted-Regular font-Wanted-Regular text-Large">
                                     {% for countryValue, countryDisplay in eventForm.country.field.choices %}
                                     <option value="{{ countryValue }}" {% if eventForm.country.countryValue == value %}selected{% endif %}>{{ countryDisplay }}</option>
                                     {% endfor %}
@@ -232,50 +232,51 @@ Create your event — WAVE.
                             </label>
                         </div>
                         
-                        <div class="address-intake">
+                        <div class="address-intake flex flex-col gap-3 w-full justify-center items-center">
                             <label for="{{ eventForm.building_name.id_for_label }}" class="flex flex-col gap-1 w-1/2">
-                                <p>{{ eventForm.building_name.label }}</p>
-                                <input required class="building-input" type="{{ eventForm.building_name.field.widget.input_type }}" id="{{ eventForm.building_name.auto_id }}" name="{{ eventForm.building_name.html_name }}" />
-                                <div id="building-error">
+                                <p class="font-Wanted-Variable text-Small text-[#4e4e4e]">{{ eventForm.building_name.label }}</p>
+                                <input required class="building-input w-full p-3 rounded-2xl border-2 border-[#8988887f] font-Wanted-Regular text-Large" type="{{ eventForm.building_name.field.widget.input_type }}" id="{{ eventForm.building_name.auto_id }}" name="{{ eventForm.building_name.html_name }}" />
+                                <div id="building-error" class="text-red-700 font-Wanted-Regular text-Base p-1">
                                     Please provide a shorter name.
                                 </div>
                             </label>
 
-                            <label for="{{ eventForm.street.id_for_label }}">
-                                <p>{{ eventForm.street.label }}</p>
-                                <input required class="street-input" type="{{ eventForm.street.field.widget.input_type }}" id="{{ eventForm.street.auto_id }}" name="{{ eventForm.street.html_name }}" />
-                                <div id="street-error">
+                            <label for="{{ eventForm.street.id_for_label }}" class="flex flex-col gap-1 w-1/2">
+                                <p class="font-Wanted-Variable text-Small text-[#4e4e4e]">{{ eventForm.street.label }}</p>
+                                <input required class="street-input w-full p-3 rounded-2xl border-2 border-[#8988887f] font-Wanted-Regular text-Large" type="{{ eventForm.street.field.widget.input_type }}" id="{{ eventForm.street.auto_id }}" name="{{ eventForm.street.html_name }}" />
+                                <div id="street-error" class="text-red-700 font-Wanted-Regular text-Base p-1">
                                     Please provide a shorter street address.
                                 </div>
                             </label>
 
-                            <label for="{{ eventForm.apt_suite_unit.id_for_label }}">
-                                <p>{{ eventForm.apt_suite_unit.label }}</p>
-                                <input class="apt-input" type="{{ eventForm.apt_suite_unit.field.widget.input_type }}" id="{{ eventForm.apt_suite_unit.auto_id }}" name="{{ eventForm.apt_suite_unit.html_name }}" />
-                                <div id="apt-error">
+                            <label for="{{ eventForm.apt_suite_unit.id_for_label }}" class="flex flex-col gap-1 w-1/2">
+                                <p class="font-Wanted-Variable text-Small text-[#4e4e4e]">{{ eventForm.apt_suite_unit.label }}</p>
+                                <input class="apt-input w-full p-3 rounded-2xl border-2 border-[#8988887f] font-Wanted-Regular text-Large" type="{{ eventForm.apt_suite_unit.field.widget.input_type }}" id="{{ eventForm.apt_suite_unit.auto_id }}" name="{{ eventForm.apt_suite_unit.html_name }}" />
+                                <div id="apt-error" class="text-red-700 font-Wanted-Regular text-Base p-1">
                                     Please provide a shorter apt/suit/unit address.
                                 </div>
                             </label>
 
-                            <label for="{{ eventForm.city.id_for_label }}">
-                                <p>{{ eventForm.city.label }}</p>
-                                <input required class="city-input" type="{{ eventForm.city.field.widget.input_type }}" id="{{ eventForm.city.auto_id }}" name="{{ eventForm.city.html_name }}" />
-                                <div id="city-error">
+                            <label for="{{ eventForm.city.id_for_label }}" class="flex flex-col gap-1 w-1/2">
+                                <p class="font-Wanted-Variable text-Small text-[#4e4e4e]">{{ eventForm.city.label }}</p>
+                                <input required class="city-input w-full p-3 rounded-2xl border-2 border-[#8988887f] font-Wanted-Regular text-Large" type="{{ eventForm.city.field.widget.input_type }}" id="{{ eventForm.city.auto_id }}" name="{{ eventForm.city.html_name }}" />
+                                <div id="city-error" class="text-red-700 font-Wanted-Regular text-Base p-1">
                                     Please provide a shorter city/town name.
                                 </div>
                             </label>
 
-                            <label for="{{ eventForm.state.id_for_label }}">
-                                <p>{{ eventForm.state.label }}</p>
+                            <label for="{{ eventForm.state.id_for_label }}" class="flex flex-col gap-1 w-1/2">
+                                <p class="font-Wanted-Variable text-Small text-[#4e4e4e]">{{ eventForm.state.label }}</p>
                                 <div class="state-intake">
-                                    {{ eventForm.state }}
+                                    {{ eventForm.state|add_class:"w-full p-3 rounded-2xl border-2 border-[#8988887f] font-Wanted-Regular text-Large" }}
+                                    
                                 </div>
                             </label>
 
-                            <label for="{{ eventForm.zip_code.id_for_label }}">
-                                <p>{{ eventForm.zip_code.label }}</p>
-                                <input required class="zip-input" type="number" id="{{ eventForm.zip_code.auto_id }}" name="{{ eventForm.zip_code.html_name }}" maxlength="5" minlength="5" pattern="\d{5}" oninput="this.value = this.value.slice(0, 5)" />
-                                <div id="zip-error">
+                            <label for="{{ eventForm.zip_code.id_for_label }}" class="flex flex-col gap-1 w-1/2">
+                                <p class="font-Wanted-Variable text-Small text-[#4e4e4e]">{{ eventForm.zip_code.label }}</p>
+                                <input required class="zip-input w-full p-3 rounded-2xl border-2 border-[#8988887f] font-Wanted-Regular text-Large" type="number" id="{{ eventForm.zip_code.auto_id }}" name="{{ eventForm.zip_code.html_name }}" maxlength="5" minlength="5" pattern="\d{5}" oninput="this.value = this.value.slice(0, 5)" />
+                                <div id="zip-error" class="text-red-700 font-Wanted-Regular text-Base p-1">
                                     Zip code needs to be 5 digits.
                                 </div>
                             </label>
@@ -438,7 +439,7 @@ Create your event — WAVE.
                     Previous
                 </button>
             </div>
-            <button id="next-sectionbtn" class="border p-4 border-[#007379] bg-[#007379] font-Wanted-Regular text-Medium w-[10%] cursor-pointer rounded-3xl hover:bg-[#008d95] disabled:bg-[#aeaeaeab] disabled:border disabled:border-[#aeaeaeab] disabled:cursor-not-allowed text-white" type="button">
+            <button id="next-sectionbtn" class="border p-3 border-[#007379] bg-[#007379] font-Wanted-Regular text-Medium w-[10%] cursor-pointer rounded-2xl hover:bg-[#008d95] disabled:bg-[#aeaeaeab] disabled:border disabled:border-[#aeaeaeab] disabled:cursor-not-allowed text-white" type="button">
                 Next
             </button>
         </div>
