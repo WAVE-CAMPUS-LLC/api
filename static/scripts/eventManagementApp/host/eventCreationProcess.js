@@ -86,16 +86,21 @@ $(document).ready(function () {
         if(currentSectionIndex === 1) {
             currentSection.find('.text-input').each(function () {
                 const len = $(this).val().length;
-                if (len == 0 ) {
-                    $("#title-error").hide();
+                const titleError = $("#title-error");
+                if (len === 0) {
+                    titleError.addClass('hidden');
+                    console.log("Title is empty, hiding error.");
                 } else if (len < 4) {
                     isValid = false;
-                    $("#title-error").text("Title needs to be longer.").show();
+                    titleError.text("Title needs to be longer.").removeClass('hidden');
+                    console.log("Title too short, showing error.");
                 } else if (len > 100) {
                     isValid = false;
-                    $("#title-error").text("Title needs to be shorter.").show();
+                    titleError.text("Title needs to be shorter.").removeClass('hidden');
+                    console.log("Title too long, showing error.");
                 } else {
-                    $("#title-error").hide();
+                    titleError.addClass('hidden');
+                    console.log("Title length is valid, hiding error.");
                 }
             });
         } else if (currentSectionIndex === 3) {
@@ -109,15 +114,15 @@ $(document).ready(function () {
                 currentDate.setHours(-24, 0, 0, 0); 
     
                 if (len == 0) {
-                    $("#date-error").hide();
+                    $("#date-error").addClass('hidden');
                 } else if (selectedDate.getTime() < currentDate.getTime()) {
                     isValid = false;
-                    $("#date-error").text("Date cannot be in the past.").show();
+                    $("#date-error").text("Date cannot be in the past.").removeClass('hidden');
                 } else if (selectedDate.getTime() > futureLimitDate.getTime()) {
                     isValid = false;
-                    $("#date-error").text("Date cannot be in more than a year into the future.").show();
+                    $("#date-error").text("Date cannot be in more than a year into the future.").removeClass('hidden');
                 } else {
-                    $("#date-error").hide();
+                    $("#date-error").addClass('hidden');
                 }
             });
         } else if (currentSectionIndex === 4) {
