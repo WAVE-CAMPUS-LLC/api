@@ -234,6 +234,10 @@
     font-family: Wanted-Regular;
 }
 
+.image-type-input .clearable-file-input {
+    display: none;
+}
+
 /* Privacy Tab */
 .display-on-college {
     width: 100%;

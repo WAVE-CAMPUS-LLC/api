@@ -101,69 +101,153 @@ Manage {{ event.title }} | WAVE.
                             <img src="{% static "/images/eventManagementApp/host/edit.svg" %}" />
                         </button>
                     </div>
+
                     <div class="body-row">
                         <div class="body-row-content">
-                            <h3>Type of Event</h3>
-                            <p>{{ event.event_type }}</p>
+                            <h3 id="edit-type-previous" >Type of Event</h3>
+                            <p id="edit-type-previous-value">{{ event.event_type }}</p>
+                            <form method="POST" style="display: none;" id="edit-type-form">
+                                {% csrf_token %}
+                                <input type="hidden" name="event_id" value="{{ event.eventId }}"></input>
+                                
+                                <div class="form-input">
+                                    <div>
+                                        {{ eventTypeForm.event_type }}
+                                    </div>
+                                    <button id="save-info" type="submit" class="save-event" name="eventAction" value="saveEventType">
+                                        Save Type
+                                    </button>
+                                </div>
+                            </form>
                         </div>
                         <button class="edit-event" id="edit-type">
                             <img src="{% static "/images/eventManagementApp/host/edit.svg" %}" />
                         </button>
                     </div>
+
                     <div class="body-row">
                         <div class="body-row-content">
-                            <h3>Event Date</h3>
-                            <p>{{ event.date }}</p>
+                            <h3 id="edit-date-previous">Event Date</h3>
+                            <p id="edit-date-previous-value">{{ event.date }}</p>
+                            <form method="POST" style="display: none;" id="edit-date-form">
+                                {% csrf_token %}
+                                <input type="hidden" name="event_id" value="{{ event.eventId }}"></input>
+                                
+                                <div class="form-input">
+                                    <div>
+                                        {{ eventDateForm.date }}
+                                    </div>
+                                    <button id="save-info" type="submit" class="save-event" name="eventAction" value="saveEventDate">
+                                        Save Date
+                                    </button>
+                                </div>
+                            </form>
                         </div>
                         <button class="edit-event" id="edit-date">
                             <img src="{% static "/images/eventManagementApp/host/edit.svg" %}" />
                         </button>
                     </div>
+
                     <div class="time-row">
                         <div class="body-row">
                             <div class="body-row-content">
-                                <h3>Start Time</h3>
-                                
-                                <p>{{ event.start_time }}</p>
+                                <h3 id="edit-start-time-previous">Start Time</h3>
+                                <p id="edit-start-time-previous-value">{{ event.start_time }}</p>
+                                <form method="POST" style="display: none;" id="edit-start-time-form">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="event_id" value="{{ event.eventId }}"></input>
+                                    
+                                    <div class="form-input">
+                                        <div>
+                                            {{ eventStartTimeForm.start_time }}
+                                        </div>
+                                        <button id="save-info" type="submit" class="save-event" name="eventAction" value="saveEventStartTime">
+                                            Save Start Time
+                                        </button>
+                                    </div>
+                                </form>
                             </div>
                             <button class="edit-event" id="edit-start-time">
                                 <img src="{% static "/images/eventManagementApp/host/edit.svg" %}" />
                             </button>
                         </div>
+
                         <div class="body-row">
                             <div class="body-row-content">
-                                <h3>End Time</h3>
-                                <p>{{ event.end_time }}</p>
+                                <h3 id="edit-end-time-previous">End Time</h3>
+                                <p id="edit-end-time-previous-value">{{ event.end_time }}</p>
+                                <form method="POST" style="display: none;" id="edit-end-time-form">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="event_id" value="{{ event.eventId }}"></input>
+                                    
+                                    <div class="form-input">
+                                        <div>
+                                            {{ eventEndTimeForm.end_time }}
+                                        </div>
+                                        <button id="save-info" type="submit" class="save-event" name="eventAction" value="saveEventEndTime">
+                                            Save End Time
+                                        </button>
+                                    </div>
+                                </form>
                             </div>
                             <button class="edit-event" id="edit-end-time">
                                 <img src="{% static "/images/eventManagementApp/host/edit.svg" %}" />
                             </button>
                         </div>
                     </div>
+
                     <div class="body-row">
                         <div class="body-row-content">
-                            <h3>Description</h3>
-                            <p>{{ event.description }}</p>
+                            <h3 id="edit-description-previous">Description</h3>
+                            <p id="edit-description-previous-value">{{ event.description }}</p>
+                            <form method="POST" style="display: none;" id="edit-description-form">
+                                {% csrf_token %}
+                                <input type="hidden" name="event_id" value="{{ event.eventId }}"></input>
+                                
+                                <div class="form-input">
+                                    <div>
+                                        {{ eventDescriptionForm.description }}
+                                    </div>
+                                    <button id="save-info" type="submit" class="save-event" name="eventAction" value="saveEventDescription">
+                                        Save Description
+                                    </button>
+                                </div>
+                            </form>
                         </div>
                         <button class="edit-event" id="edit-description">
                             <img src="{% static "/images/eventManagementApp/host/edit.svg" %}" />
                         </button>
                     </div>
+
                     <div class="privacy-row">
                         <div class="body-row">
                             <div class="body-row-content">
-                                <h3>Privacy</h3>
-                                <p>{{ event.privacy }}</p>
+                                <h3 id="edit-privacy-previous">Privacy</h3>
+                                <p id="edit-privacy-previous-value">{{ event.privacy }}</p>
+                                <form method="POST" style="display: none;" id="edit-privacy-form">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="event_id" value="{{ event.eventId }}"></input>
+                                    
+                                    <div class="form-input">
+                                        <div>
+                                            {{ eventPrivacyForm.privacy }}
+                                        </div>
+                                        <button id="save-info" type="submit" class="save-event" name="eventAction" value="saveEventPrivacy">
+                                            Save Priavcy
+                                        </button>
+                                    </div>
+                                </form>
                             </div>
                             <button class="edit-event" id="edit-privacy">
                                 <img src="{% static "/images/eventManagementApp/host/edit.svg" %}" />
                             </button>
                         </div>
                     </div>
+
                     <div class="body-row">
                         <div class="body-row-content">
-                            <h3>Location</h3>
-                            <p>
+                            <h3 id="edit-location-previous">Location</h3>
+                            <p id="edit-location-previous-value">
                                 {{ event.building_name }}, 
                                 <br/> 
                                 {{ event.street }}, 
@@ -174,15 +258,53 @@ Manage {{ event.title }} | WAVE.
                                 {{ event.state }}, 
                                 {{ event.zip_code }}
                             </p>
+                            <form method="POST" style="display: none;" id="edit-location-form">
+                                {% csrf_token %}
+                                <input type="hidden" name="event_id" value="{{ event.eventId }}"></input>
+                                
+                                <div class="form-input">
+                                    <div style="display: flex; flex-direction: column; gap: 10px; width: 500px;">
+                                        {{ eventLocationForm.building_name }}
+                                        {{ eventLocationForm.street }}
+                                        {{ eventLocationForm.apt_suite_unit }}
+                                        {{ eventLocationForm.city }}
+                                        {{ eventLocationForm.state }}
+                                        {{ eventLocationForm.zip_code }}
+                                    </div>
+                                    <button id="save-info" type="submit" class="save-event" name="eventAction" value="saveEventLocation">
+                                        Save Location
+                                    </button>
+                                </div>
+                            </form>
                         </div>
                         <button class="edit-event" id="edit-location">
                             <img src="{% static "/images/eventManagementApp/host/edit.svg" %}" />
                         </button>
                     </div>
+
                     <div class="body-row">
-                        <h3>Flyer Image</h3>
-                        <img class="flyer-image" src="{{ event.header_photo.url }}" />
+                        <div class="body-row-content">
+                            <h3 id="edit-header-image-previous">Flyer Image</h3>
+                            <img class="flyer-image" src="{{ event.header_photo.url }}" id="edit-header-image-previous-value"/>
+                            <form method="POST" enctype="multipart/form-data" style="display: none;" id="edit-header-image-form">
+                                {% csrf_token %}
+                                <input type="hidden" name="event_id" value="{{ event.eventId }}"></input>
+                                
+                                <div class="form-input">
+                                    <div class="image-type-input">
+                                        {{ eventHeaderImageForm.header_photo }}
+                                    </div>
+                                    <button id="save-info" type="submit" class="save-event" name="eventAction" value="saveEventHeaderImage">
+                                        Save Flyer Image
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                        <button class="edit-event" id="edit-header-image">
+                            <img src="{% static "/images/eventManagementApp/host/edit.svg" %}" />
+                        </button>
                     </div>
+                    
                     {% if event.body_photo_one or event.body_photo_two or event.body_photo_three or event.body_photo_four or event.body_photo_five %}
                     <div class="body-row">
                         <h3>Extra Images</h3>
