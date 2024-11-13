@@ -21,50 +21,50 @@ Host Dashboard | WAVE.
 
 
 {% block body %}
-<div id="body-content">
-    <div class="page-heading">
+<div id="body-content" class="flex flex-col gap-[70px] px-[100px]">
+    <div class="page-heading font-Wanted-SemiBold text-[30px] flex flex-row justify-between items-center">
         <h2>Good to see you, {{ request.user.first_name }}!<h2>
-        <a href="{% url "eventManagement:hostCreateEvent"%}" class="createEventBtn">
+        <a href="{% url "eventManagement:hostCreateEvent"%}" class="createEventBtn p-[12.5px_15px] border-[1px] border-solid border-transparent text-white font-Wanted-SemiBold flex items-center flex-row gap-[10px] text-[20px] rounded-[20px] cursor-pointer bg-gradient-to-r from-[#008d95bc] to-[#13c9d3] hover:bg-[#007379]">
             <img src="{% static "/images/eventManagementApp/host/host_ticket.svg" %}" />
             Create Event
         </a>
     </div>
 
-    <div id="portal-body">
-        <div class="control-row">
-            <div role="button" type="button" class="dashboard-tab tab-active" data-tab="live-events">Live</div>
-            <div role="button" type="button" class="dashboard-tab" data-tab="upcoming-events">Upcoming</div>
-            <div role="button" type="button" class="dashboard-tab" data-tab="archived-events">Archived</div>
+    <div id="portal-body" class="flex flex-col gap-[40px]">
+        <div class="control-row flex flex-row gap-[15px]">
+            <div role="button" type="button" class="dashboard-tab tab-active cursor-pointer font-Wanted-Variable border-[1px] border-solid border-gray-600 p-[5px] rounded-[13px] w-[10%] flex justify-center active:border-[1px] active:border-solid active:border-[#007379] active:font-Wanted-Variable active:text-white active:bg-[#007379]" data-tab="live-events">Live</div>
+            <div role="button" type="button" class="dashboard-tab cursor-pointer font-Wanted-Variable border-[1px] border-solid border-gray-600 p-[5px] rounded-[13px] w-[10%] flex justify-center" data-tab="upcoming-events">Upcoming</div>
+            <div role="button" type="button" class="dashboard-tab cursor-pointer font-Wanted-Variable border-[1px] border-solid border-gray-600 p-[5px] rounded-[13px] w-[10%] flex justify-center" data-tab="archived-events">Archived</div>
         </div>
 
         <div id="portal-body-content">
             <div class="pbc-element-content" id="live-events">
                 {% if events %}
-                <div id="event-container">
+                <div id="event-container" class="grid grid-cols-3 gap-[20px] p-[20px]">
                     {% for event in events %}
                         {% if event.status == "live" %}
-                        <div id="port-event-display">
+                        <div id="port-event-display" class="flex flex-col gap-[20px] font-Wanted-SemiBold text-[15px] w-full border-[1px] border-solid border-[rgba(113,113,113,0.182)] rounded-[20px] p-[20px] pb-[30px] cursor-pointer">
                             <div class="event-image">
-                                <img src="{{event.header_photo.url}}" />
+                                <img src="{{event.header_photo.url}}" class="max-w-[350px] max-h-[350px] w-full h-full rounded-[15px]"/>
                             </div>
-                            <div class="event-information">
-                                <h5>
+                            <div class="event-information flex flex-col gap-[10px]">
+                                <h5 class="font-Wanted-Medium text-[25px] whitespace-nowrap overflow-hidden text-ellipsis w-full text-left">
                                     {{ event.title }}
                                 </h5>
-                                <p>{{ event.date }}</p>
-                                <div class="event-view">
-                                    <h6>
+                                <p class="flex justify-end font-Wanted-Variable text-[15px]">{{ event.date }}</p>
+                                <div class="event-view flex flex-col gap-[5px]">
+                                    <h6 class="font-Wanted-Regular text-[19px] text-gray-600 w-full flex justify-center text-center">
                                         View Event
                                     </h6>
-                                    <span class="view-containers">
-                                        <a target="_blank" href="{% url "eventManagement:eventOverview" eventId=event.eventId %}">Host View</a>
-                                        <a target="_blank" href="{% url "core:eventDetails" eventId=event.eventId %}">Public View</a>
+                                    <span class="view-containers w-full flex flex-row justify-between items-center">
+                                        <a target="_blank" href="{% url "eventManagement:eventOverview" eventId=event.eventId %}" class="text-[#008d95] font-Wanted-Variable text-[16px] underline-offset-[2.5px] decoration-[1.5px] hover:decoration-black hover:decoration-[2.5px]">Host View</a>
+                                        <a target="_blank" href="{% url "core:eventDetails" eventId=event.eventId %}" class="text-[#008d95] font-Wanted-Variable text-[16px] underline-offset-[2.5px] decoration-[1.5px] hover:decoration-black hover:decoration-[2.5px]">Public View</a>
                                     </span>
                                 </div>
                             </div>
-                            <div class="ticketing-delete">
+                            <div class="ticketing-delete flex flex-col gap-[30px] w-full">
                                 <div class="ticketing">
-                                    <a class="ticketing-link" href="{% url "eventManagement:ticketingOverview" eventId=event.eventId %}">Event Ticketing</a>
+                                    <a class="ticketing-link bg-[#008d95] p-[13px] rounde-[15px] text-white font-Wanted-Regular" href="{% url "eventManagement:ticketingOverview" eventId=event.eventId %}">Event Ticketing</a>
                                 </div>
 
                                 <div class="event-delete">
@@ -81,23 +81,23 @@ Host Dashboard | WAVE.
                     {% endfor %}
                 </div>
                 {% else %}
-                <div class="empty-pcb">
-                    <img class="empty-image" src="{% static "/images/eventManagementApp/host/empty-listing.svg" %}" />
+                <div class="empty-pcb w-full flex flex-col justify-center items-center gap-[10px] font-Wanted-Variable bg-[rgba(146,146,146,0.096)] p-[50px] rounded-[20px]">
+                    <img class="empty-image w-[20px]" src="{% static "/images/eventManagementApp/host/empty-listing.svg" %}" />
                     <p>You currently have no live events to display!</p>
                 </div>
                 {% endif %}
             </div>
 
             <div class="pbc-element-content" id="upcoming-events">
-                <div class="empty-pcb">
-                    <img class="empty-image" src="{% static "/images/eventManagementApp/host/empty-listing.svg" %}" />
+                <div class="empty-pcb w-full flex flex-col justify-center items-center gap-[10px] font-Wanted-Variable bg-[rgba(146,146,146,0.096)] p-[50px] rounded-[20px]">
+                    <img class="empty-image w-[30px]" src="{% static "/images/eventManagementApp/host/empty-listing.svg" %}" />
                     <p>You currently have no upcoming events to display!</p>
                 </div>
             </div>
 
             <div class="pbc-element-content" id="archived-events">
-                <div class="empty-pcb">
-                    <img class="empty-image" src="{% static "/images/eventManagementApp/host/empty-listing.svg" %}" />
+                <div class="empty-pcb w-full flex flex-col justify-center items-center gap-[10px] font-Wanted-Variable bg-[rgba(146,146,146,0.096)] p-[50px] rounded-[20px]">
+                    <img class="empty-image w-[30px]" src="{% static "/images/eventManagementApp/host/empty-listing.svg" %}" />
                     <p>You currently have no archived events to display!</p>
                 </div>
             </div>
