@@ -1,0 +1,197 @@
+#body-logo {
+    font-family: Wanted-Bold;
+}
+
+#body-logo .spot {
+    color: #008d95;
+}
+
+/** [End] Logo used in body's [End]**/
+
+
+/* Body Content */
+#body-content {
+    display: flex;
+    flex-direction: column;
+    gap: 70px;
+    padding-left: 100px;
+    padding-right: 100px;
+}
+
+#creation-header {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.exitCreationBtn {
+    cursor: pointer;
+    font-family: Wanted-Variable;
+    font-size: 19px;
+    border: 1px solid grey;
+    padding: 5px;
+    border-radius: 20px;
+    width: 10%;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: transparent;
+    text-decoration: none;
+    color: black;
+}
+
+.exitCreationBtn:hover {
+    border: 1px solid #007379;
+    font-family: Wanted-Variable;
+    color: white;
+    background-color: #007379;
+}
+
+/* Creation Body */
+#creation-body {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+
+    overflow-y: auto;
+    gap: 30px;
+    height: 100%;
+}
+
+#creation-body-control {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+#creation-body-control #creation-previous {
+    font-family: Wanted-SemiBold;
+    font-size: 16px;
+    background-color: transparent;
+    border: none;
+
+    cursor: pointer;
+}
+
+#creation-body-control #creation-previous:hover {
+    text-decoration: underline;
+}
+
+#creation-body-control #creation-next {
+    font-family: Wanted-SemiBold;
+    font-size: 16px;
+
+    background-color: #007379;
+    border-radius: 15px;
+    padding: 15px;
+    width: 10%;
+    border: 1px solid transparent;
+
+    color: white;
+    cursor: pointer;
+}
+
+#cbc-info-container {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+#cbc-ic-info {
+    width: 70%;
+}
+
+#cbc-ic-image {
+    width: 30%;
+}
+
+#cbc-ic-image img {
+    border-radius: 20px;
+    width: 310px;
+    height: 310px;
+}
+
+.cbc-i-c-header {
+    display: flex;
+    justify-content: center;
+}
+
+.cbc-i-c-header h2 {
+    font-family: Wanted-SemiBold;
+    font-size: 50px;
+}
+
+.cbc-i-c-body {
+    padding-left: 150px;
+    padding-right: 150px;
+
+    display: flex;
+    justify-content: center;
+}
+
+.steps {
+    display: flex;
+    flex-direction: column;
+}
+
+.steps-heading {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+
+    font-family: Wanted-Regular;
+    font-size: 25px;
+    color: black;
+}
+
+.steps-body {
+    padding: 20px;
+    font-size: 16px;
+    font-family: Wanted-Variable;
+    color: #5b5b5b;
+    text-align: center;
+}
+
+#get-started {
+    display: flex;
+    width: 100%;
+    justify-content: end;
+}
+
+.begin-btn {
+    padding: 12.5px 15px;
+    border: 1px solid transparent;
+    border-right-color: #13c9d3;
+    border-left-color: #008d95bc;
+    color: white;
+
+    font-family: Wanted-SemiBold;
+    text-decoration: none;
+
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    gap: 10px;
+
+    font-size: 20px;
+    border-radius: 20px;
+
+    cursor: pointer;
+
+    border-radius: 20px;
+    background-image: linear-gradient(to right,  #007d84c3 0%, #13c9d3 100%);
+}
+
+.steps-container {
+    width: 70%;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.steps-container hr {
+    border: 1px solid #9191913d;
+}

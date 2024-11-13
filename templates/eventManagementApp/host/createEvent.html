@@ -19,56 +19,55 @@ Create an event! — WAVE.
 
 
 {% block body %}
-<div id="body-content">
-    <div id="creation-header">
-        <a href="{% url "eventManagement:hostPortal" %}" id="exitCreationBtn" class="exitCreationBtn">Exit</a>
-        <a href="{% url "eventManagement:hostCreateEventGenerator"  %}" class="begin-btn">Let's Begin</a>
+<div id="body-content" class="flex flex-col gap-[70px] px-[20px] sm:px-[50px] pre-lg:px-[60px] lg:px-[100px]">
+    <div id="creation-header" class="flex flex-row justify-between">
+        <a href="{% url "eventManagement:hostPortal" %}" id="exitCreationBtn" class="exitCreationBtn cursor-pointer font-Wanted-Variable text-[19px] border-[1px] border-solid border-gray-600 p-[5px] rounded-[20px] w-[30%] sm:w-[10%] flex justify-center items-center bg-transparent text-black hover:border-[1px] hover:border-solid hover:border-[#007379] hover:font-Wanted-Variable hover:text-white hover:bg-[#007379]">Exit</a>
+        <a href="{% url "eventManagement:hostCreateEventGenerator"  %}" class="begin-btn p-[12.5px_15px] border-[1px] border-solid border-transparent text-white font-Wanted-SemiBold flex items-center flex-row gap-[10px] text-[20px] rounded-[20px] cursor-pointer bg-gradient-to-r from-[#008d95bc] to-[#13c9d3]">Let's Begin</a>
     </div>
-
-    <div id="creation-body">
-        <div id="creation-body-content">
-            <div id="cbc-info-container" style="display: none;">
-                <div id="cbc-ic-info"></div>
-                <div id="cbc-ic-image">
-                    <img src="{% static "images/eventManagementApp/host/images/createEvent.png" %}" />
+    <div id="creation-body" class="flex flex-col justify-between overflow-y-auto gap-[30px] h-full">
+        <div id="creation-body-content" class="flex flex-row justify-between">
+            <div id="cbc-info-container" class="flex flex-col gap-[30px]" style="display: none;">
+                <div id="cbc-ic-info" class="w-[70%]"></div>
+                <div id="cbc-ic-image" class="w-[30%]">
+                    <img src="{% static "images/eventManagementApp/host/images/createEvent.png" %}" class="rounded-[20px] w-[310px] h-[310px]"/>
                 </div>
             </div>
 
-            <section id="cbc-info-container">
-                <div class="cbc-i-c-header">
-                    <h2>
+            <section id="cbc-info-container" class="flex flex-col gap-[30px]">
+                <div class="cbc-i-c-header flex justify-center">
+                    <h2 class="font-Wanted-SemiBold xs:max-sm:text-center text-[35px] md:text-[50px]">
                         Getting started is quite easy with 
                         <span id="body-logo">WAVE<span class="spot">.</span></span>
                     </h2>
                 </div>
 
-                <div class="cbc-i-c-body">
-                    <div class="steps-container">
-                        <div class="steps">
-                            <div class="steps-heading">
+                <div class="cbc-i-c-body xs:max-xxsm:px-[10px] px-[20px] sm:px-[50px] md:px-[100px] lg:px-[150px] flex justify-center">
+                    <div class="steps-container w-full pre-lg:w-[70%] flex flex-col gap-[20px]">
+                        <div class="steps flex flex-col">
+                            <div class="steps-heading flex flex-row justify-center items-center gap-[10px] font-Wanted-Regular text-[25px] text-black">
                                 <span>1</span>
                                 <h5>
                                     Talk about the event
                                 </h5>
                             </div>
                             
-                            <div class="steps-body">
+                            <div class="steps-body p-[20px] text-[16px] font-Wanted-Variable text-[#5b5b5b] text-center">
                                 <p>
                                     Give us some information regarding the event. The name of the event, 
                                     of event it is, location, how many attendees you'd expect.
                                 </p>
                             </div>
                         </div>
-                        <hr />
-                        <div class="steps">
-                            <div class="steps-heading">
+                        <hr class="border-[1px] border-solid border-[#9191913d]"/>
+                        <div class="steps flex flex-col">
+                            <div class="steps-heading flex flex-row justify-center items-center gap-[10px] font-Wanted-Regular text-[25px] text-black">
                                 <span>2</span>
                                 <h5>
                                     Go into details
                                 </h5>
                             </div>
                             
-                            <div class="steps-body">
+                            <div class="steps-body p-[20px] text-[16px] font-Wanted-Variable text-[#5b5b5b] text-center">
                                 <p>
                                     Provide a persuasive description of your event to sway users. 
                                     Describe your event as one that will allow users to create memories unlike any other. 
@@ -77,14 +76,14 @@ Create an event! — WAVE.
                         </div> 
                         <hr />
                         <div class="steps">
-                            <div class="steps-heading">
+                            <div class="steps-heading flex flex-row justify-center items-center gap-[10px] font-Wanted-Regular text-[25px] text-black">
                                 <span>3</span>
                                 <h5>
                                     Add some life
                                 </h5>
                             </div>
                             
-                            <div class="steps-body">
+                            <div class="steps-body p-[20px] text-[16px] font-Wanted-Variable text-[#5b5b5b] text-center">
                                 <p>
                                     Add some pictures, choose a color and set your theme. Let it represent who you are! 
                                 </p>
@@ -92,14 +91,14 @@ Create an event! — WAVE.
                         </div>  
                         <hr />
                         <div class="steps">
-                            <div class="steps-heading">
+                            <div class="steps-heading flex flex-row justify-center items-center gap-[10px] font-Wanted-Regular text-[25px] text-black">
                                 <span>4</span>
                                 <h5>
                                     Go live!
                                 </h5>
                             </div>
                             
-                            <div class="steps-body">
+                            <div class="steps-body p-[20px] text-[16px] font-Wanted-Variable text-[#5b5b5b] text-center">
                                 <p>
                                     You are ready to go live! Make this event discoverable by all users! 
                                 </p>
@@ -111,8 +110,8 @@ Create an event! — WAVE.
         </div>
     </div>
 
-    <div id="get-started">
-        <a href="{% url "eventManagement:hostCreateEventGenerator" %}" class="begin-btn">Let's Begin</a>
+    <div id="get-started" class="flex w-full justify-end">
+        <a href="{% url "eventManagement:hostCreateEventGenerator" %}" class="begin-btn p-[12.5px_15px] border-[1px] border-solid border-transparent text-white font-Wanted-SemiBold flex items-center flex-row gap-[10px] text-[20px] rounded-[20px] cursor-pointer bg-gradient-to-r from-[#008d95bc] to-[#13c9d3]">Let's Begin</a>
     </div>
 </div>
 {% endblock body %}
