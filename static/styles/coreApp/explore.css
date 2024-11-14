@@ -1,3 +1,7 @@
+#ehim-img-cont:first-child {
+    display: block;
+}
+
 #ehim-img-cont::before {
     content: '';
     position: absolute;
@@ -23,6 +27,10 @@
     /* Ensure all child elements are above the blur effect */
 }
 
-#trending-slideshow .trending-event-element {
+#ehim-img-cont {
+    transition: transform 1s ease; /* Smooth transition */
+}
+
+#trending-slideshow #ehim-img-cont {
     flex: 0 0 100%; /* Ensure slides take up full width of the container */
 }

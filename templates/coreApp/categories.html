@@ -20,17 +20,17 @@ See what's happening around you — WAVE.
 {% endblock header %}
 
 {% block body %}
-<div id="content-container">
-    <div id="page-heading">
-        <h4>All Categories</h4>
+<div id="content-container" class="w-full flex flex-col gap-[100px] px-[20px] md:px-[100px]">
+    <div id="page-heading" class="flex justify-center font-Wanted-Bold text-[30px] md:text-[45px]">
+        <h4 class="flex flex-row gap-3"><span class="hidden xs:block">All</span> Categories</h4>
     </div>
 
-    <div id="categories-wrapper">
+    <div id="categories-wrapper" class="grid grid-cols-1 md:grid-cols-2 gap-[40px]">
         {% for value, display in exploreCategoryChoices %}
-        <div id="category" class="category-card">
+        <div id="category" class="border border-solid border-[rgba(116,116,116,0)] border-l-[10px] border-l-[#008d95] hover:border-l-[#21cdd6] p-5 xs:p-10 rounded-[15px] rounded-tl-none rounded-bl-none shadow-custom-shadow">
             <a href="{% url "core:category" name=display %}">
-                <div id="categoryName">
-                    <h4>{{ display }}</h4>
+                <div id="categoryName" class="h-full flex items-center">
+                    <h4 class="font-Wanted-Bold text-Base xs:text-xl sm:text-1xl md:text-2xl pre-lg:text-3xl lg:text-4xl xl:text-5xl">{{ display }}</h4>
                 </div>
             </a>
         </div>
