@@ -24,28 +24,28 @@ What's the wave?! — WAVE.
 {% endblock header %}
 
 {% block body %}
-<div id="content-container">
-    <div id="explore-home-image-main" class="explore-home-image-main">
-        <div id="trending-slideshow">
+<div id="content-container" class="w-full flex flex-col gap-24 px-24">
+    <div id="explore-home-image-main" class="w-full flex flex-col gap-5">
+        <div id="trending-slideshow" class="w-full h-full relative overflow-hidden">
             {% for trending in trending_events %}
-            <div id="ehim-img-cont" class="trending-event-element" style="background-image: url('{{ trending.header_photo.url }}');">
+            <div id="ehim-img-cont" class="trending-event-element w-full h-full min-w-full min-h-[500px] max-h-[550px] relative rounded-3xl bg-cover bg-top bg-no-repeat hidden first:block" style="background-image: url('{{ trending.header_photo.url }}');">
 
-                <figcaption id="event-countdown-caption">
-                    <h6 id="event-caption-date">
+                <figcaption id="event-countdown-caption" class="p-6 absolute top-0 left-0">
+                    <h6 id="event-caption-date" class="font-Wanted-Variable text-Pre-Xl text-white">
                         <span id="event-date-{{ forloop.counter }}" data-date="{{ trending.date }}" data-time="{{trending.start_time|time:"g:i A" }}"></span>
                     </h6>
                 </figcaption>
     
-                <div id="display-trending">
+                <div id="display-trending" class="flex items-center justify-center w-full h-full min-h-[500px] relative p-20">
                     <a target="_blank" href="{% url "core:eventDetails" eventId=trending.eventId %}">
-                        <img id="trending-img" src="{{trending.header_photo.url}}" />
+                        <img id="trending-img" class="w-full max-w-[400px] max-h-[400px] object-contain" src="{{trending.header_photo.url}}" />
                     </a>
                     
                 </div>
     
-                <figcaption id="event-hosted-caption">
-                    <h6 id="event-caption-host">
-                        Hosted by  <a target="_blank" href="{% url "social:publicProfile" username=trending.host.username %}">@{{ trending.host.username }}</a>
+                <figcaption id="event-hosted-caption" class="p-6 absolute bottom-0 right-0">
+                    <h6 id="event-caption-host" class="font-Wanted-Variable text-Pre-Xl text-white">
+                        Hosted by  <a target="_blank" class="text-white" href="{% url "social:publicProfile" username=trending.host.username %}">@{{ trending.host.username }}</a>
                     </h6>
                 </figcaption>
             </div>
@@ -54,20 +54,20 @@ What's the wave?! — WAVE.
     </div>
 
     <div id="content-body">
-        <div id="categories-row" class="row-container">
-            <div class="row-header">
-                <div class="heading-text">
+        <div id="categories-row" class="flex flex-col gap-12">
+            <div class="flex flex-row justify-between items-center">
+                <div class="font-Wanted-Bold text-2xl">
                     Categories
                 </div>
                 <div class="heading-controls">
-                    <a target="_blank" href="{% url "core:categories" %}">See More</a>
+                    <a target="_blank" class="text-[#008d95] underline font-Wanted-Variable text-Semi-Medium underline-offset-2" href="{% url "core:categories" %}">See More</a>
                 </div>
             </div>
 
-            <div class="row-body" id="row-body">
+            <div class="grid grid-cols-4 gap-5" id="row-body">
                 {% for value, display in exploreCategoryChoices %}
                     {% if display %}
-                        <div class="category-card">
+                        <div class="border-l-4 border-[#008d95] p-7 py-4 font-Wanted-Variable bg-white text-black cursor-pointer">
                             <a target="_blank" href="{% url 'core:category' name=display %}">
                                 <div class="category-name">
                                     <h2>{{ display }}</h2>

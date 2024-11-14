@@ -37,7 +37,7 @@ numpy==2.1.2
 openai==1.53.0
 pillow==10.4.0
 prompt_toolkit==3.0.47
-psycopg2-binary==2.9.9
+psycopg2-binary>=2.9.10
 pyasn1==0.6.1
 pyasn1_modules==0.4.1
 pycparser==2.22
