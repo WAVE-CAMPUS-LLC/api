@@ -112,6 +112,7 @@ module.exports = {
         customGray3: 'rgba(128, 128, 128, 0.798)',
         customGray4: 'rgba(146, 146, 146, 0.096)',
         customGray5: 'rgba(66, 66, 66, 0.575)',
+        customGray6: 'rgba(0, 86, 90, 0.309)',
         'gradient-start': '#008d95bc',
         'gradient-end': '#13c9d3',
         'green': '#008d95',

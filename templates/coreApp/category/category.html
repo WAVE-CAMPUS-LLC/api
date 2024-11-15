@@ -8,9 +8,6 @@
 {{ categoryName|capfirst }} events — WAVE.
 {% endblock title %}
 
-{% block app_page_style %}
-<link rel="stylesheet" type="text/css" href="{% static "/styles/coreApp/category/category.css" %}" />
-{% endblock app_page_style %}
 
 {% block script %}
 {% comment %} <script type="text/javascript" src="{% static "scripts/coreApp/eventCountdown.js" %}"></script> {% endcomment %}
@@ -21,23 +18,23 @@
 {% endblock header %}
 
 {% block body %}
-<div id="content-container">
-    <div id="content-header">
-        <h4 class="heading">{{ categoryName }} Events</h4>
+<div id="content-container" class="flex flex-col px-[10px] after-xsm:px-[20px] xxsm:px-[35px] sm:px-[40px] md:px-[40px] pre-lg:px-[50px] lg:px-[80px] xl:px-[150px] 2xl:px-[200px] 3xl:-[300px] gap-[70px]">
+    <div id="content-header" class="flex w-full justify-start">
+        <h4 class="font-Wanted-Bold text-Large after-xsm:text-2xl text-black">{{ categoryName }} Events</h4>
     </div>
 
     <div id="content-body">
-        <div id="events-container">
+        <div id="events-container" class="grid sm:grid-cols-1 pre-lg:grid-cols-2 lg:grid-cols-3">
             {% for event in events %}
-                <a target="_blank" href="{% url "core:eventDetails" eventId=event.eventId %}" class="category-event-card">
-                    <div class="category-image">
-                        <img src="{{event.header_photo.url}}" alt="">
+                <a target="_blank" href="{% url "core:eventDetails" eventId=event.eventId %}" class="category-event-card hover:category-image hover:scale-95 transform transition duration-300 flex flex-col justify-center items-center cursor-pointer overflow-hidden p-[10px] text-black">
+                    <div class="category-image w-full rounded-2xl shadow-custom-shadow-3">
+                        <img src="{{ event.header_photo.url }}" alt="" class="w-full h-[448px] rounded-2xl rounded-b-none object-cover">
                     </div>
-                    <div class="category-event-name">
-                        <h2 id="eventTitle">{{ event.title }}</h2>
-                        <div class="eventSubInfo">
-                            <p id="eventLocation">Hosted by @{{ event.host.username }}</p>
-                            <p id="eventDate">{{ event.date }}</p>
+                    <div class="category-event-name font-Wanted-SemiBold text-Base flex flex-col justify-center items-start gap-1 w-full border border-custom-rgba5 rounded-bl-2xl rounded-br-2xl shadow-custom-shadow-3 border-t-2 px-5 p-2">
+                        <h2 id="eventTitle" class="whitespace-nowrap overflow-hidden text-ellipsis w-full text-left text-2xl">{{ event.title }}</h2>
+                        <div class="eventSubInfo flex flex-col items-start gap-[1px] w-full font-Wanted-Variable text-customGray5">
+                            <p class="flex flex-row justify-start">Hosted by @{{ event.host.username }}</p>
+                            <p class="w-full flex justify-end font-Wanted-Bold text-Large">{{ event.date }}</p>
                         </div>
                     </div>
                 </a>

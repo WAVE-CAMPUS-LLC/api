@@ -8,9 +8,6 @@
 {{ categoryName|capfirst }} events — WAVE.
 {% endblock title %}
 
-{% block app_page_style %}
-<link rel="stylesheet" type="text/css" href="{% static "/styles/coreApp/category/empty_category.css" %}" />
-{% endblock app_page_style %}
 
 {% block script %}
 {% comment %} <script type="text/javascript" src="{% static "scripts/coreApp/eventCountdown.js" %}"></script> {% endcomment %}
@@ -21,15 +18,18 @@
 {% endblock header %}
 
 {% block body %}
-<div id="content-container">
-    <div id="content-header">
-        <h4 class="heading">{{ categoryName }} Events</h4>
+<div id="content-container" class="flex flex-col px-[10px] after-xsm:px-[20px] xxsm:px-[35px] sm:px-[40px] md:px-[40px] pre-lg:px-[50px] lg:px-[80px] xl:px-[150px] 2xl:px-[200px] 3xl:-[300px] gap-[70px]">
+    <div id="content-header" class="flex w-full justify-start">
+        <h4 class="font-Wanted-Bold text-Large after-xsm:text-2xl text-black">{{ categoryName }} Events</h4>
     </div>
 
     <div id="content-body">
-        <div class="empty-container">
-            <img class="empty-image" src="{% static "/images/eventManagementApp/host/empty-listing.svg" %}" />
-            <p>Currently no {{ categoryName }} events to be displayed!</p>
+        <div class="empty-container w-full h-full flex flex-col justify-center items-center gap-2 bg-customGray4 p-12 rounded-2xl">
+            <img class="size-14" src="{% static "/images/eventManagementApp/host/empty-listing.svg" %}" />
+            <p class="font-Wanted-Variable text-Base xsm:text-Medium xxsm:text-Large md:text-xl flex flex-row gap-1">
+                Currently no {{ categoryName|lower }} events 
+                <span class="hidden sm:flex">to be displayed!</span>
+            </p>
         </div>
     </div>
 </div>
