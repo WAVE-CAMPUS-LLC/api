@@ -26,6 +26,9 @@ What's the wave?! — WAVE.
 {% block body %}
 <div id="content-container" class="flex flex-col px-[10px] after-xsm:px-[20px] xxsm:px-[35px] sm:px-[40px] md:px-[40px] pre-lg:px-[50px] lg:px-[80px] xl:px-[150px] 2xl:px-[200px] 3xl:-[300px] gap-[70px]">
     <div id="explore-home-image-main" class="w-full flex flex-col gap-5">
+        <div id="row-header" class="font-Wanted-Bold text-Large after-xsm:text-2xl text-black">
+            <h3>Trending now</h3>
+        </div>
         <div id="trending-slideshow" class="w-full h-full relative overflow-hidden">
             {% for trending in trending_events %}
             <div id="ehim-img-cont" class="trending-event-element w-full h-full min-w-full min-h-full relative rounded-3xl flex justify-center items-center bg-cover bg-top bg-no-repeat" style="background-image: url('{{ trending.header_photo.url }}');">
@@ -81,7 +84,10 @@ What's the wave?! — WAVE.
 
         {% if invited_events_with_tokens %}
         <div id="categories-row" class="row-container">
-            <h3 class="invited-header">Personally Invited Events</h3>
+            <div class="w-full flex justify-start">
+                <h3 class="font-Wanted-Bold text-Large after-xsm:text-2xl">Personally Invited</h3>
+            </div>
+
             <div class="row-body event-row-body" id="events-container">
                 {% for event, token in invited_events_with_tokens %}
                 <a href="{% url "core:eventDetails_withToken" eventId=event.eventId token=token %}" class="category-event-card hover:category-image hover:scale-95 transform transition duration-300 flex flex-col justify-center items-center cursor-pointer overflow-hidden p-[10px] text-black">

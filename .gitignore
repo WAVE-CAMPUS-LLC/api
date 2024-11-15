@@ -16,6 +16,8 @@ virtual/
 #Environment variables 
 .env
 
+static/tailwindcss/output.css
+
 # Install packages
 *.egg
 *.egg-info/

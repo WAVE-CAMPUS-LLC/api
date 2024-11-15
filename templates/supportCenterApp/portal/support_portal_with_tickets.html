@@ -18,20 +18,14 @@ Support Portal — Wave.
 {% include "partials/nav-footer/nav/support_nav.html" %}
 {% endblock header %}
 
-{% block container_art %}
-<div id="container-art">
-    <div class="ticket-heading">
-        <div class="ticket-header">
-            <h3>My Support Portal</h3>
-        </div>
-    </div>
-</div>
-{% endblock container_art %}
-
 
 
 {% block body %}
-<div class="ticket-containers">
+<div class="flex flex-col gap-[70px] px-4 sm:px-6 md:px-[40px] pre-lg:px-[40px] lg:px-[100px] 2xl:px-48 3xl:px-96">
+    <div id="portal-header" class="w-full flex justify-start">
+        <h1 class="font-Wanted-Bold text-Pre-Xl xsm:text-1xl xxsm:text-[35px] lg:text-[40px]">Your support portal, {{ current_user.first_name }}!</h1>
+    </div>
+    
     <div id="live-row">
         <div id="row-heading">Active Tickets</div>
         <div id="tickets">

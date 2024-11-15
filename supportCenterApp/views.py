@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import ensure_csrf_cookie
 from .forms import SupportTicketForm, FeedbackForm
 from .models import SupportTicket, SupportTicketMessage
+from authenticationApp.models import CustomUser
 from django.http import JsonResponse
 from openai import OpenAI
 from sklearn.metrics.pairwise import cosine_similarity
@@ -15,10 +16,10 @@ import os
 from difflib import SequenceMatcher
 
 # Hardcoded platform-specific questions
-# When adding a question take special care to add unique keywords that are not present in other questions. 
-# Also for keywords that are likely to appear in other questions but are not necessarily the keywords for the question, 
+# When adding a question take special care to add unique keywords that are not present in other questions.
+# Also for keywords that are likely to appear in other questions but are not necessarily the keywords for the question,
 # add those questions to the end of the list because our algorithm does a sequential search. This is of course very crude but
-# it is a simple way to ensure that the most relevant question is returned. Our algorithm will be improved in the future when we have more resources to purchase more tokens from OpenAI. 
+# it is a simple way to ensure that the most relevant question is returned. Our algorithm will be improved in the future when we have more resources to purchase more tokens from OpenAI.
 
 hardcoded_questions = [
     {
@@ -54,7 +55,7 @@ hardcoded_questions = [
     {
         "question": "How do I create an account?",
         "answer": "To create an account, go to the sign-up page, fill in your details, and submit the form.",
-        "keywords": [ "account", "sign up", "register"],
+        "keywords": ["account", "sign up", "register"],
     },
     {
         "question": "How do I purchase event tickets?",
@@ -64,7 +65,10 @@ hardcoded_questions = [
     {
         "question": "Can I attend events on other campuses?",
         "answer": "Yes! WAVE allows students to attend events on any participating campus across the country.",
-        "keywords": ["other campuses", "other colleges",],
+        "keywords": [
+            "other campuses",
+            "other colleges",
+        ],
     },
     {
         "question": "How do QR codes work for event entry?",
@@ -76,7 +80,7 @@ hardcoded_questions = [
         "answer": "The Crew System allows you to form groups with friends to attend events together. You can invite friends to your crew by searching for their profiles and simply clicking the 'Invite to Crew' button.",
         "keywords": ["Crew"],
     },
-     {
+    {
         "question": "What is WAVE?",
         "answer": "WAVE is a platform designed to revolutionize campus entertainment by providing seamless event ticketing and management solutions.",
         "keywords": ["WAVE"],
@@ -103,8 +107,8 @@ greetings = [
     "Great",
     "I need help",
     "Can you help me?",
-    "I have a question"
-    ]
+    "I have a question",
+]
 
 
 def find_keywords_in_question(user_question, predefined_question):
@@ -190,6 +194,7 @@ def supportPortal(request):
 
     current_tickets = user_tickets.filter(status="Open")
     previous_tickets = user_tickets.filter(status="Closed")
+    user = CustomUser.objects.get(email=request.user.email)
 
     if user_tickets.exists():
         return render(
@@ -198,11 +203,12 @@ def supportPortal(request):
             {
                 "current_tickets": current_tickets,
                 "previous_tickets": previous_tickets,
+                "current_user": user,
             },
         )
     else:
         return render(
-            request, "supportCenterApp/portal/support_portal_without_ticket.html"
+            request, "supportCenterApp/portal/support_portal_without_ticket.html", {"current_user": user,}
         )
 
 
@@ -219,18 +225,18 @@ def supportTicket(request):
         form = SupportTicketForm()
     return render(request, "supportCenterApp/ticket/createTicket.html", {"form": form})
 
+
 @login_required(login_url="authentication:login")
 def send_ticket_reply(request, ticket_id):
     ticket = get_object_or_404(SupportTicket, ticket_id=ticket_id)
-    if request.method == 'POST':
-        message = request.POST.get('message')
+    if request.method == "POST":
+        message = request.POST.get("message")
         if message:
             SupportTicketMessage.objects.create(
-                ticket=ticket,
-                sender=request.user,
-                message=message
+                ticket=ticket, sender=request.user, message=message
             )
-    return redirect('support:viewTicket', ticket_id=ticket_id)
+    return redirect("support:viewTicket", ticket_id=ticket_id)
+
 
 def userFeedback(request):
     if request.method == "POST":
@@ -261,6 +267,7 @@ def viewTicket(request, ticket_id):
         "supportCenterApp/portal/support_ticket_details.html",
         {"ticket": ticket},
     )
+
 
 def ticket_messages(request, ticket_id):
     ticket = SupportTicket.objects.get(ticket_id=ticket_id)
