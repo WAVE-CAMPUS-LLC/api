@@ -1,6 +1,7 @@
 {
 	"dependencies": {
-		"html5-qrcode": "^2.3.8"
+		"html5-qrcode": "^2.3.8",
+		"quill": "^2.0.2"
 	},
 	"scripts": {
 		"dev": "npx tailwindcss -i static/tailwindcss/input.css -o static/tailwindcss/output.css --watch"

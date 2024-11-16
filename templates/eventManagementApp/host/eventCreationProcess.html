@@ -16,6 +16,7 @@ Create your event — WAVE.
 <script type="text/javascript" src="{% static "scripts/eventManagementApp/host/eventCreationProcess.js" %}" defer></script>
 <script type="text/javascript" src="{% static "scripts/eventManagementApp/host/photoPreview.js" %}"></script>
 <script type="text/javascript" src="{% static "scripts/eventManagementApp/host/eventTypeSelect.js" %}" defer></script>
+<script src="{% static "scripts/quilljs/eventCreationQuill.js" %}"></script>
 {% endblock script %}
 
 {% block header %}
@@ -146,7 +147,8 @@ Create your event — WAVE.
                     </div>
         
                     <div class="section-intake flex flex-col w-full items-center justify-center">
-                        <textarea required id="{{ eventForm.description.id_for_label }}" name="{{ eventForm.description.html_name }}" class="body-input w-[80%] min-h-[300px] border-2 border-[#0909091c] rounded-2xl p-5 font-Wanted-Variable text-Medium"/></textarea>
+                        <textarea required id="{{ eventForm.description.id_for_label }}" name="{{ eventForm.description.html_name }}" class="hidden"/></textarea>
+                        <div id="quill-editor" class="body-input w-[80%] min-h-[300px] border-2 border-[#0909091c] rounded-2xl p-5 font-Wanted-Variable text-Medium"></div>
                         <div id="body-error" class="text-[#FF0000] font-Wanted-Regular text-Medium p-3 hidden"></div>
                     </div>
                 </div>
@@ -446,3 +448,4 @@ Create your event — WAVE.
     </form>    
 </div>
 {% endblock body %}
+

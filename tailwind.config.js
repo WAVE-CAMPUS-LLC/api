@@ -1,6 +1,14 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: ["./static/**/*.{js, css}","./static/**/**/*.{css , js}" ,"./templates/*.html", "./templates/**/*.html", "./templates/**/**/*.html", "./templates/**/**/**/*.html", "./templates/**/**/**/**/*.html"],
+  safelist: [
+    'ql-editor',
+    'ql-container',
+    'ql-toolbar',
+    'ql-snow',
+    'ql-active',
+    'ql-disabled',
+  ],
   theme: {
     screens: {
       'xs': '225px',
