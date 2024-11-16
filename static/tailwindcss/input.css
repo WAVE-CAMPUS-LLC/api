@@ -308,4 +308,9 @@ footer {
 	color: black;
 }
 
-/* Quill */
+.hide {
+    display: none;
+}
+.active {
+    display: block;
+}

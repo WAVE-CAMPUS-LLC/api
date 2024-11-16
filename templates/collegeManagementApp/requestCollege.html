@@ -21,69 +21,69 @@ Add your college campus! — WAVE. on Campus
 {% endblock header %}
 
 {% block body %}
-<div id="content-container">
-    <div id="pageHeader">
-        <h3>
+<div id="content-container" class="flex flex-col gap-[70px] px-4 sm:px-6 md:px-[40px] pre-lg:px-[40px] lg:px-[100px] 2xl:px-48 3xl:px-96">
+    <div id="pageHeader" class="w-full flex flex-col justify-start gap-[5px]">
+        <h3 class="font-Wanted-Bold text-[20px] xssm:text-[25px] after-xsm:text-[30px] sm:text-[35px] md:text-[35px] pre-lg:text-[40px] font-bold">
             Request your college
         </h3>
-        <p>Can't find your college? We will add it!</p>
+        <p class="font-Wanted-Variable after-xsm:text-[17px] text-customGray3">Can't find your college? We will add it!</p>
     </div>
 
     <div id="pageBody">
-        <form method="POST" action="{% url "colleges:request" %}" enctype="multipart/form-data">
+        <form method="POST" action="{% url "colleges:request" %}" enctype="multipart/form-data" class="flex flex-col gap-[30px]">
             {% csrf_token %}
-            <section class="section active">
-                <div class="section-container body-section">
-                    <div class="section-title">
-                        <h4>{{ collegeRequestForm.name.label }}</h4>
+            <section class="section hide">
+                <div class="section-container body-section flex flex-col gap-[15px]">
+                    <div class="section-title w-full flex flex-col justify-center items-center gap-[5px] text-center">
+                        <h4 class="font-bold font-Wanted-SemiBold text-[15px] xssm:text-[18px] after-xsm:text-[20px] sm:text-[24px] md:text-[30px] pre-lg:text-[35px]">{{ collegeRequestForm.name.label }}</h4>
                     </div>
-                    <div class="section-input">
-                        {{ collegeRequestForm.name }}
+                    <div class="section-input w-full flex justify-center">
+                        {{ collegeRequestForm.name|add_class:"p-[12px] xxsm:p-[15px] rounded-[20px] border border-custom-rgba font-Wanted-Regular after-xsm:text-[20px] w-[90%] sm:w-2/3 lg:w-1/2 shadow-form-shadow" }}
                     </div>
-                    <div class="section-input">
-                        <div class="suggestions-box" style="display:none"></div>  <!-- Container for college name suggestions -->
+                    <div class="section-input w-full flex justify-center">
+                        <div id="suggestions-box" class="border-solid font-Wanted-Variable border-[#ccc] max-h-[200px] overflow-y-auto bg-white absolute z-1000 w-[43%] rounded-[20px]"></div>  <!-- Container for college name suggestions -->
                     </div>                    
                 </div>
             </section>
     
-            <section class="section">
-                <div class="section-container body-section">
-                    <div class="section-title">
-                        <h4>{{ collegeRequestForm.yourName.label }}</h4>
+            <section class="section hide">
+                <div class="section-container body-section flex flex-col gap-[15px]">
+                    <div class="section-title w-full flex flex-col justify-center items-center gap-[5px] text-center">
+                        <h4 class="font-bold font-Wanted-SemiBold text-[15px] xssm:text-[18px] after-xsm:text-[20px] sm:text-[24px] md:text-[30px] pre-lg:text-[35px]">{{ collegeRequestForm.yourName.label }}</h4>
                     </div>
-                    <div class="section-input">
-                        {{ collegeRequestForm.yourName }}
+                    <div class="section-input w-full flex justify-center">
+                        {{ collegeRequestForm.yourName|add_class:"p-[12px] xxsm:p-[15px] rounded-[20px] border border-custom-rgba font-Wanted-Regular after-xsm:text-[20px] w-[90%] sm:w-2/3 lg:w-1/2 shadow-form-shadow" }}
                     </div>
                 </div>
             </section>
     
-            <section class="section">
-                <div class="section-container body-section">
-                    <div class="section-title">
-                        <h4>{{ collegeRequestForm.yourEmail.label }}</h4>
+            <section class="section hide">
+                <div class="section-container body-section flex flex-col gap-[15px]">
+                    <div class="section-title w-full flex flex-col justify-center items-center gap-[5px] text-center">
+                        <h4 class="font-bold font-Wanted-SemiBold text-[15px] xssm:text-[18px] after-xsm:text-[20px] sm:text-[24px] md:text-[30px] pre-lg:text-[35px]">{{ collegeRequestForm.yourEmail.label }}</h4>
                     </div>
-                    <div class="section-input">
-                        {{ collegeRequestForm.yourEmail }}
+                    <div class="section-input w-full flex justify-center">
+                        {{ collegeRequestForm.yourEmail|add_class:"p-[12px] xxsm:p-[15px] rounded-[20px] border border-custom-rgba font-Wanted-Regular after-xsm:text-[20px] w-[90%] sm:w-2/3 lg:w-1/2 shadow-form-shadow" }}
                     </div>
                 </div>
             </section>
 
-            <section class="section">
-                <div class="section-container body-section">
-                    <div class="section-title">
-                        <h4>We hear you! <br/> Expect to see your school soon!</h4>
+            <section class="section hide">
+                <div class="section-container body-section flex flex-col gap-[15px]">
+                    <div class="section-title w-full flex flex-col justify-center items-center gap-[5px] text-center">
+                        <h4 class="font-bold font-Wanted-SemiBold text-[15px] xssm:text-[18px] after-xsm:text-[20px] sm:text-[24px] md:text-[30px] pre-lg:text-[35px]">We hear you! <br/> Expect to see your school soon!</h4>
                     </div>
                 </div>
             </section>
 
             
     
-            <div class="nextPreviousRow">
-                <button type="button" role="button" id="previousSectionButton">Previous</button>
+            <div class="nextPreviousRow w-full flex justify-between items-center">
+                <button type="button" role="button" id="previousSectionButton" class="hidden font-Wanted-Regular text-[14px] after-xsm:text-[16px] xxsm:text-[17px] underline underline-offset-[3px] bg-none border-none cursor-pointer">Previous</button>
     
-                <div id="nextSubmitContainer">
-                    <button type="button" role="button" id="nextSectionButton">Next</button>
-                    <button type="submit" role="button" id="submitButton">Submit</button>
+                <div id="nextSubmitContainer" class="flex justify-end w-full">
+                    <button type="button" role="button" id="nextSectionButton" class="inline-block bg-green p-[12px] after-xsm:p-[15px] rounded-[15px] border-none font-Wanted-Regular text-white text-[14px] after-xsm:text-[16px] xxsm:text-[17px] cursor-pointer disabled:bg-[#8d9090]">Next</button>
+                    <button type="submit" role="button" id="submitButton" class="hidden bg-green p-[12px] after-xsm:p-[15px] rounded-[15px] border-none font-Wanted-Regular text-white text-[14px] after-xsm:text-[16px] xxsm:text-[17px] cursor-pointer">Submit</button>
                 </div>
             </div>
         </form>
