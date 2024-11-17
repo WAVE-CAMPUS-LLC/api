@@ -3,24 +3,24 @@
 
 <link rel="stylesheet" type="text/css" href="{% static "/styles/partials/nav-footer/nav/host/host_portal.css" %}" />
 
-<nav>
+<nav class="flex justify-between w-full items-center">
     <div id="logo-menu">
-        <div id="logo">
-            <a href="{% url "core:index" %}">WAVE<span>.</span></a>
+        <div id="logo" class="font-Wanted-Black text-[30px]">
+            <a href="{% url "core:index" %}" class="font-Wanted-Black">WAVE<span class="text-[#008d95]">.</span></a>
         </div>
     </div>
     <div id="menu-options">
-        <ul>
+        <ul class="flex flex-row items-center gap-[35px] list-none">
             <li>
-                <a href="{% url "eventManagement:hostPortal" %}">Dashboard</a>
+                <a href="{% url "eventManagement:hostPortal" %}" class="text-black font-Wanted-Regular text-[18px]">Dashboard</a>
             </li>
 
             <li>
-                <a href="">Listings</a>
+                <a href="" class="text-black font-Wanted-Regular text-[18px]">Listings</a>
             </li>
 
             <li>
-                <a href="">Insights</a>
+                <a href="" class="text-black font-Wanted-Regular text-[18px]">Insights</a>
             </li>
         </ul>
     </div>

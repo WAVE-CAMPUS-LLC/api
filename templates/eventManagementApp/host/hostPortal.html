@@ -21,20 +21,22 @@ Host Dashboard | WAVE.
 
 
 {% block body %}
-<div id="body-content" class="flex flex-col gap-[70px] px-[100px]">
-    <div class="page-heading font-Wanted-SemiBold text-[30px] flex flex-row justify-between items-center">
+<div id="body-content" class="flex flex-col gap-[70px] px-[20px] sm:px-[50px] pre-lg:px-[60px] lg:px-[100px]">
+    <div class="page-heading font-Wanted-SemiBold text-[25px] md:text-[30px] flex flex-col sm:flex-row sm:justify-between gap-[10px] w-full">
         <h2>Good to see you, {{ request.user.first_name }}!<h2>
-        <a href="{% url "eventManagement:hostCreateEvent"%}" class="createEventBtn p-[12.5px_15px] border-[1px] border-solid border-transparent text-white font-Wanted-SemiBold flex items-center flex-row gap-[10px] text-[20px] rounded-[20px] cursor-pointer bg-gradient-to-r from-[#008d95bc] to-[#13c9d3] hover:bg-[#007379]">
-            <img src="{% static "/images/eventManagementApp/host/host_ticket.svg" %}" />
-            Create Event
-        </a>
+        <div class="w-full flex justify-end">
+            <a href="{% url "eventManagement:hostCreateEvent"%}" class="createEventBtn p-[12.5px_15px] border-[1px] border-solid border-transparent text-white font-Wanted-SemiBold flex flex-row gap-[10px] text-[20px] rounded-[20px] cursor-pointer bg-gradient-to-r from-[#008d95bc] to-[#13c9d3] hover:bg-[#007379]">
+                <img src="{% static "/images/eventManagementApp/host/host_ticket.svg" %}" />
+                Create Event
+            </a>
+        </div> 
     </div>
 
     <div id="portal-body" class="flex flex-col gap-[40px]">
         <div class="control-row flex flex-row gap-[15px]">
-            <div role="button" type="button" class="dashboard-tab tab-active cursor-pointer font-Wanted-Variable border-[1px] border-solid border-gray-600 p-[5px] rounded-[13px] w-[10%] flex justify-center active:border-[1px] active:border-solid active:border-[#007379] active:font-Wanted-Variable active:text-white active:bg-[#007379]" data-tab="live-events">Live</div>
-            <div role="button" type="button" class="dashboard-tab cursor-pointer font-Wanted-Variable border-[1px] border-solid border-gray-600 p-[5px] rounded-[13px] w-[10%] flex justify-center" data-tab="upcoming-events">Upcoming</div>
-            <div role="button" type="button" class="dashboard-tab cursor-pointer font-Wanted-Variable border-[1px] border-solid border-gray-600 p-[5px] rounded-[13px] w-[10%] flex justify-center" data-tab="archived-events">Archived</div>
+            <div role="button" type="button" class="dashboard-tab tab-active cursor-pointer font-Wanted-Variable border-[1px] border-solid border-gray-600 p-[5px] rounded-[13px] w-[30%] md:w-[20%] pre-lg:w-[15%] flex justify-center active:border-[1px] active:border-solid active:border-[#007379] active:font-Wanted-Variable active:text-white active:bg-[#007379]" data-tab="live-events">Live</div>
+            <div role="button" type="button" class="dashboard-tab cursor-pointer font-Wanted-Variable border-[1px] border-solid border-gray-600 p-[5px] rounded-[13px] w-[30%] md:w-[20%] pre-lg:w-[15%] flex justify-center" data-tab="upcoming-events">Upcoming</div>
+            <div role="button" type="button" class="dashboard-tab cursor-pointer font-Wanted-Variable border-[1px] border-solid border-gray-600 p-[5px] rounded-[13px] w-[30%] md:w-[20%] pre-lg:w-[15%] flex justify-center" data-tab="archived-events">Archived</div>
         </div>
 
         <div id="portal-body-content">
