@@ -1,37 +1,135 @@
 {% load static %}
 {% load user_tags %}
 
-<link rel="stylesheet" type="text/css" href="{% static "/styles/partials/nav-footer/nav/host/host_nav.css" %}" />
+
+<script type="text/javascript" src="{% static "/scripts/partials/navigation/navbar.js" %}" defer></script>
 
 
-<nav>
-    <div id="logo-menu">
-        <div id="logo">
-            <a href="{% url "core:index" %}">WAVE<span>.</span></a>
+<div id="navigation-container" class="hidden pre-lg:inline max-w-full w-full top-0 right-0 left-0 flex-none">
+    <div id="navigation-bar" class="w-full flex flex-row items-center justify-between pre-lg:px-8 lg:px-14 xl:px-24 2xl:px-28 py-5">
+        <nav class="w-full flex justify-between">
+            <div id="logo-menu">
+                <div id="logo">
+                    <a href="{% url "core:index" %}">WAVE<span>.</span></a>
+                </div>
+            </div>
+            <div id="menu-options">
+                <ul class="flex gap-4 list-none items-center text-black font-Wanted-Variable text-Semi-Medium">
+                    <li class="navlink">
+                        <a href="{% url "support:feedback" %}"> Faq's </a>
+                    </li>
+                    <li class="createEvent flex flex-row gap-5 items-center">
+                        Come, create!
+        
+                        {% if request.user.is_authenticated %}
+                            {% if request.user|has_group:"Host" or request.user|has_group:"host" %}
+                            <a href="{% url "eventManagement:hostCreateEvent" %}" class="createEventBtn gradient-btn" id="createEventBtn">
+                                <img src="{% static "/images/eventManagementApp/host/host_ticket.svg" %}" />
+                                Create Event
+                            </a>
+                            {% else %}
+                            <a class="applyNowBtn gradient-btn" href="{% url "eventManagement:hostApply" %}">Apply Now!</a>
+                            {% endif %}
+                        {% else %}
+                        <a class="applyNowBtn gradient-btn" href="{% url "eventManagement:hostApply" %}">Apply Now!</a>
+                        {% endif %}
+                        
+                    </li>
+                </ul>
+            </div>
+        </nav>
+    </div>
+</div>
+
+<div class="top-0 pre-lg:hidden w-full">
+    <nav class="mt-5 right-0 left-0 w-full">
+        <div clss="flex flex-row justify-between w-full">
+            <div id="nav-container" class="w-full h-full mx-auto px-4 pr-1 sm:px-8 flex items-center justify-between">
+                <div id="brand-logo" class=" h-full flex items-center justify-center">
+                    <div id="logo">
+                        <a href="{% url "core:index"  %}">WAV<span>E</span>.</a>
+                    </div>
+                </div>
+                <div id="nav-bar_menu-container" class="h-full flex items-center justify-center pt-1">
+                    <button title="menuButton" id="menuButton" class="h-full flex items-center justify-center hamburger hamburger--elastic w-full px-7" type="button">
+                        <span class="hamburger-box">
+                            <span class="hamburger-inner"></span>
+                        </span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div id="overlay"
+        class="fixed top-0 left-0 right-0 bottom-0 z-[1005] w-full overflow-y-scroll overflow-x-hidden">
+        <div class="container px-4 py-3 w-full h-full">
+            <div id="ov-menu"
+                class="max-h-screen h-full w-full flex justify-between flex-col mt-6 pb-10 top-10 xsm:top-20 sm:top-20 md:top-20">
+                <div class="flex flex-col h-full gap-12">
+                    <div class="flex flex-col gap-7">
+                        <div class="w-full flex justify-end">
+                            <div id="overlay-logo" class="font-Wanted-Black text-2xl text-black">
+                                <a href="{% url "core:index"  %}">WAV<span class="text-white">E</span>.</a>
+                            </div>
+                        </div>
+                        <hr>
+                    </div>
+                    <ul class="flex flex-col gap-5 list-none text-Large px-5 font-Wanted-Regular text-white">
+                        <li class="navlink">
+                            <a href="{% url "support:feedback" %}"> Faq's </a>
+                        </li>
+                        <li class="createEvent flex flex-row gap-5 items-center">
+                            Come, create!
+                        </li>
+                    </ul>
+                    <div class=""></div>
+                </div>
+                <div class="w-full flex justify-center items-center">
+                    {% if user.is_authenticated %}
+                        {% if page == home %}
+                            {% if user|has_group:"Host" %}
+                            <a class="gradient-btn hover:gradient-btn-hover text-white" href="{% url "eventManagement:hostCreateEvent" %}">
+                                <img src="{% static "/images/eventManagementApp/host/host_ticket.svg" %}" />
+                                Host Portal
+                            </a>
+                            {% else %}
+                            <a class="gradient-btn hover:gradient-btn-hover text-white" href="{% url "eventManagement:hostGuide" %}">
+                                <img src="{% static "/images/eventManagementApp/host/hostGuide.svg" %}" />
+                                Host Guide
+                            </a>
+                            {% endif %}
+                        {% elif page == "explore" %}
+                            <a class="gradient-btn hover:gradient-btn-hover text-white" href="{% url "colleges:find" %}">
+                                <img src="{% static "/images/explore/community.svg" %}" />
+                                Join Campus!
+                            </a>
+                        {% else %}
+                        <a class="gradient-btn hover:gradient-btn-hover text-white" target="_blank" href="{% url "eventManagement:hostPortal" %}">
+                            <img src="{% static "/images/eventManagementApp/host/host_ticket.svg" %}" />
+                            Host Portal
+                        </a>
+                        {% endif %}
+                    {% else %}
+                        {% if page == "home" %}
+                            <a class="overlay-btn hover:gradient-btn-hover text-[#008d95]" href="{% url "eventManagement:hostHome" %}">
+                                <img src="{% static "/images/eventManagementApp/host/host_ticket.svg" %}" />
+                                Host Event
+                            </a>
+                        {% elif page == "explore" %}
+                            <a class="gradient-btn hover:gradient-btn-hover text-white" href="{% url "colleges:find" %}">
+                                <img src="{% static "/images/explore/community.svg" %}" />
+                                Join Campus!
+                            </a>
+                        {% else %}
+                            <a class="gradient-btn hover:gradient-btn-hover text-white" href="{% url "eventManagement:portal" %}">
+                                <img src="{% static "/images/eventManagementApp/host/host_ticket.svg" %}" />
+                                Create Event
+                            </a>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
         </div>
     </div>
-    <div id="menu-options">
-        <ul>
-            <li class="navlink">
-                <a href="{% url "support:feedback" %}"> Faq's </a>
-            </li>
-            <li class="createEvent">
-                Come, create!
-
-                {% if request.user.is_authenticated %}
-                    {% if request.user|has_group:"Host" or request.user|has_group:"host" %}
-                    <a href="{% url "eventManagement:hostCreateEvent" %}" class="createEventBtn" id="createEventBtn">
-                        <img src="{% static "/images/eventManagementApp/host/host_ticket.svg" %}" />
-                        Create Event
-                    </a>
-                    {% else %}
-                    <a class="applyNowBtn" href="{% url "eventManagement:hostApply" %}">Apply Now!</a>
-                    {% endif %}
-                {% else %}
-                <a class="applyNowBtn" href="{% url "eventManagement:hostApply" %}">Apply Now!</a>
-                {% endif %}
-                
-            </li>
-        </ul>
-    </div>
-</nav>
+</div>

@@ -1,9 +1,11 @@
 {% load static %}
 
-<link rel="stylesheet" type="text/css" href="{% static "/styles/partials/headers/logoAlone.css" %}" />
+<link rel="stylesheet" type="text/css" href="{% static "/tailwindcss/input.css" %}" />
+<link rel="stylesheet" type="text/css" href="{% static "/tailwindcss/output.css" %}" />
 
-<header id="navHeader">
-    <div id="logo">
-        <a href="{% url "core:index" %}">WAVE<span>.</span></a>
+
+<header id="navHeader" class="w-full flex justify-center pt-8">
+    <div id="logo" class="font-Wanted-ExtraBlack text-3.5xl">
+        <a href="{% url "core:index" %}">WAV<span>E</span>.</a>
     </div>
 </header>

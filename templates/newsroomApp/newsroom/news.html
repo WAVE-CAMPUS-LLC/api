@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block title %}
-Newsroom — Wave.  
+Newsroom — WAVE.  
 {% endblock title %}
 
 {% block app_page_style %}
@@ -15,51 +15,53 @@ Newsroom — Wave.
 
 {% block body %}
 <div id="content-container" class="flex flex-col gap-[70px] px-4 sm:px-6 md:px-[40px] pre-lg:px-[40px] lg:px-[100px] 2xl:px-48 3xl:px-96">
-    <div id="page-heading">
-        <h6>
+    <div id="page-heading" class="flex flex-col gap-[20px]">
+        <h6 class="text-[25px] font-bold font-Wanted-Bold text-green">
             {{ newsItem.newsCategory }}
         </h6>
-        <h2>
+        <h2 class="font-bold font-Wanted-ExtraBold text-[20px] xsm:text-[25px] xxsm:text-[35px] sm:text-[40px] md:text-[50px]">
             {{ newsItem.title }}
         </h2>
     </div>
 
     <div id="news-header">
-        <div id="nH-image-container" style="background-image: url('{{ newsItem.headerImage.url }}');">
-            <div id="display-header">
-                <img id="header-img" src="{{newsItem.headerImage.url}}" />
+        <div id="nH-image-container" style="background-image: url('{{ newsItem.headerImage.url }}');" class="w-full h-full min-w-full min-h-[500px] max-h-[550px] relative rounded-[25px] bg-cover bg-no-repeat bg-top before:">
+            <div id="display-header" class="relative z-2 flex items-center justify-center w-full h-full min-h-[500px] p-[10px] sm:p-[80px]">
+                <img id="header-img" src="{{newsItem.headerImage.url}}" class="relative z-2 w-full max-w-[400px] max-h-[400px] object-contain rounded-[20px]" />
             </div>
         </div>
     </div>
 
-    <div id="blog-content">
-        <div class="blogContent-Sidebar">
-            <div class="blogContent-Sidebar-container">
-                <div class="userDate-published">
-                    <h6>By <a href="#" id="username">@{{ newsItem.created_by.username }}</a></h6>
-                    <p>{{ newsItem.created_at|date:"F d, Y" }}</p>
+    <div id="blog-content" class="flex flex-col xl:flex-row gap-[40px]">
+        <div class="blogContent-Sidebar w-[35%] h-full">
+            <div class="blogContent-Sidebar-container h-full flex flex-col gap-[50px]">
+                <div class="userDate-published flex flex-col gap-[10px]">
+                    <h6 class="font-bold text-green font-Wanted-Medium text-[16px] xsm:text-[20px]">
+                        By <a href="#" id="username" class="no-underline text-green hover:underline">@{{ newsItem.created_by.username }}</a>
+                    </h6>
+                    <p class="font-Wanted-Regular text-[15px] xsm:text-[18px]">{{ newsItem.created_at|date:"F d, Y" }}</p>
                 </div>
-                <div class="bCS-divider">
-                    <hr>
+                <div class="bCS-divider w-full flex justify-start">
+                    <hr class="w-1/2 border-2  border-custom-rgba10 rounded-[10px]">
                 </div>
             </div>
         </div>
-        <div class="blogContent-Main">
-            <p>
+        <div class="blogContent-Main pre-lg:w-[70%] flex flex-col gap-[50px]">
+            <p class="font-Wanted-Regular text-[20px] text-[#454545]">
                 {{ newsItem.body }}
             </p>
 
-            <div class="bodyImages">
+            <div class="bodyImages w-full grid grid-cols-2 gap-2">
                 {% if newsItem.imageOne %}
-                <img src="{{ newsItem.imageOne.url }}" />
+                <img src="{{ newsItem.imageOne.url }}" class="max-h-full max-w-full w-full h-full rounded-[20px]" />
                 {% endif %}
 
                 {% if newsItem.imageTwo %}
-                <img src="{{ newsItem.imageTwo.url }}" />
+                <img src="{{ newsItem.imageTwo.url }}" class="max-h-full max-w-full w-full h-full rounded-[20px]" />
                 {% endif %}
 
                 {% if newsItem.imageThree %}
-                <img src="{{ newsItem.imageThree.url }}" />
+                <img src="{{ newsItem.imageThree.url }}" class="max-h-full max-w-full w-full h-full rounded-[20px]" />
                 {% endif %}
             </div>
         </div>

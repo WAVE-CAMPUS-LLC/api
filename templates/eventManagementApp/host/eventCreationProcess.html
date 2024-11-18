@@ -290,57 +290,65 @@ Create your event — WAVE.
             {% comment %} Stage 3 {% endcomment %}
             <section id="stage-section" data-validate="false">
                 <input required type="hidden" class="section-title" value="Stage 2 - Provide event ticketing information — WAVE." />
-                <div class="stageSection-container-row">
-                    <div id="section-description">
-                        <h3>Stage 3</h3>
-                        <h4>
+                <div class="flex flex-row gap-5">
+                    <div class="flex flex-col gap-3 justify-center items-start w-[60%]">
+                        <h3 class="font-Wanted-Regular text-Base">Stage 3</h3>
+                        <h4 class="font-Wanted-SemiBold text-3xl">
                             Provide contact details
                         </h4>
-                        <p>
+                        <p class="font-Wanted-Variable text-Large text-[#4e4e4e]">
                             Give event attendees a way to get in contact you.
                         </p>
                     </div>
             
-                    <div id="section-image">
-                        <img src="{% static "images/eventManagementApp/host/images/contact.png" %}" />
+                    <div id="section-image" class="w-[40%] flex items-center justify-center">
+                        <img class="w-[400px] h-[400px] rounded-2xl" src="{% static "images/eventManagementApp/host/images/contact.png" %}" />
                     </div>
                 </diV>
             </section>
 
             <section id="stage-section" data-validate="true">
                 <input type="hidden" class="section-title" value="Tickets made available  — WAVE." />
-                <div class="stageSection-container-col">
-                    <div class="section-question">
+                <div class="flex flex-col gap-6">
+                    <div class="flex justify-center items-center flex-col font-Wanted-SemiBold text-3xl">
                         Contact information
-                        <p>Provide your event attendees with a way to get in touch with you!</p>
+                        <p class="font-Wanted-Variable text-Base text-[#797878]">Provide your event attendees with a way to get in touch with you!</p>
                     </div>
         
-                    <div class="ticket-section-intake">
-                        <div class="ticket-type-row">
-                            <label for="{{ eventForm.contact_email.id_for_label }}">
-                                <p>{{ eventForm.contact_email.label }} (optional) </p>
-                                <input type="{{ eventForm.contact_email.field.widget.input_type }}" id="{{ eventForm.contact_email.auto_id }}" name="{{ eventForm.contact_email.html_name }}" />
+                    <div class="flex flex-col gap-9">
+                        <div class="flex justify-center items-start w-full">
+                            <label class="flex flex-col items-center gap-1 w-1/2" for="{{ eventForm.contact_email.id_for_label }}">
+                                <div class="w-full flex justify-start">
+                                    <p class="font-Wanted-Variable text-left text-Small text-[#4e4e4e]">{{ eventForm.contact_email.label }} (optional) </p>
+                                </div>
+                                <input class="w-full p-3 rounded-2xl border-2 border-[#8988887f] font-Wanted-Regular font-Wanted-Regular text-Large" type="{{ eventForm.contact_email.field.widget.input_type }}" id="{{ eventForm.contact_email.auto_id }}" name="{{ eventForm.contact_email.html_name }}" />
                             </label>
                         </div>
 
-                        <div class="ticket-type-row">
-                            <label for="{{ eventForm.contact_phone.id_for_label }}">
-                                <p>{{ eventForm.contact_phone.label }} (optional) </p>
-                                <input type="{{ eventForm.contact_phone.field.widget.input_type }}" id="{{ eventForm.contact_phone.auto_id }}" name="{{ eventForm.contact_phone.html_name }}" />
+                        <div class="flex justify-center items-start w-full">
+                            <label class="flex flex-col items-center gap-1 w-1/2" for="{{ eventForm.contact_phone.id_for_label }}">
+                                <div class="w-full flex justify-start">
+                                    <p class="font-Wanted-Variable text-left text-Small text-[#4e4e4e]">{{ eventForm.contact_phone.label }} (optional) </p>
+                                </div>
+                                <input class="w-full p-3 rounded-2xl border-2 border-[#8988887f] font-Wanted-Regular font-Wanted-Regular text-Large" type="{{ eventForm.contact_phone.field.widget.input_type }}" id="{{ eventForm.contact_phone.auto_id }}" name="{{ eventForm.contact_phone.html_name }}" />
                             </label>
                         </div>
 
-                        <div class="ticket-type-row">
-                            <label for="{{ eventForm.contact_website.id_for_label }}">
-                                <p>{{ eventForm.contact_website.label }} (optional) </p>
-                                <input type="{{ eventForm.contact_website.field.widget.input_type }}" id="{{ eventForm.contact_website.auto_id }}" name="{{ eventForm.contact_website.html_name }}" />
+                        <div class="flex justify-center items-start w-full">
+                            <label class="flex flex-col items-center gap-1 w-1/2" for="{{ eventForm.contact_website.id_for_label }}">
+                                <div class="w-full flex justify-start">
+                                    <p class="font-Wanted-Variable text-left text-Small text-[#4e4e4e]">{{ eventForm.contact_website.label }} (optional) </p>
+                                </div>
+                                <input class="w-full p-3 rounded-2xl border-2 border-[#8988887f] font-Wanted-Regular font-Wanted-Regular text-Large" type="{{ eventForm.contact_website.field.widget.input_type }}" id="{{ eventForm.contact_website.auto_id }}" name="{{ eventForm.contact_website.html_name }}" />
                             </label>
                         </div>
 
-                        <div class="ticket-type-row">
-                            <label for="{{ eventForm.contact_instagram.id_for_label }}">
-                                <p>{{ eventForm.contact_instagram.label }} (optional) </p>
-                                <input type="{{ eventForm.contact_instagram.field.widget.input_type }}" id="{{ eventForm.contact_instagram.auto_id }}" name="{{ eventForm.contact_instagram.html_name }}" />
+                        <div class="flex justify-center items-start w-full">
+                            <label class="flex flex-col items-center gap-1 w-1/2" for="{{ eventForm.contact_instagram.id_for_label }}">
+                                <div class="w-full flex justify-start">
+                                    <p class="font-Wanted-Variable text-left text-Small text-[#4e4e4e]">{{ eventForm.contact_instagram.label }} (optional) </p>
+                                </div>
+                                <input class="w-full p-3 rounded-2xl border-2 border-[#8988887f] font-Wanted-Regular font-Wanted-Regular text-Large" type="{{ eventForm.contact_instagram.field.widget.input_type }}" id="{{ eventForm.contact_instagram.auto_id }}" name="{{ eventForm.contact_instagram.html_name }}" />
                             </label>
                         </div>
                     </div>
@@ -349,35 +357,35 @@ Create your event — WAVE.
             
             <section id="stage-section" data-validate="false">
                 <input required type="hidden" class="section-title" value="Stage 2 - Provide event ticketing information — WAVE." />
-                <div class="stageSection-container-row">
-                    <div id="section-description">
-                        <h3>Stage 4</h3>
-                        <h4>
+                <div class="flex flex-row gap-5">
+                    <div class="flex flex-col gap-3 justify-center items-start w-[60%]">
+                        <h3 class="font-Wanted-Regular text-Base">Stage 4</h3>
+                        <h4 class="font-Wanted-SemiBold text-3xl">
                             Add some life!
                         </h4>
-                        <p>
+                        <p class="font-Wanted-Variable text-Large text-[#4e4e4e]">
                             Add a few pictures to showcase what the experience will be like!
                         </p>
                     </div>
             
-                    <div id="section-image">
-                        <img src="{% static "images/eventManagementApp/host/images/picture.png" %}" />
+                    <div id="section-image" class="w-[40%] flex items-center justify-center">
+                        <img class="w-[400px] h-[400px] rounded-2xl" src="{% static "images/eventManagementApp/host/images/picture.png" %}" />
                     </div>
                 </diV>
             </section>
 
             <section id="stage-section" data-validate="true">
                 <input required type="hidden" class="section-title" value="Tickets made available  — WAVE." />
-                <div class="stageSection-container-col">
-                    <div class="section-question">
+                <div class="flex flex-col gap-6">
+                    <div class="section-question flex flex-col items-center justify-center font-Wanted-SemiBold text-3xl">
                         {{ eventForm.header_photo.label }}
-                        <p>This will be the first thing everyone sees!</p>
+                        <p class="font-Wanted-Variable text-Base text-[#797878]">This will be the first thing everyone sees!</p>
                     </div>
         
-                    <div class="section-intake">
-                        <div class="header-photo-intake">
-                            <img id="header-photo-preview" src="#" alt="Header Photo Preview">
-                            <button class="upload-header-photo" type="button" onclick="document.getElementById('photo-input').click();">Upload photo</button>
+                    <div class="flex justify-center items-start w-full">
+                        <div class="header-photo-intake h-[80%] w-[80%] p-12 border-2 border-[#aeaeaeab] rounded-2xl flex justify-center items-center flex-col gap-5">
+                            <img id="header-photo-preview" class="max-w-full hidden h-auto max-h-[400px] rounded-2xl" src="#" alt="Header Photo Preview">
+                            <button class="upload-header-photo gradient-btn" type="button" onclick="document.getElementById('photo-input').click();">Upload photo</button>
                             {{ eventForm.header_photo|add_class:"hidden"|attr:"id:photo-input" }}
                         </div>
                     </div>
@@ -386,38 +394,38 @@ Create your event — WAVE.
 
             <section id="stage-section" data-validate="true">
                 <input required type="hidden" class="section-title" value="Tickets made available  — WAVE." />
-                <div class="stageSection-container-col">
-                    <div class="section-question">
+                <div class="flex flex-col gap-6">
+                    <div class="section-question flex flex-col items-center justify-center font-Wanted-SemiBold text-3xl">
                         Add photos to show your unique style.
-                        <p>These photos make your event a lot more attractive!</p>
+                        <p class="font-Wanted-Variable text-Base text-[#797878]">These photos make your event a lot more attractive!</p>
                     </div>
         
-                    <div class="section-intake">
-                        <div class="body-photo-intake">
-                            <div class="body-image-containers">
-                                <div class="body-photos">
+                    <div class="flex justify-center items-start w-full">
+                        <div class="body-photo-intake h-[80%] w-[80%] p-12 border-2 border-[#aeaeaeab] rounded-2xl flex justify-center items-center flex-col gap-5">
+                            <div class="body-image-containers grid grid-cols-2 gap-6 w-full h-auto">
+                                <div class="body-photos h-[80%] w-[80%] p-12 border-2 border-[#aeaeaeab] rounded-2xl flex justify-center items-center flex-col gap-2">
                                     <div id="{{eventForm.body_photo_one.auto_id}}-preview"></div>
-                                    <button class="upload-body-photo" type="button" onclick="document.getElementById('{{eventForm.body_photo_one.auto_id}}').click();">Upload</button>
+                                    <button class="upload-body-photo gradient-btn" type="button" onclick="document.getElementById('{{eventForm.body_photo_one.auto_id}}').click();">Upload</button>
                                     {{ eventForm.body_photo_one|add_class:"hidden" }}
                                 </div>
-                                <div class="body-photos">
+                                <div class="body-photos h-[80%] w-[80%] p-12 border-2 border-[#aeaeaeab] rounded-2xl flex justify-center items-center flex-col gap-2">
                                     <div id="{{eventForm.body_photo_two.auto_id}}-preview"></div>
-                                    <button class="upload-body-photo" type="button" onclick="document.getElementById('{{eventForm.body_photo_two.auto_id}}').click();">Upload</button>
+                                    <button class="upload-body-photo gradient-btn" type="button" onclick="document.getElementById('{{eventForm.body_photo_two.auto_id}}').click();">Upload</button>
                                     {{ eventForm.body_photo_two|add_class:"hidden" }}
                                 </div>
-                                <div class="body-photos">
+                                <div class="body-photos h-[80%] w-[80%] p-12 border-2 border-[#aeaeaeab] rounded-2xl flex justify-center items-center flex-col gap-2">
                                     <div id="{{eventForm.body_photo_three.auto_id}}-preview"></div>
-                                    <button class="upload-body-photo" type="button" onclick="document.getElementById('{{eventForm.body_photo_three.auto_id}}').click();">Upload</button>
+                                    <button class="upload-body-photo gradient-btn" type="button" onclick="document.getElementById('{{eventForm.body_photo_three.auto_id}}').click();">Upload</button>
                                     {{ eventForm.body_photo_three|add_class:"hidden" }}
                                 </div>
-                                <div class="body-photos">
+                                <div class="body-photos h-[80%] w-[80%] p-12 border-2 border-[#aeaeaeab] rounded-2xl flex justify-center items-center flex-col gap-2">
                                     <div id="{{eventForm.body_photo_four.auto_id}}-preview"></div>
-                                    <button class="upload-body-photo" type="button" onclick="document.getElementById('{{eventForm.body_photo_four.auto_id}}').click();">Upload</button>
+                                    <button class="upload-body-photo gradient-btn" type="button" onclick="document.getElementById('{{eventForm.body_photo_four.auto_id}}').click();">Upload</button>
                                     {{ eventForm.body_photo_four|add_class:"hidden" }}
                                 </div>
-                                <div class="body-photos">
+                                <div class="body-photos h-[80%] w-[80%] p-12 border-2 border-[#aeaeaeab] rounded-2xl flex justify-center items-center flex-col gap-2">
                                     <div id="{{eventForm.body_photo_five.auto_id}}-preview"></div>
-                                    <button class="upload-body-photo" type="button" onclick="document.getElementById('{{eventForm.body_photo_five.auto_id}}').click();">Upload</button>
+                                    <button class="upload-body-photo gradient-btn" type="button" onclick="document.getElementById('{{eventForm.body_photo_five.auto_id}}').click();">Upload</button>
                                     {{ eventForm.body_photo_five|add_class:"hidden" }}
                                 </div>                                
                             </div>
@@ -428,9 +436,9 @@ Create your event — WAVE.
 
             <section id="stage-section" data-validate="true">
                 <input required type="hidden" class="section-title" value="Go live!  — WAVE." />
-                <div class="stage-final">
+                <div class="stage-final w-full h-full flex justify-center items-center">
                     <input required type="hidden" id="goLiveInput" name="goLiveInput" value="0">
-                    <button class="go-live" type="submit" onclick="document.getElementById('goLiveInput').value='1'">Go live!</button>
+                    <button class="go-live gradient-btn text-3.5xl font-Wanted-ExtraBold" type="submit" onclick="document.getElementById('goLiveInput').value='1'">Go live!</button>
                 </div>
             </section>
         </div>

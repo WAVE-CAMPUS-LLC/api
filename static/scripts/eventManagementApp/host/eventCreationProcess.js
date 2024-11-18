@@ -234,7 +234,7 @@ $(document).ready(function () {
     let debounceTimer;
     $('input, textarea, select').on('input change', function () {
         clearTimeout(debounceTimer);
-        debounceTimer = setTimeout(() => validateCurrentSection(), 300);
+        debounceTimer = setTimeout(() => validateCurrentSection(), 100);
     });
 
     $('#photo-input').on('change', function () {
