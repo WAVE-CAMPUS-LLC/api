@@ -74,25 +74,25 @@ class Event(models.Model):
     ]
 
     EVENT_TYPE_CHOICES = [
-        ("Sports", "Sports"),
-        ("Social", "Social"),
-        ("Networking", "Networking"),
-        ("Greek", "Greek"),
-        ("Music", "Music"),
-        ("Conference", "Conference"),
-        ("Workshop", "Workshop"),
-        ("Exhibition", "Exhibition"),
-        ("Technology", "Technology"),
-        ("Health", "Health"),
-        ("Fundraiser", "Fundraiser"),
-        ("Volunteer", "Volunteer"),
-        ("Fashion", "Fashion"),
-        ("Adventure", "Adventure"),
-        ("Spiritual", "Spiritual"),
         ("Academic", "Academic"),
-        ("Photography", "Photography"),
+        ("Adventure", "Adventure"),
         ("Art", "Art"),
+        ("Conference", "Conference"),
         ("Dance", "Dance"),
+        ("Exhibition", "Exhibition"),
+        ("Fashion", "Fashion"),
+        ("Fundraiser", "Fundraiser"),
+        ("Greek", "Greek"),
+        ("Health", "Health"),
+        ("Music", "Music"),
+        ("Networking", "Networking"),
+        ("Photography", "Photography"),
+        ("Social", "Social"),
+        ("Spiritual", "Spiritual"),
+        ("Sports", "Sports"),
+        ("Technology", "Technology"),
+        ("Volunteer", "Volunteer"),
+        ("Workshop", "Workshop"),
     ]
 
     PRIVACY_CHOICES = [
@@ -109,7 +109,7 @@ class Event(models.Model):
     ]
 
     COUNTRY_CHOICES = [("United States", "United States")]
-    
+
     STATE_CHOICES = [
         ("AL", "Alabama"),
         ("AK", "Alaska"),
@@ -164,25 +164,25 @@ class Event(models.Model):
     ]
 
     EXPLORE_TYPE_CHOICES = [
-        ("social", "Social"),
-        ("sports", "Sports"),
-        ("networking", "Networking"),
-        ("greek", "Greek"),
-        ("music", "Music"),
-        ("conference", "Conference"),
-        ("workshop", "Workshop"),
-        ("exhibition", "Exhibition"),
-        ("technology", "Technology"),
-        ("health", "Health"),
-        ("fundraiser", "Fundraiser"),
-        ("volunteer", "Volunteer"),
-        ("fashion", "Fashion"),
-        ("adventure", "Adventure"),
-        ("spiritual", "Spiritual"),
         ("academic", "Academic"),
-        ("photography", "Photography"),
+        ("adventure", "Adventure"),
         ("art", "Art"),
+        ("conference", "Conference"),
         ("dance", "Dance"),
+        ("exhibition", "Exhibition"),
+        ("fashion", "Fashion"),
+        ("fundraiser", "Fundraiser"),
+        ("greek", "Greek"),
+        ("health", "Health"),
+        ("music", "Music"),
+        ("networking", "Networking"),
+        ("photography", "Photography"),
+        ("social", "Social"),
+        ("spiritual", "Spiritual"),
+        ("sports", "Sports"),
+        ("technology", "Technology"),
+        ("volunteer", "Volunteer"),
+        ("workshop", "Workshop"),
     ]
     eventId = models.UUIDField(
         primary_key=True, default=uuid.uuid4, editable=False, unique=True
@@ -283,12 +283,12 @@ class Event(models.Model):
         _("City / town"), max_length=100, null=True, blank=True, default=""
     )
     state = models.CharField(
-        _("State"), 
-        max_length=100, 
-        null=True, 
-        blank=False, 
-        default="", 
-        choices=STATE_CHOICES
+        _("State"),
+        max_length=100,
+        null=True,
+        blank=False,
+        default="",
+        choices=STATE_CHOICES,
     )
     zip_code = models.CharField(
         _("ZIP code"), max_length=6, null=True, blank=True, default=""
@@ -358,5 +358,3 @@ class EventPrivacy(models.Model):
 
     def __str__(self):
         return f"{self.event.title} Privacy Settings"
-
-

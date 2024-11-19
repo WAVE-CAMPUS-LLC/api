@@ -15,6 +15,7 @@ module.exports = {
       'xsm': '324px',
       'after-xsm': '400px',
       'xxsm': '478px',
+      'pre-sm': '550px',
       'sm': '640px',
       // => @media (min-width: 640px) { ... }
 
@@ -113,6 +114,7 @@ module.exports = {
         'form-shadow-2': '2px 3px 21px 4px rgba(0, 0, 0, 0.061)',
         'custom-shadow-4': '0px 4px 12px rgba(0, 0, 0, 0.272)',
         'custom-shadow-5': '2px 3px 21px 4px rgba(0, 0, 0, 0.289)',
+        'custom-shadow-6': '0 0 10px rgba(89, 89, 89, 0.279)',
       },
       colors: {
         customGray: 'rgb(120, 120, 120)',

@@ -30,50 +30,47 @@ Host Dashboard | WAVE.
         </div> 
     </div>
 
-    <div id="portal-body" class="flex flex-col gap-[40px]">
-        <div class="flex flex-wrap gap-[15px]">
-            <div role="button" type="button" class="dashboard-tab cursor-pointer font-Wanted-Variable border border-gray-400 p-[5px] rounded-[13px] px-3 flex justify-center active:border-[#007379]" data-tab="live-events">Live</div>
-            <div role="button" type="button" class="dashboard-tab cursor-pointer font-Wanted-Variable border border-gray-400 p-[5px] rounded-[13px] px-3 flex justify-center active:border-[#007379]" data-tab="incomplete-events">Incomplete</div>
-            <div role="button" type="button" class="dashboard-tab cursor-pointer font-Wanted-Variable border border-gray-400 p-[5px] rounded-[13px] px-3 flex justify-center active:border-[#007379]" data-tab="past-events">Past</div>
+    <div id="portal-body">
+        <div class="control-row">
+            <div role="button" type="button" class="dashboard-tab tab-active" data-tab="live-events">Live</div>
+            <div role="button" type="button" class="dashboard-tab" data-tab="incomplete-events">Incomplete</div>
+            <div role="button" type="button" class="dashboard-tab" data-tab="past-events">Past</div>
         </div>
 
         <div id="portal-body-content">
-            <div class="w-full" id="live-events">
+            <div class="pbc-element-content" id="live-events">
                 {% if liveEvents %}
-                <div class="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-7">
+                <div id="event-container">
                     {% for event in liveEvents %}
-                    <div id="port-event-display" class="flex flex-col gap-[15px] font-Wanted-SemiBold text-[15px] w-full border border-rgba(113, 113, 113, 0.182) rounded-[20px] box-shadow: 2px 3px 21px 4px rgba(170, 170, 170, 0.075); p-[20px] cursor-pointer">
+                    <div id="port-event-display">
                         <div class="event-image">
-                            <img src="{{event.header_photo.url}}" class="max-w-[350px] max-h-[350px] min-h-[258px] w-full h-full rounded-[15px] mx-auto" />
+                            <img src="{{event.header_photo.url}}" />
                         </div>
-                        <div class="flex flex-col gap-[0px]">
-                            <h5 class="font-Wanted-Bold text-[25px]">
+                        <div class="event-information">
+                            <h5>
                                 {{ event.title }}
                             </h5>
                         </div>
-                        <div class="ticketing-delete flex flex-col gap-5">
+                        <div class="ticketing-delete">
                             {% if isInCollege %}
-                            <form class="display-on-college flex w-full flex-row justify-between font-Wanted-Bold items-center text-Medium" method="POST" id="college-display-form">
+                            <form class="display-on-college" method="POST" id="college-display-form">
                                 {% csrf_token %}
                                 <p>Display on college?</p>
                                 <input type="hidden" name="event_id" value="{{ event.eventId }}">
-                                <label class="flex h-full items-center mr-5">
-                                    <input id="displayOnCollegeCheckbox" class="appearance-none cursor-pointer" type="checkbox" name="displayOnCollege" value="true" {% if event.display_event_on_college %} checked {% endif %}>
-                                    <span class="checkbox cursor-pointer absolute h-5 w-5 border-2 border-gray-200 rounded-xl" />
+                                <label>
+                                    <input id="displayOnCollegeCheckbox" type="checkbox" name="displayOnCollege" value="true" {% if event.display_event_on_college %} checked {% endif %}>
+                                    <span class="checkbox" />
                                 </label>
                             </form>
                             {% endif %}
 
-                            <div class="sub-row flex flex-col md:flex-row gap-4">
+                            <div class="sub-row">
                                 <div class="ticketing">
-                                    <a class="ticketing-link gradient-btn flex gap-1" href="{% url "eventManagement:eventManagement" eventId=event.eventId %}">
-                                        <span class="flex md:hidden pre-lg:flex">Event</span> 
-                                        Ticketing
-                                    </a>
+                                    <a class="ticketing-link" href="{% url "eventManagement:eventManagement" eventId=event.eventId %}">Event Ticketing</a>
                                 </div>
 
                                 <div class="privacy">
-                                    <a class="ticketing-link gradient-btn" href="{% url "eventManagement:eventManagement" eventId=event.eventId %}">Privacy <span class="flex md:hidden pre-lg:flex">Settings</span></a>
+                                    <a class="ticketing-link" href="{% url "eventManagement:eventManagement" eventId=event.eventId %}">Privacy Settings</a>
                                 </div>
                             </div>
                         </div>
@@ -127,7 +124,7 @@ Host Dashboard | WAVE.
             </div>
 
             <div class="pbc-element-content" id="past-events">
-                <div class="w-full flex flex-col justify-center items-center gap-[10px] font-Wanted-Variable bg-customGray4 p-[50px] rounded-[20px]">
+                <div class="empty-pcb">
                     <img class="empty-image" src="{% static "/images/eventManagementApp/host/empty-listing.svg" %}" />
                     <p>You currently have no past events to display!</p>
                 </div>

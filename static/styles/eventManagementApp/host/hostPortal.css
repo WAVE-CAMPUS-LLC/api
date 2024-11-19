@@ -14,3 +14,15 @@ input:checked+.checkbox {
     background: #008d95;
     border: 2px solid #008d95;
 }
+
+.dashboard-tab {
+    display: flex;
+    justify-content: center;
+}
+
+.dashboard-tab.tab-active {
+    border: 1px solid #007379;
+    font-family: Wanted-Variable;
+    color: white;
+    background-color: #007379;
+}
