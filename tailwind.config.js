@@ -100,6 +100,9 @@ module.exports = {
       },
       colors: {
         customGray: 'rgb(120, 120, 120)',
+        'gradient-start': '#008d95bc',
+        'gradient-end': '#13c9d3',
+        'green': '#008d95',
       },
       zIndex: {
         '1': '1',
