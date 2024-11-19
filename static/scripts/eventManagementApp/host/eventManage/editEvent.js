@@ -9,7 +9,7 @@ document.addEventListener("DOMContentLoaded", function () {
   allEditButtons.forEach((editButton) => {
     editButton.addEventListener("click", function () {
       const id = editButton.getAttribute("id");
-      editField(id);
+      editField(id, allEditButtons);
     });
   });
 
@@ -29,7 +29,7 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 });
 
-function editField(id) {
+function editField(id, allEditButtons) {
   const fieldElement = document.getElementById(id);
   const fieldForm = document.getElementById(`${id}-form`);
   const fieldLabel = document.getElementById(`${id}-previous`);
@@ -39,4 +39,8 @@ function editField(id) {
   fieldLabel.style.display = "none";
   fieldValue.style.display = "none";
   fieldForm.style.display = "block";
+
+  allEditButtons.forEach((editButton) => {
+    editButton.style.display = "none";
+  });
 }
