@@ -309,7 +309,10 @@ Create your event — WAVE.
                 <input type="hidden" class="section-title" value="Tickets made available  — WAVE." />
                 <div class="flex flex-col gap-6">
                     <div class="flex justify-center items-center flex-col font-Wanted-SemiBold text-3xl">
+                <div class="flex flex-col gap-6">
+                    <div class="flex justify-center items-center flex-col font-Wanted-SemiBold text-3xl">
                         Contact information
+                        <p class="font-Wanted-Variable text-Base text-[#797878]">Provide your event attendees with a way to get in touch with you!</p>
                         <p class="font-Wanted-Variable text-Base text-[#797878]">Provide your event attendees with a way to get in touch with you!</p>
                     </div>
         
@@ -371,6 +374,7 @@ Create your event — WAVE.
                     <div class="flex justify-center items-center flex-col font-Wanted-SemiBold text-3xl">
                         {{ eventForm.header_photo.label }}
                         <p class="font-Wanted-Variable text-Base text-[#797878]">This will be the first thing everyone sees!</p>
+                        <p class="font-Wanted-Variable text-Base text-[#797878]">This will be the first thing everyone sees!</p>
                     </div>
         
                     <div class="flex justify-center items-center flex-col w-full">
@@ -388,6 +392,7 @@ Create your event — WAVE.
                 <div class="flex flex-col gap-5">
                     <div class="flex justify-center items-center flex-col font-Wanted-SemiBold text-3xl">
                         Add photos to show your unique style.
+                        <p class="font-Wanted-Variable text-Base text-[#797878]">These photos make your event a lot more attractive!</p>
                         <p class="font-Wanted-Variable text-Base text-[#797878]">These photos make your event a lot more attractive!</p>
                     </div>
         
@@ -427,6 +432,7 @@ Create your event — WAVE.
 
             <section id="stage-section" data-validate="true">
                 <input required type="hidden" class="section-title" value="Go live!  — WAVE." />
+                <div class="stage-final w-full h-full flex justify-center items-center">
                 <div class="stage-final w-full h-full flex justify-center items-center">
                     <input required type="hidden" id="goLiveInput" name="goLiveInput" value="0">
                     <button class="go-live bg-gradient-to-r  from-gradient-start to-gradient-end text-white font-Wanted-Bold flex flex-row items-center p-6 px-10 text-3.5xl rounded-2xl" type="submit" onclick="document.getElementById('goLiveInput').value='1'">Go live!</button>

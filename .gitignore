@@ -11,9 +11,12 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+virtual/
 
 #Environment variables 
 .env
+
+static/tailwindcss/output.css
 
 # Install packages
 *.egg

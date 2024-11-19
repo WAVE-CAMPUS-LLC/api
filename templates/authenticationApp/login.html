@@ -13,28 +13,28 @@ WAVE — Welcome back!
 {% endblock script %}
 
 {% block auth_body %}
-<main id="loginCardContainer">
-    <header id="navHeader">
-        <div id="logo">
-            <a href="{% url "core:index" %}">WAVE<span>.</span></a>
+<main id="loginCardContainer" class="flex justify-center items-center flex-col gap-y-[20px] pb-14 w-full h-full overflow-y-auto">
+    <header id="navHeader" class="w-full flex justify-center pt-[50px]">
+        <div id="logo" class="font-Wanted-Black text-[40px]">
+            <a href="{% url "core:index" %}" class="text-black no-underline">WAV<span class="text-[#008d95]">E</span>.</a>
         </div>
     </header>
-    <div id="loginCard">
-        <div id="heading">
+    <div id="loginCard" class="flex flex-col gap-y-[20px] bg-white w-[85%] sm:w-[75%] md:w-[55%] pre-lg:w-[30%] pt-[20px] pb-[30px] pl-[25px] md:pl-[50px] pr-[25px] md:pr-[50px] border border-solid border-[rgba(130,130,130,0.094)] rounded-[20px] shadow-custom-shadow">
+        <div id="heading" class="text-black font-Wanted-ExtraBold text-[22px] sm:text-[25px] md:text-[28px] flex justify-center text-center flex-col w-full">
             <h3>Log in</h3>
-            <div id="sectionName">
+            <div id="sectionName" class="font-Wanted-Regular text-[14px]">
                 <h3>Welcome back!</h3>
             </div>
         </div>
 
-        <form action="{% url "authentication:login" %}?next={{ request.GET.next }}" method="post">
+        <form action="{% url "authentication:login" %}?next={{ request.GET.next }}" method="post" class="flex flex-col gap-[15px]">
             {% csrf_token %}
             <input type="hidden" name="next" value="{{ next }}">
             <div class="input-box">
-                <label for="{{ form.email.id_for_label }}">
+                <label for="{{ form.email.id_for_label }}" class="font-Wanted-SemiBold text-[13px] text-black uppercase flex flex-col gap-[5px] w-full">
                     <div>
                         {{ form.email.label }} 
-                        <span id="requiredIndicator">*</span>
+                        <span id="requiredIndicator" class="text-[red] font-Wanted-Variable">*</span>
                         <span id="errorContainer">
                             {% if form.email.errors %}
                                 {% for error in form.email.errors %}
@@ -46,14 +46,14 @@ WAVE — Welcome back!
                             {% endif %}
                         </span>
                     </div>
-                    <input type="{{ form.email.field.widget.input_type }}" name="{{ form.email.html_name }}" id="{{ form.email.auto_id }}" class="" autocomplete="off" autofocus required>
+                    <input type="{{ form.email.field.widget.input_type }}" name="{{ form.email.html_name }}" id="{{ form.email.auto_id }}" class="p-[10px] pl-[13px] pr-[13px] rounded-[10px] border border-solid border-[rgba(9,9,9,0.108)] font-Wanted-Regular text-[15px] w-full shadow-form-shadow" autocomplete="off" autofocus required>
                 </label>
             </div>
             <div class="input-box">
-                <label>
+                <label class="font-Wanted-SemiBold text-[13px] text-black uppercase flex flex-col gap-[5px] w-full">
                     <div>
                         {{ form.password.label }} 
-                        <span id="requiredIndicator">*</span>
+                        <span id="requiredIndicator" class="text-[red] font-Wanted-Variable">*</span>
                         <span id="errorContainer">
                             {% if form.password.errors %}
                                 {% for error in form.password.errors %}
@@ -65,16 +65,18 @@ WAVE — Welcome back!
                             {% endif %}
                         </span>
                     </div>
-                    <input type="{{ form.password.field.widget.input_type }}" name="{{ form.password.html_name }}" id="{{ form.password.auto_id }}" class="" autocomplete="off" required>
+                    <input type="{{ form.password.field.widget.input_type }}" class="p-[10px] pl-[13px] pr-[13px] rounded-[10px] border border-solid border-[rgba(9,9,9,0.108)] font-Wanted-Regular text-[15px] w-full shadow-form-shadow" name="{{ form.password.html_name }}" id="{{ form.password.auto_id }}" autocomplete="off" required>
                 </label>
             </div>
-            <div id="forgot">
-                <h6><a href="{% url "authentication:forgot" %}">Forgot password?</a></h6>
+            <div id="forgot" class="w-full flex justify-end">
+                <h6 class="font-Wanted-Variable text-[18px] sm:text-[20px] md:text-[23px] text-black no-underline">
+                    <a href="{% url "authentication:forgot" %}" class="font-Wanted-Variable text-[14px] text-black no-underline hover:text-[rgb(86,85,85)]">Forgot password?</a>
+                </h6>
             </div>
-            <div id="controlledElements">
-                <button type="submit" role="button">Login</button>
-                <div id="joinUs">
-                    <p>Need an account? <a href="{% url "authentication:join" %}">Join Us</a></p>
+            <div id="controlledElements" class="w-full flex flex-col justify-center gap-[15px]">
+                <button type="submit" role="button" class="font-Wanted-Regular w-full pt-[10px] pb-[10px] bg-[#008d95] border-none outline-none rounded-[13px] cursor-pointer text-[1.2em] text-[#fff] font-[500]">Login</button>
+                <div id="joinUs" class="font-Wanted-Variable text-[14px]">
+                    <p>Need an account? <a href="{% url "authentication:join" %}" class="text-[#008d95] no-underline hover:underline">Join Us</a></p>
                 </div>
             </div>
 

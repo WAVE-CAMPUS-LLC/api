@@ -43,5 +43,5 @@ urlpatterns = [
 handler404 = "extras.views.error_404"
 
 # Using s3 for media storage
-#if settings.DEBUG:
-#    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+if settings.DEBUG:
+   urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

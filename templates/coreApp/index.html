@@ -5,9 +5,6 @@
 WAVE. — Explore a new wave of events. Tick them off your bucketlist!
 {% endblock title %}
 
-{% block app_page_style %}
-<link rel="stylesheet" type="text/css" href="{% static "/styles/coreApp/index.css" %}" />
-{% endblock app_page_style %}
 
 {% block header %}
 {% include "partials/nav-footer/nav/main_nav.html" %}
@@ -51,7 +48,7 @@ WAVE. — Explore a new wave of events. Tick them off your bucketlist!
 
     <section class="w-full h-full py-16 xs:px-5 xsm:px-7 after-xsm:px-9 sm:px-11 md:px-16 lg:px-24 xl:px-36 2xl:px-44 3xl:px-52 flex justify-center items-center flex-col-reverse xs:flex-col-reverse xsm:flex-col-reverse after-xsm:flex-col-reverse xxsm:flex-col-reverse sm:flex-col-reverse md:flex-col-reverse pre-lg:flex-row gap-20 bg-black text-white">
         <div class="w-full h-full xs:max-w-[500px] md:max-w-[500px] xs:max-h-[500px] md:max-h-[500px] overflow-hidden">
-            <img src="{% static "/images/home/homecoming.JPG" %}" alt="Create lasting memories" class="rounded-3xl w-full h-full max-h-[500px] object-cover">
+            <img src="{% static "/images/home/campuses.png" %}" alt="Create lasting memories" class="rounded-3xl w-full h-full max-h-[500px] object-cover">
         </div>
         <div>
             <div class="flex flex-col gap-10">

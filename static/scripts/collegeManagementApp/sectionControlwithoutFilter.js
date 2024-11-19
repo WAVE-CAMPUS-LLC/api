@@ -7,8 +7,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function showSection(index) {
         sections.forEach((section, i) => {
-            section.classList.toggle('active', i === index);
+            if (i === index) {
+                section.classList.add('active');
+                section.classList.remove('hide');
+            } else {
+                section.classList.remove('active');
+                section.classList.add('hide');
+            }
         });
+
+        // Update button visibility
         previousButton.style.display = index === 0 ? 'none' : 'inline-block';
         nextButton.style.display = index === sections.length - 1 ? 'none' : 'inline-block';
         submitButton.style.display = index === sections.length - 1 ? 'inline-block' : 'none';

@@ -6,9 +6,6 @@
 Host Dashboard | WAVE.
 {% endblock title %}
 
-{% block app_page_style %}
-<link rel="stylesheet" type="text/css" href="{% static "/styles/eventManagementApp/host/hostPortal.css" %}" />
-{% endblock app_page_style %}
 
 {% block script %}
 <script type="text/javascript" src="{% static "scripts/eventManagementApp/host/hostPortal.js" %}" defer></script>
@@ -23,12 +20,14 @@ Host Dashboard | WAVE.
 
 {% block body %}
 <div class="flex flex-col gap-[70px] px-[20px] after-xsm:px-[30px] xxsm:px-[60px] sm:px-[70px] md:px-[60px] pre-lg:px-[70px] lg:px-[100px] xl:px-[140px] 2xl:px-[200px] 3xl:px-[300px]">
-    <div class="font-Wanted-Bold text-[25px] after-xsm:text-[30px] sm:text-[38px] pre-lg:text-[45px] flex flex-col md:flex-row gap-6 justify-between items-end">
-        <h2 class="w-full md:w-auto text-start">Good to see you, {{ request.user.first_name }}!<h2>
-        <a href="{% url "eventManagement:hostCreateEvent"%}" class="p-[10px] xxsm:py-[12.5px] xxsm:px-[15px] border border-transparent border-r-gradient-start border-l-gradient-end text-white font-Wanted-Bold no-underline flex items-center gap-[10px] text-[15px] xxsm:text-[17px] sm:text-[18.5px] md:text-[20px] xl:text-[25px] rounded-[20px] cursor-pointer bg-gradient-to-r from-gradient-start to-gradient-end hover:bg-[#007379]">
-            <img src="{% static "/images/eventManagementApp/host/host_ticket.svg" %}" />
-            Create Event
-        </a>
+    <div class="page-heading font-Wanted-SemiBold text-[25px] md:text-[30px] flex flex-col sm:flex-row sm:justify-between gap-[10px] w-full">
+        <h2>Good to see you, {{ request.user.first_name }}!<h2>
+        <div class="w-full flex justify-end">
+            <a href="{% url "eventManagement:hostCreateEvent"%}" class="createEventBtn p-[12.5px_15px] border-[1px] border-solid border-transparent text-white font-Wanted-SemiBold flex flex-row gap-[10px] text-[20px] rounded-[20px] cursor-pointer bg-gradient-to-r from-[#008d95bc] to-[#13c9d3] hover:bg-[#007379]">
+                <img src="{% static "/images/eventManagementApp/host/host_ticket.svg" %}" />
+                Create Event
+            </a>
+        </div> 
     </div>
 
     <div id="portal-body" class="flex flex-col gap-[40px]">
@@ -39,9 +38,9 @@ Host Dashboard | WAVE.
         </div>
 
         <div id="portal-body-content">
-            <div class="flex justify-center md:justify-start" id="live-events">
+            <div class="w-full" id="live-events">
                 {% if liveEvents %}
-                <div id="event-container" class="flex max-w-[340px] min-w-[340px] gap-[30px] p-[20px]">
+                <div class="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-7">
                     {% for event in liveEvents %}
                     <div id="port-event-display" class="flex flex-col gap-[15px] font-Wanted-SemiBold text-[15px] w-full border border-rgba(113, 113, 113, 0.182) rounded-[20px] box-shadow: 2px 3px 21px 4px rgba(170, 170, 170, 0.075); p-[20px] cursor-pointer">
                         <div class="event-image">
@@ -52,26 +51,29 @@ Host Dashboard | WAVE.
                                 {{ event.title }}
                             </h5>
                         </div>
-                        <div class="ticketing-delete">
+                        <div class="ticketing-delete flex flex-col gap-5">
                             {% if isInCollege %}
-                            <form class="display-on-college" method="POST" id="college-display-form">
+                            <form class="display-on-college flex w-full flex-row justify-between font-Wanted-Bold items-center text-Medium" method="POST" id="college-display-form">
                                 {% csrf_token %}
                                 <p>Display on college?</p>
                                 <input type="hidden" name="event_id" value="{{ event.eventId }}">
-                                <label>
-                                    <input id="displayOnCollegeCheckbox" type="checkbox" name="displayOnCollege" value="true" {% if event.display_event_on_college %} checked {% endif %}>
-                                    <span class="checkbox" />
+                                <label class="flex h-full items-center mr-5">
+                                    <input id="displayOnCollegeCheckbox" class="appearance-none cursor-pointer" type="checkbox" name="displayOnCollege" value="true" {% if event.display_event_on_college %} checked {% endif %}>
+                                    <span class="checkbox cursor-pointer absolute h-5 w-5 border-2 border-gray-200 rounded-xl" />
                                 </label>
                             </form>
                             {% endif %}
 
-                            <div class="sub-row">
+                            <div class="sub-row flex flex-col md:flex-row gap-4">
                                 <div class="ticketing">
-                                    <a class="ticketing-link" href="{% url "eventManagement:eventManagement" eventId=event.eventId %}">Event Ticketing</a>
+                                    <a class="ticketing-link gradient-btn flex gap-1" href="{% url "eventManagement:eventManagement" eventId=event.eventId %}">
+                                        <span class="flex md:hidden pre-lg:flex">Event</span> 
+                                        Ticketing
+                                    </a>
                                 </div>
 
                                 <div class="privacy">
-                                    <a class="ticketing-link" href="{% url "eventManagement:eventManagement" eventId=event.eventId %}">Privacy Settings</a>
+                                    <a class="ticketing-link gradient-btn" href="{% url "eventManagement:eventManagement" eventId=event.eventId %}">Privacy <span class="flex md:hidden pre-lg:flex">Settings</span></a>
                                 </div>
                             </div>
                         </div>

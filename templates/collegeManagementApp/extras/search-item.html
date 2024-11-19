@@ -1,10 +1,18 @@
 {% load static %}
 
-<link rel="stylesheet" type="text/css" href="{% static "/styles/collegeManagementApp/extras/search-item.css" %}" />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Select an event category | WAVE.</title>
+    <link rel="stylesheet" type="text/css" href="{% static "/tailwindcss/input.css" %}" />
+    <link rel="stylesheet" type="text/css" href="{% static "/tailwindcss/output.css" %}" />
+</head>
 
-<div class="search-result-item">
-    <a href="{% url "colleges:info" collegeId=college.collegeId %} " target="_blank" class="search-result-info">
-        <h6>{{ college.name }}</h6>
-        <p>{{ college.city }}, {{ college.state }}</p>
-    </a>
-</div>
+<body>
+    <div class="search-result-item w-full flex flex-col gap-[7px] justify-start no-underline text-black ps-3 hover:text-green">
+        <a href="{% url "colleges:info" collegeId=college.collegeId %} " target="_blank" class="search-result-info">
+            <h6 class="font-Wanted-SemiBold text-[40px] my-20">{{ college.name }}</h6>
+            <p class="font-Wanted-Regular text-[17px] my-14">{{ college.city }}, {{ college.state }}</p>
+        </a>
+    </div>
+</body>

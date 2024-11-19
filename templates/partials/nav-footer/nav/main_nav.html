@@ -72,10 +72,10 @@
                 </li>
                 <li id="auth" class="flex flex-row items-center gap-7">
                     {% if user.is_authenticated %}
-                    <a class="hidden hover:underline hover:decoration-[#008d95] hover:decoration-solid hover:decoration-2 hover:underline-offset-2" href="{% url "accountManagement:userAccount"  %}">My Account</a>
+                    <a class="hover:underline text-black hover:decoration-[#008d95] hover:decoration-solid hover:decoration-2 hover:underline-offset-2" href="{% url "accountManagement:userAccount"  %}">My Account</a>
                     {% else %}
                     <a class="hover:underline hover:decoration-[#008d95] hover:decoration-solid hover:decoration-2 hover:underline-offset-2" href="{% url "authentication:login"  %}">Login</a>
-                     <a class="hover:underline hover:decoration-[#008d95] hover:decoration-solid hover:decoration-2 hover:underline-offset-2" href="{% url "authentication:join"  %}">Join</a>
+                    <a class="hover:underline hover:decoration-[#008d95] hover:decoration-solid hover:decoration-2 hover:underline-offset-2" href="{% url "authentication:join"  %}">Join</a>
                     {% endif %}
                 </li>
             </ul>
@@ -83,12 +83,12 @@
     </div>
 
     {% if page == "explore" %}
-    <div id="main-find-events">
-        <div class="find-event-by-categ">
-            <div class="febc-img">
+    <div id="main-find-events" class="w-full flex justify-center">
+        <div class="w-1/2 flex flex-row gap-1 border-2 border-[#07070715] rounded-3xl bg-[#ffffff07] shadow-form-shadow-2">
+            <div class="febc-img flex justify-center p-4">
                 <img src="{% static "images/explore/find.svg" %}" alt="Find Events">
             </div>
-            <input type="text" name="" id="" placeholder="Find event by category or title">
+            <input type="text" name="" id="" class="w-full appearance-none h-full p-4 py-5 font-Wanted-Variable text-Semi-Medium text-black border-none rounded-3xl focus:ring-0 focus:outline-none placeholder:text-[#00000076] placeholder:font-Wanted-Regular" placeholder="Find event by category or title">
         </div>
     </div>
     {% endif %}
@@ -98,21 +98,33 @@
 
 <div class="top-0 pre-lg:hidden">
     <nav class="mt-5 right-0 left-0 w-full">
-        <div id="nav-container"
-            class="w-full h-full mx-auto px-4 pr-1 sm:px-8 flex items-center justify-between">
-            <div id="brand-logo" class=" h-full flex items-center justify-center">
-                <div id="logo">
-                    <a href="{% url "core:index"  %}">WAV<span>E</span>.</a>
+        <div class="flex flex-col gap-2">
+            <div id="nav-container" class="w-full h-full mx-auto px-4 pr-1 sm:px-8 flex items-center justify-between">
+                <div id="brand-logo" class=" h-full flex items-center justify-center">
+                    <div id="logo">
+                        <a href="{% url "core:index"  %}">WAV<span>E</span>.</a>
+                    </div>
+                </div>
+                <div id="nav-bar_menu-container" class="h-full flex items-center justify-center pt-1">
+                    <button title="menuButton" id="menuButton" class="h-full flex items-center justify-center hamburger hamburger--elastic w-full px-7" type="button">
+                        <span class="hamburger-box">
+                            <span class="hamburger-inner"></span>
+                        </span>
+                    </button>
                 </div>
             </div>
-            <div id="nav-bar_menu-container" class="h-full flex items-center justify-center pt-1">
-                <button title="menuButton" id="menuButton" class="h-full flex items-center justify-center hamburger hamburger--elastic w-full px-7" type="button">
-                    <span class="hamburger-box">
-                        <span class="hamburger-inner"></span>
-                    </span>
-                </button>
+            {% if page == "explore" %}
+            <div id="main-find-events" class="w-full flex justify-center">
+                <div class="w-[90%] after-xsm:w-4/5 sm:w-[65%] flex flex-row gap-1 border-2 border-[#07070715] rounded-3xl bg-[#ffffff07] shadow-form-shadow-2">
+                    <div class="febc-img flex justify-center p-2 px-4 after-xsm:p-4">
+                        <img src="{% static "images/explore/find.svg" %}" alt="Find Events">
+                    </div>
+                    <input type="text" name="" id="" class="w-full appearance-none h-full p-2 px-4 after-xsm:p-4 py-5 font-Wanted-Variable text-Semi-Medium text-black border-none rounded-3xl focus:ring-0 focus:outline-none placeholder:text-[#00000076] placeholder:font-Wanted-Regular" placeholder="Find event by category or title">
+                </div>
             </div>
+            {% endif %}
         </div>
+        
     </nav>
 
     <div id="overlay"

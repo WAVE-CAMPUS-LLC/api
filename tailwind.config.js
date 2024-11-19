@@ -1,6 +1,14 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: ["./static/**/*.{js, css}","./static/**/**/*.{css , js}" ,"./templates/*.html", "./templates/**/*.html", "./templates/**/**/*.html", "./templates/**/**/**/*.html", "./templates/**/**/**/**/*.html"],
+  safelist: [
+    'ql-editor',
+    'ql-container',
+    'ql-toolbar',
+    'ql-snow',
+    'ql-active',
+    'ql-disabled',
+  ],
   theme: {
     screens: {
       'xs': '225px',
@@ -104,12 +112,15 @@ module.exports = {
         'form-shadow': '2px 3px 21px 4px rgba(138, 138, 138, 0.026)',
         'form-shadow-2': '2px 3px 21px 4px rgba(0, 0, 0, 0.061)',
         'custom-shadow-4': '0px 4px 12px rgba(0, 0, 0, 0.272)',
+        'custom-shadow-5': '2px 3px 21px 4px rgba(0, 0, 0, 0.289)',
       },
       colors: {
         customGray: 'rgb(120, 120, 120)',
         customGray2: 'rgb(99, 99, 99)',
         customGray3: 'rgba(128, 128, 128, 0.798)',
         customGray4: 'rgba(146, 146, 146, 0.096)',
+        customGray5: 'rgba(66, 66, 66, 0.575)',
+        customGray6: 'rgba(0, 86, 90, 0.309)',
         'gradient-start': '#008d95bc',
         'gradient-end': '#13c9d3',
         'green': '#008d95',
