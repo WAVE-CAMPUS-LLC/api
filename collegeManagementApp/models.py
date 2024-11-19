@@ -21,6 +21,9 @@ class CollegeRequest(models.Model):
 
     def __str__(self):
         return self.name
+    
+    class Meta:
+        default_permissions = ()
 
 
 class Organization(models.Model):
@@ -92,6 +95,8 @@ class Organization(models.Model):
                 fields=["name", "college"], name="unique_organization_per_college"
             )
         ]
+        
+        default_permissions = ()
 
 
 class Membership(models.Model):

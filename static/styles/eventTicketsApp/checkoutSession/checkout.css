@@ -51,6 +51,8 @@
 }
 
 
+
+
 main {
     width: 100%;
     height: 100%;
@@ -64,8 +66,10 @@ main {
     width: 80%;
     height: 100%;
 
+    padding: 30px;
+
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     gap: 10px;
     align-items: center;
     justify-content: center;
@@ -76,7 +80,7 @@ main {
 
 /* Checkout Information */
 .checkout-information {
-    width: 60%;
+    width: 100%;
     padding: 40px;
     padding-top: 20px;
     height: 100%;
@@ -88,8 +92,9 @@ main {
 
 .ci-header {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     gap: 1px;
+    justify-content: space-between;
 }
 
 .ci-header h1 {
@@ -156,21 +161,17 @@ main {
 }
 
 /* Checkout Items */
-.checkout-items {
-    width: 40%;
-    height: 100%;
-    padding: 20px;
-    border-left: 1px solid #e0e0e082;
-    background-color: rgb(255, 255, 255);
-    box-shadow: 0 0 10px rgba(57, 57, 57, 0.279);
-    border-top-right-radius: 20px;
-    border-bottom-right-radius: 20px;
+.checkout-card form {
+    width: 80%;
+    display: flex;
+    justify-content: center;
 }
 
 .checkout-total {
     display: flex;
     flex-direction: column;
     gap: 15px;
+    width: 80%;
 }
 
 .total-row {
@@ -206,6 +207,10 @@ main {
     width: 100%;
     flex-direction: column;
     gap: 20px;
+}
+
+.checkout-item hr {
+    border: 1px solid #e0e0e082;
 }
 
 .ticket-nqp {

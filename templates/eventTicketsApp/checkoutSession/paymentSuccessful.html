@@ -1,0 +1,25 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block app_page_style %}
+<link rel="stylesheet" type="text/css" href="{% static "/styles/eventTicketsApp/checkoutSession/paymentSuccessful.css" %}" />
+{% endblock app_page_style %}
+
+{% block body %}
+
+<div id="content-container">
+    <div id="payment-successful-container">
+        <div id="payment-successful-content">
+            <div id="payment-successful-header">
+                <h1>Payment Successful</h1>
+            </div>
+            <div id="payment-successful-body">
+                <p>Thank you for your purchase {{ customerUsername }}. Your tickets have been sent to your email.</p>
+            </div>
+            <div id="payment-successful-footer">
+                <a class="btn btn-primary">View Tickets</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock body %}
