@@ -20,55 +20,58 @@
 
 {% block body %}
 <div id="content-container" class="flex flex-col gap-[70px] px-4 sm:px-6 md:px-[40px] pre-lg:px-[40px] lg:px-[100px] 2xl:px-48 3xl:px-96">
-    <div id="page-heading">
-        <div id="blogType-and-editButton">
-                <form method="POST" action="{% url 'blog:blogView' blogId=blog.blogId %}" id="typeInput-and-saveButton">
-                    <input type="hidden" name="field" value="type-info" />
-                    {% csrf_token %}
-                    <div class="formRow">
-                        <label for="{{ typeFieldForm.blogType.id_for_label }}" class="formLabel">
-                            <h5 id="type">Type: {{ blog.blogType }}</h5>
-                            <select 
-                                name="{{ typeFieldForm.blogType.name }}" 
-                                id="type-input"
-                                style="display: none;"
-                                required>
-                                <option value="Review" {% if blog.blogType == "Review" %}selected{% endif %}>Review</option>
-                                <option value="Anticipation" {% if blog.blogType == "Anticipation" %}selected{% endif %}>Anticipation</option>
-                                <option value="Safety" {% if blog.blogType == "Safety" %}selected{% endif %}>Safety</option>
-                            </select>
-                        </label>
-                    </div>
-                    <div class="submit-row">
-                        <button type="submit" id="save-type" style="display: none;">Save Type</button>
-                    </div>
-                
+    <div id="page-heading" class="flex flex-col gap-[15px] md:gap-[20px]">
+        <div id="blogType-and-editButton" class="flex flex-col-reverse sm:flex-row justify-between items-center **gap-[10px] sm:gap-0">
+            <form method="POST" action="{% url 'blog:blogView' blogId=blog.blogId %}" id="typeInput-and-saveButton" class="flex **flex-col sm:flex-row justify-between w-full **gap-[10px] sm:gap-0">
+                <input type="hidden" name="field" value="type-info" />
+                {% csrf_token %}
+                <div class="formRow flex flex-row justify-between items-start mr-auto gap-[30px] sm:gap-[50px] col-span-3">
+                    <label for="{{ typeFieldForm.blogType.id_for_label }}" class=" flex flex-col gap-[5px] after-xsm:gap-[10px]">
+                        <h5 id="type" class="text-[20px] sm:text-[25px] font-Wanted-Bold text-[#008d95]">Type: {{ blog.blogType }}</h5>
+                        <select 
+                            name="{{ typeFieldForm.blogType.name }}" 
+                            id="type-input"
+                            style="display: none;"
+                            class="w-full p-[15px] after-xsm:p-[25px] rounded-[15px] border-[1px] border-solid border-[rgba(0,0,0,0.153)] font-Wanted-Regular text-[16px] sm:text-[18px]"
+                            required>
+                            <option value="Review" {% if blog.blogType == "Review" %}selected{% endif %}>Review</option>
+                            <option value="Anticipation" {% if blog.blogType == "Anticipation" %}selected{% endif %}>Anticipation</option>
+                            <option value="Safety" {% if blog.blogType == "Safety" %}selected{% endif %}>Safety</option>
+                        </select>
+                    </label>
+                </div>
+                <div class="submit-row mt-[8px] sm:mt-[10px] flex items-center justify-center">
+                    <button type="submit" id="save-type" style="display: none;" class="px-[16px] after-xsm:px-[20px] py-[12px] after-xsm:py-[15px] border-[2px] border-solid border-transparent border-r-[#13c9d3] border-l-[#008d95bc] text-white font-Wanted-Regular text-[16px] sm:text-[19px] no-underline flex flex-row items-center gap-[10px] rounded-[20px] bg-gradient-to-r from-[#008d95bc] to-[#13c9d3] cursor-pointer justify-center">Save Type</button>
+                </div>
             </form>
             {% if request.user.is_authenticated and request.user == blog.created_by%}
-            <button type="button" id="edit-btn" >
-                <img id="edit-img" src="{% static 'images/home/edit-svgrepo-com.svg' %}" alt="Edit">
-                <span style="margin-left: 5px;">Edit Blog</span>
-            </button>
+            <div class="w-full flex justify-end">
+                <button type="button" id="edit-btn" class="px-[15px] py-[10px] sm:py-[15px] border-[1px] border-solid border-transparent border-r-[#13c9d3] border-l-[#008d95bc] text-white font-Wanted-Variable no-underline flex flex-row items-center justify-between gap-[8px] sm:gap-[10px] text-[18px] sm:text-[24px] rounded-[20px] bg-gradient-to-r from-[#008d95bc] to-[#13c9d3] cursor-pointer">
+                    <img id="edit-img" class="size-4 after-xsm:size-5 sm:size-6" src="{% static 'images/blogApp/edit-svgrepo-com.svg' %}" alt="Edit">
+                    <span style="margin-left: 5px;">Edit Blog</span>
+                </button>
+            </div>
             {% endif %}
         </div>
 
         <form method="POST" action="{% url 'blog:blogView' blogId=blog.blogId %}">
             {% csrf_token %}
-            <div class="formRow">
+            <div class="formRow flex flex-row justify-between items-start mr-auto gap-[30px] sm:gap-[50px] col-span-3">
                 <div>
                     <input type="hidden" name="field" value="title-info" />
-                    <label for="{{ titleFieldForm.title.id_for_label }}" class="formLabel">
-                        <h2 id="title">{{ blog.title }}</h2>
+                    <label for="{{ titleFieldForm.title.id_for_label }}" class="formLabel font-Wanted-Bold text-[14px] sm:text-[16px] md:text-[19px] text-black">
+                        <h2 id="title" class="font-Wanted-ExtraBold text-Pre-Xl xsm:text-[30px] lg:text-[40px]">{{ blog.title }}</h2>
                         <input
                             type="text"
                             name="{{ titleFieldForm.title.name }}"
                             id="title-input"
                             style="display: none; font-size: 2em; font-weight: bold; width: auto;"
+                            class="w-full p-[20px] sm:p-[25px] rounded-[15px] border-[1px] border-solid border-[rgba(0,0,0,0.153)] font-Wanted-Regular text-[16px] sm:text-[18px]"
                         />
                     </label>
                 </div>
-                <div class="submit-row">
-                    <button type="submit" id="save-title" style="display: none;">Save Title</button>
+                <div class="submit-row mt-[8px] sm:mt-[10px] flex items-center justify-center">
+                    <button type="submit" id="save-title" style="display: none;" class="px-[16px] after-xsm:px-[20px] py-[12px] after-xsm:py-[15px] border-[2px] border-solid border-transparent border-r-[#13c9d3] border-l-[#008d95bc] text-white font-Wanted-Regular text-[16px] sm:text-[19px] no-underline flex flex-row items-center gap-[10px] rounded-[20px] bg-gradient-to-r from-[#008d95bc] to-[#13c9d3] cursor-pointer justify-center">Save Title</button>
                 </div>
             </div>
         </form>
@@ -76,97 +79,101 @@
         <form method="POST" action="{% url 'blog:blogView' blogId=blog.blogId %}" enctype="multipart/form-data">
             {% csrf_token %}
             <div id="news-header">
-                <div id="nH-image-container" style="background-image: url('{{ blog.imageOne.url }}');">
-                    <div id="display-header">
-                        <img id="header-img" src="{{ blog.imageOne.url }}" />
+                <div id="nH-image-container" style="background-image: url('{{ blog.imageOne.url }}');" class="w-full h-full min-w-full min-h-[300px] after-xsm:min-h-[400px] sm:min-h-[500px] max-h-[550px] relative rounded-[25px] bg-cover bg-top bg-no-repeat before:content-[''] before:absolute before:top-0 before:bottom-0 before:right-0 before:left-0 before:bg-[rgba(23,23,23,0.2)] before:backdrop-blur-[5px] before:rounded-[25px] before:z-[1]  *:relative *:z-[2]">
+                    <div id="display-header" class="flex items-center justify-center w-full h-full min-h-[300px] after-xsm:min-h-[400px] sm:min-h-[500px] relative p-[20px] after-xsm:p-[40px] sm:p-[80px]">
+                        <img id="header-img" src="{{ blog.imageOne.url }}" class="w-full max-w-[300px] after-xsm:max-w-[350px] sm:max-w-[400px] max-h-[300px] after-xsm:max-h-[350px] sm:max-h-[400px] object-contain rounded-[20px]" />
                     </div>
                 </div>
             </div>
             
-            <div style="display: flex; flex-direction: row;align-items: center; justify-content: space-between;">
-                <div class="formRow">
+            <div style="display: flex; flex-direction: row;align-items: center; justify-content: space-between;" class="flex flex-col sm:flex-row items-center sm:items-start justify-between gap-[10px] sm:gap-[20px]">
+                <div class="formRow flex flex-row justify-between items-start mr-auto gap-[30px] sm:gap-[50px] col-span-3">
                     <input type="hidden" name="field" value="imageOne-info" />
-                    <label for="{{ imageOneForm.imageOne.id_for_label }}" class="formLabel" style="margin-right: auto;">
+                    <label for="{{ imageOneForm.imageOne.id_for_label }}" class="formLabel font-Wanted-Bold text-[14px] sm:text-[16px] md:text-[19px] text-black" style="margin-right: auto;">
                         <div id="news-header-input" style="display: none;">
                             <p class="rowTitle" style="padding-bottom: 10px;">Upload New Header Image</p>
     
                             <input type="file" 
                                 name="{{ imageOneForm.imageOne.name }}"
                                 id="{{ imageOneForm.imageOne.id_for_label }}" 
-                                accept="image/*" />
+                                accept="image/*"
+                                class="w-full p-[20px] sm:p-[25px] rounded-[15px] border-[1px] border-solid border-[rgba(0,0,0,0.153)] font-Wanted-Regular text-[16px] sm:text-[18px]" />
                         </div>
                     </label>
                 </div>
-                <div class="submit-row">
-                    <button type="submit" id="save-imageOne" style="display: none;">Save Header Image</button>
+                <div class="submit-row mt-[8px] sm:mt-[10px] flex items-center justify-center">
+                    <button type="submit" id="save-imageOne" style="display: none;" class="px-[16px] after-xsm:px-[20px] py-[12px] after-xsm:py-[15px] border-[2px] border-solid border-transparent border-r-[#13c9d3] border-l-[#008d95bc] text-white font-Wanted-Regular text-[16px] sm:text-[19px] no-underline flex flex-row items-center gap-[10px] rounded-[20px] bg-gradient-to-r from-[#008d95bc] to-[#13c9d3] cursor-pointer justify-center">Save Header Image</button>
                 </div>
             </div>
         </form>
-        <div id="blog-content">
-            <div class="blogContent-Sidebar">
-                <div class="blogContent-Sidebar-container">
-                    <div class="userDate-published">
-                        <h6>By <a href="{% url 'accountManagement:memberProfile' username=blog.created_by.username %}" id="username">@{{ blog.created_by.username }}</a></h6>
-                        <p>{{ blog.created_at|date:"F d, Y" }}</p>
+
+        <div id="blog-content" class="flex flex-col md:flex-row gap-[20px] md:gap-[40px]">
+            <div class="blogContent-Sidebar w-full md:w-[30%] gap-[30px] md:gap-[50px] h-full">
+                <div class="blogContent-Sidebar-container h-full flex flex-col gap-[50px]">
+                    <div class="userDate-published flex flex-col gap-[5px] sm:gap-[10px]">
+                        <h6 class="text-[#008d95] font-Wanted-Medium text-[16px] sm:text-[20px]">By <a href="{% url 'social:publicProfile' username=blog.created_by.username %}" id="username" class="no-underline text-[#008d95] hover:underline">@{{ blog.created_by.username }}</a></h6>
+                        <p class="font-Wanted-Regular text-[14px] sm:text-[18px]">{{ blog.created_at|date:"F d, Y" }}</p>
                     </div>
-                    <div class="bCS-divider">
-                        <hr>
+                    <div class="bCS-divider w-full flex justify-start">
+                        <hr class="w-[50%] border-[2px] border-solid border-[rgba(0,0,0,0.223)] rounded-[10px]">
                     </div>
                 </div>
             </div>
 
 
-            <div class="blogContent-Main">
+            <div class="blogContent-Main w-full md:w-[70%] flex flex-col gap-[30px] md:gap-[50px]">
                 <form method="POST" action="{% url 'blog:blogView' blogId=blog.blogId %}">
                     {% csrf_token %}
                     <div>
                         <input type="hidden" name="field" value="body-info" />
-                        <label for="{{ bodyFieldForm.body.id_for_label }}" class="formRow" style="margin-right: auto;">
-                            <p id="blog-body">{{ blog.body }}</p>
+                        <label for="{{ bodyFieldForm.body.id_for_label }}" class="formRow flex flex-row justify-between items-start mr-auto gap-[30px] sm:gap-[50px] col-span-3" style="margin-right: auto;">
+                            <p id="blog-body" class="font-Wanted-Variable text-[16px] sm:text-[19px] text-black">{{ blog.body }}</p>
                             <textarea
                             name="{{ bodyFieldForm.body.name }}"
                             id="blog-body-input"
                             style="display: none; width: 100%; height: 150px;"
+                            class="w-full p-[20px] sm:p-[25px] rounded-[15px] border-[1px] border-solid border-[rgba(0,0,0,0.153)] font-Wanted-Regular text-[16px] sm:text-[18px]"
                         >{{blog.body}}</textarea>
                         </label>
-                        <div class="submit-row">
-                            <button type="submit" id="save-blog-body" style="display: none;">Save Body</button>
+                        <div class="submit-row mt-[8px] sm:mt-[10px] flex items-center justify-center">
+                            <button type="submit" id="save-blog-body" style="display: none;" class="px-[16px] after-xsm:px-[20px] py-[12px] after-xsm:py-[15px] border-[2px] border-solid border-transparent border-r-[#13c9d3] border-l-[#008d95bc] text-white font-Wanted-Regular text-[16px] sm:text-[19px] no-underline flex flex-row items-center gap-[10px] rounded-[20px] bg-gradient-to-r from-[#008d95bc] to-[#13c9d3] cursor-pointer justify-center">Save Body</button>
                         </div>
                     </div>
                 </form>
 
                 <div>
-                    <div class="bodyImages" id="images">
+                    <div class="bodyImages w-full grid grid-cols-1 sm:grid-cols-2 gap-[24px] sm:gap-[35px]" id="images">
                         {% if blog.imageOne %}
-                        <img src="{{ blog.imageOne.url }}" />
+                        <img src="{{ blog.imageOne.url }}" class="max-h-full max-w-full w-full h-full rounded-[20px]" />
                         {% endif %}
                         {% if blog.imageTwo %}
-                        <img src="{{ blog.imageTwo.url }}" />
+                        <img src="{{ blog.imageTwo.url }}" class="max-h-full max-w-full w-full h-full rounded-[20px]" />
                         {% endif %}
                         {% if blog.imageThree %}
-                        <img src="{{ blog.imageThree.url }}" />
+                        <img src="{{ blog.imageThree.url }}" class="max-h-full max-w-full w-full h-full rounded-[20px]" />
                         {% endif %}
                     </div>
     
                     <form method="POST" action="{% url 'blog:blogView' blogId=blog.blogId %}" enctype="multipart/form-data">
                         {% csrf_token %}
                         <div style="display: flex; flex-direction: row;align-items: center; justify-content: space-between; padding: 5px;">
-                            <div class="formRow">
+                            <div class="formRow flex flex-row justify-between items-start mr-auto gap-[30px] sm:gap-[50px] col-span-3">
                                 <div id="image-two">
                                     <input type="hidden" name="field" value="imageTwo-info" />
-                                    <label for="{{ imageTwoForm.imageTwo.id_for_label }}" class="formLabel">
+                                    <label for="{{ imageTwoForm.imageTwo.id_for_label }}" class="formLabel font-Wanted-Bold text-[14px] sm:text-[16px] md:text-[19px] text-black">
                                         <div id="imageTwo-input" style="display: none;">
                                             <p class="rowTitle">Update Body Image 1</p>
                                             <input type="file" 
                                                 name="{{ imageTwoForm.imageTwo.name }}"
                                                 id="{{ imageTwoForm.imageThree.id_for_label }}" 
-                                                accept="image/*" />
+                                                accept="image/*"
+                                                class="w-full p-[20px] sm:p-[25px] rounded-[15px] border-[1px] border-solid border-[rgba(0,0,0,0.153)] font-Wanted-Regular text-[16px] sm:text-[18px]" />
                                         </div>
                                     </label>
                                 </div>
                             </div>
-                            <div class="submit-row">
-                                <button type="submit" id="save-imageTwo" style="display: none;">Save Image 1</button>
+                            <div class="submit-row mt-[8px] sm:mt-[10px] flex items-center justify-center">
+                                <button type="submit" id="save-imageTwo" style="display: none;" class="px-[16px] after-xsm:px-[20px] py-[12px] after-xsm:py-[15px] border-[2px] border-solid border-transparent border-r-[#13c9d3] border-l-[#008d95bc] text-white font-Wanted-Regular text-[16px] sm:text-[19px] no-underline flex flex-row items-center gap-[10px] rounded-[20px] bg-gradient-to-r from-[#008d95bc] to-[#13c9d3] cursor-pointer justify-center">Save Image 1</button>
                             </div>
                         </div>
                     </form>
@@ -174,22 +181,23 @@
                     <form method="POST" action="{% url 'blog:blogView' blogId=blog.blogId %}" enctype="multipart/form-data">
                         {% csrf_token %}
                         <div style="display: flex; flex-direction: row;align-items: center; justify-content: space-between; padding: 5px;">
-                            <div class="formRow">
+                            <div class="formRow flex flex-row justify-between items-start mr-auto gap-[30px] sm:gap-[50px] col-span-3">
                                 <div>
                                     <input type="hidden" name="field" value="imageThree-info" />
-                                    <label for="{{ imageThreeForm.imageThree.id_for_label }}" class="formLabel">
+                                    <label for="{{ imageThreeForm.imageThree.id_for_label }}" class="formLabel font-Wanted-Bold text-[14px] sm:text-[16px] md:text-[19px] text-black">
                                         <div id="imageThree-input" style="display: none;">
                                             <p class="rowTitle">Update Body Image 2</p>
                                             <input type="file" 
                                                 name="{{ imageThreeForm.imageThree.name }}"
                                                 id="{{ imageThreeForm.imageThree.id_for_label }}" 
-                                                accept="image/*" />
+                                                accept="image/*"
+                                                class="w-full p-[20px] sm:p-[25px] rounded-[15px] border-[1px] border-solid border-[rgba(0,0,0,0.153)] font-Wanted-Regular text-[16px] sm:text-[18px]" />
                                         </div>
                                     </label>
                                 </div>
                             </div>
-                            <div class="submit-row">
-                                <button type="submit" id="save-imageThree" style="display: none;">Save Image 2</button>
+                            <div class="submit-row mt-[8px] sm:mt-[10px] flex items-center justify-center">
+                                <button type="submit" id="save-imageThree" style="display: none;" class="px-[16px] after-xsm:px-[20px] py-[12px] after-xsm:py-[15px] border-[2px] border-solid border-transparent border-r-[#13c9d3] border-l-[#008d95bc] text-white font-Wanted-Regular text-[16px] sm:text-[19px] no-underline flex flex-row items-center gap-[10px] rounded-[20px] bg-gradient-to-r from-[#008d95bc] to-[#13c9d3] cursor-pointer justify-center">Save Image 2</button>
                             </div>
                         </div>
                     </form>

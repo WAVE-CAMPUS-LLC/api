@@ -19,45 +19,45 @@ Campus Manager — WAVE.
 
 {% block body %}
 <div id="content-container" class="flex flex-col gap-[70px] px-4 sm:px-6 md:px-[40px] pre-lg:px-[40px] lg:px-[100px] 2xl:px-48 3xl:px-96">
-    <div id="pageHeader">
-        <h3>Welcome to the dashboard, {{ request.user.first_name }}!</h3>
-        <p>Manage campuses from your dashboard. </p>
+    <div id="pageHeader" class="w-full justify-start flex-col gap-[5px]">
+        <h3 class="font-Wanted-Bold text-[30px] md:text-[40px]">Welcome<span class="xs:max-sm:hidden"> to the dashboard</span>, {{ request.user.first_name }}!</h3>
+        <p class="font-Wanted-Variable text-[17px] text-[rgba(128,128,128,0.798)]">Manage campuses from your dashboard. </p>
     </div>
 
-    <div id="tabbingContent">
+    <div id="tabbingContent" class="flex flex-col gap-[30px]">
         <div id="tabControlHeader">
-            <ul id="tabControl">
-                <li class="managerTab tab-active" data-tab="campusInformation">
+            <ul id="tabControl" class="list-none flex flex-row justify-start gap-[10px] w-full pb-[5px] font-Wanted-Bold text-[16px]">
+                <li class="managerTab tab-active cursor-pointer p-[10px] px-[20px] border-b-[4px] border-solid border-[#008d95]" data-tab="campusInformation">
                     {% if managed_colleges > 1 %}
-                    Assigned Campuses
+                    <span class="xs:max-xxsm:hidden">Assigned</span> Campuses
                     {% else %}
-                    Assigned Campus
+                    <span class="xs:max-xxsm:hidden">Assigned</span> Campus
                     {% endif %} 
                 </li>
-                <li class="managerTab" data-tab="organizationInformation" title="View all organizations. Pending and approved!">Organizations</li>
-                <li  class="managerTab" data-tab="eventsInformation">Events</li>
+                <li class="managerTab cursor-pointer p-[10px] px-[20px] hover:border-b-[4px] hover:border-solid hover:border-[#008d95a4]" data-tab="organizationInformation" title="View all organizations. Pending and approved!">Organizations</li>
+                <li  class="managerTab cursor-pointer p-[10px] px-[20px] hover:border-b-[4px] hover:border-solid hover:border-[#008d95a4]" data-tab="eventsInformation">Events</li>
             </ul>        
         </div>
     
         <div id="tabBody">
             <div id="tabBodyContent">
                 <div id="campusInformation" class="campusManagerInformation">
-                    <div class="campusInfoContainer">
+                    <div class="campusInfoContainer grid xs:max-xxsm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[20px]">
                         {% if managed_colleges %}
                             {% for college_info in managed_colleges %}
-                            <div id="college-card">
-                                <div id="college-logo">
-                                    <img src="{{ college_info.college.logo.url }}" alt="{{ college_info.college.name }} logo">
+                            <div id="college-card" class="border-[2px] border-solid border-[rgba(0,0,0,0.038)] rounded-[15px] shadow-form-shadow-3 p-[30px] flex flex-col gap-[10px] cursor-pointer">
+                                <div id="college-logo" class="w-full flex justify-end">
+                                    <img src="{{ college_info.college.logo.url }}" alt="{{ college_info.college.name }} logo" class="w-[90px] h-[90px]">
                                 </div>
-                                <div id="college-body">
+                                <div id="college-body" class="font-Wanted-SemiBold text-[30px] flex flex-col gap-[15px]">
                                     <div id="college-card-header">
-                                        <h5>{{ college_info.college.name }}</h5>
+                                        <h5 class="whitespace-nowrap overflow-hidden text-ellipsis w-full text-left">{{ college_info.college.name }}</h5>
                                     </div>
-                                    <div id="college-card-body">
-                                        <p class="members-display">
+                                    <div id="college-card-body" class="font-Wanted-Regular text-[15.5px] flex justify-between items-center">
+                                        <p class="members-display font-Wanted-Variable text-[13px]">
                                             {{ college_info.member_count }} {% if college_info.member_count == 1 %}Member{% else %}Members{% endif %}
                                         </p>
-                                        <p class="organization-display">
+                                        <p class="organization-display font-Wanted-Variable text-[13px]">
                                             {% if college_info.organization_count > 1 %}
                                             {{ college_info.organization_count }} Organizations
                                             {% elif college_info.organization_count < 1 %}
@@ -69,8 +69,8 @@ Campus Manager — WAVE.
                                     </div>
                                 </div>
 
-                                <div id="manage-row">
-                                    <a target="_blank" href="{% url "campusManager:campus" collegeId=college_info.college.collegeId %}" class="manage-college-btn">Manage</a>
+                                <div id="manage-row" class="flex justify-center">
+                                    <a target="_blank" href="{% url "campusManager:campus" collegeId=college_info.college.collegeId %}" class="manage-college-btn p-[15px_10px] border-[1px] border-solid border-transparent border-r-[#13c9d3] border-l-[#008d95bc] text-white w-1/2 no-underline font-[Wanted-Regular] text-[17px] flex items-center flex-row justify-center gap-2 rounded-[20px] bg-gradient-to-r from-[#008d95bc] to-[#13c9d3] cursor-pointer">Manage</a>
                                 </div>
                             </div>
                             {% endfor %}
@@ -79,44 +79,44 @@ Campus Manager — WAVE.
                 </div>
 
                 <div id="organizationInformation" class="campusManagerInformation">
-                    <div class="attentionInfoContainer">
-                        <div class="tabHeader">
-                            <h4>Pending Organizations</h4>
-                            <p>Organizations are pending approval. Please review and approve them.</p>
+                    <div class="attentionInfoContainer flex flex-col gap-[20px]">
+                        <div class="tabHeader flex justify-start flex-col gap-[5px]">
+                            <h4 class="font-Wanted-Bold text-[20px]">Pending Organizations</h4>
+                            <p class="font-Wanted-Variable text-[15px] text-[rgba(128,128,128,0.798)]">Organizations are pending approval. Please review and approve them.</p>
                         </div>
-                        <div class="tabBody">
+                        <div class="tabBody flex flex-col gap-7">
                             {% if pending_organizations %}
                                 {% for org in pending_organizations %}
-                                <div class="organizationCard">
-                                    <div class="organizationPreviewInfo">
+                                <div class="organizationCard xs:max-md:border-[2px] xs:max-md:border-solid xs:max-md:border-[rgba(0,0,0,0.038)] xs:max-md:rounded-[15px] xs:max-md:shadow-form-shadow-3 xs:max-md:p-[30px] px-[10px] flex flex-col xs:max-md:gap-[40px] md:flex-row justify-between items-center">
+                                    <div class="organizationPreviewInfo flex flex-col sm:flex-row gap-[30px] items-center">
                                         <div class="organizationLogo">
-                                            <img src="{{ org.logo.url }}" alt="Organization Logo">
+                                            <img src="{{ org.logo.url }}" alt="Organization Logo" class="xxsm:max-md:w-[150px] xxsm:max-md:h-[150px] w-[100px] h-[100px] rounded-[15px]">
                                         </div>
-                                        <div class="organizationBody">
+                                        <div class="organizationBody flex flex-col gap-[10px]">
                                             <div class="organizationCardHeader">
-                                                <h5>{{ org.name }}</h5>
+                                                <h5 class="font-Wanted-SemiBold text-[20px] md:text-[25px]">{{ org.name }}</h5>
                                             </div>
-                                            <div class="organizationCardBody">
-                                                <p class="organization-created">
+                                            <div class="organizationCardBody flex flex-col gap-[5px]">
+                                                <p class="organization-created font-Wanted-Variable text-[15px] text-[rgba(128,128,128,0.798)]">
                                                     Created by: {{ org.created_by.first_name }} {{ org.created_by.last_name }} 
                                                     <a href="{% url "social:publicProfile" username=org.created_by.username %}">
                                                         {{ org.created_by.username }}
                                                     </a>
                                                 </p>
-                                                <p class="organization-display">Created on: {{ org.date_added }}</p>
+                                                <p class="organization-display font-Wanted-Variable text-[15px] text-[rgba(128,128,128,0.798)]">Created on: {{ org.date_added }}</p>
                                             </div>
                                         </div>
                                     </div>
                                     
-                                    <form method="POST" class="organizationManageRow">
+                                    <form method="POST" class="organizationManageRow flex flex-col sm:flex-row gap-[10px] items-center h-full">
                                         {% csrf_token %}
                                         <input type="hidden" name="orgId" value="{{ org.orgId }}">
                                         <div class="previewRow">
-                                            <button role="button" type="button" class="manage-button preview">Preview</button>
+                                            <button role="button" type="button" class="manage-button preview bg-[#008d95] px-[12px] xssm:max-md:px-[20px] xs:max-md:rounded-[12px] p-[12px] border-[2px] border-solid border-transparent text-white font-Wanted-Variable text-[18px] flex items-center flex-row gap-[10px] rounded-[20px] cursor-pointer">Preview</button>
                                         </div>
-                                        <div class="approvalAction">
-                                            <button role="button" type="submit" name="approvalAction" value="approveOrg" class="manage-button approve">Approve</button>
-                                            <button role="button" type="submit" name="approvalAction" value="declineOrg" class="manage-button decline">Decline</button>
+                                        <div class="approvalAction flex flex-row md:flex-col justify-between h-full gap-[15px]">
+                                            <button role="button" type="submit" name="approvalAction" value="approveOrg" class="manage-button approve bg-[#13d329] px-[12px] xssm:max-md:px-[20px] xs:max-md:rounded-[12px] p-[12px] border-[2px] border-solid border-transparent text-white font-Wanted-Variable text-[18px] flex items-center flex-row gap-[10px] rounded-[20px] cursor-pointer">Approve</button>
+                                            <button role="button" type="submit" name="approvalAction" value="declineOrg" class="manage-button decline bg-red-600 px-[12px] xssm:max-md:px-[20px] xs:max-md:rounded-[12px] p-[12px] border-[2px] border-solid border-transparent text-white font-Wanted-Variable text-[18px] flex items-center flex-row gap-[10px] rounded-[20px] cursor-pointer">Decline</button>
                                         </div>
                                     </form>  
                                 </div>
@@ -124,9 +124,10 @@ Campus Manager — WAVE.
                             {% else %}
                             <div class="emptyContainer">
                                 <div>
-                                    <img src="{% static "/images/collegeManagementApp/collegeInformation/empty-listing.svg" %}" />
+                                    <img class="w-[30px] after-xsm:w-[40px] sm:w-[50px] md:w-[60px]" src="{% static "/images/collegeManagementApp/collegeInformation/empty-listing.svg" %}" />
                                 </div>
-                                <p>No pending organizations.</p>
+                                <p class="font-Wanted-Variable text-[10px] after-xsm:text-[12px] sm:text-[14px] md:text-[16.5px] text-black">No pending organizations.</p>
+                                
                             </div>
                             {% endif %}
                         </div>
