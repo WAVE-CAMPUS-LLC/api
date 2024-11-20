@@ -23,20 +23,23 @@ Careers @ Wave.
 {% block body %}
 <div id="content-container" class="flex flex-col gap-[70px] px-4 sm:px-6 md:px-[40px] pre-lg:px-[40px] lg:px-[100px] 2xl:px-48 3xl:px-96">
     <div class="job-rowOne">
-        <div class="infoText">
-            <div class="text-holder">
-                <h3>Careers @ <span id="body-logo"> WAVE<span class="spot">.</span></h3>
-                <p>Build the future with us!</p>
+        <div class="flex flex-col md:flex-row items-center">
+            <div class="flex items-center md:w-1/2">
+                <div class="mx-auto md:mx-0 text-center xxsm:text-center md:text-start gap-[10px]">
+                    <h3 class="font-Wanted-ExtraBold text-Pre-Xl xsm:text-[30px] lg:text-[40px]">Careers @ <span id="body-logo"> WAV<span class="spot">E</span>.</h3>
+                    <p class="font-Wanted-Medium text-[20px] leading text-customGray2">Build the future with us!</p>
+                </div>
             </div>
-            <div class="image">
-                <img src="{% static "images\career\careerHome.png" %}" />
+            <div class="pt-[50px] after-xsm:w-[366px] md:w-1/2 ">
+                <img class="rounded-3xl w-full h-full" src="{% static "images\career\careerHome.png" %}" />
             </div>
         </div>
     </div>
-    <div id="jobs-header-info">
-        <section id="jhi-One">
-            <h4>Come, let's innovate! </h4>
-            <p>
+
+    <div id="jobs-header-info" class="flex flex-col">
+        <section id="jhi-One" class="flex flex-col gap-[50px]">
+            <h4 class="flex justify-center font-Wanted-ExtraBold text-Pre-Xl xsm:text-[30px] lg:text-[40px]">Come, let's innovate! </h4>
+            <p class="font-Wanted-Variable text-[15px] text-[rgb(101,101,101)] leading-[35px]">
                 Our platform serves as a dynamic bridge, empowering organizers to showcase their events with
                 essential details while providing users with a hassle-free way to discover, purchase tickets,
                 and participate in campus happenings. By cultivating a collaborative environment, we aim to
@@ -48,30 +51,30 @@ Careers @ Wave.
         </section>
         <section id="jhi-Two"></section>
     </div>
-    <div id="jobs-info-tabbing">
-        <div id="jit-heading">
-            <h1>We'd love to work with you!</h1>
-            <p>Click on each tab to view roles.</p>
+    <div id="jobs-info-tabbing" class="flex flex-col gap-[20px] items-center">
+        <div id="jit-heading" class="w-full flex flex-col gap-2">
+            <h1 class="font-Wanted-ExtraBold text-Pre-Xl xsm:text-[30px] lg:text-[40px]">We'd love to work with you!</h1>
+            <p class="font-Wanted-Medium text-[20px] text-gray-600">Click on each tab to view roles.</p>
 
-            <div id="jit-heading-search">
-                <div class="jit-heading-search-container">
-                    <input type="search" placeholder="Search available roles" />
-                    <div class="jit-hsc-img">
-                        <img src="{% static "images/extras/company/careers/search.svg" %}" />
+            <div id="jit-heading-search" class="w-full hidden xsm:flex justify-end">
+                <div class="w-full xsm:w-auto flex flex-row border-[2px] border-solid border-[#070707] rounded-[15px] bg-[#ffffff07] shadow-custom-shadow-2">
+                    <input type="search" class="p-[15px] font-Wanted-Regular text-[17px] text-[#000000] border-none rounded-[15px] outline-[2px] outline outline-transparent outline-offset-[2px]" placeholder="Search available roles" />
+                    <div class="jit-hsc-img flex items-center pr-[10px]">
+                        <img class="w-[30px]" src="{% static "images/extras/company/careers/search.svg" %}" />
                     </div>
                 </div>
             </div>
         </div>
 
-        <div id="job-info-main-container">
-            <div id="jit-tab-container">
+        <div id="job-info-main-container" class="w-full md:w-5/6 ">
+            <div id="jit-tab-container" class="flex flex-col gap-[10px]">
                 {% for department, roles in department_roles.items %}
                 <div class="jit-role-tab">
-                    <div role="button" class="jit-tab-header">
+                    <div role="button" class="jit-tab-header font-Wanted-Bold text-[24px] py-[15px] px-[20px] rounded-[20px] border-[#008d95] bg-[#008d95] text-white cursor-pointer">
                         <h3>{{ department.name }}</h3>
                     </div>
-                    <div class="jit-tab-body defaulted">
-                        <p id="role-count">
+                    <div class="jit-tab-body defaulted border-[4px] border-solid border-[008d95] rounded-bl-[20px] rounded-br-[20px] my-0 mx-[20px] p-[20px]">
+                        <p id="role-count" class="w-full flex justify-end mb-[25px] font-Wanted-Bold text-[15px] font-Wanted-Variable">
                             {% if roles|length == 1 %}
                             {{ roles|length }} Open Role
                             {% else %}
@@ -81,16 +84,16 @@ Careers @ Wave.
                         <ul>
                             {% for role in roles %}
                             <li>
-                                <a href="{% url "careers:roleDetails" roleID=role.roleID %}">
-                                    <div id="role-title">
-                                        <p>Role</p>
-                                        <p>Team</p>
-                                        <p>Location (Type)</p>
+                                <a class="border-t-[1px] border-solid border-black p-[20px] pl-[10px] flex flex-col gap-[5px] text-[000000]" href="{% url "careers:roleDetails" roleID=role.roleID %}">
+                                    <div id="role-title" class="flex justify-between pre-sm:grid w-full pre-sm:grid-cols-3 gap-2">
+                                        <p class="font-Wanted-Regular text-[15px]">Role</p>
+                                        <p class="font-Wanted-Regular text-[15px] hidden pre-sm:flex">Team</p>
+                                        <p class="font-Wanted-Regular text-[15px] hidden xxsm:flex">Location (Type)</p>
                                     </div>
-                                    <div id="role-info">
-                                        <h6>{{ role.roleTitle }}</h6>
-                                        <h6>{{ role.department }}</h6>
-                                        <h6>{{ role.roleLocation }} ({{ role.roleType }})</h6>
+                                    <div id="role-info" class="flex justify-between pre-sm:grid w-full pre-sm:grid-cols-3 gap-2">
+                                        <h6 class="font-Wanted-Medium text-[17px]">{{ role.roleTitle }}</h6>
+                                        <h6 class="font-Wanted-Medium text-[17px] hidden pre-sm:flex">{{ role.department }}</h6>
+                                        <h6 class="font-Wanted-Medium text-[17px] hidden xxsm:flex">{{ role.roleLocation }} ({{ role.roleType }})</h6>
                                     </div>
                                 </a>
                             </li>
@@ -105,8 +108,8 @@ Careers @ Wave.
             </div>
         </div>
     </div>
-    <div id="jobs-footer-info">
-        <h3>Create with us!</h3>
+    <div class="w-full flex justify-end border-t-[2px] border-t-[rgba(146, 146, 146, 0.096)] pt-[70px] bg-clip-text text-transparent text-[35px] font-Wanted-ExtraBold bg-gradient-to-r from-gradient-start to-gradient-end">
+        <h1 class="text-end sm:text-[42px] md:text-[50px] pre-lg:text-[53px] lg:text-[56px] xl:text-[80px]">Create with us!</h1>
     </div>
 </div>
 {% endblock body %}

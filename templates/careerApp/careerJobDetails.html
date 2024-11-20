@@ -20,34 +20,34 @@ Careers @ Wave.
 
 {% block body %}
 <div id="content-container" class="flex flex-col gap-[70px] px-4 sm:px-6 md:px-[40px] pre-lg:px-[40px] lg:px-[100px] 2xl:px-48 3xl:px-96">
-    <div id="page-heading">
-        <h6>
+    <div id="page-heading" class="flex flex-col gap-[10px]">
+        <h6 class="text-[30px] md:text-[50px] font-Wanted-ExtraBold text-[#008d95]">
             {{ careerRole.roleTitle }}
         </h6>
-        <div id="jobDetailsApply">
-            <div id="jobDetails">
-                <h1 id="jobTeam">
+        <div id="jobDetailsApply" class="flex flex-col xxsm:flex-row gap-4">
+            <div id="jobDetails" class="w-[80%]">
+                <h1 id="jobTeam" class="text-[20px] font-Wanted-Regular">
                     {{ careerRole.department }}
                 </h1>
-                <h2>
+                <h2 class="text-[20px] sm:text-[25px] font-Wanted-Bold text-[#444444]">
                     {{ careerRole.roleLocation }} ({{ careerRole.roleType }})
                 </h2>
             </div>
-            <div id="jobApply">
+            <div id="jobApply" class="w-full xxsm:w-[30%] md:w-[25%] flex justify-end items-center xs:max-after-xxsm:hidden">
                 <div class="jA-Container">
-                    <button type="button" id="applyJobForm">Apply Now</button>
+                    <button type="button" id="applyJobForm" class="p-[20px] py-[15px] bg-[#008d95] border-none rounded-[15px] font-Wanted-Medium text-[17px] text-white cursor-pointer">Apply Now</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="job-divider">
-        <hr>
+    <div id="job-divider" class="w-full flex justify-center py-4">
+        <hr class="border-[3px] border-solid border-[rgba(125,125,125,0.37)] w-[90%] sm:w-[50%] rounded-[10px]">
     </div>
 
-    <div id="job-description">
-        <div class="jB-mission">
-            <p>
+    <div id="job-description" class="sm:px-[70px] font-Wanted-Regular w-full flex flex-col justify-start items-start gap-[60px]">
+        <div class="jB-mission flex flex-col gap-[20px] items-start justify-start w-full">
+            <p class="leading-[25px] font-Wanted-Variable">
                 At <span id="body-logo">WAVE<span class="spot">.</span></span>, we're on a mission to
                 revolutionize
                 the way college students connect and engage with
@@ -62,26 +62,26 @@ Careers @ Wave.
 
                 <br><br>
 
-            As a Social Media Manager at <span id="body-logo">WAVE<span class="spot">.</span></span>, you'll
-            play a pivotal role in amplifying our brand and expanding
-            our reach across various social media platforms. You'll be at the forefront of shaping our online
-            presence, crafting compelling content, and engaging with our audience in meaningful ways. Whether
-            it's sharing the latest event highlights, sparking conversations around trending topics, or
-            fostering connections between students from different corners of the globe, you'll be instrumental
-            in bringing the <span id="body-logo">WAVE<span class="spot">.</span></span> experience to life.
+                As a Social Media Manager at <span id="body-logo">WAVE<span class="spot">.</span></span>, you'll
+                play a pivotal role in amplifying our brand and expanding
+                our reach across various social media platforms. You'll be at the forefront of shaping our online
+                presence, crafting compelling content, and engaging with our audience in meaningful ways. Whether
+                it's sharing the latest event highlights, sparking conversations around trending topics, or
+                fostering connections between students from different corners of the globe, you'll be instrumental
+                in bringing the <span id="body-logo">WAVE<span class="spot">.</span></span> experience to life.
 
-            <br><br>
+                <br><br>
 
-            If you're passionate about harnessing the power of social media to connect students and create
-            unforgettable experiences, we want to hear from you. Join us at <span id="body-logo">WAVE<span
-                    class="spot">.</span></span> and be part of a team that's
-            making waves in the world of college entertainment and events.
+                If you're passionate about harnessing the power of social media to connect students and create
+                unforgettable experiences, we want to hear from you. Join us at <span id="body-logo">WAVE<span
+                        class="spot">.</span></span> and be part of a team that's
+                making waves in the world of college entertainment and events.
             </p>
         </div>
 
-        <div class="jB-responsibilities">
-            <h6>What's expected of you</h6>
-            <ul>
+        <div class="jB-responsibilities flex flex-col gap-[20px] w-full items-start justify-start">
+            <h6 class="font-Wanted-Bold text-[27px]">What's expected of you</h6>
+            <ul class="pl-[25px] flex flex-col gap-[15px] items-start justify-start w-full">
                 <li>
                     Develop and execute a comprehensive social media content strategy aligned with our brand
                     identity and target audience. Create engaging and relevant content, including graphics,
@@ -108,9 +108,9 @@ Careers @ Wave.
             </ul>
         </div>
 
-        <div class="jB-experience">
-            <h6>What you need to have</h6>
-            <ul>
+        <div class="jB-experience flex flex-col gap-[20px] justify-start items-start w-full">
+            <h6 class="font-Wanted-Bold text-[27px]">What you need to have</h6>
+            <ul class="pl-[25px] flex flex-col gap-[15px] items-start justify-start w-full">
                 <li>
                     Develop and execute a social media strategy aligned with WAVE's goals, regularly evaluating
                     performance metrics to refine tactics and ensure alignment with objectives.
@@ -128,8 +128,8 @@ Careers @ Wave.
             </ul>
         </div>
 
-        <div class="jB-equalRights">
-            <p>
+        <div class="jB-equalRights w-full justify-start">
+            <p class="leading-[23px] italic">
                 At <span id="body-logo">WAVE<span class="spot">.</span></span>, we're revolutionizing event
                 ticketing with a key focus on college campuses. Our
                 mission is to bring people together for unforgettable experiences, starting with the vibrant
@@ -152,24 +152,24 @@ Careers @ Wave.
         </div>
     </div>
 
-    <div id="job-divider">
-        <hr>
+    <div id="job-divider" class="w-[100%] flex justify-center py-[20px]">
+        <hr class="border-[3px] border-solid border-[rgba(125,125,125,0.37)] w-[90%] sm:w-[50%] rounded-[10px]">
     </div>
 
-    <div id="apply-role">
-        <button id="applyJobFormTwo" type="button" role="button">Apply Now</button>
+    <div id="apply-role" class="w-full flex justify-center pb-[50px]">
+        <button id="applyJobFormTwo" type="button" role="button" class="cursor-pointer p-[30px] py-[20px] bg-[#008d95] border-none rounded-[20px] text-white">Apply Now</button>
     </div>
 </div>
 
-<span id="jobApplicationForm">
-    <div class="applicationPopupBg">
-        <div class="applicationPopupCard">
-            <div id="heading-Close">
-                <div id="contentCard-header">
+<span id="jobApplicationForm" class="bg-[rgba(0, 0, 0, 0.037)] backdrop-blur-sm fixed top-0 left-0 right-0 bottom-0 z-[1005] w-full h-full cursor-default">
+    <div class="applicationPopupBg w-full h-full flex justify-center items-center">
+        <div class="applicationPopupCard w-3/5 h-[90%] bg-white shadow-custom-shadow rounded-2xl p-5 pb-12 flex flex-col gap-3 overflow-x-auto">
+            <div id="heading-Close" class="w-full flex justify-between">
+                <div id="contentCard-header" class="w-full flex justify-start font-Wanted-Bold text-Pre-Xl">
                     <h3>Apply for role</h3>
                 </div>
-                <div id="contentCard-close">
-                    <button role="button" type="button" id="contentCardClose-button">
+                <div id="contentCard-close" class="w-full flex justify-end">
+                    <button role="button" type="button" id="contentCardClose-button" class="border-none bg-none cursor-pointer">
                         <img src="{% static "images/career/jobAppClose.svg" %}" alt="Minimize Card">
                     </button>
                 </div>
@@ -182,9 +182,9 @@ Careers @ Wave.
                     <p>{{ error }}</p>
                 {% endfor %}
 
-                <section id="sectionOne">
-                    <div class="infoSOneContainer">
-                        <div id="fNlN-row">
+                <section id="sectionOne" class="w-full h-full flex flex-col gap-6">
+                    <div class="infoSOneContainer flex flex-col gap-5">
+                        <div id="fNlN-row" class="w-full flex flex-row gap-6">
                             <label for="{{ careerAppForm.applicantFirstName.id_for_label }}">
                                 <p>{{ careerAppForm.applicantFirstName.label }} <span class="redRequired">*</span></p>
                                 <input type="{{ careerAppForm.applicantFirstName.field.widget.input_type }}" name="{{ careerAppForm.applicantFirstName.html_name }}" id="{{ careerAppForm.applicantFirstName.auto_id }}" autocomplete="off" required>
@@ -194,7 +194,7 @@ Careers @ Wave.
                                 <input type="{{ careerAppForm.applicantLastName.field.widget.input_type }}" name="{{ careerAppForm.applicantLastName.html_name }}" id="{{ careerAppForm.applicantLastName.auto_id }}" autocomplete="off" required>
                             </label>
                         </div>
-                        <div id="emailPhone-row">
+                        <div id="emailPhone-row" class="w-full flex flex-row gap-6">
                             <label for="{{ careerAppForm.applicantEmail.id_for_label }}">
                                 <p>{{ careerAppForm.applicantEmail.label }} <span class="redRequired">*</span></p>
                                 <input type="{{ careerAppForm.applicantEmail.field.widget.input_type }}" name="{{ careerAppForm.applicantEmail.html_name }}" id="{{ careerAppForm.applicantEmail.auto_id }}" autocomplete="off" required>
@@ -204,13 +204,13 @@ Careers @ Wave.
                                 <input type="{{ careerAppForm.applicantPhone.field.widget.input_type }}" name="{{ careerAppForm.applicantPhone.html_name }}" id="{{ careerAppForm.applicantPhone.auto_id }}" autocomplete="off" required>
                             </label>
                         </div>
-                        <div id="location-row">
+                        <div id="location-row" class="w-full flex flex-row gap-6">
                             <label for="{{ careerAppForm.applicantLocation.id_for_label }}">
                                 <p>{{ careerAppForm.applicantLocation.label }} <span class="redRequired">*</span></p>
                                 <input type="{{ careerAppForm.applicantLocation.field.widget.input_type }}" name="{{ careerAppForm.applicantLocation.html_name }}" id="{{ careerAppForm.applicantLocation.auto_id }}" autocomplete="off" required>
                             </label>
                         </div>
-                        <div id="cVcL-row">
+                        <div id="cVcL-row" class="w-full flex flex-row gap-6">
                             <label for="{{ careerAppForm.applicantResume.id_for_label }}" class="file-upload">
                                 <p>{{ careerAppForm.applicantResume.label }}<span class="redRequired">*</span></p>
                                 <div class="resumeUpload">
