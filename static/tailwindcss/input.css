@@ -269,6 +269,10 @@
 	color: #008d95;
 }
 
+.redRequired {
+	color: red;
+}
+
 /* Footer shadow */
 footer {
 	max-width: 100vw;

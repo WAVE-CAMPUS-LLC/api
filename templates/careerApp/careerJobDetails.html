@@ -5,9 +5,6 @@
 Careers @ Wave.  
 {% endblock title %}
 
-{% block app_page_style %}
-<link rel="stylesheet" type="text/css" href="{% static "/styles/careerApp/careerJobDetails.css" %}" />
-{% endblock app_page_style %}
 
 {% block script %}
 <script type="text/javascript" src="{% static "scripts/careerApp/careerJobDetails.js" %}"></script>
@@ -163,10 +160,10 @@ Careers @ Wave.
 
 <span id="jobApplicationForm" class="bg-[rgba(0, 0, 0, 0.037)] backdrop-blur-sm fixed top-0 left-0 right-0 bottom-0 z-[1005] w-full h-full cursor-default">
     <div class="applicationPopupBg w-full h-full flex justify-center items-center">
-        <div class="applicationPopupCard w-3/5 h-[90%] bg-white shadow-custom-shadow rounded-2xl p-5 pb-12 flex flex-col gap-3 overflow-x-auto">
+        <div class="applicationPopupCard w-11/12 xxsm:w-9/12 pre-sm:w-10/12 sm:w-10/12 md:w-10/12 pre-lg:w-10/12 lg:w-10/12 xl:w-3/5 h-auto min-h-[80%] max-h-[90%] bg-white shadow-custom-shadow rounded-2xl p-5 pb-12 flex flex-col gap-3 overflow-y-auto">
             <div id="heading-Close" class="w-full flex justify-between">
                 <div id="contentCard-header" class="w-full flex justify-start font-Wanted-Bold text-Pre-Xl">
-                    <h3>Apply for role</h3>
+                    <h3>Apply for {{ careerRole.roleTitle }}</h3>
                 </div>
                 <div id="contentCard-close" class="w-full flex justify-end">
                     <button role="button" type="button" id="contentCardClose-button" class="border-none bg-none cursor-pointer">
@@ -176,90 +173,91 @@ Careers @ Wave.
             </div>
 
 
-            <form action="{% url "careers:roleDetails" careerRole.roleID %}" method="post">
+            <form action="{% url "careers:roleDetails" careerRole.roleID %}" class="h-full flex justify-between" method="post">
                 {% csrf_token %}
                 {% for error in careerAppForm.errors %}
                     <p>{{ error }}</p>
                 {% endfor %}
 
-                <section id="sectionOne" class="w-full h-full flex flex-col gap-6">
-                    <div class="infoSOneContainer flex flex-col gap-5">
-                        <div id="fNlN-row" class="w-full flex flex-row gap-6">
-                            <label for="{{ careerAppForm.applicantFirstName.id_for_label }}">
-                                <p>{{ careerAppForm.applicantFirstName.label }} <span class="redRequired">*</span></p>
-                                <input type="{{ careerAppForm.applicantFirstName.field.widget.input_type }}" name="{{ careerAppForm.applicantFirstName.html_name }}" id="{{ careerAppForm.applicantFirstName.auto_id }}" autocomplete="off" required>
+                <section id="sectionOne" class="w-full h-full flex flex-col gap-6 font-Wanted-Variable">
+                    <div class="infoSOneContainer flex flex-col gap-5 w-full">
+                        <div id="fNlN-row" class="w-full flex flex-col sm:flex-row gap-6">
+                            <label class="w-full flex flex-col gap-1" for="{{ careerAppForm.applicantFirstName.id_for_label }}">
+                                <p>{{ careerAppForm.applicantFirstName.label }} <span class="text-[#ff0000]">*</span></p>
+                                <input class="w-full border-2 border-[#0909091c] rounded-2xl p-3 font-Wanted-Variable text-Medium" type="{{ careerAppForm.applicantFirstName.field.widget.input_type }}" name="{{ careerAppForm.applicantFirstName.html_name }}" id="{{ careerAppForm.applicantFirstName.auto_id }}" autocomplete="off" required>
                             </label>
-                            <label for="{{ careerAppForm.applicantLastName.id_for_label }}">
-                                <p>{{ careerAppForm.applicantLastName.label }} <span class="redRequired">*</span></p>
-                                <input type="{{ careerAppForm.applicantLastName.field.widget.input_type }}" name="{{ careerAppForm.applicantLastName.html_name }}" id="{{ careerAppForm.applicantLastName.auto_id }}" autocomplete="off" required>
-                            </label>
-                        </div>
-                        <div id="emailPhone-row" class="w-full flex flex-row gap-6">
-                            <label for="{{ careerAppForm.applicantEmail.id_for_label }}">
-                                <p>{{ careerAppForm.applicantEmail.label }} <span class="redRequired">*</span></p>
-                                <input type="{{ careerAppForm.applicantEmail.field.widget.input_type }}" name="{{ careerAppForm.applicantEmail.html_name }}" id="{{ careerAppForm.applicantEmail.auto_id }}" autocomplete="off" required>
-                            </label>
-                            <label for="{{ careerAppForm.applicantPhone.id_for_label }}">
-                                <p>{{ careerAppForm.applicantPhone.label }} <span class="redRequired">*</span></p>
-                                <input type="{{ careerAppForm.applicantPhone.field.widget.input_type }}" name="{{ careerAppForm.applicantPhone.html_name }}" id="{{ careerAppForm.applicantPhone.auto_id }}" autocomplete="off" required>
+                            <label class="w-full flex flex-col gap-1" for="{{ careerAppForm.applicantLastName.id_for_label }}">
+                                <p>{{ careerAppForm.applicantLastName.label }} <span class="text-[#ff0000]">*</span></p>
+                                <input class="w-full border-2 border-[#0909091c] rounded-2xl p-3 font-Wanted-Variable text-Medium" type="{{ careerAppForm.applicantLastName.field.widget.input_type }}" name="{{ careerAppForm.applicantLastName.html_name }}" id="{{ careerAppForm.applicantLastName.auto_id }}" autocomplete="off" required>
                             </label>
                         </div>
-                        <div id="location-row" class="w-full flex flex-row gap-6">
-                            <label for="{{ careerAppForm.applicantLocation.id_for_label }}">
-                                <p>{{ careerAppForm.applicantLocation.label }} <span class="redRequired">*</span></p>
-                                <input type="{{ careerAppForm.applicantLocation.field.widget.input_type }}" name="{{ careerAppForm.applicantLocation.html_name }}" id="{{ careerAppForm.applicantLocation.auto_id }}" autocomplete="off" required>
+                        <div id="emailPhone-row" class="w-full flex flex-col sm:flex gap-6">
+                            <label class="w-full flex flex-col gap-1" for="{{ careerAppForm.applicantEmail.id_for_label }}">
+                                <p>{{ careerAppForm.applicantEmail.label }} <span class="text-[#ff0000]">*</span></p>
+                                <input class="w-full border-2 border-[#0909091c] rounded-2xl p-3 font-Wanted-Variable text-Medium" type="{{ careerAppForm.applicantEmail.field.widget.input_type }}" name="{{ careerAppForm.applicantEmail.html_name }}" id="{{ careerAppForm.applicantEmail.auto_id }}" autocomplete="off" required>
+                            </label>
+                            <label class="w-full flex flex-col gap-1" for="{{ careerAppForm.applicantPhone.id_for_label }}">
+                                <p>{{ careerAppForm.applicantPhone.label }} <span class="text-[#ff0000]">*</span></p>
+                                <input class="w-full border-2 border-[#0909091c] rounded-2xl p-3 font-Wanted-Variable text-Medium" type="{{ careerAppForm.applicantPhone.field.widget.input_type }}" name="{{ careerAppForm.applicantPhone.html_name }}" id="{{ careerAppForm.applicantPhone.auto_id }}" autocomplete="off" required>
                             </label>
                         </div>
-                        <div id="cVcL-row" class="w-full flex flex-row gap-6">
-                            <label for="{{ careerAppForm.applicantResume.id_for_label }}" class="file-upload">
-                                <p>{{ careerAppForm.applicantResume.label }}<span class="redRequired">*</span></p>
-                                <div class="resumeUpload">
+                        <div id="location-row" class="w-full flex flex-col sm:flex gap-6">
+                            <label class="w-full flex flex-col gap-1" for="{{ careerAppForm.applicantLocation.id_for_label }}">
+                                <p>{{ careerAppForm.applicantLocation.label }} <span class="text-[#ff0000]">*</span></p>
+                                <input class="w-full border-2 border-[#0909091c] rounded-2xl p-3 font-Wanted-Variable text-Medium" type="{{ careerAppForm.applicantLocation.field.widget.input_type }}" name="{{ careerAppForm.applicantLocation.html_name }}" id="{{ careerAppForm.applicantLocation.auto_id }}" autocomplete="off" required>
+                            </label>
+                        </div>
+                        <div id="cVcL-row" class="w-full flex flex-col sm:flex gap-6">
+                            <label class="w-full flex flex-col gap-1" for="{{ careerAppForm.applicantResume.id_for_label }}" class="file-upload">
+                                <p class="font-Wanted-Variable">{{ careerAppForm.applicantResume.label }}<span class="text-[#ff0000]">*</span></p>
+                                <div class="resumeUpload gradient-btn">
                                     Attach
                                 </div>
-                                <input  type="{{ careerAppForm.applicantResume.field.widget.input_type }}" name="{{ careerAppForm.applicantResume.html_name }}" id="{{ careerAppForm.applicantResume.auto_id }}" accept=".doc,.docx,.pdf,.txt" class="input-file">
+                                <input class="hidden" type="{{ careerAppForm.applicantResume.field.widget.input_type }}" name="{{ careerAppForm.applicantResume.html_name }}" id="{{ careerAppForm.applicantResume.auto_id }}" accept=".doc,.docx,.pdf,.txt" class="input-file">
                             </label>
 
-                            <label for="{{ careerAppForm.applicantCoverLetter.id_for_label }}" class="file-upload">
-                                <p>{{ careerAppForm.applicantCoverLetter.label }}</p>
-                                <div class="coverLetterUpload">
+                            <label class="w-full flex flex-col gap-1" for="{{ careerAppForm.applicantCoverLetter.id_for_label }}" class="file-upload">
+                                <p class="font-Wanted-Variable">{{ careerAppForm.applicantCoverLetter.label }}</p>
+                                <div class="coverLetterUpload gradient-btn">
                                     Attach
                                 </div>
-                                <input type="{{ careerAppForm.applicantCoverLetter.field.widget.input_type }}" name="{{ careerAppForm.applicantCoverLetter.html_name }}" id="{{ careerAppForm.applicantCoverLetter.auto_id }}" accept=".doc,.docx,.pdf,.txt" class="input-file">
+                                <input class="hidden" type="{{ careerAppForm.applicantCoverLetter.field.widget.input_type }}" name="{{ careerAppForm.applicantCoverLetter.html_name }}" id="{{ careerAppForm.applicantCoverLetter.auto_id }}" accept=".doc,.docx,.pdf,.txt" class="input-file">
                             </label>
                         </div>
 
-                        <div id="submitNext">
-                            <button type="button" id="nextButtonControl">Next</button>
+                        <div id="submitNext" class="w-full flex justify-end">
+                            <button type="button" id="nextButtonControl" class="gradient-btn">Next</button>
                         </div>
                     </div>
                 </section>
-                <section id="sectionTwo" style="display: none;">
-                    <h6>Extra Information</h6>
-                    <div class="infoSTwoContainer">
-                        <label for="{{ careerAppForm.whatYouBring.id_for_label }}">
-                            <p>{{ careerAppForm.whatYouBring.label }}<span class="redRequired">*</span></p>
-                            <textarea type="{{ careerAppForm.whatYouBring.field.widget.input_type }}" name="{{ careerAppForm.whatYouBring.html_name }}" id="{{ careerAppForm.whatYouBring.auto_id }}"></textarea>
+
+                <section id="sectionTwo" style="display: none;" class="w-full h-full flex flex-col gap-6 font-Wanted-Variable">
+                    <h6 class="font-Wanted-SemiBold">Extra Information</h6>
+                    <div class="infoSTwoContainer flex flex-col w-full gap-5">
+                        <label class="w-full" for="{{ careerAppForm.whatYouBring.id_for_label }}">
+                            <p>{{ careerAppForm.whatYouBring.label }}<span class="text-[#ff0000]">*</span></p>
+                            <textarea class="w-full border-2 border-[#0909091c] rounded-2xl p-3 font-Wanted-Variable text-Medium" type="{{ careerAppForm.whatYouBring.field.widget.input_type }}" name="{{ careerAppForm.whatYouBring.html_name }}" id="{{ careerAppForm.whatYouBring.auto_id }}"></textarea>
                         </label>
-                        <label for="{{ careerAppForm.applicantPortfolio.id_for_label }}">
-                            <p>{{ careerAppForm.applicantPortfolio.label }}<span class="redRequired">*</span></p>
-                            <input type="{{ careerAppForm.applicantPortfolio.field.widget.input_type }}" name="{{ careerAppForm.applicantPortfolio.html_name }}" id="{{ careerAppForm.applicantPortfolio.auto_id }}">
+                        <label class="w-full" for="{{ careerAppForm.applicantPortfolio.id_for_label }}">
+                            <p>{{ careerAppForm.applicantPortfolio.label }}<span class="text-[#ff0000]">*</span></p>
+                            <input class="w-full border-2 border-[#0909091c] rounded-2xl p-3 font-Wanted-Variable text-Medium" type="{{ careerAppForm.applicantPortfolio.field.widget.input_type }}" name="{{ careerAppForm.applicantPortfolio.html_name }}" id="{{ careerAppForm.applicantPortfolio.auto_id }}">
                         </label>
-                        <label for="{{ careerAppForm.applicantLinkedIn.id_for_label }}">
-                            <p>{{ careerAppForm.applicantLinkedIn.label }}<span class="redRequired">*</span></p>
-                            <input type="{{ careerAppForm.applicantLinkedIn.field.widget.input_type }}" name="{{ careerAppForm.applicantLinkedIn.html_name }}" id="{{ careerAppForm.applicantLinkedIn.auto_id }}">
+                        <label class="w-full" for="{{ careerAppForm.applicantLinkedIn.id_for_label }}">
+                            <p>{{ careerAppForm.applicantLinkedIn.label }}<span class="text-[#ff0000]">*</span></p>
+                            <input class="w-full border-2 border-[#0909091c] rounded-2xl p-3 font-Wanted-Variable text-Medium" type="{{ careerAppForm.applicantLinkedIn.field.widget.input_type }}" name="{{ careerAppForm.applicantLinkedIn.html_name }}" id="{{ careerAppForm.applicantLinkedIn.auto_id }}">
                         </label>
-                        <label for="{{ careerAppForm.applicantGithub.id_for_label }}">
-                            <p>{{ careerAppForm.applicantGithub.label }} <span class="redRequired">*</span></p>
-                            <input type="{{ careerAppForm.applicantGithub.field.widget.input_type }}" name="{{ careerAppForm.applicantGithub.html_name }}" id="{{ careerAppForm.applicantGithub.auto_id }}">
+                        <label class="w-full" for="{{ careerAppForm.applicantGithub.id_for_label }}">
+                            <p>{{ careerAppForm.applicantGithub.label }} <span class="text-[#ff0000]">*</span></p>
+                            <input class="w-full border-2 border-[#0909091c] rounded-2xl p-3 font-Wanted-Variable text-Medium" type="{{ careerAppForm.applicantGithub.field.widget.input_type }}" name="{{ careerAppForm.applicantGithub.html_name }}" id="{{ careerAppForm.applicantGithub.auto_id }}">
                         </label>
-                        <label for="{{ careerAppForm.workAuthorization.id_for_label }}">
-                            <p>{{ careerAppForm.workAuthorization.label }}<span class="redRequired">*</span></p>
-                            <textarea type="{{ careerAppForm.workAuthorization.field.widget.input_type }}" name="{{ careerAppForm.workAuthorization.html_name }}" id="{{ careerAppForm.workAuthorization.auto_id }}"></textarea>
+                        <label class="w-full" for="{{ careerAppForm.workAuthorization.id_for_label }}">
+                            <p>{{ careerAppForm.workAuthorization.label }}<span class="text-[#ff0000]">*</span></p>
+                            <textarea class="w-full border-2 border-[#0909091c] rounded-2xl p-3 font-Wanted-Variable text-Medium min-h-28" type="{{ careerAppForm.workAuthorization.field.widget.input_type }}" name="{{ careerAppForm.workAuthorization.html_name }}" id="{{ careerAppForm.workAuthorization.auto_id }}"></textarea>
                         </label>
 
-                        <div id="previousSubmit">
-                            <button type="button" id="previousButtonControl">Return</button>
-                            <button type="submit" id="submitButtonControl">Submit</button>
+                        <div id="previousSubmit" class="w-full flex flex-row justify-between">
+                            <button type="button" class="underline font-Wanted-Regular text-black" id="previousButtonControl">Previous</button>
+                            <button type="submit" class="gradient-btn" id="submitButtonControl">Submit</button>
                         </div>
                     </div>
 
