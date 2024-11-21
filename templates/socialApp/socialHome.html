@@ -21,14 +21,12 @@ My Social @{{ user.username }} — WAVE.
 
 {% block body %}
 <div id="content-container" class="flex flex-col gap-[70px] px-4 sm:px-6 md:px-[40px] pre-lg:px-[40px] lg:px-[100px] 2xl:px-48 3xl:px-96">
-    <div class="userHeader">
-        <div>
-            <div class="userPfp">
-                <img src="{{ user_profile.profile_photo.url }}" alt="Profile Picture" />
-            </div>
-            <div class="userNames">
-                <h1>My Social</h1>
-            </div>
+    <div class=" flex flex-col gap-2 justify-center items-center">
+        <div class="max-w-80 max-h-80 w-full flex justify-center">
+            <img src="{{ user_profile.profile_photo.url }}" alt="Profile Picture" class="rounded-full size-40" />
+        </div>
+        <div class="userNames">
+            <h1>My Social</h1>
         </div>
         
         <div class="connectRow">

@@ -23,27 +23,29 @@
 {% block body %}
 {% if isInCrew %}
 <div id="content-container" class="flex flex-col gap-[70px] px-4 sm:px-6 md:px-[40px] pre-lg:px-[40px] lg:px-[100px] 2xl:px-48 3xl:px-96">
-    <div id="pageHeader">
-        <div id="name-and-leave">
-            <h3>
+    <div id="pageHeader" class="w-full flex justify-between items-start flex-col sm:flex-row">
+        <div id="name-and-leave" class="flex flex-col items-start justify-start gap-[10px]">
+            <h3 class="font-bold font-wanted-bold text-[25px] after-xsm:text-[30px] xxsm:text-[33px] sm:text-[35px] pre-lg:text-[40px]">
                 {{ crew.name }}
             </h3>
-            {% if isCrewOwner %}
+            <p class="font-Wanted-Variable text-[15px] xssm:text-[17px] sm:text-xl text-customGray3">Invite your friends to join your crew and go to events with them!</p>
+        </div>
+        {% if isCrewOwner %}
             <div id="confirmDeleteOptions">
-                <button id="deleteCrew">
+                <button id="deleteCrew" class="py-[7px] after-xsm:py-[10px] px-[12px] after-xsm:px-[15px] flex gap-[10px] items-center text-white rounded-[13px] after-xsm:rounded-[16px] md:rounded-[20px] bg-gradient-to-r from-[#d20d0dc3] to-[#ff0000] cursor-pointer font-Wanted-Variable text-[15px] xssm:text-[16px] md:text-[20px] border-transparent no-underline">
                     Delete Crew
                 </button>
                 <p id="postDeleteCrewText" style="display: none;">Are you sure you want to delete this crew?</p>
                 <div id="postDeleteCrewConfirm" style="display: none;">
                     <form method="POST">
                         {% csrf_token %}
-                        <button id="delete-crew" type="submit" name="action" value="delete_crew" role="button">
+                        <button id="delete-crew" type="submit" class="py-[7px] after-xsm:py-[10px] px-[12px] after-xsm:px-[15px] flex gap-[10px] items-center text-white rounded-[13px] after-xsm:rounded-[16px] md:rounded-[20px] bg-gradient-to-r from-[#d20d0dc3] to-[#ff0000] cursor-pointer font-Wanted-Variable text-[15px] xssm:text-[16px] md:text-[20px] border-transparent no-underline" name="action" value="delete_crew" role="button">
                             Confirm
                         </button>
                     </form>
                 </div>
                 <div id="postDeleteCrewCancel" style="display: none;">
-                    <button id="cancelDelete">
+                    <button id="cancelDelete" class="py-[7px] after-xsm:py-[10px] px-[12px] after-xsm:px-[15px] flex gap-[10px] items-center text-white rounded-[13px] after-xsm:rounded-[16px] md:rounded-[20px] bg-[#008d95] cursor-pointer font-Wanted-Variable text-[15px] xssm:text-[16px] md:text-[20px] border-solid no-underline">
                         Cancel
                     </button>
                 </div>
@@ -51,82 +53,80 @@
             {% else %}
             <form method="POST">
                 {% csrf_token %}
-                <button id="leave-crew" type="submit" name="action" value="leave_crew" role="button">
+                <button id="leave-crew" type="submit" class="py-[7px] after-xsm:py-[10px] px-[12px] after-xsm:px-[15px] flex gap-[10px] items-center text-white rounded-[13px] after-xsm:rounded-[16px] md:rounded-[20px] bg-gradient-to-r from-[#d20d0dc3] to-[#ff0000] cursor-pointer font-Wanted-Variable text-[15px] xssm:text-[16px] md:text-[20px] border-transparent no-underline" name="action" value="leave_crew" role="button">
                     Leave Crew
                 </button>
             </form>
             {% endif %}
-        </div>
-        <p>Invite your friends to join your crew and go to events with them!</p>
     </div>
 
-    <div id="pageBody">
-        <div class="subHeader" id="subHeader">
-            <div class="crewDetailsTab tab-active" data-tab="overviewInformation">
+    <div id="pageBody" class="flex flex-col gap-[30px] w-full">
+        <div class="subHeader list-none flex justify-start gap-[10px] w-full pb-[5px] font-Wanted-Bold text-[16px]" id="subHeader">
+            <div class="crewDetailsTab tab-active border-b-4 border-b-green p-[10px] px-[20px] cursor-pointer" data-tab="overviewInformation">
                 Overview
             </div>
-            <div class="crewDetailsTab" data-tab="memberInformation">
+            <div class="crewDetailsTab p-[10px] px-[20px] cursor-pointer" data-tab="memberInformation">
                 Members
             </div>
         </div>
 
         <div id="subBody">
             <div id="subBodyContent">
-                <div id="overviewInformation" class="overviewInformation crewTabInformation">
-                    <div class="overviewContainer">
-                        <div class="heading">
-                            <h4 class="crew-name">
+                <div id="overviewInformation" class="overviewInformation crewTabInformation block">
+                    <div class="overviewContainer flex flex-col gap-[20px]">
+                        <div class="heading flex flex-col gap-[5px]">
+                            <h4 class="crew-name font-Wanted-Bold text-[23px] xsm:text-[26px] xxsm:text-[28px] sm:text-[30px]">
                                 {{ crew.name }}
                             </h4>
                             
-                            <p class="created-by">
+                            <p class="created-by font-Wanted-Variable text-[16px] text-customGray3">
                                 Created By:
                                 <span>
                                     {{ crew.created_by.first_name }} {{ crew.created_by.last_name }} 
 
-                                    <a target="_blank" href="{% url "social:publicProfile" username=crew.created_by.username %}">
+                                    <a target="_blank" class="text-green no-underline" href="{% url "social:publicProfile" username=crew.created_by.username %}">
                                         @{{ crew.created_by.username }}
                                     </a>
                                 </span>
                             </p>
                         </div>
                         <div>
-                            <p class="bio">
+                            <p class="bio font-Wanted-Variable text-[16px]">
                                 {{ crew.bio }}
                             </p>
                         </div>
                     </div>
                 </div>
 
-                <div id="memberInformation" class="crewTabInformation">
-                    <div class="memberContainer">
-                        <div class="memberDisplayContainer">
-                            <h4>Current Crew Members</h4>
-                            <div class="memberDisplay">
+                <div id="memberInformation" class="crewTabInformation hidden">
+                    <div class="memberContainer flex flex-col xl:grid grid-cols-2 gap-[40px]">
+                        <div class="memberDisplayContainer flex flex-col gap-[20px] pb-[30px] xl:pb-0 border-2 border-black border-r-0 xl:border-r-2 border-b-2 xl:border-b-0 border-t-0 border-l-0">
+                            <h4 class="font-bold font-Wanted-Bold text-[20px]">Current Crew Members</h4>
+                            <div class="memberDisplay flex flex-col gap-[20px]">
                                 {% for member in crewMembers %}
-                                <div id="memberItem">
-                                    <a target="_blank" href="{% url "social:publicProfile" username=member.user.username %}">
-                                        <div class="ir-pfp">
-                                            <img src="{% static "/images/socialApp/publicProfile/profile/E.L.png" %}" alt="crew member" />
+                                <div id="memberItem" class="flex flex-col sm:flex-row text-start sm:justify-between sm:gap-[20px] items-start sm:items-center w-full">
+                                    <a target="_blank" class="no-underline text-black flex gap-[30px] justify-between items-center" href="{% url "social:publicProfile" username=member.user.username %}">
+                                        <div class="ir-pfp flex items-center justify-center">
+                                            <img src="{% static "/images/socialApp/publicProfile/profile/E.L.png" %}" alt="crew member" class="w-[70px] xxsm:w-[100px] h-[70px] xxsm:h-[100px] rounded-[50%]" />
                                         </div>
-                                        <div class="member-info">
-                                            <h3 class="member-name">
+                                        <div class="member-info flex flex-col gap-[5px] no-underline">
+                                            <h3 class="member-name font-bold no-underline font-Wanted-Bold text-[18px] xssm:text-[20px]">
                                                 {{ member.user.first_name }} {{ member.user.last_name }}
                                                 {% if member.user == self %}
                                                 (you)
                                                 {% endif %}
                                             </h3>
-                                            <p class="member-username">
+                                            <p class="member-username no-underline font-Wanted-Variable text-[16px] text-customGray3">
                                                 {{member.user.username}}
                                             </p>
                                         </div>
                                     </a>
                                     {% if isCrewOwner and member.user != self %}
-                                    <div id="kickMemberButton">
+                                    <div id="kickMemberButton" class="p-[20px] self-end">
                                         <form method="POST">
                                             {% csrf_token %}
                                             <input type="hidden" name="member" value="{{ member.user.username }}" />
-                                            <button id="kick-member" type="submit" name="action" value="kick_member" role="button">
+                                            <button id="kick-member" type="submit" name="action" value="kick_member" role="button" class="py-[7px] after-xsm:py-[10px] px-[12px] after-xsm:px-[15px] flex gap-[10px] items-center text-white rounded-[13px] after-xsm:rounded-[16px] md:rounded-[20px] bg-gradient-to-r from-[#d20d0dc3] to-[#ff0000] cursor-pointer font-Wanted-Variable text-[15px] xssm:text-[16px] md:text-[20px] border-transparent no-underline">
                                                 Kick Member
                                             </button>
                                         </form>
@@ -137,36 +137,36 @@
                             </div>
                         </div>
                         
-                        <div class="freindsContainer">
+                        <div class="freindsContainer pt-[20px] xl:pt-0">
                             <div id="pageSearch">
-                                <div id="find-colleges">
-                                    <div class="find-college-name">
-                                        <div class="febc-img">
+                                <div id="find-colleges" class="w-full flex justify-center">
+                                    <div class="find-college-name w-[85%] flex gap-[5px] border-2 border-[#07070715] rounded-[25px] bg-[#ffffff07] shadow-form-shadow-2">
+                                        <div class="febc-img flex justify-center p-[15px]">
                                             <img src="{% static "images/explore/find.svg" %}" alt="Find College">
                                         </div>
-                                        <input type="text" name="" id="collegeSearchBar" placeholder="Find your friend by their name" autocomplete="off">
+                                        <input type="text" name="" id="collegeSearchBar" placeholder="Find your friend by their name" autocomplete="off" class="w-full h-full p-[15px] py-[20px] font-Wanted-Regular text-[17px] text-black border-none rounded-r-[25px] outline-2 outline-transparent outline-offset-2">
                                     </div>
                                 </div>
                         
                                 
-                                <div id="collegeSearchCardModal">
-                                    <div class="searchCardContainer">
-                                        <div class="searchCard">
-                                            <div class="searchCardHeader">
-                                                <div id="searchCardHeading">
-                                                    <h6>Search for a friend</h6>
-                                                    <button type="button" role="button" id="closeSearchModalButton">
+                                <div id="collegeSearchCardModal" class="hidden bg-customColor3 backdrop-blur-sm fixed top-0 left-0 right-0 bottom-0 z-1010 w-full h-full cursor-pointer" style="backdrop-filter: saturate(1.7);">
+                                    <div class="searchCardContainer w-full h-full flex justify-center items-center">
+                                        <div class="searchCard w-[60%] h-[90%] overflow-y-auto bg-white shadow-form-shadow-2 rounded-[20px] p-[40px] pb-[0px] flex flex-col gap-[40px] cursor-default">
+                                            <div class="searchCardHeader flex flex-col gap-[20px]">
+                                                <div id="searchCardHeading" class="flex justify-between gap-[20px]">
+                                                    <h6 class="font-bold font-Wanted-Bold text-[30px]">Search for a friend</h6>
+                                                    <button type="button" role="button" class="bg-none border-none cursor-pointer font-Wanted-Bold text-[15px] text-[#3b3b3ba4]" id="closeSearchModalButton">
                                                         <img src="{% static '/images/admin/roles/modalClose.svg' %}" alt="">
                                                         <p>CLOSE</p>
                                                     </button>
                                                 </div>
-                                                <div id="searchBarRow">
-                                                    <div class="find-college-card-name">
-                                                        <div class="febc-img">
+                                                <div id="searchBarRow" class="w-full flex justify-center">
+                                                    <div class="find-college-card-name flex gap-[5px] border-2 border-[#07070715] bg-[#ffffff07] shadow-form-shadow-2 w-[70%]">
+                                                        <div class="febc-img flex justify-center p-[15px]">
                                                             <img src="{% static "images/explore/find.svg" %}" alt="Find College">
                                                         </div>
                                                         <div id="crew-data" data-crew-id="{{ crew.crewId }}"></div>
-                                                        <input type="text" name="" id="collegeSearchContentBar" placeholder="Find your friend by their name" autofocus autocomplete="off">
+                                                        <input type="text" name="" id="collegeSearchContentBar" class="w-full h-full p-[15px] py-[15px] font-Wanted-Regular text-[17px] text-black border-none rounded-r-[25px] outline-2 outline-transparent outline-offset-2" placeholder="Find your friend by their name" autofocus autocomplete="off">
                                                     </div>
                                                 </div>
                                             </div>
@@ -177,55 +177,60 @@
                                 </div>
                             </div>
                             {% for friend in pendingFriends %}
-                            <div class="friendItem">
-                                <div class="friendInfoo">
+                            <div class="friendItem flex flex-col sm:flex-row justify-between items-start sm:items-center p-[20px]">
+                                <div class="friendInfoo flex gap-[20px] items-center">
                                     <div class="friendPfp">
-                                        <img src="{% static "/images/socialApp/publicProfile/profile/E.L.png" %}" alt="Profile Picture" />
+                                        <img src="{% static "/images/socialApp/publicProfile/profile/E.L.png" %}"
+                                            alt="Profile Picture" class="w-[50px] after-xsm:w-[70px] h-[50px] after-xsm:h-[70px] rounded-[70%]"/>
                                     </div>
-                                    <div class="friendNames">
-                                        <h2>{{ friend.user.first_name }} {{ friend.user.last_name }}</h2>
+                                    <div class="friendNames font-Wanted-Bold text-[18px] xssm:text-[20px]">
+                                        <h2 class="font-bold">{{ friend.user.first_name }} {{ friend.user.last_name }}</h2>
                                     </div>
                                 </div>
-                                <div class="friendActions">
-                                    <div class="statusDisplay pending">
-                                        <img src="{% static "/images/socialApp/pending.svg" %}" alt="Pending" />
-                                        <h3> Pending </h3>
+                                <div class="friendActions self-end">
+                                    <div class="statusDisplay pending border-2 border-transparent text-white bg-green capitalize gap-[10px] p-[12px] after-xsm:p-[15px] py-[7px] after-xsm:py-[10px] rounded-[15px] flex items-center font-Wanted-Medium text-[15px] md:text-[17px]">
+                                        <img src="{% static "/images/socialApp/pending.svg" %}" alt="Pending" class="w-[20px] h-[20px] after-xsm:w-[30px] xxsm:w-[45px] after-xsm:h-[30px] xxsm:h-[45px]"/>
+                                        <h3 class="font-bold"> Pending </h3>
                                     </div>
                                 </div>
                             </div>
                             {% endfor %}
                             {% for friend in declinedFriends %}
-                            <div class="friendItem">
-                                <div class="friendInfoo">
+                            <div class="friendItem flex flex-col sm:flex-row justify-between items-start sm:items-center p-[20px]">
+                                <div class="friendInfoo flex gap-[20px] items-center">
                                     <div class="friendPfp">
-                                        <img src="{% static "/images/socialApp/publicProfile/profile/E.L.png" %}" alt="Profile Picture" />
+                                        <img src="{% static "/images/socialApp/publicProfile/profile/E.L.png" %}"
+                                            alt="Profile Picture" class="w-[50px] after-xsm:w-[70px] h-[50px] after-xsm:h-[70px] rounded-[70%]"/>
                                     </div>
-                                    <div class="friendNames">
-                                        <h2>{{ friend.user.first_name }} {{ friend.user.last_name }}</h2>
+                                    <div class="friendNames font-Wanted-Bold text-[18px] xssm:text-[20px]">
+                                        <h2 class="font-bold">{{ friend.user.first_name }} {{ friend.user.last_name }}</h2>
                                     </div>
                                 </div>
-                                <div class="friendActions">
-                                    <div id="declined-invite">
+                                <div class="friendActions self-end">
+                                    <div id="declined-invite" class="py-[7px] after-xsm:py-[10px] px-[12px] after-xsm:px-[15px] flex gap-[10px] items-center text-white rounded-[13px] after-xsm:rounded-[16px] md:rounded-[20px] bg-gradient-to-r from-[#d20d0dc3] to-[#ff0000] cursor-pointer font-Wanted-Variable text-[15px] xssm:text-[16px] md:text-[20px] border-transparent no-underline">
                                         Declined Invite
                                     </div>
                                 </div>
                             </div>
                             {% endfor %}
+
                             {% for friend in notInvitedFriends %}
-                            <div class="friendItem">
-                                <div class="friendInfoo">
+                            <div class="friendItem flex flex-col sm:flex-row justify-between items-start sm:items-center p-[20px]">
+                                <div class="friendInfoo flex gap-[20px] items-center">
                                     <div class="friendPfp">
-                                        <img src="{% static "/images/socialApp/publicProfile/profile/E.L.png" %}" alt="Profile Picture" />
+                                        <img src="{% static "/images/socialApp/publicProfile/profile/E.L.png" %}"
+                                            alt="Profile Picture" class="w-[50px] after-xsm:w-[70px] h-[50px] after-xsm:h-[70px] rounded-[70%]"/>
                                     </div>
-                                    <div class="friendNames">
-                                        <h2>{{ friend.user.first_name }} {{ friend.user.last_name }}</h2>
+                                    <div class="friendNames font-Wanted-Bold text-[18px] xssm:text-[20px]">
+                                        <h2 class="font-bold">{{ friend.user.first_name }} {{ friend.user.last_name }}</h2>
                                     </div>
                                 </div>
-                                <div class="friendActions">
+                                <div class="friendActions self-end">
                                     <form method="POST">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="invitee_username" value="{{ friend.user.username }}" />
-                                        <button class="inviteFriend" type="submit" name="action" value="crew_invite" role="button">
+                                        <input type="hidden" name="invitee_username"
+                                            value="{{ friend.user.username }}" />
+                                        <button class="inviteFriend cursor-pointer p-[12px] after-xsm:p-[15px] bg-green border-none rounded-[15px] font-Wanted-Regular text-[15px] xssm:text-[16px] md:text-[18px] text-white" type="submit" name="action"
+                                            value="crew_invite" role="button">
                                             Send Crew Invite
                                         </button>
                                     </form>

@@ -1,8 +1,23 @@
 {% load static %}
 
-<link rel="stylesheet" type="text/css" href="{% static "/styles/socialApp/extras/no-result.css" %}" />
+<!DOCTYPE html>
+<html lang="en">
 
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" type="text/css" href="{% static "/tailwindcss/input.css" %}" />
+        <link rel="stylesheet" type="text/css" href="{% static "/tailwindcss/output.css" %}" />
+        <title>Colleges Campuses | WAVE.</title>
+    </head>
 
-<div class="no-results">
-    <p>No friends found matching your search.</p>
-</div>
+    <div id="html-content" class="pb-[70px] px-[10px] xssm:px-[30px] xxsm:px-[60px] sm:px-[100px] flex flex-col gap-[70px] min-h-full items-center">
+        <body>
+            <div id="content-container" class="pb-[70px] px-[100px] flex flex-col gap-[70px]">
+                <div class="no-results text-center">
+                    <p>No friends found matching your search.</p>
+                </div>
+            </div>
+        </body>
+    </div>
+</html>
