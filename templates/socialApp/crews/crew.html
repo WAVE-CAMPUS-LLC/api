@@ -23,46 +23,46 @@
 {% block body %}
 {% if isInCrew %}
 <div id="content-container" class="flex flex-col gap-[70px] px-4 sm:px-6 md:px-[40px] pre-lg:px-[40px] lg:px-[100px] 2xl:px-48 3xl:px-96">
-    <div id="pageHeader" class="w-full flex justify-between items-start flex-col sm:flex-row">
-        <div id="name-and-leave" class="flex flex-col items-start justify-start gap-[10px]">
+    <div id="pageHeader" class="w-full flex justify-between items-start flex-col pre-sm:flex-row">
+        <div id="name-and-leave" class="flex flex-col items-start justify-start gap-1 sm:gap-[10px]">
             <h3 class="font-bold font-wanted-bold text-[25px] after-xsm:text-[30px] xxsm:text-[33px] sm:text-[35px] pre-lg:text-[40px]">
                 {{ crew.name }}
             </h3>
             <p class="font-Wanted-Variable text-[15px] xssm:text-[17px] sm:text-xl text-customGray3">Invite your friends to join your crew and go to events with them!</p>
         </div>
         {% if isCrewOwner %}
-            <div id="confirmDeleteOptions">
-                <button id="deleteCrew" class="py-[7px] after-xsm:py-[10px] px-[12px] after-xsm:px-[15px] flex gap-[10px] items-center text-white rounded-[13px] after-xsm:rounded-[16px] md:rounded-[20px] bg-gradient-to-r from-[#d20d0dc3] to-[#ff0000] cursor-pointer font-Wanted-Variable text-[15px] xssm:text-[16px] md:text-[20px] border-transparent no-underline">
-                    Delete Crew
-                </button>
-                <p id="postDeleteCrewText" style="display: none;">Are you sure you want to delete this crew?</p>
-                <div id="postDeleteCrewConfirm" style="display: none;">
-                    <form method="POST">
-                        {% csrf_token %}
-                        <button id="delete-crew" type="submit" class="py-[7px] after-xsm:py-[10px] px-[12px] after-xsm:px-[15px] flex gap-[10px] items-center text-white rounded-[13px] after-xsm:rounded-[16px] md:rounded-[20px] bg-gradient-to-r from-[#d20d0dc3] to-[#ff0000] cursor-pointer font-Wanted-Variable text-[15px] xssm:text-[16px] md:text-[20px] border-transparent no-underline" name="action" value="delete_crew" role="button">
-                            Confirm
-                        </button>
-                    </form>
-                </div>
-                <div id="postDeleteCrewCancel" style="display: none;">
-                    <button id="cancelDelete" class="py-[7px] after-xsm:py-[10px] px-[12px] after-xsm:px-[15px] flex gap-[10px] items-center text-white rounded-[13px] after-xsm:rounded-[16px] md:rounded-[20px] bg-[#008d95] cursor-pointer font-Wanted-Variable text-[15px] xssm:text-[16px] md:text-[20px] border-solid no-underline">
-                        Cancel
+        <div id="confirmDeleteOptions" class="w-full flex flex-col items-center pt-3 pre-sm:items-end justify-end gap-2">
+            <button id="deleteCrew" class="py-[7px] after-xsm:py-[10px] px-[12px] after-xsm:px-[15px] flex gap-[10px] items-center text-white rounded-[13px] after-xsm:rounded-[16px] md:rounded-[20px] bg-[#ff0000] cursor-pointer font-Wanted-Variable text-[15px] xssm:text-[16px] md:text-[20px]  no-underline">
+                Delete Crew
+            </button>
+            <p id="postDeleteCrewText" style="display: none;" class="font-Wanted-Variable text-Small">Are you sure you want to delete this crew?</p>
+            <div id="postDeleteCrewConfirm" style="display: none;">
+                <form method="POST">
+                    {% csrf_token %}
+                    <button id="delete-crew" type="submit" class="py-[7px] after-xsm:py-[10px] px-[12px] after-xsm:px-[15px] flex gap-[10px] items-center text-white rounded-[13px] after-xsm:rounded-[16px] md:rounded-[20px] bg-[#ff0000] cursor-pointer font-Wanted-Variable text-[15px] xssm:text-[16px] md:text-[20px] no-underline" name="action" value="delete_crew" role="button">
+                        Confirm
                     </button>
-                </div>
+                </form>
             </div>
-            {% else %}
-            <form method="POST">
-                {% csrf_token %}
-                <button id="leave-crew" type="submit" class="py-[7px] after-xsm:py-[10px] px-[12px] after-xsm:px-[15px] flex gap-[10px] items-center text-white rounded-[13px] after-xsm:rounded-[16px] md:rounded-[20px] bg-gradient-to-r from-[#d20d0dc3] to-[#ff0000] cursor-pointer font-Wanted-Variable text-[15px] xssm:text-[16px] md:text-[20px] border-transparent no-underline" name="action" value="leave_crew" role="button">
-                    Leave Crew
+            <div id="postDeleteCrewCancel" style="display: none;">
+                <button id="cancelDelete" class="py-[7px] after-xsm:py-[10px] px-[12px] after-xsm:px-[15px] flex gap-[10px] items-center text-white rounded-[13px] after-xsm:rounded-[16px] md:rounded-[20px] bg-[#008d95] cursor-pointer font-Wanted-Variable text-[15px] xssm:text-[16px] md:text-[20px] border-solid no-underline">
+                    Cancel
                 </button>
-            </form>
-            {% endif %}
+            </div>
+        </div>
+        {% else %}
+        <form method="POST">
+            {% csrf_token %}
+            <button id="leave-crew" type="submit" class="py-[7px] after-xsm:py-[10px] px-[12px] after-xsm:px-[15px] flex gap-[10px] items-center text-white rounded-[13px] after-xsm:rounded-[16px] md:rounded-[20px] bg-gradient-to-r from-[#d20d0dc3] to-[#ff0000] cursor-pointer font-Wanted-Variable text-[15px] xssm:text-[16px] md:text-[20px] border-transparent no-underline" name="action" value="leave_crew" role="button">
+                Leave Crew
+            </button>
+        </form>
+        {% endif %}
     </div>
 
     <div id="pageBody" class="flex flex-col gap-[30px] w-full">
         <div class="subHeader list-none flex justify-start gap-[10px] w-full pb-[5px] font-Wanted-Bold text-[16px]" id="subHeader">
-            <div class="crewDetailsTab tab-active border-b-4 border-b-green p-[10px] px-[20px] cursor-pointer" data-tab="overviewInformation">
+            <div class="crewDetailsTab crew-tab-active p-[10px] px-[20px] cursor-pointer" data-tab="overviewInformation">
                 Overview
             </div>
             <div class="crewDetailsTab p-[10px] px-[20px] cursor-pointer" data-tab="memberInformation">
@@ -151,22 +151,27 @@
                                 
                                 <div id="collegeSearchCardModal" class="hidden bg-customColor3 backdrop-blur-sm fixed top-0 left-0 right-0 bottom-0 z-1010 w-full h-full cursor-pointer" style="backdrop-filter: saturate(1.7);">
                                     <div class="searchCardContainer w-full h-full flex justify-center items-center">
-                                        <div class="searchCard w-[60%] h-[90%] overflow-y-auto bg-white shadow-form-shadow-2 rounded-[20px] p-[40px] pb-[0px] flex flex-col gap-[40px] cursor-default">
+                                        <div class="searchCard w-11/12 pre-lg:w-4/5 lg:w-3/4 xl:w-[60%] h-[90%] overflow-y-auto bg-white shadow-form-shadow-2 rounded-[20px] p-[40px] pb-[0px] flex flex-col gap-[40px] cursor-default">
                                             <div class="searchCardHeader flex flex-col gap-[20px]">
-                                                <div id="searchCardHeading" class="flex justify-between gap-[20px]">
-                                                    <h6 class="font-bold font-Wanted-Bold text-[30px]">Search for a friend</h6>
-                                                    <button type="button" role="button" class="bg-none border-none cursor-pointer font-Wanted-Bold text-[15px] text-[#3b3b3ba4]" id="closeSearchModalButton">
-                                                        <img src="{% static '/images/admin/roles/modalClose.svg' %}" alt="">
-                                                        <p>CLOSE</p>
-                                                    </button>
+                                                <div id="searchCardHeading" class="flex flex-col-reverse lg:flex-row justify-between gap-[20px]">
+                                                    <div class="flex justify-center lg:justify-start">
+                                                        <h6 class="font-bold font-Wanted-Bold text-[30px]">Search for a friend</h6>
+                                                    </div>
+                                                    
+                                                    <div class="flex justify-end">
+                                                        <button type="button" role="button" class="bg-none border-none cursor-pointer flex flex-col items-center font-Wanted-Bold text-[15px] text-[#3b3b3ba4]" id="closeSearchModalButton">
+                                                            <img src="{% static '/images/admin/roles/modalClose.svg' %}" alt="">
+                                                            <p>CLOSE</p>
+                                                        </button>
+                                                    </div>
                                                 </div>
                                                 <div id="searchBarRow" class="w-full flex justify-center">
-                                                    <div class="find-college-card-name flex gap-[5px] border-2 border-[#07070715] bg-[#ffffff07] shadow-form-shadow-2 w-[70%]">
+                                                    <div class="find-college-card-name flex gap-[5px] border-2 rounded-2xl border-[#07070715] bg-[#ffffff07] shadow-form-shadow-2 w-full lg:w-[70%]">
                                                         <div class="febc-img flex justify-center p-[15px]">
                                                             <img src="{% static "images/explore/find.svg" %}" alt="Find College">
                                                         </div>
                                                         <div id="crew-data" data-crew-id="{{ crew.crewId }}"></div>
-                                                        <input type="text" name="" id="collegeSearchContentBar" class="w-full h-full p-[15px] py-[15px] font-Wanted-Regular text-[17px] text-black border-none rounded-r-[25px] outline-2 outline-transparent outline-offset-2" placeholder="Find your friend by their name" autofocus autocomplete="off">
+                                                        <input type="text" name="" id="collegeSearchContentBar" class="w-full h-full px-6 lg:px-[15px] lg:p-[15px] font-Wanted-Regular text-[17px] text-black rounded-r-2xl border-none outline-none outline-transparent outline-offset-2" placeholder="Find your friend by their name" autofocus autocomplete="off">
                                                     </div>
                                                 </div>
                                             </div>

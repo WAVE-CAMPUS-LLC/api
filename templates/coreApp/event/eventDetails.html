@@ -31,8 +31,8 @@
     <h3>You have reserved a place for the event. Check your email for confirmation.</h3>
 </div>
 {% endif %}
-<div id="content-container" class="flex flex-col px-[10px] after-xsm:px-[20px] xxsm:px-[35px] sm:px-[40px] md:px-[40px] pre-lg:px-[50px] lg:px-[80px] xl:px-[150px] 2xl:px-[200px] 3xl:-[300px] gap-[70px]">
-    <div class="page-header w-full flex flex-row justify-between items-center">
+<div id="content-container" class="flex flex-col px-[10px] overflow-hidden after-xsm:px-[20px] xxsm:px-[35px] sm:px-[40px] md:px-[40px] pre-lg:px-[50px] lg:px-[80px] xl:px-[150px] 2xl:px-[200px] 3xl:-[300px] gap-[70px]">
+    <div class="page-header w-full flex flex-col gap-3 lg:flex-row justify-between items-center">
         <div class="event-title">
             <h3 class="font-Wanted-Black text-3xl text-black">{{ event.title }}</h3>
         </div>
@@ -55,42 +55,39 @@
 
         <div id="contentContainerTabs" class="w-full flex flex-col gap-12">
             <div id="tabHeaderParent" class="w-full flex justify-center flex-col">
-                <ul id="tabHeader" class="list-none flex flex-row gap-7 w-full pb-1 font-Wanted-Medium text-Large">
-                    <li class="eventDetailsTab p-2 px-5 hover:bg-customGray6 rounded-2xl tab-active cursor-pointer" data-tab="eventDescription">
+                <ul id="tabHeader" class="list-none grid grid-cols-2 xxsm:grid-cols-3 w-full pb-1 font-Wanted-Medium text-Semi-Medium md:text-Large">
+                    <li class="eventDetailsTab p-2 px-5 text-center hover:border-b-customGray6 cursor-pointer" data-tab="eventDescription">
                         Description
                     </li>
                     {% if paidFreeTickets or event.ticketing == "RSVP Required" %}
-                    <li class="eventDetailsTab p-2 px-5 hover:bg-customGray6 rounded-2xl cursor-pointer" data-tab="eventTicketInformation">
+                    <li class="eventDetailsTab p-2 px-5 text-center hover:border-b-customGray6 cursor-pointer" data-tab="eventTicketInformation">
                         Ticketing
                     </li>
                     {% endif %}
 
 
-                    <li class="eventDetailsTab p-2 px-5 hover:bg-customGray6 rounded-2xl cursor-pointer" data-tab="eventPhotosVideos">
+                    <li class="eventDetailsTab p-2 px-5 text-center hover:border-b-customGray6 cursor-pointer " data-tab="eventPhotosVideos">
                         Photos
                     </li>
                 </ul>
-                <div class="headerDivider w-full flex justify-start pt-2">
-                    <hr class="w-1/2 border-1 border-[#91919189] rounded-lg">
-                </div>
             </div>
 
 
-            <div id="tabBody" class="flex flex-row gap-10">
-                <div id="tabBodyContent" class="w-[65%]">
+            <div id="tabBody" class="flex flex-col md:flex-row gap-10">
+                <div id="tabBodyContent" class="w-full lg:w-[65%]">
                     <div id="eventDescription" class="details-body eventDetailsTabInformation">
                         <div class="eventDetails-body flex flex-col gap-20">
-                            <div class="flex flex-col gap-4">
+                            <div class="flex flex-col gap-4 w-full">
                                 <div class="eventTitleDate flex flex-col gap-1 items-start">
-                                    <div class="flex flex-row gap-2 items-center">
-                                        <h5 class="font-Wanted-SemiBold text-3xl">
+                                    <div class="flex flex-col md:flex-row gap-2 items-start md:items-center">
+                                        <h5 class="font-Wanted-SemiBold w-full text-xl xxsm:text-xl pre-sm:text-1xl md:text-3xl flex w-full overflow-hidden text-ellipsis">
                                             {{ event.title }}
                                         </h5>
-                                        <span class="text-black text-1xl">•</span>
-                                        <h5 class="font-Wanted-Regular text-Large">by {{ event.host.first_name }} {{ event.host.last_name }}</h5>
+                                        <span class="text-black hidden md:inline-block text-1xl">•</span>
+                                        <h5 class="font-Wanted-Regular text-Medium xxsm:text-Large w-auto">by {{ event.host.first_name }} {{ event.host.last_name }}</h5>
                                     </div>
                                                                         
-                                    <p class="event-dated-timed font-Wanted-Bold text-Pre-Xl text-[#008d95] flex items-center flex-row gap-1">
+                                    <p class="event-dated-timed font-Wanted-Medium  md:font-Wanted-Bold text-Medium xxsm:text-Large md:text-Pre-Xl text-[#008d95] flex items-center flex-row gap-1">
                                         {{ event.date|custom_date }} <span class="text-black text-1xl">•</span> {{event.start_time|time:"g:i A" }}
                                     </p>
                                 </div>
@@ -110,16 +107,15 @@
                             </div>
                             
 
-                            <div class="flex flex-col gap-3">
-                                <h6 class="font-Wanted-Medium text-Pre-Xl">Overview</h6>
-                                <p class="font-Wanted-Regular text-Large">
+                            <div class="flex flex-col gap-0 w-auto quill-content">
+                                <p class="font-Wanted-Regular text-Large w-full quill-content">
                                     {{ event.description|safe }}
                                 </p>
                             </div>
 
 
-                            <div class="hostInformation border-t border-customGray5 py-5 flex flex-col gap-7">
-                                <h3 class="flex justify-start text-Pre-Xl font-Wanted-SemiBold">Who's coming?!</h3>
+                            <div class="hostInformation py-5 border-t border-customGray5 flex flex-col gap-7">
+                                <h3 class="flex justify-start text-Pre-Xl font-Wanted-SemiBold">Attendee list</h3>
                                 <div id="guestList" class="flex flex-row gap-7">
                                     <a href="" class="flex flex-col items-center justify-center">
                                         <img class="h-20 w-20 rounded-full" src="{% static "images/account/E.L3.png" %}" alt="Attendees" class="size-5" />
@@ -265,7 +261,7 @@
                 </div>
 
                 {% if event.ticketing == "Paid/Free" and paidFreeTickets %}
-                <div id="ticketCartContent" class="ticketCartContent">
+                <div id="ticketCartContent" class="w-full md:w-[35%] ticketCartContent">
                     <div class="ticketCartContentCard">
                         <div class="cartHeader">
                             <h3>Your Cart</h3>

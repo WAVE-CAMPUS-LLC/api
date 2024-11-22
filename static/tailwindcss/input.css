@@ -313,8 +313,30 @@ footer {
 }
 
 .hide {
-    display: none;
+	display: none;
 }
 .active {
-    display: block;
+	display: block;
+}
+
+.quill-content * {
+	max-width: 100%; /* Prevent content from exceeding the container */
+	word-wrap: break-word; /* Ensure long words or URLs break */
+}
+
+.quill-content img {
+	max-width: 100%; /* Ensure images stay within the container */
+	height: auto;
+}
+
+.quill-content iframe {
+	max-width: 100%; /* Resize iframes to fit */
+}
+
+.quill-content p {
+    margin: 0; /* Adjust spacing */
+    font-family: 'Wanted-Variable', sans-serif; /* Apply font */
+    font-size: 1.25rem; /* Match text-Large size */
+    line-height: 1.5; /* Adjust line height */
+    word-wrap: break-word; /* Handle long words */
 }

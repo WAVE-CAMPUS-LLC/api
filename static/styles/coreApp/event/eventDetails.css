@@ -23,11 +23,9 @@
     /* Ensure it's on top of the background */
 }
 
-.eventDetailsTab.tab-active {
-    background-image: linear-gradient(to right, #007d84c3 0%, #13c9d3 100%);
-
-    border-radius: 15px;
-    color: white;
+.eventDeets-tab-active {
+    border-bottom: 4px solid #008d95;
+    width: auto;
 }
 
 .jit-tab-header {
