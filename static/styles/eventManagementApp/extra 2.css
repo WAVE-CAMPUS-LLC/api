@@ -1,0 +1,456 @@
+/* Body Content */
+#content-container {
+    width: 100%;
+
+    display: flex;
+    flex-direction: column;
+    gap: 100px;
+
+    padding-left: 100px;
+    padding-right: 100px;
+}
+
+/* Page Heading */
+#page-header {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+#page-heading {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+#page-heading h5 {
+    font-family: Wanted-Bold;
+    font-size: 40px;
+}
+
+#page-heading p {
+    font-family: Wanted-Variable;
+    font-size: 17px;
+    color: rgb(95, 95, 95);
+}
+
+.header-button {
+    display: flex;
+    justify-content: end;
+}
+
+/* Portal Body Content */
+#portal-body {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+}
+
+.empty-container {
+    width: 100%;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 25px;
+
+    font-family: Wanted-Variable;
+
+    background-color: rgba(146, 146, 146, 0.096);
+    padding: 50px;
+    border-radius: 20px;
+}
+
+.first-row {
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+}
+
+.first-row .image {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+.create-event-row {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+.createEventButton {
+    padding: 12.5px 15px;
+    border: 1px solid transparent;
+    border-right-color: #13c9d3;
+    border-left-color: #008d95bc;
+    color: white;
+
+    font-family: Wanted-SemiBold;
+    text-decoration: none;
+
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    gap: 10px;
+
+    font-size: 20px;
+    border-radius: 20px;
+
+    cursor: pointer;
+
+    border-radius: 20px;
+    background-image: linear-gradient(to right, #007d84c3 0%, #13c9d3 100%);
+}
+
+.createEventButton:hover {
+    background-color: #008d95;
+}
+
+
+.empty-image {
+    width: 60px;
+}
+
+/* Create Ticket Container */
+#ticketCreationModal {
+    display: none;
+
+    background-color: rgba(0, 0, 0, 0.037);
+
+    -webkit-backdrop-filter: blur(2px) saturate(1.7);
+    backdrop-filter: blur(2px) saturate(1.7);
+
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1005;
+
+    width: 100%;
+    height: 100%;
+
+    cursor: default;
+}
+
+.ticketCreationContainer {
+    width: 100%;
+    height: 100%;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.ticketCreateCard {
+    width: 60%;
+    height: 90%;
+    overflow-y: auto;
+
+    background-color: white;
+    -webkit-box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.085);
+    -moz-box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.16);
+    box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.061);
+
+    border-radius: 20px;
+    padding: 20px;
+    padding-bottom: 0px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.modalHeading {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.modalHeader {
+    font-family: Wanted-Bold;
+    font-size: 25px;
+    color: black;
+}
+
+.closeModalRow {
+    width: 100%;
+    display: flex;
+    justify-content: end;
+}
+
+#modalCloseButton,
+.ticketInfoModalClose {
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+/* Modal Body */
+.modalBody {
+    width: 100%;
+    padding-bottom: 20px;
+    color: black;
+}
+
+.modalBody form {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: start;
+    gap: 15px;
+}
+
+.modalBody form label {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.rowTitle {
+    font-family: Wanted-Variable;
+    font-size: 17px;
+}
+
+.modalBody form label input,
+.modalBody form label select,
+.modalBody form label textarea {
+    width: 70%;
+
+    padding: 15px;
+
+    border-radius: 15px;
+    border: 1px solid rgba(0, 0, 0, 0.153);
+
+    font-family: Wanted-Regular;
+    font-size: 16px;
+}
+
+.submit-row {
+    display: flex;
+    justify-content: center;
+}
+
+.submit-button {
+    padding: 12.5px 15px;
+    border: 1px solid transparent;
+    border-right-color: #13c9d3;
+    border-left-color: #008d95bc;
+    color: white;
+    width: 65%;
+    text-align: center;
+
+    font-family: Wanted-SemiBold;
+    text-decoration: none;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: row;
+    gap: 10px;
+
+    font-size: 20px;
+    border-radius: 20px;
+
+    cursor: pointer;
+
+    border-radius: 20px;
+    background-image: linear-gradient(to right, #007d84c3 0%, #13c9d3 100%);
+}
+
+.submit-button:hover {
+    background-color: #008d95;
+}
+
+
+/* Ticket Design */
+.ticketContainer {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+    width: 100%;
+}
+
+#eventTicket {
+    padding: 20px;
+    border-radius: 20px;
+    background-image: linear-gradient(to right, #007d84c3 0%, #13c9d3 100%);
+    border: 1px solid transparent;
+    border-right-color: #13c9d3;
+    border-left-color: #008d95bc;
+    color: white;
+
+    -webkit-box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.085);
+    -moz-box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.16);
+    box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.061);
+
+    display: flex;
+    flex-direction: row;
+}
+
+/* Amount Sold */
+.amountSold {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 2px;
+    padding: 40px;
+    border-right: 3px dashed white;
+}
+
+.amountSold h4 {
+    font-family: Wanted-Bold;
+    font-size: 70px;
+}
+
+.amountSold p {
+    font-family: Wanted-Regular;
+    font-size: 30px;
+}
+
+/* Ticket Information */
+.ticketInfo {
+    border-left: 3px dashed white;
+    padding: 20px;
+    padding-left: 40px;
+    padding-bottom: 10px;
+
+    display: flex;
+    justify-content: space-between;
+    flex-direction: column;
+    width: 100%;
+
+}
+
+.ticketInfo .info {
+    display: flex;
+    justify-content: space-between;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+}
+
+.ticketInfo .info h6 {
+    font-family: Wanted-Variable;
+    font-size: 20px;
+}
+
+.ticketInfo .info h1 {
+    font-family: Wanted-Bold;
+    font-size: 40px;
+
+    white-space: nowrap;
+    /* Prevent wrapping */
+    overflow: hidden;
+    /* Hide overflow content */
+    text-overflow: ellipsis;
+    /* Show ellipsis for overflow text */
+    width: 100%;
+    text-align: left;
+}
+
+.ticketInfo .info p {
+    font-family: Wanted-Variable;
+    font-size: 17px;
+}
+
+.viewMore {
+    width: 100%;
+    display: flex;
+    justify-content: end;
+}
+
+.viewTicketInfoBtn {
+    background-color: white;
+    border-radius: 15px;
+    border: none;
+    padding: 15px;
+
+    font-family: Wanted-Variable;
+    font-size: 17px;
+    cursor: pointer;
+}
+
+/* Ticket Information Modal */
+.ticketInformationModal {
+    display: none;
+
+    background-color: rgba(0, 0, 0, 0.037);
+
+    -webkit-backdrop-filter: blur(2px) saturate(1.7);
+    backdrop-filter: blur(2px) saturate(1.7);
+
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1005;
+
+    width: 100%;
+    height: 100%;
+
+    cursor: default;
+}
+
+.ticketInformationContainer {
+    width: 100%;
+    height: 100%;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.ticketInformationCard {
+    width: 40%;
+    height: 70%;
+    overflow-y: auto;
+
+    background-color: white;
+    -webkit-box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.085);
+    -moz-box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.16);
+    box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.061);
+
+    border-radius: 20px;
+    padding: 20px;
+    padding-left: 40px;
+    padding-bottom: 0px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.informationModalBody {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    color: black;
+    height: 100%;
+    padding-bottom: 40px;
+}
+
+.informationModalBody div {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    width: 60%;
+}
+
+.informationHeading {
+    font-family: Wanted-Variable;
+    font-size: 16px;
+    color: rgba(84, 84, 84, 0.787);
+}
+
+.informationBody {
+    font-family: Wanted-Regular;
+    font-size: 18px;
+    color: black;
+}

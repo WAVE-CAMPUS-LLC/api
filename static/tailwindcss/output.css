@@ -1847,12 +1847,6 @@ footer {
     padding-right: 1.25rem;
   }
 
-  @media not all and (min-width: 640px) {
-    .xs\:max-sm\:text-center {
-      text-align: center;
-    }
-  }
-
   @media not all and (min-width: 478px) {
     .xs\:max-xxsm\:px-\[10px\] {
       padding-left: 10px;
