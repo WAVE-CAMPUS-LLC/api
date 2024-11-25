@@ -85,7 +85,7 @@ What's the wave?! — WAVE.
                 <h3 class="font-Wanted-Bold text-Large after-xsm:text-2xl">Personally Invited</h3>
             </div>
 
-            <div class="row-body event-row-body" id="events-container">
+            <div class="row-body event-row-body grid sm:grid-cols-1 pre-lg:grid-cols-2 lg:grid-cols-3" id="events-container">
                 {% for event, token in invited_events_with_tokens %}
                 <a href="{% url "core:eventDetails_withToken" eventId=event.eventId token=token %}" class="category-event-card hover:category-image hover:scale-95 transform transition duration-300 flex flex-col justify-center items-center cursor-pointer overflow-hidden p-[10px] text-black">
                     <div class="category-image w-full rounded-2xl shadow-custom-shadow-3">

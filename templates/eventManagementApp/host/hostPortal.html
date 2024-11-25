@@ -30,72 +30,82 @@ Host Dashboard | WAVE.
         </div> 
     </div>
 
-    <div id="portal-body">
-        <div class="control-row">
-            <div role="button" type="button" class="dashboard-tab tab-active" data-tab="live-events">Live</div>
-            <div role="button" type="button" class="dashboard-tab" data-tab="incomplete-events">Incomplete</div>
-            <div role="button" type="button" class="dashboard-tab" data-tab="past-events">Past</div>
+    <div id="portal-body" class="flex flex-col gap-10">
+        <div class="control-row flex flex-row gap-4 w-full">
+            <div role="button" type="button" class="dashboard-tab tab-active cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="live-events">Live</div>
+            <div role="button" type="button" class="dashboard-tab cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="incomplete-events">Incomplete</div>
+            <div role="button" type="button" class="dashboard-tab cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="past-events">Past</div>
         </div>
 
         <div id="portal-body-content">
             <div class="pbc-element-content" id="live-events">
                 {% if liveEvents %}
-                <div id="event-container">
+                <div id="event-container" class="grid grid-cols-1 sm:grid-cols-1 pre-lg:grid-cols-2 xl:grid-cols-3 gap-5 p-5">
                     {% for event in liveEvents %}
-                    <div id="port-event-display">
+                    <div id="port-event-display" class="flex flex-col gap-5 font-Wanted-Variable text-Base w-full border border-gray-300 rounded-2xl shadow-custom-shadow-2 p-5 pb-7 cursor-pointer">
                         <div class="event-image">
-                            <img src="{{event.header_photo.url}}" />
+                            <img src="{{event.header_photo.url}}" class="max-h-[450px] min-h-[450px] w-full h-full rounded-2xl" />
                         </div>
-                        <div class="event-information">
-                            <h5>
+                        <div class="event-information flex flex-col gap-2">
+                            <h5 class="font-Wanted-Medium text-xl overflow-hidden whitespace-nowrap text-ellipsis w-full text-left">
                                 {{ event.title }}
                             </h5>
                         </div>
-                        <div class="ticketing-delete">
+                        <div class="ticketing-delete flex flex-col gap-7 w-full">
                             {% if isInCollege %}
-                            <form class="display-on-college" method="POST" id="college-display-form">
+                            <form class="display-on-college w-full flex justify-between font-Wanted-Variable" method="POST" id="college-display-form">
                                 {% csrf_token %}
                                 <p>Display on college?</p>
                                 <input type="hidden" name="event_id" value="{{ event.eventId }}">
-                                <label>
-                                    <input id="displayOnCollegeCheckbox" type="checkbox" name="displayOnCollege" value="true" {% if event.display_event_on_college %} checked {% endif %}>
-                                    <span class="checkbox" />
+                                <label class="mr-5">
+                                    <input id="displayOnCollegeCheckbox" type="checkbox" class="appearance-none" name="displayOnCollege" value="true" {% if event.display_event_on_college %} checked {% endif %}>
+                                    <span class="checkbox absolute h-5 w-5 rounded-md border-2 border-gray-300 duration-100 ease-in cursor-pointer" />
                                 </label>
                             </form>
                             {% endif %}
 
-                            <div class="sub-row">
-                                <div class="ticketing">
-                                    <a class="ticketing-link" href="{% url "eventManagement:eventManagement" eventId=event.eventId %}">Event Ticketing</a>
+                            <div class="grid grid-cols-1 pre-sm:grid-cols-2 gap-4 mt-4 justify-between items-center">
+                                <div class="ticketing w-full">
+                                    <a class="bg-[#008d95] w-full p-3 rounded-2xl text-white font-Wanted-Regular text-center block" 
+                                       href="{% url 'eventManagement:eventManagement' eventId=event.eventId %}">
+                                       Event Ticketing
+                                    </a>
                                 </div>
-
-                                <div class="privacy">
-                                    <a class="ticketing-link" href="{% url "eventManagement:eventManagement" eventId=event.eventId %}">Privacy Settings</a>
+                            
+                                <div class="privacy w-full">
+                                    <a class="bg-[#008d95] w-full p-3 rounded-2xl text-white font-Wanted-Regular text-center block" 
+                                       href="{% url 'eventManagement:eventManagement' eventId=event.eventId %}">
+                                       Privacy Settings
+                                    </a>
                                 </div>
                             </div>
+                            
                         </div>
                         
                     </div>
                     {% endfor %}
                 </div>
                 {% else %}
-                <div class="empty-pcb">
-                    <img class="empty-image" src="{% static "/images/eventManagementApp/host/empty-listing.svg" %}" />
-                    <p>You currently have no live events to display!</p>
+                <div class="empty-container w-full h-full flex flex-col justify-center items-center gap-2 bg-customGray4 p-12 rounded-2xl">
+                    <img class="size-14" src="{% static "/images/eventManagementApp/host/empty-listing.svg" %}" />
+                    <p class="font-Wanted-Variable text-Base xsm:text-Medium xxsm:text-Large md:text-xl flex flex-row gap-1">
+                        Currently no events 
+                        <span class="hidden sm:flex">to be displayed!</span>
+                    </p>
                 </div>
                 {% endif %}
             </div>
 
             <div class="pbc-element-content" id="incomplete-events">
                 {% if incompleteEvents %}
-                <div id="event-container">
+                <div id="event-container" class="grid grid-cols-1 sm:grid-cols-1 pre-lg:grid-cols-2 xl:grid-cols-3 gap-5 p-5">
                     {% for event in incompleteEvents %}
-                        <div id="port-event-display">
+                        <div id="port-event-display" class="flex flex-col gap-5 font-Wanted-Variable text-Base w-full border border-gray-300 rounded-2xl shadow-custom-shadow-2 p-5 pb-7 cursor-pointer">
                             <div class="event-image">
                                 {% if not event.header_photo %}
-                                <img src="{% static "/images/eventManagementApp/host/incomplete_event.png" %}" />
+                                <img  class="max-h-[450px] min-h-[450px] w-full h-full rounded-2xl" src="{% static "/images/eventManagementApp/host/incomplete_event.png" %}" />
                                 {% else %}
-                                <img src="{{event.header_photo.url}}" />
+                                <img  class="max-h-[450px] min-h-[450px] w-full h-full rounded-2xl" src="{{event.header_photo.url}}" />
                                 {% endif %}
                             </div>
                             <div class="event-information">
@@ -106,9 +116,9 @@ Host Dashboard | WAVE.
                                     {{ event.title }}
                                     {% endif %}
                                 </h5>
-                                <div class="event-view">
+                                <div class="event-view w-full flex justify-center">
                                     <span class="view-containers">
-                                        <a href="{% url "eventManagement:eventCreationProcess" eventId=event.eventId %}">Finish setup</a>
+                                        <a class="gradient-btn w-full" href="{% url "eventManagement:eventCreationProcess" eventId=event.eventId %}">Finish setup</a>
                                     </span>
                                 </div>
                             </div>                            
@@ -116,17 +126,23 @@ Host Dashboard | WAVE.
                     {% endfor %}
                 </div>
                 {% else %}
-                <div class="empty-pcb">
-                    <img class="empty-image" src="{% static "/images/eventManagementApp/host/empty-listing.svg" %}" />
-                    <p>You currently have no incomplete events to display!</p>
+                <div class="empty-container w-full h-full flex flex-col justify-center items-center gap-2 bg-customGray4 p-12 rounded-2xl">
+                    <img class="size-14" src="{% static "/images/eventManagementApp/host/empty-listing.svg" %}" />
+                    <p class="font-Wanted-Variable text-Base xsm:text-Medium xxsm:text-Large md:text-xl flex flex-row gap-1">
+                        Currently no events 
+                        <span class="hidden sm:flex">to be displayed!</span>
+                    </p>
                 </div>
                 {% endif %}
             </div>
 
             <div class="pbc-element-content" id="past-events">
-                <div class="empty-pcb">
-                    <img class="empty-image" src="{% static "/images/eventManagementApp/host/empty-listing.svg" %}" />
-                    <p>You currently have no past events to display!</p>
+                <div class="empty-container w-full h-full flex flex-col justify-center items-center gap-2 bg-customGray4 p-12 rounded-2xl">
+                    <img class="size-14" src="{% static "/images/eventManagementApp/host/empty-listing.svg" %}" />
+                    <p class="font-Wanted-Variable text-Base xsm:text-Medium xxsm:text-Large md:text-xl flex flex-row gap-1">
+                        Currently no events 
+                        <span class="hidden sm:flex">to be displayed!</span>
+                    </p>
                 </div>
             </div>
         </div>

@@ -16,113 +16,38 @@ WAVE. — Management Dashboard
 
 
 {% block header %}
-{% include "partials/nav-footer/nav/admin_nav.html" %}
+{% include "partials/nav-footer/nav/main_nav.html" %}
 {% endblock header %}
-
-{% block container_art %}
-<div id="container-art">
-    <div class="ticket-heading">
-        <div class="ticket-header">
-            <h3>Management</h3>
-        </div>
-    </div>
-</div>
-{% endblock container_art %}
-
 
 
 {% block body %}
 <div id="content-container" class="flex flex-col gap-[70px] px-4 sm:px-6 md:px-[40px] pre-lg:px-[40px] lg:px-[100px] 2xl:px-48 3xl:px-96">
     <section class="content-section">
-        <div class="section-header">
+        <div class="font-Wanted-Bold text-Large sm:text-2xl md:text-[40px]">
             <h4>Administrative Overview</h4>
         </div>
 
-        <div class="section-body">
-            <a id="optionCard" href="{% url 'waveAdmin:dashboard' %}">
-                <div id="oC-img">
-                    <img src="{% static "/images/admin/dashboard/optionDashboard.svg" %}" alt="Support Management Dashboard">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-[20px] grid grid-cols-1 md:grid-cols-2 gap-[20px]">
+            <a id="optionCard" href="{% url 'waveAdmin:dashboard' %}" class="border-[2px] border-solid border-[rgba(0,0,0,0.038)] rounded-[20px] py-[40px] px-[20px] cursor-pointer flex flex-row gap-[12px] md:gap-[30px] lg:gap-[50px] w-full shadow-custom-shadow-2">
+                <div class="w-[30%] flex justify-center items-center" >
+                    <img src="{% static "/images/admin/dashboard/optionDashboard.svg" %}" alt="Support Management Dashboard" class="size-24">
                 </div>
-                <div id="oC-info">
-                    <div class="oci-content">
-                        <h3>Dashboard</h3>
-                        <p>Last Update: 5th March, 2024</p>
+                <div class="w-[70%] h-[100%] flex flex-col">
+                    <div class="h-[100%] flex flex-col justify-center gap-[10px] h-[100%] flex flex-col justify-center gap-[10px]">
+                        <h3 class="font-Wanted-Bold text-Large sm:text-2xl md:text-[40px]">Dashboard</h3>
+                        <p class="font-Wanted-Regular">Last Update: 5th March, 2024</p>
                     </div>
                 </div>
             </a>
 
-            <a id="optionCard" href="{% url 'waveAdmin:finances' %}">
-                <div id="oC-img">
-                    <img src="{% static "/images/admin/finance/optionFinance.svg" %}" alt="Support Management [Finance]">
+            <a id="optionCard" href="{% url 'waveAdmin:finances' %}" class="border-[2px] border-solid border-[rgba(0,0,0,0.038)] rounded-[20px] py-[40px] px-[20px] cursor-pointer flex flex-row gap-[12px] md:gap-[30px] lg:gap-[50px] w-full shadow-custom-shadow-2">
+                <div class="w-[30%] flex justify-center items-center">
+                    <img class="size-24" src="{% static "/images/admin/finance/optionFinance.svg" %}" alt="Support Management [Finance]">
                 </div>
-                <div id="oC-info">
-                    <div class="oci-content">
-                        <h3>Financials</h3>
-                        <p>Last Update: 5th March, 2024</p>
-                    </div>
-                </div>
-            </a>
-        </div>
-    </section>
-
-    <section class="content-section">
-        <div class="section-header">
-            <h4>Data & Analytics</h4>
-        </div>
-
-        <div class="section-body">
-            <a id="optionCard" href="{% url 'waveAdmin:departments' %}">
-                <div id="oC-img">
-                    <img src="{% static "/images/admin/departments/optionDepartment.svg" %}" alt="Departments Management Dashboard">
-                </div>
-                <div id="oC-info">
-                    <div class="oci-content">
-                        <h3>Overview</h3>
-                        <p>Last Update: 5th March, 2024</p>
-                    </div>
-                </div>
-            </a>
-
-            <a id="optionCard" href="{% url 'waveAdmin:careers' %}">
-                <div id="oC-img">
-                    <img src="{% static "/images/admin/jobs/optionJobs.svg" %}" alt="Support Management Jobs">
-                </div>
-                <div id="oC-info">
-                    <div class="oci-content">
-                        <h3>Jobs</h3>
-                        <p>Last Update: 5th March, 2024</p>
-                    </div>
-                </div>
-            </a>
-        </div>
-    </section>
-    
-    <section class="content-section">
-        <div class="section-header">
-            <h4>Departments & Careers</h4>
-        </div>
-
-        <div class="section-body">
-            <a id="optionCard" href="{% url 'waveAdmin:departments' %}">
-                <div id="oC-img">
-                    <img src="{% static "/images/admin/departments/optionDepartment.svg" %}" alt="Departments Management Dashboard">
-                </div>
-                <div id="oC-info">
-                    <div class="oci-content">
-                        <h3>Departments</h3>
-                        <p>Last Update: 5th March, 2024</p>
-                    </div>
-                </div>
-            </a>
-
-            <a id="optionCard" href="{% url 'waveAdmin:careers' %}">
-                <div id="oC-img">
-                    <img src="{% static "/images/admin/jobs/optionJobs.svg" %}" alt="Support Management Jobs">
-                </div>
-                <div id="oC-info">
-                    <div class="oci-content">
-                        <h3>Jobs</h3>
-                        <p>Last Update: 5th March, 2024</p>
+                <div class="w-[70%] h-[100%] flex flex-col">
+                    <div class="h-[100%] flex flex-col justify-center gap-[10px]">
+                        <h3 class="font-Wanted-Bold text-Large sm:text-2xl md:text-[40px]">Financials</h3>
+                        <p class="font-Wanted-Regular">Last Update: 5th March, 2024</p>
                     </div>
                 </div>
             </a>
@@ -130,104 +55,31 @@ WAVE. — Management Dashboard
     </section>
 
     <section class="content-section">
-        <div class="section-header">
-            <h4>Applications Management</h4>
+        <div class="font-Wanted-Bold text-[30px] md:text-[40px]">
+            <h4 class="font-Wanted-Bold text-Large sm:text-2xl md:text-[40px]">Data & Analytics</h4>
         </div>
 
-        <div class="section-body">
-            <a id="optionCard" href="{% url 'waveAdmin:applications' %}">
-                <div id="oC-img">
-                    <img src="{% static "/images/admin/applications/optionApplications.svg" %}" alt="Applications Management Dashboard">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-[20px]">
+            <a id="optionCard" href="{% url 'waveAdmin:departments' %}" class="border-[2px] border-solid border-[rgba(0,0,0,0.038)] rounded-[20px] py-[40px] px-[20px] cursor-pointer flex flex-row gap-[12px] md:gap-[30px] lg:gap-[50px] w-full shadow-custom-shadow-2">
+                <div class="w-[30%] flex justify-center items-center">
+                    <img  class="size-24"src="{% static "/images/admin/departments/optionDepartment.svg" %}" alt="Departments Management Dashboard">
                 </div>
-                <div id="oC-info">
-                    <div class="oci-content">
-                        <h3>Applications</h3>
-                        <p>Last Update: 30th May, 2024</p>
-                    </div>
-                </div>
-            </a>
-        </div>
-    </section>
-
-    <section class="content-section">
-        <div class="section-header">
-            <h4>User Management</h4>
-        </div>
-
-        <div class="section-body">
-            <a id="optionCard" href="{% url 'waveAdmin:users' %}">
-                <div id="oC-img">
-                    <img src="{% static "/images/admin/users/optionUsers.svg" %}" alt="Support Management Users">
-                </div>
-                <div id="oC-info">
-                    <div class="oci-content">
-                        <h3>Users</h3>
-                        <p>Last Update: 5th March, 2024</p>
+                <div class="w-[70%] h-[100%] flex flex-col">
+                    <div class="h-[100%] flex flex-col justify-center gap-[10px]">
+                        <h3 class="font-Wanted-Bold text-Large sm:text-2xl md:text-[40px]">Overview</h3>
+                        <p class="font-Wanted-Regular">Last Update: 5th March, 2024</p>
                     </div>
                 </div>
             </a>
 
-            <a id="optionCard" href="{% url 'waveAdmin:roles' %}">
-                <div id="oC-img">
-                    <img src="{% static "/images/admin/roles/optionRoles.svg" %}" alt="User Role Management">
+            <a id="optionCard" href="{% url 'waveAdmin:careers' %}" class="border-[2px] border-solid border-[rgba(0,0,0,0.038)] rounded-[20px] py-[40px] px-[20px] cursor-pointer flex flex-row gap-[12px] md:gap-[30px] lg:gap-[50px] w-full shadow-custom-shadow-2">
+                <div class="w-[30%] flex justify-center items-center">
+                    <img class="size-24"  class="size-24"src="{% static "/images/admin/jobs/optionJobs.svg" %}" alt="Support Management Jobs">
                 </div>
-                <div id="oC-info">
-                    <div class="oci-content">
-                        <h3>User Roles</h3>
-                        <p>Last Update: 5th March, 2024</p>
-                    </div>
-                </div>
-            </a>
-        </div>
-    </section>
-    
-
-    <section class="content-section">
-        <div class="section-header">
-            <h4>Events Management</h4>
-        </div>
-
-        <div class="section-body">
-            <a id="optionCard" href="{% url 'waveAdmin:events' %}">
-                <div id="oC-img">
-                    <img src="{% static "/images/admin/events/optionEvent.svg" %}" alt="Support Management Events">
-                </div>
-                <div id="oC-info">
-                    <div class="oci-content">
-                        <h3>Events</h3>
-                        <p>Last Update: 5th March, 2024</p>
-                    </div>
-                </div>
-            </a>
-        </div>
-    </section>
-
-    <section class="content-section">
-        <div class="section-header">
-            <h4>Campus Management</h4>
-        </div>
-
-        <div class="section-body">
-            <a id="optionCard" href="{% url 'waveAdmin:colleges' %}">
-                <div id="oC-img">
-                    <img src="{% static "/images/admin/campusManagement/optionCollege.svg" %}" alt="Email Marketing">
-                </div>
-                <div id="oC-info">
-                    <div class="oci-content">
-                        <h3>Campuses</h3>
-                        <p>Last Update: 5th March, 2024</p>
-                    </div>
-                </div>
-            </a>
-        
-            <a id="optionCard" href="{% url 'waveAdmin:organizations' %}">
-                <div id="oC-img">
-                    <img src="{% static "/images/admin/campusManagement/optionOrganization.svg" %}" alt="Survey Marketing">
-                </div>
-                <div id="oC-info">
-                    <div class="oci-content">
-                        <h3>Organizations</h3>
-                        <p>Last Update: 5th March, 2024</p>
+                <div class="w-[70%] h-[100%] flex flex-col">
+                    <div class="h-[100%] flex flex-col justify-center gap-[10px]">
+                        <h3 class="font-Wanted-Bold text-Large sm:text-2xl md:text-[40px]">Jobs</h3>
+                        <p class="font-Wanted-Regular">Last Update: 5th March, 2024</p>
                     </div>
                 </div>
             </a>
@@ -235,31 +87,31 @@ WAVE. — Management Dashboard
     </section>
     
     <section class="content-section">
-        <div class="section-header">
-            <h4>Support & Feedback</h4>
+        <div class="font-Wanted-Bold text-[30px] md:text-[40px]">
+            <h4 class="font-Wanted-Bold text-Large sm:text-2xl md:text-[40px]">Departments & Careers</h4>
         </div>
 
-        <div class="section-body">
-            <a id="optionCard" href="{% url 'waveAdmin:support' %}">
-                <div id="oC-img">
-                    <img src="{% static "/images/admin/support/optionSupport.svg" %}" alt="Support Management [Support]">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-[20px]">
+            <a id="optionCard" href="{% url 'waveAdmin:departments' %}" class="border-[2px] border-solid border-[rgba(0,0,0,0.038)] rounded-[20px] py-[40px] px-[20px] cursor-pointer flex flex-row gap-[12px] md:gap-[30px] lg:gap-[50px] w-full shadow-custom-shadow-2">
+                <div class="w-[30%] flex justify-center items-center">
+                    <img class="size-24" src="{% static "/images/admin/departments/optionDepartment.svg" %}" alt="Departments Management Dashboard">
                 </div>
-                <div id="oC-info">
-                    <div class="oci-content">
-                        <h3>Support</h3>
-                        <p>Last Update: 5th March, 2024</p>
+                <div class="w-[70%] h-[100%] flex flex-col">
+                    <div class="h-[100%] flex flex-col justify-center gap-[10px]">
+                        <h3 class="font-Wanted-Bold text-Large sm:text-2xl md:text-[40px]">Departments</h3>
+                        <p class="font-Wanted-Regular">Last Update: 5th March, 2024</p>
                     </div>
                 </div>
             </a>
-        
-            <a id="optionCard" href="{% url 'waveAdmin:feedback' %}">
-                <div id="oC-img">
-                    <img src="{% static "/images/admin/feedback/optionFeedback.svg" %}" alt="Support Management [Feedback]">
+
+            <a id="optionCard" href="{% url 'waveAdmin:careers' %}" class="border-[2px] border-solid border-[rgba(0,0,0,0.038)] rounded-[20px] py-[40px] px-[20px] cursor-pointer flex flex-row gap-[12px] md:gap-[30px] lg:gap-[50px] w-full shadow-custom-shadow-2">
+                <div class="w-[30%] flex justify-center items-center">
+                    <img class="size-24" src="{% static "/images/admin/jobs/optionJobs.svg" %}" alt="Support Management Jobs">
                 </div>
-                <div id="oC-info">
-                    <div class="oci-content">
-                        <h3>Feedback</h3>
-                        <p>Last Update: 5th March, 2024</p>
+                <div class="w-[70%] h-[100%] flex flex-col">
+                    <div class="h-[100%] flex flex-col justify-center gap-[10px]">
+                        <h3 class="font-Wanted-Bold text-Large sm:text-2xl md:text-[40px]">Jobs</h3>
+                        <p class="font-Wanted-Regular">Last Update: 5th March, 2024</p>
                     </div>
                 </div>
             </a>
@@ -267,55 +119,192 @@ WAVE. — Management Dashboard
     </section>
 
     <section class="content-section">
-        <div class="section-header">
-            <h4>Product Marketing</h4>
+        <div class="font-Wanted-Bold text-[30px] md:text-[40px]">
+            <h4 class="font-Wanted-Bold text-Large sm:text-2xl md:text-[40px]">Applications Management</h4>
         </div>
 
-        <div class="section-body">
-            <a id="optionCard" href="{% url 'waveAdmin:emailing' %}">
-                <div id="oC-img">
-                    <img src="{% static "/images/admin/emailMarketing/optionEmails.svg" %}" alt="Email Marketing">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-[20px]">
+            <a id="optionCard" href="{% url 'waveAdmin:applications' %}" class="border-[2px] border-solid border-[rgba(0,0,0,0.038)] rounded-[20px] py-[40px] px-[20px] cursor-pointer flex flex-row gap-[12px] md:gap-[30px] lg:gap-[50px] w-full shadow-custom-shadow-2">
+                <div class="w-[30%] flex justify-center items-center">
+                    <img class="size-24" src="{% static "/images/admin/applications/optionApplications.svg" %}" alt="Applications Management Dashboard">
                 </div>
-                <div id="oC-info">
-                    <div class="oci-content">
-                        <h3>Emailing</h3>
-                        <p>Last Update: 5th March, 2024</p>
+                <div class="w-[70%] h-[100%] flex flex-col">
+                    <div class="h-[100%] flex flex-col justify-center gap-[10px]">
+                        <h3 class="font-Wanted-Bold text-Large sm:text-2xl md:text-[40px]">Applications</h3>
+                        <p class="font-Wanted-Regular">Last Update: 30th May, 2024</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </section>
+
+    <section class="content-section">
+        <div class="font-Wanted-Bold text-[30px] md:text-[40px]">
+            <h4 class="font-Wanted-Bold text-Large sm:text-2xl md:text-[40px]">User Management</h4>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-[20px]">
+            <a id="optionCard" href="{% url 'waveAdmin:users' %}" class="border-[2px] border-solid border-[rgba(0,0,0,0.038)] rounded-[20px] py-[40px] px-[20px] cursor-pointer flex flex-row gap-[12px] md:gap-[30px] lg:gap-[50px] w-full shadow-custom-shadow-2">
+                <div class="w-[30%] flex justify-center items-center">
+                    <img class="size-24" src="{% static "/images/admin/users/optionUsers.svg" %}" alt="Support Management Users">
+                </div>
+                <div class="w-[70%] h-[100%] flex flex-col">
+                    <div class="h-[100%] flex flex-col justify-center gap-[10px]">
+                        <h3 class="font-Wanted-Bold text-Large sm:text-2xl md:text-[40px]">Users</h3>
+                        <p class="font-Wanted-Regular">Last Update: 5th March, 2024</p>
+                    </div>
+                </div>
+            </a>
+
+            <a id="optionCard" href="{% url 'waveAdmin:roles' %}" class="border-[2px] border-solid border-[rgba(0,0,0,0.038)] rounded-[20px] py-[40px] px-[20px] cursor-pointer flex flex-row gap-[12px] md:gap-[30px] lg:gap-[50px] w-full shadow-custom-shadow-2">
+                <div class="w-[30%] flex justify-center items-center">
+                    <img class="size-24" src="{% static "/images/admin/roles/optionRoles.svg" %}" alt="User Role Management">
+                </div>
+                <div class="w-[70%] h-[100%] flex flex-col">
+                    <div class="h-[100%] flex flex-col justify-center gap-[10px]">
+                        <h3 class="font-Wanted-Bold text-Large sm:text-2xl md:text-[40px]">User Roles</h3>
+                        <p class="font-Wanted-Regular">Last Update: 5th March, 2024</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </section>
+    
+
+    <section class="content-section">
+        <div class="font-Wanted-Bold text-[30px] md:text-[40px]">
+            <h4 class="font-Wanted-Bold text-Large sm:text-2xl md:text-[40px]">Events Management</h4>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-[20px]">
+            <a id="optionCard" href="{% url 'waveAdmin:events' %}" class="border-[2px] border-solid border-[rgba(0,0,0,0.038)] rounded-[20px] py-[40px] px-[20px] cursor-pointer flex flex-row gap-[12px] md:gap-[30px] lg:gap-[50px] w-full shadow-custom-shadow-2">
+                <div class="w-[30%] flex justify-center items-center">
+                    <img class="size-24" src="{% static "/images/admin/events/optionEvent.svg" %}" alt="Support Management Events">
+                </div>
+                <div class="w-[70%] h-[100%] flex flex-col">
+                    <div class="h-[100%] flex flex-col justify-center gap-[10px]">
+                        <h3 class="font-Wanted-Bold text-Large sm:text-2xl md:text-[40px]">Events</h3>
+                        <p class="font-Wanted-Regular">Last Update: 5th March, 2024</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </section>
+
+    <section class="content-section">
+        <div class="font-Wanted-Bold text-[30px] md:text-[40px]">
+            <h4 class="font-Wanted-Bold text-Large sm:text-2xl md:text-[40px]">Campus Management</h4>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-[20px]">
+            <a id="optionCard" href="{% url 'waveAdmin:colleges' %}" class="border-[2px] border-solid border-[rgba(0,0,0,0.038)] rounded-[20px] py-[40px] px-[20px] cursor-pointer flex flex-row gap-[12px] md:gap-[30px] lg:gap-[50px] w-full shadow-custom-shadow-2">
+                <div class="w-[30%] flex justify-center items-center">
+                    <img class="size-24" src="{% static "/images/admin/campusManagement/optionCollege.svg" %}" alt="Email Marketing">
+                </div>
+                <div class="w-[70%] h-[100%] flex flex-col">
+                    <div class="h-[100%] flex flex-col justify-center gap-[10px]">
+                        <h3 class="font-Wanted-Bold text-Large sm:text-2xl md:text-[40px]">Campuses</h3>
+                        <p class="font-Wanted-Regular">Last Update: 5th March, 2024</p>
                     </div>
                 </div>
             </a>
         
-            <a id="optionCard" href="{% url 'waveAdmin:feedback' %}">
-                <div id="oC-img">
-                    <img src="{% static "/images/admin/surveyMarketing/optionSurvey.svg" %}" alt="Survey Marketing">
+            <a id="optionCard" href="{% url 'waveAdmin:organizations' %}" class="border-[2px] border-solid border-[rgba(0,0,0,0.038)] rounded-[20px] py-[40px] px-[20px] cursor-pointer flex flex-row gap-[12px] md:gap-[30px] lg:gap-[50px] w-full shadow-custom-shadow-2">
+                <div class="w-[30%] flex justify-center items-center">
+                    <img class="size-24" src="{% static "/images/admin/campusManagement/optionOrganization.svg" %}" alt="Survey Marketing">
                 </div>
-                <div id="oC-info">
-                    <div class="oci-content">
-                        <h3>Surveys</h3>
-                        <p>Last Update: 5th March, 2024</p>
+                <div class="w-[70%] h-[100%] flex flex-col">
+                    <div class="h-[100%] flex flex-col justify-center gap-[10px]">
+                        <h3 class="font-Wanted-Bold text-Large sm:text-2xl md:text-[40px]">Organizations</h3>
+                        <p class="font-Wanted-Regular">Last Update: 5th March, 2024</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </section>
+    
+    <section class="content-section">
+        <div class="font-Wanted-Bold text-[30px] md:text-[40px]">
+            <h4 class="font-Wanted-Bold text-Large sm:text-2xl md:text-[40px]">Support & Feedback</h4>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-[20px]">
+            <a id="optionCard" href="{% url 'waveAdmin:support' %}" class="border-[2px] border-solid border-[rgba(0,0,0,0.038)] rounded-[20px] py-[40px] px-[20px] cursor-pointer flex flex-row gap-[12px] md:gap-[30px] lg:gap-[50px] w-full shadow-custom-shadow-2">
+                <div class="w-[30%] flex justify-center items-center">
+                    <img class="size-24" src="{% static "/images/admin/support/optionSupport.svg" %}" alt="Support Management [Support]">
+                </div>
+                <div class="w-[70%] h-[100%] flex flex-col">
+                    <div class="h-[100%] flex flex-col justify-center gap-[10px]">
+                        <h3 class="font-Wanted-Bold xs:max-xssm:text-[25px] text-[30px] lg-[35px]">Support</h3>
+                        <p class="font-Wanted-Regular">Last Update: 5th March, 2024</p>
+                    </div>
+                </div>
+            </a>
+        
+            <a id="optionCard" href="{% url 'waveAdmin:feedback' %}" class="border-[2px] border-solid border-[rgba(0,0,0,0.038)] rounded-[20px] py-[40px] px-[20px] cursor-pointer flex flex-row gap-[12px] md:gap-[30px] lg:gap-[50px] w-full shadow-custom-shadow-2">
+                <div class="w-[30%] flex justify-center items-center">
+                    <img class="size-24" src="{% static "/images/admin/feedback/optionFeedback.svg" %}" alt="Support Management [Feedback]">
+                </div>
+                <div class="w-[70%] h-[100%] flex flex-col">
+                    <div class="h-[100%] flex flex-col justify-center gap-[10px]">
+                        <h3 class="font-Wanted-Bold text-Large sm:text-2xl md:text-[40px]">Feedback</h3>
+                        <p class="font-Wanted-Regular">Last Update: 5th March, 2024</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </section>
+
+    <section class="content-section">
+        <div class="font-Wanted-Bold text-[30px] md:text-[40px]">
+            <h4 class="font-Wanted-Bold text-Large sm:text-2xl md:text-[40px]">Product Marketing</h4>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-[20px]">
+            <a id="optionCard" href="{% url 'waveAdmin:emailing' %}" class="border-[2px] border-solid border-[rgba(0,0,0,0.038)] rounded-[20px] py-[40px] px-[20px] cursor-pointer flex flex-row gap-[12px] md:gap-[30px] lg:gap-[50px] w-full shadow-custom-shadow-2">
+                <div class="w-[30%] flex justify-center items-center">
+                    <img class="size-24" src="{% static "/images/admin/emailMarketing/optionEmails.svg" %}" alt="Email Marketing">
+                </div>
+                <div class="w-[70%] h-[100%] flex flex-col">
+                    <div class="h-[100%] flex flex-col justify-center gap-[10px]">
+                        <h3 class="font-Wanted-Bold text-Large sm:text-2xl md:text-[40px]">Emailing</h3>
+                        <p class="font-Wanted-Regular">Last Update: 5th March, 2024</p>
+                    </div>
+                </div>
+            </a>
+        
+            <a id="optionCard" href="{% url 'waveAdmin:feedback' %}" class="border-[2px] border-solid border-[rgba(0,0,0,0.038)] rounded-[20px] py-[40px] px-[20px] cursor-pointer flex flex-row gap-[12px] md:gap-[30px] lg:gap-[50px] w-full shadow-custom-shadow-2">
+                <div class="w-[30%] flex justify-center items-center">
+                    <img class="size-24" src="{% static "/images/admin/surveyMarketing/optionSurvey.svg" %}" alt="Survey Marketing">
+                </div>
+                <div class="w-[70%] h-[100%] flex flex-col">
+                    <div class="h-[100%] flex flex-col justify-center gap-[10px]">
+                        <h3 class="font-Wanted-Bold text-Large sm:text-2xl md:text-[40px]">Surveys</h3>
+                        <p class="font-Wanted-Regular">Last Update: 5th March, 2024</p>
                     </div>
                 </div>
             </a>
 
-            <a id="optionCard" href="{% url 'waveAdmin:newsroom' %}">
-                <div id="oC-img">
-                    <img src="{% static "/images/admin/surveyMarketing/optionSurvey.svg" %}" alt="Newsroom">
+            <a id="optionCard" href="{% url 'waveAdmin:newsroom' %}" class="border-[2px] border-solid border-[rgba(0,0,0,0.038)] rounded-[20px] py-[40px] px-[20px] cursor-pointer flex flex-row gap-[12px] md:gap-[30px] lg:gap-[50px] w-full shadow-custom-shadow-2">
+                <div class="w-[30%] flex justify-center items-center">
+                    <img class="size-24" src="{% static "/images/admin/surveyMarketing/optionSurvey.svg" %}" alt="Newsroom">
                 </div>
-                <div id="oC-info">
-                    <div class="oci-content">
-                        <h3>NewsRoom</h3>
-                        <p>Last Update: 5th March, 2024</p>
+                <div class="w-[70%] h-[100%] flex flex-col">
+                    <div class="h-[100%] flex flex-col justify-center gap-[10px]">
+                        <h3 class="font-Wanted-Bold text-Large sm:text-2xl md:text-[40px]">NewsRoom</h3>
+                        <p class="font-Wanted-Regular">Last Update: 5th March, 2024</p>
                     </div>
                 </div>
             </a>
             
-            <a id="optionCard" href="{% url 'waveAdmin:newsroom' %}">
-                <div id="oC-img">
-                    <img src="{% static "/images/admin/dashboard/blog.svg" %}" alt="Blogs">
+            <a id="optionCard" href="{% url 'waveAdmin:newsroom' %}" class="border-[2px] border-solid border-[rgba(0,0,0,0.038)] rounded-[20px] py-[40px] px-[20px] cursor-pointer flex flex-row gap-[12px] md:gap-[30px] lg:gap-[50px] w-full shadow-custom-shadow-2">
+                <div class="w-[30%] flex justify-center items-center">
+                    <img class="size-24" src="{% static "/images/admin/dashboard/blog.svg" %}" alt="Blogs">
                 </div>
-                <div id="oC-info">
-                    <div class="oci-content">
-                        <h3>Blog</h3>
-                        <p>Last Update: 5th March, 2024</p>
+                <div class="w-[70%] h-[100%] flex flex-col">
+                    <div class="h-[100%] flex flex-col justify-center gap-[10px]">
+                        <h3 class="font-Wanted-Bold text-Large sm:text-2xl md:text-[40px]">Blog</h3>
+                        <p class="font-Wanted-Regular">Last Update: 5th March, 2024</p>
                     </div>
                 </div>
             </a>
