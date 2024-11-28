@@ -112,6 +112,9 @@
 @import "../styles/supportCenterApp/portal/support_ticket_details.css";
 @import "../styles/supportCenterApp/ticket/createTicket.css";
 
+@import "../styles/eventTicketsApp/checkout.css";
+@import "../styles/eventTicketsApp/ticket/viewTicket.css";
+
 @import "../styles/hamburger/hamburgers.css";
 
 @layer utilities {

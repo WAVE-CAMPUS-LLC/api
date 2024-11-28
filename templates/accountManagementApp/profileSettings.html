@@ -20,172 +20,125 @@ Account Settings — WAVE.
 
 {% block body %}
 <div id="content-container" class="flex flex-col gap-[70px] px-4 sm:px-6 md:px-[40px] pre-lg:px-[40px] lg:px-[100px] 2xl:px-48 3xl:px-96">
-    <div id="body-header">
-        <h3>Profile Settings</h3>
+    <div id="body-header" class="w-full justify-start mb-[40px]">
+        <h3 class="text-black font-Wanted-Bold text-1xl pre-lg:text-3.5xl font-extrabold">Profile Settings</h3>
     </div>
-    <div class="content-control">
-        <div class="settings-tab tab-active" data-tab="profile-information">
+    <div class="content-control border-b border-b-[#008d95] flex gap-[20px] justify-start font-Wanted-Bold font-bold text-black">
+        <div class="settings-tab tab-active inline-block px-[7px] cursor-pointer border-b-4 border-b-[#008d95] pb-[10px]" data-tab="profile-information">
             Profile
         </div>
-        <div class="settings-tab" data-tab="preferences-information">
+        <div class="settings-tab inline-block px-[7px] cursor-pointer" data-tab="preferences-information">
             Interests
         </div>
     </div>
-    <div id="body-content-container">
-        <div class="settings-tab-content" id="profile-information">
-            <section id="personal-change" class="info-container">
-                <h6 class="ic-headers">Personal Information</h6>
-                <form method="post" action="{% url "accountManagement:userSettings" %}">
+    <div id="body-content-container" class="w-full h-full">
+        <div class="settings-tab-content flex flex-col gap-5 h-full" id="profile-information">
+            <section id="personal-change" class="info-container flex flex-col w-full gap-y-[25px]">
+                <h6 class="ic-headers font-Wanted-Medium text-[20px] text-black">Personal Information</h6>
+                <form method="post" action="{% url "accountManagement:userSettings" %}" class="flex flex-col sm:flex-row justify-between w-full gap-[25px]">
                     {% csrf_token %}
                     <input type="hidden" name="form_type" value="personal-info" />
-                    <div class="input-div">
-                        <div class="input-box">
-                            <label for="{{ personal_form.first_name.id_for_label }}">{{ personal_form.first_name.label_tag }}</label>
+                    <div class="input-div flex flex-col gap-y-[50px]">
+                        <div class="input-box flex flex-col gap-1">
+                            <label for="{{ personal_form.first_name.id_for_label }}" class="font-Wanted-Variable font-bold text-[1em] text0[#02374ccb]">{{ personal_form.first_name.label_tag }}</label>
                             <input
                                 name="{{ personal_form.first_name.html_name }}"
                                 id="{{ personal_form.first_name.auto_id }}"
                                 type="{{ personal_form.first_name.field.widget.input_type }}"
                                 value="{{ user.first_name }}"
-                                
+                                class="w-full border-2 border-[#0909091c] rounded-2xl p-3 font-Wanted-Variable text-Medium"
                             />
                         </div>
     
-                        <div class="input-box">
-                            <label for="{{ personal_form.last_name.id_for_label }}">{{ personal_form.last_name.label_tag }}</label>
+                        <div class="input-box flex flex-col gap-1">
+                            <label for="{{ personal_form.last_name.id_for_label }}" class="font-Wanted-Variable font-bold text-[1em] text0[#02374ccb]">{{ personal_form.last_name.label_tag }}</label>
                             <input
                                 name="{{ personal_form.last_name.html_name }}"
                                 id="{{ personal_form.last_name.auto_id }}"
                                 type="{{ personal_form.last_name.field.widget.input_type }}"
                                 value="{{ user.last_name }}"
-                                
+                                class="w-full border-2 border-[#0909091c] rounded-2xl p-3 font-Wanted-Variable text-Medium"
                             />
                         </div>
                     </div>
-                    <button type="submit" role="button">Confirm Changes</button>
+                    <div class="flex sm:items-center justify-end sm:justify-center">
+                        <button type="submit" role="button" class="font-Wanted-Variable text-Pre-Xl bg-[#008d95] rounded-[10px] text-white border border-[#25567b39] py-2 px-4 w-auto cursor-pointer">Save</button>
+                    </div>
                 </form>
             </section>
 
-            <hr class="cc-divider" />
+            <hr class="cc-divider my-[50px] border-[#8e8e8e58 border-[1.5px] w-full" />
 
-            <section id="email-change" class="info-container">
-                <h6 class="ic-headers">Email Address</h6>
-                <form method="post" action="{% url "accountManagement:userSettings" %}">
+            <section id="email-change" class="info-container flex flex-col w-full gap-y-[25px]">
+                <h6 class="ic-headers font-Wanted-Medium text-[20px] text-black">Email Address</h6>
+                <form method="post" action="{% url "accountManagement:userSettings" %}" class="flex flex-col sm:flex-row justify-between w-full gap-[25px]">
                     {% csrf_token %}
                     <input type="hidden" name="form_type" value="email-info" />
                     <div class="input-div">
-                        <div class="input-box">
-                            <label for="{{ contact_form.email.id_for_label }}">{{ contact_form.email.label_tag }}</label>
+                        <div class="input-box flex flex-col gap-1">
+                            <label for="{{ contact_form.email.id_for_label }}" class="font-Wanted-Variable font-bold text-[1em] text0[#02374ccb]">{{ contact_form.email.label_tag }}</label>
                             <input
                                 name="{{ contact_form.email.html_name }}"
                                 id="{{ contact_form.email.auto_id }}"
                                 type="{{ contact_form.email.field.widget.input_type }}"
                                 value="{{ user.email }}"
+                                class="w-full border-2 border-[#0909091c] rounded-2xl p-3 font-Wanted-Variable text-Medium"
                             />
                         </div>
                     </div>
-                    <button type="submit" role="button">Confirm Change</button>
+                    <div class="flex sm:items-center justify-end sm:justify-center">
+                        <button type="submit" role="button" class="font-Wanted-Variable text-Pre-Xl bg-[#008d95] rounded-[10px] text-white border border-[#25567b39] py-2 px-4 w-auto cursor-pointer">Save</button>
+                    </div>
                 </form>
             </section>
 
+            <hr class="cc-divider my-[50px] border-[#8e8e8e58 border-[1.5px] w-full" />
 
-            <section id="password-change" class="info-container">
+            <section id="password-change" class="info-container flex flex-col w-full gap-y-[25px]">
                 <div>
-                    <h6 class="ic-headers">Password & Authentication</h6>
+                    <h6 class="ic-headers font-Wanted-Medium text-[20px] text-black">Password & Authentication</h6>
                 </div>
-                <div>
-                    {% comment %} <button type="button" id="updatePwbtn">Change Password</button> {% endcomment %}
-                    <a href="{% url "accountManagement:changePassword" %}">Change Password</a>
+                <div class="flex sm:items-center justify-end sm:justify-start">
+                    <a href="{% url "accountManagement:changePassword" %}" class="font-Wanted-Variable text-Pre-Xl bg-[#008d95] rounded-[10px] text-white border border-[#25567b39] py-2 px-4 w-auto cursor-pointer">Change Password</a>
                 </div>
-                {% comment %} <div id="pw-card_container">
-                    <div class="container-main">
-                        <div id="passwordCard">
-                            <div class="heading">
-                                <h3>Set New Password</h3>
-                            </div>
-                            <form id="passwordForm"  method="post" action="">
-                                {% csrf_token %}
-                                <div class="input-containers">
-                                    <div class="input-box">
-                                        <label for="password">Current Password</label>
-                                        <input type="password" id="password">
-                                    </div>
-                                    <div class="input-box">
-                                        <label for="new-password">New Password</label>
-                                        <input type="password" id="new-password">
-                                    </div>
-                                    <div class="input-box">
-                                        <label for="confirm-new-password">Confirm New Password</label>
-                                        <input type="password" id="confirm-new-password">
-                                    </div>
-                                </div>
-                                <div class="submit-form">
-                                    <button type="submit">Confirm Change</button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div> {% endcomment %}
             </section>
 
-            <hr class="cc-divider" />
+            <hr class="cc-divider my-[50px] border-[#8e8e8e58 border-[1.5px] w-full" />
 
-            {% comment %} <section id="phone-change" class="info-container">
-                <h6 class="ic-headers">Phone Number</h6>
-                <form method="post" action="{% url "accountManagement:userSettings" %}">
-                    {% csrf_token %}
-                    <input type="hidden" name="form_type" value="phone-info" />
-                    <div class="input-div">
-                        <div class="input-box">
-                            <label for="{{ contact_form.phone_number.id_for_label }}">{{ contact_form.phone_number.label_tag }}</label>
-                            <input
-                                name="{{ contact_form.phone_number.html_name }}"
-                                id="{{ contact_form.phone_number.auto_id }}"
-                                type="{{ contact_form.phone_number.field.widget.input_type }}"
-                                value="{{ user.phone_number }}"
-                                readonly
-                                
-                            />
-                        </div>
-                    </div>
-                    <button type="submit" role="button">Request Change</button>
-                </form>
-            </section>
-
-            <hr class="cc-divider" /> {% endcomment %}
-
-            <section id="location-change" class="info-container">
-                <h6 class="ic-headers">Location</h6>
-                <form method="post" action="{% url "accountManagement:userSettings" %}">
+            <section id="location-change" class="info-container flex flex-col w-full gap-y-[25px]">
+                <h6 class="ic-headers font-Wanted-Medium text-[20px] text-black">Location</h6>
+                <form method="post" action="{% url "accountManagement:userSettings" %}" class="flex flex-col sm:flex-row justify-between w-full gap-[25px]">
                     {% csrf_token %}
                     <input type="hidden" name="form_type" value="location-info" />
-                    <div class="input-div">
-                        <div class="input-box">
-                            <label for="{{ profile_form.country.id_for_label }}">{{ profile_form.country.label_tag }}</label>
+                    <div class="input-div flex flex-col gap-y-[50px]">
+                        <div class="input-box flex flex-col gap-1">
+                            <label for="{{ profile_form.country.id_for_label }}" class="font-Wanted-Variable font-bold text-[1em] text0[#02374ccb]">{{ profile_form.country.label_tag }}</label>
                             <select
                                 name="{{ profile_form.country.html_name }}"
                                 id="{{ profile_form.country.auto_id }}"
                                 type="{{ profile_form.country.field.widget.input_type }}"
                                 value="United States"
-                                
+                                class="w-full border-2 border-[#0909091c] rounded-2xl p-3 font-Wanted-Variable text-Medium"
                             >
                                 <option value="usa">United States</option>
                             </select>
                         </div>
     
-                        <div class="input-box">
-                            <label for="zip-code"
-                                >ZIP Code / PostCode</label
+                        <div class="input-box flex flex-col gap-1">
+                            <label for="zip-code" class="font-Wanted-Variable font-bold text-[1em] text0[#02374ccb]">ZIP Code</label
                             >
                             <input
                                 id="zip-code"
                                 name="zip-code"
                                 type="text"
                                 value="28167"
-                                
+                                class="w-full border-2 border-[#0909091c] rounded-2xl p-3 font-Wanted-Variable text-Medium"
                             />
                         </div>
                     </div>
-                    <button type="submit" role="button">Confirm Changes</button>
+                    <div class="flex sm:items-center justify-end sm:justify-center">
+                        <button type="submit" role="button" class="font-Wanted-Variable text-Pre-Xl bg-[#008d95] rounded-[10px] text-white border border-[#25567b39] py-2 px-4 w-auto cursor-pointer">Save</button>
+                    </div>
                 </form>
             </section>
 

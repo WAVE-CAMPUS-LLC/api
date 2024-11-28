@@ -5,9 +5,6 @@
 WAVE — Join Us!
 {% endblock title %}
 
-{% block app_page_style %}
-<link rel="stylesheet" type="text/css" href="{% static "/styles/eventTicketsApp/checkout.css" %}" />
-{% endblock app_page_style %}
 
 {% block script %}
 <script type="text/javascript" src="" defer></script>
@@ -15,93 +12,71 @@ WAVE — Join Us!
 
 
 {% block checkout_body %}
-<div class="checkout-container">
-    <main>
-        <div class="checkout-card">
-            <div class="checkout-information">
-                <div class="ci-header">
-                    <div id="logo">
-                        <a href="{% url 'core:index' %}">
-                            WAV<span>E</span>.
+<div class="checkout-container flex flex-col gap-[20px] items-center justify-center overflow-hidden h-full p-[30px]">
+    <div class="w-full h-full flex justify-center">
+        <div class="w-[80%] h-full flex flex-col gap-[10px] py-4 items-center justify-center border-[1px] border-solid border-[#e0e0e082] rounded-[20px] shadow-custom-shadow-3">
+            <div class="checkout-information w-full p-[40px] pt-[20px] h-full flex flex-col gap-[20px]">
+                <div class="ci-header flex flex-row gap-[1px] justify-between">
+                    <div id="logo" class="font-Wanted-Black text-[30px]">
+                        <a href="{% url 'core:index' %}" class="text-[#000000]">
+                            WAV<span class="text-[#008d95]">E</span>.
                         </a>
                     </div>
                 </div>
 
-                <div class="ci-body-information-row-one">
-                    <h3>1. Personal Information</h3>
-                    <div class="ci-body-information">
-                        <div class="ci-body-row">
-                            <label>
-                                <p>First Name</p>
-                                <input type="text" name="first_name" id="first_name" required>
+                <div class="ci-body-information-row-one flex flex-col gap-[5px]">
+                    <h3 class="font-Wanted-Bold text-[17px] text-black">1. Personal Information</h3>
+                    <div class="ci-body-information flex flex-col gap-[20px]">
+                        <div class="ci-body-row flex flex-col md:flex-row gap-[20px] items-center justify-center">
+                            <label class="flex flex-col gap-[5px] w-full">
+                                <p class="font-Wanted-Variable text-[13px] text-[#00000085]">First Name</p>
+                                <input type="text" name="first_name" id="first_name" class="w-full p-[15px] rounded-[12px] border-[1px] border-solid border-[rgba(0,0,0,0.153)] font-Wanted-Variable text-[15px]" required>
                             </label>
-                            <label>
-                                <p>Last Name</p>
-                                <input type="text" name="last_name" id="last_name" required>
+                            <label class="flex flex-col gap-[5px] w-full">
+                                <p class="font-Wanted-Variable text-[13px] text-[#00000085]">Last Name</p>
+                                <input type="text" name="last_name" id="last_name" class="w-full p-[15px] rounded-[12px] border-[1px] border-solid border-[rgba(0,0,0,0.153)] font-Wanted-Variable text-[15px]" required>
                             </label>
                         </div>
-                        <div class="ci-body-row">
-                            <label>
-                                <p>Email</p>
-                                <input type="email" name="email" id="email" required>
+                        <div class="ci-body-row flex flex-row gap-[20px] items-center justify-center">
+                            <label class="flex flex-col gap-[5px] w-full">
+                                <p class="font-Wanted-Variable text-[13px] text-[#00000085]">Email</p>
+                                <input type="email" name="email" id="email" class="w-full p-[15px] rounded-[12px] border-[1px] border-solid border-[rgba(0,0,0,0.153)] font-Wanted-Variable text-[15px]" required>
                             </label>
                         </div>
                     </div>
                 </div>
                 
-                <div class="ci-body-information-row-one">
-                    <h3>2. Payment Information</h3>
-                    <div class="ci-body-information">
-                        <div class="ci-body-row">
-                            <label>
-                                <p>Card Number</p>
-                                <input type="text" name="first_name" id="first_name" required>
+                <div class="ci-body-information-row-one flex flex-col gap-[5px]">
+                    <h3 class="font-Wanted-Bold text-[17px] text-black">2. Payment Information</h3>
+                    <div class="ci-body-information flex flex-col gap-[20px]">
+                        <div class="ci-body-row flex flex-row gap-[20px] items-center justify-center">
+                            <label class="flex flex-col gap-[5px] w-full">
+                                <p class="font-Wanted-Variable text-[13px] text-[#00000085]">Card Number</p>
+                                <input type="text" name="first_name" id="first_name" class="w-full p-[15px] rounded-[12px] border-[1px] border-solid border-[rgba(0,0,0,0.153)] font-Wanted-Variable text-[15px]" required>
                             </label>
                         </div>
-                        <div class="ci-body-row">
-                            <label>
-                                <p>Expiry Date</p>
-                                <input type="text" name="email" id="email" required>
+                        <div class="ci-body-row flex flex-col xxsm:flex-row gap-[20px] items-center justify-center">
+                            <label class="flex flex-col gap-[5px] w-full">
+                                <p class="font-Wanted-Variable text-[13px] text-[#00000085]">Expiry Date</p>
+                                <input type="text" name="email" id="email" class="w-full p-[15px] rounded-[12px] border-[1px] border-solid border-[rgba(0,0,0,0.153)] font-Wanted-Variable text-[15px]" required>
                             </label>
-                            <label>
-                                <p>CVV</p>
-                                <input type="text" name="email" id="email" required>
+                            <label class="flex flex-col gap-[5px] w-full">
+                                <p class="font-Wanted-Variable text-[13px] text-[#00000085]">CVV</p>
+                                <input type="text" name="email" id="email" class="w-full p-[15px] rounded-[12px] border-[1px] border-solid border-[rgba(0,0,0,0.153)] font-Wanted-Variable text-[15px]" required>
                             </label>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="checkout-items">
-                <div class="tickets-display">
-                    {% for ticket_id, ticket in cart.items %}
-                    <div class="checkout-item">
-                        <div class="ticket-nqp">
-                            <div class="ticket-name-quantity">
-                                <p>{{ ticket.name }}</p>
-                                <p>x{{ ticket.quantity }}</p>
-                            </div>
-                            <div class="ticket-price">
-                                <p>${{ ticket.price }} each</p>
-                            </div>
-                        </div>         
-                        <div class="sub-total">
-                            <p>$ {{ ticket.price|floatformat:2 }}</p>
-                        </div>             
-                    </div>
-                    {% endfor %}
+            <form method="post" action="{% url "eventTickets:checkout" %}">
+                {% csrf_token %}
+                <div class="w-full flex justify-center px-3">
+                    <button class="pay-button p-[15px] flex flex-row g justify-center gap-[10px] items-center text-white border-[1px] border-solid border-transparent uppercase cursor-pointer w-full font-Wanted-Bold text-[22px] rounded-[20px] gradient-btn" id="payButton" type="submit" role="button">Pay Now</button>
                 </div>
-
-                <div class="checkout-total">
-                    <div class="total-row">
-                        <p>Total</p>
-                        <p>${{ total_amount|floatformat:2 }}</p>
-                    </div>
-                    <button class="pay-button" id="payButton" type="button" role="button">Pay Now</button>
-                </div>
-            </div>
+            </form>
         </div>
-    </main>
+    </div>
 </div>
 
 
