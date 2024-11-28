@@ -121,12 +121,10 @@ class ChangePasswordView(SuccessMessageMixin, PasswordChangeView):
     success_message = "Password successfully changed!"
 
     def post(self, request, *args, **kwargs):
-        # Call the original post method to handle password change logic
         result = super().post(request, *args, **kwargs)
 
-        # If password change is successful, update the session
-        if result.status_code == 302:  # Redirection status code
-            update_session_auth_hash(request, request.user)  # type: ignore
+        if result.status_code == 302: 
+            update_session_auth_hash(request, request.user)
 
         return result
 
