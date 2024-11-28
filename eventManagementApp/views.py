@@ -15,6 +15,15 @@ from collegeManagementApp.models import Organization, OrganizationMembership
 from .forms import (
     HostApplicationForm,
     EventForm,
+    EventTitleForm,
+    EventTypeForm,
+    EventDateForm,
+    EventStartTimeForm,
+    EventEndTimeForm,
+    EventDescriptionForm,
+    EventPrivacyForm,
+    EventLocationForm,
+    EventHeaderImageForm
 )
 
 from eventTicketsApp.forms import InvitationForm, PaidFreeTicketForm
@@ -290,11 +299,76 @@ def eventManagement(request, eventId):
     event_privacy = EventPrivacy.objects.get(event=event)
     rsvp_list = RSVPTicket.objects.filter(event=event)
     paid_free_tickets = PaidFreeTicket.objects.filter(event=event)
+    
+    #edit forms
+    eventTitleForm = EventTitleForm(instance=event)
+    eventTypeForm = EventTypeForm(instance=event)
+    eventDateForm = EventDateForm(instance=event)
+    eventStartTimeForm = EventStartTimeForm(instance=event)
+    eventEndTimeForm = EventEndTimeForm(instance=event)
+    eventDescriptionForm = EventDescriptionForm(instance=event)
+    eventPrivacyForm = EventPrivacyForm(instance=event)
+    eventLocationForm = EventLocationForm(instance=event)
+    eventHeaderImageForm = EventHeaderImageForm(instance=event)
 
     if request.method == "POST":
         action = request.POST.get("eventAction")
         invitationForm = InvitationForm(request.POST)
         paidFreeForm = PaidFreeTicketForm(request.POST)
+        
+        if action == "saveEventTitle":
+            form = EventTitleForm(request.POST, instance=event)
+            if form.is_valid():
+                form.save()
+            return redirect("eventManagement:eventManagement", eventId=eventId)
+        
+        if action == "saveEventType":
+            form = EventTypeForm(request.POST, instance=event)
+            if form.is_valid():
+                form.save()
+            return redirect("eventManagement:eventManagement", eventId=eventId)
+        
+        if action == "saveEventDate":
+            form = EventDateForm(request.POST, instance=event)
+            if form.is_valid():
+                form.save()
+            return redirect("eventManagement:eventManagement", eventId=eventId)
+        
+        if action == "saveEventStartTime":
+            form = EventStartTimeForm(request.POST, instance=event)
+            if form.is_valid():
+                form.save()
+            return redirect("eventManagement:eventManagement", eventId=eventId)
+        
+        if action == "saveEventEndTime":
+            form = EventEndTimeForm(request.POST, instance=event)
+            if form.is_valid():
+                form.save()
+            return redirect("eventManagement:eventManagement", eventId=eventId)
+        
+        if action == "saveEventDescription":
+            form = EventDescriptionForm(request.POST, instance=event)
+            if form.is_valid():
+                form.save()
+            return redirect("eventManagement:eventManagement", eventId=eventId)
+        
+        if action == "saveEventPrivacy":
+            form = EventPrivacyForm(request.POST, instance=event)
+            if form.is_valid():
+                form.save()
+            return redirect("eventManagement:eventManagement", eventId=eventId)
+        
+        if action == "saveEventLocation":    
+            form = EventLocationForm(request.POST, instance=event)
+            if form.is_valid():
+                form.save()
+            return redirect("eventManagement:eventManagement", eventId=eventId)
+        
+        if action == "saveEventHeaderImage":
+            form = EventHeaderImageForm(request.POST, request.FILES, instance=event)
+            if form.is_valid():
+                form.save()
+            return redirect("eventManagement:eventManagement", eventId=eventId)
 
         if action == "deleteEvent":
             event.delete()
@@ -364,6 +438,15 @@ def eventManagement(request, eventId):
     else:
         invitationForm = InvitationForm()
         paidFreeForm = PaidFreeTicketForm()
+        eventTitleForm = EventTitleForm(instance=event)
+        eventTypeForm = EventTypeForm(instance=event)
+        eventDateForm = EventDateForm(instance=event)
+        eventStartTimeForm = EventStartTimeForm(instance=event)
+        eventEndTimeForm = EventEndTimeForm(instance=event)
+        eventDescriptionForm = EventDescriptionForm(instance=event)
+        eventPrivacyForm = EventPrivacyForm(instance=event)
+        eventLocationForm = EventLocationForm(instance=event)
+        eventHeaderImageForm = EventHeaderImageForm(instance=event)
 
     return render(
         request,
@@ -377,5 +460,14 @@ def eventManagement(request, eventId):
             "rsvpList": rsvp_list,
             "paidFreeForm": paidFreeForm,
             "paidFreeTickets": paid_free_tickets,
+            "eventTitleForm": eventTitleForm,
+            "eventTypeForm": eventTypeForm,
+            "eventDateForm": eventDateForm,
+            "eventStartTimeForm": eventStartTimeForm,
+            "eventEndTimeForm": eventEndTimeForm,
+            "eventDescriptionForm": eventDescriptionForm,
+            "eventPrivacyForm": eventPrivacyForm,
+            "eventLocationForm": eventLocationForm,
+            "eventHeaderImageForm": eventHeaderImageForm,
         },
     )

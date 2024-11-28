@@ -34,6 +34,7 @@ class FriendRequest(models.Model):
         unique_together = ("sender", "receiver")
         verbose_name = "Friend Request"
         verbose_name_plural = "Friend Requests"
+        default_permissions = ()
 
     def __str__(self):
         return f"{self.sender.username} -> {self.receiver.username} ({self.status})"
@@ -62,6 +63,9 @@ class Crew(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     
+    class Meta:
+        default_permissions = ()
+    
     def __str__(self):
         return self.name
 
@@ -74,6 +78,7 @@ class CrewMember(models.Model):
 
     class Meta:
         unique_together = ('crew', 'user')
+        default_permissions = ()
 
     def __str__(self):
         return f"{self.user.username} in {self.crew.name}"
@@ -115,6 +120,7 @@ class CrewRequest(models.Model):
         unique_together = ("sender", "receiver", "crew")
         verbose_name = "Crew Request"
         verbose_name_plural = "Crew Requests"
+        default_permissions = ()
 
     def __str__(self):
         return f"{self.sender.username} -> {self.receiver.username} ({self.status})"

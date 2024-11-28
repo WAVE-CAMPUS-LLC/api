@@ -112,6 +112,7 @@ class SupportTicketMessage(models.Model):
     sent_at = models.DateTimeField(default=timezone.now)
 
     class Meta:
+        default_permissions = ()
         ordering = ['sent_at']  # Display messages in the order they were sent
 
     def __str__(self):

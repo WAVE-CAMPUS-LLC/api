@@ -8,7 +8,8 @@ Manage {{ event.title }} | WAVE.
 {% endblock title %}
 
 {% block script %}
-    <script type="text/javascript" src="{% static "scripts/eventManagementApp/host/eventManage/tabControl.js" %}" defer></script>
+    <script type="text/javascript" src="{% static "scripts/eventManagementApp/host/eventManage/editEvent.js" %}" d efer></script>
+    <script type="text/javascript" src="{% static "scripts/eventManagementApp/host/eventManage/tabControl.js" %}" d efer></script>
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     <script type="text/javascript" src="{% static "scripts/eventTicketsApp/eventManagementScanner/scanner.js" %}" defer></script>
     {% if isInCollege %}
@@ -90,6 +91,7 @@ Manage {{ event.title }} | WAVE.
                         <h3 class="font-Wanted-ExtraBold text-Medium">Description</h3>
                         <p class="font-Wanted-Variable text-Pre-Xl">{{ event.description|safe }}</p>
                     </div>
+
                     <div class="privacy-row">
                         <div class="flex flex-col gap-1">
                             <h3 class="font-Wanted-ExtraBold text-Medium">Privacy</h3>
@@ -114,6 +116,7 @@ Manage {{ event.title }} | WAVE.
                         <h3 class="font-Wanted-ExtraBold text-Medium">Flyer Image</h3>
                         <img class="flyer-image max-w-[400px] max-h-[400px] w-auto rounded-2xl h-auto" src="{{ event.header_photo.url }}" />
                     </div>
+                    
                     {% if event.body_photo_one or event.body_photo_two or event.body_photo_three or event.body_photo_four or event.body_photo_five %}
                     <div class="flex flex-col gap-1">
                         <h3 class="font-Wanted-ExtraBold text-Medium">Extra Images</h3>
@@ -320,9 +323,11 @@ Manage {{ event.title }} | WAVE.
 
                     <div class="scanner-display" id="scanner-display">
                         <div class="scanner-display-container">
-                            <div class="scanned-ticket-status">
-                                <h3 class="ticket-status valid">Enosh Lartey: Valid</h3>
-                                <h3 class="ticket-status invalid">Enosh Lartey: Invalid</h3>
+                            <div class="scanned-ticket-status" >
+                                <h3 class="ticket-status-valid ticket-status">
+                                </h3>
+                                <h3 class="ticket-status-invalid ticket-status">
+                                </h3>
                             </div>
                         
                             <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">

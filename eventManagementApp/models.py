@@ -328,6 +328,9 @@ class Event(models.Model):
 
     def __str__(self):
         return self.title
+    
+    class Meta:
+        default_permissions = ()
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
@@ -355,6 +358,9 @@ class EventPrivacy(models.Model):
     restricted_organization = models.ForeignKey(
         Organization, on_delete=models.SET_NULL, blank=True, null=True
     )
+    
+    class Meta:
+        default_permissions = ()
 
     def __str__(self):
         return f"{self.event.title} Privacy Settings"
