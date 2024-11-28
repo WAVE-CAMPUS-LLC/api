@@ -5,9 +5,6 @@
 Resend Verification — WAVE.
 {% endblock title %}
 
-{% block app_page_style %}
-<link rel="stylesheet" type="text/css" href="{% static "/styles/authenticationApp/verify/verificationLinkSent.css" %}" />
-{% endblock app_page_style %}
 
 {% block script %}
 <script type="text/javascript" src="{% static "/scripts/authenticationApp/verify/redirect.js" %}" defer></script>
@@ -15,20 +12,20 @@ Resend Verification — WAVE.
 
 
 {% block auth_body %}
-<body id="joinCardContainer" onload="redirectAfterDelay('http://localhost:8000{% url 'accountManagement:userAccount' %}')">
-    <header id="navHeader">
-        <div id="logo">
-            <a href="{% url "core:index" %}">WAVE<span>.</span></a>
+<body id="joinCardContainer" class="flex justify-center items-center pt-36 pb-2 flex-col gap-5 w-screen h-screen overflow-y-auto" onload="redirectAfterDelay('http://localhost:8000{% url 'accountManagement:userAccount' %}')">
+    <header id="navHeader" class="w-full flex justify-center pt-7">
+        <div id="logo" class="font-Wanted-ExtraBlack text-3.5xl">
+            <a href="{% url "core:index" %}">WAV<span class="text-[#008d95]">E</span>.</a>
         </div>
     </header>
-    <div class="display-info">
-        <h3>
+    <div class="font-Wanted-Bold flex justify-center items-center">
+        <h3 class="flex justify-center items-center text-center">
             Verification Link Sent!
             <br /> 
             Please check your email and click on the link to verify your account.
         </h3>
     </div>
-    <span class="redirectText">
+    <span class="font-Wanted-Variable text-Base text-center">
         <p>Redirecting you back to your profile overview...</p>
     </span>
 </body>

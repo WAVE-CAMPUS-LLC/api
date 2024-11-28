@@ -6,61 +6,62 @@
 WAVE — Welcome back!
 {% endblock title %}
 
-{% block app_page_style %}
-<link rel="stylesheet" type="text/css" href="{% static "/styles/eventTicketsApp/ticket/viewTicket.css" %}" />
-{% endblock app_page_style %}
 
 {% block script %}
 {% endblock script %}
 
 {% block checkout_body %}
-<div class="ticket-container">
-    <main class="ticket-card">
-        <div class="ticket-event-information">
-            <div class="tei-header">
-                <div id="logo">
-                    <a href="{% url 'core:index' %}">
-                        WAV<span>E</span>.
+<div class="ticket-container min-h-screen w-full flex flex-col gap-[30px] items-center justify-center overflow-hidden h-full">
+    <div class="ticket-card w-11/12 lg:w-[60%] h-full flex flex-col md:flex-row items-center justify-center border-[1px] border-solid border-[#e0e0e082] rounded-[20px] shadow-form-shadow-3 p-[30px]">
+        <div class="ticket-event-information  w-full h-full flex flex-col justify-between">
+            <div class="tei-header w-full flex flex-row xs:max-sm:justify-center justify-start">
+                <div id="logo" class="font-Wanted-Black text-[30px]">
+                    <a href="{% url 'core:index' %}" class="text-[#000000]">
+                        WAV<span class="text-[#008d95]">E</span>.
                     </a>
                 </div>
             </div>
-            <div class="event-information">
-                <div class="ei-header">
-                    <h1>For you, {% if ticket.user %}{{ ticket.user.first_name }}{% else %}{{ ticket.guestFirstName }}{% endif %}</h1>
-                    <h3>{{ event.title }}</h3>
+            <div class="event-information flex flex-col gap-[20px]">
+                <div class="ei-header flex flex-col gap-[7px]">
+                    <h1 class="font-Wanted-Black text-[25px] sm:text-[30px] md:text-[40px] text-[#008d95]">For you, {% if ticket.user %}{{ ticket.user.first_name }}{% else %}{{ ticket.guestFirstName }}{% endif %}</h1>
+                    <h3 class="font-Wanted-ExtraBold text-[25px] text-[#000000] whitespace-nowrap overflow-hidden text-ellipsis w-full text-left">{{ event.title }}</h3>
                 </div>
-                <div class="ei-body">
+                <div class="ei-body flex flex-col gap-[10px] justify-between h-full">
                     <div>
-                        <p class="eib-location">
+                        <p class="eib-location flex flex-col gap-[3px] font-Wanted-Variable text-[14px]">
                             {{ event.building_name }}, 
                             <br> 
                             {{ event.street }}, 
                             <br> 
                             {{ event.city }}, {{ event.state }} {{ event.zip_code }}
 
-                            <a href="" class="go-to-location">Locate</a>
+                            <a href="" class="go-to-location font-Wanted-Variable text-[#008d95] underline text-[13px] cursor-pointer">Locate</a>
                         </p>
                     </div>
                 </div>
 
-                <div class="host-name">
-                    <p>Hosted by <a target="_blank" href="{% url "social:publicProfile" username=event.host.username %}">@{{ event.host.username }}</a>
+                <div class="host-name font-Wanted-Variable text-[14px]">
+                    <p>Hosted by <a target="_blank" class="text-[#008d95] underline" href="{% url "social:publicProfile" username=event.host.username %}">@{{ event.host.username }}</a>
                 </div>
             </div>
-            <div class="marketing-phrase">
-                <p>Enjoy! Take pictures for us to repost!</p>
+            <div class="marketing-phrase w-full flex justify-start">
+                <p class="font-Wanted-Black text-[17px] text-[#008d95] italic">Enjoy! Take pictures for us to repost!</p>
             </div>
         </div>
 
-        <div class="ticket-event-qr">
-            <div class="qr-code-container">
+        <div class="w-full flex justify-center md:hidden my-7">
+            <hr class="ticket-separator w-full bg-[#00000082] ">
+        </div>
+
+        <div class="ticket-event-qr h-full">
+            <div class="qr-code-container h-full w-full flex items-center justify-center">
                 {% if ticket.qrCodeImage %}
-                <img src="{{ticket.qrCodeImage.url}}" alt="Ticket QR Code" />
+                <img src="{{ticket.qrCodeImage.url}}" alt="Ticket QR Code" class="w-full h-full max-w-[400px] max-h-[400px] sm:max-w-[300px] sm:max-h-[300px] rounded-[20px]" />
                 {% else %}
-                <img src="{% qr_from_text ticket.qrCodeData %}" alt="Ticket QR Code" />
+                <img src="{% qr_from_text ticket.qrCodeData %}" alt="Ticket QR Code" class="w-full h-full max-w-[400px] max-h-[400px] sm:max-w-[300px] sm:max-h-[300px] rounded-[20px]"/>
                 {% endif %}
             </div>
         </div>
-    </main>
+    </div>
 </div>
 {% endblock checkout_body %}

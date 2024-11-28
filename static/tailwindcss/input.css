@@ -1,0 +1,346 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import "../styles/accountManagementApp/partials/passwordChange.css";
+@import "../styles/accountManagementApp/profileManagement.css";
+@import "../styles/accountManagementApp/profileSettings.css";
+@import "../styles/accountManagementApp/publicProfile.css";
+
+@import "../styles/adminDashboardApp/index.css";
+@import "../styles/adminDashboardApp/tabs/applications.css";
+@import "../styles/adminDashboardApp/tabs/careers.css";
+@import "../styles/adminDashboardApp/tabs/colleges.css";
+@import "../styles/adminDashboardApp/tabs/dashboard.css";
+@import "../styles/adminDashboardApp/tabs/departments.css";
+@import "../styles/adminDashboardApp/tabs/emailing.css";
+@import "../styles/adminDashboardApp/tabs/feedback.css";
+@import "../styles/adminDashboardApp/tabs/newsroom.css";
+@import "../styles/adminDashboardApp/tabs/financial.css";
+@import "../styles/adminDashboardApp/tabs/roles.css";
+@import "../styles/adminDashboardApp/tabs/support.css";
+@import "../styles/adminDashboardApp/tabs/users.css";
+@import "../styles/adminDashboardApp/tabs/careers/careerDetails.css";
+@import "../styles/adminDashboardApp/tabs/colleges/collegeInfo.css";
+@import "../styles/adminDashboardApp/tabs/departments/departmentDetails.css";
+@import "../styles/adminDashboardApp/tabs/newsroom/createNews.css";
+@import "../styles/adminDashboardApp/tabs/newsroom/editNews.css";
+@import "../styles/adminDashboardApp/tabs/users/user.css";
+
+@import "../styles/authenticationApp/forgot_password.css";
+@import "../styles/authenticationApp/join.css";
+@import "../styles/authenticationApp/login.css";
+@import "../styles/authenticationApp/passwordReset/newPassword.css";
+
+@import "../styles/base/base.css";
+
+@import "../styles/blogApp/blogHome.css";
+@import "../styles/blogApp/blogItem.css";
+@import "../styles/blogApp/createBlog.css";
+@import "../styles/blogApp/editBlog.css";
+
+@import "../styles/campusManagerApp/managerCampusView.css";
+@import "../styles/campusManagerApp/managerDashboard.css";
+
+@import "../styles/careerApp/careerJobDetails.css";
+@import "../styles/careerApp/careers.css";
+
+@import "../styles/collegeManagementApp/add.css";
+@import "../styles/collegeManagementApp/campuses.css";
+@import "../styles/collegeManagementApp/collegeInformation.css";
+@import "../styles/collegeManagementApp/createCampusOrg.css";
+@import "../styles/collegeManagementApp/home.css";
+@import "../styles/collegeManagementApp/joinCollege.css";
+@import "../styles/collegeManagementApp/requestCollege.css";
+@import "../styles/collegeManagementApp/verifyJoinCollege.css";
+@import "../styles/collegeManagementApp/extras/no-result.css";
+@import "../styles/collegeManagementApp/extras/search-item.css";
+@import "../styles/collegeManagementApp/organizations/viewOrg.css";
+
+@import "../styles/coreApp/index.css";
+@import "../styles/coreApp/explore.css";
+@import "../styles/coreApp/categories.css";
+@import "../styles/coreApp/category/category.css";
+@import "../styles/coreApp/category/empty_category.css";
+@import "../styles/coreApp/event/eventDetails.css";
+
+@import "../styles/eventManagementApp/event/ticketing/ticketingOverview.css";
+@import "../styles/eventManagementApp/host/createEvent.css";
+@import "../styles/eventManagementApp/host/eventCreationProcess.css";
+@import "../styles/eventManagementApp/host/eventPreview.css";
+@import "../styles/eventManagementApp/host/hostApplication.css";
+@import "../styles/eventManagementApp/host/hostGuide.css";
+@import "../styles/eventManagementApp/host/hostHome.css";
+@import "../styles/eventManagementApp/host/hostPortal.css";
+@import "../styles/eventManagementApp/host/eventManagement.css";
+
+@import "../styles/extras/company/about.css";
+@import "../styles/extras/company/team.css";
+@import "../styles/extras/invalid/invalid.css";
+@import "../styles/extras/policy/faq.css";
+@import "../styles/extras/policy/privacy.css";
+@import "../styles/extras/policy/safety.css";
+@import "../styles/extras/policy/terms.css";
+@import "../styles/extras/resources/colleges.css";
+@import "../styles/extras/resources/creators.css";
+@import "../styles/extras/resources/organizers.css";
+@import "../styles/extras/resources/partners.css";
+
+@import "../styles/newsroomApp/newsroom.css";
+@import "../styles/newsroomApp/newsroom/news.css";
+
+@import "../styles/partials/footer.css";
+@import "../styles/partials/headers/logoAlone.css";
+@import "../styles/partials/nav-footer/nav/account_nav.css";
+@import "../styles/partials/nav-footer/nav/admin_nav.css";
+@import "../styles/partials/nav-footer/nav/main_nav.css";
+@import "../styles/partials/nav-footer/nav/support_nav.css";
+@import "../styles/partials/nav-footer/nav/host/host_nav.css";
+@import "../styles/partials/nav-footer/nav/host/host_portal.css";
+
+@import "../styles/socialApp/publicProfile.css";
+@import "../styles/socialApp/socialHome.css";
+@import "../styles/socialApp/crews/createCrew.css";
+@import "../styles/socialApp/crews/crew.css";
+@import "../styles/socialApp/extras/no-result.css";
+@import "../styles/socialApp/extras/search-item.css";
+
+@import "../styles/supportCenterApp/index.css";
+@import "../styles/supportCenterApp/feedback/provideFeedback.css";
+@import "../styles/supportCenterApp/portal/support_portal_with_tickets.css";
+@import "../styles/supportCenterApp/portal/support_portal_without_tickets.css";
+@import "../styles/supportCenterApp/portal/support_ticket_details.css";
+@import "../styles/supportCenterApp/ticket/createTicket.css";
+
+@import "../styles/eventTicketsApp/checkout.css";
+@import "../styles/eventTicketsApp/ticket/viewTicket.css";
+
+@import "../styles/hamburger/hamburgers.css";
+
+@layer utilities {
+	.negative-gap {
+		gap: 5px;
+	}
+
+	.gradient-btn {
+		padding: 15px 20px;
+		border: 2px solid transparent;
+		border-right-color: #13c9d3;
+		border-left-color: #008d95bc;
+		color: white;
+
+		font-family: Wanted-Regular;
+		text-decoration: none;
+
+		display: flex;
+		align-items: center;
+		flex-direction: row;
+		gap: 10px;
+		border-radius: 20px;
+		background-image: linear-gradient(to right, #008d95bc 0%, #13c9d3 100%);
+		cursor: pointer;
+		justify-content: center;
+	}
+
+	.overlay-btn {
+		padding: 15px 20px;
+		border: 2px solid transparent;
+		color: #008d95;
+
+		font-family: Wanted-Medium;
+		border-left-color: #13c9d3;
+		font-size: 24px;
+		text-decoration: none;
+
+		display: flex;
+		align-items: center;
+		flex-direction: row;
+		gap: 10px;
+		border-radius: 20px;
+		background-image: linear-gradient(to left, #ffffff 0%, #13c9d3 100%);
+		cursor: pointer;
+		justify-content: center;
+	}
+
+	.gradient-btn-hover {
+		background-color: #007379;
+	}
+
+	.small-gt-btn {
+		padding-top: 5px;
+		padding-bottom: 5px;
+		padding-left: 13px;
+		padding-right: 13px;
+		border: 2px solid transparent;
+		border-right-color: #13c9d3;
+		border-left-color: #008d95bc;
+		color: white;
+
+		text-decoration: none;
+
+		display: flex;
+		align-items: center;
+		font-family: Wanted-Medium;
+		flex-direction: row;
+		gap: 10px;
+		border-radius: 12px;
+		background-image: linear-gradient(to right, #008d95bc 0%, #13c9d3 100%);
+		cursor: pointer;
+		justify-content: center;
+	}
+}
+
+* {
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+	scrollbar-width: none;
+}
+
+::-webkit-scrollbar {
+	width: 0;
+	height: 0;
+}
+
+@font-face {
+	font-family: "Wanted-ExtraBlack";
+	src: url("../fonts/Wanted/WantedSans-ExtraBlack-BF65baf133c4859.otf")
+		format("opentype");
+}
+
+@font-face {
+	font-family: "Wanted-Black";
+	src: url("../fonts/Wanted/WantedSans-Black-BF65baf1369b817.otf")
+		format("opentype");
+}
+
+@font-face {
+	font-family: "Wanted-ExtraBold";
+	src: url("../fonts/Wanted/WantedSans-ExtraBold-BF65baf137317a5.otf")
+		format("opentype");
+}
+
+@font-face {
+	font-family: "Wanted-SemiBold";
+	src: url("../fonts/Wanted/WantedSans-SemiBold-BF65baf13722853.otf")
+		format("opentype");
+}
+
+@font-face {
+	font-family: "Wanted-Bold";
+	src: url("../fonts/Wanted/WantedSans-Bold-BF65baf135d5a25.otf")
+		format("opentype");
+}
+
+@font-face {
+	font-family: "Wanted-Medium";
+	src: url("../fonts/Wanted/WantedSans-Medium-BF65baf1388963b.otf")
+		format("opentype");
+}
+
+@font-face {
+	font-family: "Wanted-Regular";
+	src: url("../fonts/Wanted/WantedSans-Regular-BF65baf13579965.otf")
+		format("opentype");
+}
+
+@font-face {
+	font-family: "Wanted-Variable";
+	src: url("../fonts/Wanted/WantedSansVariable-BF65baf13a24667.ttf")
+		format("truetype");
+}
+
+/** Logo used in body's **/
+#body-logo {
+	font-family: Wanted-Black;
+}
+
+#body-logo .spot {
+	color: #008d95;
+}
+
+#logo {
+	font-family: Wanted-Black;
+	font-size: 30px;
+}
+
+#logo a {
+	color: #000000;
+	text-decoration: none;
+}
+
+#logo a span {
+	color: #008d95;
+}
+
+.redRequired {
+	color: red;
+}
+
+/* Footer shadow */
+footer {
+	max-width: 100vw;
+	-webkit-box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.085);
+	-moz-box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.16);
+	box-shadow: 2px 3px 21px 4px rgba(0, 0, 0, 0.061);
+}
+
+.no-scroll {
+	overflow: hidden;
+	height: 100%;
+}
+
+/* Empty Container */
+.emptyContainer {
+	width: 100%;
+	border-radius: 20px;
+	padding-top: 70px;
+	padding-bottom: 70px;
+
+	display: flex;
+	justify-content: center;
+	flex-direction: column;
+	gap: 10px;
+	align-items: center;
+
+	background-color: rgba(146, 146, 146, 0.096);
+}
+
+.emptyContainer img {
+	width: 60px;
+}
+
+.emptyContainer p {
+	font-family: Wanted-Variable;
+	font-size: 16.5px;
+	color: black;
+}
+
+.hide {
+	display: none;
+}
+.active {
+	display: block;
+}
+
+.quill-content * {
+	max-width: 100%; /* Prevent content from exceeding the container */
+	word-wrap: break-word; /* Ensure long words or URLs break */
+}
+
+.quill-content img {
+	max-width: 100%; /* Ensure images stay within the container */
+	height: auto;
+}
+
+.quill-content iframe {
+	max-width: 100%; /* Resize iframes to fit */
+}
+
+.quill-content p {
+    margin: 0; /* Adjust spacing */
+    font-family: 'Wanted-Variable', sans-serif; /* Apply font */
+    font-size: 1.25rem; /* Match text-Large size */
+    line-height: 1.5; /* Adjust line height */
+    word-wrap: break-word; /* Handle long words */
+}

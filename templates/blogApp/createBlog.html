@@ -1,6 +1,7 @@
 {% extends "base/base.html" %}
 {% load static %}
 {% load user_tags %}
+{% load widget_tweaks %}
 
 {% block title %}
 Hosting Events | WAVE.
@@ -17,64 +18,65 @@ Hosting Events | WAVE.
 
 
 {% block body %}
-<div id="content-container">
-    <div class="page-heading">
-        <h2>Speak your mind!</h2>
+<div id="content-container" class="flex flex-col gap-[70px] px-4 sm:px-6 md:px-[40px] pre-lg:px-[40px] lg:px-[100px] 2xl:px-48 3xl:px-96">
+    <div class="page-heading flex justify-center items-center">
+        <h2 class="flex justify-center items-center font-Wanted-Bold text-[25px] after-xsm:text-[30px] sm:text-[36px] md:text-[45px] text-[#008d95] text-center">Speak your mind!</h2>
     </div>
 
-    <div id="content-body">
-        <form id="blogsForm" method="POST" action="{% url "blog:createBlog" %}" enctype="multipart/form-data">
+    <div id="content-body" class="w-full flex justify-center">
+        <form id="blogsForm" method="POST" action="{% url "blog:createBlog" %}" enctype="multipart/form-data" class="w-[90%] after-xsm:w-[80%] sm:w-[60%] md:w-[50%] border-[2px] border-solid border-[#0000000a] rounded-[15px] shadow-form-shadow p-[18px] after-xsm:p-[24px] sm:p-[27px] md:p-[30px] flex flex-col gap-[20px] md:gap-[30px] cursor-pointer">
             {% csrf_token %}
-            <div class="formRow">
-                <label for="{{ createBlogForm.blogType.id_for_label }}" class="formLabel">
-                    <p class="rowTitle">{{ createBlogForm.blogType.label }}</p>
-                    {{ createBlogForm.blogType }}
+            <div class="formRow flex flex-col gap-[5px] after-xsm:gap-[7px]">
+                <label for="{{ createBlogForm.blogType.id_for_label }}" class="formLabel flex flex-col gap-[5px]">
+                    <p class="rowTitle font-Wanted-Regular text-[14px] after-xsm:text-[16px] sm:text-[18px]">{{ createBlogForm.blogType.label }}</p>
+                    {{ createBlogForm.blogType|add_class:"w-full p-[10px] after-xsm:p-[12px] sm:p-[15px] rounded-[15px] border-[1px] border-solid border-[#00000027] font-Wanted-Regular text-[14px] sm:text-[16px]" }}
                 </label>
             </div>
 
-                <label for="{{ createBlogForm.title.id_for_label }}" class="formLabel">
-                    <p class="rowTitle">{{ createBlogForm.title.label }}</p>
-                    {{ createBlogForm.title }}
+            <div class="formRow flex flex-col gap-[5px] after-xsm:gap-[7px]">
+                <label for="{{ createBlogForm.title.id_for_label }}" class="formLabel flex flex-col gap-[5px]">
+                    <p class="rowTitle font-Wanted-Regular text-[14px] after-xsm:text-[16px] sm:text-[18px]">{{ createBlogForm.title.label }}</p>
+                    {{ createBlogForm.title|add_class:"w-full p-[10px] after-xsm:p-[12px] sm:p-[15px] rounded-[15px] border-[1px] border-solid border-[#00000027] font-Wanted-Regular text-[14px] sm:text-[16px]" }}
                 </label>
             </div>
 
-            <div class="formRow">
-                <label for="{{ createBlogForm.body.id_for_label }}" class="formLabel">
-                    <p class="rowTitle">{{ createBlogForm.body.label }}</p>
-                    {{ createBlogForm.body }}
+            <div class="formRow flex flex-col gap-[5px] after-xsm:gap-[7px]">
+                <label for="{{ createBlogForm.body.id_for_label }}" class="formLabel flex flex-col gap-[5px]">
+                    <p class="rowTitle font-Wanted-Regular text-[14px] after-xsm:text-[16px] sm:text-[18px]">{{ createBlogForm.body.label }}</p>
+                    {{ createBlogForm.body|add_class:"w-full p-[10px] after-xsm:p-[12px] sm:p-[15px] rounded-[15px] border-[1px] border-solid border-[#00000027] font-Wanted-Regular text-[14px] sm:text-[16px]" }}
                 </label>
             </div> 
 
-            <div class="formRow">
-                <label for="{{ createBlogForm.imageOne.id_for_label }}" class="formLabel">
-                    <p class="rowTitle">{{ createBlogForm.imageOne.label }}</p>
-                    {{ createBlogForm.imageOne }}
+            <div class="formRow flex flex-col gap-[5px] after-xsm:gap-[7px]">
+                <label for="{{ createBlogForm.imageOne.id_for_label }}" class="formLabel flex flex-col gap-[5px]">
+                    <p class="rowTitle font-Wanted-Regular text-[14px] after-xsm:text-[16px] sm:text-[18px]">{{ createBlogForm.imageOne.label }}</p>
+                    {{ createBlogForm.imageOne|add_class:"w-full p-[10px] after-xsm:p-[12px] sm:p-[15px] rounded-[15px] border-[1px] border-solid border-[#00000027] font-Wanted-Regular text-[14px] sm:text-[16px]" }}
                 </label>
             </div> 
 
-            <div class="formRow">
-                <label for="{{ createBlogForm.imageTwo.id_for_label }}" class="formLabel">
-                    <p class="rowTitle">{{ createBlogForm.imageTwo.label }}</p>
-                    {{ createBlogForm.imageTwo }}
+            <div class="formRow flex flex-col gap-[5px] after-xsm:gap-[7px]">
+                <label for="{{ createBlogForm.imageTwo.id_for_label }}" class="formLabel flex flex-col gap-[5px]">
+                    <p class="rowTitle font-Wanted-Regular text-[14px] after-xsm:text-[16px] sm:text-[18px]">{{ createBlogForm.imageTwo.label }}</p>
+                    {{ createBlogForm.imageTwo|add_class:"w-full p-[10px] after-xsm:p-[12px] sm:p-[15px] rounded-[15px] border-[1px] border-solid border-[#00000027] font-Wanted-Regular text-[14px] sm:text-[16px]" }}
                 </label>
             </div> 
 
-            <div class="formRow">
-                <label for="{{ createBlogForm.imageThree.id_for_label }}" class="formLabel">
-                    <p class="rowTitle">{{ createBlogForm.imageThree.label }}</p>
-                    {{ createBlogForm.imageThree }}
+            <div class="formRow flex flex-col gap-[5px] after-xsm:gap-[7px]">
+                <label for="{{ createBlogForm.imageThree.id_for_label }}" class="formLabel flex flex-col gap-[5px]">
+                    <p class="rowTitle font-Wanted-Regular text-[14px] after-xsm:text-[16px] sm:text-[18px]">{{ createBlogForm.imageThree.label }}</p>
+                    {{ createBlogForm.imageThree|add_class:"w-full p-[10px] after-xsm:p-[12px] sm:p-[15px] rounded-[15px] border-[1px] border-solid border-[#00000027] font-Wanted-Regular text-[14px] sm:text-[16px]" }}
                 </label>
             </div> 
 
-            <div class="formRow">
-                <label for="{{ createBlogForm.mood.id_for_label }}" class="formLabel">
-                    <p class="rowTitle">{{ createBlogForm.mood.label }}</p>
-                    {{ createBlogForm.mood }}
+            <div class="formRow flex flex-col gap-[5px] after-xsm:gap-[7px]">
+                <label for="{{ createBlogForm.mood.id_for_label }}" class="formLabel flex flex-col gap-[5px]">
+                    <p class="rowTitle font-Wanted-Regular text-[14px] after-xsm:text-[16px] sm:text-[18px]">{{ createBlogForm.mood.label }}</p>
+                    {{ createBlogForm.mood|add_class:"w-full p-[10px] after-xsm:p-[12px] sm:p-[15px] rounded-[15px] border-[1px] border-solid border-[#00000027] font-Wanted-Regular text-[14px] sm:text-[16px]" }}
                 </label>
             </div> 
 
-            <div class="buttonRow">
-                <button type="submit" role="button">Post Your Blog!</button>
+            <div class="buttonRow w-full flex justify-center mb-[20px] mt-[4px] after-xsm:mt-[6px]">
+                <button type="submit" role="button" class="cursor-pointer px-[12px] py-[12px] after-xsm:px-[15px] after-xsm:py-[15px] bg-[#008d95] border-none rounded-[15px] font-Wanted-Regular text-[14px] after-xsm:text-[16px] sm:text-[18px] text-white">Post Your Blog!</button>
             </div>
         </form>
     </div>

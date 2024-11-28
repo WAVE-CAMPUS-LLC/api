@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block title %}
-WAVE — Join Us!
+Join Us! — WAVE 
 {% endblock title %}
 
 {% block app_page_style %}
@@ -15,15 +15,15 @@ WAVE — Join Us!
 
 
 {% block auth_body %}
-<main id="joinCardContainer">
-    <header id="navHeader">
-        <div id="logo">
-            <a href="{% url "core:index" %}">WAVE<span>.</span></a>
+<main id="joinCardContainer" class="flex justify-center items-center pt-[150px] pb-[10px] flex-col gap-y-[20px] max-w-[100vw] max-h-[100vh] w-full h-full overflow-y-auto">
+    <header id="navHeader" class="w-full flex justify-center pt-[30px]">
+        <div id="logo" class="font-Wanted-Black text-[40px]">
+            <a href="{% url "core:index" %}" class="no-underline text-black">WAV<span>E</span>.</a>
         </div>
     </header>
-    <div id="joinCard">
-        <div id="heading">
-            <h3>Join Us</h3>
+    <div id="joinCard" class="flex flex-col gap-y-[20px] bg-white w-[90%] sm:w-[80%] md:w-[60%] pt-[20px] pb-[30px] pl-[25px] md:pl-[50px] pr-[25px] md:pr-[50px] border border-solid border-custom-rgba rounded-[20px] shadow-custom-shadow">
+        <div id="heading" class="text-black font-Wanted-ExtraBold text-[25px] flex justify-center">
+            <h3 class="text-black font-Wanted-ExtraBlack text-[22px] sm:text-[25px] md:text-[28px] flex justify-center">Join Us</h3>
         </div>
 
         <div id="formErrorDisplay">
@@ -40,109 +40,120 @@ WAVE — Join Us!
         </div>
         
 
-        <form action="{% url "authentication:join" %}" method="post">
+        <form action="{% url "authentication:join" %}" method="post" class="flex flex-col gap-[15px]">
             {% csrf_token %}
-            <div id="rowOne">
-                <label for="{{ form.first_name.id_for_label }}">
-                    <div>
+            <div id="rowOne" class="flex flex-col sm:flex-row gap-[10px]">
+                <label for="{{ form.first_name.id_for_label }}" class="font-Wanted-SemiBold text-[13px] text-black uppercase flex flex-col gap-[5px] w-full">
+                    <div class="flex flex-row gap-1">
                         {{ form.first_name.label }}
-                        <span id="requiredIndicator">*</span>
-                        <span id="errorContainer">
+                        <span id="requiredIndicator" class="text-[red] font-Wanted-Variable">*</span>
+                        <span id="errorContainer" class="capitalize">
                             <div>
-                                <p id="firstNameLiveValidationError"></p>
-                                <p id="firstNameLiveValidationValid"></p>
+                                <p id="firstNameLiveValidationError" class="text-[red] font-Wanted-Variable"></p>
+                                <p id="firstNameLiveValidationValid" class="text-[#28cf28] font-Wanted-Variable"></p>
                             </div>
                         </span>
                     </div>
-                    <input type="{{ form.first_name.field.widget.input_type }}" name="{{ form.first_name.html_name }}" id="{{ form.first_name.auto_id }}" autocomplete="off" required class="firstName" autofocus>
+                    <input type="{{ form.first_name.field.widget.input_type }}" name="{{ form.first_name.html_name }}" id="{{ form.first_name.auto_id }}" autocomplete="off" required class="firstName p-[10px] pl-[13px] pr-[13px] rounded-[10px] border border-solid border-custom-rgba font-Wanted-Regular text-[15px] w-full shadow-form-shadow" autofocus>
                 </label>
-                <label for="{{ form.last_name.id_for_label }}">
-                    <div>
+                <label for="{{ form.last_name.id_for_label }}" class="font-Wanted-SemiBold text-[13px] uppercase flex flex-col gap-[5px] w-full">
+                    <div class="flex flex-row gap-1">
                         {{ form.last_name.label }} 
-                        <span  id="requiredIndicator">*</span>
-                        <span id="errorContainer">
+                        <span  id="requiredIndicator" class="text-[red] font-Wanted-Variable">*</span>
+                        <span id="errorContainer" class="capitalize">
                             <div>
-                                <p id="lastNameLiveValidationError"></p>
-                                <p id="lastNameLiveValidationValid"></p>
+                                <p id="lastNameLiveValidationError" class="text-[red] font-Wanted-Variable"></p>
+                                <p id="lastNameLiveValidationValid" class="text-[#28cf28] font-Wanted-Variable"></p>
                             </div>
                         </span>
                     </div>
-                    <input type="{{ form.last_name.field.widget.input_type }}" name="{{ form.last_name.html_name }}" id="{{ form.last_name.auto_id }}" autocomplete="off" required class="lastName">
+                    <input type="{{ form.last_name.field.widget.input_type }}" name="{{ form.last_name.html_name }}" id="{{ form.last_name.auto_id }}" autocomplete="off" required class="lastName p-[10px] pl-[13px] pr-[13px] rounded-[10px] border border-solid border-custom-rgba font-Wanted-Regular text-[15px] w-full shadow-form-shadow">
                 </label>
             </div>
 
             <div id="rowTwo">
-                <label for="{{ form.email.id_for_label }}">
-                    <div>
+                <label for="{{ form.email.id_for_label }}" class="font-Wanted-SemiBold text-[13px] uppercase flex flex-col gap-[5px] w-full">
+                    <div class="flex flex-row gap-1">
                         {{ form.email.label }} 
-                        <span  id="requiredIndicator">*</span>
-                        <span id="errorContainer">
+                        <span  id="requiredIndicator" class="text-[red] font-Wanted-Variable">*</span>
+                        <span id="errorContainer" class="capitalize">
                             <div>
-                                <p id="emailLiveValidationError"></p>
-                                <p id="emailLiveValidationValid"></p>
+                                <p id="emailLiveValidationError" class="text-[red] font-Wanted-Variable"></p>
+                                <p id="emailLiveValidationValid" class="text-[#28cf28] font-Wanted-Variable"></p>
                             </div>
                         </span>
                     </div>
-                    <input type="{{ form.email.field.widget.input_type }}" name="{{ form.email.html_name }}" id="{{ form.email.auto_id }}" autocomplete="off" required class="emailAddress">
+                    <input type="{{ form.email.field.widget.input_type }}" name="{{ form.email.html_name }}" id="{{ form.email.auto_id }}" autocomplete="off" required class="emailAddress p-[10px] pl-[13px] pr-[13px] rounded-[10px] border border-solid border-custom-rgba font-Wanted-Regular text-[15px] w-full shadow-form-shadow">
                 </label>
             </div>
 
             <div id="rowThree">
-                <label for="{{ form.username.id_for_label }}">
-                    <div>
+                <label for="{{ form.username.id_for_label }}" class="font-Wanted-SemiBold text-[13px] uppercase flex flex-col gap-[5px] w-full">
+                    <div class="flex flex-row gap-1">
                         {{ form.username.label }} 
-                        <span id="requiredIndicator">*</span>
-                        <span id="errorContainer">
+                        <span id="requiredIndicator" class="text-[red] font-Wanted-Variable">*</span>
+                        <span id="errorContainer" class="capitalize">
                             <div>
-                                <p id="usernameLiveValidationError"></p>
-                                <p id="usernameLiveValidationValid"></p>
+                                <p id="usernameLiveValidationError" class="text-[red] font-Wanted-Variable"></p>
+                                <p id="usernameLiveValidationValid" class="text-[#28cf28] font-Wanted-Variable"></p>
                             </div>
                         </span>
                     </div>
-                    <div id="usernamePlaceholder">
-                        <h6>@</h6>
-                        <input type="{{ form.username.field.widget.input_type }}" name="{{ form.username.html_name }}" id="{{ form.username.auto_id }}" autocomplete="off" required class="username" maxlength="20">
+                    <div id="usernamePlaceholder" class="flex flex-row items-center gap-[10px] rounded-[10px] border border-solid border-custom-rgba p-[12px] pt-0 pb-0 pl-0">
+                        <h6 class="font-Wanted-Bold text-[18px] sm:text-[20px] md:text-[23px] pl-[12px] pr-[12px] border-r border-solid border-custom-rgba">@</h6>
+                        <input type="{{ form.username.field.widget.input_type }}" name="{{ form.username.html_name }}" id="{{ form.username.auto_id }}" autocomplete="off" required class="username p-[10px] border-none focus:border-none font-Wanted-Regular text-[15px] w-full shadow-form-shadow" maxlength="20">
                     </div>
                 </label>
             </div>
 
-            <div id="rowFour">
-                <label for="{{ form.password1.id_for_label }}">
-                    <div>
+            <div id="rowFour" class="flex flex-col sm:flex-row gap-[10px]">
+                <label for="{{ form.password1.id_for_label }}"  class="font-Wanted-SemiBold text-[13px] uppercase flex flex-col gap-[5px] w-full">
+                    <div class="flex flex-row gap-1">
                         {{ form.password1.label }} 
-                        <span id="requiredIndicator">*</span>
-                        <span id="errorContainer">
+                        <span id="requiredIndicator" class="text-[red] font-Wanted-Variable">*</span>
+                        <span id="errorContainer" class="capitalize">
                             <div>
-                                <p id="passwordOneLiveValidationError"></p>
-                                <p id="passwordOneLiveValidationValid"></p>
+                                <p id="passwordOneLiveValidationError" class="text-[red] font-Wanted-Variable"></p>
+                                <p id="passwordOneLiveValidationValid" class="text-[#28cf28] font-Wanted-Variable"></p>
                             </div>
                         </span>
                     </div>
-                    <input type="{{ form.password1.field.widget.input_type }}" name="{{ form.password1.html_name }}" id="{{ form.password1.auto_id }}" autocomplete="off" required class="password" minlength="8">
+                    <input type="{{ form.password1.field.widget.input_type }}" name="{{ form.password1.html_name }}" id="{{ form.password1.auto_id }}" autocomplete="off" required class="password p-[10px] pl-[13px] pr-[13px] rounded-[10px] border border-solid border-custom-rgba font-Wanted-Regular text-[15px] w-full shadow-form-shadow" minlength="8">
                 </label>
-                <label for="{{ form.password2.id_for_label }}">
-                    <div>
+                <label for="{{ form.password2.id_for_label }}" class="font-Wanted-SemiBold text-[13px] uppercase flex flex-col gap-[5px] w-full">
+                    <div class="flex flex-row gap-1">
                         {{ form.password2.label }} 
-                        <span id="requiredIndicator">*</span>
-                        <span id="errorContainer">
+                        <span id="requiredIndicator" class="text-[red] font-Wanted-Variable">*</span>
+                        <span id="errorContainer" class="capitalize">
                             <div>
-                                <p id="passwordTwoLiveValidationError"></p>
-                                <p id="passwordTwoLiveValidationValid"></p>
+                                <p id="passwordTwoLiveValidationError" class="text-[red] font-Wanted-Variable"></p>
+                                <p id="passwordTwoLiveValidationValid" class="text-[#28cf28] font-Wanted-Variable"></p>
                             </div>
                         </span>
                     </div>
-                    <input type="{{ form.password2.field.widget.input_type }}" name="{{ form.password2.html_name }}" id="{{ form.password2.auto_id }}" autocomplete="off" required class="password">
+                    <input type="{{ form.password2.field.widget.input_type }}" name="{{ form.password2.html_name }}" id="{{ form.password2.auto_id }}" autocomplete="off" required class="password p-[10px] pl-[13px] pr-[13px] rounded-[10px] border border-solid border-custom-rgba font-Wanted-Regular text-[15px] w-full shadow-form-shadow">
                 </label>
             </div>
 
             
 
-            <div id="signupComplete">
-                <button type="submit" id="proceedBtn">Proceed</button>
-                <p>By joining, you agree to our <a href="{% url "extras:terms" %}">Terms</a> and <a href="{% url "extras:privacy" %}">Privacy Policy</a>.</p>
+            <div id="signupComplete" class="flex flex-col gap-[5px] font-Wanted-Regular">
+                <button type="submit" id="proceedBtn" class="bg-[#008d95] border-none rounded-[13px] p-[15px] text-[18px] font-Wanted-Regular text-white">Proceed</button>
+                <p class="font-Wanted-Variable text-[14px]">
+                    By joining, you agree to our 
+                    <a class="text-[#008d95] no-underline" href="{% url "extras:terms" %}">Terms</a> 
+                    and 
+                    <a class="text-[#008d95] no-underline" href="{% url "extras:privacy" %}">Privacy Policy</a>
+                    .
+                </p>
             </div>
 
-            <p id="existingAccount">Have an account? <a href="{% url "authentication:login" %}"> Login</a></p>
+            <p id="existingAccount" class="font-Wanted-Variable text-[14px] flex justify-end w-full">
+                Have an account? 
+                <a class="text-[#008d95] no-underline pl-[3px]" href="{% url "authentication:login" %}"> 
+                    Login
+                </a>
+            </p>
         </form>
     </div>
 </main>

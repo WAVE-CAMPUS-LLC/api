@@ -1,75 +1,81 @@
 {% load static %}
 
-<link rel="stylesheet" href="{% static "/styles/partials/footer.css" %}" />
-
-
-<div id="footer-logo">
-    <a href="{% url "core:index"  %}">WAVE<span>.</span></a>
+<div id="footer-logo" class="w-full flex justify-center items-center border-b border-b-[#5d5d5d35] text-4xl xsm:text-6xl py-10 font-Wanted-Black">
+    <a href="{% url "core:index"  %}" class="flex justify-center">
+        WAV<span class="text-[#008d95]">E</span>.
+    </a>
 </div>
-<div id="footer-body">
-    <div id="the-company">
-        <ul>
+<div id="footer-body" class="w-full grid grid-rows-2 sm:grid-rows-1 sm:grid-cols-3 gap-10 lg:gap-16 xl:gap-24 justify-center bg-[#ffffffc8] sm:px-10 lg:px-40 xl:px-60 py-[5rem] text-black font-Wanted-Variable">
+    <div id="the-company" class="flex flex-col gap-3 xsm:gap-7 justify-center">
+        <h5 class="font-Wanted-Bold text-[#000000] text-Medium xxsm:text-Large sm:text-Medium">
+            <span class="hidden md:inline-block">The </span> Company
+        </h5>
+        <ul class="flex flex-col gap-5 text-Base">
             <li>
-                <h5>The Company</h5>
+                <a target="_blank" href="{% url "extras:about"  %}">
+                    About 
+                    <span class="font-Wanted-Regular">WAV<span class="text-[#008d95]">E</span>.
+                    </span>
+                </a>
             </li>
-            <li><a target="_blank" href="{% url "extras:about"  %}">About <span id="footer-btm-logo">WAVE<span id="dot">.</span></span></a>
+            <li>
+                <a target="_blank" href="{% url "newsroom:home"  %}" class="hover:underline hover:decoration-[#008d95]">
+                    Newsroom
+                </a>
             </li>
-            <li><a target="_blank" href="{% url "newsroom:home"  %}">Newsroom</a></li>
-            <li><a target="_blank" href="{% url "careers:home"  %}">Join The Team!</a></li>
+            <li><a target="_blank" href="{% url "blog:home"  %}" class="hover:underline hover:decoration-[#008d95]">Blog</a></li>
+            <li><a target="_blank" href="{% url "careers:home"  %}" class="hover:underline hover:decoration-[#008d95]">Join The Team!</a></li>
         </ul>
     </div>
-    <div id="the-terms">
-        <ul>
+    <div class="border-[#008d95] hidden sm:flex flex flex-col gap-3 xsm:gap-7">
+        <h5 class="font-Wanted-Bold text-[#000000] text-Medium xxsm:text-Large sm:text-Medium">Policies</h5>
+        <ul class="flex flex-col gap-5 text-Base">
             <li>
-                <h5>Policies</h5>
+                <a target="_blank" href="{% url "extras:privacy"  %}" class="hover:underline hover:decoration-[#008d95]">Privacy</a>
             </li>
-            <li><a target="_blank" href="{% url "extras:privacy"  %}">Privacy</a></li>
-            <li><a target="_blank" href="{% url "extras:terms"  %}">Terms</a></li>
-            <li><a target="_blank" href="{% url "extras:safety"  %}">Safety</a></li>
-            <li><a target="_blank" href="{% url "extras:faq"  %}">Frequently Asked</a></li>
+            <li><a target="_blank" href="{% url "extras:terms"  %}" class="hover:underline hover:decoration-[#008d95]">Terms</a></li>
+            <li><a target="_blank" href="{% url "extras:safety"  %}" class="hover:underline hover:decoration-[#008d95]">Safety</a></li>
+            <li><a target="_blank" href="{% url "extras:faq"  %}" class="hover:underline hover:decoration-[#008d95]">Frequently Asked</a></li>
         </ul>
     </div>
-    <div id="the-partners">
-        <ul>
+    <div id="the-partners" class="flex flex-col gap-7 text-Large">
+        <h5 class="font-Wanted-Bold text-[#000000] text-Medium xxsm:text-Large sm:text-Medium">Resources</h5>
+        <ul class="flex flex-col gap-5 text-Base">
+            <li><a target="_blank" class="hover:underline decoration-[#008d95]" href="{% url "support:home"  %}">Support</a></li>
             <li>
-                <h5>Resources</h5>
+                <a target="_blank" class="hover:underline decoration-[#008d95]" href="{% url "eventManagement:hostHome" %}">Host Event</a>
             </li>
-            <li>
-                <a target="_blank" href="{% url "eventManagement:hostHome" %}">Host Event</a></li>
-            <li><a target="_blank" href="{% url "colleges:home"  %}">College Campuses</a></li>
-            <li><a target="_blank" href="{% url "extras:partners"  %}">Partner With Us</a></li>
-            <li><a target="_blank" href="{% url "extras:affiliate"  %}">Become an Affiliate</a></li>
+            <li><a target="_blank" class="hover:underline decoration-[#008d95]" href="{% url "colleges:home"  %}">College Campuses</a></li>
+            <li><a target="_blank" class="hover:underline decoration-[#008d95]" href="{% url "extras:partners"  %}">Partner With Us</a></li>
         </ul>
     </div>
 </div>
-<div id="footer-bottom">
-    <div id="social-icons">
-        <div>
+<div class="bg-[#ffffff] border-t  text-black w-full py-7 font-Wanted-Regular flex justify-center sm:justify-between text-center flex-col sm:flex-row-reverse gap-5 sm:px-10 ">
+    <div id="social-icons" class="flex flex-row justify-center gap-4">
+        <div class="border border-white rounded-full flex items-center">
             <a target="_blank" href="https://instagram.com/waveoncamp/">
                 <img src="{% static "/images/footer/socials/instagram.svg" %}" alt="WAVE. - Instagram">
             </a>
         </div>
-        <div>
-            <a target="_blank" href="https://www.youtube.com/@WAVEoncamp">
+        <div class="border border-white rounded-full flex items-center">
+            <a target="_blank" href="https://www.youtube.com/@waveoncamp">
                 <img src="{% static "/images/footer/socials/youtube.svg" %}" alt="WAVE. - YouTube">
             </a>
         </div>
-        <div>
-            <a target="_blank" href="">
+        <div class="border border-white rounded-full flex items-center">
+            <a target="_blank" href="https://x.com/waveoncamp">
                 <img src="{% static "/images/footer/socials/twitter.svg" %}" alt="WAVE. - Twitter/X">
             </a>
         </div>
-        <div>
-            <a target="_blank" href="">
+        <div class="border border-white rounded-full flex items-center">
+            <a target="_blank" href="https://www.tiktok.com/@waveoncamp?_t=8rK5f82b5QM&_r=1">
                 <img src="{% static "/images/footer/socials/tiktok.svg" %}" alt="WAVE. - TikTok">
             </a>
         </div>
     </div>
     <div id="copyright-section">
-        <p>
-            Copyright 2024 <span id="footer-btm-logo">WAVE<span id="dot">.</span></span>
-            <br>
-            <a href="#">OAK Brothers Inc.</a>
+        <p class="font-Wanted-Variable">
+            © Copyright 2024 WAVE Campus, LLC
         </p>
     </div>
 </div>

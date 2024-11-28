@@ -220,7 +220,6 @@ STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
 # --------------------------------------------
 
 # Remove local MEDIA_ROOT since media files are now served from S3
-MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 # AWS S3 bucket configurations
@@ -241,6 +240,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 # DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 
 # Set the S3 URL for media
+# MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/media/'
 # MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/media/'
 
 # Default primary key field type

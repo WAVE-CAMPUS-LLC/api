@@ -20,125 +20,125 @@ Become an event host. Apply Now! — WAVE.
 
 
 {% block body %}
-<div id="body-content">
-    <div class="page-heading">
-        <h3>Become a host</h3>
+<div class="flex flex-col px-[10px] after-xsm:px-[20px] xxsm:px-[35px] sm:px-[40px] md:px-[40px] pre-lg:px-[50px] lg:px-[80px] xl:px-[150px] 2xl:px-[200px] 3xl:-[300px]">
+    <div>
+        <h3 class="font-Wanted-ExtraBold text-[40px] text-center pb-[50px]">Become a host</h3>
     </div>
-    <div id="work-with-us">
-        <div class="wwu-heading">
-            <ul>
-                <li><span>1</span>Yourself</li>
-                <li><span>2</span>Your organization</li>
-                <li><span>3</span>Event</li>
+    <div id="work-with-us" class="border border-[rgba(170,170,170,0.404)] rounded-[20px] shadow-form-shadow-2 flex flex-col gap-[30px]">
+        <div class="border border-b-rgba(170, 170, 170, 0.404) p-[25px] rounded-tl-[20px] rounded-tr-[20px]">
+            <ul class="list-none w-full grid grid-cols-3 font-Wanted-Bold text-[17px]">
+                <li class="w-full flex justify-center items-center gap-[15px] text-black"><span class="w-[35px] h-[35px] flex items-center justify-center bg-black text-white rounded-[30px]">1</span><p class="hidden md:flex">Yourself</p></li>
+                <li class="w-full flex justify-center items-center gap-[15px] text-black"><span class="w-[35px] h-[35px] flex items-center justify-center bg-black text-white rounded-[30px]">2</span><p class="hidden md:flex">Organization</p></li>
+                <li class="w-full flex justify-center items-center gap-[15px] text-black"><span class="w-[35px] h-[35px] flex items-center justify-center bg-black text-white rounded-[30px]">3</span><p class="hidden md:flex">Event</p></li>
             </ul>
         </div>
-        <div class="wwu-body">
-            <form id="hostEventApplication" action="{% url "eventManagement:hostApply" %}" method="POST">
+        <div class="p-[25px] w-full h-full flex items-center">
+            <form id="hostEventApplication" class="w-full h-full" action="{% url "eventManagement:hostApply" %}" method="POST">
                 {% csrf_token %}
-                <section id="about-yrslf">
-                    <div class="section-summary">
-                        <h5>A bit about you</h5>
-                        <p>Tell us a bit about yourself.</p>
+                <section id="about-yrslf" class="w-full flex flex-col md:flex-row gap-[40px] md:gap-[25px]">
+                    <div class="w-full md:w-[40%] flex flex-col text-center md:text-start gap-[10px]">
+                        <h5 class="font-Wanted-ExtraBold text-[22px]">A bit about you</h5>
+                        <p class="font-Wanted-Regular text-[17px]">Tell us a bit about yourself.</p>
                     </div>
-                    <div id="form-aboutYourself">
-                        <div class="form-aboutYourself-container">
-                            <div class="doubleDisplayRow">
-                                <label for="{{ form.firstName.id_for_label }}">
+                    <div id="form-aboutYourself" class="md:w-[60%] flex flex-col gap-[30px]">
+                        <div class="form-aboutYourself-container flex flex-col gap-[25px]">
+                            <div class="flex flex-col sm:flex-row gap-[10px]">
+                                <label for="{{ form.firstName.id_for_label }}" class="w-full sm:w-1/2 font-Wanted-Regular flex flex-col gap-[10px]">
                                     <p>{{ form.firstName.label }}</p>
-                                    <input type="{{ form.firstName.field.widget.input_type }}" name="{{ form.firstName.html_name }}" id="{{ form.firstName.auto_id }}">
+                                    <input class="w-full border border-[rgba(48,48,48,0.083)] rounded-[12px] font-Wanted-Regular text-[15px] pt-[15px] pb-[15px] pl-[10px] pr-[10px] shadow-[0px_2px_7px_0px_rgba(116,116,116,0.149)]" type="{{ form.firstName.field.widget.input_type }}" name="{{ form.firstName.html_name }}" id="{{ form.firstName.auto_id }}">
                                 </label>
-                                <label for="{{ form.lastName.id_for_label }}">
+                                <label for="{{ form.lastName.id_for_label }}" class="w-full sm:w-1/2 font-Wanted-Regular flex flex-col gap-[10px]">
                                     <p>{{ form.lastName.label }}</p>
-                                    <input type="{{ form.lastName.field.widget.input_type }}" name="{{ form.lastName.html_name }}" id="{{ form.lastName.auto_id }}">
+                                    <input class="w-full border border-[rgba(48,48,48,0.083)] rounded-[12px] font-Wanted-Regular text-[15px] pt-[15px] pb-[15px] pl-[10px] pr-[10px] shadow-[0px_2px_7px_0px_rgba(116,116,116,0.149)]" type="{{ form.lastName.field.widget.input_type }}" name="{{ form.lastName.html_name }}" id="{{ form.lastName.auto_id }}">
                                 </label>
                             </div>
-                            <label for="{{ form.email.id_for_label }}">
+                            <label for="{{ form.email.id_for_label }}"  class="font-Wanted-Regular flex flex-col gap-[10px]">
                                 <p>{{ form.email.label }}</p>
-                                <input type="{{ form.email.field.widget.input_type }}" name="{{ form.email.html_name }}" id="{{ form.email.auto_id }}">
+                                <input class="w-full border border-[rgba(48,48,48,0.083)] rounded-[12px] font-Wanted-Regular text-[15px] pt-[15px] pb-[15px] pl-[10px] pr-[10px] shadow-[0px_2px_7px_0px_rgba(116,116,116,0.149)]" type="{{ form.email.field.widget.input_type }}" name="{{ form.email.html_name }}" id="{{ form.email.auto_id }}">
                             </label>
                             
-                            <label for="{{ form.phone.id_for_label }}">
+                            <label for="{{ form.phone.id_for_label }}" class="font-Wanted-Regular flex flex-col gap-[10px]">
                                 <p>{{ form.phone.label }}</p>
-                                <input type="{{ form.phone.field.widget.input_type }}" name="{{ form.phone.html_name }}" id="{{ form.phone.auto_id }}">
+                                <input class="w-full border border-[rgba(48,48,48,0.083)] rounded-[12px] font-Wanted-Regular text-[15px] pt-[15px] pb-[15px] pl-[10px] pr-[10px] shadow-[0px_2px_7px_0px_rgba(116,116,116,0.149)]" type="{{ form.phone.field.widget.input_type }}" name="{{ form.phone.html_name }}" id="{{ form.phone.auto_id }}">
                             </label>
                         </div>
-                        <div id="nextOrSubmit">
-                            <button type="button" id="nextButtonOne" class="next-button">Next</button>
+                        <div id="nextOrSubmit" class="w-full flex flex-col sm:flex-row">
+                            <button type="button" id="nextButtonOne" class="next-button text-white font-Wanted-Medium text-[17px] p-[6px] xssm:p-[8px] after-xsm:p-[11px] xxsm:p-[13px] sm:p-[15px] bg-[#008d95] border border-transparent rounded-[10px] cursor-pointer">Next</button>
                         </div>
                     </div>
                 </section>
 
-                <section id="about-yrorg" style="display: none;">
-                    <div class="section-summary">
-                        <h5>Organization</h5>
-                        <p>Tell us a bit about your organization.
+                <section id="about-yrorg" class="w-full flex-col md:flex-row gap-[40px] md:gap-[25px] hidden">
+                    <div class="w-full md:w-[40%] flex flex-col text-center md:text-start gap-[10px]">
+                        <h5 class="font-Wanted-ExtraBold text-[22px]">Organization</h5>
+                        <p class="font-Wanted-Regular text-[17px]">Tell us a bit about your organization.
                         </p>
                     </div>
-                    <div id="form-aboutYourorg">
-                        <div class="form-aboutYourorg-container">
+                    <div id="form-aboutYourorg" class="md:w-[60%] flex flex-col gap-[30px]">
+                        <div class="form-aboutYourorg-container flex flex-col gap-[25px]">
                             <div class="organization-name">
-                                <label for="{{ form.organizationName.id_for_label }}">
+                                <label for="{{ form.organizationName.id_for_label }}" class="font-Wanted-Regular text-[17px] flex flex-col gap-[10px]">
                                     <p>{{ form.organizationName.label }}</p>
-                                    <input type="{{ form.organizationName.field.widget.input_type }}" name="{{ form.organizationName.html_name }}" id="{{ form.organizationName.auto_id }}">
+                                    <input class="w-full border border-[rgba(48,48,48,0.083)] rounded-[12px] font-Wanted-Regular text-[15px] pt-[15px] pb-[15px] pl-[10px] pr-[10px] shadow-[0px_2px_7px_0px_rgba(116,116,116,0.149)]" type="{{ form.organizationName.field.widget.input_type }}" name="{{ form.organizationName.html_name }}" id="{{ form.organizationName.auto_id }}">
                                 </label>
                             </div>
                             <div class="organization-email">
-                                <label for="{{ form.organizationEmail.id_for_label }}">
+                                <label for="{{ form.organizationEmail.id_for_label }}" class="font-Wanted-Regular text-[17px] flex flex-col gap-[10px]">
                                     <p>{{ form.organizationEmail.label }}</p>
-                                    <input type="{{ form.organizationEmail.field.widget.input_type }}" name="{{ form.organizationEmail.html_name }}" id="{{ form.organizationEmail.auto_id }}">
+                                    <input class="w-full border border-[rgba(48,48,48,0.083)] rounded-[12px] font-Wanted-Regular text-[15px] pt-[15px] pb-[15px] pl-[10px] pr-[10px] shadow-[0px_2px_7px_0px_rgba(116,116,116,0.149)]" type="{{ form.organizationEmail.field.widget.input_type }}" name="{{ form.organizationEmail.html_name }}" id="{{ form.organizationEmail.auto_id }}">
                                 </label>
                             </div>
                             <div class="organization-location">
-                                <label for="{{ form.organizationLocation.id_for_label }}">
+                                <label for="{{ form.organizationLocation.id_for_label }}" class="font-Wanted-Regular text-[17px] flex flex-col gap-[10px]">
                                     <p>{{ form.organizationLocation.label }}</p>
-                                    <input type="{{ form.organizationLocation.field.widget.input_type }}" name="{{ form.organizationLocation.html_name }}" id="{{ form.organizationLocation.auto_id }}">
+                                    <input class="w-full border border-[rgba(48,48,48,0.083)] rounded-[12px] font-Wanted-Regular text-[15px] pt-[15px] pb-[15px] pl-[10px] pr-[10px] shadow-[0px_2px_7px_0px_rgba(116,116,116,0.149)]" type="{{ form.organizationLocation.field.widget.input_type }}" name="{{ form.organizationLocation.html_name }}" id="{{ form.organizationLocation.auto_id }}">
                                 </label>
                             </div>
                         </div>
-                        <div id="nextOrSubmit">
-                            <button type="button" id="previousButtonyrOrg"
-                                class="previous-button">Previous</button>
-                            <button type="button" id="nextButtonTwo" class="next-button">Next</button>
+                        <div id="nextOrSubmit" class="w-full flex flex-col gap-2 sm:flex-row justify-between">
+                            <button type="button" id="previousButtonyrOrg" class="previous-button text-white font-Wanted-Medium text-[17px] p-[6px] xssm:p-[8px] after-xsm:p-[11px] xxsm:p-[13px] sm:p-[15px] bg-[#008d95] border border-transparent rounded-[10px] cursor-pointer">
+                                Previous
+                            </button>
+                            <button type="button" id="nextButtonTwo" class="next-button text-white font-Wanted-Medium text-[17px] p-[6px] xssm:p-[8px] after-xsm:p-[11px] xxsm:p-[13px] sm:p-[15px] bg-[#008d95] border border-transparent rounded-[10px] cursor-pointer">Next</button>
                         </div>
                     </div>
                 </section>
 
-                <section id="about-yrevent" style="display: none;">
-                    <div class="section-summary">
-                        <h5>Event Information</h5>
-                        <p>
+                <section id="about-yrevent" class="w-full flex-col md:flex-row gap-[40px] md:gap-[25px] hidden">
+                    <div class="w-full md:w-[40%] flex flex-col text-center md:text-start gap-[10px]">
+                        <h5 class="font-Wanted-ExtraBold text-[22px]">Event Information</h5>
+                        <p class="font-Wanted-Regular text-[17px]">
                             What kind of events would you host?
                         </p>
                     </div>
-                    <div id="form-aboutYourevent">
-                        <div class="form-aboutYourevent-container">
+                    <div id="form-aboutYourevent" class="md:w-[60%] flex flex-col gap-[30px]">
+                        <div class="flex flex-col gap-[25px]">
                             <div class="event_name">
-                                <label for="{{ form.eventTypes.id_for_label }}" class="eventTypeSelector">
+                                <label class="eventTypeSelector font-Wanted-Regular text-[17px] flex flex-col gap-[10px]">
                                     <p>{{ form.eventTypes.label }}</p>
-                                    <div class="eventTypeSelectorButtons">
+                                    <div class="eventTypeSelectorButtons flex flex-row flex-wrap gap-[15px]">
                                         {% for choice_value, choice_label in form.eventTypes.field.choices %}
-                                            <div class="optionals">
-                                                <input type="checkbox" id="{{ form.eventTypes.id_for_label }}_{{ forloop.counter }}" name="{{ form.eventTypes.html_name }}" value="{{ choice_value }}">
-                                                <label for="{{ form.eventTypes.id_for_label }}_{{ forloop.counter }}">{{ choice_label }}</label>
+                                            <div class="optionals checked:text-green bg-[rgba(145,145,145,0.098)] border-2 border-[#008d95] rounded-[20px] cursor-pointer flex items-center mb-[10px] text-green">
+                                                <input class="hidden appearance-none " type="checkbox" id="{{ form.eventTypes.id_for_label }}_{{ forloop.counter }}" name="{{ form.eventTypes.html_name }}" value="{{ choice_value }}">
+                                                <label class="cursor-pointer p-[10px] pt-[7px] pb-[7px] h-full w-full flex items-center font-Wanted-Regular selected:" for="{{ form.eventTypes.id_for_label }}_{{ forloop.counter }}">{{ choice_label }}</label>
                                             </div>
                                         {% endfor %}
                                     </div>
                                 </label>
                             </div>
-                            <label for="{{ form.eventHostedAnnually.id_for_label }}">
+                            <label for="{{ form.eventHostedAnnually.id_for_label }}" class="font-Wanted-Regular text-[17px] flex flex-col gap-[10px]">
                                 <p>{{ form.eventHostedAnnually.label }}</p>
-                                <input type="{{ form.eventHostedAnnually.field.widget.input_type }}" name="{{ form.eventHostedAnnually.html_name }}" id="{{ form.eventHostedAnnually.auto_id }}">
+                                <input class="border border-[rgba(48,48,48,0.083)] rounded-[12px] font-Wanted-Regular text-[15px] pt-[15px] pb-[15px] pl-[10px] pr-[10px] shadow-[0px_2px_7px_0px_rgba(116,116,116,0.149)]" type="{{ form.eventHostedAnnually.field.widget.input_type }}" name="{{ form.eventHostedAnnually.html_name }}" id="{{ form.eventHostedAnnually.auto_id }}">
                             </label>
 
-                            <label for="{{ form.eventPopulation.id_for_label }}">
+                            <label for="{{ form.eventPopulation.id_for_label }}"  class="font-Wanted-Regular text-[17px] flex flex-col gap-[10px]">
                                 <p>{{ form.eventPopulation.label }}</p>
-                                <input type="{{ form.eventPopulation.field.widget.input_type }}" name="{{ form.eventPopulation.html_name }}" id="{{ form.eventPopulation.auto_id }}">
+                                <input class="border border-[rgba(48,48,48,0.083)] rounded-[12px] font-Wanted-Regular text-[15px] pt-[15px] pb-[15px] pl-[10px] pr-[10px] shadow-[0px_2px_7px_0px_rgba(116,116,116,0.149)]" type="{{ form.eventPopulation.field.widget.input_type }}" name="{{ form.eventPopulation.html_name }}" id="{{ form.eventPopulation.auto_id }}">
                             </label>
                         </div>
-                        <div id="nextOrSubmit">
-                            <button type="button" id="previousButtonyrEvent"
-                                class="previous-button">Previous</button>
-                            <button type="submit">Submit</button>
+                        <div id="nextOrSubmit" class="w-full flex flex-col gap-2 sm:flex-row justify-between">
+                            <button type="button" id="previousButtonyrEvent" class="previous-button text-white font-Wanted-Medium text-[17px] p-[6px] xssm:p-[8px] after-xsm:p-[11px] xxsm:p-[13px] sm:p-[15px] bg-[#008d95] border border-transparent rounded-[10px] cursor-pointer">Previous</button>
+                            <button type="submit" class="previous-button text-white font-Wanted-Medium text-[17px] p-[6px] xssm:p-[8px] after-xsm:p-[11px] xxsm:p-[13px] sm:p-[15px] bg-[#008d95] border border-transparent rounded-[10px] cursor-pointer">Submit</button>
                         </div>
                     </div>
                 </section>

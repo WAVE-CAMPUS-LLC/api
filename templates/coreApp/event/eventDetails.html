@@ -1,14 +1,12 @@
 {% extends "base/base.html" %}
 {% load static %}
 {% load date_tag %}
+{% load widget_tweaks %}
 
 {% block title %}
 {{ event.title }} ({{ event.date }}) hosted by @{{ event.host.username }}
 {% endblock title %}
 
-{% block app_page_style %}
-<link rel="stylesheet" type="text/css" href="{% static "/styles/coreApp/event/eventDetails.css" %}" />
-{% endblock app_page_style %}
 
 {% block script %}
 <script type="text/javascript" src="{% static "scripts/coreApp/event/eventDetailsTabs.js" %}"></script>
@@ -33,93 +31,102 @@
     <h3>You have reserved a place for the event. Check your email for confirmation.</h3>
 </div>
 {% endif %}
-<div id="content-container">
-    <div class="page-header">
+<div id="content-container" class="flex flex-col px-[10px] overflow-hidden after-xsm:px-[20px] xxsm:px-[35px] sm:px-[40px] md:px-[40px] pre-lg:px-[50px] lg:px-[80px] xl:px-[150px] 2xl:px-[200px] 3xl:-[300px] gap-[70px]">
+    <div class="page-header w-full flex flex-col gap-3 lg:flex-row justify-between items-center">
         <div class="event-title">
-            <h3>{{ event.title }}</h3>
+            <h3 class="font-Wanted-ExtraBold pre-sm:font-Wanted-Black text-Medium xsm:text-Large after-xsm:text-Pre-Xl xxsm:text-1xl pre-sm:text-1xl sm:text-2xl md:text-3xl text-black">{{ event.title }}</h3>
         </div>
-        <div class="hosted-by">
+        <div class="hosted-by font-Wanted-Variable text-XSmall after-xsm:text-Small pre-sm:text-Medium text-[#a6a6a6]">
             <p>
                 Hosted by {{ event.host.first_name }} {{ event.host.last_name }}
-                <a target="_blank" href="{% url "social:publicProfile" username=event.host.username %}">
+                <a class="font-Wanted-Regular text-[#a6a6a6] underline underline-offset-2" target="_blank" href="{% url "social:publicProfile" username=event.host.username %}">
                    @ {{ event.host.username }}
                 </a>
             </p>
         </div>
     </div>
 
-    <div id="contentContainerBodyOne">
-        <div class="header-image" style="background-image: url('{{ event.header_photo.url }}');">
-            <div class="placeHolderImage">
-                <img id="trending-img" src="{{event.header_photo.url}}" />
+    <div id="contentContainerBodyOne" class="flex flex-col gap-12">
+        <div class="header-image hidden pre-sm:inline-block w-full h-full min-w-full min-h-full relative rounded-3xl flex justify-center items-center bg-cover bg-top bg-no-repeat" style="background-image: url('{{ event.header_photo.url }}');">
+            <div class="placeHolderImage flex items-center justify-center w-full h-full min-h-[500px] relative p-20">
+                <img id="trending-img" class="w-full h-[300px] xxsm:h-full max-w-[400px] max-h-[400px] object-contain rounded-3xl" src="{{event.header_photo.url}}" />
             </div>
         </div>
 
-        <div id="contentContainerTabs">
-            <div id="tabHeaderParent">
-                <ul id="tabHeader">
-                    <li class="eventDetailsTab tab-active" data-tab="eventDescription">
+        <div class="w-full inline-block pre-sm:hidden">
+            <img id="trending-img" class="w-full h-[300px] xxsm:h-full max-h-[400px] rounded-3xl" src="{{event.header_photo.url}}" />
+        </div>
+
+        <div id="contentContainerTabs" class="w-full flex flex-col gap-12">
+            <div id="tabHeaderParent" class="w-full flex justify-center flex-col">
+                <ul id="tabHeader" class="list-none grid grid-cols-1 gap-2 xsm:grid-cols-2 xxsm:grid-cols-3 w-full pb-1 font-Wanted-Medium text-Semi-Medium md:text-Large">
+                    <li class="eventDetailsTab p-2 px-5 text-center hover:border-b-customGray6 cursor-pointer" data-tab="eventDescription">
                         Description
                     </li>
                     {% if paidFreeTickets or event.ticketing == "RSVP Required" %}
-                    <li class="eventDetailsTab" data-tab="eventTicketInformation">
+                    <li class="eventDetailsTab p-2 px-5 text-center hover:border-b-customGray6 cursor-pointer" data-tab="eventTicketInformation">
                         Ticketing
                     </li>
                     {% endif %}
 
-                    <li class="eventDetailsTab" data-tab="eventPhotosVideos">
+                    {% if event.body_photo_one or event.body_photo_two or event.body_photo_three or event.body_photo_four or event.body_photo_five %}
+                    <li class="eventDetailsTab p-2 px-5 text-center hover:border-b-customGray6 cursor-pointer " data-tab="eventPhotosVideos">
                         Photos
                     </li>
+                    {% endif %}
+                    
                 </ul>
-                <div class="headerDivider">
-                    <hr>
-                </div>
             </div>
 
 
-            <div id="tabBody">
-                <div id="tabBodyContent">
+            <div id="tabBody" class="flex flex-col lg:flex-row gap-10">
+                <div id="tabBodyContent" class="w-full lg:w-[65%]">
                     <div id="eventDescription" class="details-body eventDetailsTabInformation">
-                        <div class="eventDetails-body">
-                            <div class="eventTitleDate">
-                                <h5 class="event-title">
-                                    {{ event.title }}
-                                </h5>
+                        <div class="eventDetails-body flex flex-col gap-20">
+                            <div class="flex flex-col gap-4 w-full">
+                                <div class="eventTitleDate flex flex-col gap-1 items-start">
+                                    <div class="flex flex-col md:flex-row gap-2 items-start md:items-center">
+                                        <h5 class="font-Wanted-SemiBold w-[80%] text-xl xxsm:text-xl pre-sm:text-1xl md:text-3xl flex w-full overflow-hidden text-ellipsis">
+                                            {{ event.title }}
+                                        </h5>
+                                        
+                                    </div>
+                                                                        
+                                    <p class="event-dated-timed font-Wanted-Medium  md:font-Wanted-Bold text-Medium xxsm:text-Large md:text-Pre-Xl text-[#008d95] flex items-start xsm:items-center flex-col xsm:flex-row gap-0 xsm:gap-1">
+                                        {{ event.date|custom_date }} 
+                                        | 
+                                        {{event.start_time|time:"g:i A" }}
+                                    </p>
+                                </div>
+    
+                                <div class="flex flex-col gap-3 justify-start">
+                                    <div class="event-types flex flex-row gap-3">
+                                        <a href="{% url "core:category" name=event.event_type %}" class="p-1 border bg-[#008d95] rounded-2xl px-4 text-white font-Wanted-Regular">{{ event.event_type }}</a>
+                                    </div>
+    
+                                    <p class="flex flex-row gap-1 items-center text-Pre-Xl text-black font-Wanted-Medium">
+                                        <img src="{% static "images/coreApp/eventDetails/location.svg" %}" alt="Location" class="size-5" />
+                                        {{ event.building_name}} 
+                                        <span class="text-black text-1xl">•</span>
+                                        <a target="_blank" href="https://www.google.com/maps?q={{ event.street|urlencode }},+{{ event.city|urlencode }},+{{ event.state|urlencode }},+{{ event.zip_code|urlencode }},+{{ event.country|urlencode }}" class="text-[#008d95] text-Semi-Medium font-Wanted-Variable">Locate</a>
+                                    </p>
+                                </div>
                             </div>
+                            
 
-                            <div class="event-details-location">
-                                
-                                <p class="event-dated-timed">{{ event.date|custom_date }} at {{event.start_time|time:"g:i A" }}</p>
-                            </div>
-
-                            <div>
-                                <p>@{{ event.building_name}}</p>
-                            </div>
-
-                            <div class="event-details-location-address">
-                                <i class='bx bx-current-location'></i>
-                                <p>
-                                    {{ event.street }}, {{ event.city }},  {{ event.state }}, {{ event.zip_code }}, {{ event.country }}
+                            <div class="flex flex-col gap-0 w-auto quill-content">
+                                <p class="font-Wanted-Regular text-Large w-full quill-content">
+                                    {{ event.description|safe }}
                                 </p>
                             </div>
 
-                            <div class="eventDescription-body">
-                                <h6>Description</h6>
-                                {{ event.description }}
-                            </div>
 
-                            <hr/>
-                            {% comment %} <div class="guestlistDisplay">
-                                <div class="guestListImage">
-                                    <img src="{{}}" />
-                                </div>
-                            </div>
-
-                            <hr/> {% endcomment %}
-
-                            <div class="hostInformation">
-                                <div>
-                                    <h6>Hosted by {{ event.host.username }}</h6>
+                            <div class="hostInformation py-5 border-t border-customGray5 flex flex-col gap-7">
+                                <h3 class="flex justify-start text-Pre-Xl font-Wanted-SemiBold">Attendee list</h3>
+                                <div id="guestList" class="flex flex-row gap-7">
+                                    <a href="" class="flex flex-col items-center justify-center">
+                                        <img class="h-20 w-20 rounded-full" src="{% static "images/account/E.L3.png" %}" alt="Attendees" class="size-5" />
+                                    </a>
                                 </div>
                             </div>
                         </div>
@@ -127,41 +134,41 @@
 
                     {% if paidFreeTickets or event.ticketing == "RSVP Required" %}
                     <div id="eventTicketInformation" class="ticketinfo-body eventDetailsTabInformation">
-                        <div class="eventTickets-body">
+                        <div class="eventTickets-body flex flex-col gap-2">
                             {% if event.ticketing == "RSVP Required" %}
-                            <div class="ticketBodyHeader">
+                            <div class="ticketBodyHeader font-Wanted-Bold text-Medium xsm:text-Large after-xsm:text-Pre-Xl xxsm:text-1xl pre-sm:text-1xl sm:text-2xl md:text-3xl text-black">
                                 <h3>You are required to reserve your place</h3>
                             </div>
-                            <div id="jit-tab-container">
-                                <div class="jit-role-tab">
-                                    <div role="button" class="jit-tab-header">
+                            <div id="jit-tab-container" class="flex flex-col gap-5">
+                                <div class="jit-role-tab w-full sm:w-4/5">
+                                    <div role="button" class="jit-tab-header flex items-center justify-between font-Wanted-Bold text-xl py-4 px-5 rounded-3xl border border-transparent text-white font-Wanted-SemiBold flex-col sm:flex-row justify-center gap-2 text-Pre-Xl rounded-2xl bg-gradient-to-r from-gradient-start to-gradient-end cursor-pointer">
                                         <h3>Reserve your place</h3>
-                                        <p>Tap to RSVP</p>
+                                        <p class="font-Wanted-Variable text-XSmall after-xsm:text-Small pre-sm:text-Medium">Tap to RSVP</p>
                                     </div>
-                                    <div class="jit-tab-body defaulted">
-                                        <div class="jtb-container">
-                                            <div class="rsvp-card-header">
+                                    <div class="jit-tab-body defaulted border-4 border-[#008d95] rounded-b-2xl mx-5 p-5 hidden">
+                                        <div class="jtb-container flex flex-col gap-9">
+                                            <div class="rsvp-card-header font-Wanted-Bold text-Medium sm:text-Large xxsm:text-xl pre-sm:text-2xl flex justify-center w-full">
                                                 <h6>Enter your details below</h6>
                                             </div>
                                             
     
-                                            <form id="rsvpForm" method="post">
+                                            <form id="rsvpForm" class="flex flex-col gap-6" method="post">
                                                 {% csrf_token %}
-                                                <div class="form-group">
-                                                    <label for="{{ rsvpForm.first_name.id_for_label }}">
-                                                        <p>{{ rsvpForm.first_name.label }}</p>
-                                                        {{ rsvpForm.first_name }}
+                                                <div class="form-group flex flex-col pre-sm:flex-row gap-5">
+                                                    <label for="{{ rsvpForm.first_name.id_for_label }}" class="flex flex-col gap-1 w-full">
+                                                        <p class="font-Wanted-Variable text-Base text-black">{{ rsvpForm.first_name.label }}</p>
+                                                        {{ rsvpForm.first_name|add_class:"w-full px-4 p-3 rounded-xl border border-custom-rgba5 font-Wanted-Variable text-Medium" }}
                                                     </label>
-                                                    <label for="{{ rsvpForm.last_name.id_for_label }}">
-                                                        <p>{{ rsvpForm.last_name.label }}</p>
-                                                        {{ rsvpForm.last_name }}
+                                                    <label for="{{ rsvpForm.last_name.id_for_label }}" class="flex flex-col gap-1 w-full">
+                                                        <p class="font-Wanted-Variable text-Base text-black">{{ rsvpForm.last_name.label }}</p>
+                                                        {{ rsvpForm.last_name|add_class:"w-full px-4 p-3 rounded-xl border border-custom-rgba5 font-Wanted-Variable text-Medium" }}
                                                     </label>
                                                 </div>
 
-                                                <div class="form-group">
-                                                    <label for="{{ rsvpForm.email.id_for_label }}">
-                                                        <p>{{ rsvpForm.email.label }}</p>
-                                                        {{ rsvpForm.email }}
+                                                <div class="form-group flex flex-row gap-5 w-full">
+                                                    <label for="{{ rsvpForm.email.id_for_label }}" class="w-full">
+                                                        <p class="font-Wanted-Variable text-Base text-black">{{ rsvpForm.email.label }}</p>
+                                                        {{ rsvpForm.email|add_class:"w-full px-4 p-3 rounded-xl border border-custom-rgba5 font-Wanted-Variable text-Medium" }}
                                                     </label>
                                                 </div>
 
@@ -169,14 +176,14 @@
                                                 <div class="display-group">
                                                     <p>{{ rsvpForm.display_on_guestlist.label }}</p>
                                                     <label for="{{ rsvpForm.display_on_guestlist.id_for_label }}" class="custom-toggle">
-                                                        {{ rsvpForm.display_on_guestlist }}
+                                                        {{ rsvpForm.display_on_guestlist|add_class:"w-4 h-4 rounded-2xl border" }}
                                                         <span class="custom-slider custom-round"></span>
                                                     </label>
                                                 </div>
                                                 {% endif %}
 
-                                                <div class="submit-group">
-                                                    <button type="submit" class="reserveButton" role="button" name="eventAction" value="RSVP">Reserve</button>
+                                                <div class="submit-group w-full flex justify-end">
+                                                    <button type="submit" class="reserveButton gradient-btn w-full" role="button" name="eventAction" value="RSVP">Reserve</button>
                                                 </div>
                                             </form>
                                         </div>
@@ -186,24 +193,24 @@
                                 
                             </div>
                             {% elif event.ticketing == "Paid/Free" and paidFreeTickets %}
-                            <div class="ticketBodyHeader">
+                            <div class="font-Wanted-Bold text-Medium xsm:text-Large after-xsm:text-Pre-Xl xxsm:text-1xl pre-sm:text-1xl sm:text-2xl md:text-3xl text-black">
                                 <h3>Purchase your ticket</h3>
                             </div>
 
-                            <div id="jit-tab-container" class="jit-tab-container">
+                            <div id="jit-tab-container" class="flex flex-col gap-5">
                                 <input type="hidden" id="save-url" value="{% url 'eventTickets:updateCart' %}" />
                                 {% for ticket in paidFreeTickets %}
-                                <div class="jit-role-tab">
-                                    <div role="button" class="jit-tab-header">
+                                <div class="jit-role-tab w-full sm:w-4/5">
+                                    <div role="button" class="jit-tab-header flex items-center justify-between font-Wanted-Bold text-xl py-4 px-5 rounded-3xl border border-transparent text-white font-Wanted-SemiBold flex-col sm:flex-row justify-center gap-2 text-Pre-Xl rounded-2xl bg-gradient-to-r from-gradient-start to-gradient-end cursor-pointer">
                                         <h3>{{ ticket.ticket_name }}</h3>
-                                        <p>Tap to see more</p>
+                                        <p class="font-Wanted-Variable text-XSmall after-xsm:text-Small pre-sm:text-Medium">Tap to see more</p>
                                     </div>
 
-                                    <div class="jit-tab-body defaulted">
-                                        <div class="jtb-container">
-                                            <div class="ticket-description-body">
-                                                <div class="ticket-header-info">
-                                                    <h6 class="priceType">
+                                    <div class="jit-tab-body defaulted border-4 border-[#008d95] rounded-b-2xl mx-5 p-5 hidden">
+                                        <div class="jtb-container flex flex-col gap-9">
+                                            <div class="ticket-description-body flex flex-col gap-4">
+                                                <div class="ticket-header-info flex flex-row justify-between items-center">
+                                                    <h6 class="priceType flex justify-start font-Wanted-Bold text-Large">
                                                         {% if ticket.ticket_type == "Paid" %}
                                                         ${{ ticket.ticket_price }}
                                                         {% elif ticket.ticket_type == "Free" %}
@@ -211,19 +218,19 @@
                                                         {% endif %}
                                                     </h6>
 
-                                                    <div class="addRemoveTickets">
-                                                        <button class="removeTicket" id="removeTicketButton" data-ticket-id="{{ ticket.ticket_id }}" data-ticket-name="{{ ticket.ticket_name }}" data-ticket-price="{{ ticket.ticket_price }}" role="button" name="eventAction" value="Remove Ticket">
+                                                    <div class="addRemoveTickets flex flex-row gap-1 items-center">
+                                                        <button class="removeTicket border-none bg-none cursor-pointer" id="removeTicketButton" data-ticket-id="{{ ticket.ticket_id }}" data-ticket-name="{{ ticket.ticket_name }}" data-ticket-price="{{ ticket.ticket_price }}" role="button" name="eventAction" value="Remove Ticket">
                                                             <img src="{% static "images/eventManagementApp/event/removeTicket.svg" %}" alt="-1 Ticket" />
                                                         </button>
-                                                        <span class="currentTicketAmount" id="currentTicketAmount" data-ticket-id="{{ ticket.ticket_id }}">0</span>
-                                                        <button class="addTicket" id="addTicketButton" name="eventAction" data-ticket-id="{{ ticket.ticket_id }}" data-ticket-name="{{ ticket.ticket_name }}" data-ticket-price="{{ ticket.ticket_price }}" value="Add Ticket" onclick="">
+                                                        <span class="currentTicketAmount w-12 h-7 font-Wanted-Variable flex justify-center items-center" id="currentTicketAmount" data-ticket-id="{{ ticket.ticket_id }}">0</span>
+                                                        <button class="addTicket border-none bg-none cursor-pointer" id="addTicketButton" name="eventAction" data-ticket-id="{{ ticket.ticket_id }}" data-ticket-name="{{ ticket.ticket_name }}" data-ticket-price="{{ ticket.ticket_price }}" value="Add Ticket" onclick="">
                                                             <img src="{% static "images/eventManagementApp/event/addTicket.svg" %}" alt="+1 Ticket" />
                                                         </button>
                                                     </div>
                                                 </div>
                                                 
 
-                                                <p>{{ ticket.ticket_description }}</p>
+                                                <p class="font-Wanted-Variable text-Semi-Medium">{{ ticket.ticket_description }}</p>
                                             </div>
                                             
                                         </div>
@@ -236,49 +243,51 @@
                     </div>
                     {% endif %}
                     
-
+                    {% if event.body_photo_one or event.body_photo_two or event.body_photo_three or event.body_photo_four or event.body_photo_five %}
                     <div id="eventPhotosVideos" class="attachment-body eventDetailsTabInformation">
                         <div class="eventPhotosVideos-body">
-                            <div id="slideshow-container" class="slideshow-container">
+                            <div id="slideshow-container" class="slideshow-container grid sm:grid-cols-1 pre-lg:grid-cols-2 lg:grid-cols-3">
                                 {% if event.body_photo_one %}
-                                <img src="{{ event.body_photo_one.url }}" />
+                                <img src="{{ event.body_photo_one.url }}" class="rounded-xl w-full" />
                                 {% endif %}
                                 {% if event.body_photo_two %}
-                                <img src="{{ event.body_photo_two.url }}" />
+                                <img src="{{ event.body_photo_two.url }}" class="rounded-xl w-full" />
                                 {% endif %}
                                 {% if event.body_photo_three %}
-                                <img src="{{ event.body_photo_three.url }}" />
+                                <img src="{{ event.body_photo_three.url }}" class="rounded-xl w-full" />
                                 {% endif %}
                                 {% if event.body_photo_four %}
-                                <img src="{{ event.body_photo_four.url }}" />
+                                <img src="{{ event.body_photo_four.url }}" class="rounded-xl w-full" />
                                 {% endif %}
                                 {% if event.body_photo_five %}   
-                                <img src="{{ event.body_photo_five.url }}" />
+                                <img src="{{ event.body_photo_five.url }}" class="rounded-xl w-full" />
                                 {% endif %}
                             </div>
                         </div>
                     </div>
+                    {% endif %}
+                    
                 </div>
 
                 {% if event.ticketing == "Paid/Free" and paidFreeTickets %}
-                <div id="ticketCartContent" class="ticketCartContent">
-                    <div class="ticketCartContentCard">
-                        <div class="cartHeader">
+                <div id="ticketCartContent" class="w-full lg:w-[35%] ticketCartContent py-10 border-t lg:border-t-0 border-customGray5">
+                    <div class="ticketCartContentCard w-full h-auto rounded-2xl p-6 border border-custom-rgba5 shadow-custom-shadow flex flex-col gap-3">
+                        <div class="cartHeader flex justify-center font-Wanted-Bold text-xl">
                             <h3>Your Cart</h3>
                         </div>
-                        <div class="cartBody">
+                        <div class="cartBody flex flex-col gap-5">
                             <div id="emptyCart" class="emptyCart">
-                                <div class="emptyCartContainer">
-                                    <img src="{% static "/images/coreApp/careerDetails/empty-cart.svg" %}" />
+                                <div class="emptyCartContainer w-full h-auto py-11 bg-[#aeaeae30] flex flex-col after-xsm:flex-row gap-1 font-Wanted-Bold text-Large flex justify-center items-center rounded-2xl gap-3">
+                                    <img src="{% static "/images/coreApp/careerDetails/empty-cart.svg" %}" class="size-6 xxsm:size-12" />
                                     <p>Cart is empty</p>
                                 </div>
                             </div>
 
                             <div id="cartItems" class="cartItems" style="display: none;">
-                                <div id="cartItemContainer" class="cartItemContainer">
-                                    <div class="cartItem">
+                                <div id="cartItemContainer" class="cartItemContainer flex flex-col gap-5 font-Wanted-Variable text-Medium">
+                                    <div class="cartItem flex flex-col gap-1">
                                         <span class="cartItemName">Ticket Name Placeholder</span>
-                                        <div class="priceQuantity">
+                                        <div class="priceQuantity w-full flex flex-row justify-between">
                                             <span class="cartItemCount">
                                                 Quantity: 
                                                 <span id="ticketCountPlaceholder">
@@ -295,11 +304,11 @@
                                 </div>
                             </div>
 
-                            <div class="checkoutRow" id="checkoutRow">
-                                <div class="checkoutRowContainer">
+                            <div class="checkoutRow w-full flex justify-center" id="checkoutRow">
+                                <div class="checkoutRowContainer flex justify-center">
                                     <input type="hidden" id="checkout-url" value="{% url 'eventTickets:checkout' %}">
 
-                                    <button id="checkoutButton" data-save-url="{% url 'eventTickets:updateCart' %}" class="checkoutButton" role="button" name="eventAction" value="Checkout" onclick="returnCheckout()">
+                                    <button id="checkoutButton" data-save-url="{% url 'eventTickets:updateCart' %}" class="checkoutButton gradient-btn w-full font-Wanted-SemiBold text-Large" role="button" name="eventAction" value="Checkout" onclick="returnCheckout()">
                                         Checkout -
                                         <span id="checkoutTotal">$0.00</span>
                                     </button>

@@ -8,9 +8,6 @@
 What's the wave?! — WAVE.
 {% endblock title %}
 
-{% block app_page_style %}
-<link rel="stylesheet" type="text/css" href="{% static "/styles/coreApp/explore.css" %}" />
-{% endblock app_page_style %}
 
 {% block script %}
 <script type="text/javascript" src="{% static "scripts/coreApp/eventCountdown.js" %}"></script>
@@ -24,28 +21,31 @@ What's the wave?! — WAVE.
 {% endblock header %}
 
 {% block body %}
-<div id="content-container">
-    <div id="explore-home-image-main" class="explore-home-image-main">
-        <div id="trending-slideshow">
+<div id="content-container" class="flex flex-col px-[10px] after-xsm:px-[20px] xxsm:px-[35px] sm:px-[40px] md:px-[40px] pre-lg:px-[50px] lg:px-[80px] xl:px-[150px] 2xl:px-[200px] 3xl:-[300px] gap-[70px]">
+    <div id="explore-home-image-main" class="w-full flex flex-col gap-5">
+        <div id="row-header" class="font-Wanted-Bold text-Large after-xsm:text-2xl text-black">
+            <h3>Trending now</h3>
+        </div>
+        <div id="trending-slideshow" class="w-full h-full relative overflow-hidden">
             {% for trending in trending_events %}
-            <div id="ehim-img-cont" class="trending-event-element" style="background-image: url('{{ trending.header_photo.url }}');">
+            <div id="ehim-img-cont" class="trending-event-element w-full h-full min-w-full min-h-full relative rounded-3xl flex justify-center items-center bg-cover bg-top bg-no-repeat" style="background-image: url('{{ trending.header_photo.url }}');">
 
-                <figcaption id="event-countdown-caption">
-                    <h6 id="event-caption-date">
+                <figcaption id="event-countdown-caption" class="p-2 pt-7 pl-7 absolute top-0 left-0">
+                    <h6 id="event-caption-date" class="font-Wanted-Variable text-Small xs:text-Semi-Medium after-xsm:text-Pre-Xl text-white">
                         <span id="event-date-{{ forloop.counter }}" data-date="{{ trending.date }}" data-time="{{trending.start_time|time:"g:i A" }}"></span>
                     </h6>
                 </figcaption>
     
-                <div id="display-trending">
+                <div id="display-trending" class="flex items-center justify-center w-full h-[300px] after-xsm:h-[400px] xxsm:h-[500px] relative p-2">
                     <a target="_blank" href="{% url "core:eventDetails" eventId=trending.eventId %}">
-                        <img id="trending-img" src="{{trending.header_photo.url}}" />
+                        <img id="trending-img" class="w-full h-[300px] xxsm:h-full max-w-[400px] max-h-[400px] object-contain rounded-3xl" src="{{trending.header_photo.url}}" />
                     </a>
                     
                 </div>
     
-                <figcaption id="event-hosted-caption">
-                    <h6 id="event-caption-host">
-                        Hosted by  <a target="_blank" href="{% url "social:publicProfile" username=trending.host.username %}">@{{ trending.host.username }}</a>
+                <figcaption id="event-hosted-caption" class="p-6 absolute bottom-0 right-0">
+                    <h6 id="event-caption-host" class="font-Wanted-Variable text-Small xs:text-Semi-Medium after-xsm:text-Pre-Xl text-white">
+                        Hosted by  <a target="_blank" class="text-white" href="{% url "social:publicProfile" username=trending.host.username %}">@{{ trending.host.username }}</a>
                     </h6>
                 </figcaption>
             </div>
@@ -53,24 +53,24 @@ What's the wave?! — WAVE.
         </div>
     </div>
 
-    <div id="content-body">
-        <div id="categories-row" class="row-container">
-            <div class="row-header">
-                <div class="heading-text">
+    <div id="content-body" class="flex flex-col w-full h-full gap-11">
+        <div id="categories-row" class="flex flex-col gap-12">
+            <div class="flex flex-row justify-between items-center">
+                <div class="font-Wanted-Bold text-Large after-xsm:text-2xl">
                     Categories
                 </div>
                 <div class="heading-controls">
-                    <a target="_blank" href="{% url "core:categories" %}">See More</a>
+                    <a class="text-[#008d95] underline font-Wanted-Variable text-Small after-xsm:text-Semi-Medium underline-offset-2" href="{% url "core:categories" %}">See More</a>
                 </div>
             </div>
 
-            <div class="row-body" id="row-body">
+            <div class="grid grid-cols-2 xsm:grid-cols-2 xxsm:grid-cols-4 gap-5" id="row-body">
                 {% for value, display in exploreCategoryChoices %}
                     {% if display %}
-                        <div class="category-card">
-                            <a target="_blank" href="{% url 'core:category' name=display %}">
-                                <div class="category-name">
-                                    <h2>{{ display }}</h2>
+                        <div class="border-l-4 border-[#008d95] p-3 after-xsm:p-7 py-4 font-Wanted-Medium bg-white text-black cursor-pointer hover:shadow-custom-shadow-5 hover:border-l-4 hover:rounded-r-2xl">
+                            <a class="w-full flex flex-col justify-start items-start text-[#000000]" target="_blank" href="{% url 'core:category' name=display %}">
+                                <div class="category-name flex justify-start capitalize w-full">
+                                    <h2 class="text-Small after-xsm:text-Semi-Medium">{{ display }}</h2>
                                 </div>
                             </a>
                         </div>
@@ -79,20 +79,23 @@ What's the wave?! — WAVE.
             </div>
         </div>
 
+        {% if invited_events_with_tokens %}
         <div id="categories-row" class="row-container">
-            {% if invited_events_with_tokens %}
-            <h3 class="invited-header">Personally Invited Events</h3>
-            <div class="row-body event-row-body" id="events-container">
+            <div class="w-full flex justify-start">
+                <h3 class="font-Wanted-Bold text-Large after-xsm:text-2xl">Personally Invited</h3>
+            </div>
+
+            <div class="row-body event-row-body grid sm:grid-cols-1 pre-lg:grid-cols-2 lg:grid-cols-3" id="events-container">
                 {% for event, token in invited_events_with_tokens %}
-                <a href="{% url "core:eventDetails_withToken" eventId=event.eventId token=token %}" class="category-event-card">
-                    <div class="category-image">
-                        <img src="{{event.header_photo.url}}" alt="">
+                <a href="{% url "core:eventDetails_withToken" eventId=event.eventId token=token %}" class="category-event-card hover:category-image hover:scale-95 transform transition duration-300 flex flex-col justify-center items-center cursor-pointer overflow-hidden p-[10px] text-black">
+                    <div class="category-image w-full rounded-2xl shadow-custom-shadow-3">
+                        <img src="{{event.header_photo.url}}" alt="" class="w-full h-[448px] rounded-2xl rounded-b-none object-cover">
                     </div>
-                    <div class="category-event-name">
-                        <h2 id="eventTitle">{{ event.title }}</h2>
-                        <div class="eventSubInfo">
-                            <p id="eventHost">Hosted by @{{ event.host.username }}</p>
-                            <p id="eventDate">{{ event.date }}</p>
+                    <div class="category-event-name font-Wanted-SemiBold text-Base flex flex-col justify-center items-start gap-1 w-full border border-custom-rgba5 rounded-bl-2xl rounded-br-2xl shadow-custom-shadow-3 border-t-2 px-5 p-2">
+                        <h2 id="eventTitle" class="whitespace-nowrap overflow-hidden text-ellipsis w-full text-left text-2xl">{{ event.title }}</h2>
+                        <div class="eventSubInfo flex flex-col items-start gap-[1px] w-full font-Wanted-Variable text-customGray5">
+                            <p id="eventHost" class="flex flex-row justify-start">Hosted by @{{ event.host.username }}</p>
+                            <p id="eventDate" class="w-full flex justify-end font-Wanted-Bold text-Large">{{ event.date }}</p>
                         </div>
                     </div>
                 </a>
@@ -100,20 +103,21 @@ What's the wave?! — WAVE.
             </div>
             {% endif %}
         </div>
+        {% endif %}
 
-        <div id="categories-row" class="row-container">
-            <div class="row-body event-row-body" id="events-container">
+        <div id="categories-row" class="row-container w-full h-full flex flex-col gap-12">
+            <div class="row-body event-row-body grid sm:grid-cols-1 pre-lg:grid-cols-2 lg:grid-cols-3" id="events-container">
                 {% for event in events %}
                     {% if event.status == "live" %}
-                    <a href="{% url "core:eventDetails" eventId=event.eventId %}" class="category-event-card">
-                        <div class="category-image">
-                            <img src="{{event.header_photo.url}}" alt="">
+                    <a href="{% url "core:eventDetails" eventId=event.eventId %}" class="category-event-card hover:category-image hover:scale-95 transform transition duration-300 flex flex-col justify-center items-center cursor-pointer overflow-hidden p-[10px] text-black">
+                        <div class="category-image w-full rounded-2xl shadow-custom-shadow-3">
+                            <img src="{{event.header_photo.url}}" alt="" class="w-full h-[448px] rounded-2xl rounded-b-none object-cover">
                         </div>
-                        <div class="category-event-name">
-                            <h2 id="eventTitle">{{ event.title }}</h2>
-                            <div class="eventSubInfo">
-                                <p id="eventLocation">Hosted by @{{ event.host.username }}</p>
-                                <p id="eventDate">{{ event.date }}</p>
+                        <div class="category-event-name font-Wanted-SemiBold text-Base flex flex-col justify-center items-start gap-1 w-full border border-custom-rgba5 rounded-bl-2xl rounded-br-2xl shadow-custom-shadow-3 border-t-2 px-5 p-2">
+                            <h2 id="eventTitle" class="whitespace-nowrap overflow-hidden text-ellipsis w-full text-left text-2xl">{{ event.title }}</h2>
+                            <div class="eventSubInfo flex flex-col items-start gap-[1px] w-full font-Wanted-Variable text-customGray5">
+                                <p id="eventHost" class="flex flex-row justify-start">Hosted by @{{ event.host.username }}</p>
+                                <p id="eventDate" class="w-full flex justify-end font-Wanted-Bold text-Large">{{ event.date }}</p>
                             </div>
                         </div>
                     </a>
@@ -121,8 +125,8 @@ What's the wave?! — WAVE.
                 {% endfor %}
             </div>
 
-            <div class="loadMore">
-                <button type="button" role="button" id="loadMoreButton" onclick="loadMoreEvents()">Load More</button>
+            <div class="loadMore w-full flex justify-center">
+                <button type="button" class="p-5 w-full xsm:w-4/5 after-xsm:w-3/5 sm:w-2/5 border border-transparent text-white font-Wanted-SemiBold flex flex-row justify-center gap-2 text-Pre-Xl rounded-2xl bg-gradient-to-r from-gradient-start to-gradient-end cursor-pointer" role="button" id="loadMoreButton" onclick="loadMoreEvents()">Load More</button>
             </div>
         </div>
     </div>

@@ -15,6 +15,8 @@ virtual/
 #Environment variables 
 .env
 
+static/tailwindcss/output.css
+
 # Install packages
 *.egg
 *.egg-info/
@@ -68,9 +70,6 @@ db.sqlite3-journal
 
 # Windows
 Thumbs.db
-
-
-# Node JS 
 node_modules/
 
 # Package files

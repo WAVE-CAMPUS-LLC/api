@@ -9,7 +9,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function showSection(index) {
         sections.forEach((section, i) => {
-            section.classList.toggle('active', i === index);
+            if (i === index) {
+                section.classList.add('active');
+                section.classList.remove('hide');
+            } else {
+                section.classList.remove('active');
+                section.classList.add('hide');
+            }
         });
         previousButton.style.display = index === 0 ? 'none' : 'inline-block';
         nextButton.style.display = index === sections.length - 1 ? 'none' : 'inline-block';
@@ -33,7 +39,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     
     function validateInput(input) {
-        const suggestionsBox = document.querySelector('.suggestions-box');
+        const suggestionsBox = document.querySelector('#suggestions-box');
     
         if (input.id === 'id_name') {  // Only for college name input
             const query = input.value.trim();
@@ -41,9 +47,9 @@ document.addEventListener('DOMContentLoaded', function () {
             if (query.length > 0) {
                 fetchCollegeSuggestions(query);  
                 nextButton.disabled = false;  
-                suggestionsBox.style.display = 'block';  
+                suggestionsBox.classList.add('hide');  
             } else {
-                suggestionsBox.style.display = 'none'; 
+                suggestionsBox.classList.remove('hide'); 
                 nextButton.disabled = true;  
             }
         } else if (input.type === 'email') { 
@@ -61,7 +67,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // Fetch college suggestions from the College Scorecard API
     function fetchCollegeSuggestions(query) {
         const url = `https://api.data.gov/ed/collegescorecard/v1/schools?api_key=${apiKey}&school.name=${query}&fields=id,school.name`;
-        const suggestionsBox = document.querySelector('.suggestions-box');
+        const suggestionsBox = document.querySelector('#suggestions-box');
 
         fetch(url)
             .then(response => response.json())
@@ -83,7 +89,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                     suggestionItem.addEventListener('click', () => {
                         document.getElementById('id_name').value = school['school.name'];
-                        suggestionsBox.style.display = 'none'; 
+                        suggestionsBox.classList.add('hide'); 
                     });
 
                     suggestionsBox.appendChild(suggestionItem);

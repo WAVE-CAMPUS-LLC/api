@@ -16,73 +16,65 @@ Hosting Events | WAVE.
 
 
 {% block body %}
-<div id="body-content">
-    <div class="host-rowOne">
-        <div class="infoText">
-            <div class="text-holder">
-                <h3>Hosting @ <span id="body-logo"> WAVE<span class="spot">.</span></h3>
-                <p>Create something bigger than yourself. <br /> Create a community!</p>
+<div id="body-content" class="flex flex-col px-[10px] after-xsm:px-[20px] xxsm:px-[35px] sm:px-[40px] md:px-[40px] pre-lg:px-[50px] lg:px-[80px] xl:px-[150px] 2xl:px-[200px] 3xl:-[300px] gap-[70px]">
+    <div class="flex flex-col md:flex-row items-center">
+        <div class="flex items-center md:w-1/2">
+            <div class="mx-auto md:mx-0 text-center xxsm:text-center md:text-start gap-[10px]">
+                <h3 class="font-Wanted-ExtraBold text-[30px] lg:text-[40px] text-nowrap">Hosting @ <span id="body-logo"> WAV<span class="spot">E</span>.</h3>
+                <p class="font-Wanted-Medium text-[20px] leading text-customGray2">Create something bigger than yourself. <br /> Create a community!</p>
             </div>
         </div>
-        <div class="image">
-            <img src="{% static "images\eventManagementApp\host\hostHome.png" %}" />
+        <div class="pt-[50px] after-xsm:w-[366px] md:w-1/2 ">
+            <img src="{% static "images\eventManagementApp\host\hostHome.png" %}" class="rounded-3xl w-full h-full" />
         </div>
     </div>
-    <div class="row-header">
-        <h3>
+    <div class="flex justify-center text-center gap-[20px]">
+        <h3 class="font-Wanted-Regular font-bold text-[40px]">
             It's a simple process, really!
         </h3>
     </div>
-    <div id="cCParentDiv">
-        <div id="cCBodyLeft">
-            <div class="process-container">
+    <div class="w-full">
+        <div class="flex flex-col gap-[30px]">
+            <div class="flex flex-col gap-y-9 lg:flex-row justify-between gap-x-3">
                 <div class="process-explanation">
-                    <h1><span class="process-number">1.</span> Apply</h1>
-                    <p>
+                    <h1 class="flex flex-col justify-center items-center font-Wanted-ExtraBold font-bold text-2xl"><span class="process-number text-customGray2">1.</span> Apply</h1>
+                    <p class="font-Wanted-Regular text-center text-[20px]">
                         Submit an application to be a host.
                     </p>
                 </div>
                 
-                {% comment %} <div class="process-arrow">
-                    <img src="{% static "/images/eventManagementApp/process-arrowDown.svg" %}" alt="Arrow Down">
-                </div> {% endcomment %}
-
                 <div class="process-explanation">
-                    <h1><span class="process-number">2.</span> Create </h1>
-                    <p>
+                    <h1 class="flex flex-col justify-center items-center font-Wanted-ExtraBold font-bold text-2xl"><span class="process-number text-customGray2">2.</span> Create </h1>
+                    <p class="font-Wanted-Regular text-center text-[20px]">
                         Create your event. Be detailed. 
                     </p>
                 </div>
 
-                {% comment %} <div class="process-arrow">
-                    <img src="{% static "/images/eventManagementApp/process-arrowDown.svg" %}" alt="Arrow Down">
-                </div> {% endcomment %}
-
                 <div class="process-explanation">
-                    <h1><span class="process-number">3.</span> Go live!</h1>
-                    <p>
+                    <h1 class="flex flex-col justify-center items-center font-Wanted-ExtraBold font-bold text-2xl"><span class="process-number text-customGray2">3.</span> Go live!</h1>
+                    <p class="font-Wanted-Regular text-center text-[20px]">
                         Watch your community show up!
                     </p>
                 </div>
             </div>
         </div>
     </div>
-    <div class="applyNow">
+    <div class="flex justify-center">
         {% if request.user.is_authenticated %}
             {% if request.user|has_group:"Host" or request.user|has_group:"host" %}
-            <a href="{% url "eventManagement:hostCreateEvent" %}" class="createEventBtn">
+            <a href="{% url "eventManagement:hostCreateEvent" %}" class="flex items-center p-[15px] text-white font-Wanted-Bold text-[20px] rounded-[20px] gap-[10px] border border-transparent border-l-gradient-start border-r-gradient-end bg-gradient-to-r from-gradient-start to-gradient-end no-underline">
                 <img src="{% static "/images/eventManagementApp/host/host_ticket.svg" %}" />
                 Create Event
             </a>
             {% else %}
-            <a href="{% url "eventManagement:hostApply" %}">Apply Now!</a>
+            <a href="{% url "eventManagement:hostApply" %}" class="flex items-center p-[15px] text-white font-Wanted-Bold text-[20px] rounded-[20px] gap-[10px] border border-transparent border-l-gradient-start border-r-gradient-end bg-gradient-to-r from-gradient-start to-gradient-end no-underline">Apply Now!</a>
             {% endif %}
         {% else %}
-        <a href="{% url "eventManagement:hostApply" %}">Apply Now!</a>
+        <a href="{% url "eventManagement:hostApply" %}" class="flex items-center p-[15px] text-white font-Wanted-Bold text-[20px] rounded-[20px] gap-[10px] border border-transparent border-l-gradient-start border-r-gradient-end bg-gradient-to-r from-gradient-start to-gradient-end no-underline">Apply Now!</a>
         {% endif %}
     </div>
-    <div class="standout-text">
-        <h1>Create something bigger!</h1>
+    <div class="w-full flex justify-end border-t-[2px] border-t-[rgba(146, 146, 146, 0.096)] pt-[70px] bg-clip-text text-transparent text-[35px] font-Wanted-ExtraBold bg-gradient-to-r from-gradient-start to-gradient-end">
+        <h1 class="text-end sm:text-[42px] md:text-[50px] pre-lg:text-[53px] lg:text-[56px] xl:text-[80px]">Create something bigger!</h1>
     </div>
 </div>
 {% endblock body %}

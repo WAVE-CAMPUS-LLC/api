@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block title %}
-Submit support ticket — Wave.
+Open a support ticket — WAVE.
 {% endblock title %}
 
 {% block app_page_style %}
@@ -17,76 +17,88 @@ Submit support ticket — Wave.
 
 {% block header %}
 {% include "partials/nav-footer/nav/support_nav.html" %}
-{% endblock header %}
-
-{% block container_art %}
-<div id="container-art">
-    <div class="ticket-heading">
-        <div class="ticket-header">
-            <h3>Submit Support Ticket</h3>
-        </div>
-    </div>
-</div>
-{% endblock container_art %}
-    
+{% endblock header %}  
     
 
 {% block body %}
-<div id="container">
-    <div id="ticket-form">
-        <div id="support-form-heading">
-            <p>We will get back to you soon!</p>
+<div id="container" class="flex flex-col gap-[70px] px-4 sm:px-6 md:px-[40px] pre-lg:px-[40px] lg:px-[100px] 2xl:px-48 3xl:px-96">
+    <div id="support-header" class="flex flex-col md:flex-row gap-5 items-center w-full">
+        <div class="mx-auto md:mx-0 w-full md:w-1/2 text-center xxsm:text-center md:text-start gap-[10px]">
+            <h1 class="font-Wanted-ExtraBold text-[35px] lg:text-[40px]">Need more assistance?</h1>
+            <p class="font-Wanted-Medium text-[20px] leading text-customGray2">Open a ticket. We'll be with you shortly.</p>
         </div>
-        <form action="{% url "support:newTicket" %}" method="POST">
-            {% csrf_token %}
-            {% if form.errors %}
-            <div class="alert alert-danger">
-                <ul>
-                    {% for error in form.errors %}
-                    <li>{{ error }}</li>
-                    {% endfor %}
-                </ul>
-            </div>
-            {% endif %}
-            <div class="form-input">
-                <label for="{{ form.title.id_for_label }}">
-                    {{ form.title.label }} <span>*</span>
-                </label>
-                <select name="{{ form.title.html_name }}" id="{{ form.title.auto_id }}" autofocus>
-                    {% comment %} 
-                    Each option's value has to correlate with the TITLE_CHOICES in the models.py file of this app. 
-                    {% endcomment %}
-                    <option value="select" selected>Select an option...</option>
-                    <option value="help">Help & Support</option>
-                    <option value="hacked_account">Hacked Account</option>
-                    <option value="appeals">Appeals and Account Updates</option>
-                    <option value="billing">Account Billing</option>
-                    <option value="bugs">Bug Reports</option>
-                    <option value="creators_support">Creators Support</option>
-                    <option value="privacy_support">Contact Privacy Support</option>
-                    <option value="community_support">Community Programs</option>
-                </select>
-            </div>
+        <div class="pt-[50px] after-xsm:w-[366px] md:w-1/2">
+            <img src="{% static "images/supportCenterApp/art/openTicket.png" %}" class="rounded-3xl w-full h-full" />
+        </div>
+    </div>
 
-            <div class="form-input">
-                <label for="{{ form.email.id_for_label }}">{{ form.email.label }} <span>*</span></label>
-                <input type="{{ form.email.field.widget.input_type }}" name="{{ form.email.html_name }}" value="" id="{{ form.email.auto_id }}" required>
-            </div>
-            
-            <div class="form-input">
-                <label for="{{ form.subject.id_for_label }}">{{ form.subject.label }} <span>*</span></label>
-                <input type="{{ form.subject.field.widget.input_type }}" name="{{ form.subject.html_name }}" id="{{ form.subject.auto_id }}" required>
-            </div>
+    <div class="w-full flex justify-center">
+        <hr class="border-2 border-custom-rgba5 rounded-md w-1/2" />
+    </div>
 
-            <div class="form-input">
-                <label for="{{ form.description.id_for_label }}">{{ form.description.label }} <span>*</span></label>
-                <textarea name="{{ form.description.html_name }}" id="{{ form.description.auto_id }}" cols="30" rows="10" required></textarea>
+    <div class="w-full flex justify-center">
+        <div id="ticket-form" class="w-full md:max-w-2xl font-Wanted-Medium text-xl md:bg-white  md:shadow-custom-shadow md:rounded-[20px] md:p-16 p-16">
+            <div id="support-form-heading" class="w-[100%] flex justify-center mb-[20px] font-Wanted-Bold text-[20px] xs:text-center">
+                <p>We will get back to you soon!</p>
             </div>
+            <form action="{% url "support:newTicket" %}" method="POST" class="flex flex-col gap-[20px]">
+                {% csrf_token %}
+                {% if form.errors %}
+                <div class="alert alert-danger">
+                    <ul>
+                        {% for error in form.errors %}
+                        <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+                <div class="flex flex-col gap-[5px]">
+                    <label for="{{ form.title.id_for_label }}" class="font-Wanted-Medium text-[17px] flex justify-start">
+                        {{ form.title.label }} 
+                        <span class="text-red-600 font-Wanted-Regular text-[20px]">*</span>
+                    </label>
+                    <select name="{{ form.title.html_name }}" id="{{ form.title.auto_id }}" class="w-[100%] px-[5px] py-[10px] font-Wanted-Regular text-[15px] rounded-[10px] border border-solid border-[rgba(0,0,0,0.193)]" autofocus>
+                        {% comment %} 
+                        Each option's value has to correlate with the TITLE_CHOICES in the models.py file of this app. 
+                        {% endcomment %}
+                        <option value="select" selected>Select an option...</option>
+                        <option value="help">Help & Support</option>
+                        <option value="hacked_account">Hacked Account</option>
+                        <option value="appeals">Appeals and Account Updates</option>
+                        <option value="billing">Account Billing</option>
+                        <option value="bugs">Bug Reports</option>
+                        <option value="creators_support">Creators Support</option>
+                        <option value="privacy_support">Contact Privacy Support</option>
+                        <option value="community_support">Community Programs</option>
+                    </select>
+                </div>
 
-            <div class="submit-row">
-                <button type="submit" role="button">Submit</button>
-            </div>
-        </form>
+                <div class="flex flex-col gap-[5px]">
+                    <label for="{{ form.email.id_for_label }}" class="font-Wanted-Medium text-[17px] flex justify-start">{{ form.email.label }} 
+                        <span class="text-red-600 font-Wanted-Regular text-[20px]">*</span>
+                    </label>
+                    <input type="{{ form.email.field.widget.input_type }}" class="w-[100%] px-[5px] py-[10px] font-Wanted-Regular text-[15px] rounded-[10px] border border-solid border-[rgba(0,0,0,0.193)]" name="{{ form.email.html_name }}" value="" id="{{ form.email.auto_id }}" required>
+                </div>
+                
+                <div class="flex flex-col gap-[5px]">
+                    <label for="{{ form.subject.id_for_label }}" class="font-Wanted-Medium text-[17px] flex justify-start">{{ form.subject.label }} 
+                        <span class="text-red-600 font-Wanted-Regular text-[20px]">*</span>
+                    </label>
+                    <input type="{{ form.subject.field.widget.input_type }}" class="w-[100%] px-[5px] py-[10px] font-Wanted-Regular text-[15px] rounded-[10px] border border-solid border-[rgba(0,0,0,0.193)]" name="{{ form.subject.html_name }}" id="{{ form.subject.auto_id }}" required>
+                </div>
+
+                <div class="flex flex-col gap-[5px]">
+                    <label for="{{ form.description.id_for_label }}" class="font-Wanted-Medium text-[17px] flex justify-start">{{ form.description.label }} 
+                        <span class="text-red-600 font-Wanted-Regular text-[20px]">*</span>
+                    </label>
+                    <textarea class="w-full max-w-full min-w-full px-[5px] py-[10px] font-Wanted-Regular text-[15px] rounded-[10px] border border-solid border-[rgba(0,0,0,0.193)]" name="{{ form.description.html_name }}" id="{{ form.description.auto_id }}" cols="30" rows="10" required></textarea>
+                </div>
+
+                <div class="w-full flex justify-center mt-[50px]">
+                    <button type="submit" role="button" class="py-[15px] w-[70%] rounded-[15px] border border-solid border-[rgba(0,0,0,0.185)] bg-[#008d95] text-white">Open Ticket</button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 {% endblock body %}

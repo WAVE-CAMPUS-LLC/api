@@ -19,54 +19,70 @@ Provide Feedback — Wave.
 {% include "partials/nav-footer/nav/support_nav.html" %}
 {% endblock header %}
 
-{% block container_art %}
-<div id="container-art">
-    <div class="ticket-heading">
-        <div class="ticket-header">
-            <h3>We Listen!</h3>
-        </div>
-    </div>
-</div>
-{% endblock container_art %}
-
 
 
 {% block body %}
-<div id="container">
-    <div id="feedback-form">
-        <div id="feedback-form-heading">
-            <p>We greatly appreciate your feedback!</p>
+<div id="container" class="flex flex-col gap-[70px] px-4 sm:px-6 md:px-[40px] pre-lg:px-[40px] lg:px-[100px] 2xl:px-48 3xl:px-96">
+    <div id="support-header" class="flex flex-col md:flex-row gap-5 items-center w-full">
+        <div class="mx-auto md:mx-0 w-full md:w-1/2 text-center xxsm:text-center md:text-start gap-[10px]">
+            <h1 class="font-Wanted-ExtraBold text-[35px] lg:text-[40px]">We want to hear your voice!</h1>
+            <p class="font-Wanted-Medium text-[20px] leading text-customGray2">How can we create something you want?</p>
         </div>
-        <form action="{% url "support:feedback" %}" method="POST">
-            {% csrf_token %}
-            {% if support_form.errors %}
-            <ul>
-                {% for error in support_form.errors %}
-                <li>{{ error }}</li>
-                {% endfor %}
-            </ul>
-            {% endif %}
-            <div class="form-input">
-                <label for="{{ support_form.full_name.id_for_label}}">{{ support_form.full_name.label }}<span>*</span></label>
-                <input type="{{ support_form.full_name.field.widget.input_type }}" name="{{ support_form.full_name.html_name }}" id="{{ support_form.full_name.auto_id }}" required autofocus>
-            </div>
-            <div class="form-input">
-                <label for="{{ support_form.email.id_for_label }}">{{ support_form.email.label }} <span>*</span></label>
-                <input type="{{ support_form.email.field.widget.input_type }}" name="{{ support_form.email.html_name }}" id="{{ support_form.email.auto_id }}" required>
-            </div>
-            <div class="form-input">
-                <label for="{{ support_form.subject.id_for_label }}">{{ support_form.subject.label }} <span>*</span></label>
-                <input type="{{ support_form.subject.widget.input_type }}" name="{{ support_form.subject.html_name }}" id="{{ support_form.subject.auto_id }}" required>
-            </div>
-            <div class="form-input">
-                <label for="{{ support_form.body.id_for_label }}">{{ support_form.body.label }} <span>*</span></label>
-                <textarea type="{{ support_form.body.widget.input_type }}" id="{{ support_form.body.auto_id }}" name="{{ support_form.body.html_name }}" cols="30" rows="10" required></textarea>
-            </div>
-
-            <div class="submit-row">
-                <button type="submit" role="button">Submit</button>
-            </div>
-        </form>
+        <div class="pt-[50px] after-xsm:w-[366px] md:w-1/2">
+            <img src="{% static "images/supportCenterApp/art/feedback.png" %}" class="rounded-3xl w-full h-full" />
+        </div>
     </div>
+
+    <div class="w-full flex justify-center">
+        <hr class="border-2 border-custom-rgba5 rounded-md w-1/2" />
+    </div>
+
+    <div class="w-full flex justify-center">
+        <div id="feedback-form" class="w-full after-xsm:w-4/5 md:w-3/5 md:bg-white  md:shadow-custom-shadow md:rounded-[20px] md:p-16">
+            <div id="feedback-form-heading" class="w-[100%] flex justify-center mb-[20px] font-Wanted-Bold text-[20px] xs:text-center">
+                <p>We greatly appreciate your feedback!</p>
+            </div>
+            <form action="{% url "support:feedback" %}" method="POST" class="w-[100%] flex flex-col gap-4 justify-center mb-[20px] font-Wanted-Bold text-[20px] xs:max-sm:text-center">
+                {% csrf_token %}
+                {% if support_form.errors %}
+                <ul>
+                    {% for error in support_form.errors %}
+                    <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+                <div class="form-input" class="flex flex-col gap-[5px]">
+                    <label for="{{ support_form.full_name.id_for_label}}" class="font-Wanted-Medium text-[17px] flex justify-start">
+                        {{ support_form.full_name.label }}
+                        <span class="text-red-600 font-Wanted-Regular text-[20px]">*</span>
+                    </label>
+                    <input class="w-[100%] px-[5px] py-[10px] font-Wanted-Regular text-[15px] rounded-[10px] border border-solid border-[rgba(0,0,0,0.193)]" type="{{ support_form.full_name.field.widget.input_type }}" name="{{ support_form.full_name.html_name }}" id="{{ support_form.full_name.auto_id }}" required autofocus>
+                </div>
+                <div class="form-input" class="flex flex-col gap-[5px]">
+                    <label for="{{ support_form.email.id_for_label }}" class="font-Wanted-Medium text-[17px] flex justify-start">{{ support_form.email.label }} <span class="text-red-600 font-Wanted-Regular text-[20px]">*</span></label>
+                    <input class="w-[100%] px-[5px] py-[10px] font-Wanted-Regular text-[15px] rounded-[10px] border border-solid border-[rgba(0,0,0,0.193)]" type="{{ support_form.email.field.widget.input_type }}" name="{{ support_form.email.html_name }}" id="{{ support_form.email.auto_id }}" required>
+                </div>
+                <div class="form-input" class="flex flex-col gap-[5px]">
+                    <label for="{{ support_form.subject.id_for_label }}" class="font-Wanted-Medium text-[17px] flex justify-start">
+                        {{ support_form.subject.label }} 
+                        <span class="text-red-600 font-Wanted-Regular text-[20px]">*</span>
+                    </label>
+                    <input class="w-[100%] px-[5px] py-[10px] font-Wanted-Regular text-[15px] rounded-[10px] border border-solid border-[rgba(0,0,0,0.193)]" type="{{ support_form.subject.widget.input_type }}" name="{{ support_form.subject.html_name }}" id="{{ support_form.subject.auto_id }}" required>
+                </div>
+                <div class="form-input" class="flex flex-col gap-[5px]">
+                    <label for="{{ support_form.body.id_for_label }}" class="font-Wanted-Medium text-[17px] flex justify-start">
+                        {{ support_form.body.label }} 
+                        <span class="text-red-600 font-Wanted-Regular text-[20px]">*</span>
+                    </label>
+                    <textarea class="w-full max-w-full min-w-full px-[5px] py-[10px] font-Wanted-Regular text-[15px] rounded-[10px] border border-solid border-[rgba(0,0,0,0.193)]" type="{{ support_form.body.widget.input_type }}" id="{{ support_form.body.auto_id }}" name="{{ support_form.body.html_name }}" cols="30" rows="10" required></textarea>
+                </div>
+    
+                <div class="submit-row w-full flex justify-center mt-[50px]">
+                    <button type="submit" role="button" class="py-[15px] w-[70%] rounded-[15px] font-Wanted-Medium text-xl border border-solid border-[rgba(0,0,0,0.185)] bg-[#008d95] text-white">Submit</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
 </div>
 {% endblock body %}

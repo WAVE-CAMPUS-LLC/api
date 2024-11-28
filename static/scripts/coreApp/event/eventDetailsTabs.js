@@ -2,9 +2,9 @@ document.addEventListener('DOMContentLoaded', function () {
     // Function to handle tab click
     function handleTabClick(tab, tabContents) {
         tab.forEach(tab => {
-            tab.classList.remove('tab-active');
+            tab.classList.remove('eventDeets-tab-active');
         });
-        this.classList.add('tab-active');
+        this.classList.add('eventDeets-tab-active');
 
         // Logic to display corresponding content based on clicked tab
         const tabId = this.getAttribute('data-tab');
@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Set the first tab as active by default in each body section
         if (tabs.length > 0) {
-            tabs[0].classList.add('tab-active');
+            tabs[0].classList.add('eventDeets-tab-active');
             const defaultTabId = tabs[0].getAttribute('data-tab');
             showTabContent(tabContents, defaultTabId);
         }

@@ -1,5 +1,7 @@
 {% extends "base/base.html" %}
 {% load static %}
+{% load user_tags %}
+{% load widget_tweaks %}
 
 {% block title %}
 Join {{ college.name }} — WAVE. on campus 
@@ -17,25 +19,25 @@ Join {{ college.name }} — WAVE. on campus
 {% endblock header %}
 
 {% block body %}
-<div id="content-container">
-    <div id="pageHeader">
-        <h3>
+<div id="content-container" class="flex flex-col gap-[70px] px-4 sm:px-6 md:px-[40px] pre-lg:px-[40px] lg:px-[100px] 2xl:px-48 3xl:px-96">
+    <div id="pageHeader" class="w-full justify-center flex-col gap-[5px]">
+        <h3 class="font-Wanted-Bold text-[30px] md:text-[35px]">
             Join {{ college.name }}
         </h3>
-        <p>Enter your school to receive a verification code. </p>
+        <p class="font-Wanted-Variable text-[17px] text-[rgba(128,128,128,0.798)]">Enter your school to receive a verification code. </p>
     </div>
 
-    <div id="pageBody">
-        <form class="verifyForm" method="post" action="{% url "colleges:join" collegeId=college.collegeId %}">
+    <div id="pageBody" class="w-full flex justify-center items-center">
+        <form class="verifyForm flex flex-col gap-5 bg-white w-full xxsm:w-[90%] sm:w-9/12 pre-lg:w-8/12 lg:w-4/6 xl:w-2/5 pt-5 px-4 sm:px-7 pre-lg:px-10 xl:px-12 pb-7 rounded-2xl border-customGray4 shadow-custom-shadow-5" method="post" action="{% url "colleges:join" collegeId=college.collegeId %}">
             {% csrf_token %}
-            <h5>Enter your campus email</h5>
-            <label for="{{joinForm.email.id_for_label}}">
-                <p>{{ joinForm.email.label }}</p>
-                {{ joinForm.email }}
+            <h5 class="flex justify-center font-Wanted-Medium text-Pre-Xl xsm:text-[30px] lg:text-[40px]">Enter your email</h5>
+            <label class="flex flex-col gap-1" for="{{joinForm.email.id_for_label}}">
+                <p class="font-Wanted-Variable text-customGray3">{{ joinForm.email.label }}</p>
+                {{ joinForm.email|add_class:"w-full border-2 border-[#0909091c] rounded-2xl p-3 font-Wanted-Variable text-Medium" }}
             </label>
 
-            <div class="submitFormContainer">
-                <button type="submit" role="button" class="submitButton">Verify</button>
+            <div class="submitFormContainer w-full flex justify-center">
+                <button type="submit" role="button" class="submitButton gradient-btn w-full">Send Code</button>
             </div>
         </form>
     </div>

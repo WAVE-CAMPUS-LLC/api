@@ -7,11 +7,35 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function showSection(index) {
         sections.forEach((section, i) => {
-            section.classList.toggle('active', i === index);
+            if (i === index) {
+                section.classList.remove('hidden'); // Show current section
+                section.classList.add('block'); // Ensure it's displayed as a block
+            } else {
+                section.classList.add('hidden'); // Hide other sections
+                section.classList.remove('block');
+            }
         });
-        previousButton.style.display = index === 0 ? 'none' : 'inline-block';
-        nextButton.style.display = index === sections.length - 1 ? 'none' : 'inline-block';
-        submitButton.style.display = index === sections.length - 1 ? 'inline-block' : 'none';
+
+        // Toggle button visibility based on current index
+        if (index === 0) {
+            previousButton.classList.add('hidden');
+            previousButton.classList.remove('flex');
+        } else {
+            previousButton.classList.remove('hidden');
+            previousButton.classList.add('flex');
+        }
+
+        if (index === sections.length - 1) {
+            nextButton.classList.add('hidden');
+            nextButton.classList.remove('flex');
+            submitButton.classList.remove('hidden');
+            submitButton.classList.add('flex');
+        } else {
+            nextButton.classList.remove('hidden');
+            nextButton.classList.add('flex');
+            submitButton.classList.add('hidden');
+            submitButton.classList.remove('flex');
+        }
     }
 
     nextButton.addEventListener('click', () => {

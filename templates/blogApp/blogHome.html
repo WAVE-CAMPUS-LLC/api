@@ -1,6 +1,7 @@
 {% extends "base/base.html" %} 
 {% load static %} 
 {% load user_tags %} 
+{% load widget_tweaks %}
 
 {% block title %} Blog | WAVE. {% endblock title %} 
 
@@ -14,36 +15,36 @@
 
 {% block body%}
 <div class="content-container">
-  <section class="section-two">
-    <div class="sectionTwoHeader">
-      <h2>
+  <section class="section-two px-[25px] after-xsm:px-[50px] sm:px-[75px] md:px-[100px]">
+    <div class="sectionTwoHeader flex pb-[22px] after-xsm:pb-[40px] sm:pb-[50px] md:pb-[70px] justify-center">
+      <h2 class="font-Wanted-Bold text-[20px] after-xsm:text-[30px] sm:text-[40px] md:text-[50px]">
         What's happening @
-        <span id="body-logo">WAVE<span class="spot">.</span></span>
+        <span id="body-logo" class="font-Wanted-ExtraBlack">WAV<span class="spot">E</span>.</span>
       </h2>
     </div>
 
     {% if blogItems %}
-    <div class="news-container">
+    <div class="news-container flex gap-[14px] after-xsm:gap-[16px] sm:gap-[18px] md:gap-[20px] flex-col w-full">
       {% for blog in blogItems %}
-      <a href="{% url "blog:blogView" blogId=blog.blogId %}" class="sub-news">
-        <img src="{{ blog.imageOne.url }}" alt="" />
-        <div class="news-content">
-          <h5>{{ blog.blogType }}</h5>
-          <h4>{{ blog.title }}</h4>
+      <a href="{% url "blog:blogView" blogId=blog.blogId %}" class="sub-news grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 items-center gap-[15px] after-xsm:gap-[25px] sm:gap-[30px] md:gap-[40px] pb-[32px] after-xsm:pb-[40px] sm:pb-[50px] pt-[32px] after-xsm:pt-[40px] sm:pt-[50px] no-underline text-[#000000] hover:text-[#008d95] w-full">
+        <img src="{{ blog.imageOne.url }}" alt="" class="w-full h-full max-h-[180px] after-xsm:max-h-[200px] sm:max-h-[250px] md:max-h-[300px] rounded-[15px]" />
+        <div class="news-content flex h-full flex-col items-start justify-center gap-[14px] after-xsm:gap-[16px] sm:gap-[18px] md:gap-[20px]">
+          <h5 class="font-Wanted-ExtraBold uppercase text-[#008d95] text-[14px] after-xsm:text-[16px] sm:text-[18px] md:text-[20px]">{{ blog.blogType }}</h5>
+          <h4 class="font-Wanted-ExtraBold text-[20px] after-xsm:text-[24px] sm:text-[28px] md:text-[32px] pt-[2px] after-xsm:pt-[3px] md:pt-[5px]">{{ blog.title }}</h4>
         </div>
 
-        <div class="section-button">
-          <button type="button" role="button">Read more</button>
+        <div class="section-button flex justify-end">
+          <button type="button" role="button" class="px-[15px] after-xsm:px-[20px] py-[12px] after-xsm:py-[15px] border-[2px] border-solid border-transparent border-r-[#13c9d3] border-l-[#008d95bc] text-white font-Wanted-Regular text-[12px] after-xsm:text-[14px] sm:text-[16px] md:text-[19px] no-underline flex flex-row items-center gap-[10px] rounded-[20px] bg-gradient-to-r from-[#008d95bc] to-[#13c9d3] cursor-pointer">Read more</button>
         </div>
       </a>
       {% endfor %}
     </div>
     {% else %}
-    <div class="emptyContainer">
+    <div class="emptyContainer w-full rounded-[20px] pt-[40px] after-xsm:pt-[50px] sm:pt-[60px] md:pt-[70px] pb-[40px] after-xsm:pb-[50px] sm:pb-[60px] md:pb-[70px] flex flex-col justify-center gap-[7px] after-xsm:gap-[8px] sm:gap-[9px] md:gap-[10px] items-center bg-[rgba(146,146,146,0.096)]">
       <div>
-        <img src="{% static "/images/collegeManagementApp/collegeInformation/empty-listing.svg" %}" />
+        <img class="w-[30px] after-xsm:w-[40px] sm:w-[50px] md:w-[60px]" src="{% static "/images/collegeManagementApp/collegeInformation/empty-listing.svg" %}" />
       </div>
-      <p>Nothing to display, currently.</p>
+      <p class="font-Wanted-Variable text-[10px] after-xsm:text-[12px] sm:text-[14px] md:text-[16.5px] text-black">Nothing to display, currently.</p>
     </div>
     {% endif %}
   </section>

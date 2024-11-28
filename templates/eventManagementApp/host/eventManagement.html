@@ -1,14 +1,11 @@
 {% extends "base/base.html" %}
 {% load static %}
+{% load widget_tweaks %}
 
 
 {% block title %}
 Manage {{ event.title }} | WAVE.
 {% endblock title %}
-
-{% block app_page_style %}
-<link rel="stylesheet" type="text/css" href="{% static "/styles/eventManagementApp/host/eventManagement.css" %}" />
-{% endblock app_page_style %}
 
 {% block script %}
     <script type="text/javascript" src="{% static "scripts/eventManagementApp/host/eventManage/editEvent.js" %}" d efer></script>
@@ -31,45 +28,34 @@ Manage {{ event.title }} | WAVE.
 
 
 {% block body %}
-<div id="body-content">
-    <div class="page-heading">
-        <h2>Manage: {{ event.title }}</h2>
-        <div class="edit-and-delete">
-            <button id="delete-event">
-                <img src="{% static "/images/eventManagementApp/host/delete.svg" %}" />
-                Delete
-            </button>
-
-            <p style="display: none;" id="delete-event-description">Are you sure you want to delete this event?</p>
-            <button id="cancel-delete-event" style="display: none;">
-                <img src="{% static "/images/admin/jobs/modalClose.svg" %}" />
-                Cancel
-            </button>
-
+<div class="flex flex-col gap-[70px] px-[20px] after-xsm:px-[30px] xxsm:px-[60px] sm:px-[70px] md:px-[60px] pre-lg:px-[70px] lg:px-[100px] xl:px-[140px] 2xl:px-[200px] 3xl:px-[300px]">
+    <div class="page-heading font-Wanted-SemiBold text-2xl flex flex-col gap-2 lg:flex-row justify-between">
+        <h2>Manage: {{ event.title }}<h2>
+        <div class="event-delete">
             <form method="POST">
                 {% csrf_token %}
                 <input type="hidden" name="event_id" value="{{ event.eventId }}">
                 
-                <button style="display: none;" id="confirm-delete-event" type="submit" role="button" name="eventAction" value="deleteEvent">
-                    <img src="{% static "/images/eventManagementApp/host/delete.svg" %}" />
-                    Confirm
+                <button type="submit" class="bg-[#ff0000] text-white border-transparent px-4 py-3 rounded-2xl font-Wanted-Regular text-Base cursor-pointer flex flex-row items-center gap-2" role="button" name="eventAction" value="deleteEvent">
+                    <img src="{% static "/images/eventManagementApp/host/delete.svg" %}" class="size-6" />
+                    Delete
                 </button>
             </form>
         </div>
     </div>
 
-    <div id="portal-body">
-        <div class="control-row">
-            <div role="button" type="button" class="dashboard-tab tab-active" data-tab="event-information">Overview</div>
-            <div role="button" type="button" class="dashboard-tab" data-tab="event-privacy">Privacy</div>
-            <div role="button" type="button" class="dashboard-tab" data-tab="event-ticketing">Ticketing</div>
-            <div role="button" type="button" class="dashboard-tab" data-tab="event-scanner">QR Scanner</div>
+    <div id="portal-body" class="flex flex-col gap-10">
+        <div class="control-row grid grid-cols-2 after-xsm:grid-cols-3 pre-sm:flex flex-row gap-4 w-full">
+            <div role="button" type="button" class="dashboard-tab tab-active cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="event-information">Overview</div>
+            <div role="button" type="button" class="dashboard-tab cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="event-privacy">Privacy</div>
+            <div role="button" type="button" class="dashboard-tab cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="event-ticketing">Ticketing</div>
+            <div role="button" type="button" class="dashboard-tab cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="event-scanner">QR Scanner</div>
         </div>
 
         <div id="portal-body-content">
             <div class="pbc-element-content" id="event-information">
-                <div class="tab-information-body">
-                    <div class="tab-summary">
+                <div class="tab-information-body flex flex-col gap-10">
+                    <div class="font-Wanted-Variable text-Base text-[#000000c3]">
                         <p>
                             This tab provides an overview of all the key information 
                             related to your event, including the event's title, date, 
@@ -79,250 +65,76 @@ Manage {{ event.title }} | WAVE.
                             <br/>To make changes to the event information, simply click on the "Edit" button to update the details as needed.
                         </p>
                     </div>
-                    <div class="body-row">
-                        <div class="body-row-content">
-                            <h3 id="edit-title-previous">Title</h3>
-                            <p id="edit-title-previous-value">{{ event.title }}</p>
-                            <form method="POST" style="display: none;" id="edit-title-form">
-                                {% csrf_token %}
-                                <input type="hidden" name="event_id" value="{{ event.eventId }}"></input>
-                                
-                                <div class="form-input">
-                                    <div>
-                                        {{ eventTitleForm.title }}
-                                    </div>
-                                    <button id="save-info" type="submit" class="save-event" name="eventAction" value="saveEventTitle">
-                                        Save Title
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                        <button class="edit-event" id="edit-title">
-                            <img src="{% static "/images/eventManagementApp/host/edit.svg" %}" />
-                        </button>
+                    <div class="flex flex-col gap-1 flex flex-col gap-1">
+                        <h3 class="font-Wanted-ExtraBold text-Medium">Title</h3>
+                        <p class="font-Wanted-Variable text-Pre-Xl">{{ event.title }}</p>
                     </div>
-
-                    <div class="body-row">
-                        <div class="body-row-content">
-                            <h3 id="edit-type-previous" >Type of Event</h3>
-                            <p id="edit-type-previous-value">{{ event.event_type }}</p>
-                            <form method="POST" style="display: none;" id="edit-type-form">
-                                {% csrf_token %}
-                                <input type="hidden" name="event_id" value="{{ event.eventId }}"></input>
-                                
-                                <div class="form-input">
-                                    <div>
-                                        {{ eventTypeForm.event_type }}
-                                    </div>
-                                    <button id="save-info" type="submit" class="save-event" name="eventAction" value="saveEventType">
-                                        Save Type
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                        <button class="edit-event" id="edit-type">
-                            <img src="{% static "/images/eventManagementApp/host/edit.svg" %}" />
-                        </button>
+                    <div class="flex flex-col gap-1">
+                        <h3 class="font-Wanted-ExtraBold text-Medium">Type of Event</h3>
+                        <p class="font-Wanted-Variable text-Pre-Xl">{{ event.event_type }}</p>
                     </div>
-
-                    <div class="body-row">
-                        <div class="body-row-content">
-                            <h3 id="edit-date-previous">Event Date</h3>
-                            <p id="edit-date-previous-value">{{ event.date }}</p>
-                            <form method="POST" style="display: none;" id="edit-date-form">
-                                {% csrf_token %}
-                                <input type="hidden" name="event_id" value="{{ event.eventId }}"></input>
-                                
-                                <div class="form-input">
-                                    <div>
-                                        {{ eventDateForm.date }}
-                                    </div>
-                                    <button id="save-info" type="submit" class="save-event" name="eventAction" value="saveEventDate">
-                                        Save Date
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                        <button class="edit-event" id="edit-date">
-                            <img src="{% static "/images/eventManagementApp/host/edit.svg" %}" />
-                        </button>
+                    <div class="flex flex-col gap-1">
+                        <h3 class="font-Wanted-ExtraBold text-Medium">Event Date</h3>
+                        <p class="font-Wanted-Variable text-Pre-Xl">{{ event.date }}</p>
                     </div>
-
-                    <div class="time-row">
-                        <div class="body-row">
-                            <div class="body-row-content">
-                                <h3 id="edit-start-time-previous">Start Time</h3>
-                                <p id="edit-start-time-previous-value">{{ event.start_time }}</p>
-                                <form method="POST" style="display: none;" id="edit-start-time-form">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="event_id" value="{{ event.eventId }}"></input>
-                                    
-                                    <div class="form-input">
-                                        <div>
-                                            {{ eventStartTimeForm.start_time }}
-                                        </div>
-                                        <button id="save-info" type="submit" class="save-event" name="eventAction" value="saveEventStartTime">
-                                            Save Start Time
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                            <button class="edit-event" id="edit-start-time">
-                                <img src="{% static "/images/eventManagementApp/host/edit.svg" %}" />
-                            </button>
+                    <div class="time-row grid grid-cols-1 gap-6 md:grid-cols-2 w-full">
+                        <div class="flex flex-col gap-1">
+                            <h3 class="font-Wanted-ExtraBold text-Medium">Start Time</h3>
+                            <p class="font-Wanted-Variable text-Pre-Xl">{{ event.start_time }}</p>
                         </div>
-
-                        <div class="body-row">
-                            <div class="body-row-content">
-                                <h3 id="edit-end-time-previous">End Time</h3>
-                                <p id="edit-end-time-previous-value">{{ event.end_time }}</p>
-                                <form method="POST" style="display: none;" id="edit-end-time-form">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="event_id" value="{{ event.eventId }}"></input>
-                                    
-                                    <div class="form-input">
-                                        <div>
-                                            {{ eventEndTimeForm.end_time }}
-                                        </div>
-                                        <button id="save-info" type="submit" class="save-event" name="eventAction" value="saveEventEndTime">
-                                            Save End Time
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                            <button class="edit-event" id="edit-end-time">
-                                <img src="{% static "/images/eventManagementApp/host/edit.svg" %}" />
-                            </button>
+                        <div class="flex flex-col gap-1">
+                            <h3 class="font-Wanted-ExtraBold text-Medium">End Time</h3>
+                            <p class="font-Wanted-Variable text-Pre-Xl">{{ event.end_time }}</p>
                         </div>
                     </div>
-
-                    <div class="body-row">
-                        <div class="body-row-content">
-                            <h3 id="edit-description-previous">Description</h3>
-                            <p id="edit-description-previous-value">{{ event.description }}</p>
-                            <form method="POST" style="display: none;" id="edit-description-form">
-                                {% csrf_token %}
-                                <input type="hidden" name="event_id" value="{{ event.eventId }}"></input>
-                                
-                                <div class="form-input">
-                                    <div>
-                                        {{ eventDescriptionForm.description }}
-                                    </div>
-                                    <button id="save-info" type="submit" class="save-event" name="eventAction" value="saveEventDescription">
-                                        Save Description
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                        <button class="edit-event" id="edit-description">
-                            <img src="{% static "/images/eventManagementApp/host/edit.svg" %}" />
-                        </button>
+                    <div class="flex flex-col gap-1 quill-content">
+                        <h3 class="font-Wanted-ExtraBold text-Medium">Description</h3>
+                        <p class="font-Wanted-Variable text-Pre-Xl">{{ event.description|safe }}</p>
                     </div>
 
                     <div class="privacy-row">
-                        <div class="body-row">
-                            <div class="body-row-content">
-                                <h3 id="edit-privacy-previous">Privacy</h3>
-                                <p id="edit-privacy-previous-value">{{ event.privacy }}</p>
-                                <form method="POST" style="display: none;" id="edit-privacy-form">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="event_id" value="{{ event.eventId }}"></input>
-                                    
-                                    <div class="form-input">
-                                        <div>
-                                            {{ eventPrivacyForm.privacy }}
-                                        </div>
-                                        <button id="save-info" type="submit" class="save-event" name="eventAction" value="saveEventPrivacy">
-                                            Save Priavcy
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                            <button class="edit-event" id="edit-privacy">
-                                <img src="{% static "/images/eventManagementApp/host/edit.svg" %}" />
-                            </button>
+                        <div class="flex flex-col gap-1">
+                            <h3 class="font-Wanted-ExtraBold text-Medium">Privacy</h3>
+                            <p class="font-Wanted-Variable text-Pre-Xl">{{ event.privacy }}</p>
                         </div>
                     </div>
-
-                    <div class="body-row">
-                        <div class="body-row-content">
-                            <h3 id="edit-location-previous">Location</h3>
-                            <p id="edit-location-previous-value">
-                                {{ event.building_name }}, 
-                                <br/> 
-                                {{ event.street }}, 
-                                {% if event.apt_suite_unit %}{{ event.apt_suite_unit }},{% endif %} 
-                                <br/>
-                                {{ event.city }}, 
-                                <br/>
-                                {{ event.state }}, 
-                                {{ event.zip_code }}
-                            </p>
-                            <form method="POST" style="display: none;" id="edit-location-form">
-                                {% csrf_token %}
-                                <input type="hidden" name="event_id" value="{{ event.eventId }}"></input>
-                                
-                                <div class="form-input">
-                                    <div style="display: flex; flex-direction: column; gap: 10px; width: 500px;">
-                                        {{ eventLocationForm.building_name }}
-                                        {{ eventLocationForm.street }}
-                                        {{ eventLocationForm.apt_suite_unit }}
-                                        {{ eventLocationForm.city }}
-                                        {{ eventLocationForm.state }}
-                                        {{ eventLocationForm.zip_code }}
-                                    </div>
-                                    <button id="save-info" type="submit" class="save-event" name="eventAction" value="saveEventLocation">
-                                        Save Location
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                        <button class="edit-event" id="edit-location">
-                            <img src="{% static "/images/eventManagementApp/host/edit.svg" %}" />
-                        </button>
+                    <div class="flex flex-col gap-1">
+                        <h3 class="font-Wanted-ExtraBold text-Medium">Location</h3>
+                        <p class="font-Wanted-Variable text-Pre-Xl">
+                            {{ event.building_name }}, 
+                            <br/> 
+                            {{ event.street }}, 
+                            {% if event.apt_suite_unit %}{{ event.apt_suite_unit }},{% endif %} 
+                            <br/>
+                            {{ event.city }}, 
+                            <br/>
+                            {{ event.state }}, 
+                            {{ event.zip_code }}
+                        </p>
                     </div>
-
-                    <div class="body-row">
-                        <div class="body-row-content">
-                            <h3 id="edit-header-image-previous">Flyer Image</h3>
-                            <img class="flyer-image" src="{{ event.header_photo.url }}" id="edit-header-image-previous-value"/>
-                            <form method="POST" enctype="multipart/form-data" style="display: none;" id="edit-header-image-form">
-                                {% csrf_token %}
-                                <input type="hidden" name="event_id" value="{{ event.eventId }}"></input>
-                                
-                                <div class="form-input">
-                                    <div class="image-type-input">
-                                        {{ eventHeaderImageForm.header_photo }}
-                                    </div>
-                                    <button id="save-info" type="submit" class="save-event" name="eventAction" value="saveEventHeaderImage">
-                                        Save Flyer Image
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                        <button class="edit-event" id="edit-header-image">
-                            <img src="{% static "/images/eventManagementApp/host/edit.svg" %}" />
-                        </button>
+                    <div class="flex flex-col gap-1">
+                        <h3 class="font-Wanted-ExtraBold text-Medium">Flyer Image</h3>
+                        <img class="flyer-image max-w-[400px] max-h-[400px] w-auto rounded-2xl h-auto" src="{{ event.header_photo.url }}" />
                     </div>
                     
                     {% if event.body_photo_one or event.body_photo_two or event.body_photo_three or event.body_photo_four or event.body_photo_five %}
-                    <div class="body-row">
-                        <h3>Extra Images</h3>
-                        <div class="body-image-container">
+                    <div class="flex flex-col gap-1">
+                        <h3 class="font-Wanted-ExtraBold text-Medium">Extra Images</h3>
+                        <div class="body-image-container grid sm:grid-cols-1 pre-lg:grid-cols-2 lg:grid-cols-3">
                             {% if event.body_photo_one %}
-                            <img src="{{ event.body_photo_one.url }}" />
+                            <img src="{{ event.body_photo_one.url }}" class="w-full h-full rounded-3xl" />
                             {% endif %}
                             {% if event.body_photo_two %}
-                            <img src="{{ event.body_photo_two.url }}" />
+                            <img src="{{ event.body_photo_two.url }}" class="w-full h-full rounded-3xl" />
                             {% endif %}
                             {% if event.body_photo_three %}
-                            <img src="{{ event.body_photo_three.url }}" />
+                            <img src="{{ event.body_photo_three.url }}" class="w-full h-full rounded-3xl" />
                             {% endif %}
                             {% if event.body_photo_four %}
-                            <img src="{{ event.body_photo_four.url }}" />
+                            <img src="{{ event.body_photo_four.url }}" class="w-full h-full rounded-3xl" />
                             {% endif %}
                             {% if event.body_photo_five %}
-                            <img src="{{ event.body_photo_five.url }}" />
+                            <img src="{{ event.body_photo_five.url }}" class="w-full h-full rounded-3xl" />
                             {% endif %}
                         </div>
                     </div>
@@ -331,8 +143,8 @@ Manage {{ event.title }} | WAVE.
             </div>
 
             <div class="pbc-element-content" id="event-privacy">
-                <div class="container-information">
-                    <div class="tab-summary">
+                <div class="container-information flex flex-col gap-10">
+                    <div class="font-Wanted-Variable text-Base text-[#000000c3]">
                         <p>
                             Here, you can review whether your event is displayed within your college, if it's discoverable globally on the explore page, or if it's restricted to a specific organization. 
                             
@@ -342,22 +154,22 @@ Manage {{ event.title }} | WAVE.
                         </p>
                     </div>
 
-                    <div class="tab-information-body">
-                        <div class="body-row">
-                            <h3>Current Privacy Setting</h3>
-                            <p>{{ event.privacy }}</p>
+                    <div class="tab-information-body flex flex-col gap-10">
+                        <div class="flex flex-col gap-1">
+                            <h class="font-Wanted-ExtraBold text-Medium"3>Current Privacy Setting</h3>
+                            <p class="font-Wanted-Variable text-Pre-Xl">{{ event.privacy }}</p>
                         </div>
 
                         {% if isInCollege %}
-                        <div class="body-row">
-                            <h3>Do you want to display this event in your college?</h3>
+                        <div class="flex flex-col gap-1">
+                            <h3 class="font-Wanted-ExtraBold text-Medium">Do you want to display this event in your college?</h3>
                             <form class="display-on-college" method="POST" id="college-display-form">
                                 {% csrf_token %}
-                                <p>The event will be displayed in {{userProfile.college}}?</p>
+                                <p class="font-Wanted-Variable text-Medium">The event will be displayed in {{userProfile.college}}?</p>
                                 <input type="hidden" name="event_id" value="{{ event.eventId }}">
                                 <label>
-                                    <input id="displayOnCollegeCheckbox" type="checkbox" name="displayOnCollege" value="true" {% if event.display_event_on_college %} checked {% endif %}>
-                                    <span class="checkbox" />
+                                    <input id="displayOnCollegeCheckbox" class="appearance-none" type="checkbox" name="displayOnCollege" value="true" {% if event.display_event_on_college %} checked {% endif %}>
+                                    <span class="checkbox absolute h-5 w-5 rounded-md border-2 border-gray-300 duration-100 ease-in cursor-pointer" />
                                 </label>
                             </form>
                         </div>
@@ -367,61 +179,61 @@ Manage {{ event.title }} | WAVE.
             </div>
 
             <div class="pbc-element-content" id="event-ticketing">
-                <div class="container-information">
-                    <div class="body-row">
-                        <h3>Your set your event ticketing to:</h3>
-                        <p>{{ event.ticketing}}</p>
+                <div class="container-information flex flex-col gap-10">
+                    <div class="flex flex-col gap-1">
+                        <h3 class="font-Wanted-ExtraBold text-Medium">Your set your event ticketing to:</h3>
+                        <p class="font-Wanted-Variable text-Pre-Xl">{{ event.ticketing}}</p>
                     </div>
                     <div class="tab-information-body">
                         {% if event.ticketing == "Invite Required" %}
-                        <div class="inviteSystem">
-                            <div class="systemHeader">
-                                <h3>Invite your favourite people to the event!</h3>
-                                <p>Enter their emails separated by a comma, type up your invitation message, then hit send!</p>
+                        <div class="inviteSystem flex flex-col gap-10">
+                            <div class="systemHeader flex flex-col gap-1 items-start">
+                                <h3 class="font-Wanted-Bold text-2xl">Invite your favourite people to the event!</h3>
+                                <p class="font-Wanted-Variable text-Semi-Medium text-[#5f5f5fca]">Enter their emails separated by a comma, type up your invitation message, then hit send!</p>
                             </div>
 
-                            <form id="inviteForm" class="inviteForm" method="post">
+                            <form id="inviteForm" class="inviteForm flex flex-col gap-10" method="post">
                                 {% csrf_token %}
-                                <div class="inviteFormField">
-                                    {{ invitationForm.invite_emails.label_tag }}
-                                    {{ invitationForm.invite_emails }}
+                                <div class="inviteFormField flex flex-col gap-2">
+                                    {{ invitationForm.invite_emails.label_tag|add_class:"font-Wanted-Variable text-Semi-Medium text-gray-200" }}
+                                    {{ invitationForm.invite_emails|add_class:"w-full px-4 p-3 rounded-xl border border-custom-rgba5 font-Wanted-Variable text-Medium" }}
                                 </div>
 
-                                <div class="inviteFormField">
-                                    {{ invitationForm.invite_subject.label_tag }}
-                                    {{ invitationForm.invite_subject }}
+                                <div class="inviteFormField flex flex-col gap-2">
+                                    {{ invitationForm.invite_subject.label_tag|add_class:"font-Wanted-Variable text-Semi-Medium text-gray-200" }}
+                                    {{ invitationForm.invite_subject|add_class:"w-full px-4 p-3 rounded-xl border border-custom-rgba5 font-Wanted-Variable text-Medium" }}
                                 </div>
 
-                                <div class="inviteFormField">
-                                    {{ invitationForm.invite_message.label_tag }}
-                                    {{ invitationForm.invite_message }}
+                                <div class="inviteFormField flex flex-col gap-2">
+                                    {{ invitationForm.invite_message.label_tag|add_class:"font-Wanted-Variable text-Semi-Medium text-gray-200" }}
+                                    {{ invitationForm.invite_message|add_class:"w-full px-4 p-3 rounded-xl border border-custom-rgba5 font-Wanted-Variable text-Medium min-h-[300px]" }}
                                 </div>
 
-                                <div class="sendButton">
-                                    <button type="submit" class="sendInvitesButton" role="button" name="eventAction" value="sendInvites">Send Invites</button>
+                                <div class="sendButton w-full flex justify-center">
+                                    <button type="submit" class="sendInvitesButton gradient-btn font-Wanted-Bold text-xl" role="button" name="eventAction" value="sendInvites">Send Invites</button>
                                 </div>
                             </form>
                         </div>
                         {% elif event.ticketing == "RSVP Required" %}
-                        <div class="body-row">
-                            <div class="rsvpHeading">
+                        <div class="flex flex-col gap-1">
+                            <div class="rsvpHeading w-full flex justify-center font-Wanted-ExtraBold text-xl">
                                 <h4>RSVP List</h4>
                             </div>
                             
                             <div class="rsvpList">
                                 {% if rsvpList %}
-                                <ul>
+                                <ul class="flex flex-col gap-5 list-none">
                                     {% for rsvp in rsvpList %}
                                     <hr/>
                                     <li class="rsvpUser">
-                                        <form method="post">
+                                        <form method="post" class="flex flex-col gap-2 sm:flex-row justify-between">
                                             {% csrf_token %}
-                                            <div class="rsvpUserInfo">
-                                                <div class="userName">{{ rsvp.first_name }} {{ rsvp.last_name }}</div>
-                                                <div class="userEmail">
+                                            <div class="rsvpUserInfo flex flex-col gap-3">
+                                                <div class="userName font-Wanted-Variable text-Large">{{ rsvp.first_name }} {{ rsvp.last_name }}</div>
+                                                <div class="userEmail font-Wanted-SemiBold text-Base text-[#0000008c]">
                                                     {{ rsvp.email }}
                                                 </div>
-                                                <div class="guestlistDisplay">
+                                                <div class="guestlistDisplay font-Wanted-Variable text-XSmall">
                                                     {% if rsvp.display_on_guestlist == True %}
                                                     {{ rsvp.first_name }} opted to be displayed on the guestlist.
                                                     {% else %}
@@ -430,24 +242,26 @@ Manage {{ event.title }} | WAVE.
                                                 </div>
                                             </div>
                                             <input type="hidden" name="rsvp_id" value="{{ rsvp.ticket_id }}">
-                                            <div class="rsvpButton">
-                                                <button type="submit" name="eventAction" value="removefromRSVPlist" id="removeRSVP">Remove from list</button>
+                                            <div class="rsvpButton flex items-center">
+                                                <button type="submit" name="eventAction" class="p-3 border-4 border-transparent bg-[#ff0000] flex justify-center font-Wanted-Variable text-Semi-Medium items-center flex-row gap-2 rounded-2xl cursor-pointer" value="removefromRSVPlist" id="removeRSVP">Remove from list</button>
                                             </div>
                                         </form>
                                     </li>
                                     {% endfor %}
                                 </ul>
                                 {% else %}
-                                <div class="empty-pcb">
-                                    <img class="empty-image" src="{% static "/images/eventManagementApp/host/empty-listing.svg" %}" />
-                                    <p>There's no one on the RSVP list. Invite your friends!!</p>
+                                <div class="empty-container w-full h-full flex flex-col text-center justify-center items-center gap-2 bg-customGray4 p-12 rounded-2xl">
+                                    <img class="size-14" src="{% static "/images/eventManagementApp/host/empty-listing.svg" %}" />
+                                    <p class="font-Wanted-Variable text-Base xsm:text-Medium xxsm:text-Large md:text-xl flex flex-row gap-1">
+                                        There's no one on the RSVP list. Invite your friends!!
+                                    </p>
                                 </div>
                                 {% endif %}
                                 
                             </div>
                         </div>
                         {% elif event.ticketing == "Paid/Free" %}
-                        <div class="body-row">
+                        <div class="flex flex-col gap-1">
                             <div class="ticketingHeader">
                                 <div class="ticketingHeading">
                                     <h4>
@@ -458,8 +272,8 @@ Manage {{ event.title }} | WAVE.
                                         {% endif %}
                                     </h4>
                                 </div>
-                                <div class="createTicketButtonRow">
-                                    <button type="button" class="createTicketButton" id="createTicketButtonFirst" role="button">
+                                <div class="createTicketButtonRow w-full flex justify-center">
+                                    <button type="button" class="createTicketButton gradient-btn" id="createTicketButtonFirst" role="button">
                                         <img src="{% static "/images/eventManagementApp/host/host_ticket.svg" %}" />
                                         Create Ticket
                                     </button>
@@ -477,9 +291,9 @@ Manage {{ event.title }} | WAVE.
                                 </div>
                                 {% else %}
                                 <div class="empty-pcb">
-                                    <img class="empty-image" src="{% static "/images/eventManagementApp/host/empty-listing.svg" %}" />
-                                    <p>You haven't created any tickets. </p>
-                                    <button type="button" class="createTicketButton" id="createTicketButtonSecond" role="button">
+                                    <img class="empty-image size-14" src="{% static "/images/eventManagementApp/host/empty-listing.svg" %}" />
+                                    <p class="font-Wanted-Variable text-Pre-Xl">You haven't created any tickets. </p>
+                                    <button type="button" class="createTicketButton gradient-btn" id="createTicketButtonSecond" role="button">
                                         <img src="{% static "/images/eventManagementApp/host/host_ticket.svg" %}" />
                                         Create Ticket
                                     </button>
@@ -493,10 +307,10 @@ Manage {{ event.title }} | WAVE.
             </div>
 
             <div class="pbc-element-content" id="event-scanner">
-                <div class="event-scanner-container">
+                <div class="event-scanner-container flex flex-col gap-10">
                     <div class="scannerHeader">
-                        <h3>Ticket Scanner</h3>
-                        <p>Scan tickets to check-in users!</p>
+                        <h3 class="font-Wanted-ExtraBold text-Medium">Ticket Scanner</h3>
+                        <p class="font-Wanted-Variable text-Pre-Xl">Scan tickets to check-in users!</p>
                     </div>
 
                     <div id="scanner-container" class="scanner-container">
@@ -528,56 +342,56 @@ Manage {{ event.title }} | WAVE.
     </div>
 </div>
 
-<div class="ticketCreationModal" id="ticketCreationModal">
-    <div class="ticketCreationModalContainer">
-        <div class="ticketCreationCard">
-            <div class="ticketCreationHeader">
-                <div class="ticketCreationHeading">
+<div class="hidden bg-[rgba(0, 0, 0, 0.037)] backdrop-blur-sm fixed top-0 left-0 right-0 bottom-0 z-[1005] w-full h-full cursor-default">
+    <div class="w-full h-full flex justify-center items-center py-10">
+        <div class="w-11/12 xxsm:w-9/12 pre-sm:w-10/12 sm:w-10/12 md:w-10/12 pre-lg:w-10/12 lg:w-10/12 xl:w-3/5 h-auto min-h-[80%] max-h-[90%] bg-white shadow-custom-shadow rounded-2xl p-5 pb-12 flex flex-col gap-3 overflow-y-auto">
+            <div class="w-full flex justify-between">
+                <div class="w-full flex justify-start flex-col font-Wanted-Bold text-Pre-Xl">
                     <h3>Create a ticket</h3>
-                    <p>Setup a ticket for users to gain access!</p>
+                    <p class="font-Wanted-Variable text-Base">Setup a ticket for users to gain access!</p>
                 </div>
 
-                <div class="closeTicketCreationButtonRow">
-                    <button type="button" role="button" id="closeCreateTicketModalButton" class="closeticketCreationModalButton">
+                <div class="closeTicketCreationButtonRow w-full flex justify-end">
+                    <button type="button" role="button" id="closeCreateTicketModalButton" class="closeticketCreationModalButton border-none bg-none cursor-pointer">
                         <img src="{% static '/images/admin/roles/modalClose.svg' %}" alt="Close create ticket tab">
                     </button>
                 </div>
                 
             </div>
 
-            <form class="ticketCreationBody" method="post">
+            <form class="flex flex-col gap-5" method="post">
                 {% csrf_token %}
-                <div class="creationRow">
-                    <label for="{{ paidFreeForm.ticket_name.id_for_label }}">
-                        <p>{{ paidFreeForm.ticket_name.label }}</p>
-                        {{ paidFreeForm.ticket_name }}
+                <div class="creationRow flex flex-col pre-sm:flex-row gap-4 w-full">
+                    <label for="{{ paidFreeForm.ticket_name.id_for_label }}" class="w-full">
+                        <p class="font-Wanted-Variable text-Semi-Medium text-gray-200">{{ paidFreeForm.ticket_name.label }}</p>
+                        {{ paidFreeForm.ticket_name|add_class:"w-full px-4 p-3 rounded-xl border border-custom-rgba5 font-Wanted-Variable text-Medium" }}
                     </label>
-                    <label for="{{ paidFreeForm.ticket_type.id_for_label }}">
-                        <p>{{ paidFreeForm.ticket_type.label }}</p>
-                        {{ paidFreeForm.ticket_type }}
-                    </label>
-                </div>
-
-                <div class="creationRow">
-                    <label for="{{ paidFreeForm.ticket_price.id_for_label }}">
-                        <p>{{ paidFreeForm.ticket_price.label }}</p>
-                        {{ paidFreeForm.ticket_price }}
-                    </label>
-                    <label for="{{ paidFreeForm.ticket_quantity.id_for_label }}">
-                        <p>{{ paidFreeForm.ticket_quantity.label }}</p>
-                        {{ paidFreeForm.ticket_quantity }}
+                    <label for="{{ paidFreeForm.ticket_type.id_for_label }}" class="w-full">
+                        <p class="font-Wanted-Variable text-Semi-Medium text-gray-200">{{ paidFreeForm.ticket_type.label }}</p>
+                        {{ paidFreeForm.ticket_type|add_class:"w-full px-4 p-3 rounded-xl border border-custom-rgba5 font-Wanted-Variable text-Medium" }}
                     </label>
                 </div>
 
-                <div class="creationRow">
-                    <label for="{{ paidFreeForm.ticket_description.id_for_label }}">
-                        <p>{{ paidFreeForm.ticket_description.label }}</p>
-                        {{ paidFreeForm.ticket_description }}
+                <div class="creationRow flex flex-col pre-sm:flex-row gap-4 w-full">
+                    <label for="{{ paidFreeForm.ticket_price.id_for_label }}" class="w-full">
+                        <p class="font-Wanted-Variable text-Semi-Medium text-gray-200">{{ paidFreeForm.ticket_price.label }}</p>
+                        {{ paidFreeForm.ticket_price|add_class:"w-full px-4 p-3 rounded-xl border border-custom-rgba5 font-Wanted-Variable text-Medium" }}
+                    </label>
+                    <label for="{{ paidFreeForm.ticket_quantity.id_for_label }}" class="w-full">
+                        <p class="font-Wanted-Variable text-Semi-Medium text-gray-200">{{ paidFreeForm.ticket_quantity.label }}</p>
+                        {{ paidFreeForm.ticket_quantity|add_class:"w-full px-4 p-3 rounded-xl border border-custom-rgba5 font-Wanted-Variable text-Medium" }}
                     </label>
                 </div>
 
-                <div class="creationSubmitRow">
-                    <button type="submit" class="createPaidTicketButton" role="button" name="eventAction" value="createPaidFreeTicket">Create Ticket</button>
+                <div class="creationRow w-full">
+                    <label for="{{ paidFreeForm.ticket_description.id_for_label }}" class="w-full">
+                        <p class="font-Wanted-Variable text-Semi-Medium text-gray-200">{{ paidFreeForm.ticket_description.label }}</p>
+                        {{ paidFreeForm.ticket_description|add_class:"w-full px-4 p-3 rounded-xl border border-custom-rgba5 font-Wanted-Variable text-Medium min-h-[300px]" }}
+                    </label>
+                </div>
+
+                <div class="creationSubmitRow w-full flex justify-center">
+                    <button type="submit" class="createPaidTicketButton gradient-btn w-full" role="button" name="eventAction" value="createPaidFreeTicket">Create Ticket</button>
                 </div>
             </form>
         </div>

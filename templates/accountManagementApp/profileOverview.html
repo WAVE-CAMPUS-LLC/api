@@ -5,9 +5,6 @@
 Profile Overview
 {% endblock title %}
 
-{% block app_page_style %}
-<link rel="stylesheet" type="text/css" href="{% static "/styles/accountManagementApp/profileOverview.css" %}" />
-{% endblock app_page_style %}
 
 {% block script %}
 <script type="text/javascript" src="{% static "/scripts/accountManagementApp/settings/profileManagement.js" %}" defer></script>
@@ -21,152 +18,152 @@ Profile Overview
 
 
 {% block body %}
-<div id="body-content">
+<div id="body-content" class="flex flex-col gap-[70px] px-4 sm:px-6 md:px-[40px] pre-lg:px-[40px] lg:px-[100px] 2xl:px-48 3xl:px-96">
     <div id="body-header">
-        <h3>Welcome, {{ user.first_name }}!</h3>
+        <h3 class="font-bold text-black font-Wanted-ExtraBold text-[25px] xsm:text-[30px] xxsm:text-[35px] sm:text-[45px]">Welcome, {{ user.first_name }}!</h3>
         {% if userRequest.email_verified == False or userRequest.user_preferences_completed == False %}
-        <div id="missing-info">
-            <p>Click to complete:</p>
-            <div class="missing-subDiv">
+        <div id="missing-info" class="w-full flex items-center gap-[10px]">
+            <p class="font-Wanted-Variable text-[15px] text-black">Click to complete:</p>
+            <div class="missing-subDiv flex flex-col gap-[10px]">
                 {% if userRequest.email_verified == False %}
-                <a href="{% url "authentication:generateVerification" %}" class="missing profile">Verify Account</a>
+                <a href="{% url "authentication:generateVerification" %}" class="missing profile border border-transparent bg-red p-[5px] px-[10px] font-Wanted-Variable text-[13px] no-underline rounded-[15px] text-[white] hover:underline">Verify Account</a>
                 {% endif %}
 
                 {% if userRequest.user_preferences_completed == False %}
-                <a href="{% url "accountManagement:userPreferences" %}" class="missing preferences">Complete Profile</a>
+                <a href="{% url "accountManagement:userPreferences" %}" class="missing preferences border border-transparent bg-red p-[5px] px-[10px] font-Wanted-Variable text-[13px] no-underline rounded-[15px] text-[white] hover:underline">Complete Profile</a>
                 {% endif %}
             </div>
         </div>
         {% endif %}
     </div>
     
-    <div id="content-container">
-        <div class="cc-user-card">
-            <div id="heading">
-                <div class="fNamePfp">
+    <div id="content-container" class="flex flex-col gap-20">
+        <div class="cc-user-card w-full rounded-[15px] gap-[10px] grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 xxsm:px-[50px] sm:px-[110px] md:px-0">
+            <div id="heading" class="flex flex-col justify-center border border-custom-rgba11 rounded-[15px] py-[20px] px-[40px] shadow-custom-shadow-6">
+                <div class="fNamePfp flex flex-col xxsm:flex-row items-center xxsm:items-start gap-[20px]">
                     <div class="pfp">
                         {% if userProfile.profile_photo %}
-                        <img src="{{ userProfile.profile_photo.url }}" />
+                        <img src="{{ userProfile.profile_photo.url }}" class="w-[80px] h-[80px] rounded-[50%]" />
                         {% else %}
-                        <img src="{% static "/images/logo/android-chrome-512x512.png" %}" />
+                        <img src="{% static "/images/logo/android-chrome-512x512.png" %}" class="w-[80px] h-[80px] rounded-[50%]" />
                         {% endif %}
                     </div>
-                    <div class="info">
-                        <h4>{{ user.first_name }} {{ user.last_name }}</h4>
-                        <p>@{{ user.username }}</p>
-                        <div class="heading-edit">
-                            <a href="{% url "accountManagement:userSettings"%}#personal-change">Edit</a>
+                    <div class="info flex flex-col justify-between">
+                        <h4 class="font-bold font-Wanted-Bold text-[20px] xssm:text-[23px] xxsm:text-[30px] text-black">{{ user.first_name }} {{ user.last_name }}</h4>
+                        <p class="font-Wanted-Variable text-[15px] text-black">@{{ user.username }}</p>
+                        <div class="heading-edit flex justify-start items-center font-Wanted-Regular text-[13px] mt-[5px]">
+                            <a href="{% url "accountManagement:userSettings"%}#personal-change" class="text-green no-underline">Edit</a>
                         </div>
                     </div>
                 </div>
             </div>
-            <div id="summary">
-                <div class="summary-main">
+            <div id="summary" class="flex justify-between items-center border border-custom-rgba11 rounded-[15px] py-[20px] px-[40px] shadow-custom-shadow-6">
+                <div class="summary-main flex flex-col gap-y-[20px]">
                     <div class="email">
-                        <h6>Email Address</h6>
-                        <p> {{ user.email }}</p>
+                        <h6 class="font-bold text-black font-Wanted-Variable text-[13px]">Email Address</h6>
+                        <p class="text-black font-Wanted-Variable text-[12px]"> {{ user.email }}</p>
                     </div>
                     <div class="phone">
-                        <h6>Joined</h6>
-                        <p>{{ user.date_joined }}</p>
+                        <h6 class="font-bold text-black font-Wanted-Variable text-[13px]">Joined</h6>
+                        <p class="text-black font-Wanted-Variable text-[12px]">{{ user.date_joined }}</p>
                     </div>
                 </div>
                 <div id="edit">
-                    <a href="{% url "accountManagement:userSettings" %}#email-change">Edit</a>
+                    <a href="{% url "accountManagement:userSettings" %}#email-change" class="text-green no-underline">Edit</a>
                 </div>
             </div>
-            <div id="status">
+            <div id="status" class="border border-custom-rgba11 rounded-[15px] py-[20px] px-[40px] shadow-custom-shadow-6 flex flex-col justify-center">
                 <div>
-                    <h3>
+                    <h3 class="font-bold font-Wanted-Medium text-black">
                         Your Account Status:
-                        <span>All Good</span>
+                        <span class="text-light-green">All Good</span>
                     </h3>
                 </div>
 
                 <div>
-                    <p>
+                    <p class="text-black font-Wanted-Variable text-[13px]">
                         Thank you for upholding our
-                        <a href="{% url "extras:terms" %}">Terms of Service</a>
+                        <a href="{% url "extras:terms" %}"  class="text-green">Terms of Service</a>
                         and
-                        <a href="{% url "extras:safety" %}"> Safety Guidelines</a>!
+                        <a href="{% url "extras:safety" %}"  class="text-green"> Safety Guidelines</a>!
                     </p>
                 </div>
             </div>
         </div>
         <!--User Card | End-->
 
-        <div class="cc-sub-body" id="cc-sub-body">
-            <div id="side-nav">
-                <div id="settings">
-                    <ul>
-                        <li class="profile-tab tab-active" data-tab="myEvents-information">
-                            <a>My Events</a>
+        <div class="cc-sub-body w-full max-w-[100vw] flex flex-col md:flex-row items-center md:items-start gap-10" id="cc-sub-body">
+            <div id="side-nav" class="flex flex-col w-full lg:w-[25%] gap-y-[20px]">
+                <div id="settings" class="border border-custom-rgba11 shadow-custom-shadow-6 rounded-[10px] w-full shadow-custom-shadow-6">
+                    <ul class="list-none rounded-[10px] w-full text-nowrap">
+                        <li class="profile-tab tab-active border-b border-b-custom-rgba11 p-[20px] font-Wanted-Regular cursor-pointer" data-tab="myEvents-information">
+                            <a class="text-black no-underline hover:text-green cursor-pointer">My Events</a>
                         </li>
-                        <li>
-                            <a target="_blank" href="{% url "eventManagement:hostHome" %}">Event Hosting</a>
+                        <li class="border-b border-b-custom-rgba11 p-[20px] font-Wanted-Regular cursor-pointer">
+                            <a class="text-black no-underline hover:text-green cursor-pointer" target="_blank" href="{% url "eventManagement:hostHome" %}">Event Hosting</a>
                         </li>
-                        <li class="profile-tab" data-tab="myBlog-information">
-                            <a>Blog</a>
+                        <li class="profile-tab border-b border-b-custom-rgba11 p-[20px] font-Wanted-Regular cursor-pointer" data-tab="myBlog-information">
+                            <a class="text-black no-underline hover:text-green cursor-pointer">Blog</a>
                         </li>
-                        <li>
-                            <a href="{% url "accountManagement:userSettings" %}">Settings</a>
+                        <li class="profile-tab border-b border-b-custom-rgba11 p-[20px] font-Wanted-Regular cursor-pointer">
+                            <a class="text-black no-underline hover:text-green cursor-pointer" href="{% url "accountManagement:userSettings" %}">Settings</a>
                         </li>
-                        <li>
-                            <a href="#">My Preferences</a>
+                        <li class="profile-tab border-b border-b-custom-rgba11 p-[20px] font-Wanted-Regular cursor-pointer">
+                            <a class="text-black no-underline hover:text-green cursor-pointer" href="#">My Preferences</a>
                         </li>
-                        <li>
-                            <a href="#">Payment Methods</a>
+                        <li class="profile-tab border-b border-b-custom-rgba11 p-[20px] font-Wanted-Regular cursor-pointer">
+                            <a class="text-black no-underline hover:text-green cursor-pointer" href="#">Payment Methods</a>
                         </li>
-                        <li>
-                            <a href="#">Promo Codes & Gifting</a>
+                        <li class="profile-tab border-b border-b-custom-rgba11 p-[20px] font-Wanted-Regular cursor-pointer">
+                            <a class="text-black no-underline hover:text-green cursor-pointer" href="#">Promo Codes & Gifting</a>
                         </li>
-                        <li>
-                            <a href="#">Account Activity</a>
+                        <li class="profile-tab border-b border-b-custom-rgba11 p-[20px] font-Wanted-Regular cursor-pointer">
+                            <a class="text-black no-underline hover:text-green cursor-pointer" href="#">Account Activity</a>
                         </li>
                     </ul>
                 </div>
-                <div id="support">
-                    <div class="support-heading">
+                <div id="support" class="border border-custom-rgba11 rounded-[10px] w-full shadow-custom-shadow-6 p-[20px] pt-[30px] hidden md:block">
+                    <div class="support-heading font-Wanted-Regular text-[28px] font-extrabold pb-[25px] text-[#1b4965]">
                         <h6>We've got your back!</h6>
                     </div>
-                    <div class="support-body">
-                        <p>
+                    <div class="support-body font-Wanted-Regular text-[14px]">
+                        <p class="mb-[13.5px]">
                             Can't find what you're looking for?
                             <br />
-                            <a href="{% url "support:home" %}">Visit our Support Center</a>
+                            <a class="text-green no-underline hover:text-[#1b4965cf]" href="{% url "support:home" %}">Visit our Support Center</a>
                         </p>
-                        <p>
+                        <p class="mb-[13.5px]">
                             Having issues with any purchases?
                             <br />
                             Go to
-                            <a href="#">My Purchases</a>, click the
+                            <a class="text-green no-underline hover:text-[#1b4965cf]" href="#">My Purchases</a>, click the
                             event summary, and hit the "Request Help"
                             button.
                         </p>
                     </div>
                 </div>
             </div>
-            <div class="main-content">
-                <div class="host-info profile-tab-content" id="myEvents-information">
-                    <div class="mchi-heading">
+            <div class="main-content xl:w-[75%]">
+                <div class="host-info profile-tab-content w-full flex flex-col gap-y-[17px]" id="myEvents-information">
+                    <div class="mchi-heading font-Wanted-Medium text-[25px] text-[#1b4965]">
                         <h5>Host Your Event</h5>
                     </div>
-                    <div class="host-container">
-                        <div class="hc-info">
-                            <h6>
+                    <div class="host-container border border-custom-rgba11 rounded-[10px] w-full flex flex-col pre-lg:flex-row gap-[20px] py-[20px] px-[30px] shadow-custom-shadow-6">
+                        <div class="hc-info pre-lg:w-[85%]">
+                            <h6 class="font-bold font-Wanted-Regular text-[16px] after-xsm:text-[18.5px] text-[#1b4965]">
                                 The most exciting way to host your
                                 events! Use Wave.
                             </h6>
-                            <p>
+                            <p class="font-light font-Wanted-Variable text-[15px] text-[#1b4965cf]">
                                 Sell tickets to your events in a quick
                                 and simple way. Tap into thousands of
                                 fans who are looking to tick events off
                                 their bucket lists.
                             </p>
                         </div>
-                        <div class="hc-link">
-                            <div>
-                                <a target="_blank" href="{% url "eventManagement:hostHome" %}">Learn More</a>
+                        <div class="hc-link flex items-center justify-center w-[90px]">
+                            <div class="w-full font-Wanted-Medium bg-[#25567b] rounded-[10px] p-[10px] hover:shadow-custom-shadow-6">
+                                <a target="_blank" href="{% url "eventManagement:hostHome" %}" class="text-white no-underline flex justify-center items-center text-[13px] text-nowrap">Learn More</a>
                             </div>
                         </div>
                     </div>
@@ -174,32 +171,32 @@ Profile Overview
 
                 <!-- inline style to stop blogs briefly showing on page refresh -->
                 <div class="profile-tab-content" id="myBlog-information" style="display:none;">
-                    <div class="blog-tab">
-                        <div class="header">
-                            <div class="headerRow">
-                                <h3 class="heading">My Blog Posts</h3>
+                    <div class="blog-tab flex flex-col gap-[25px] mt-[15px]">
+                        <div class="header flex justify-between items-center flex-col xxsm:flex-row">
+                            <div class="headerRow w-full">
+                                <h3 class="heading w-full flex justify-between items-center text-[24px] xxsm:text-[27px] font-Wanted-Bold font-bold">My Blog Posts</h3>
                             </div>
                             
                             <div class="createBlog">
-                                <a target="_blank" href="{% url "blog:createBlog" %}">Create Blog</a>
+                                <a target="_blank" href="{% url "blog:createBlog" %}" class="p-[10px] xsm:p-[15px] xxsm:p-[20px] text-nowrap border border-transparent border-r-gradient-start border-l-gradient-end text-white font-Wanted-SemiBold no-underline flex items-center justify-center gap-[10px] mt-[20px] xxsm:mt-0 w-full text-[22px] xxsm:text-[24px] rounded-[10px] xsm:rounded-[15px] xxsm:rounded-[20px] bg-gradient-to-r from-gradient-start to-gradient-end cursor-pointer">Create Blog</a>
                             </div>
                         </div>
 
-                        <div class="blogContainer">
+                        <div class="blogContainer flex flex-col gap-[30px] no-underline text-black hover:text-green">
                             {% for blog in blogItems %}
                             <a href="{% url "blog:blogView" blogId=blog.blogId %}" class="blogCard">
-                                <div class="blogHeader">
-                                    <img src="{{ blog.imageOne.url }}" />
+                                <div class="blogHeader border border-custom-rgba8 rounded-[20px] shadow-custom-shadow-2 max-w-full max-h-[350px]">
+                                    <img src="{{ blog.imageOne.url }}" class="w-full h-full max-h-[350px] max-w-full rounded-[20px] object-cover" />
                                 </div>
-                                <div class="blogBody">
-                                    <div class="blogType">
-                                        <h6>{{ blog.blogType }}</h6>
+                                <div class="blogBody flex flex-col gap-[15px]">
+                                    <div class="blogType flex justify-start w-full">
+                                        <h6 class="text-green font-Wanted-Black text-[18px] font-black">{{ blog.blogType }}</h6>
                                     </div>
-                                    <div class="blogTitle">
-                                        <h4>{{ blog.title }}</h4>
+                                    <div class="blogTitle flex justify-start w-full">
+                                        <h4 class="font-bold font-Wanted-Regular text-[20px] after-xsm:text-[23px] xxsm:text-[25px] text-nowrap overflow-hidden text-ellipsis w-full text-left">{{ blog.title }}</h4>
                                     </div>
-                                    <div class="blogDate">
-                                        <p>By {{ blog.created_by.first_name }} {{ blog.created_by.last_name }}</p>
+                                    <div class="blogDate flex justify-end w-full">
+                                        <p class="font-Wanted-Variable text-[15px] text-black">By {{ blog.created_by.first_name }} {{ blog.created_by.last_name }}</p>
                                     </div>
                                 </div>
                             </a> 
