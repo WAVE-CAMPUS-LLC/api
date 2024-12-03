@@ -37,7 +37,7 @@ How can we help? — WAVE.
             <h3>Frequently Asked Questions</h3>
         </div>
         <div id="support-faq-body" class="font-Wanted-Regular text-[12px] after-xsm:text-[14px] sm:text-[16px] md:text-[18px] flex flex-col">
-            <a href="#" class="border-b-[1px] border-b-black pt-[25px] pb-[25px] no-underline text-black flex justify-between">
+            <a href="{% url "support:home" %}" class="border-b-[1px] border-b-black pt-[25px] pb-[25px] no-underline text-black flex justify-between">
                 <p>What does it take to host an event?</p>
                 <img src="{% static "/images/support/main/faq-expand.svg" %}" alt="View More" title="View More">
             </a>
@@ -55,7 +55,7 @@ How can we help? — WAVE.
         </div>
 
         <div id="support-categories-body" class="w-full grid grid-cols-1 xxsm:grid-cols-2 lg:grid-cols-3 gap-[12px] after-xsm:gap-[14px] sm:gap-[18px] md:gap-[20px]">
-            <div id="scb-card" class="border-2 border-solid border-[rgba(0,0,0,0.038)] rounded-[15px] shadow-form-shadow-2 p-[21px] after-xsm:p-[24px] sm:p-[27px] md:p-[30px] flex flex-col gap-[6px] after-xsm:gap-[7px] sm:gap-[8px] md:gap-[10px] cursor-pointer no-underline text-black">
+            <a href="{% url "extras:about" %}" id="scb-card" class="border-2 border-solid border-[rgba(0,0,0,0.038)] rounded-[15px] shadow-form-shadow-2 p-[21px] after-xsm:p-[24px] sm:p-[27px] md:p-[30px] flex flex-col gap-[6px] after-xsm:gap-[7px] sm:gap-[8px] md:gap-[10px] cursor-pointer no-underline text-black">
                 <div id="scbc-img" class="w-full flex justify-end">
                     <h3 class="text-[#b0b0b0c1] font-Wanted-Black text-[15px] after-xsm:text-[18px] sm:text-[20px] md:text-[25px]">WAVE.</h3>
                 </div>
@@ -69,9 +69,9 @@ How can we help? — WAVE.
                         </p>
                     </div>
                 </div>
-            </div>
+            </a>
 
-            <div id="scb-card" class="border-2 border-solid border-[rgba(0,0,0,0.038)] rounded-[15px] shadow-form-shadow-2 p-[21px] after-xsm:p-[24px] sm:p-[27px] md:p-[30px] flex flex-col gap-[6px] after-xsm:gap-[7px] sm:gap-[8px] md:gap-[10px] cursor-pointer no-underline text-black">
+            <a href="{% url "extras:partners" %}" id="scb-card" class="border-2 border-solid border-[rgba(0,0,0,0.038)] rounded-[15px] shadow-form-shadow-2 p-[21px] after-xsm:p-[24px] sm:p-[27px] md:p-[30px] flex flex-col gap-[6px] after-xsm:gap-[7px] sm:gap-[8px] md:gap-[10px] cursor-pointer no-underline text-black">
                 <div id="scbc-img" class="w-full flex justify-end">
                     <img src="{% static "/images/support/main/partnerships.svg" %}" alt="Handshake">
                 </div>
@@ -88,9 +88,9 @@ How can we help? — WAVE.
                         </p>
                     </div>
                 </div>
-            </div>
+            </a>
 
-            <div id="scb-card" class="border-2 border-solid border-[rgba(0,0,0,0.038)] rounded-[15px] shadow-form-shadow-2 p-[21px] after-xsm:p-[24px] sm:p-[27px] md:p-[30px] flex flex-col gap-[6px] after-xsm:gap-[7px] sm:gap-[8px] md:gap-[10px] cursor-pointer no-underline text-black">
+            <a href="{% url "eventManagement:hostHome" %}" id="scb-card" class="border-2 border-solid border-[rgba(0,0,0,0.038)] rounded-[15px] shadow-form-shadow-2 p-[21px] after-xsm:p-[24px] sm:p-[27px] md:p-[30px] flex flex-col gap-[6px] after-xsm:gap-[7px] sm:gap-[8px] md:gap-[10px] cursor-pointer no-underline text-black">
                 <div id="scbc-img" class="w-full flex justify-end">
                     <img src="{% static "/images/support/main/svgEvent.svg" %}" alt="Event Calendar">
                 </div>
@@ -105,7 +105,7 @@ How can we help? — WAVE.
                         </p>
                     </div>
                 </div>
-            </div>
+            </a>
 
             <div id="scb-card" class="border-2 border-solid border-[rgba(0,0,0,0.038)] rounded-[15px] shadow-form-shadow-2 p-[21px] after-xsm:p-[24px] sm:p-[27px] md:p-[30px] flex flex-col gap-[6px] after-xsm:gap-[7px] sm:gap-[8px] md:gap-[10px] cursor-pointer no-underline text-black">
                 <div id="scbc-img" class="w-full flex justify-end">
@@ -128,7 +128,7 @@ How can we help? — WAVE.
                 </div>
             </div>
 
-            <div id="scb-card" class="border-2 border-solid border-[rgba(0,0,0,0.038)] rounded-[15px] shadow-form-shadow-2 p-[21px] after-xsm:p-[24px] sm:p-[27px] md:p-[30px] flex flex-col gap-[6px] after-xsm:gap-[7px] sm:gap-[8px] md:gap-[10px] cursor-pointer no-underline text-black">
+            <a href="{% url "eventManagement:hostGuide" %}" id="scb-card" class="border-2 border-solid border-[rgba(0,0,0,0.038)] rounded-[15px] shadow-form-shadow-2 p-[21px] after-xsm:p-[24px] sm:p-[27px] md:p-[30px] flex flex-col gap-[6px] after-xsm:gap-[7px] sm:gap-[8px] md:gap-[10px] cursor-pointer no-underline text-black">
                 <div id="scbc-img" class="w-full flex justify-end">
                     <img src="{% static "/images/support/main/event-management.svg" %}" alt="Calendar">
                 </div>
@@ -145,7 +145,7 @@ How can we help? — WAVE.
                         </p>
                     </div>
                 </div>
-            </div>
+            </a>
             
             <div id="scb-card" class="border-2 border-solid border-[rgba(0,0,0,0.038)] rounded-[15px] shadow-form-shadow-2 p-[21px] after-xsm:p-[24px] sm:p-[27px] md:p-[30px] flex flex-col gap-[6px] after-xsm:gap-[7px] sm:gap-[8px] md:gap-[10px] cursor-pointer no-underline text-black">
                 <div id="scbc-img" class="w-full flex justify-end">
@@ -187,39 +187,35 @@ How can we help? — WAVE.
         </div>
     </div>
     <!-- Chatbot Image with inline onclick -->
-<img src="{% static 'images/support/chatbot/chatbot logo.jpg' %}" 
-     style="height: 40px; margin-left: auto; width: 40px; position:sticky; bottom: 20px; z-index: 1000; cursor: pointer;"  
-     alt="Chatbot Logo" 
-     id="bottomRightImage"
-     onclick="if(chatContainer) {
-        if(chatContainer.style.display === 'none') {
-            chatContainer.style.display = 'block';
-        } else {
-            chatContainer.style.display = 'none';
-        } }
-     ">
-<!-- Speech Bubble that floats above the image -->
-<div class="speech-bubble hidden absolute bottom-12 left-[50%] translate-x-[-50%] bg-[#333] text-white p-3 rounded-md text-XSmall text-center w-[150px] z-[1000] after:content-[""] after:absolute after:bottom-[-10px] left-[50%] translate-x-[-50%] border-8 border-[#333] border-transparent" id="speechBubble">
-    Click to Chat!
-</div>
+    <img src="{% static 'images/support/chatbot/chatbot logo.jpg' %}" style="height: 40px; margin-left: auto; width: 40px; position:sticky; bottom: 20px; z-index: 1000; cursor: pointer;"  alt="Chatbot Logo" id="bottomRightImage" onclick="if(chatContainer) {
+            if(chatContainer.style.display === 'none') {
+                chatContainer.style.display = 'block';
+            } else {
+                chatContainer.style.display = 'none';
+            } }
+        ">
+    <!-- Speech Bubble that floats above the image -->
+    <div class="speech-bubble hidden absolute bottom-12 left-[50%] translate-x-[-50%] bg-[#333] text-white p-3 rounded-md text-XSmall text-center w-[150px] z-[1000] after:content-[""] after:absolute after:bottom-[-10px] left-[50%] translate-x-[-50%] border-8 border-[#333] border-transparent" id="speechBubble">
+        Click to Chat!
+    </div>
 
-<div id="chatContainer" style="display: none; position: fixed; bottom: 80px; right: 20px; width: 400px; height: 400px; background-color: white; border: 1px solid #ccc; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); z-index: 1000; border-radius: 10px;">
-    <div style="background-color: black; padding: 10px; color: white; text-align: center; border-radius: 10px 10px 0 0;">
-        <span>Chat with us!</span>
-        <button id="closeChat" style="background: none; border: none; color: white; float: right;">&times;</button>
+    <div id="chatContainer" class="min-h-4/6 rounded-2xl fixed bg-white shadow-md border border-gray-200" style="display: none; bottom: 80px; right: 20px; width: 400px; z-index: 1000;">
+        <div class="bg-green text-white flex px-4 justify-between rounded-2xl py-4 w-full">
+            <span class="font-Wanted-Bold text-Large">Chat with us!</span>
+            <button id="closeChat" class="bg-none border-none text-white float-right size-5">&times;</button>
+        </div>
+        <div id="chat-body" style="padding: 10px; height: 300px; overflow-y: auto;" class="font-Wanted-Variable text-Large">
+            <p style="text-align: center;" class="flex justify-center font-Wanted-Regular">Start a conversation...</p>
+        </div>
+        <div style="padding: 10px; border-top: 1px solid #ccc;">
+            <form id="chat-form" method="post" style="display: flex; align-items: center; gap: 10px;">
+                {% csrf_token %}
+                <input type="text" id="chat-input" placeholder="Type your message..." class="rounded-2xl flex-1 py-3 px-2 font-Wanted-Variable shadow-sm w-full border border-gray-300"/>
+                <button id="chat-button" type="submit" class="gradient-btn cursor-pointer">
+                    Send
+                </button>
+            </form>
+        </div>
     </div>
-    <div id="chat-body" style="padding: 10px; height: 300px; overflow-y: auto;">
-        <p style="text-align: center;">Start a conversation...</p>
-    </div>
-    <div style="padding: 10px; border-top: 1px solid #ccc;">
-        <form id="chat-form" method="post" style="display: flex; align-items: center; gap: 10px;">
-            {% csrf_token %}
-            <input type="text" id="chat-input" placeholder="Type your message..." style="flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 4px;"/>
-            <button id="chat-button" type="submit" style="padding: 10px 20px; background-color: black; color: white; border: none; border-radius: 4px; cursor: pointer;">
-                Send
-            </button>
-        </form>
-    </div>
-</div>
 </div>
 {% endblock body %}

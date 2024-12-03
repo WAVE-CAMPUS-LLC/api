@@ -22,15 +22,15 @@ Profile Overview
     <div id="body-header">
         <h3 class="font-bold text-black font-Wanted-ExtraBold text-[25px] xsm:text-[30px] xxsm:text-[35px] sm:text-[45px]">Welcome, {{ user.first_name }}!</h3>
         {% if userRequest.email_verified == False or userRequest.user_preferences_completed == False %}
-        <div id="missing-info" class="w-full flex items-center gap-[10px]">
+        <div id="missing-info" class="w-full flex flex-col xxsm:flex-row items-start justify-start xsm:items-center gap-[10px]">
             <p class="font-Wanted-Variable text-[15px] text-black">Click to complete:</p>
-            <div class="missing-subDiv flex flex-col gap-[10px]">
+            <div class="missing-subDiv flex flex-row gap-[10px]">
                 {% if userRequest.email_verified == False %}
-                <a href="{% url "authentication:generateVerification" %}" class="missing profile border border-transparent bg-red p-[5px] px-[10px] font-Wanted-Variable text-[13px] no-underline rounded-[15px] text-[white] hover:underline">Verify Account</a>
+                <a href="{% url "authentication:generateVerification" %}" class="missing profile border border-transparent bg-[#ff0000] p-[5px] px-[10px] font-Wanted-Variable text-[13px] no-underline rounded-[15px] text-[white] hover:underline">Verify Account</a>
                 {% endif %}
 
                 {% if userRequest.user_preferences_completed == False %}
-                <a href="{% url "accountManagement:userPreferences" %}" class="missing preferences border border-transparent bg-red p-[5px] px-[10px] font-Wanted-Variable text-[13px] no-underline rounded-[15px] text-[white] hover:underline">Complete Profile</a>
+                <a href="{% url "accountManagement:userPreferences" %}" class="missing preferences border border-transparent bg-[#ff0000] p-[5px] px-[10px] font-Wanted-Variable text-[13px] no-underline rounded-[15px] text-[white] hover:underline">Complete Profile</a>
                 {% endif %}
             </div>
         </div>
