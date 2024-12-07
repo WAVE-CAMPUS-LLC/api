@@ -16,7 +16,10 @@
             <div id="menu-options">
                 <ul class="flex gap-4 list-none items-center text-black font-Wanted-Variable text-Semi-Medium">
                     <li class="navlink">
-                        <a href="{% url "support:feedback" %}"> Faq's </a>
+                        <a class="hover:underline hover:decoration-green" href="{% url "support:feedback" %}"> Faq's </a>
+                    </li>
+                    <li class="navlink">
+                        <a class="hover:underline hover:decoration-green" href="{% url "eventManagement:hostGuide" %}">Host Guide </a>
                     </li>
                     <li class="createEvent flex flex-row gap-5 items-center">
                         Come, create!
@@ -78,6 +81,9 @@
                     <ul class="flex flex-col gap-5 list-none text-Large px-5 font-Wanted-Regular text-white">
                         <li class="navlink">
                             <a href="{% url "support:feedback" %}"> Faq's </a>
+                        </li>
+                        <li class="navlink">
+                            <a class="hover:underline hover:decoration-green" href="{% url "eventManagement:hostGuide" %}">Host Guide </a>
                         </li>
                         <li class="createEvent flex flex-row gap-5 items-center">
                             Come, create!

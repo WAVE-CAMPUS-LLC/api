@@ -297,6 +297,7 @@ def createOrg(request, collegeId):
             organization.created_by = request.user
             organization.status = "Pending"
             organization.save()
+            OrganizationMembership.objects.create(user=request.user, organization=organization)
 
             return redirect("colleges:find")
     else:
@@ -336,6 +337,8 @@ def viewOrganization(request, collegeId, orgId):
         return redirect("colleges:find")
     organization = get_object_or_404(Organization, orgId=orgId, college=college)
 
+    is_owner = organization.created_by == user_profile.user
+
     is_member = OrganizationMembership.objects.filter(
         user=request.user, organization=organization
     ).exists()
@@ -352,20 +355,49 @@ def viewOrganization(request, collegeId, orgId):
         privacy="Private (Organization)", 
         privacy_details__restricted_organization=organization
     )
+    
+    org_privacy = organization.privacy
+    org_owner = organization.created_by
 
-    return render(
-        request,
-        "collegeManagementApp/organizations/viewOrg.html",
-        {
-            "pageName": pageName,
-            "college": college,
-            "organization": organization,
-            "is_member": is_member,
-            "member_count": member_count,
-            "members": members,
-            "events": restricted_events,
-        },
-    )
+    if request.method == "POST":
+        action = request.POST.get("action")
+        if action == "kickMember":
+            member_username = request.POST.get("leavingMemberUsername")
+            member = UserProfile.objects.filter(user__username=member_username).first()
+            if member:
+                OrganizationMembership.objects.filter(
+                    user=member.user, organization=organization
+                ).delete()
+                messages.success(request, f"{member.user.username} has been removed from the organization.")
+            
+            elif not member:
+                messages.error(request, "User not found.")
+                
+            else:
+                messages.error(request, "An error occurred.", extra_tags="danger")
+            
+            return redirect("colleges:viewOrg", collegeId=collegeId, orgId=orgId)
+            
+
+    
+    if org_privacy == "Private" and not is_member:
+        return render(request, "collegeManagementApp/extras/privateOrg.html", {"pageName": pageName, "college": college, "organization": organization})
+    else:
+        return render(
+            request,
+            "collegeManagementApp/organizations/viewOrg.html",
+            {
+                "pageName": pageName,
+                "college": college,
+                "organization": organization,
+                "is_member": is_member,
+                "member_count": member_count,
+                "members": members,
+                "events": restricted_events,
+                "isOwner": is_owner,
+                "orgOwner": org_owner
+            },
+        )
 
 
 @login_required

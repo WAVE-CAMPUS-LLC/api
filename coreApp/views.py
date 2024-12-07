@@ -1,7 +1,8 @@
 from django.shortcuts import get_object_or_404, render, redirect
 from django.http import JsonResponse
 import random
-from django.db.models import Count
+from django.db.models import Count, Q
+from django.http import JsonResponse
 
 from eventManagementApp.models import (
     Event,
@@ -296,3 +297,32 @@ def categoryView(request, name):
 
 def rsvpConfirm(request):
     return render(request, "extras/confirmations/RSVPConfirm.html")
+
+
+def searchEvents(request):
+    search_query = request.GET.get("searchEvents", "")
+    results = []
+
+    if search_query:
+        search_events = Event.objects.filter(
+            Q(title__icontains=search_query) | Q(event_type__icontains=search_query),
+            status="live",
+        )
+        
+        results = [
+            {
+                "eventId": event.eventId,
+                "title": event.title,
+                "date": event.date.strftime("%Y-%m-%d"),  # Format date as needed
+                "host_username": (
+                    event.host.username if event.host else "Unknown"
+                ),  # Handle case where host might be missing
+                "header_photo_url": (
+                    event.header_photo.url if event.header_photo else ""
+                ),  # Ensure photo URL is included
+                "status": event.status,
+            }
+            for event in search_events
+        ]
+
+    return JsonResponse({"results": results})

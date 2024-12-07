@@ -13,4 +13,5 @@ urlpatterns = [
     path("category/<str:name>/", views.categoryView, name="category"),
     path("load-more/", views.load_more_events, name="load_more_events"),
     path("event/reserved/", views.rsvpConfirm, name="rsvpConfirm"),
+    path("explore/search/", views.searchEvents, name="search"),
 ]

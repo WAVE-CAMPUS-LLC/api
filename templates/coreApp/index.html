@@ -27,9 +27,9 @@ WAVE. — Explore a new wave of events. Tick them off your bucketlist!
                     <p class="font-Wanted-Variable xxsm:font-Wanted-Regular text-Base sm:text-Medium font-thin">Purchase ticket, be there, live in the moment.</p>
                 </div>
 
-                <div class="flex flex-col gap-6 w-full">
-                    <div class="w-full 2xl:w-1/2 border-2 border-[#62626200] rounded-2xl bg-[#ffffff07] cursor-text flex flex-row items-center">
-                        <input type="text" name="" id="" placeholder="Enter event category" class="w-full h-full p-4 text-Semi-Medium font-Wanted-Regular text-black border-none rounded-l-2xl outline-none">
+                <div class="flex flex-col gap-6 w-full" onclick="redirectToPage({% url "core:explore" %})">
+                    <div class="w-full 2xl:w-1/2 border-2 shadow-md text-black border-[#30303015] rounded-2xl bg-[#ffffff07] cursor-pointer flex flex-row items-center">
+                        <input type="text" name="" id="" placeholder="Find an event by title..." class="w-full h-full p-4 text-Semi-Medium font-Wanted-Regular text-black border-none rounded-l-2xl outline-none bg-white">
                         <div class="flex justify-center p-2.5 pl-0.5">
                             <img src="{% static "/images/home/home-explore-icon.svg" %}" alt="Explore Events" >
                         </div>

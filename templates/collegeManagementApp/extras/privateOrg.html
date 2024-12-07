@@ -1,0 +1,30 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}
+Not a member of {{ college.name }} | WAVE.
+{% endblock title %}
+
+{% block header %}
+{% include "partials/nav-footer/nav/main_nav.html" %}
+{% endblock header %}
+
+{% block body %}
+<main class="h-full flex flex-col items-center gap-8">
+    <div id="body-content" class="h-full flex flex-col justify-center px-4 sm:px-6 md:px-[40px] pre-lg:px-[40px] lg:px-[100px] 2xl:px-48 3xl:px-96">
+        <h2 class="font-Wanted-ExtraBlack text-Large xxsm:text-xl sm:text-1xl md:text-2xl pre-lg:text-4xl uppercase text-[#008d95]">You are not a member of {{ organization.name }}</h2>
+        <p class="font-Wanted-Variable xxsm:font-Wanted-Regular text-Semi-Medium pre-lg:text-Large text-black">To view more information about this college, you need to join.</p>
+    </div>
+    <div id="joinCollege" class="w-full flex justify-center">
+        {% if user.is_authenticated %}
+            <a href="{% url 'colleges:joinOrg' college.collegeId organization.orgId %}" class="joinCollegeButton p-[6px] sm:p-[8px] md:p-[15px] border border-transparent border-r-gradient-start border-l-gradient-end text-white font-Wanted-SemiBold no-underline flex items-center gap-[10px] text-Semi-Medium md:text-Large rounded-[10px] xxsm:rounded-[10px] sm:rounded-[15px] md:rounded-[20px] w-[20%] bg-gradient-to-r from-gradient-start to-gradient-end">
+                <img src="{% static 'images/collegeManagementApp/join.svg' %}" class="w-[25px] h-[25px]"  />
+                Join Org
+            </a>
+        {% endif %}
+    </div>
+</main>
+{% endblock body %}
+
+{% block footer %}
+{% endblock footer %}

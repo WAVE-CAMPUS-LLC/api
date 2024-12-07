@@ -122,8 +122,6 @@ def hostPortalView(request):
     )
 
 
-@login_required
-@group_required("Host")
 def hostGuideView(request):
     return render(request, "eventManagementApp/host/hostGuide.html")
 

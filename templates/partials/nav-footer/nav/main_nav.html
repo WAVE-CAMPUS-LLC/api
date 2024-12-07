@@ -3,6 +3,7 @@
 
 
 <script type="text/javascript" src="{% static "/scripts/partials/navigation/navbar.js" %}" defer></script>
+<script type="text/javascript" src="{% static "/scripts/partials/navigation/searchEvents.js" %}" defer></script>
 
 
 <div id="navigation-container" class="hidden pre-lg:inline max-w-full w-full top-0 right-0 left-0 flex-none">
@@ -83,17 +84,32 @@
     </div>
 
     {% if page == "explore" %}
-    <div id="main-find-events" class="w-full flex justify-center">
-        <div class="w-1/2 flex flex-row gap-1 border-2 border-[#07070715] rounded-3xl bg-[#ffffff07] shadow-form-shadow-2">
-            <div class="febc-img flex justify-center p-4">
-                <img src="{% static "images/explore/find.svg" %}" alt="Find Events">
+    <div id="main-find-events" class="w-full flex flex-col gap-3 items-center justify-center relative h-auto">
+        <!-- Search input container -->
+        <div id="event-search-input-container" class="w-[90%] after-xsm:w-4/5 sm:w-[65%] flex flex-row gap-1 border-2 border-[#07070715] rounded-3xl bg-[#ffffff07] shadow-form-shadow-2 static">
+            <div class="febc-img flex justify-center p-2 px-4 after-xsm:p-4">
+                <img src="{% static 'images/explore/find.svg' %}" alt="Find Events">
             </div>
-            <input type="text" name="" id="" class="w-full appearance-none h-full p-4 py-5 font-Wanted-Variable text-Semi-Medium text-black border-none rounded-3xl focus:ring-0 focus:outline-none placeholder:text-[#00000076] placeholder:font-Wanted-Regular" placeholder="Find event by category or title">
+            <input type="text" name="searchEvents" id="search-events-input-large" 
+                class="w-full appearance-none h-full p-4 py-5 font-Wanted-Variable text-Semi-Medium text-black 
+                border-none rounded-3xl focus:ring-0 focus:outline-none placeholder:text-[#00000076] placeholder:font-Wanted-Regular" 
+                placeholder="Find event by category or title" autofocus>
+        </div>
+        
+        <!-- Event search results container -->
+        <div id="event-search-results-large" class="absolute top-full border-2 border-[#30303015] rounded-3xl bg-white shadow-form-shadow-2 w-[90%] after-xsm:w-4/5 sm:w-[65%] mt-2 hidden z-[1040]">
+            <!-- Search items will be dynamically populated here -->
+            <div id="events-search-items-large" class="grid sm:grid-cols-1 lg:grid-cols-2 w-full">
+                
+            </div>
         </div>
     </div>
+    
     {% endif %}
     
 </div>
+
+
 
 
 <div class="top-0 pre-lg:hidden">
@@ -114,12 +130,24 @@
                 </div>
             </div>
             {% if page == "explore" %}
-            <div id="main-find-events" class="w-full flex justify-center">
-                <div class="w-[90%] after-xsm:w-4/5 sm:w-[65%] flex flex-row gap-1 border-2 border-[#07070715] rounded-3xl bg-[#ffffff07] shadow-form-shadow-2">
+            <div id="main-find-events" class="w-full flex flex-col gap-3 items-center justify-center relative h-auto">
+                <!-- Search input container -->
+                <div id="event-search-input-container" class="w-[90%] after-xsm:w-4/5 sm:w-[65%] flex flex-row gap-1 border-2 border-[#07070715] rounded-3xl bg-[#ffffff07] shadow-form-shadow-2 static">
                     <div class="febc-img flex justify-center p-2 px-4 after-xsm:p-4">
-                        <img src="{% static "images/explore/find.svg" %}" alt="Find Events">
+                        <img src="{% static 'images/explore/find.svg' %}" alt="Find Events">
                     </div>
-                    <input type="text" name="" id="" class="w-full appearance-none h-full p-2 px-4 after-xsm:p-4 py-5 font-Wanted-Variable text-Semi-Medium text-black border-none rounded-3xl focus:ring-0 focus:outline-none placeholder:text-[#00000076] placeholder:font-Wanted-Regular" placeholder="Find event by category or title">
+                    <input type="text" name="searchEvents" id="search-events-input-mobile" 
+                        class="w-full appearance-none h-full p-4 py-5 font-Wanted-Variable text-Semi-Medium text-black 
+                        border-none rounded-3xl focus:ring-0 focus:outline-none placeholder:text-[#00000076] placeholder:font-Wanted-Regular" 
+                        placeholder="Find event by category or title" autofocus>
+                </div>
+                
+                <!-- Event search results container -->
+                <div id="event-search-results-mobile" class="absolute top-full border-2 border-[#30303015] rounded-3xl bg-white shadow-form-shadow-2 w-[90%] after-xsm:w-4/5 sm:w-[65%] mt-2 hidden z-[1040]">
+                    <!-- Search items will be dynamically populated here -->
+                    <div id="events-search-items-mobile" class="grid sm:grid-cols-1 lg:grid-cols-2 w-full">
+                        
+                    </div>
                 </div>
             </div>
             {% endif %}
