@@ -40,22 +40,22 @@ Become an event host. Apply Now! — WAVE.
                         <div class="form-aboutYourself-container flex flex-col gap-[25px]">
                             <div class="flex flex-col sm:flex-row gap-[10px]">
                                 <label for="{{ form.firstName.id_for_label }}" class="w-full sm:w-1/2 font-Wanted-Regular flex flex-col gap-[10px]">
-                                    <p>{{ form.firstName.label }}</p>
-                                    <input class="w-full border border-[rgba(48,48,48,0.083)] rounded-[12px] font-Wanted-Regular text-[15px] pt-[15px] pb-[15px] pl-[10px] pr-[10px] shadow-[0px_2px_7px_0px_rgba(116,116,116,0.149)]" type="{{ form.firstName.field.widget.input_type }}" name="{{ form.firstName.html_name }}" id="{{ form.firstName.auto_id }}">
+                                    <p>{{ form.firstName.label }}<span class="text-[red]">*</span></p>
+                                    <input required class="w-full border border-[rgba(48,48,48,0.083)] rounded-[12px] font-Wanted-Regular text-[15px] pt-[15px] pb-[15px] pl-[10px] pr-[10px] shadow-[0px_2px_7px_0px_rgba(116,116,116,0.149)]" type="{{ form.firstName.field.widget.input_type }}" name="{{ form.firstName.html_name }}" id="{{ form.firstName.auto_id }}">
                                 </label>
                                 <label for="{{ form.lastName.id_for_label }}" class="w-full sm:w-1/2 font-Wanted-Regular flex flex-col gap-[10px]">
-                                    <p>{{ form.lastName.label }}</p>
-                                    <input class="w-full border border-[rgba(48,48,48,0.083)] rounded-[12px] font-Wanted-Regular text-[15px] pt-[15px] pb-[15px] pl-[10px] pr-[10px] shadow-[0px_2px_7px_0px_rgba(116,116,116,0.149)]" type="{{ form.lastName.field.widget.input_type }}" name="{{ form.lastName.html_name }}" id="{{ form.lastName.auto_id }}">
+                                    <p>{{ form.lastName.label }}<span class="text-[red]">*</span></p>
+                                    <input required class="w-full border border-[rgba(48,48,48,0.083)] rounded-[12px] font-Wanted-Regular text-[15px] pt-[15px] pb-[15px] pl-[10px] pr-[10px] shadow-[0px_2px_7px_0px_rgba(116,116,116,0.149)]" type="{{ form.lastName.field.widget.input_type }}" name="{{ form.lastName.html_name }}" id="{{ form.lastName.auto_id }}">
                                 </label>
                             </div>
                             <label for="{{ form.email.id_for_label }}"  class="font-Wanted-Regular flex flex-col gap-[10px]">
-                                <p>{{ form.email.label }}</p>
-                                <input class="w-full border border-[rgba(48,48,48,0.083)] rounded-[12px] font-Wanted-Regular text-[15px] pt-[15px] pb-[15px] pl-[10px] pr-[10px] shadow-[0px_2px_7px_0px_rgba(116,116,116,0.149)]" type="{{ form.email.field.widget.input_type }}" name="{{ form.email.html_name }}" id="{{ form.email.auto_id }}">
+                                <p>{{ form.email.label }}<span class="text-[red]">*</span></p>
+                                <input required class="w-full border border-[rgba(48,48,48,0.083)] rounded-[12px] font-Wanted-Regular text-[15px] pt-[15px] pb-[15px] pl-[10px] pr-[10px] shadow-[0px_2px_7px_0px_rgba(116,116,116,0.149)]" type="{{ form.email.field.widget.input_type }}" name="{{ form.email.html_name }}" id="{{ form.email.auto_id }}">
                             </label>
                             
                             <label for="{{ form.phone.id_for_label }}" class="font-Wanted-Regular flex flex-col gap-[10px]">
-                                <p>{{ form.phone.label }}</p>
-                                <input class="w-full border border-[rgba(48,48,48,0.083)] rounded-[12px] font-Wanted-Regular text-[15px] pt-[15px] pb-[15px] pl-[10px] pr-[10px] shadow-[0px_2px_7px_0px_rgba(116,116,116,0.149)]" type="{{ form.phone.field.widget.input_type }}" name="{{ form.phone.html_name }}" id="{{ form.phone.auto_id }}">
+                                <p>{{ form.phone.label }}<span class="text-[red]">*</span></p>
+                                <input required class="w-full border border-[rgba(48,48,48,0.083)] rounded-[12px] font-Wanted-Regular text-[15px] pt-[15px] pb-[15px] pl-[10px] pr-[10px] shadow-[0px_2px_7px_0px_rgba(116,116,116,0.149)]" type="{{ form.phone.field.widget.input_type }}" name="{{ form.phone.html_name }}" id="{{ form.phone.auto_id }}">
                             </label>
                         </div>
                         <div id="nextOrSubmit" class="w-full flex flex-col sm:flex-row">
@@ -111,11 +111,11 @@ Become an event host. Apply Now! — WAVE.
                         <div class="flex flex-col gap-[25px]">
                             <div class="event_name">
                                 <label class="eventTypeSelector font-Wanted-Regular text-[17px] flex flex-col gap-[10px]">
-                                    <p>{{ form.eventTypes.label }}</p>
+                                    <p>{{ form.eventTypes.label }} <span class="text-[red]">*</span> <span class="text-gray-500">(Max 3)</span></p>
                                     <div class="eventTypeSelectorButtons flex flex-row flex-wrap gap-[15px]">
                                         {% for choice_value, choice_label in form.eventTypes.field.choices %}
                                             <div class="optionals checked:text-green bg-[rgba(145,145,145,0.098)] border-2 border-[#008d95] rounded-[20px] cursor-pointer flex items-center mb-[10px] text-green">
-                                                <input class="hidden appearance-none " type="checkbox" id="{{ form.eventTypes.id_for_label }}_{{ forloop.counter }}" name="{{ form.eventTypes.html_name }}" value="{{ choice_value }}">
+                                                <input required class="hidden appearance-none " type="checkbox" id="{{ form.eventTypes.id_for_label }}_{{ forloop.counter }}" name="{{ form.eventTypes.html_name }}" value="{{ choice_value }}">
                                                 <label class="cursor-pointer p-[10px] pt-[7px] pb-[7px] h-full w-full flex items-center font-Wanted-Regular selected:" for="{{ form.eventTypes.id_for_label }}_{{ forloop.counter }}">{{ choice_label }}</label>
                                             </div>
                                         {% endfor %}
@@ -123,13 +123,13 @@ Become an event host. Apply Now! — WAVE.
                                 </label>
                             </div>
                             <label for="{{ form.eventHostedAnnually.id_for_label }}" class="font-Wanted-Regular text-[17px] flex flex-col gap-[10px]">
-                                <p>{{ form.eventHostedAnnually.label }}</p>
-                                <input class="border border-[rgba(48,48,48,0.083)] rounded-[12px] font-Wanted-Regular text-[15px] pt-[15px] pb-[15px] pl-[10px] pr-[10px] shadow-[0px_2px_7px_0px_rgba(116,116,116,0.149)]" type="{{ form.eventHostedAnnually.field.widget.input_type }}" name="{{ form.eventHostedAnnually.html_name }}" id="{{ form.eventHostedAnnually.auto_id }}">
+                                <p>{{ form.eventHostedAnnually.label }}<span class="text-[red]">*</span></p>
+                                <input required class="border border-[rgba(48,48,48,0.083)] rounded-[12px] font-Wanted-Regular text-[15px] pt-[15px] pb-[15px] pl-[10px] pr-[10px] shadow-[0px_2px_7px_0px_rgba(116,116,116,0.149)]" type="{{ form.eventHostedAnnually.field.widget.input_type }}" name="{{ form.eventHostedAnnually.html_name }}" id="{{ form.eventHostedAnnually.auto_id }}">
                             </label>
 
                             <label for="{{ form.eventPopulation.id_for_label }}"  class="font-Wanted-Regular text-[17px] flex flex-col gap-[10px]">
-                                <p>{{ form.eventPopulation.label }}</p>
-                                <input class="border border-[rgba(48,48,48,0.083)] rounded-[12px] font-Wanted-Regular text-[15px] pt-[15px] pb-[15px] pl-[10px] pr-[10px] shadow-[0px_2px_7px_0px_rgba(116,116,116,0.149)]" type="{{ form.eventPopulation.field.widget.input_type }}" name="{{ form.eventPopulation.html_name }}" id="{{ form.eventPopulation.auto_id }}">
+                                <p>{{ form.eventPopulation.label }}<span class="text-[red]">*</span></p>
+                                <input required class="border border-[rgba(48,48,48,0.083)] rounded-[12px] font-Wanted-Regular text-[15px] pt-[15px] pb-[15px] pl-[10px] pr-[10px] shadow-[0px_2px_7px_0px_rgba(116,116,116,0.149)]" type="{{ form.eventPopulation.field.widget.input_type }}" name="{{ form.eventPopulation.html_name }}" id="{{ form.eventPopulation.auto_id }}">
                             </label>
                         </div>
                         <div id="nextOrSubmit" class="w-full flex flex-col gap-2 sm:flex-row justify-between">

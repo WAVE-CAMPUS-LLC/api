@@ -106,6 +106,7 @@ class Membership(models.Model):
 
     class Meta:
         unique_together = ("user", "college")
+        default_permissions = ()
 
     def __str__(self):
         return f"{self.user} - {self.college}"
@@ -118,3 +119,4 @@ class OrganizationMembership(models.Model):
 
     class Meta:
         unique_together = ("user", "organization")
+        default_permissions = ()

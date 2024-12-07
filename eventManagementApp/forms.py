@@ -6,13 +6,27 @@ from accountManagementApp.models import UserProfile
 from collegeManagementApp.models import OrganizationMembership, Organization
 
 
-class HostApplicationForm(forms.ModelForm):
+class HostApplicationForm(forms.ModelForm):    
     EVENT_TYPE_CHOICES = [
-        ("conference", "Conference"),
-        ("workshop", "Workshop"),
-        ("seminar", "Seminar"),
-        ("webinar", "Webinar"),
-        ("networking", "Networking Event"),
+        ("Academic", "Academic"),
+        ("Adventure", "Adventure"),
+        ("Art", "Art"),
+        ("Conference", "Conference"),
+        ("Dance", "Dance"),
+        ("Exhibition", "Exhibition"),
+        ("Fashion", "Fashion"),
+        ("Fundraiser", "Fundraiser"),
+        ("Greek", "Greek"),
+        ("Health", "Health"),
+        ("Music", "Music"),
+        ("Networking", "Networking"),
+        ("Photography", "Photography"),
+        ("Social", "Social"),
+        ("Spiritual", "Spiritual"),
+        ("Sports", "Sports"),
+        ("Technology", "Technology"),
+        ("Volunteer", "Volunteer"),
+        ("Workshop", "Workshop"),
     ]
 
     eventTypes = forms.MultipleChoiceField(

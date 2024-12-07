@@ -11,6 +11,25 @@ $(document).ready(function () {
         }, 300); // Adjust delay as needed
     });
 
+    $(document).on('click', function (e) {
+        // Iterate over both 'large' and 'mobile' to handle both cases
+        ['large', 'mobile'].forEach(idName => {
+            const $searchContainer = $(`#main-find-events`);
+            const $searchResults = $(`#events-search-results-${idName}`);
+    
+            if (!$(e.target).closest($searchContainer).length) {
+                $searchResults.addClass('hidden').fadeOut(300);
+            }
+        });
+    });
+    
+
+    $(document).on('keydown', function (e) {
+        if (e.key === 'Escape') {
+            $('#events-search-results-large, #events-search-results-mobile').addClass('hidden').fadeOut(300);
+        }
+    });
+
     $('#search-events-input-mobile').on('input', function () {
         idName = 'mobile';
         handleEmptyInput(idName); // Check and hide results if input is empty immediately

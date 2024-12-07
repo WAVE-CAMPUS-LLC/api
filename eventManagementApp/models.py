@@ -21,10 +21,10 @@ class HostApplication(models.Model):
         ("networking", "Networking Event"),
     ]
 
-    firstName = models.CharField(verbose_name="First Name", max_length=70)
-    lastName = models.CharField(verbose_name="Last Name", max_length=70)
-    email = models.EmailField(verbose_name="Email")
-    phone = models.CharField(verbose_name="Phone", max_length=10)
+    firstName = models.CharField(verbose_name="First Name", max_length=70, null=False, blank=False)
+    lastName = models.CharField(verbose_name="Last Name", max_length=70, null=False, blank=False)
+    email = models.EmailField(verbose_name="Email", null=False, blank=False)
+    phone = models.CharField(verbose_name="Phone", max_length=10, null=False, blank=False)
 
     organizationName = models.CharField(
         verbose_name="Organization Name", max_length=150
@@ -34,10 +34,10 @@ class HostApplication(models.Model):
         verbose_name="Organization Location", max_length=150
     )
 
-    eventTypes = models.ManyToManyField("EventType", related_name="applications")
+    eventTypes = models.ManyToManyField("EventType", related_name="applications", null=False, blank=False)
 
     eventHostedAnnually = models.CharField(
-        verbose_name="How many events do you plan on hosting annually?", max_length=100
+        verbose_name="How many events do you plan on hosting annually?", max_length=100, null=False
     )
     eventPopulation = models.CharField(
         verbose_name="How many people do you expect at each event?", max_length=1000

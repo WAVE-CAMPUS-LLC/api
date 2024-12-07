@@ -77,7 +77,6 @@ document.addEventListener("DOMContentLoaded", function() {
             const selectedOptions = document.querySelectorAll('.eventTypeSelectorButtons input[type="checkbox"]:checked');
             if (selectedOptions.length > 3) {
                 option.checked = false;
-                alert('You can select a maximum of 3 event types.');
             }
         });
     });

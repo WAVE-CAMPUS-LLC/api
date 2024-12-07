@@ -1,0 +1,7 @@
+.tabHeaderItem.tab-active {
+    border-bottom: 4px solid #008d95;
+}
+
+.section.active {
+    display: block;
+}

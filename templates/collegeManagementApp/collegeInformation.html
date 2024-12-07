@@ -57,7 +57,7 @@
                                     {% for event in events %}
                                     <a target="_blank" href="{% url "core:eventDetails" eventId=event.eventId %}" class="category-event-card overflow-hidden flex flex-col justify-center items-center cursor-pointer p-[10px] text-black no-underline">
                                         <div class="category-image w-full rounded-[20px] border-0 border-[#00000013] shadow-custom-shadow-3">
-                                            <img src="{{ event.header_photo.url }}" alt="" class="w-full h-full rounded-[20px] object-cover transition-transform duration-300 ease-in-out">
+                                            <img src="{{ event.header_photo.url }}" alt="" class="w-full h-full rounded-[20px] rounded-b-none object-cover transition-transform duration-300 ease-in-out">
                                         </div>
                                         <div class="category-event-name font-Wanted-SemiBold text-[15px] flex flex-col justify-center items-center gap-[5px] border rounded-b-[20px] shadow-custom-shadow-3 p-[10px] px-[20px] w-full">
                                             <h2 id="eventTitle" class="whitespace-nowrap overflow-hidden text-ellipsis w-full text-left font-bold text-[1.5rem]">{{ event.title }}</h2>
@@ -90,11 +90,11 @@
                                 </div>
                                 <div class="collegeOrganizationsContainer w-full">
                                     {% if organizations %}
-                                    <div class="collegeOrgsGrid grid sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 xssm:px-[35px] sm:px-0 md:px-[30px] pre-lg:gap-[50px] lg:gap-0">
+                                    <div class="collegeOrgsGrid grid sm:grid-cols-2 lg:grid-cols-3 xssm:px-[35px] sm:px-0 md:px-[30px] pre-lg:gap-[50px] lg:gap-0">
                                         {% for org in organizations %}
                                         <div class="organization-card flex flex-col justify-center items-center cursor-pointer overflow-hidden p-[10px] text-black no-underline">
                                             <div class="orgCard-image-container w-full max-w-[350px] rounded-[20px] border-0 border-[#00000013] rounded-b-[20px] shadow-custom-shadow-3">
-                                                <img src="{{org.logo.url}}" class="orgCard-image w-full h-full max-h-[350px] max-w-[350px] rounded-[20px] object-cover"/>
+                                                <img src="{{org.logo.url}}" class="orgCard-image w-full h-full min-h-[400px] max-h-[350px] max-w-[350px] rounded-[20px] rounded-b-none object-cover"/>
                                             </div>
                                             <div class="orgCard-body-container font-Wanted-SemiBold text-[15px] flex flex-col justify-center items-start gap-[10px] w-full max-w-[350px] border-solid border-custom-rgba5 rounded-b-[20px] shadow-custom-shadow-3 border-t-[1px] p-[10px] px-[20px] box-border">
                                                 <h3 class="font-Wanted-Bold text-[22px] whitespace-nowrap overflow-hidden text-ellipsis w-full text-start font-bold"> {{ org.name }}</h3>

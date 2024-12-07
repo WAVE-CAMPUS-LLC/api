@@ -3,6 +3,8 @@ from django.http import JsonResponse
 import random
 from django.db.models import Count, Q
 from django.http import JsonResponse
+from datetime import datetime, timedelta
+from django.utils.timezone import now
 
 from eventManagementApp.models import (
     Event,
@@ -71,6 +73,14 @@ def exploreView(request):
         )
         trending_category_choices += additional_choices
 
+    today = now().date()
+    start_of_week = today - timedelta(days=today.weekday())
+    end_of_week = start_of_week + timedelta(days=6)
+
+    weekly_events = Event.objects.filter(
+        date__range=[start_of_week, end_of_week], status="live", privacy="Discoverable"
+    ).order_by("?")[:3]
+
     return render(
         request,
         "coreApp/explore.html",
@@ -78,6 +88,7 @@ def exploreView(request):
             "page": pageName,
             "events": initial_events,
             "trending_events": trending_events,
+            "weekly_events": weekly_events,
             "exploreCategoryChoices": trending_category_choices,
             "invited_events_with_tokens": invited_events_with_tokens,
         },
@@ -308,7 +319,7 @@ def searchEvents(request):
             Q(title__icontains=search_query) | Q(event_type__icontains=search_query),
             status="live",
         )
-        
+
         results = [
             {
                 "eventId": event.eventId,
