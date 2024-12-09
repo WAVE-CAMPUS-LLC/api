@@ -1,5 +1,9 @@
 from django import forms
 from .models import College, CollegeRequest, Organization
+from django.forms.widgets import ClearableFileInput
+
+class CustomClearableFileInput(ClearableFileInput):
+    template_name = 'custom_clearable_file_input.html'  # Custom template for the widget
 
 
 class CollegeRequestForm(forms.ModelForm):
@@ -86,3 +90,21 @@ class OrganizationForm(forms.ModelForm):
         ]
 
         widgets = {"privacy": forms.Select()}
+        
+class EditOrganizationForm(forms.ModelForm):
+    class Meta:
+        model = Organization
+        fields = [
+            "description",
+            "privacy",
+            "logo",
+            "contact_name",
+            "contact_email",
+            "contact_website",
+            "instagram",
+        ]
+
+        widgets = {
+            "privacy": forms.Select(choices=Organization.PRIVACY_CHOICES),
+            "logo": forms.ClearableFileInput(attrs={"class": "custom-file-input"})
+        }

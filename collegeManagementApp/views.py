@@ -12,6 +12,7 @@ from .forms import (
     JoinCollegeForm,
     OrganizationForm,
     VerifyCollegeJoinForm,
+    EditOrganizationForm
 )
 from .models import (
     CollegeRequest,
@@ -377,8 +378,34 @@ def viewOrganization(request, collegeId, orgId):
                 messages.error(request, "An error occurred.", extra_tags="danger")
             
             return redirect("colleges:viewOrg", collegeId=collegeId, orgId=orgId)
+        if action == "deleteOrg":
+            all_memberships = OrganizationMembership.objects.filter(organization=organization)
+            all_memberships.delete()
             
+            events = Event.objects.filter(privacy="Private (Organization)", privacy_details__restricted_organization=organization)
+            events.delete()
+            
+            event_privacy = EventPrivacy.objects.filter(restricted_organization=organization)
+            event_privacy.delete()
+            
+            organization.delete()
+            messages.success(request, f"{organization.name} has been deleted.")
+            return redirect("colleges:find")
+        if action == "saveChanges":
+            orgForm = EditOrganizationForm(request.POST, request.FILES, instance=organization)
+            
+            if orgForm.is_valid():
+                org = orgForm.save(commit=False)
 
+                if 'logo' in request.FILES:
+                    org.logo = request.FILES['logo']
+    
+                org.save()
+
+                messages.success(request, "Changes saved successfully.")
+                return redirect("colleges:viewOrg", collegeId=collegeId, orgId=orgId)
+            
+    form = EditOrganizationForm(instance=organization)
     
     if org_privacy == "Private" and not is_member:
         return render(request, "collegeManagementApp/extras/privateOrg.html", {"pageName": pageName, "college": college, "organization": organization})
@@ -395,7 +422,8 @@ def viewOrganization(request, collegeId, orgId):
                 "members": members,
                 "events": restricted_events,
                 "isOwner": is_owner,
-                "orgOwner": org_owner
+                "orgOwner": org_owner,
+                "form" : form
             },
         )
 
