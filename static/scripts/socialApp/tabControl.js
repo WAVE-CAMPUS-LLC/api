@@ -80,11 +80,11 @@ $(document).ready(function () {
 
 document.addEventListener("DOMContentLoaded", function () {
   // Function to handle tab click
-  function handleTabClick(tab, tabContents) {
+  function handleTabClick(tab, tabContents, tabActiveName) {
     tab.forEach((tab) => {
-      tab.classList.remove("crew-tab-active");
+      tab.classList.remove(tabActiveName);
     });
-    this.classList.add("crew-tab-active");
+    this.classList.add(tabActiveName);
 
     // Logic to display corresponding content based on clicked tab
     const tabId = this.getAttribute("data-tab");
@@ -106,11 +106,11 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   // Initialize tab systems for each body section
-  initializeTabSystem("socialBody", "social-tab", "social-home-elements");
-  initializeTabSystem("pageBody", "crewDetailsTab", "crewTabInformation");
+  initializeTabSystem("socialBody", "social-tab", "social-home-elements", 'social-tab-active');
+  initializeTabSystem("pageBody", "crewDetailsTab", "crewTabInformation", 'crew-tab-active');
 
   // Function to initialize tab system for a specific body section
-  function initializeTabSystem(bodyId, tabClass, contentClass) {
+  function initializeTabSystem(bodyId, tabClass, contentClass, tabActiveName) {
     const tabs = document.querySelectorAll(`#${bodyId} .${tabClass}`);
     const tabContents = document.querySelectorAll(
       `#${bodyId} .${contentClass}`
@@ -118,7 +118,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     tabs.forEach((tab) => {
       tab.addEventListener("click", function () {
-        handleTabClick.call(this, tabs, tabContents);
+        handleTabClick.call(this, tabs, tabContents, tabActiveName);
       });
     });
 
@@ -128,7 +128,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Set the first tab as active by default in each body section
     if (tabs.length > 0) {
-      tabs[0].classList.add("crew-tab-active");
+      tabs[0].classList.add(tabActiveName);
       const defaultTabId = tabs[0].getAttribute("data-tab");
       showTabContent(tabContents, defaultTabId);
     }

@@ -1,0 +1,6 @@
+.social-tab-active {
+    border-color: #008d95; /* Higher specificity for active tabs */
+}
+.social-tab:hover {
+    border-color: #008d95; /* Ensure hover matches active color */
+}
