@@ -28,4 +28,9 @@ urlpatterns = [
         views.eventManagement,
         name="eventManagement",
     ),
+    path(
+        "billing/",
+        views.hostBilling,
+        name="hostBilling",
+    ),
 ]

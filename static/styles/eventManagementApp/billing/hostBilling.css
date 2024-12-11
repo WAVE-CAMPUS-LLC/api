@@ -1,0 +1,11 @@
+.billing-tab {
+  display: flex;
+  justify-content: center;
+}
+
+.billing-tab.tab-active {
+  border: 1px solid #007379;
+  font-family: Wanted-Variable;
+  color: white;
+  background-color: #007379;
+}

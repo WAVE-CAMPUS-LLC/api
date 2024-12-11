@@ -56,6 +56,13 @@ class UserProfileForm(forms.ModelForm):
         required=True,
         label="Select the type of events do you want to see (Maximum 10)",
     )
+    
+    profile_photo = forms.ImageField(
+        required=False,
+        widget=forms.FileInput(attrs={'class': 'custom-file-input'})
+    )
+    
+    
 
     class Meta:
         model = UserProfile

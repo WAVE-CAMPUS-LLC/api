@@ -15,15 +15,7 @@ from collegeManagementApp.models import Organization, OrganizationMembership
 from .forms import (
     HostApplicationForm,
     EventForm,
-    EventTitleForm,
-    EventTypeForm,
-    EventDateForm,
-    EventStartTimeForm,
-    EventEndTimeForm,
-    EventDescriptionForm,
-    EventPrivacyForm,
-    EventLocationForm,
-    EventHeaderImageForm
+    EditEventForm
 )
 
 from eventTicketsApp.forms import InvitationForm, PaidFreeTicketForm
@@ -298,81 +290,15 @@ def eventManagement(request, eventId):
     rsvp_list = RSVPTicket.objects.filter(event=event)
     paid_free_tickets = PaidFreeTicket.objects.filter(event=event)
     
-    #edit forms
-    eventTitleForm = EventTitleForm(instance=event)
-    eventTypeForm = EventTypeForm(instance=event)
-    eventDateForm = EventDateForm(instance=event)
-    eventStartTimeForm = EventStartTimeForm(instance=event)
-    eventEndTimeForm = EventEndTimeForm(instance=event)
-    eventDescriptionForm = EventDescriptionForm(instance=event)
-    eventPrivacyForm = EventPrivacyForm(instance=event)
-    eventLocationForm = EventLocationForm(instance=event)
-    eventHeaderImageForm = EventHeaderImageForm(instance=event)
-
+    
     if request.method == "POST":
         action = request.POST.get("eventAction")
-        invitationForm = InvitationForm(request.POST)
-        paidFreeForm = PaidFreeTicketForm(request.POST)
-        
-        if action == "saveEventTitle":
-            form = EventTitleForm(request.POST, instance=event)
-            if form.is_valid():
-                form.save()
-            return redirect("eventManagement:eventManagement", eventId=eventId)
-        
-        if action == "saveEventType":
-            form = EventTypeForm(request.POST, instance=event)
-            if form.is_valid():
-                form.save()
-            return redirect("eventManagement:eventManagement", eventId=eventId)
-        
-        if action == "saveEventDate":
-            form = EventDateForm(request.POST, instance=event)
-            if form.is_valid():
-                form.save()
-            return redirect("eventManagement:eventManagement", eventId=eventId)
-        
-        if action == "saveEventStartTime":
-            form = EventStartTimeForm(request.POST, instance=event)
-            if form.is_valid():
-                form.save()
-            return redirect("eventManagement:eventManagement", eventId=eventId)
-        
-        if action == "saveEventEndTime":
-            form = EventEndTimeForm(request.POST, instance=event)
-            if form.is_valid():
-                form.save()
-            return redirect("eventManagement:eventManagement", eventId=eventId)
-        
-        if action == "saveEventDescription":
-            form = EventDescriptionForm(request.POST, instance=event)
-            if form.is_valid():
-                form.save()
-            return redirect("eventManagement:eventManagement", eventId=eventId)
-        
-        if action == "saveEventPrivacy":
-            form = EventPrivacyForm(request.POST, instance=event)
-            if form.is_valid():
-                form.save()
-            return redirect("eventManagement:eventManagement", eventId=eventId)
-        
-        if action == "saveEventLocation":    
-            form = EventLocationForm(request.POST, instance=event)
-            if form.is_valid():
-                form.save()
-            return redirect("eventManagement:eventManagement", eventId=eventId)
-        
-        if action == "saveEventHeaderImage":
-            form = EventHeaderImageForm(request.POST, request.FILES, instance=event)
-            if form.is_valid():
-                form.save()
-            return redirect("eventManagement:eventManagement", eventId=eventId)
-
+  
         if action == "deleteEvent":
             event.delete()
             return redirect("eventManagement:hostPortal")
 
-        if action == "removefromRSVPlist":
+        elif action == "removefromRSVPlist":
             rsvp_id = request.POST.get("rsvp_id")
             rsvp = get_object_or_404(RSVPTicket, ticket_id=rsvp_id)
             ticket = get_object_or_404(Ticket, guestEmail=rsvp.email, event=event)
@@ -380,7 +306,7 @@ def eventManagement(request, eventId):
             ticket.delete()
             return redirect("eventManagement:eventManagement", eventId=eventId)
 
-        if "displayOnCollege" in request.POST:
+        elif "displayOnCollege" in request.POST:
             event_to_update = get_object_or_404(
                 Event, eventId=event.eventId, host=request.user
             )
@@ -390,62 +316,98 @@ def eventManagement(request, eventId):
             event_to_update.save()
             return redirect("eventManagement:eventManagement", eventId=eventId)
 
-        if action == "sendInvites" and invitationForm.is_valid():
-            emails = invitationForm.cleaned_data["invite_emails"]
-            subject = invitationForm.cleaned_data["invite_subject"]
-            message = invitationForm.cleaned_data["invite_message"]
-            emailList = [email.strip() for email in emails.split(",")]
+        elif action == "sendInvites":
+            invitationForm = InvitationForm(request.POST)
+            if invitationForm.is_valid():
+                emails = invitationForm.cleaned_data["invite_emails"]
+                subject = invitationForm.cleaned_data["invite_subject"]
+                message = invitationForm.cleaned_data["invite_message"]
+                emailList = [email.strip() for email in emails.split(",")]
 
-            for email in emailList:
-                invitation = InviteEventOption.objects.create(event=event, email=email)
-                user_profile.invited_events.add(event)
-                user_profile.invitations.add(invitation)
-                # invitation.generate_token()
-                invitation.save()
+                for email in emailList:
+                    invitation = InviteEventOption.objects.create(event=event, email=email)
+                    user_profile.invited_events.add(event)
+                    user_profile.invitations.add(invitation)
+                    # invitation.generate_token()
+                    invitation.save()
 
-                invitation_link = request.build_absolute_uri(
-                    reverse(
-                        "core:eventDetails_withToken",
-                        kwargs={
-                            "eventId": str(eventId),
-                            "token": invitation.token,
-                        },
+                    invitation_link = request.build_absolute_uri(
+                        reverse(
+                            "core:eventDetails_withToken",
+                            kwargs={
+                                "eventId": str(eventId),
+                                "token": invitation.token,
+                            },
+                        )
                     )
-                )
-                emailMessageHtml = render_to_string(
-                    "emailTemplates/eventManagementApp/host/inviteAttendees.html",
-                    {"body": message, "invitationLink": invitation_link},
-                )
-                send_mail(
-                    subject=subject,
-                    message=message,
-                    from_email=None,
-                    fail_silently=False,
-                    recipient_list=[email],
-                    html_message=emailMessageHtml,
-                )
+                    emailMessageHtml = render_to_string(
+                        "emailTemplates/eventManagementApp/host/inviteAttendees.html",
+                        {"body": message, "invitationLink": invitation_link},
+                    )
+                    send_mail(
+                        subject=subject,
+                        message=message,
+                        from_email=None,
+                        fail_silently=False,
+                        recipient_list=[email],
+                        html_message=emailMessageHtml,
+                    )
             return redirect("eventManagement:eventManagement", eventId=eventId)
 
-        if action == "createPaidFreeTicket" and paidFreeForm.is_valid():
-            new_ticket = paidFreeForm.save(commit=False)
-            new_ticket.event = event
-            new_ticket.save()
+        elif action == "saveChanges":      
+            editEventForm = EditEventForm(request.POST, request.FILES, instance=event)
+            if editEventForm.is_valid():
+                # first check to see if user deleted any photos          
+                if 'remove_body_photo_one' in request.POST:
+                    event.body_photo_one.delete(save=False)
+                    event.body_photo_one = None
+                if 'remove_body_photo_two' in request.POST:
+                    event.body_photo_two.delete(save=False)
+                    event.body_photo_two = None
+                if 'remove_body_photo_three' in request.POST:
+                    event.body_photo_three.delete(save=False)
+                    event.body_photo_three = None
+                if 'remove_body_photo_four' in request.POST:
+                    event.body_photo_four.delete(save=False)
+                    event.body_photo_four = None
+                if 'remove_body_photo_five' in request.POST:
+                    event.body_photo_five.delete(save=False)
+                    event.body_photo_five = None
+                    
+                edits = editEventForm.save(commit=False)
+                
+                if 'headerPhoto' in request.FILES:
+                    edits.header_photo = request.FILES['headerPhoto']
+                if 'bodyPhotoOne' in request.FILES:
+                    edits.body_photo_one = request.FILES['bodyPhotoOne']
+                if 'bodyPhotoTwo' in request.FILES:
+                    edits.body_photo_two = request.FILES['bodyPhotoTwo']
+                if 'bodyPhotoThree' in request.FILES:
+                    edits.body_photo_three = request.FILES['bodyPhotoThree']
+                if 'bodyPhotoFour' in request.FILES:
+                    edits.body_photo_four = request.FILES['bodyPhotoFour']
+                if 'bodyPhotoFive' in request.FILES:
+                    edits.body_photo_five = request.FILES['bodyPhotoFive']
+        
+                edits.save()
+            else:
+                print(editEventForm.errors)
             return redirect("eventManagement:eventManagement", eventId=eventId)
-        else:
-            print(paidFreeForm.errors)
+    
+        elif action == "createPaidFreeTicket":
+            paidFreeForm = PaidFreeTicketForm(request.POST)  
+            if paidFreeForm.is_valid():
+                new_ticket = paidFreeForm.save(commit=False)
+                new_ticket.event = event
+                new_ticket.save()
+            return redirect("eventManagement:eventManagement", eventId=eventId)
+            
     else:
         invitationForm = InvitationForm()
         paidFreeForm = PaidFreeTicketForm()
-        eventTitleForm = EventTitleForm(instance=event)
-        eventTypeForm = EventTypeForm(instance=event)
-        eventDateForm = EventDateForm(instance=event)
-        eventStartTimeForm = EventStartTimeForm(instance=event)
-        eventEndTimeForm = EventEndTimeForm(instance=event)
-        eventDescriptionForm = EventDescriptionForm(instance=event)
-        eventPrivacyForm = EventPrivacyForm(instance=event)
-        eventLocationForm = EventLocationForm(instance=event)
-        eventHeaderImageForm = EventHeaderImageForm(instance=event)
-
+        editEventForm = EditEventForm(instance=event)
+    
+    
     return render(
         request,
         "eventManagementApp/host/eventManagement.html",
@@ -458,14 +420,10 @@ def eventManagement(request, eventId):
             "rsvpList": rsvp_list,
             "paidFreeForm": paidFreeForm,
             "paidFreeTickets": paid_free_tickets,
-            "eventTitleForm": eventTitleForm,
-            "eventTypeForm": eventTypeForm,
-            "eventDateForm": eventDateForm,
-            "eventStartTimeForm": eventStartTimeForm,
-            "eventEndTimeForm": eventEndTimeForm,
-            "eventDescriptionForm": eventDescriptionForm,
-            "eventPrivacyForm": eventPrivacyForm,
-            "eventLocationForm": eventLocationForm,
-            "eventHeaderImageForm": eventHeaderImageForm,
+            "editEventForm": editEventForm
         },
     )
+
+
+def hostBilling(request):
+    return render(request, "eventManagementApp/billing/hostBilling.html")
