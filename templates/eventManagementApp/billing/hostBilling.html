@@ -20,7 +20,7 @@ Host Dashboard | WAVE.
 {% block body %}
 <div class="flex flex-col gap-[70px] px-[20px] after-xsm:px-[30px] xxsm:px-[60px] sm:px-[70px] md:px-[60px] pre-lg:px-[70px] lg:px-[100px] xl:px-[140px] 2xl:px-[200px] 3xl:px-[300px]">
     <div class="page-heading font-Wanted-SemiBold text-[25px] md:text-[30px] flex flex-col sm:flex-row sm:justify-between gap-[10px] w-full">
-        <h2>Your Payout Methods, {{ request.user.first_name }}!<h2>
+        <h2>Your Payout Methods, {{ request.user.first_name }}!</h2>
     </div>
 
     <div id="billing-body" class="flex flex-col w-full gap-5">
@@ -34,14 +34,14 @@ Host Dashboard | WAVE.
                 <div class="w-full flex flex-col gap-2">
                     <h3 class="font-Wanted-Bold text-[20px]">Payout Methods</h3>
 
-                    <div class="flex flex-row gap-2 w-full">
+                    <div class="flex flex-col sm:flex-row gap-[45px] sm:gap-2 w-full">
                         <div class="flex flex-col gap-1 w-[70%]">
                             <h4 class="font-Wanted-Medium text-[15px]">Bank Account</h4>
                             <p class="font-Wanted-Variable text-[13px]">You have not added a bank account yet.</p>
                         </div>
 
-                        <div class="w-[30%] flex justify-end items-center h-full">
-                            <button class="font-Wanted-Regular gradient-btn hover:bg-green">Add Payout Method</button>
+                        <div class="w-full md:w-[30%] flex justify-center sm:justify-end items-center h-full">
+                            <button class="font-Wanted-Regular gradient-btn hover:bg-green flex justify-center items-center">Add Payout Method</button>
                         </div>
                     </div>
                 </div>
