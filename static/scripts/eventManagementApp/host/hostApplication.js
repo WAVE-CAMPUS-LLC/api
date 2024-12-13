@@ -107,3 +107,14 @@ document.addEventListener("DOMContentLoaded", function() {
     });
     
 });
+
+
+document.querySelector("#hostEventApplication").addEventListener("submit", (e) => {
+    const eventTypesField = document.querySelector("[name='eventTypes']");
+    if (eventTypesField && eventTypesField.offsetParent === null) {
+        e.preventDefault(); // Prevent submission
+        alert("Please fill out the event type field."); // Inform the user
+        // Optionally make the field visible
+        eventTypesField.closest(".hidden").classList.remove("hidden");
+    }
+});

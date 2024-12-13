@@ -1,5 +1,5 @@
 from django import forms
-from .models import HostApplication, Event
+from .models import HostApplication, Event, HostProfile
 from django.utils.translation import gettext_lazy as _
 from adminDashboardApp.models import College
 from accountManagementApp.models import UserProfile
@@ -50,6 +50,17 @@ class HostApplicationForm(forms.ModelForm):
             "eventHostedAnnually",
             "eventPopulation",
         ]
+        
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop("user", None)
+        super().__init__(*args, **kwargs)
+        if user:
+            self.fields["firstName"].initial = user.first_name
+            self.fields["lastName"].initial = user.last_name
+            self.fields["email"].initial = user.email
+            self.fields["firstName"].disabled = True
+            self.fields["lastName"].disabled = True
+            self.fields["email"].disabled = True
 
 
 class EventForm(forms.ModelForm):
@@ -185,3 +196,10 @@ class EditEventForm(forms.ModelForm):
             "body_photo_five",
         ]
         
+        
+class HostProfileForm(forms.ModelForm):
+    class Meta:
+        model = HostProfile
+        fields = [ "cashapp_id", "google_pay_id", "apple_pay_id"]
+        
+    # bank_account_details = forms.JSONField(widget=forms.Textarea, required=False)

@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import HostApplication, Event, EventPrivacy
+from .models import HostApplication, Event, EventPrivacy, HostProfile
 from eventTicketsApp.models import RSVPTicket, PaidFreeTicket, Ticket
 
 
@@ -86,7 +86,19 @@ class TicketAdmin(admin.ModelAdmin):
     )
 
 
+class HostProfileAdmin(admin.ModelAdmin):
+    list_display = (
+        "user",
+        "stripe_account_id",
+        # "bank_account_details",
+        "cashapp_id",
+        "google_pay_id",
+        "apple_pay_id",
+        
+    )
+
 admin.site.register(Ticket, TicketAdmin)
+admin.site.register(HostProfile, HostProfileAdmin)
 
 
 admin.site.register(Event, EventAdmin)

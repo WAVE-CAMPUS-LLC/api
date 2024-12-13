@@ -1,37 +1,30 @@
 from datetime import datetime
+import time
+import json
+import stripe
+from cryptography.fernet import Fernet
+from django.conf import settings
 from django.shortcuts import get_object_or_404, redirect, render
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from django.core.mail import send_mail
+import stripe.error
 from wave_v1.decorators import group_required
 from django.urls import reverse
 
 
 from accountManagementApp.models import UserProfile
 from collegeManagementApp.models import Organization, OrganizationMembership
-from .forms import (
-    HostApplicationForm,
-    EventForm,
-    EditEventForm
-)
+from .forms import HostApplicationForm, EventForm, EditEventForm
+from .stripeProcesses import updateConnectWithStripeDetails, getRequiredActions
 
 from eventTicketsApp.forms import InvitationForm, PaidFreeTicketForm
-from .models import (
-    EventType,
-    HostApplication,
-    Event,
-    EventPrivacy,
-)
+from .models import EventType, HostApplication, Event, EventPrivacy, HostProfile
 
-from eventTicketsApp.models import (
-    InviteEventOption,
-    RSVPTicket,
-    PaidFreeTicket,
-    Ticket
-)
+from eventTicketsApp.models import InviteEventOption, RSVPTicket, PaidFreeTicket, Ticket
 
 
 # Create your views here.
@@ -42,35 +35,38 @@ def hostView(request):
     )
 
 
+@login_required
 def hostApplyView(request):
-    """
-    The `hostApplyView` function handles the submission of a host application form in a Django web
-    application.
+    print("Request method:", request.method)  # Debugging
+    applicant = request.user
+    print("Applicant:", applicant)  # Debugging
+    applicant_profile = UserProfile.objects.get(user=applicant)
+    print("Applicant profile:", applicant_profile)  # Debugging
 
-    :param request: The `request` parameter in the `hostApplyView` function is an object that contains
-    information about the current HTTP request. It includes details such as the request method (GET,
-    POST, etc.), request data (POST data, query parameters), user session information, and more. In this
-    function,
-    :return: The `hostApplyView` function returns a rendered HTML template named "hostApplication.html"
-    along with a form object. The form object is either a new instance of `HostApplicationForm` if the
-    request method is not POST, or a form populated with the POST data if the request method is POST and
-    the form is valid. If the form is valid, the function also saves the form data to
-    """
     if request.method == "POST":
-        form = HostApplicationForm(request.POST)
+        form = HostApplicationForm(request.POST, user=applicant)
+        print("Form data:", request.POST)  # Debugging
+
         if form.is_valid():
+            print("Form is valid")
             application = form.save(commit=False)
             application.save()
             event_types = form.cleaned_data["eventTypes"]
+            print("Event types:", event_types)  # Debugging
             event_type_objs = [
                 EventType.objects.get_or_create(name=et)[0] for et in event_types
             ]
             application.eventTypes.set(event_type_objs)
             return redirect("eventManagement:hostHome")
+        else:
+            print("Form errors:", form.errors)  # Debugging
     else:
         form = HostApplicationForm()
+
     return render(
-        request, "eventManagementApp/host/hostApplication.html", {"form": form}
+        request,
+        "eventManagementApp/host/hostApplication.html",
+        {"form": form, "applicant": applicant_profile},
     )
 
 
@@ -289,11 +285,10 @@ def eventManagement(request, eventId):
     event_privacy = EventPrivacy.objects.get(event=event)
     rsvp_list = RSVPTicket.objects.filter(event=event)
     paid_free_tickets = PaidFreeTicket.objects.filter(event=event)
-    
-    
+
     if request.method == "POST":
         action = request.POST.get("eventAction")
-  
+
         if action == "deleteEvent":
             event.delete()
             return redirect("eventManagement:hostPortal")
@@ -325,7 +320,9 @@ def eventManagement(request, eventId):
                 emailList = [email.strip() for email in emails.split(",")]
 
                 for email in emailList:
-                    invitation = InviteEventOption.objects.create(event=event, email=email)
+                    invitation = InviteEventOption.objects.create(
+                        event=event, email=email
+                    )
                     user_profile.invited_events.add(event)
                     user_profile.invitations.add(invitation)
                     # invitation.generate_token()
@@ -354,60 +351,59 @@ def eventManagement(request, eventId):
                     )
             return redirect("eventManagement:eventManagement", eventId=eventId)
 
-        elif action == "saveChanges":      
+        elif action == "saveChanges":
             editEventForm = EditEventForm(request.POST, request.FILES, instance=event)
             if editEventForm.is_valid():
-                # first check to see if user deleted any photos          
-                if 'remove_body_photo_one' in request.POST:
+                # first check to see if user deleted any photos
+                if "remove_body_photo_one" in request.POST:
                     event.body_photo_one.delete(save=False)
                     event.body_photo_one = None
-                if 'remove_body_photo_two' in request.POST:
+                if "remove_body_photo_two" in request.POST:
                     event.body_photo_two.delete(save=False)
                     event.body_photo_two = None
-                if 'remove_body_photo_three' in request.POST:
+                if "remove_body_photo_three" in request.POST:
                     event.body_photo_three.delete(save=False)
                     event.body_photo_three = None
-                if 'remove_body_photo_four' in request.POST:
+                if "remove_body_photo_four" in request.POST:
                     event.body_photo_four.delete(save=False)
                     event.body_photo_four = None
-                if 'remove_body_photo_five' in request.POST:
+                if "remove_body_photo_five" in request.POST:
                     event.body_photo_five.delete(save=False)
                     event.body_photo_five = None
-                    
+
                 edits = editEventForm.save(commit=False)
-                
-                if 'headerPhoto' in request.FILES:
-                    edits.header_photo = request.FILES['headerPhoto']
-                if 'bodyPhotoOne' in request.FILES:
-                    edits.body_photo_one = request.FILES['bodyPhotoOne']
-                if 'bodyPhotoTwo' in request.FILES:
-                    edits.body_photo_two = request.FILES['bodyPhotoTwo']
-                if 'bodyPhotoThree' in request.FILES:
-                    edits.body_photo_three = request.FILES['bodyPhotoThree']
-                if 'bodyPhotoFour' in request.FILES:
-                    edits.body_photo_four = request.FILES['bodyPhotoFour']
-                if 'bodyPhotoFive' in request.FILES:
-                    edits.body_photo_five = request.FILES['bodyPhotoFive']
-        
+
+                if "headerPhoto" in request.FILES:
+                    edits.header_photo = request.FILES["headerPhoto"]
+                if "bodyPhotoOne" in request.FILES:
+                    edits.body_photo_one = request.FILES["bodyPhotoOne"]
+                if "bodyPhotoTwo" in request.FILES:
+                    edits.body_photo_two = request.FILES["bodyPhotoTwo"]
+                if "bodyPhotoThree" in request.FILES:
+                    edits.body_photo_three = request.FILES["bodyPhotoThree"]
+                if "bodyPhotoFour" in request.FILES:
+                    edits.body_photo_four = request.FILES["bodyPhotoFour"]
+                if "bodyPhotoFive" in request.FILES:
+                    edits.body_photo_five = request.FILES["bodyPhotoFive"]
+
                 edits.save()
             else:
                 print(editEventForm.errors)
             return redirect("eventManagement:eventManagement", eventId=eventId)
-    
+
         elif action == "createPaidFreeTicket":
-            paidFreeForm = PaidFreeTicketForm(request.POST)  
+            paidFreeForm = PaidFreeTicketForm(request.POST)
             if paidFreeForm.is_valid():
                 new_ticket = paidFreeForm.save(commit=False)
                 new_ticket.event = event
                 new_ticket.save()
             return redirect("eventManagement:eventManagement", eventId=eventId)
-            
+
     else:
         invitationForm = InvitationForm()
         paidFreeForm = PaidFreeTicketForm()
         editEventForm = EditEventForm(instance=event)
-    
-    
+
     return render(
         request,
         "eventManagementApp/host/eventManagement.html",
@@ -420,10 +416,167 @@ def eventManagement(request, eventId):
             "rsvpList": rsvp_list,
             "paidFreeForm": paidFreeForm,
             "paidFreeTickets": paid_free_tickets,
-            "editEventForm": editEventForm
+            "editEventForm": editEventForm,
         },
     )
 
 
+@login_required
+@group_required("Host")
 def hostBilling(request):
-    return render(request, "eventManagementApp/billing/hostBilling.html")
+    hostProfile = HostProfile.objects.get(user=request.user)
+
+    required_actions = []
+
+    # Getting the required actions for the connected stripe account so that the stripe account is fully activated
+    if hostProfile.stripe_account_id:
+        response = getRequiredActions(hostProfile.stripe_account_id)
+
+        if response["status"] == "success":
+            required_actions = response["required_actions"]
+            print(f"All required actions: {required_actions}")
+        else:
+            messages.error(request, f"Error: {response['message']}")
+
+    if request.method == "POST":
+        action = request.POST.get("billingAction")
+
+        if action == "removeBankAccount":
+            hostProfile.bank_account_details = None
+            hostProfile.save()
+            messages.success(request, "Bank account removed successfully.")
+            return redirect("eventManagement:hostBilling")
+
+        elif action == "addBankAccountNew":
+            account_holder_name = request.POST.get("accountHolderName")
+            bank_account_number = request.POST.get("accountNumber")
+            routing_number = request.POST.get("accountRoutingNumber")
+
+            # Validate banking details before proceeding
+            bank_details = {
+                "account_holder_name": account_holder_name,
+                "account_number": bank_account_number,
+                "routing_number": routing_number,
+            }
+
+            # response = createAndUpdateConnectedAccount(request, hostProfile, bank_details)
+
+            # if response["status"] == "success":
+            #     messages.success(request, "Bank account added successfully.")
+            # else:
+            #     messages.error(request, f"Error: {response['message']}")
+
+            return redirect("eventManagement:hostBilling")
+
+        elif action == "completeRequiredActions":
+            update_data = {}
+            if (
+                "business_profile" in required_actions
+                or "business_profile.url" in required_actions
+                or "business_profile.name" in required_actions
+                or "business_profile.support_phone" in required_actions
+                or "business_profile.support_email" in required_actions
+                or "business_profile.support_url" in required_actions
+                or "business_profile.support_address" in required_actions
+                or "business_profile.product_description" in required_actions
+            ):
+                update_data["business_profile.url"] = request.POST.get(
+                    "businessProfileURL"
+                )
+                update_data["business_profile.business_name"] = request.POST.get(
+                    "businessName"
+                )
+                update_data["business_profile.support_email"] = request.POST.get(
+                    "supportEmail"
+                )
+                update_data["business_profile.support_phone"] = request.POST.get(
+                    "supportPhone"
+                )
+                update_data["business_profile.support_url"] = request.POST.get(
+                    "businessProfileURL"
+                )
+                update_data["business_profile.product_description"] = request.POST.get(
+                    "businessProductDescription"
+                )
+                update_data["business_profile.support_address"] = {
+                    "line1": request.POST.get("street"),
+                    "city": request.POST.get("city"),
+                    "state": request.POST.get("state"),
+                    "postal_code": request.POST.get("postalCode"),
+                    "country": request.POST.get("country"),
+                }
+
+            if "external_account" in required_actions:
+                update_data["bank_details"] = {
+                    "account_holder_name": request.POST.get("accountHolderName"),
+                    "account_number": request.POST.get("accountNumber"),
+                    "routing_number": request.POST.get("accountRoutingNumber"),
+                }
+
+            if (
+                "individual.first_name" in required_actions
+                or "individual.last_name" in required_actions
+            ):
+                update_data["individual.first_name"] = request.POST.get("firstName")
+                update_data["individual.last_name"] = request.POST.get("lastName")
+
+            if (
+                "individual.dob.day" in required_actions
+                or "individual.dob.month" in required_actions
+                or "individual.dob.year" in required_actions
+            ):
+                update_data["individual.dob.day"] = request.POST.get("dobDay")
+                update_data["individual.dob.month"] = request.POST.get("dobMonth")
+                update_data["individual.dob.year"] = request.POST.get("dobYear")
+
+            if "individual" in required_actions and "ssn_last_4" in required_actions:
+                update_data["ssn_last_4"] = request.POST.get("ssn")
+
+                update_data["address"] = {
+                    "line1": request.POST.get("street"),
+                    "city": request.POST.get("city"),
+                    "state": request.POST.get("state"),
+                    "postal_code": request.POST.get("postalCode"),
+                    "country": request.POST.get("country"),
+                }
+
+            if (
+                "tos_acceptance" in required_actions
+                or "tos_acceptance.ip" in required_actions
+            ):
+                update_data["tos_acceptance"] = {
+                    "date": int(time.time()),
+                    "ip": get_client_ip(request),
+                    "user_agent": request.META.get("HTTP_USER_AGENT"),
+                    "service_agreement": "full",
+                }
+
+            print(update_data)
+            # Send updates to Stripe
+            response = updateConnectWithStripeDetails(hostProfile, update_data)
+            if response["status"] == "success":
+                print("Required actions completed successfully.")
+                messages.success(request, "Required actions completed successfully.")
+            else:
+                print(f"Error: {response['message']}")
+                messages.error(request, f"Error: {response['message']}")
+
+            return redirect("eventManagement:hostBilling")
+
+    return render(
+        request,
+        "eventManagementApp/billing/hostBilling.html",
+        {
+            "hostProfile": hostProfile,
+            "requiredActions": required_actions,
+        },
+    )
+
+
+def get_client_ip(request):
+    x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
+    if x_forwarded_for:
+        ip = x_forwarded_for.split(",")[0]
+    else:
+        ip = request.META.get("REMOTE_ADDR")
+    return ip

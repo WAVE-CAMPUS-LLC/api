@@ -1,5 +1,8 @@
 import resend
 import json
+import stripe
+
+from django.conf import settings
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 from django.views.decorators.http import require_POST
@@ -24,13 +27,14 @@ from accountManagementApp.models import UserProfile
 from authenticationApp.models import CustomUser
 from supportCenterApp.models import SupportTicket, FeedbackModel
 from careerApp.models import CareerRoleApplication
-from eventManagementApp.models import HostApplication
+from eventManagementApp.models import HostApplication, HostProfile
 from collegeManagementApp.models import (
     CollegeRequest,
     Organization,
     OrganizationMembership,
     Membership,
 )
+from eventManagementApp.stripeProcesses import updateConnectWithStripeDetails
 from blogApp.models import Blog
 from campusManagerApp.models import CampusManagerInvite
 from django.conf import settings
@@ -53,10 +57,9 @@ from .forms import (
     CollegeForm,
 )
 from supportCenterApp.models import SupportTicket, SupportTicketMessage
-from wave_v1.decorators import (    
-    check_suspension,
-    group_required
-)
+from wave_v1.decorators import check_suspension, group_required
+
+stripe.api_key = settings.STRIPE_SECRET_KEY
 
 
 # Create your views here.
@@ -196,6 +199,7 @@ def adminApplicationsView(request):
     if request.method == "POST":
         action = request.POST.get("applicationAction")
         applicant_email = request.POST.get("applicantEmail")
+        applicant_phone = request.POST.get("phone")
 
         if action == "approve":
             sendHostApprovalEmail(applicant_email)
@@ -203,7 +207,41 @@ def adminApplicationsView(request):
             try:
                 applicant = CustomUser.objects.get(email=applicant_email)
                 host_group, created = Group.objects.get_or_create(name="Host")
+
                 applicant.groups.add(host_group)
+
+                host_profile, profile_created = HostProfile.objects.get_or_create(
+                    user=applicant
+                )
+                try:
+                    stripeAccount = stripe.Account.create(
+                        type="custom",
+                        country="US",
+                        email=applicant_email,
+                        business_type="individual",
+                        individual={
+                            "email": applicant_email,
+                            "phone": applicant_phone,
+                            "first_name": applicant.first_name,
+                            "last_name": applicant.last_name,
+                        },
+                        capabilities={"transfers": {"requested": True}},
+                    )
+                    host_profile.stripe_account_id = stripeAccount.id
+                    host_profile.save()
+
+                except stripe.error.StripeError as e:
+                    return JsonResponse(
+                        {"status": "error", "message": str(e)}, status=400
+                    )
+                except Exception as e:
+                    return JsonResponse(
+                        {"status": "error", "message": str(e)}, status=500
+                    )
+
+                if profile_created:
+                    print(f"HostProfile created for user: {applicant_email}")
+
                 applicant.save()
 
             except CustomUser.DoesNotExist:
@@ -565,7 +603,7 @@ def adminCollegeDetailView(request, collegeId):
         if email:
             try:
                 send_invite(email, college)
-                
+
                 messages.success(request, "Invite sent successfully")
             except Exception as e:
                 messages.error(request, f"Error sending invite: {str(e)}")
@@ -606,7 +644,7 @@ def send_invite(email, college):
     """
     The function `send_invite` sends an invitation email to a user to become a Campus Manager at a
     specific college, handling existing invites and generating a unique invite link.
-    
+
     :param email: The `email` parameter in the `send_invite` function is the email address of the person
     to whom the invitation will be sent
     :param college: The `college` parameter in the `send_invite` function is likely an object
@@ -655,7 +693,7 @@ def adminNewsRoomView(request):
     """
     The function `adminNewsRoomView` retrieves all news articles from the Newsroom model and renders
     them in the newsroom.html template for display in the admin dashboard.
-    
+
     :param request: The `request` parameter in the `adminNewsRoomView` function is an object that
     contains information about the current HTTP request, such as the request method, headers, user
     session, and more. It is typically passed to view functions in Django to handle incoming requests
@@ -675,7 +713,7 @@ def adminCreateNewsView(request):
     """
     This Python function handles the creation of news articles by processing form data and saving it to
     the database.
-    
+
     :param request: The `request` parameter in the `adminCreateNewsView` function is an HttpRequest
     object that represents the current HTTP request. It contains information about the request made by
     the client, such as the request method (GET, POST, etc.), request data, user session information,
@@ -710,7 +748,7 @@ def adminCreateNewsView(request):
 def adminEditNewsView(request, newsId):
     """
     This function is likely used to display a view for editing news articles by an admin.
-    
+
     :param request: The `request` parameter in the `adminEditNewsView` function is typically an
     HttpRequest object that represents the current request from the user. It contains information about
     the request, such as the user's session, any data submitted through forms, and other metadata
@@ -826,12 +864,14 @@ def adminEditNewsView(request, newsId):
         },
     )
 
+
 @login_required
 @check_suspension
 @group_required("Admin")
 def adminBlogView(request):
     blogs = Blog.objects.all()
     return render(request, "adminDashboardApp/tabs/blogs.html", {"blogs": blogs})
+
 
 @login_required
 @check_suspension
@@ -840,7 +880,7 @@ def adminEmailingView(request):
     """
     The `adminEmailingView` function retrieves all active user profiles and renders them in an emailing
     template for the admin dashboard.
-    
+
     :param request: The `request` parameter in the `adminEmailingView` function is an HttpRequest object
     that represents the current HTTP request. It contains metadata about the request, such as the
     request method, headers, user session information, and more. This parameter is typically passed to
@@ -871,6 +911,8 @@ resend.api_key = settings.RESEND_API_KEY
     the email fails to send, it returns a JSON response with `"success": False` and an error message
     indicating the reason for the failure.
     """
+
+
 @csrf_exempt
 @require_POST
 @login_required
@@ -879,9 +921,9 @@ resend.api_key = settings.RESEND_API_KEY
 def send_email(request):
     try:
         data = json.loads(request.body)
-        recipients = data.get('recipients')
-        subject = data.get('subject')
-        message = data.get('message')
+        recipients = data.get("recipients")
+        subject = data.get("subject")
+        message = data.get("message")
 
         email_params: resend.Emails.SendParams = {
             "from": "Support @ WAVE. <support@wavecampus.net>",
@@ -892,7 +934,7 @@ def send_email(request):
 
         email_response = resend.Emails.send(email_params)
 
-        if email_response.get("id"):  
+        if email_response.get("id"):
             return JsonResponse({"success": True, "data": email_response})
         else:
             return JsonResponse({"success": False, "error": "Failed to send email."})
@@ -900,52 +942,57 @@ def send_email(request):
     except Exception as e:
         return JsonResponse({"success": False, "error": f"Error: {str(e)}"})
 
+
 @login_required
 def admin_ticket_details(request, ticket_id):
     ticket = get_object_or_404(SupportTicket, ticket_id=ticket_id)
-    return render(request, 'adminDashboardApp/tabs/admin_ticket_details.html', {'ticket': ticket})
+    return render(
+        request, "adminDashboardApp/tabs/admin_ticket_details.html", {"ticket": ticket}
+    )
+
 
 @login_required
 def admin_send_ticket_reply(request, ticket_id):
     ticket = get_object_or_404(SupportTicket, ticket_id=ticket_id)
-    if request.method == 'POST':
-        message = request.POST.get('message')
+    if request.method == "POST":
+        message = request.POST.get("message")
         if message:
             SupportTicketMessage.objects.create(
-                ticket=ticket,
-                sender=request.user,
-                message=message
+                ticket=ticket, sender=request.user, message=message
             )
-    return redirect('waveAdmin:admin_ticket_details', ticket_id=ticket_id)
+    return redirect("waveAdmin:admin_ticket_details", ticket_id=ticket_id)
+
 
 @login_required
 def toggle_ticket_status(request, ticket_id):
     ticket = get_object_or_404(SupportTicket, ticket_id=ticket_id)
-    if request.method == 'POST':
-        if ticket.status == 'Closed':
-            ticket.status = 'Open'
+    if request.method == "POST":
+        if ticket.status == "Closed":
+            ticket.status = "Open"
         else:
-            ticket.status = 'Closed'
+            ticket.status = "Closed"
         ticket.save()
-        return redirect('waveAdmin:admin_ticket_details', ticket_id=ticket_id)
+        return redirect("waveAdmin:admin_ticket_details", ticket_id=ticket_id)
+
 
 def ticket_messages(request, ticket_id):
     ticket = SupportTicket.objects.get(ticket_id=ticket_id)
     messages = ticket.messages.all()
     return render(request, "partials/messages.html", {"messages": messages})
 
+
 @login_required
 def admin_send_ticket_reply(request, ticket_id):
     ticket = get_object_or_404(SupportTicket, ticket_id=ticket_id)
-    if request.method == 'POST':
-        message = request.POST.get('message')
+    if request.method == "POST":
+        message = request.POST.get("message")
         if message:
             # Save the message to the database
             new_message = SupportTicketMessage.objects.create(
                 ticket=ticket,
                 sender=request.user,
                 message=message,
-                sent_at=timezone.now()
+                sent_at=timezone.now(),
             )
 
             # Send the message to the WebSocket group
@@ -957,6 +1004,13 @@ def admin_send_ticket_reply(request, ticket_id):
                     "message": new_message.message,
                     "sender": new_message.sender.username,
                     "sent_at": new_message.sent_at.strftime("%Y-%m-%d %H:%M:%S"),
-                }
+                },
             )
-    return redirect('waveAdmin:admin_ticket_details', ticket_id=ticket_id)
+    return redirect("waveAdmin:admin_ticket_details", ticket_id=ticket_id)
+
+
+def stripeProfiles(request):
+    profiles = UserProfile.objects.filter(stripe_customer_id__isnull=False)
+    return render(
+        request, "adminDashboardApp/tabs/stripeProfiles.html", {"profiles": profiles}
+    )

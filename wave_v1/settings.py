@@ -28,6 +28,7 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
+CRYPTOGRAPHY_KEY = os.getenv("CRYPTOGRAPHY_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -113,13 +114,6 @@ WSGI_APPLICATION = "wave_v1.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
-    }
-}
-
 # DATABASES = {
 #     "default": {
 #         "ENGINE": "django.db.backends.sqlite3",
@@ -146,19 +140,16 @@ if DATABASE_URL is None:
     raise ValueError("DATABASE_URL environment variable not set")
 
 # Parse the DATABASE_URL
-tmpPostgres = urlparse(DATABASE_URL)
+tmpPostgres = urlparse(os.getenv("DATABASE_URL"))
 
-# Ensure that all components are handled as strings
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": str(
-            tmpPostgres.path.lstrip("/")
-        ),  # Convert to string and remove leading slash
-        "USER": str(tmpPostgres.username),
-        "PASSWORD": str(tmpPostgres.password),
-        "HOST": str(tmpPostgres.hostname),
-        "PORT": str(tmpPostgres.port) if tmpPostgres.port else "",
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': tmpPostgres.path.replace('/', ''),
+        'USER': str(tmpPostgres.username),
+        'PASSWORD': str(tmpPostgres.password),
+        'HOST': str(tmpPostgres.hostname),
+        'PORT': 5432,
     }
 }
 

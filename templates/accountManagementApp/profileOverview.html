@@ -41,14 +41,14 @@ Profile Overview
         <div class="cc-user-card w-full rounded-[15px] gap-[10px] grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 xxsm:px-[50px] sm:px-[110px] md:px-0">
             <div id="heading" class="flex flex-col justify-center border border-custom-rgba11 rounded-[15px] py-[20px] px-[40px] shadow-custom-shadow-6">
                 <div class="fNamePfp flex flex-col xxsm:flex-row items-center xxsm:items-start gap-[20px]">
-                    <div class="pfp">
+                    <div class="h-full w-fit flex items-center">
                         {% if userProfile.profile_photo %}
                         <img src="{{ userProfile.profile_photo.url }}" class="w-[80px] h-[80px] rounded-[50%]" />
                         {% else %}
                         <img src="{% static "/images/logo/android-chrome-512x512.png" %}" class="w-[80px] h-[80px] rounded-[50%]" />
                         {% endif %}
                     </div>
-                    <div class="info flex flex-col justify-between">
+                    <div class="info flex w-fit flex-col justify-between">
                         <h4 class="font-bold font-Wanted-Bold text-[20px] xssm:text-[23px] xxsm:text-[30px] text-black">{{ user.first_name }} {{ user.last_name }}</h4>
                         <p class="font-Wanted-Variable text-[15px] text-black">@{{ user.username }}</p>
                         <div class="heading-edit flex justify-start items-center font-Wanted-Regular text-[13px] mt-[5px]">

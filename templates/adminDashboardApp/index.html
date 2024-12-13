@@ -116,6 +116,38 @@ WAVE. — Management Dashboard
 
     <section class="content-section">
         <div class="font-Wanted-Bold text-[30px] md:text-[40px]">
+            <h4 class="font-Wanted-Bold text-Large sm:text-2xl md:text-[40px]">Billing & Finance</h4>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-[20px]">
+            <a id="optionCard" href="{% url 'waveAdmin:stripeProfiles' %}" class="border-[2px] border-solid border-[rgba(0,0,0,0.038)] rounded-[20px] py-[40px] px-[20px] cursor-pointer flex flex-row gap-[12px] md:gap-[30px] lg:gap-[50px] w-full shadow-custom-shadow-2">
+                <div class="w-[30%] flex justify-center items-center">
+                    <img class="size-24" src="{% static "/images/admin/departments/optionDepartment.svg" %}" alt="Departments Management Dashboard">
+                </div>
+                <div class="w-[70%] h-[100%] flex flex-col">
+                    <div class="h-[100%] flex flex-col justify-center gap-[10px]">
+                        <h3 class="font-Wanted-Bold text-Large sm:text-2xl md:text-[40px]">Stripe Profiles</h3>
+                        <p class="font-Wanted-Regular">Last Update: 5th March, 2024</p>
+                    </div>
+                </div>
+            </a>
+
+            <a id="optionCard" href="{% url 'waveAdmin:careers' %}" class="border-[2px] border-solid border-[rgba(0,0,0,0.038)] rounded-[20px] py-[40px] px-[20px] cursor-pointer flex flex-row gap-[12px] md:gap-[30px] lg:gap-[50px] w-full shadow-custom-shadow-2">
+                <div class="w-[30%] flex justify-center items-center">
+                    <img class="size-24" src="{% static "/images/admin/jobs/optionJobs.svg" %}" alt="Support Management Jobs">
+                </div>
+                <div class="w-[70%] h-[100%] flex flex-col">
+                    <div class="h-[100%] flex flex-col justify-center gap-[10px]">
+                        <h3 class="font-Wanted-Bold text-Large sm:text-2xl md:text-[40px]">Jobs</h3>
+                        <p class="font-Wanted-Regular">Last Update: 5th March, 2024</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </section>
+
+    <section class="content-section">
+        <div class="font-Wanted-Bold text-[30px] md:text-[40px]">
             <h4 class="font-Wanted-Bold text-Large sm:text-2xl md:text-[40px]">Applications Management</h4>
         </div>
 

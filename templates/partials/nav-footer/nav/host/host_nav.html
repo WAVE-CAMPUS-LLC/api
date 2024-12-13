@@ -128,9 +128,9 @@
                                 Join Campus!
                             </a>
                         {% else %}
-                            <a class="gradient-btn hover:gradient-btn-hover text-white" href="{% url "eventManagement:portal" %}">
+                            <a class="gradient-btn hover:gradient-btn-hover text-white" target="_blank" href="{% url "eventManagement:hostPortal" %}">
                                 <img src="{% static "/images/eventManagementApp/host/host_ticket.svg" %}" />
-                                Create Event
+                                Host Portal
                             </a>
                         {% endif %}
                     {% endif %}

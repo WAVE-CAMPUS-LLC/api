@@ -1,4 +1,6 @@
 import uuid
+import json
+from cryptography.fernet import Fernet
 from django.db import models
 from django.utils.translation import gettext as _
 from django.utils import timezone
@@ -12,6 +14,9 @@ from collegeManagementApp.models import Organization
 from eventTicketsApp.models import InviteEventOption
 
 
+fernet = Fernet(settings.CRYPTOGRAPHY_KEY)
+
+
 class HostApplication(models.Model):
     EVENT_TYPE_CHOICES = [
         ("conference", "Conference"),
@@ -21,10 +26,16 @@ class HostApplication(models.Model):
         ("networking", "Networking Event"),
     ]
 
-    firstName = models.CharField(verbose_name="First Name", max_length=70, null=False, blank=False)
-    lastName = models.CharField(verbose_name="Last Name", max_length=70, null=False, blank=False)
+    firstName = models.CharField(
+        verbose_name="First Name", max_length=70, null=False, blank=False
+    )
+    lastName = models.CharField(
+        verbose_name="Last Name", max_length=70, null=False, blank=False
+    )
     email = models.EmailField(verbose_name="Email", null=False, blank=False)
-    phone = models.CharField(verbose_name="Phone", max_length=10, null=False, blank=False)
+    phone = models.CharField(
+        verbose_name="Phone", max_length=10, null=False, blank=False
+    )
 
     organizationName = models.CharField(
         verbose_name="Organization Name", max_length=150
@@ -34,10 +45,14 @@ class HostApplication(models.Model):
         verbose_name="Organization Location", max_length=150
     )
 
-    eventTypes = models.ManyToManyField("EventType", related_name="applications", null=False, blank=False)
+    eventTypes = models.ManyToManyField(
+        "EventType", related_name="applications", null=False, blank=False
+    )
 
     eventHostedAnnually = models.CharField(
-        verbose_name="How many events do you plan on hosting annually?", max_length=100, null=False
+        verbose_name="How many events do you plan on hosting annually?",
+        max_length=100,
+        null=False,
     )
     eventPopulation = models.CharField(
         verbose_name="How many people do you expect at each event?", max_length=1000
@@ -328,7 +343,7 @@ class Event(models.Model):
 
     def __str__(self):
         return self.title
-    
+
     class Meta:
         default_permissions = ()
 
@@ -358,9 +373,50 @@ class EventPrivacy(models.Model):
     restricted_organization = models.ForeignKey(
         Organization, on_delete=models.SET_NULL, blank=True, null=True
     )
-    
+
     class Meta:
         default_permissions = ()
 
     def __str__(self):
         return f"{self.event.title} Privacy Settings"
+
+
+class HostProfile(models.Model):
+    user = models.OneToOneField(
+        "authenticationApp.CustomUser",
+        on_delete=models.CASCADE,
+        related_name="host_profile",
+    )
+    stripe_account_id = models.CharField(
+        max_length=255, blank=True, null=True, help_text="Stripe account ID"
+    )
+    bank_account_details = models.TextField(null=True, blank=True)
+    cashapp_id = models.CharField(
+        max_length=255, blank=True, null=True, help_text="CashApp ID"
+    )
+    google_pay_id = models.CharField(
+        max_length=255, blank=True, null=True, help_text="Google Pay ID"
+    )
+    apple_pay_id = models.CharField(
+        max_length=255, blank=True, null=True, help_text="Apple Pay ID"
+    )
+    connected_on = models.DateTimeField(auto_now_add=True)
+    updated_on = models.DateTimeField(auto_now=True)
+
+    def set_bank_account_details(self, details):
+        # Save bank account details as plain text (no encryption)
+        self.bank_account_details = json.dumps(details)
+        self.save()
+
+    def get_bank_account_details(self):
+        if not self.bank_account_details:
+            return None
+        try:
+            # Just return the details as plain text
+            return json.loads(self.bank_account_details)
+        except Exception as e:
+            print(f"Error loading bank account details: {e}")
+        return None
+
+    def __str__(self):
+        return f"{self.user.first_name} {self.user.last_name}'s Host Profile"

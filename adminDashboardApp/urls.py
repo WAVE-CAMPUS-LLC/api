@@ -43,4 +43,5 @@ urlpatterns = [
     path('send_ticket_reply/<str:ticket_id>/', views.admin_send_ticket_reply, name='admin_send_ticket_reply'),
     path('toggle_ticket_status/<str:ticket_id>/', views.toggle_ticket_status, name='toggle_ticket_status'),
 
+    path('stripe/profiles/', views.stripeProfiles, name='stripeProfiles'),
 ]
