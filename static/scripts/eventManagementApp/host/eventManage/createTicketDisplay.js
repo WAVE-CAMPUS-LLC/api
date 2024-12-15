@@ -5,14 +5,14 @@ document.addEventListener('DOMContentLoaded', function () {
     const createTicketModal = document.getElementById("ticketCreationModal")
 
     createTicketButtonFirst.addEventListener('click', function () {
-        createTicketModal.style.display = 'block';
+        createTicketModal.classList.remove('hidden');
     });
 
     createTicketButtonSecond.addEventListener('click', function () {
-        createTicketModal.style.display = 'block';
+        createTicketModal.classList.remove('hidden');
     });
 
     closeTicketModal.addEventListener('click', function () {
-        createTicketModal.style.display = 'none';
+        createTicketModal.classList.add('hidden');
     });
 });

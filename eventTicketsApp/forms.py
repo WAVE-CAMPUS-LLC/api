@@ -45,22 +45,7 @@ class PaidFreeTicketForm(forms.ModelForm):
         model = PaidFreeTicket
         fields = [
             "ticket_name",
-            "ticket_type",
             "ticket_price",
             "ticket_description",
             "ticket_quantity",
         ]
-
-    def clean(self):
-        cleaned_data = super().clean()
-        ticket_type = cleaned_data.get("ticket_type")
-        ticket_price = cleaned_data.get("ticket_price")
-
-        # Validate ticket price for 'Priced' tickets
-        if ticket_type == "Priced" and (ticket_price is None or ticket_price <= 0):
-            self.add_error(
-                "ticket_price",
-                "Ticket price must be greater than zero for priced tickets.",
-            )
-
-        return cleaned_data

@@ -34,7 +34,7 @@ from collegeManagementApp.models import (
     OrganizationMembership,
     Membership,
 )
-from eventManagementApp.stripeProcesses import updateConnectWithStripeDetails
+from stripeManagementApp.updateConnectWithStripeDetails import updateConnectWithStripeDetails
 from blogApp.models import Blog
 from campusManagerApp.models import CampusManagerInvite
 from django.conf import settings

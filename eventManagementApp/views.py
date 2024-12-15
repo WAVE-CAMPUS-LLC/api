@@ -19,7 +19,10 @@ from django.urls import reverse
 from accountManagementApp.models import UserProfile
 from collegeManagementApp.models import Organization, OrganizationMembership
 from .forms import HostApplicationForm, EventForm, EditEventForm
-from .stripeProcesses import updateConnectWithStripeDetails, getRequiredActions
+from stripeManagementApp.getRequiredActions import  getRequiredActions
+from stripeManagementApp.updateConnectWithStripeDetails import updateConnectWithStripeDetails
+from stripeManagementApp.createHostProduct import createHostProduct
+from stripeManagementApp.createHostProductPrice import createProductPriceType
 
 from eventTicketsApp.forms import InvitationForm, PaidFreeTicketForm
 from .models import EventType, HostApplication, Event, EventPrivacy, HostProfile
@@ -146,10 +149,12 @@ def eventCreationProcess(request, eventId):
             if go_live:
                 event_status = "live"
                 event.status = event_status
-
+                
+                
                 messages.success(request, "Event is live!")
 
                 user_profile = event.host.user_profile
+                hostProfile = HostProfile.objects.get(user=request.user)
                 organization_membership = OrganizationMembership.objects.filter(
                     user=event.host
                 ).first()
@@ -200,7 +205,17 @@ def eventCreationProcess(request, eventId):
                     event_privacy.save()
 
                 event.save()
-                return redirect("eventManagement:eventManagement", eventId=eventId)
+                product = createHostProduct(event, hostProfile.stripe_account_id)
+                
+                if product is not None:
+                    productId = product.id
+                    event.stripeProductId = productId
+                    print("Product ID:", productId)
+                    event.save()
+                else:
+                    print("Product creation failed")
+                    messages.error(request, "Product creation failed")
+                    return redirect("eventManagement:eventManagement", eventId=eventId)
 
             else:
                 event.save()
@@ -253,7 +268,7 @@ def save_event_progress(request, eventId):
         event.privacy = request.POST.get("privacy", "")
         event.country = request.POST.get("country", "")
         event.building_name = request.POST.get("building_name", "")
-        event.street_address = request.POST.get("street_address", "")
+        event.street = request.POST.get("street", "")
         event.apt_suite_unit = request.POST.get("apt_suite_unit", "")
         event.city = request.POST.get("city", "")
         event.state = request.POST.get("state", "")
@@ -281,6 +296,7 @@ def save_event_progress(request, eventId):
 def eventManagement(request, eventId):
     event = get_object_or_404(Event, eventId=eventId)
     user_profile = UserProfile.objects.get(user=request.user)
+    hostProfile = HostProfile.objects.get(user=event.host)
     is_in_college = user_profile.college is not None
     event_privacy = EventPrivacy.objects.get(event=event)
     rsvp_list = RSVPTicket.objects.filter(event=event)
@@ -396,7 +412,14 @@ def eventManagement(request, eventId):
             if paidFreeForm.is_valid():
                 new_ticket = paidFreeForm.save(commit=False)
                 new_ticket.event = event
+                
                 new_ticket.save()
+                eventStripeId = event.stripeProductId
+                print("Event Stripe ID:", eventStripeId)
+                stripePrice = createProductPriceType(eventStripeId, new_ticket.ticket_price, hostProfile.stripe_account_id, new_ticket.ticket_quantity)
+                new_ticket.stripePriceId = stripePrice.id
+                new_ticket.save()
+                
             return redirect("eventManagement:eventManagement", eventId=eventId)
 
     else:
@@ -469,6 +492,7 @@ def hostBilling(request):
             return redirect("eventManagement:hostBilling")
 
         elif action == "completeRequiredActions":
+            print(request.POST)
             update_data = {}
             if (
                 "business_profile" in required_actions
@@ -528,10 +552,11 @@ def hostBilling(request):
                 update_data["individual.dob.day"] = request.POST.get("dobDay")
                 update_data["individual.dob.month"] = request.POST.get("dobMonth")
                 update_data["individual.dob.year"] = request.POST.get("dobYear")
-
-            if "individual" in required_actions and "ssn_last_4" in required_actions:
+                
+            if "individual.ssn_last_4" in required_actions or "ssn_last_4" in required_actions:
                 update_data["ssn_last_4"] = request.POST.get("ssn")
 
+            if "individual" in required_actions: 
                 update_data["address"] = {
                     "line1": request.POST.get("street"),
                     "city": request.POST.get("city"),
@@ -555,7 +580,6 @@ def hostBilling(request):
             # Send updates to Stripe
             response = updateConnectWithStripeDetails(hostProfile, update_data)
             if response["status"] == "success":
-                print("Required actions completed successfully.")
                 messages.success(request, "Required actions completed successfully.")
             else:
                 print(f"Error: {response['message']}")

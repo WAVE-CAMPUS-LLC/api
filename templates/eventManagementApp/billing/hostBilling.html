@@ -184,7 +184,7 @@ Host Dashboard | WAVE.
                                 </div>
                                 {% endif %}
                                 
-                                
+                                {% if "individual.address" in requiredAction %}
                                 <div class="flex flex-col gap-3">
                                     <div>
                                         <h3 class="font-Wanted-SemiBold text-Pre-Xl">Business Address</h3>
@@ -234,6 +234,8 @@ Host Dashboard | WAVE.
                                         </div>
                                     </div>
                                 </div>
+                                {% endif %}
+                                
                                     
                                 {% if "individual.ssn_last_4" in requiredActions %}
                                 <div class="flex flex-col gap-3">

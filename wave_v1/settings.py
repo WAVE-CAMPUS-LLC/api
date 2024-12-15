@@ -66,8 +66,8 @@ INSTALLED_APPS = [
     "campusManagerApp",
     "widget_tweaks",
     "qr_code",
-    'storages',
-    'channels',
+    "storages",
+    "channels",
 ]
 
 MIDDLEWARE = [
@@ -80,7 +80,15 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "authenticationApp.middleware.RedirectAuthenticatedUsersMiddleware",
+    "csp.middleware.CSPMiddleware",
+    "wave_v1.middleware.nonce_handlers.NonceMiddleware",
 ]
+
+CSP_DEFAULT_SRC = ("'self'",)
+CSP_SCRIPT_SRC = (
+    "'self'",
+    "'nonce-'",
+)
 
 # CSRF_FAILURE_VIEW = 'wave_v1.middleware.csrf_handlers.csrf_failure'
 
@@ -103,10 +111,10 @@ TEMPLATES = [
     },
 ]
 
-ASGI_APPLICATION = 'wave_v1.asgi.application'  
+ASGI_APPLICATION = "wave_v1.asgi.application"
 CHANNEL_LAYERS = {
     "default": {
-        "BACKEND": "channels.layers.InMemoryChannelLayer"  #TODO: Change to Redis for production
+        "BACKEND": "channels.layers.InMemoryChannelLayer"  # TODO: Change to Redis for production
     }
 }
 WSGI_APPLICATION = "wave_v1.wsgi.application"
@@ -143,13 +151,13 @@ if DATABASE_URL is None:
 tmpPostgres = urlparse(os.getenv("DATABASE_URL"))
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': tmpPostgres.path.replace('/', ''),
-        'USER': str(tmpPostgres.username),
-        'PASSWORD': str(tmpPostgres.password),
-        'HOST': str(tmpPostgres.hostname),
-        'PORT': 5432,
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": tmpPostgres.path.replace("/", ""),
+        "USER": str(tmpPostgres.username),
+        "PASSWORD": str(tmpPostgres.password),
+        "HOST": str(tmpPostgres.hostname),
+        "PORT": 5432,
     }
 }
 
@@ -163,7 +171,7 @@ EMAIL_HOST_USER = "larteyokle@gmail.com"
 EMAIL_HOST_PASSWORD = "lrxkfnqqxxkyzgct"
 
 # Resend Email Configurations
-RESEND_API_KEY = 're_UutAuVEz_34S8yutMqLPTUr5644vau6n9'
+RESEND_API_KEY = "re_UutAuVEz_34S8yutMqLPTUr5644vau6n9"
 
 
 # Password validation

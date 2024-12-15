@@ -12,9 +12,10 @@ from django.template.loader import render_to_string
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
-
 def updateConnectWithStripeDetails(hostProfile, update_data):
     try:
+        print("")
+        print("Update Data:", update_data)
         # Update business profile
         if "business_profile.url" in update_data:
             stripe.Account.modify(
@@ -55,6 +56,7 @@ def updateConnectWithStripeDetails(hostProfile, update_data):
 
         # Add/update bank account details
         if "bank_details" in update_data:
+            print("Bank details before update:", update_data["bank_details"])
             stripe.Account.create_external_account(
                 hostProfile.stripe_account_id,
                 external_account={
@@ -98,11 +100,11 @@ def updateConnectWithStripeDetails(hostProfile, update_data):
                 },
             )
 
-        if "individual.ssn_last_4" in update_data:
+        if "individual.ssn_last_4" in update_data or "ssn_last_4" in update_data:
             stripe.Account.modify(
                 hostProfile.stripe_account_id,
                 individual={
-                    "ssn_last_4": update_data["individual.ssn_last_4"],
+                    "ssn_last_4": update_data["ssn_last_4"],
                 },
             )
         # Update personal details
@@ -139,44 +141,3 @@ def updateConnectWithStripeDetails(hostProfile, update_data):
     except stripe.error.StripeError as e:
         print("message", str(e))
         return {"status": "error", "message": str(e)}
-
-
-def getRequiredActions(stripeAccountId):
-    try:
-        # Retrieve the Stripe account using the account ID
-        account = stripe.Account.retrieve(stripeAccountId)
-
-        if "requirements" in account:
-            requirements = account["requirements"]
-
-            # Extract all required actions: currently_due, eventually_due, and pending_verification
-            currently_due = requirements.get("currently_due", [])
-            eventually_due = requirements.get("eventually_due", [])
-            pending_verification = requirements.get("pending_verification", [])
-
-            # Combine all required actions into one list
-            all_required_actions = list(
-                set(currently_due + eventually_due + pending_verification)
-            )
-
-            # Clean up the actions list (remove duplicates)
-            print(f"All required actions: {all_required_actions}")
-            return {"status": "success", "required_actions": all_required_actions}
-
-        # If 'requirements' field is missing, handle it
-        return {"status": "error", "message": "No requirements data available"}
-
-    except stripe.error.StripeError as e:
-        # Handle any Stripe API errors
-        return {"status": "error", "message": str(e)}
-
-
-def removeStripeAccount(stripeAccountId):
-    try:
-        stripe.Account.delete(stripeAccountId)
-        return {"status": "success"}
-    except stripe.error.StripeError as e:
-        return {"status": "error", "message": str(e)}
-
-
-# removeStripeAccount("acct_1QVZkiIijVu7hMzN")

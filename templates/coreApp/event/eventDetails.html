@@ -11,7 +11,7 @@
 {% block script %}
 <script type="text/javascript" src="{% static "scripts/coreApp/event/eventDetailsTabs.js" %}"></script>
 <script type="text/javascript" src="{% static "scripts/coreApp/event/eventDetailsTicketsTab.js" %}" defer></script>
-<script type="text/javascript" src="{% static "scripts/coreApp/eventDetails/ticketCount.js" %}" defer></script>
+<script type="text/javascript" src="{% static "scripts/coreApp/eventDetails/ticketCount.js" %}" defer nonce="{{ nonce }}"></script>
 {% endblock script %}
 
 
@@ -210,20 +210,17 @@
                                         <div class="jtb-container flex flex-col gap-9">
                                             <div class="ticket-description-body flex flex-col gap-4">
                                                 <div class="ticket-header-info flex flex-row justify-between items-center">
-                                                    <h6 class="priceType flex justify-start font-Wanted-Bold text-Large">
-                                                        {% if ticket.ticket_type == "Paid" %}
+                                                    <h6 class="priceType flex justify-start text-black font-Wanted-Bold text-Large">
+                                                        
                                                         ${{ ticket.ticket_price }}
-                                                        {% elif ticket.ticket_type == "Free" %}
-                                                        Free
-                                                        {% endif %}
                                                     </h6>
 
                                                     <div class="addRemoveTickets flex flex-row gap-1 items-center">
-                                                        <button class="removeTicket border-none bg-none cursor-pointer" id="removeTicketButton" data-ticket-id="{{ ticket.ticket_id }}" data-ticket-name="{{ ticket.ticket_name }}" data-ticket-price="{{ ticket.ticket_price }}" role="button" name="eventAction" value="Remove Ticket">
+                                                        <button class="removeTicket border-none bg-none cursor-pointer" id="removeTicketButton" data-ticket-id="{{ ticket.ticket_id }}" data-ticket-name="{{ ticket.ticket_name }}" data-ticket-event-name="{{ ticket.event.title }}" data-ticket-price="{{ ticket.ticket_price }}" role="button" name="eventAction" value="Remove Ticket" data-stripe-price-id="{{ ticket.stripePriceId }}" data-stripe-product-id="{{ ticket.event.stripeProductId }}" data-ticket-event-id="{{ ticket.event.eventId }}">
                                                             <img src="{% static "images/eventManagementApp/event/removeTicket.svg" %}" alt="-1 Ticket" />
                                                         </button>
                                                         <span class="currentTicketAmount w-12 h-7 font-Wanted-Variable flex justify-center items-center" id="currentTicketAmount" data-ticket-id="{{ ticket.ticket_id }}">0</span>
-                                                        <button class="addTicket border-none bg-none cursor-pointer" id="addTicketButton" name="eventAction" data-ticket-id="{{ ticket.ticket_id }}" data-ticket-name="{{ ticket.ticket_name }}" data-ticket-price="{{ ticket.ticket_price }}" value="Add Ticket" onclick="">
+                                                        <button class="addTicket border-none bg-none cursor-pointer" id="addTicketButton" name="eventAction" data-ticket-id="{{ ticket.ticket_id }}" data-ticket-name="{{ ticket.ticket_name }}" data-ticket-price="{{ ticket.ticket_price }}" value="Add Ticket" data-stripe-price-id="{{ ticket.stripePriceId }}" data-stripe-product-id="{{ ticket.event.stripeProductId }}" data-ticket-event-id="{{ ticket.event.eventId }}" data-ticket-event-name="{{ ticket.event.title }}">
                                                             <img src="{% static "images/eventManagementApp/event/addTicket.svg" %}" alt="+1 Ticket" />
                                                         </button>
                                                     </div>
@@ -294,6 +291,7 @@
                                                     0
                                                 </span>
                                             </span>
+
                                             <span class="cartItemPrice">
                                                 <span id="ticketPricePlaceholder">
                                                     $0.00
@@ -308,7 +306,7 @@
                                 <div class="checkoutRowContainer flex justify-center">
                                     <input type="hidden" id="checkout-url" value="{% url 'eventTickets:checkout' %}">
 
-                                    <button id="checkoutButton" data-save-url="{% url 'eventTickets:updateCart' %}" class="checkoutButton gradient-btn w-full font-Wanted-SemiBold text-Large" role="button" name="eventAction" value="Checkout" onclick="returnCheckout()">
+                                    <button id="checkoutButton" data-save-url="{% url 'eventTickets:updateCart' %}" class="checkoutButton gradient-btn w-full font-Wanted-SemiBold text-Large" role="button" name="eventAction" value="Checkout">
                                         Checkout -
                                         <span id="checkoutTotal">$0.00</span>
                                     </button>

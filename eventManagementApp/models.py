@@ -199,9 +199,12 @@ class Event(models.Model):
         ("volunteer", "Volunteer"),
         ("workshop", "Workshop"),
     ]
+    
     eventId = models.UUIDField(
         primary_key=True, default=uuid.uuid4, editable=False, unique=True
     )
+    
+    stripeProductId = models.CharField(max_length=255, blank=True, null=True)
 
     host = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="events"
@@ -382,6 +385,8 @@ class EventPrivacy(models.Model):
 
 
 class HostProfile(models.Model):
+    hostProfileId = models.UUIDField(
+    primary_key=True, default=uuid.uuid4, editable=False, unique=True)
     user = models.OneToOneField(
         "authenticationApp.CustomUser",
         on_delete=models.CASCADE,

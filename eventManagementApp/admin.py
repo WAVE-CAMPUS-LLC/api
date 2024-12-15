@@ -63,7 +63,6 @@ class PaidFreeTicketAdmin(admin.ModelAdmin):
     list_display = (
         "event",
         "ticket_id",
-        "ticket_type",
         "ticket_name",
         "ticket_price",
         "ticket_quantity",

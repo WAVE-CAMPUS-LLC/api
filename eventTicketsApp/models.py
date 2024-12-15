@@ -107,11 +107,6 @@ class RSVPTicket(models.Model):
 
 
 class PaidFreeTicket(models.Model):
-    TYPE_CHOICES = [
-        ("Free", "Free"),
-        ("Priced", "Priced"),
-    ]
-
     event = models.ForeignKey(
         "eventManagementApp.Event",
         verbose_name=_("Related Event"),
@@ -121,15 +116,9 @@ class PaidFreeTicket(models.Model):
     ticket_id = models.UUIDField(
         primary_key=True, default=uuid.uuid4, editable=False, unique=True
     )
+    stripePriceId = models.CharField(max_length=100, blank=True, null=True)
     ticket_name = models.CharField(_("Ticket Name"), max_length=50)
-    ticket_type = models.CharField(
-        _("Pricing Type"),
-        max_length=6,
-        null=False,
-        blank=False,
-        default="Free",
-        choices=TYPE_CHOICES,
-    )
+    
     ticket_price = models.DecimalField(
         _("Ticket Price"), max_digits=10, decimal_places=2, null=True, blank=True
     )
@@ -155,9 +144,11 @@ class PaidFreeTicket(models.Model):
         return self.ticket_quantity - self.ticket_sold
 
     def save(self, *args, **kwargs):
-        if self.ticket_type == "Paid" and not self.ticket_price:
+        if self.ticket_price is None:
             raise ValueError("Ticket price must be set for paid tickets")
         super().save(*args, **kwargs)
+
+
 
 class UserPayment(models.Model):
     user = models.ForeignKey("authenticationApp.CustomUser", on_delete=models.CASCADE)
