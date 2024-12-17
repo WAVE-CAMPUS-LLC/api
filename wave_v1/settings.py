@@ -13,6 +13,8 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 from pathlib import Path
 import os
 from urllib.parse import urlparse
+from django.contrib.messages import constants as messages_constants
+
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -38,7 +40,7 @@ ALLOWED_HOSTS = []
 # Stripe API Key (Test)
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SK")
 STRIPE_WEBHOOK_SECRET_TEST = os.getenv("STRIPE_WEBHOOK_SK")
-
+STRIPE_PUBLISHABLE_KEY = os.getenv("STRIPE_PK")
 
 # Application definition
 
@@ -80,15 +82,13 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "authenticationApp.middleware.RedirectAuthenticatedUsersMiddleware",
-    "csp.middleware.CSPMiddleware",
-    "wave_v1.middleware.nonce_handlers.NonceMiddleware",
 ]
 
-CSP_DEFAULT_SRC = ("'self'",)
-CSP_SCRIPT_SRC = (
-    "'self'",
-    "'nonce-'",
-)
+# CSP_DEFAULT_SRC = ("'self'",)
+# CSP_SCRIPT_SRC = (
+#     "'self'",
+#     "'nonce-'",
+# )
 
 # CSRF_FAILURE_VIEW = 'wave_v1.middleware.csrf_handlers.csrf_failure'
 
@@ -118,6 +118,16 @@ CHANNEL_LAYERS = {
     }
 }
 WSGI_APPLICATION = "wave_v1.wsgi.application"
+
+
+MESSAGE_TAGS = {
+    messages_constants.DEBUG: 'debug',
+    messages_constants.INFO: 'info',
+    messages_constants.SUCCESS: 'success',
+    messages_constants.WARNING: 'warning',
+    messages_constants.ERROR: 'error',
+}
+
 
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases

@@ -1,34 +1,40 @@
 document.addEventListener('DOMContentLoaded', function () {
-    const addPaymentMethodButton = document.getElementById('addPayoutMethodButton');
-    const closePayoutMethodButton = document.getElementById('closePayoutMethodButton');
-    const payoutMethodModal = document.getElementById('payoutMethodModal');
+    const addBankAccountButton = document.getElementById('addBankAccountButton');
+    const addCardButton = document.getElementById('addCardButton');
+    const closeCardPaymentButton = document.getElementById('closeCardPaymentButton');
+    const closeBankAccountButton = document.getElementById('closeBankAccountButton');
+    const addBankAccountModal = document.getElementById('addBankAccountModal');
+    const addCardModal = document.getElementById('addCardModal');
 
+    if (addBankAccountButton) {
+        addBankAccountButton.addEventListener('click', function () {
+            if (addBankAccountModal) {
+                addBankAccountModal.classList.remove('hidden');
+            }
+        });
+    }
 
-    addPaymentMethodButton.addEventListener('click', function () {
-        payoutMethodModal.classList.remove('hidden');
-    });
+    if (addCardButton) {
+        addCardButton.addEventListener('click', function () {
+            if (addCardModal) {
+                addCardModal.classList.remove('hidden');
+            }
+        });
+    }
 
-    closePayoutMethodButton.addEventListener('click', function () {
-        payoutMethodModal.classList.add('hidden');
-        paymentMethodSelectors.classList.remove('hidden');
-        bankAccountForm.classList.add('hidden');
-    });
+    if (closeBankAccountButton) {
+        closeBankAccountButton.addEventListener('click', function () {
+            if (addBankAccountModal) {
+                addBankAccountModal.classList.add('hidden');
+            }
+        });
+    }
 
-    const paymentMethodSelectors = document.getElementById('paymentMethodSelectors');
-    
-    const addBankAccountButton = document.getElementById('addBankAccountOption');
-    const addCashAppButton = document.getElementById('addCashAppOption');
-    const addApplePayButton = document.getElementById('addApplePayOption');
-    const addGooglePayButton = document.getElementById('addGooglePayOption');
-
-    const bankAccountForm = document.getElementById('bankAccountForm');
-
-    addBankAccountButton.addEventListener('click', function () {
-        paymentMethodSelectors.classList.add('hidden');
-        bankAccountForm.classList.remove('hidden');
-    });
-
-    addCashAppButton.addEventListener('click', function () {
-        paymentMethodSelectors.classList.add('hidden');
-    });
+    if (closeCardPaymentButton) {
+        closeCardPaymentButton.addEventListener('click', function () {
+            if (addCardModal) {
+                addCardModal.classList.add('hidden');
+            }
+        });
+    }
 });

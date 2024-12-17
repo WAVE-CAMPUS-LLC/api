@@ -199,11 +199,11 @@ class Event(models.Model):
         ("volunteer", "Volunteer"),
         ("workshop", "Workshop"),
     ]
-    
+
     eventId = models.UUIDField(
         primary_key=True, default=uuid.uuid4, editable=False, unique=True
     )
-    
+
     stripeProductId = models.CharField(max_length=255, blank=True, null=True)
 
     host = models.ForeignKey(
@@ -326,22 +326,43 @@ class Event(models.Model):
         upload_to="event_images/header/",
         null=True,
         blank=True,
+        max_length=500,
     )
 
     body_photo_one = models.ImageField(
-        _("(Optional)"), upload_to="event_images/body/one/", null=True, blank=True
+        _("(Optional)"),
+        upload_to="event_images/body/one/",
+        null=True,
+        blank=True,
+        max_length=500,
     )
     body_photo_two = models.ImageField(
-        _("(Optional)"), upload_to="event_images/body/two/", null=True, blank=True
+        _("(Optional)"),
+        upload_to="event_images/body/two/",
+        null=True,
+        blank=True,
+        max_length=500,
     )
     body_photo_three = models.ImageField(
-        _("(Optional)"), upload_to="event_images/body/three", null=True, blank=True
+        _("(Optional)"),
+        upload_to="event_images/body/three",
+        null=True,
+        blank=True,
+        max_length=500,
     )
     body_photo_four = models.ImageField(
-        _("(Optional)"), upload_to="event_images/body/four/", null=True, blank=True
+        _("(Optional)"),
+        upload_to="event_images/body/four/",
+        null=True,
+        blank=True,
+        max_length=500,
     )
     body_photo_five = models.ImageField(
-        _("(Optional)"), upload_to="event_images/body/five/", null=True, blank=True
+        _("(Optional)"),
+        upload_to="event_images/body/five/",
+        null=True,
+        blank=True,
+        max_length=500,
     )
 
     def __str__(self):
@@ -386,7 +407,8 @@ class EventPrivacy(models.Model):
 
 class HostProfile(models.Model):
     hostProfileId = models.UUIDField(
-    primary_key=True, default=uuid.uuid4, editable=False, unique=True)
+        primary_key=True, default=uuid.uuid4, editable=False, unique=True
+    )
     user = models.OneToOneField(
         "authenticationApp.CustomUser",
         on_delete=models.CASCADE,

@@ -8,8 +8,11 @@ Host Dashboard | WAVE.
 
 
 {% block script %}
+<script src="https://js.stripe.com/v3/"></script>
 <script type="text/javascript" src="{% static "scripts/eventManagementApp/host/eventManage/tabControl.js" %}" defer></script>
+<script type="module" src="{% static "scripts/base/stripe.js" %}" defer></script>
 <script type="text/javascript" src="{% static "scripts/eventManagementApp/billing/addPayoutMethod.js" %}" defer></script>
+<script type="text/javascript" src="{% static "scripts/eventManagementApp/billing/cashoutEarnings.js" %}" defer></script>
 {% endblock script %}
 
 
@@ -21,13 +24,14 @@ Host Dashboard | WAVE.
 {% block body %}
 <div class="flex flex-col gap-[70px] px-[20px] after-xsm:px-[30px] xxsm:px-[60px] sm:px-[70px] md:px-[60px] pre-lg:px-[70px] lg:px-[100px] xl:px-[140px] 2xl:px-[200px] 3xl:px-[300px]">
     <div class="page-heading font-Wanted-SemiBold text-[25px] md:text-[30px] flex flex-col sm:flex-row sm:justify-between gap-[10px] w-full">
-        <h2>Your Payout Methods, {{ request.user.first_name }}!</h2>
+        <h2>Your Billing Information, {{ request.user.first_name }}!</h2>
     </div>
 
     <div id="billing-body" class="flex flex-col w-full gap-5">
         <div class="control-row grid grid-cols-2 after-xsm:grid-cols-3 pre-sm:flex flex-row gap-4 w-full">
             <div role="button" type="button" class="billing-tab tab-active cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="billing-overview">Overview</div>
             <div role="button" type="button" class="billing-tab cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="previous-transactions">Transactions</div>
+            <div role="button" type="button" class="billing-tab cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="payout-methods">Accounts</div>
             {% if requiredActions %}
             <div role="button" type="button" class="billing-tab cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center bg-[red] text-white" data-tab="required-actions">Required Actions!</div>
             {% endif %}
@@ -37,55 +41,33 @@ Host Dashboard | WAVE.
         <div id="billing-body-content">
             <div class="billing-content" id="billing-overview">
                 <div class="w-full flex flex-col gap-20">
-
-                    <div class="flex flex-col">
-                        <h3 class="font-Wanted-Bold text-[30px]">Your Earnings</h3>
+                    <div class="flex flex-col gap-7">
+                        <div class="flex w-full flex-col gap-1">
+                            <h3 class="font-Wanted-Bold text-[30px]">Total Earnings</h3>
+                            <p class="font-Wanted-Regular text-[20px]" id="totalEarning">${{ totalEarnings|floatformat:2 }}</p>
+                        </div>
+                        
                         <div class="grid grid-cols-2 gap-2">
                             <div class="flex flex-col gap-1">
-                                <h3 class="font-Wanted-Bold text-[20px]">Total Earnings</h3>
-                                <p class="font-Wanted-Variable text-[15px]">$232.00</p>
+                                <h3 class="font-Wanted-Bold text-[20px]">Pending Balance</h3>
+                                <p class="font-Wanted-Variable text-[15px]" id="pendingEarnings">${{ stripeAccountBalance.pending|floatformat:2 }}</p>
                             </div>
                             <div class="grid grid-cols-2">
                                 <div class="flex flex-col gap-1">
-                                    <h3 class="font-Wanted-Bold text-[20px]">Available for Cashout</h3>
-                                    <p class="font-Wanted-Variable text-[15px]">$32234.00</p>
+                                    <div class="flex flex-col gap-1">
+                                        <h3 class="font-Wanted-Bold text-[20px]">Available for Cashout</h3>
+                                    <p class="font-Wanted-Variable text-[15px]" id="availableForCashout">${{ stripeAccountBalance.available|floatformat:2 }}</p>
+                                    </div>
+
+                                    {% if stripeAccountBalance.available == 0 and stripeAccountBalance.pending > 0 %}
+                                        <p class="text-[red] font-Wanted-Variable text-Small">Your available balance is $0. However, ${{ stripeAccountBalance.pending|floatformat:2 }} is pending and will become available soon.</p>
+                                    {% endif %}
                                 </div>
-                                <div class="flex justify-end">
-                                    <button class="font-Wanted-Regular bg-[#1cb913] text-white text-Base cursor-pointer py-2 px-5 rounded-2xl" id="cashoutButton">Cashout</button>
+                                <div class="flex justify-end items-center">
+                                    <button class="font-Wanted-Regular bg-[#1cb913] h-auto text-white text-Base cursor-pointer py-2 px-5 rounded-2xl disabled:bg-[#00800063] disabled:cursor-default" id="cashoutButton" {% if stripeAccountBalance.available == 0 %}disabled{% endif %}>Cashout</button>
                                 </div>
                             </div>
                         </div>
-                    </div>
-
-                    <div class="flex flex-col gap-2 w-full">
-                        <h3 class="font-Wanted-Bold text-[20px]">Payout Methods</h3>
-                        {% if hostProfile.bank_account_details %}
-                        <div class="flex flex-row gap-2 w-full border items-center rounded-lg py-3 px-5">
-                            <div class="flex flex-col gap-1 w-[70%]">
-                                <h4 class="font-Wanted-Bold text-[15px]">{{ bankAccountDetails.account_holder_name }}</h4>
-                                <p class="font-Wanted-Variable text-[13px]">Account Number: {{ bankAccountDetails.account_number }}</p>
-                                <p class="font-Wanted-Variable text-[13px]">Routing Number: {{ bankAccountDetails.routing_number }}</p>
-                            </div>
-
-                            <form method="POST" class="w-[30%] flex justify-end items-center h-full">
-                                {% csrf_token %}
-                                <button name="billingAction" value="removeBankAccount" class="font-Wanted-Regular w-auto rounded-xl bg-[red] text-white py-3 px-6 hover:bg-[red]" id="addPayoutMethodButton">Remove</button>
-                            </form>
-                        </div>
-                        {% else %}
-                        <div class="flex flex-row gap-2 w-full">
-                            <div class="flex flex-col gap-1 w-[70%]">
-                                <h4 class="font-Wanted-Medium text-[15px]">Bank Account</h4>
-                                <p class="font-Wanted-Variable text-[13px]">You have not added a bank account yet.</p>
-                            </div>
-
-                            <div class="w-[30%] flex justify-end items-center h-full">
-                                <button class="font-Wanted-Regular gradient-btn hover:bg-green" id="addPayoutMethodButton">Add Payout Method</button>
-                            </div>
-                        </div>
-                        {% endif %}
-                        
-                        
                     </div>
                 </div>
             </div>
@@ -101,6 +83,85 @@ Host Dashboard | WAVE.
                                 <p class="font-Wanted-Variable text-[13px]">You have not made any transactions yet.</p>
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="billing-content" id="payout-methods">
+                <div class="w-full flex flex-col gap-12">
+                    <div class="flex flex-col gap-2 w-full">
+                        {% if externalAccounts.bank_accounts %}
+                            <h3 class="font-Wanted-Bold text-[20px]">Payout Methods (Bank Accounts)</h3>
+                            {% for bank in externalAccounts.bank_accounts %}
+                            <div class="flex flex-row gap-2 w-full border items-center rounded-lg py-3 px-5 text-black">
+                                <div class="flex flex-col gap-1 w-[70%]">
+                                    <h4 class="font-Wanted-Bold text-[15px]">Name: {{ bank.account_holder_name }}</h4>
+                                    <p class="font-Wanted-Variable text-[13px]">Account Number: ****{{ bank.last4 }}</p>
+                                    <p class="font-Wanted-Variable text-[13px]">Routing Number: {{ bank.routing_number }}</p>
+                                </div>
+
+                                <form method="POST" class="w-[30%] flex flex-col gap-2 items-end h-full">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="externalAccountID" value="{{ bank.id }}">
+                                    {% if bank.default_for_currency %}
+                                    <button class="font-Wanted-Regular w-auto rounded-xl bg-transparent border-2 bg-[#00575c] border-green text-white py-3 px-6 ">Default</button>
+                                    {% else %}
+                                    <button name="billingAction" value="setDefaultPaymentMethod" class="font-Wanted-Regular w-auto rounded-xl bg-transparent text-green border-green py-3 px-6 hover:bg-green">Set Default</button>
+                                    {% endif %}
+                                    <button name="billingAction" value="removeBankAccount" class="font-Wanted-Regular w-auto rounded-xl bg-[red] text-white py-3 px-6 hover:bg-[red]" id="addPayoutMethodButton">Remove</button>
+                                </form>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="flex flex-row gap-2 w-full">
+                                <div class="flex flex-col gap-1 w-[70%]">
+                                    <h4 class="font-Wanted-Medium text-[15px]">Bank Account</h4>
+                                    <p class="font-Wanted-Variable text-[13px]">You have not added a bank account yet.</p>
+                                </div>
+
+                                <div class="w-[30%] flex justify-end items-center h-full">
+                                    <button class="font-Wanted-Regular gradient-btn hover:bg-green" id="addBankAccountButton">Add Bank</button>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="flex flex-col gap-2 w-full">
+                        {% if externalAccounts.cards %}
+                            <h3 class="font-Wanted-Bold text-[20px]">Payout Methods (Cards)</h3>
+                            {% for card in externalAccounts.cards %}
+                            <div class="flex flex-row gap-2 w-full border items-center rounded-lg py-3 px-5 text-black">
+                                <div class="flex flex-col gap-1 w-[70%]">
+                                    <h4 class="font-Wanted-Bold text-[15px]">Name: {{ card.name }}</h4>
+                                    <p class="font-Wanted-Variable text-[13px]">Card Number: ****{{ card.last4 }}</p>
+                                    <p class="font-Wanted-Variable text-[13px]">Card Type: ****{{ card.brand | title }}</p>
+                                    <p class="font-Wanted-Variable text-[13px]">Expiry: {{ card.exp_month }}/{{ card.exp_year }}</p>
+                                </div>
+
+                                <form method="POST" class="w-[30%] flex flex-col gap-2 items-end h-full">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="externalAccountID" value="{{ card.id }}">
+                                    {% if bank.default_for_currency %}
+                                    <button class="font-Wanted-Regular w-auto rounded-xl bg-transparent border-2 bg-[#00575c] border-green text-white py-3 px-6 ">Default</button>
+                                    {% else %}
+                                    <button name="billingAction" value="setDefaultPaymentMethod" class="font-Wanted-Regular w-auto rounded-xl bg-green border-green text-white py-3 px-6">Set Default</button>
+                                    {% endif %}
+                                    <button name="billingAction" value="removeBankAccount" class="font-Wanted-Regular w-auto rounded-xl bg-[red] text-white py-3 px-6 hover:bg-[red]" id="addPayoutMethodButton">Remove</button>
+                                </form>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="flex flex-row gap-2 w-full">
+                                <div class="flex flex-col gap-1 w-[70%]">
+                                    <h4 class="font-Wanted-Medium text-[15px]">Connected Cards</h4>
+                                    <p class="font-Wanted-Variable text-[13px]">You have not added a card yet.</p>
+                                </div>
+
+                                <div class="w-[30%] flex justify-end items-center h-full">
+                                    <button class="font-Wanted-Regular gradient-btn hover:bg-green" id="addCardButton">Add Card</button>
+                                </div>
+                            </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -365,42 +426,18 @@ Host Dashboard | WAVE.
     
 </div>
 
-<div id="payoutMethodModal" class="hidden bg-[rgba(0, 0, 0, 0.037)] backdrop-blur-sm fixed top-0 left-0 right-0 bottom-0 z-[1005] w-full h-full cursor-default">
+<div id="addBankAccountModal" class="hidden bg-[rgba(0, 0, 0, 0.037)] backdrop-blur-sm fixed top-0 left-0 right-0 bottom-0 z-[1005] w-full h-full cursor-default">
     <div class="w-full h-full flex justify-center items-center">
         <div class="w-11/12 xxsm:w-9/12 pre-sm:w-10/12 sm:w-10/12 md:w-10/12 pre-lg:w-10/12 lg:w-10/12 xl:w-3/5 h-auto min-h-[80%] lg:min-h-fit max-h-[90%] bg-white shadow-custom-shadow rounded-2xl p-5 pb-12 flex flex-col gap-3 overflow-y-auto">
             <div class="w-full flex justify-between">
                 <div class="w-full flex justify-start font-Wanted-Bold text-Pre-Xl">
-                    Add Payout Method
+                    Add Bank Account
                 </div>
 
                 <div class="w-full flex justify-end">
-                    <button role="button" type="button" id="closePayoutMethodButton" class="border-none flex flex-col gap-1 justify-center items-center font-Wanted-Bold text-XSmall bg-none cursor-pointer">
+                    <button role="button" type="button" id="closeBankAccountButton" class="border-none flex flex-col gap-1 justify-center items-center font-Wanted-Bold text-XSmall bg-none cursor-pointer">
                         <img src="{% static "images/career/jobAppClose.svg" %}" alt="Minimize Card">
                         <p>esc</p>
-                    </button>
-                </div>
-            </div>
-
-            <div id="paymentMethodSelectors" class="w-full flex justify-center items-center">
-                <div class="w-1/2 grid grid-cols-2 gap-2">
-                    {% if not hostProfile.bank_account_details %}
-                    <button id="addBankAccountOption" class="border-2 rounded-lg border-gray-500 py-3 px-6 text-black bg-none flex flex-row items-center justify-center gap-1">
-                        <img src="{% static "images/eventManagementApp/billing/bank.svg" %}" alt="Bank Account" class="size-5">
-                        <p class="font-Wanted-Variable">Bank Account</p>
-                    </button>
-                    {% endif %}
-                    
-                    <button id="addCashAppOption" class="border-2 rounded-lg border-gray-500 py-3 px-6 text-black bg-none flex flex-row items-center justify-center gap-1">
-                        <img src="{% static "images/eventManagementApp/billing/cashapp.svg" %}" alt="Bank Account" class="size-5">
-                        <p class="font-Wanted-Variable">Cash App</p>
-                    </button>
-                    <button id="addApplePayOption" class="border-2 rounded-lg border-gray-500 py-3 px-6 text-black bg-none flex flex-row items-center justify-center gap-1">
-                        <img src="{% static "images/eventManagementApp/billing/apple.svg" %}" alt="Bank Account" class="size-5">
-                        <p class="font-Wanted-Variable">Apple Pay</p>
-                    </button>
-                    <button id="addGooglePayOption" class="border-2 rounded-lg border-gray-500 py-3 px-6 text-black bg-none flex flex-row items-center justify-center gap-1">
-                        <img src="{% static "images/eventManagementApp/billing/google.svg" %}" alt="Bank Account" class="size-5">
-                        <p class="font-Wanted-Variable">Google Pay</p>
                     </button>
                 </div>
             </div>
@@ -424,13 +461,87 @@ Host Dashboard | WAVE.
                         </div>
 
                         <div class="w-full flex justify-end">
-                            <button type="submit" name="billingAction" value="addBankAccountNew" class="bg-green py-3 px-6 rounded-2xl text-white cursor-pointer">Complete</button>
+                            <button type="submit" name="billingAction" value="addBankAccountNew" class="bg-green py-3 px-6 rounded-2xl text-white cursor-pointer">Confirm</button>
                         </div>
                     </form>
                 </div>
             </div>
+        </div>
+    </div>
+</div>
 
-            <div id="cashAppForm" class="hidden"></div>
+<div id="addCardModal" class="hidden bg-[rgba(0, 0, 0, 0.037)] backdrop-blur-sm fixed top-0 left-0 right-0 bottom-0 z-[1005] w-full h-full cursor-default">
+    <div class="w-full h-full flex justify-center items-center">
+        <div class="w-11/12 xxsm:w-9/12 pre-sm:w-10/12 sm:w-10/12 md:w-10/12 pre-lg:w-10/12 lg:w-10/12 xl:w-3/5 h-auto min-h-[80%] lg:min-h-fit max-h-[90%] bg-white shadow-custom-shadow rounded-2xl p-5 pb-12 flex flex-col gap-3 overflow-y-auto">
+            <div class="w-full flex justify-between">
+                <div class="w-full flex justify-start font-Wanted-Bold text-Pre-Xl">
+                    Add Card
+                </div>
+
+                <div class="w-full flex justify-end">
+                    <button role="button" type="button" id="closeCardPaymentButton" class="border-none flex flex-col gap-1 justify-center items-center font-Wanted-Bold text-XSmall bg-none cursor-pointer">
+                        <img src="{% static "images/career/jobAppClose.svg" %}" alt="Minimize Card">
+                        <p>esc</p>
+                    </button>
+                </div>
+            </div>
+
+            <div class="">
+                <div class="flex flex-col gap-2">
+                    <form method="POST" id="addCardModalForm" class="flex flex-col gap-3">
+                        {% csrf_token %}
+                        <input type="hidden" id="stripeKey" value="{{ stripeKey }}">
+                        <input type="hidden" id="addCardUrl" value="{% url 'eventManagement:hostBillingAddCard' %}">
+                        <div class="flex flex-col gap-2">
+                            <label for="cardName" class="font-Wanted-Medium text-[15px]">Name</label>
+                            <input type="text" name="cardName" id="cardName" class="font-Wanted-Variable text-[13px] border border-gray-300 rounded-lg p-2" required placeholder="Name on Card">
+                        </div>
+                        <div class="flex flex-col gap-2" id="card-element">
+                            
+                        </div>
+                        
+
+                        <div class="w-full flex justify-end">
+                            <button type="submit" class="bg-green py-3 px-6 rounded-2xl text-white cursor-pointer">Confirm</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="cashoutEarningsModal" class="hidden bg-[rgba(0, 0, 0, 0.037)] backdrop-blur-sm fixed top-0 left-0 right-0 bottom-0 z-[1005] w-full h-full cursor-default">
+    <div class="w-full h-full flex justify-center items-center">
+        <div class="w-11/12 xxsm:w-9/12 pre-sm:w-10/12 sm:w-10/12 md:w-10/12 pre-lg:w-10/12 lg:w-10/12 xl:w-3/5 h-auto min-h-[80%] lg:min-h-fit max-h-[90%] bg-white shadow-custom-shadow rounded-2xl p-5 pb-12 flex flex-col gap-3 overflow-y-auto">
+            <div class="w-full flex justify-between">
+                <div class="w-full flex justify-start font-Wanted-Bold text-Pre-Xl">
+                    Enter Amount to Cashout
+                </div>
+
+                <div class="w-full flex justify-end">
+                    <button role="button" type="button" id="closeCashoutEarningsButton" class="border-none flex flex-col gap-1 justify-center items-center font-Wanted-Bold text-XSmall bg-none cursor-pointer">
+                        <img src="{% static "images/career/jobAppClose.svg" %}" alt="Minimize Card">
+                        <p>esc</p>
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex flex-col gap-2">
+                <h4 class="font-Wanted-Bold text-Large text-black">Available for cashout: ${{ stripeAccountBalance.available|floatformat:2 }}</h4>
+                <form method="POST" class="flex flex-col gap-3">
+                    {% csrf_token %}
+                    <div class="flex flex-col gap-2">
+                        <input type="number" name="cashoutAmount" id="cashoutInputAmount" class="font-Wanted-Variable text-[13px] border border-gray-300 rounded-lg p-2" placeholder="Enter amount to cash out" min="1" max="{{ stripeAccountBalance.available }}" required>
+                    </div>
+
+                    <div class="w-full flex justify-end">
+                        <input type="hidden" id="billingCashoutUrl" value="{% url 'eventManagement:hostBillingCashout' %}">
+                        <input type="hidden" id="cashoutAvailableAmount" value="{{ stripeAccountBalance.available }}">
+                        <button id="processCashoutButton" class="bg-green py-3 px-6 rounded-2xl text-white cursor-pointer">Cashout</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 </div>
