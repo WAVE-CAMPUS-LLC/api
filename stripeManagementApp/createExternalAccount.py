@@ -14,7 +14,7 @@ stripe.api_key = settings.STRIPE_SECRET_KEY
 
 
 class ExternalAccounts:
-    def createBankAccount(
+    def createBankAccount(request,
         stripeAccountId, bankAccountHolderName, bankAccountNumber, bankRoutingNumber
     ):
         try:
@@ -30,10 +30,10 @@ class ExternalAccounts:
                     "routing_number": bankRoutingNumber,
                 },
             )
-            messages.success("Bank account added successfully")
+            messages.success(request, "Bank account added successfully")
             return account  # Returns the actual Stripe account object
         except stripe.error.StripeError as e:
-            messages.error(f"Error: {e.user_message}")
+            messages.error(request, f"Error: {e.user_message}")
         return redirect("eventManagement:hostBilling")
 
     def createCard(stripeAccountId, cardToken):
@@ -44,27 +44,26 @@ class ExternalAccounts:
         
         return card
 
-    def setDefaultPaymentMethod(stripeAccountId, externalAccountId):
+    def setDefaultPaymentMethod(request, stripeAccountId, externalAccountId):
         try:
             stripe.Account.modify_external_account(
                 stripeAccountId,
                 externalAccountId,
                 default_for_currency=True,
             )
-            messages.success("Default payment method set successfully")
             return True
         except stripe.error.StripeError as e:
-            messages.error(f"Error: {e.user_message}")
+            messages.error(request, f"Error: {e.user_message}")
         return redirect("eventManagement:hostBilling")
 
-    def removePayoutMethod(stripeAccountId, externalAccountId):
+    def removePayoutMethod(request, stripeAccountId, externalAccountId):
         try:
             stripe.Account.delete_external_account(
                 stripeAccountId,
                 externalAccountId,
             )
-            messages.success("Payout method removed successfully")
+            messages.success(request, "Payout method removed successfully")
             return True
         except stripe.error.StripeError as e:
-            messages.error(f"Error: {e.user_message}")
+            messages.error(request, f"Error: {e.user_message}")
         return redirect("eventManagement:hostBilling")

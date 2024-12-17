@@ -73,17 +73,134 @@ Host Dashboard | WAVE.
             </div>
 
             <div class="billing-content" id="previous-transactions">
-                <div class="w-full flex flex-col gap-2">
-                    <h3 class="font-Wanted-Bold text-[20px]">Transactions</h3>
+                <div class="w-full flex flex-col gap-12">
+                    {% if transactions %}
+                    <div class="flex flex-col gap-5">
+                        <h3 class="font-Wanted-Bold text-2xl">Transactions</h3>
 
-                    <div class="flex flex-col gap-2 w-full">
-                        <div class="flex flex-row gap-2 w-full">
-                            <div class="flex flex-col gap-1 w-[70%]">
-                                <h4 class="font-Wanted-Medium text-[15px]">No Transactions Yet</h4>
-                                <p class="font-Wanted-Variable text-[13px]">You have not made any transactions yet.</p>
+                        <div class="flex flex-col gap-2 w-full">
+                            <div id="transaction-container" class="w-full flex flex-col gap-3">
+                                <div class="w-full flex flex-col gap-4">
+                                    {% for date, transaction in transactions.items %}
+                                    <div class="w-full flex justify-start font-Wanted-SemiBold text-black">
+                                        <h6>{{ date }}</h6>
+                                    </div>
+
+                                    {% for transactionProcess in transaction %}
+                                    <div class="border border-[#b7b7b79c] shadow-custom-shadow-6 w-full rounded-xl flex flex-row gap-2 py-4 px-8 items-center justify-between">
+                                        <div class="flex flex-row gap-9 min-w-[80%]">
+                                            <div class="flex items-center justify-center w-auto">
+                                                {% if transactionProcess.type == "payment" or transactionProcess.type == "payout" %}
+                                                    <img src="{% static 'images/eventManagementApp/billing/transactions/transaction-complete.svg' %}" alt="Transaction Complete" class="size-14">
+                                                {% elif transactionProcess.type == "dispute" %}
+                                                    <img src="{% static 'images/eventManagementApp/billing/transactions/transaction-pending.svg' %}" alt="Transaction Pending" class="size-14">
+                                                {% elif transactionProcess.type == "payment_failure" %}
+                                                    <img src="{% static 'images/eventManagementApp/billing/transactions/transaction-failed.svg' %}" alt="Transaction Failed" class="size-14">
+                                                {% endif %}
+                                            </div>
+                                            <div class="flex flex-col justify-between gap-2 w-full">
+                                                <h6 class="font-Wanted-Bold text-xl">{{ transactionProcess.type|title }}</h6>
+                                                <p class="font-Wanted-Variable text-[13px]">Processed at {{ transactionProcess.created_readable|date:"g:i A" }}</p>
+                                                <p class="font-Wanted-Variable text-[13px]">{{ transactionProcess.customer }}</p>
+                                                <div class="w-full flex flex-row justify-between">
+                                                    <p class="font-Wanted-Variable text-Small">Transaction ID: {{ transactionProcess.id }}</p>
+                                                    {% if transactionProcess.status == "available" %}
+                                                    <span class="border border-[#2fc12f] p-1 uppercase rounded-md font-Wanted-Variable text-XSmall text-white bg-[#2fc12f]">{{ transactionProcess.status }}</span>
+                                                    {% elif transactionProcess.status == "pending" %}
+                                                    <span class="border border-[#ffff00] p-1 uppercase rounded-md font-Wanted-Variable text-XSmall text-white bg-[#ffff00]">{{ transactionProcess.status }}</span>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="flex flex-col gap-2 w-auto items-center justify-center">
+                                            <p class="{% if transactionProcess.amount_in_dollars < 0 %}text-[red] {% elif  transactionProcess.amount_in_dollars > 0 %}text-[#2fc12f]{% endif %}  font-Wanted-Variable text-Semi-Medium flex flex-row gap-1 justify-center items-center">
+                                                ${{ transactionProcess.amount_in_dollars|floatformat:2 }}
+                                            </p>
+                                            <form method="POST">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="refundTransactionID" value="{{ transactionProcess.payment_id }}">
+                                                <button type="submit" name="billingAction" value="refundTransaction" class="border-[#ff0000] border-2 {% if transactionProcess.type != "payment" or transactionProcess.payment_id == None %}hidden{% endif %} hover:text-[red] hover:bg-white bg-[red] text-white rounded-xl font-Wanted-Regular text-Base px-4 py-2">Refund</button>
+                                            </form>
+                                            
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                    {% endfor %}
+                                    
+                                </div>
+                            </div>
+
+                            
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="w-full">
+                        <div class="flex flex-col gap-1 w-[70%]">
+                            <h4 class="font-Wanted-Medium text-[15px]">No Transactions Yet</h4>
+                            <p class="font-Wanted-Variable text-[13px]">You have not made any transactions yet.</p>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if payouts %}
+                    <div class="flex flex-col gap-5">
+                        <h3 class="font-Wanted-Bold text-2xl">Payouts</h3>
+
+                        <div class="flex flex-col gap-2 w-full">
+                            <div id="transaction-container" class="w-full flex flex-col gap-3">
+                                <div class="w-full flex flex-col gap-4">
+                                    {% for date, transaction in payouts.items %}
+                                    <div class="w-full flex justify-start font-Wanted-SemiBold text-black">
+                                        <h6>{{ date }}</h6>
+                                    </div>
+
+                                    {% for transactionProcess in transaction %}
+                                    <div class="border border-[#b7b7b79c] shadow-custom-shadow-6 w-full rounded-xl flex flex-row gap-2 py-4 px-8 items-center justify-between">
+                                        <div class="flex flex-row gap-9 min-w-[80%]">
+                                            <div class="flex items-center justify-center w-auto">
+                                                {% if transactionProcess.type == "bank_account" %}
+                                                <img src="{% static "images/eventManagementApp/billing/transactions/payout-bank.svg" %}" alt="Payout to Bank" class="size-14">
+                                                {% elif transactionProcess.type == "card" %}
+                                                <img src="{% static "images/eventManagementApp/billing/transactions/payout-card.svg" %}" alt="Payout to Card" class="size-14">
+                                                {% endif %}
+                                            </div>
+                                            <div class="flex flex-col justify-between gap-2 w-full">
+                                                <h6 class="font-Wanted-Bold text-xl">
+                                                    {% if transactionProcess.type == "bank_account" %}
+                                                    To Bank Account
+                                                    {% elif transactionProcess.type == "card" %}
+                                                    To Card
+                                                    {% endif %}
+                                                </h6>
+                                                <p class="font-Wanted-Variable text-[13px]">Processed at {{ transactionProcess.created_readable|date:"g:i A" }}</p>
+                                                <p class="font-Wanted-Variable text-[13px]">{{ transactionProcess.customer }}</p>
+                                                <div class="w-full flex flex-row justify-between">
+                                                    <p class="font-Wanted-Variable text-Small">Transaction ID: {{ transactionProcess.id }}</p>
+                                                    <span class="border border-[#2fc12f] p-1 rounded-md font-Wanted-Variable text-XSmall text-white uppercase bg-[#2fc12f98]">{{ transactionProcess.status }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="flex flex-col gap-2 w-auto items-center justify-center">
+                                            <p class="text-[#2fc12f] font-Wanted-Variable text-Semi-Medium flex flex-row gap-1 justify-center items-center">
+                                                <span class="font-Wanted-Bold">+</span> 
+                                                ${{ transactionProcess.amount_in_dollars|floatformat:2 }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                    {% endfor %}
+                                </div>
                             </div>
                         </div>
                     </div>
+                    {% else %}
+                    <div class="w-full">
+                        <div class="flex flex-col gap-1 w-[70%]">
+                            <h4 class="font-Wanted-Medium text-[15px]">No Payouts Yet</h4>
+                            <p class="font-Wanted-Variable text-[13px]">You have not made any payout yet.</p>
+                        </div>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
 
@@ -102,13 +219,14 @@ Host Dashboard | WAVE.
 
                                 <form method="POST" class="w-[30%] flex flex-col gap-2 items-end h-full">
                                     {% csrf_token %}
-                                    <input type="hidden" name="externalAccountID" value="{{ bank.id }}">
+                                    <input type="hidden" name="setBankDefaultAccountID" value="{{ bank.id }}">
+                                    <input type="hidden" name="externalBankAccountID" value="{{ bank.id }}">
                                     {% if bank.default_for_currency %}
-                                    <button class="font-Wanted-Regular w-auto rounded-xl bg-transparent border-2 bg-[#00575c] border-green text-white py-3 px-6 ">Default</button>
+                                    <button type="submit" class="font-Wanted-Regular w-auto rounded-xl bg-transparent border-2 bg-[#00575c] border-green text-green py-3 px-6 ">Default</button>
                                     {% else %}
-                                    <button name="billingAction" value="setDefaultPaymentMethod" class="font-Wanted-Regular w-auto rounded-xl bg-transparent text-green border-green py-3 px-6 hover:bg-green">Set Default</button>
+                                    <button type="submit" name="billingAction" value="setBankDefaultPaymentMethod" class="font-Wanted-Regular w-auto rounded-xl bg-green border-green text-white py-3 px-6">Set Default</button>
                                     {% endif %}
-                                    <button name="billingAction" value="removeBankAccount" class="font-Wanted-Regular w-auto rounded-xl bg-[red] text-white py-3 px-6 hover:bg-[red]" id="addPayoutMethodButton">Remove</button>
+                                    <button type="submit" name="billingAction" value="removeBankAccount" class="font-Wanted-Regular w-auto rounded-xl bg-[red] text-white py-3 px-6 hover:bg-[red] disabled:bg-[#7a0c0c]" id="addPayoutMethodButton" {% if bank.default_for_currency %}disabled{% endif %}>Remove</button>
                                 </form>
                             </div>
                             {% endfor %}
@@ -140,13 +258,14 @@ Host Dashboard | WAVE.
 
                                 <form method="POST" class="w-[30%] flex flex-col gap-2 items-end h-full">
                                     {% csrf_token %}
-                                    <input type="hidden" name="externalAccountID" value="{{ card.id }}">
-                                    {% if bank.default_for_currency %}
-                                    <button class="font-Wanted-Regular w-auto rounded-xl bg-transparent border-2 bg-[#00575c] border-green text-white py-3 px-6 ">Default</button>
+                                    <input type="hidden" name="externalCardAccountID" value="{{ card.id }}">
+                                    <input type="hidden" name="setCardDefaultAccountID" value="{{ card.id }}">
+                                    {% if card.default_for_currency %}
+                                    <button type="button" class="font-Wanted-Regular w-auto rounded-xl bg-transparent border-2 bg-[#00575c] border-green text-green py-3 px-6">Default</button>
                                     {% else %}
-                                    <button name="billingAction" value="setDefaultPaymentMethod" class="font-Wanted-Regular w-auto rounded-xl bg-green border-green text-white py-3 px-6">Set Default</button>
+                                    <button type="submit" name="billingAction" value="setCardDefaultPaymentMethod" class="font-Wanted-Regular w-auto rounded-xl bg-green border-green text-white py-3 px-6">Set Default</button>
                                     {% endif %}
-                                    <button name="billingAction" value="removeBankAccount" class="font-Wanted-Regular w-auto rounded-xl bg-[red] text-white py-3 px-6 hover:bg-[red]" id="addPayoutMethodButton">Remove</button>
+                                    <button type="submit" name="billingAction" value="removeCardMethod" class="font-Wanted-Regular w-auto rounded-xl bg-[red] text-white py-3 px-6 hover:bg-[red] disabled:bg-[#7a0c0c]" id="addPayoutMethodButton" {% if card.default_for_currency %}disabled{% endif %}>Remove</button>
                                 </form>
                             </div>
                             {% endfor %}
@@ -442,7 +561,7 @@ Host Dashboard | WAVE.
                 </div>
             </div>
 
-            <div id="bankAccountForm" class="hidden">
+            <div id="bankAccountForm">
                 <div class="flex flex-col gap-2">
                     <h4 class="font-Wanted-Bold text-Large text-black">Bank Account Details</h4>
                     <form method="POST" class="flex flex-col gap-3">
