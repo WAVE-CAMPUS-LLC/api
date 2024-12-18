@@ -12,7 +12,8 @@ urlpatterns = [
         views.adminDepartmentDetailedView,
         name="departmentDetails",
     ),
-    path("applications", views.adminApplicationsView, name="applications"),
+    path("applications/career/", views.adminCareerApplicationsView, name="careerApplications"),
+    path("applications/host/", views.adminHostApplicationsView, name="hostApplications"),
     path("events/", views.adminEventsView, name="events"),
     # User Management
     path("users/", views.adminUsersView, name="users"),
