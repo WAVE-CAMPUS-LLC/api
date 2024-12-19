@@ -1,7 +1,9 @@
 from calendar import c
 from os import name
+from channels.layers import get_channel_layer
 import re
 from datetime import datetime
+from asgiref.sync import async_to_sync
 from ssl import MemoryBIO
 from turtle import st
 from django.http import Http404, HttpResponseBadRequest
@@ -102,6 +104,19 @@ def publicProfileView(request, username):
             action = request.POST.get("action")
             if action == "send_request":
                 success, message = send_friend_request(request.user, user_profile)
+                receiver = get_object_or_404(UserProfile, user__username=user_profile)
+                receiver.user.user_profile.has_pending_request(request.user)
+                
+                channel_layer = get_channel_layer()
+                async_to_sync(channel_layer.group_send)(
+                    f"user_{receiver.id}",
+                    {
+                        "type": "friend_request_update",
+                        "data": {
+                            "message": f"{request.user.username} sent you a friend request!",
+                        },
+                    },
+                )
 
                 if success:
                     messages.success(request, message)
