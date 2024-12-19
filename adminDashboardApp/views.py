@@ -877,7 +877,7 @@ def adminEditNewsView(request, newsId):
 @group_required("Admin")
 def adminBlogView(request):
     blogs = Blog.objects.all()
-    return render(request, "adminDashboardApp/tabs/blogs.html", {"blogs": blogs})
+    return render(request, "adminDashboardApp/tabs/blog.html", {"blogs": blogs})
 
 
 @login_required
