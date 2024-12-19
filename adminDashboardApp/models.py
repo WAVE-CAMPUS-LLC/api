@@ -9,6 +9,9 @@ from django.contrib.auth.models import Group
 from django.apps import apps
 import uuid
 
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
 
 # Create your models here.
 
@@ -337,3 +340,19 @@ class College(models.Model):
             raise ValidationError("Invalid link. Enter your college's website.")
         return domain
 
+class EventsLastUpdated(models.Model):
+    last_updated = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        default_permissions = ()  # Removing default permissions
+
+    def __str__(self):
+        return f"Last updated: {self.timestamp}"
+    
+Event = "eventManagementApp.Event"
+@receiver(post_save, sender=Event)
+def update_last_updated(sender, instance, created, **kwargs):
+    # Create or update the LastUpdated entry when an event is saved
+    last_updated, created = EventsLastUpdated.objects.get_or_create(id=1)  # Only one row for the timestamp
+    last_updated.timestamp = instance.updated_at
+    last_updated.save()

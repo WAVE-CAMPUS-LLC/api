@@ -2,6 +2,7 @@ import uuid
 import json
 from cryptography.fernet import Fernet
 from django.db import models
+from django.utils import timezone
 from django.utils.translation import gettext as _
 from django.utils import timezone
 from django.db.models.signals import post_save
@@ -372,6 +373,9 @@ class Event(models.Model):
         blank=True,
         max_length=500,
     )
+    
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(default=timezone.now)
 
     def __str__(self):
         return self.title

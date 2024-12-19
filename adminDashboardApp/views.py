@@ -34,13 +34,21 @@ from collegeManagementApp.models import (
     OrganizationMembership,
     Membership,
 )
+from eventManagementApp.models import Event
 from stripeManagementApp.updateConnectWithStripeDetails import (
     updateConnectWithStripeDetails,
 )
 from blogApp.models import Blog
 from campusManagerApp.models import CampusManagerInvite
 from django.conf import settings
-from .models import Department, CareerRole, LoginHistoryModel, Newsroom, College
+from .models import (
+    Department,
+    EventsLastUpdated,
+    CareerRole,
+    LoginHistoryModel,
+    Newsroom,
+    College,
+)
 from .forms import (
     CreateGroupForm,
     UpdateGroupForm,
@@ -208,6 +216,13 @@ def adminCareerApplicationsView(request):
 @login_required(login_url="authentication:login")
 @check_suspension
 @group_required("Admin")
+def adminEventHostsView(request):
+    return render(request, "adminDashboardApp/tabs/events/hosts.html")
+
+
+@login_required(login_url="authentication:login")
+@check_suspension
+@group_required("Admin")
 def adminHostApplicationsView(request):
     hostApplications = HostApplication.objects.all()
 
@@ -319,7 +334,23 @@ def sendHostDenyEmail(applicantEmail):
 @check_suspension
 @group_required("Admin")
 def adminEventsView(request):
-    return render(request, "adminDashboardApp/tabs/events.html")
+    live_events = Event.objects.filter(status="live")
+    active_events = Event.objects.filter(status="active")
+    incomplete_events = Event.objects.filter(status="incomplete")
+    archived_events = Event.objects.filter(status="archived")
+
+    last_updated = EventsLastUpdated.objects.first()
+    return render(
+        request,
+        "adminDashboardApp/tabs/events/events.html",
+        {
+            "liveEvents": live_events,
+            "last_updated": last_updated,
+            "activeEvents": active_events,
+            "incompleteEvents": incomplete_events,
+            "archivedEvents": archived_events,
+        },
+    )
 
 
 @login_required(login_url="authentication:login")
