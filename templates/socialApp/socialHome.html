@@ -48,7 +48,7 @@ My Social @{{ user.username }} — WAVE.
                     <li role="button" type="button" class="social-tab block cursor-pointer border-l-4 pl-4 -ml-px border-transparent hover:border-green" data-tab="friend-requests">
                         <div id="friend-request" class="w-full flex justify-between items-center">
                             <p>Friend Requests</p>
-                            <span id="number-of-requests" data-initial-count="{{ pending_friend_requests|length }}" class="font-Wanted-Variable text-white bg-[red] rounded-full px-2 py-1">
+                            <span id="number-of-requests" data-initial-count="{{ pending_friend_requests|length }}" class="hidden font-Wanted-Variable text-white bg-[red] rounded-full px-2 py-1">
                             {% if pending_friend_requests|length != 0 %}
                                 {% if pending_friend_requests|length > 9 %}
                                     9+

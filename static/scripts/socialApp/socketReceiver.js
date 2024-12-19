@@ -1,11 +1,14 @@
-/* This JavaScript code snippet is setting up a WebSocket connection to a server endpoint and updating
-the content of an HTML element based on the incoming WebSocket messages. */
 document.addEventListener("DOMContentLoaded", function () {
-  // Initialize count from the data attribute
   const requestCountElement = document.getElementById("number-of-requests");
   let currentCount = parseInt(
     requestCountElement.getAttribute("data-initial-count")
   );
+
+  if (currentCount == 0) {
+    requestCountElement.style.display = "none";
+  } else {
+    requestCountElement.style.display = "block";
+  }
 
   const socket = new WebSocket(`ws://${window.location.host}/social/`);
 
@@ -15,16 +18,24 @@ document.addEventListener("DOMContentLoaded", function () {
 
   socket.onmessage = function (event) {
     const data = JSON.parse(event.data);
-    console.log(data);
-    console.log(data.message);
-    console.log("Message received from server");
 
-    currentCount += 1;
+    if (data.status == "sent") {
+      currentCount += 1;
+      requestCountElement.style.display = "block";
 
-    if (currentCount > 9) {
-      requestCountElement.textContent = "9+";
+      if (currentCount > 9) {
+        requestCountElement.textContent = "9+";
+      } else {
+        requestCountElement.textContent = currentCount;
+      }
     } else {
-      requestCountElement.textContent = currentCount;
+      currentCount -= 1;
+      if (currentCount <= 0) {
+        requestCountElement.style.display = "none";
+      } else {
+        requestCountElement.style.display = "block";
+        requestCountElement.textContent = currentCount;
+      }
     }
   };
 

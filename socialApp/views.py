@@ -100,11 +100,11 @@ def publicProfileView(request, username):
 
         is_profile = request.user == user
 
+        receiver = get_object_or_404(UserProfile, user__username=user_profile)
         if request.method == "POST":
             action = request.POST.get("action")
             if action == "send_request":
                 success, message = send_friend_request(request.user, user_profile)
-                receiver = get_object_or_404(UserProfile, user__username=user_profile)
                 receiver.user.user_profile.has_pending_request(request.user)
                 
                 channel_layer = get_channel_layer()
@@ -114,6 +114,7 @@ def publicProfileView(request, username):
                         "type": "friend_request_update",
                         "data": {
                             "message": f"{request.user.username} sent you a friend request!",
+                            "status": "sent",
                         },
                     },
                 )
@@ -132,6 +133,17 @@ def publicProfileView(request, username):
                 friend_request.delete()
                 messages.success(request, "Friend request canceled.")
                 friend_request_status = None
+                channel_layer = get_channel_layer()
+                async_to_sync(channel_layer.group_send)(
+                    f"user_{receiver.id}",
+                    {
+                        "type": "friend_request_cancel",
+                        "data": {
+                            "message": f"{request.user.username} sent you a friend request!",
+                            "status": "canceled",
+                        },
+                    },
+                )
                 return redirect("social:publicProfile", username=username)
 
             elif (
