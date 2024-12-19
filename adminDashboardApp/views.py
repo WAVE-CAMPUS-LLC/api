@@ -193,7 +193,14 @@ def adminDepartmentDetailedView(request, departmentID, department_name):
 @login_required(login_url="authentication:login")
 @check_suspension
 @group_required("Admin")
-def adminApplicationsView(request):
+def adminCareerApplicationsView(request):
+    return render(request, "adminDashboardApp/tabs/applications/careerApplications.html")
+
+
+@login_required(login_url="authentication:login")
+@check_suspension
+@group_required("Admin")
+def adminHostApplicationsView(request):
     hostApplications = HostApplication.objects.all()
 
     if request.method == "POST":
@@ -254,7 +261,7 @@ def adminApplicationsView(request):
             return redirect("waveAdmin:applications")
     return render(
         request,
-        "adminDashboardApp/tabs/applications.html",
+        "adminDashboardApp/tabs/applications/hostApplications.html",
         {"hostApps": hostApplications},
     )
 

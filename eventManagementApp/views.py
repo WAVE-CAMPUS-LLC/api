@@ -19,10 +19,17 @@ from django.urls import reverse
 from accountManagementApp.models import UserProfile
 from collegeManagementApp.models import Organization, OrganizationMembership
 from .forms import HostApplicationForm, EventForm, EditEventForm
-from stripeManagementApp.getRequiredActions import  getRequiredActions
-from stripeManagementApp.updateConnectWithStripeDetails import updateConnectWithStripeDetails
+from stripeManagementApp.getRequiredActions import getRequiredActions
+from stripeManagementApp.updateConnectWithStripeDetails import (
+    updateConnectWithStripeDetails,
+)
 from stripeManagementApp.createHostProduct import createHostProduct
 from stripeManagementApp.createHostProductPrice import createProductPriceType
+from stripeManagementApp.getEarnings import GetEarnings
+from stripeManagementApp.processCashout import CashoutRequest
+from stripeManagementApp.createExternalAccount import ExternalAccounts
+from stripeManagementApp.getHostTransactions import Transactions
+
 
 from eventTicketsApp.forms import InvitationForm, PaidFreeTicketForm
 from .models import EventType, HostApplication, Event, EventPrivacy, HostProfile
@@ -149,8 +156,7 @@ def eventCreationProcess(request, eventId):
             if go_live:
                 event_status = "live"
                 event.status = event_status
-                
-                
+
                 messages.success(request, "Event is live!")
 
                 user_profile = event.host.user_profile
@@ -206,7 +212,7 @@ def eventCreationProcess(request, eventId):
 
                 event.save()
                 product = createHostProduct(event, hostProfile.stripe_account_id)
-                
+
                 if product is not None:
                     productId = product.id
                     event.stripeProductId = productId
@@ -412,14 +418,19 @@ def eventManagement(request, eventId):
             if paidFreeForm.is_valid():
                 new_ticket = paidFreeForm.save(commit=False)
                 new_ticket.event = event
-                
+
                 new_ticket.save()
                 eventStripeId = event.stripeProductId
                 print("Event Stripe ID:", eventStripeId)
-                stripePrice = createProductPriceType(eventStripeId, new_ticket.ticket_price, hostProfile.stripe_account_id, new_ticket.ticket_quantity)
+                stripePrice = createProductPriceType(
+                    eventStripeId,
+                    new_ticket.ticket_price,
+                    hostProfile.stripe_account_id,
+                    new_ticket.ticket_quantity,
+                )
                 new_ticket.stripePriceId = stripePrice.id
                 new_ticket.save()
-                
+
             return redirect("eventManagement:eventManagement", eventId=eventId)
 
     else:
@@ -450,9 +461,16 @@ def hostBilling(request):
     hostProfile = HostProfile.objects.get(user=request.user)
 
     required_actions = []
+    stripeKey = settings.STRIPE_PUBLISHABLE_KEY
 
     # Getting the required actions for the connected stripe account so that the stripe account is fully activated
     if hostProfile.stripe_account_id:
+        stripeAccountBalance = GetEarnings.getStripeAccountBalance(
+            hostProfile.stripe_account_id
+        )
+
+        totalEarnings = GetEarnings.getTotalEarnings(hostProfile.stripe_account_id)
+
         response = getRequiredActions(hostProfile.stripe_account_id)
 
         if response["status"] == "success":
@@ -465,31 +483,111 @@ def hostBilling(request):
         action = request.POST.get("billingAction")
 
         if action == "removeBankAccount":
-            hostProfile.bank_account_details = None
-            hostProfile.save()
+            hostStripeAccountId = hostProfile.stripe_account_id
+
+            if not hostStripeAccountId:
+                messages.error(request, "Stripe account not found.")
+                return redirect("eventManagement:hostPortal")
+
+            external_account_id = request.POST.get("externalBankAccountID")
+            print(f"External account ID: {external_account_id}")
+
+            if not external_account_id:
+                messages.error(request, "Invalid request.")
+                return redirect("eventManagement:hostBilling")
+
+            ExternalAccounts.removePayoutMethod(
+                request, hostStripeAccountId, external_account_id
+            )
+
+            messages.success(request, "Bank account removed successfully.")
+            return redirect("eventManagement:hostBilling")
+
+        elif action == "removeCardMethod":
+            hostStripeAccountId = hostProfile.stripe_account_id
+
+            if not hostStripeAccountId:
+                messages.error(request, "Stripe account not found.")
+                return redirect("eventManagement:hostPortal")
+
+            external_account_id = request.POST.get("externalCardAccountID")
+            print(f"External account ID: {external_account_id}")
+
+            if not external_account_id:
+                messages.error(request, "Invalid request.")
+                return redirect("eventManagement:hostBilling")
+
+            ExternalAccounts.removePayoutMethod(
+                request, hostStripeAccountId, external_account_id
+            )
+
             messages.success(request, "Bank account removed successfully.")
             return redirect("eventManagement:hostBilling")
 
         elif action == "addBankAccountNew":
+            hostStripeAccountId = hostProfile.stripe_account_id
+
+            if not hostStripeAccountId:
+                messages.error(request, "Stripe account not found.")
+                return redirect("eventManagement:hostPortal")
+
             account_holder_name = request.POST.get("accountHolderName")
             bank_account_number = request.POST.get("accountNumber")
             routing_number = request.POST.get("accountRoutingNumber")
 
-            # Validate banking details before proceeding
-            bank_details = {
-                "account_holder_name": account_holder_name,
-                "account_number": bank_account_number,
-                "routing_number": routing_number,
-            }
+            if not account_holder_name or not bank_account_number or not routing_number:
+                messages.error(request, "Please fill in all required fields.")
+                return redirect("eventManagement:hostBilling")
 
-            # response = createAndUpdateConnectedAccount(request, hostProfile, bank_details)
+            value = ExternalAccounts.createBankAccount(
+                request,
+                hostStripeAccountId,
+                account_holder_name,
+                bank_account_number,
+                routing_number,
+            )
 
-            # if response["status"] == "success":
-            #     messages.success(request, "Bank account added successfully.")
-            # else:
-            #     messages.error(request, f"Error: {response['message']}")
+        elif action == "setBankDefaultPaymentMethod":
+            hostStripeAccountId = hostProfile.stripe_account_id
 
-            return redirect("eventManagement:hostBilling")
+            if not hostStripeAccountId:
+                messages.error(request, "Stripe account not found.")
+                return redirect("eventManagement:hostPortal")
+
+            external_account_id = request.POST.get("setBankDefaultAccountID")
+
+            if not external_account_id:
+                messages.error(request, "Invalid request.")
+                return redirect("eventManagement:hostBilling")
+
+            changed = ExternalAccounts.setDefaultPaymentMethod(
+                request, hostStripeAccountId, external_account_id
+            )
+
+            if changed:
+                print("Default payment method set successfully.")
+                messages.success(request, "Default payment method set successfully.")
+
+        elif action == "setCardDefaultPaymentMethod":
+            hostStripeAccountId = hostProfile.stripe_account_id
+
+            if not hostStripeAccountId:
+                messages.error(request, "Stripe account not found.")
+                return redirect("eventManagement:hostPortal")
+
+            external_account_id = request.POST.get("setCardDefaultAccountID")
+
+            if not external_account_id:
+                messages.error(request, "Invalid request.")
+                return redirect("eventManagement:hostBilling")
+
+            changed = ExternalAccounts.setDefaultPaymentMethod(
+                request, hostStripeAccountId, external_account_id
+            )
+
+            if changed:
+                print("Default payment method set successfully.")
+                messages.success(request, "Default payment method set successfully.")
 
         elif action == "completeRequiredActions":
             print(request.POST)
@@ -552,11 +650,14 @@ def hostBilling(request):
                 update_data["individual.dob.day"] = request.POST.get("dobDay")
                 update_data["individual.dob.month"] = request.POST.get("dobMonth")
                 update_data["individual.dob.year"] = request.POST.get("dobYear")
-                
-            if "individual.ssn_last_4" in required_actions or "ssn_last_4" in required_actions:
+
+            if (
+                "individual.ssn_last_4" in required_actions
+                or "ssn_last_4" in required_actions
+            ):
                 update_data["ssn_last_4"] = request.POST.get("ssn")
 
-            if "individual" in required_actions: 
+            if "individual" in required_actions:
                 update_data["address"] = {
                     "line1": request.POST.get("street"),
                     "city": request.POST.get("city"),
@@ -587,14 +688,88 @@ def hostBilling(request):
 
             return redirect("eventManagement:hostBilling")
 
+        elif action == "refundTransaction":
+            hostStripeAccountId = hostProfile.stripe_account_id
+            
+            if not hostStripeAccountId:
+                messages.error(request, "Stripe account not found.")
+                return redirect("eventManagement:hostPortal")
+
+            refund_transaction_id = request.POST.get("refundTransactionID")
+            print(f"Refund transaction ID: {refund_transaction_id}")
+            if not refund_transaction_id:
+                print("Invalid transaction ID provided.")
+                messages.error(request, "Invalid transaction ID provided.")
+                return redirect("eventManagement:hostBilling")
+            
+            if hostStripeAccountId and refund_transaction_id:
+                Transactions.processRefund(request, hostStripeAccountId, refund_transaction_id)
+
+    connectedAccount = hostProfile.stripe_account_id
+    external_accounts = {"bank_accounts": [], "cards": []}
+
+    if connectedAccount:
+        try:
+            external_accounts = stripe.Account.list_external_accounts(
+                connectedAccount,
+            )
+
+            external_accounts["bank_accounts"] = [
+                account
+                for account in external_accounts.data
+                if account.object == "bank_account"
+            ]
+            external_accounts["cards"] = [
+                account
+                for account in external_accounts.data
+                if account.object == "card"
+            ]
+            # print(external_accounts)
+        except stripe.error.StripeError as e:
+            messages.error(request, f"Error: {e.user_message}")
+            return redirect("eventManagement:hostPortal")
+
+    transactions = Transactions.getHostTransactions(request, connectedAccount)
+
+    payouts = Transactions.getHostPayouts(request, connectedAccount) or {}
+
     return render(
         request,
         "eventManagementApp/billing/hostBilling.html",
         {
             "hostProfile": hostProfile,
             "requiredActions": required_actions,
+            "stripeAccountBalance": stripeAccountBalance,
+            "totalEarnings": totalEarnings,
+            "externalAccounts": external_accounts,
+            "stripeKey": stripeKey,
+            "transactions": transactions,
+            "payouts": payouts,
         },
     )
+
+
+def addCard(request):
+    print("addCard view reached!")  # Debug print
+    try:
+        if not request.body:
+            return JsonResponse({"error": "No data provided"}, status=400)
+
+        data = json.loads(request.body)
+        token = data.get("token")
+
+        if not token:
+            return JsonResponse({"error": "No token provided"}, status=400)
+
+        hostProfile = HostProfile.objects.get(user=request.user)
+        hostStripeAccountId = hostProfile.stripe_account_id
+
+        ExternalAccounts.createCard(hostStripeAccountId, token)
+        return redirect("eventManagement:hostBilling")
+
+    except Exception as e:
+        print(f"Error in addCard view: {str(e)}")  # Debug print
+        return JsonResponse({"error": str(e)}, status=500)
 
 
 def get_client_ip(request):
@@ -604,3 +779,36 @@ def get_client_ip(request):
     else:
         ip = request.META.get("REMOTE_ADDR")
     return ip
+
+
+@login_required
+@group_required("Host")
+def hostBillingCashout(request):
+    hostProfile = HostProfile.objects.get(user=request.user)
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            amount = data.get("amount")
+            print(f"Received amount: {amount}")
+
+            if not amount or float(amount) <= 0:
+                return JsonResponse(
+                    {"sucess": False, "error": "Invalid amount"}, status=400
+                )
+
+            amount_in_cents = int(float(amount) * 100)
+
+            # external_accountId = CashoutRequest.getExternalAccountId(hostProfile.stripe_account_id)
+            CashoutRequest.processCashoutRequest(
+                amount_in_cents, "usd", hostProfile.stripe_account_id
+            )
+
+            return JsonResponse(
+                {"success": True, "message": "Cashout request successful!"}
+            )
+        except Exception as e:
+            print(f"Error: {e}")
+            return JsonResponse(
+                {"success": False, "error": "An error occurred"}, status=400
+            )
+    return JsonResponse({"success": False, "error": "Invalid request"}, status=405)

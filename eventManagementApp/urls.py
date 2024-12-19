@@ -33,4 +33,10 @@ urlpatterns = [
         views.hostBilling,
         name="hostBilling",
     ),
+    path(
+        "billing/withdraw/",
+        views.hostBillingCashout,
+        name="hostBillingCashout",
+    ),
+    path("billing/add/card/new/", views.addCard, name="hostBillingAddCard"),
 ]
