@@ -357,5 +357,4 @@ def search_users(request):
             }
             for user in users
         ]
-
     return JsonResponse({"results": results})
