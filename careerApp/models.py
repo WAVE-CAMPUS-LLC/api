@@ -1,8 +1,15 @@
 from django.db import models
 from adminDashboardApp.models import Department, CareerRole
+from django.utils import timezone
 
 
 class CareerRoleApplication(models.Model):
+    APPROVAL_STATUS_CHOICES = [
+        ("pending", "Pending"),
+        ("approved", "Approved"),
+        ("denied", "Denied"),
+    ]
+    approval_status = models.CharField(verbose_name="Approval Status", max_length=100, choices=APPROVAL_STATUS_CHOICES, default="pending")
     role = models.ForeignKey(CareerRole, on_delete=models.CASCADE)
     applicantFirstName = models.CharField(verbose_name="First Name",max_length=70)
     applicantLastName = models.CharField(verbose_name="Last Name", max_length=70)
@@ -16,6 +23,7 @@ class CareerRoleApplication(models.Model):
     applicantCoverLetter = models.FileField(verbose_name="Cover Letter", upload_to='coverLetters/', blank=True, null=True)
     whatYouBring = models.TextField(verbose_name="What do you bring to the team?")
     workAuthorization = models.TextField(verbose_name="Are you legally authorized to work for us?")
+    applicationDate = models.DateTimeField(default=timezone.now)
     
     class Meta:
         default_permissions = () # Removing default permissions

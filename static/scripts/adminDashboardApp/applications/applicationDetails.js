@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', function() {
-    const applicantCard = document.querySelectorAll("#applicant-card");
+    const applicantCard = document.querySelectorAll(".applicant-card");
 
     /* The code snippet you provided is iterating over each `applicantCard` element in the NodeList
     obtained by selecting elements with the id "applicant-card". For each card, it does the
@@ -7,12 +7,12 @@ document.addEventListener('DOMContentLoaded', function() {
     applicantCard.forEach((card, index) => {
         const modal = document.getElementById(`viewHostApplicationModal-${index + 1}`);
         card.addEventListener('click', function () {
-            modal.style.display = 'block';
+            modal.classList.remove('hidden');
         });
 
         document.addEventListener("keydown", (event) => {
             if (event.key === "Escape") {
-                modal.style.display = 'none';
+                modal.classList.add('hidden');
             }
         });
     });
@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', function() {
     closeModal.forEach((button, index) => {
         button.addEventListener('click', function () {
             const modal = document.getElementById(`viewHostApplicationModal-${index + 1}`);
-            modal.style.display = 'none';
+            modal.classList.add('hidden');
         })
     })
 })

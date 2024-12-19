@@ -25,6 +25,12 @@ class HostApplication(models.Model):
         ("webinar", "Webinar"),
         ("networking", "Networking Event"),
     ]
+    
+    APPROVAL_STATUS_CHOICES = [
+        ("pending", "Pending"),
+        ("approved", "Approved"),
+        ("denied", "Denied"),
+    ]
 
     firstName = models.CharField(
         verbose_name="First Name", max_length=70, null=False, blank=False
@@ -48,6 +54,8 @@ class HostApplication(models.Model):
     eventTypes = models.ManyToManyField(
         "EventType", related_name="applications", null=False, blank=False
     )
+    
+    approval_status = models.CharField(verbose_name="Approval Status", max_length=100, choices=APPROVAL_STATUS_CHOICES, default="pending")
 
     eventHostedAnnually = models.CharField(
         verbose_name="How many events do you plan on hosting annually?",

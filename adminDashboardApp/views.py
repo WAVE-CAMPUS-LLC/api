@@ -34,7 +34,9 @@ from collegeManagementApp.models import (
     OrganizationMembership,
     Membership,
 )
-from stripeManagementApp.updateConnectWithStripeDetails import updateConnectWithStripeDetails
+from stripeManagementApp.updateConnectWithStripeDetails import (
+    updateConnectWithStripeDetails,
+)
 from blogApp.models import Blog
 from campusManagerApp.models import CampusManagerInvite
 from django.conf import settings
@@ -194,7 +196,13 @@ def adminDepartmentDetailedView(request, departmentID, department_name):
 @check_suspension
 @group_required("Admin")
 def adminCareerApplicationsView(request):
-    return render(request, "adminDashboardApp/tabs/applications/careerApplications.html")
+    careerApplications = CareerRoleApplication.objects.all()
+
+    return render(
+        request,
+        "adminDashboardApp/tabs/applications/careerApplications.html",
+        {"applications": careerApplications},
+    )
 
 
 @login_required(login_url="authentication:login")
@@ -207,6 +215,11 @@ def adminHostApplicationsView(request):
         action = request.POST.get("applicationAction")
         applicant_email = request.POST.get("applicantEmail")
         applicant_phone = request.POST.get("phone")
+
+        try:
+            application = HostApplication.objects.get(email=applicant_email)
+        except HostApplication.DoesNotExist:
+            messages.error(request, "Application not found.")
 
         if action == "approve":
             sendHostApprovalEmail(applicant_email)
@@ -254,15 +267,21 @@ def adminHostApplicationsView(request):
             except CustomUser.DoesNotExist:
                 pass
 
-            return redirect("waveAdmin:applications")
+            application.approval_status = "approved"
+            application.save()
+
+            return redirect("waveAdmin:hostApplications")
 
         elif action == "deny":
             sendHostDenyEmail(applicant_email)
-            return redirect("waveAdmin:applications")
+            application.approval_status = "denied"
+            application.save()
+            return redirect("waveAdmin:hostApplications")
+
     return render(
         request,
         "adminDashboardApp/tabs/applications/hostApplications.html",
-        {"hostApps": hostApplications},
+        {"applications": hostApplications},
     )
 
 
