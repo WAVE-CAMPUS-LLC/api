@@ -72,21 +72,39 @@ $(document).ready(function () {
 
                     if (data.results && data.results.length > 0) {
                         // Append each result to the fragment
-                        $.each(data.results, function (index, event) {
-                            let resultHtml = `
-                                <a href="/event/${event.eventId}/" class="category-event-card hover:category-image hover:scale-95 transform transition duration-300 flex flex-col justify-center items-center cursor-pointer overflow-hidden p-[10px] text-black">
-                                    <div class="category-image w-full rounded-2xl shadow-custom-shadow-3">
-                                        <img src="${event.header_photo_url}" data-src="${event.header_photo_url}" alt="" class="lazyload w-full h-[448px] rounded-2xl rounded-b-none object-cover">
-                                    </div>
-                                    <div class="category-event-name font-Wanted-SemiBold text-Base flex flex-col justify-center items-start gap-1 w-full border border-custom-rgba5 rounded-bl-2xl rounded-br-2xl shadow-custom-shadow-3 border-t-2 px-5 p-2">
-                                        <h2 id="eventTitle" class="whitespace-nowrap overflow-hidden text-ellipsis w-full text-left text-2xl">${event.title}</h2>
-                                        <div class="eventSubInfo flex flex-col items-start gap-[1px] w-full font-Wanted-Variable text-customGray5">
-                                            <p id="eventHost" class="flex flex-row justify-start">Hosted by @${event.host_username}</p>
-                                            <p id="eventDate" class="w-full flex justify-end font-Wanted-Bold text-Large">${event.date}</p>
+                        $.each(data.results, function (index, item) {
+                            let resultHtml = '';
+                            if (item.eventId) {
+                                // Render event
+                                resultHtml = `
+                                    <a href="/event/${item.eventId}/" class="category-event-card hover:category-image hover:scale-95 transform transition duration-300 flex flex-col justify-center items-center cursor-pointer overflow-hidden p-[10px] text-black">
+                                        <div class="category-image w-full rounded-2xl shadow-custom-shadow-3">
+                                            <img src="${item.header_photo_url}" alt="" class="lazyload w-full h-[448px] rounded-2xl rounded-b-none object-cover">
                                         </div>
-                                    </div>
-                                </a>`;
-                            fragment.append(resultHtml); // Add each result to the fragment
+                                        <div class="category-event-name font-Wanted-SemiBold text-Base flex flex-col justify-center items-start gap-1 w-full border border-custom-rgba5 rounded-bl-2xl rounded-br-2xl shadow-custom-shadow-3 border-t-2 px-5 p-2">
+                                            <h2 class="whitespace-nowrap overflow-hidden text-ellipsis w-full text-left text-2xl">${item.title}</h2>
+                                            <div class="eventSubInfo flex flex-col items-start gap-[1px] w-full font-Wanted-Variable text-customGray5">
+                                                <p class="flex flex-row justify-start">Hosted by @${item.host_username}</p>
+                                                <p class="w-full flex justify-end font-Wanted-Bold text-Large">${item.date}</p>
+                                            </div>
+                                        </div>
+                                    </a>`;
+                            } else if (item.username) {
+                                // Render user
+                                resultHtml = `
+                                    <a href="/user/${item.username}/" class="category-user-card hover:scale-95 transform transition duration-300 flex flex-col justify-center items-center cursor-pointer overflow-hidden p-[10px] text-black">
+                                        <div class="user-image w-full rounded-2xl shadow-custom-shadow-3">
+                                            <img src="${item.profile_photo_url}" alt="${item.display_name}" class="lazyload w-full h-[448px] rounded-2xl object-cover">
+                                        </div>
+                                        <div class="category-user-name font-Wanted-SemiBold text-Base flex flex-col justify-center items-start gap-1 w-full border border-custom-rgba5 rounded-bl-2xl rounded-br-2xl shadow-custom-shadow-3 border-t-2 px-5 p-2">
+                                            <h2 class="whitespace-nowrap overflow-hidden text-ellipsis w-full text-left text-2xl">${item.display_name}</h2>
+                                            <div class="userSubInfo flex flex-col items-start gap-[1px] w-full font-Wanted-Variable text-customGray5">
+                                                <p class="flex flex-row justify-start">@${item.username}</p>
+                                            </div>
+                                        </div>
+                                    </a>`;
+                            }
+                            fragment.append(resultHtml);
                         });
 
                         $(`#events-search-items-${idName}`).append(fragment); // Update DOM once with the fragment

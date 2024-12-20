@@ -148,48 +148,39 @@ College Management — WAVE.
                 <div id="eventInformation" class="adminCollegeTabInformation">
                     <div class="tabInformationContainer">
                         <div class="eventDisplayContainer grid sm:grid-cols-1 pre-lg:grid-cols-2 lg:grid-cols-3">
-                            <a href="#" class="category-event-card hover:category-image hover:scale-95 transform transition duration-300 flex flex-col justify-center items-center cursor-pointer overflow-hidden p-[10px] text-black">
-                                <div class="category-image w-full rounded-2xl shadow-custom-shadow-3">
-                                    <img src="{% static "images/explore/display.png" %}" alt="" class="w-full h-[448px] rounded-2xl rounded-b-none object-cover">
-                                </div>
-                                <div class="category-event-name font-Wanted-SemiBold text-Base flex flex-col justify-center items-start gap-1 w-full border border-custom-rgba5 rounded-bl-2xl rounded-br-2xl shadow-custom-shadow-3 border-t-2 px-5 p-2">
-                                    <h2 id="eventTitle" class="whitespace-nowrap overflow-hidden text-ellipsis w-full text-left text-2xl">Event Test</h2>
-                                    <div class="eventSubInfo flex flex-col items-start gap-[1px] w-full font-Wanted-Variable text-customGray5">
-                                        <p id="eventHost" class="flex flex-row justify-start">Hosted by @davistameh</p>
-                                        <p id="eventDate" class="w-full flex justify-end font-Wanted-Bold text-Large">28th July, 2024</p>
+                            {% if events %}
+                                {% for event in events %}
+                                    <a href="{% url 'core:eventDetails' eventId=event.eventId %}" class="category-event-card hover:category-image hover:scale-95 transform transition duration-300 flex flex-col justify-center items-center cursor-pointer overflow-hidden p-[10px] text-black">
+                                        <div class="category-image w-full rounded-2xl shadow-custom-shadow-3">
+                                            <img src="{{ event.header_photo.url|default:'/static/images/explore/display.png' }}" alt="{{ event.title }}" class="w-full h-[448px] rounded-2xl rounded-b-none object-cover">
+                                        </div>
+                                        <div class="category-event-name font-Wanted-SemiBold text-Base flex flex-col justify-center items-start gap-1 w-full border border-custom-rgba5 rounded-bl-2xl rounded-br-2xl shadow-custom-shadow-3 border-t-2 px-5 p-2">
+                                            <h2 id="eventTitle" class="whitespace-nowrap overflow-hidden text-ellipsis w-full text-left text-2xl">{{ event.title }}</h2>
+                                            <div class="eventSubInfo flex flex-col items-start gap-[1px] w-full font-Wanted-Variable text-customGray5">
+                                                <p id="eventHost" class="flex flex-row justify-start">
+                                                    Hosted by @{{ event.host.username|default:"unknown" }}
+                                                </p>
+                                                <p id="eventDate" class="w-full flex justify-end font-Wanted-Bold text-Large">
+                                                    {{ event.date|date:"jS F, Y" }}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </a>
+                                {% endfor %}
+                            {% else %}
+                                <div class="col-span-full flex justify-center items-center p-8">
+                                    <div class="emptyContainer text-center">
+                                        <div class="mb-4">
+                                            <img class="w-[30px] after-xsm:w-[40px] sm:w-[50px] md:w-[60px] mx-auto" src="{% static 'images/collegeManagementApp/collegeInformation/empty-listing.svg' %}" alt="No events" />
+                                        </div>
+                                        <p class="font-Wanted-Variable text-[10px] after-xsm:text-[12px] sm:text-[14px] md:text-[16.5px] text-black">No events found for this college.</p>
                                     </div>
                                 </div>
-                            </a>
-
-                            <a href="#" class="category-event-card hover:category-image hover:scale-95 transform transition duration-300 flex flex-col justify-center items-center cursor-pointer overflow-hidden p-[10px] text-black">
-                                <div class="category-image w-full rounded-2xl shadow-custom-shadow-3">
-                                    <img src="{% static "images/explore/display.png" %}" alt="" class="w-full h-[448px] rounded-2xl rounded-b-none object-cover">
-                                </div>
-                                <div class="category-event-name font-Wanted-SemiBold text-Base flex flex-col justify-center items-start gap-1 w-full border border-custom-rgba5 rounded-bl-2xl rounded-br-2xl shadow-custom-shadow-3 border-t-2 px-5 p-2">
-                                    <h2 id="eventTitle" class="whitespace-nowrap overflow-hidden text-ellipsis w-full text-left text-2xl">Event Test</h2>
-                                    <div class="eventSubInfo flex flex-col items-start gap-[1px] w-full font-Wanted-Variable text-customGray5">
-                                        <p id="eventHost" class="flex flex-row justify-start">Hosted by @davistameh</p>
-                                        <p id="eventDate" class="w-full flex justify-end font-Wanted-Bold text-Large">28th July, 2024</p>
-                                    </div>
-                                </div>
-                            </a>
-
-                            <a href="#" class="category-event-card hover:category-image hover:scale-95 transform transition duration-300 flex flex-col justify-center items-center cursor-pointer overflow-hidden p-[10px] text-black">
-                                <div class="category-image w-full rounded-2xl shadow-custom-shadow-3">
-                                    <img src="{% static "images/explore/display.png" %}" alt="" class="w-full h-[448px] rounded-2xl rounded-b-none object-cover">
-                                </div>
-                                <div class="category-event-name font-Wanted-SemiBold text-Base flex flex-col justify-center items-start gap-1 w-full border border-custom-rgba5 rounded-bl-2xl rounded-br-2xl shadow-custom-shadow-3 border-t-2 px-5 p-2">
-                                    <h2 id="eventTitle" class="whitespace-nowrap overflow-hidden text-ellipsis w-full text-left text-2xl">Event Test</h2>
-                                    <div class="eventSubInfo flex flex-col items-start gap-[1px] w-full font-Wanted-Variable text-customGray5">
-                                        <p id="eventHost" class="flex flex-row justify-start">Hosted by @davistameh</p>
-                                        <p id="eventDate" class="w-full flex justify-end font-Wanted-Bold text-Large">28th July, 2024</p>
-                                    </div>
-                                </div>
-                            </a>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
-
+                
                 <div id="organizationInformation" class="adminCollegeTabInformation">
                     <div class="tabInformationContainer">
                         <div class="organizationDisplayContainer grid sm:grid-cols-1 pre-lg:grid-cols-2 lg:grid-cols-3">

@@ -5,7 +5,7 @@ from django.db.models import Count, Q
 from django.http import JsonResponse
 from datetime import datetime, timedelta
 from django.utils.timezone import now
-
+from authenticationApp.models import CustomUser
 from eventManagementApp.models import (
     Event,
     EventPrivacy,
@@ -335,4 +335,25 @@ def searchEvents(request):
             for event in search_events
         ]
 
+    return JsonResponse({"results": results})
+
+def search_users(request):
+    search_query = request.GET.get("searchEvents", "").strip()
+    results = []
+
+    if search_query:
+        users = CustomUser.objects.filter(
+            Q(username__icontains=search_query) |
+            Q(first_name__icontains=search_query) |
+            Q(last_name__icontains=search_query)
+        ).distinct()[:10]
+
+        results = [
+            {
+                "username": user.username,
+                "display_name": f"{user.first_name} {user.last_name}".strip() or user.username,
+                "profile_photo_url": user.user_profile.profile_photo.url if hasattr(user, 'user_profile') and user.user_profile.profile_photo else "/static/images/default_profile.png",
+            }
+            for user in users
+        ]
     return JsonResponse({"results": results})

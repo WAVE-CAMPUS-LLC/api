@@ -723,6 +723,7 @@ def adminCollegeView(request):
 @group_required("Admin")
 def adminCollegeDetailView(request, collegeId):
     college = get_object_or_404(College, collegeId=collegeId)
+    events = Event.objects.filter(college=college)
 
     action = request.POST.get("eventAction")
 
