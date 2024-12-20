@@ -10,7 +10,7 @@ from django.core.exceptions import PermissionDenied
 from django.contrib.auth import logout
 from django.contrib.auth.models import Group, Permission
 from django.contrib.auth import get_user_model
-
+from eventManagementApp.models import Event
 
 from accountManagementApp.models import UserProfile
 from authenticationApp.models import CustomUser
@@ -190,3 +190,14 @@ def accept_invite(request, token, collegeId):
         request.session["collegeId"] = collegeId
         request.session["invite_token"] = token
         return redirect(f"{reverse('authentication:login')}?next={request.path}")
+    
+@login_required
+def college_detail_view(request, collegeId):  # Changed from college_id to collegeId
+    college = get_object_or_404(College, collegeId=collegeId)  # Using collegeId instead of id
+    events = Event.objects.all()
+    
+    context = {
+        'college': college,
+        'events': events,
+    }
+    return render(request, 'adminDashboardApp/tabs/colleges/collegeInfo.html', context)
