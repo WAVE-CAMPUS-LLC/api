@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block title %}
-Applications Management — WAVE.
+Host Applications — WAVE.
 {% endblock title %}
 
 
@@ -39,7 +39,7 @@ Applications Management — WAVE.
             <div class="applications-container grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                 {% if applications %}
                     {% for hostApplication in applications %}
-                        <div id="applicant-card" role="button" class=" {% if hostApplication.approval_status == "denied" %}bg-[red]{% elif hostApplication.approval_status == "approved" %}bg-[#1bb71b]{% elif hostApplication.approval_status == "pending" %}bg-green{% endif %} text-white py-5 px-2 xsm:px-4 xxsm:px-6 md:px-7 rounded-lg cursor-pointer" data-modal="viewHostApplicationModal-{{ forloop.counter }}">
+                        <div id="" role="button" class="applicant-card {% if hostApplication.approval_status == "denied" %}bg-[red]{% elif hostApplication.approval_status == "approved" %}bg-[#1bb71b]{% elif hostApplication.approval_status == "pending" %}bg-green{% endif %} text-white py-5 px-2 xsm:px-4 xxsm:px-6 md:px-7 rounded-lg cursor-pointer" data-modal="viewHostApplicationModal-{{ forloop.counter }}">
                             <h3 class="font-Wanted-Bold whitespace-nowrap overflow-hidden text-ellipsis w-full text-left md:font-Wanted-Black text-Large md:text-2xl">{{ hostApplication.firstName }} {{ hostApplication.lastName }}</h3>
                             <p class="applicant-email font-Wanted-Regular text-Small md:text-Semi-Medium">{{ hostApplication.email }}</p>
                             <p class="application-received flex justify-end font-Wanted-Variable text-XSmall">{{ hostApplication.created_at|date:"F d, Y" }}</p>

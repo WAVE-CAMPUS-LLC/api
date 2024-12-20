@@ -3,6 +3,7 @@ import json
 import stripe
 
 from django.conf import settings
+from django.db.models import Max
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 from django.views.decorators.http import require_POST
@@ -22,7 +23,7 @@ from django.core.signing import Signer
 from django.utils import timezone
 import uuid
 
-
+from stripeManagementApp.adminActions import StripeAdmin
 from accountManagementApp.models import UserProfile
 from authenticationApp.models import CustomUser
 from supportCenterApp.models import SupportTicket, FeedbackModel
@@ -43,7 +44,7 @@ from campusManagerApp.models import CampusManagerInvite
 from django.conf import settings
 from .models import (
     Department,
-    EventsLastUpdated,
+    # EventsLastUpdated,
     CareerRole,
     LoginHistoryModel,
     Newsroom,
@@ -217,7 +218,34 @@ def adminCareerApplicationsView(request):
 @check_suspension
 @group_required("Admin")
 def adminEventHostsView(request):
-    return render(request, "adminDashboardApp/tabs/events/hosts.html")
+    hostProfile = UserProfile.objects.filter(was_host=True)
+    print(hostProfile)
+
+    if request.method == "POST":
+        action = request.POST.get("eventAction")
+        host_id = request.POST.get("hostUsername")
+
+        if action == "pause" and host_id:
+            try:
+                host = get_object_or_404(CustomUser, username=host_id)
+                host.groups.remove("Host")
+                host.save()
+                hostProfile.was_host = True
+                hostProfile.save()
+                return redirect("waveAdmin:eventHosts")
+            except CustomUser.DoesNotExist:
+                messages.error(request, "Host not found.")
+        elif action == "activate" and host_id:
+            try:
+                host = get_object_or_404(CustomUser, username=host_id)
+                host.groups.add("Host")
+                host.save()
+                hostProfile.was_host = True
+                hostProfile.save()
+                return redirect("waveAdmin:eventHosts")
+            except CustomUser.DoesNotExist:
+                messages.error(request, "Host not found.")
+    return render(request, "adminDashboardApp/tabs/events/hosts.html", {"profiles": hostProfile})
 
 
 @login_required(login_url="authentication:login")
@@ -230,6 +258,8 @@ def adminHostApplicationsView(request):
         action = request.POST.get("applicationAction")
         applicant_email = request.POST.get("applicantEmail")
         applicant_phone = request.POST.get("phone")
+        
+        userProfile = UserProfile.objects.get(user__email=applicant_email)
 
         try:
             application = HostApplication.objects.get(email=applicant_email)
@@ -242,7 +272,7 @@ def adminHostApplicationsView(request):
             try:
                 applicant = CustomUser.objects.get(email=applicant_email)
                 host_group, created = Group.objects.get_or_create(name="Host")
-
+                userProfile.was_host = True
                 applicant.groups.add(host_group)
 
                 host_profile, profile_created = HostProfile.objects.get_or_create(
@@ -278,6 +308,7 @@ def adminHostApplicationsView(request):
                     print(f"HostProfile created for user: {applicant_email}")
 
                 applicant.save()
+                userProfile.save()
 
             except CustomUser.DoesNotExist:
                 pass
@@ -339,7 +370,31 @@ def adminEventsView(request):
     incomplete_events = Event.objects.filter(status="incomplete")
     archived_events = Event.objects.filter(status="archived")
 
-    last_updated = EventsLastUpdated.objects.first()
+    last_updated = Event.objects.aggregate(last_updated=Max('updated_at'))['last_updated']
+    
+    
+    if request.method == "POST":
+        action = request.POST.get("eventAction")
+        event_id = request.POST.get("event_id")
+
+        if action == "pause" and event_id:
+            try:
+                event = get_object_or_404(Event, eventId=event_id)
+                event.admin_status = "paused"
+                event.save()
+                return redirect("waveAdmin:events")
+            except Event.DoesNotExist:
+                messages.error(request, "Event not found.")
+                
+        elif action == "activate" and event_id:
+            try:
+                event = get_object_or_404(Event, eventId=event_id)
+                event.admin_status = "active"
+                event.save()
+                return redirect("waveAdmin:events")
+            except Event.DoesNotExist:
+                messages.error(request, "Event not found.")
+    
     return render(
         request,
         "adminDashboardApp/tabs/events/events.html",
@@ -546,11 +601,28 @@ def sendDeniedApplicantEmail(applicantEmail):
         print(f"Error sending email to {applicantEmail}: {e}")
 
 
+
 @login_required(login_url="authentication:login")
 @check_suspension
 @group_required("Admin")
-def adminFinanceView(request):
-    return render(request, "adminDashboardApp/tabs/financial.html")
+def adminConnectedAccountsView(request):
+    accounts = StripeAdmin.getConnectedAccounts(request)
+    return render(request, "adminDashboardApp/tabs/financial/accounts.html", {"accounts": accounts})
+
+@login_required(login_url="authentication:login")
+@check_suspension
+@group_required("Admin")
+def adminFinanceOverviewView(request):
+    return render(request, "adminDashboardApp/tabs/financial/overview.html")
+
+
+@login_required(login_url="authentication:login")
+@check_suspension
+@group_required("Admin")
+def adminProductsView(request):
+    return render(request, "adminDashboardApp/tabs/financial/products.html")
+
+
 
 
 @login_required(login_url="authentication:login")
@@ -1064,10 +1136,3 @@ def admin_send_ticket_reply(request, ticket_id):
                 },
             )
     return redirect("waveAdmin:admin_ticket_details", ticket_id=ticket_id)
-
-
-def stripeProfiles(request):
-    profiles = UserProfile.objects.filter(stripe_customer_id__isnull=False)
-    return render(
-        request, "adminDashboardApp/tabs/stripeProfiles.html", {"profiles": profiles}
-    )

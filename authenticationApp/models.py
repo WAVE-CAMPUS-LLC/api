@@ -58,7 +58,6 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     suspension_end_date = models.DateTimeField(null=True, blank=True)
 
     user_preferences_completed = models.BooleanField(default=False, null=False)
-    
     # User Preferences Field
     user_preferences_completed = models.BooleanField(default=False)
     

@@ -26,7 +26,7 @@ class HostApplication(models.Model):
         ("webinar", "Webinar"),
         ("networking", "Networking Event"),
     ]
-    
+
     APPROVAL_STATUS_CHOICES = [
         ("pending", "Pending"),
         ("approved", "Approved"),
@@ -55,8 +55,13 @@ class HostApplication(models.Model):
     eventTypes = models.ManyToManyField(
         "EventType", related_name="applications", null=False, blank=False
     )
-    
-    approval_status = models.CharField(verbose_name="Approval Status", max_length=100, choices=APPROVAL_STATUS_CHOICES, default="pending")
+
+    approval_status = models.CharField(
+        verbose_name="Approval Status",
+        max_length=100,
+        choices=APPROVAL_STATUS_CHOICES,
+        default="pending",
+    )
 
     eventHostedAnnually = models.CharField(
         verbose_name="How many events do you plan on hosting annually?",
@@ -97,6 +102,11 @@ class Event(models.Model):
         ("archived", "Archived"),
     ]
 
+    ADMIN_STATUS_CHOICES = [
+        ("paused", "Paused"),
+        ("active", "Active"),
+    ]
+    
     EVENT_TYPE_CHOICES = [
         ("Academic", "Academic"),
         ("Adventure", "Adventure"),
@@ -226,6 +236,8 @@ class Event(models.Model):
         null=True,
         blank=True,
     )
+    
+    admin_status = models.CharField(max_length=20, choices=ADMIN_STATUS_CHOICES, default="active")
 
     title = models.CharField(
         _("What would you like to title the event?"),
@@ -373,9 +385,9 @@ class Event(models.Model):
         blank=True,
         max_length=500,
     )
-    
-    created_at = models.DateTimeField(default=timezone.now)
-    updated_at = models.DateTimeField(default=timezone.now)
+
+    created_at = models.DateTimeField(auto_now=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.title
