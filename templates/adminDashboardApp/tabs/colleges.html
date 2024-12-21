@@ -36,9 +36,9 @@ College Management — WAVE.
             <div id="activeCampuses" class="campusesInformation">
                 <div class="activeCampusesContainer flex flex-col gap-5">
                     <div class="page-heading">
-                        <h2 class="font-Wanted-Bold text-3.5xl text-green">Live Campuses</h2>
+                        <h2 class="font-Wanted-Bold text-[30px] md:text-3.5xl text-green">Live Campuses</h2>
                     </div>
-                    <div class="collegeContainer grid grid-cols-3 gap-7 w-full">
+                    <div class="collegeContainer grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-7 w-full">
                         {% for college in colleges %}
                         <div id="college-card" class="border-2 rounded-2xl shadow-custom-shadow p-7 flex flex-col gap-2 cursor-pointer">
                             <div id="college-logo" class="w-full flex justify-end">
@@ -55,7 +55,7 @@ College Management — WAVE.
                                     <p class="organization-display font-Wanted-Variable text-Small">55 Organizations</p>
                                 </div>
                                 <div id="college-card-footer" class="flex justify-center items-center font-Wanted-Variable text-Base">
-                                    <a class="manage-college gradient-btn" href="{% url "waveAdmin:collegeDetail" collegeId=college.collegeId %}">Manage College</a>
+                                    <a class="manage-college gradient-btn" href="{% url "waveAdmin:collegeDetail" collegeId=college.collegeId %}">Manage<span class="xs:max-sm:hidden">College</span></a>
                                 </div>
                             </div>
                         </div>
@@ -66,23 +66,23 @@ College Management — WAVE.
             
             <div id="requestedCampuses" class="campusesInformation">
                 <div class="requestedCampusesContainer flex flex-col gap-5">
-                    <div class="page-heading w-full flex flex-row justify-between">
-                        <h2 class="font-Wanted-Bold text-3.5xl text-green">Requested Campuses</h2>
-                        <div class="create-btn">
-                            <button type="button" role="button" id="createCollegeBtn" class="gradient-btn">Create College</button>
+                    <div class="page-heading w-full flex flex-col sm:flex-row justify-between">
+                        <h2 class="font-Wanted-Bold text-[30px] sm:text-3.5xl text-green">Requested Campuses</h2>
+                        <div class="create-btn flex justify-end">
+                            <button type="button" role="button" id="createCollegeBtn" class="gradient-btn">Create<span class="xs:max-sm:hidden">College</span></button>
                         </div>
                     </div>
 
                     <div class="request-colleges flex flex-col gap-5">
                         {% if requestedColleges %}
                             {% for request in requestedColleges %}
-                            <div id="requestedItem" class="w-full flex flex-row justify-between">
+                            <div id="requestedItem" class="w-full flex flex-col sm:flex-row justify-between xs:max-sm:gap-3">
                                 <div class="item-info">
                                     <h3 class="font-Wanted-Bold text-2xl">{{ request.name }}</h3>
                                     <p class="font-Wanted-Variable text-Base text-[rgba(128, 128, 128, 0.798)]">Requested by: <span>{{ request.yourName }}</span></p>
                                 </div>
-                                <div class="item-action flex flex-col gap-2">
-                                    <form method="POST">
+                                <div class="item-action flex flex-col gap-2 xs:max-sm:justify-end">
+                                    <form method="POST" class="flex justify-end">
                                         {% csrf_token %}
                                         <input type="hidden" name="requestId" value="{{ request.requestId }}">
                                         <button type="submit" role="button" class="approve-request bg-[#11bf11] text-white p-3 border-transparent rounded-xl cursor-pointer font-Wanted-Regular text-Base" name="eventAction" value="collegeCreated">Created</button>
@@ -95,22 +95,22 @@ College Management — WAVE.
                             <div>
                                 <img src="{% static "/images/collegeManagementApp/collegeInformation/empty-listing.svg" %}" />
                             </div>
-                            <p>Currently no requests to be displayed.</p>
+                            <p class="text-center">Currently no requests to be displayed.</p>
                         </div>
                         {% endif %}
                     </div>
 
                     <div id="createCollegeModal" class="createCollegeModal hidden bg-[rgba(0, 0, 0, 0.037)] backdrop-blur-sm fixed top-0 left-0 right-0 bottom-0 z-[1005] w-full h-full cursor-pointer">
                         <div class="createCollegeModalContainer w-full h-full flex justify-center items-center">
-                            <div class="createCollegeCard w-[80%] h-[80%] overflow-y-auto bg-white shadow-custom-shadow rounded-2xl p-10 pb-0 flex flex-col gap-10 cursor-default">
-                                <div class="createCollegeCardHeader flex flex-row justify-between">
-                                    <div class="headerHeading flex flex-col gap-1">
-                                        <h3 class="font-Wanted-Bold text-3.5xl">Create College</h3>
+                            <div class="createCollegeCard w-[80%] h-[80%] overflow-y-auto bg-white shadow-custom-shadow rounded-2xl p-8 sm:p-10 pb-0 flex flex-col gap-10 cursor-default">
+                                <div class="createCollegeCardHeader flex flex-col sm:flex-row justify-between">
+                                    <div class="headerHeading flex flex-col gap-1 xs:max-sm:order-2">
+                                        <h3 class="font-Wanted-Bold text-[30px] sm:text-3.5xl">Create College</h3>
                                         <p class="font-Wanted-Variable text-Semi-Medium text-[rgba(128, 128, 128, 0.798)]">Create a college requested by our cherished users.</p>
                                     </div>
 
-                                    <button type="button" role="button" id="closeCreateCollegeModalButton" class="closeCreateCollegeModalButton bg-none border-none cursor-pointer">
-                                        <img src="{% static '/images/admin/roles/modalClose.svg' %}" alt="Close create college modal">
+                                    <button type="button" role="button" id="closeCreateCollegeModalButton" class="closeCreateCollegeModalButton bg-none border-none cursor-pointer xs:max-sm:order-1 flex justify-center">
+                                        <img src="{% static '/images/admin/roles/modalClose.svg' %}" alt="Close create college modal" class="">
                                     </button>
                                 </div>
 
@@ -120,7 +120,7 @@ College Management — WAVE.
                                         <section class="section hidden active">
                                             <div class="section-container body-section flex flex-col gap-4 h-full">
                                                 <div class="section-title w-full flex justify-center items-center flex-col gap-1">
-                                                    <h4 class="font-Wanted-SemiBold text-3xl">{{ collegeForm.name.label }}</h4>
+                                                    <h4 class="font-Wanted-SemiBold text-[30px] sm:text-3xl">{{ collegeForm.name.label }}</h4>
                                                 </div>
                                                 <div class="section-input w-full flex-col justify-center">
                                                     <input class="w-full border-2 border-[#0909091c] rounded-2xl p-3 font-Wanted-Variable text-Medium" type="{{ collegeForm.name.field.widget.input_type }}" id="{{ collegForm.name.auto_id }}" name="{{ collegeForm.name.html_name }}" placeholder="Tennessee State University, Fisk University, etc." />

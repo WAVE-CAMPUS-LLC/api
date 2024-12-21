@@ -15,14 +15,14 @@ WAVE. — Management Dashboard
 
 
 {% block header %}
-{% include "partials/nav-footer/nav/admin_nav.html" %}
+{% include "partials/nav-footer/nav/main_nav.html" %}
 {% endblock header %}
 
 {% block container_art %}
-<div id="container-art">
+<div id="container-art" class="flex flex-col justify-center items-center w-full h-full text-center pt-[50px]">
     <div class="ticket-heading">
-        <div class="ticket-header">
-            <h3><a href="{% url 'waveAdmin:adminDashboard' %}">Management</a> > Feedback</h3>
+        <div class="ticket-header flex justify-center items-center">
+            <h3 class="text-black font-Wanted-Bold xs:max-xssm:text-center xs:max-xssm:text-[25px] text-[30px] md:text-[40px] underline underline-offset-[10px]"><a href="{% url 'waveAdmin:adminDashboard' %}">Management</a> > Feedback</h3>
         </div>
     </div>
 </div>
@@ -31,19 +31,19 @@ WAVE. — Management Dashboard
 
 
 {% block body %}
-<div id="information-container">
-    <div id="information-container-header">
+<div id="information-container" class="w-full px-[20px] sm:px-[50px] pre-lg:px-[60px] lg:px-[100px] flex flex-col gap-[100px]">
+    <div id="information-container-header" class="w-full flex justify-end font-Wanted-Bold text-[20px]">
         <h4>Total Number of Feedback: {{ feedback_count }}</h4>
     </div>
-    <div id="information-container-body">
+    <div id="information-container-body" class="grid grid-cols-1 sm:grid-cols-2 gap-[30px]">
         {% for feedback in feedback_offers %}
-        <div id="feedbackCard">
-            <div id="fC-header">
-                <h3>{{ feedback.full_name }}</h3>
-                <img role="button" src="{% static '/images/admin/feedback/bookmark.svg' %}" alt="Bookmark Feedback">
+        <div id="feedbackCard" class="border-[2px] border-solid border-[rgba(0,0,0,0.038)] rounded-[20px] py-[40px] px-[20px] flex gap-[15px] w-full shadow-custom-shadow-2 flex-col">
+            <div id="fC-header" class="w-full flex justify-between">
+                <h3 class="font-Wanted-SemiBold text-[22px]">{{ feedback.full_name }}</h3>
+                <img role="button" src="{% static '/images/admin/feedback/bookmark.svg' %}" class="w-[25px] cursor-pointer" alt="Bookmark Feedback">
             </div>
-            <h5>{{ feedback.subject }}</h5>
-            <p>
+            <h5 class="font-Wanted-SemiBold text-[18px]">{{ feedback.subject }}</h5>
+            <p class="font-Wanted-Regular text-[16px]">
                 {{ feedback.body }}
             </p>
         </div>
