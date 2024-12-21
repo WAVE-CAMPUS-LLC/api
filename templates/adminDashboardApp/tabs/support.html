@@ -13,39 +13,39 @@ WAVE. — Admin Ticket #{{ ticket.ticket_id }}
 {% endblock script %}
 
 {% block header %}
-{% include "partials/nav-footer/nav/admin_nav.html" %}
+{% include "partials/nav-footer/nav/main_nav.html" %}
 {% endblock header %}
 
 {% block container_art %}
-<div id="container-art">
+<div id="container-art" class="flex flex-col justify-center items-center w-full h-full text-center pt-[50px]">
     <div class="ticket-heading">
-        <div class="ticket-header">
-            <h3>Admin Support Ticket ID: #{{ ticket.ticket_id }} </h3>
+        <div class="ticket-header flex justify-center items-center">
+            <h3 class="text-black font-Wanted-Bold xs:max-xssm:text-center xs:max-xssm:text-[25px] text-[30px] md:text-[40px] underline underline-offset-[10px]">Admin Support Ticket ID: #{{ ticket.ticket_id }} </h3>
         </div>
     </div>
 </div>
 {% endblock container_art %}
 
 {% block body %}
-<div id="information-container">
-    <div id="information-container-header">
-        <div id="ich-search-filter">
-            <div id="ich-search">
-                <form action="" method="GET">
-                    <input type="search" name="support-ticket-search" id="support-ticket-search" placeholder="Search tickets with ID#">
-                    <button type="submit" style="padding: 10px 20px; background-color: black; color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 14px; margin-left: 10px;">
+<div id="information-container" class="w-full px-[20px] sm:px-[50px] pre-lg:px-[30px] lg:px-[80px] xl:px-[100px] flex flex-col gap-[100px]">
+    <div id="information-container-header" class="w-full">
+        <div id="ich-search-filter" class="w-full flex flex-col xs:max-sm:gap-[20px]  sm:flex-row sm:justify-between">
+            <div id="ich-search" class="xs:max-sm:w-full w-[70%]">
+                <form action="" method="GET" class="flex gap-[10px]">
+                    <input type="search" name="support-ticket-search" id="support-ticket-search" placeholder="Search tickets with ID#" class="w-[60%] border-[1px] border-solid border-[rgba(0,0,0,0.204)] shadow-form-shadow-4 rounded-[15px] p-[15px] text-[15px] font-Wanted-Regular">
+                    <button type="submit" class="px-[20px] py-[15px] border-[4px] border-solid border-transparent border-r-[#13c9d3] border-l-[#008d95bc] text-[white] font-Wanted-Regular text-[19px] rounded-[15px] bg-gradient-to-r from-[#008d95bc] to-[#13c9d3] cursor-pointer hover:border-[#008d95] hover:bg-white hover:bg-none hover:text-[#008d95]">
                         Search
                     </button>
                 </form>
             </div>
-            <div id="ich-filter">
-                <div role="button" id="text-description">
-                    <p>Sort By</p>
-                    <img src="{% static '/images/admin/support/filter.svg' %}" alt="Sort Tickets">
+            <div id="ich-filter" class=" sm:w-[30%] flex justify-end xs:max-sm:full xs:max-sm:self-end flex-col sm:flex-row items-center gap-[3px] sm:gap-[10px]">
+                <div role="button" id="text-description" class="flex flex-row items-center font-Wanted-Regular text-[15.5px]">
+                    <p class="w-[100%]">Sort By</p>
+                    <img src="{% static '/images/admin/support/filter.svg' %}" alt="Sort Tickets" class="w-[20px]">
                     :
                 </div>
                 <div id="ich-filter-options">
-                    <select title="support-filters" name="support-filters" id="support-filters">
+                    <select title="support-filters" name="support-filters" id="support-filters" class="border-none p-[10px] font-Wanted-Regular text-[14px]">
                         <option value="latest" selected>Latest</option>
                         <option value="year">Year</option>
                         <option value="month">Month</option>
@@ -59,45 +59,45 @@ WAVE. — Admin Ticket #{{ ticket.ticket_id }}
             </div>
         </div>
     </div>
-    <div id="information-container-body">
-        <div id="active-tickets">
-            <div id="active-tickets-heading">
-                <h5>Active Support Tickets: {{ active_tickets|length }}</h5>
+    <div id="information-container-body" class="w-full flex flex-col md:flex-row gap-[30px] lg:gap-[50px]">
+        <div id="active-tickets" class="w-full md:w-[50%] h-full border-[1px] border-solid border-[rgba(8,8,8,0.07)] shadow-custom-shadow-4 rounded-[15px] flex flex-col gap-[20px] pt-[25px] pb-[50px] px-[20px]">
+            <div id="active-tickets-heading" class="w-full flex justify-start">
+                <h5 class="font-Wanted-Bold text-[20px]">Active Support Tickets: {{ active_tickets|length }}</h5>
             </div>
 
-            <div id="active-tickets-body">
+            <div id="active-tickets-body" class="flex flex-col gap-[25px]">
                 {% for active_ticket in active_tickets %}
-                <div id="tickets">
-                    <div id="priority" class="high"></div>
-                    <div id="body">
-                        <div id="ticket-id-status">
+                <div id="tickets" class="w-full border-[1px] border-solid border-[rgba(8,8,8,0.244)] rounded-[15px] shadow-custom-shadow-4 flex flex-row">
+                    <div id="priority" class="high w-[20%] xs:max-sm:w-[10%] rounded-tl-[15px] rounded-bl-[15px] bg-[rgb(0,210,0)]"></div>
+                    <div id="body" class="w-[65%] xs:max-sm:w-[80%] py-[15px] px-[20px] flex flex-col gap-[15px]">
+                        <div id="ticket-id-status" class="w-full flex xs:max-after-xsm:flex-col xs:max-after-xsm:gap-[10px] justify-between">
                             <div id="tis-id">
                                 <div id="title">Ticket ID</div>  
-                                <div id="tid-body">#<span>{{ active_ticket.ticket_id }}</span> </div>
+                                <div id="tid-body" class="text-[rgba(0,0,0,0.574)]">#<span class="text-black font-Wanted-Regular">{{ active_ticket.ticket_id }}</span> </div>
                             </div>
                             <div id="tis-status">
                                 <div id="title">Status</div>  
-                                <div id="tid-body"><span>Active</span> </div>
+                                <div id="tid-body"><span class="text-black font-Wanted-Regular">Active</span> </div>
                             </div>
                         </div>
-                        <div id="user-name">
+                        <div id="user-name" class="font-Wanted-SemiBold flex flex-col">
                             <div id="title">Full Name</div>
-                            <div id="tid-body"><span>{{ active_ticket.user.first_name }} {{ active_ticket.user.last_name }}</span></div>  
+                            <div id="tid-body"><span class="text-black font-Wanted-Regular">{{ active_ticket.user.first_name }} {{ active_ticket.user.last_name }}</span></div>  
                         </div>
-                        <div id="user-id">
+                        <div id="user-id" class="font-Wanted-SemiBold flex flex-col">
                             <div id="title">User ID</div>
-                            <div id="tid-body"><span>{{ active_ticket.user.user_id }}</span></div> 
+                            <div id="tid-body"><span class="text-black font-Wanted-Regular">{{ active_ticket.user.user_id }}</span></div> 
                         </div>
-                        <div id="user-email">
+                        <div id="user-email" class="font-Wanted-SemiBold flex flex-col">
                             <div id="title">Email Address</div>
-                            <div id="tid-body"><span>{{ active_ticket.email }}</span></div>
+                            <div id="tid-body" class="w-full overflow-hidden"><span class="text-black font-Wanted-Regular whitespace-nowrap overflow-hidden text-ellipsis">{{ active_ticket.email }}</span></div>
                         </div>
-                        <div id="time-created">
-                            <div>Created <span>{{ active_ticket.time_elapsed_since_created }}</span></div>
+                        <div id="time-created" class="w-full flex justify-center font-Wanted-Regular text-[13px]">
+                            <div>Created <span class="text-black font-Wanted-Regular">{{ active_ticket.time_elapsed_since_created }}</span></div>
                         </div>
                     </div>
-                    <div id="goto">
-                        <button title="Expand Ticket">
+                    <div id="goto" class="w-[15%] xs:max-sm:w-[10%]">
+                        <button title="Expand Ticket" class="w-full h-full rounded-tr-[15px] rounded-br-[15px] border-l-[1px] border-solid border-l-[rgba(0,0,0,0.174)] shadow-form-shadow-4 bg-transparent cursor-pointer py-[15px] flex items-center justify-center">
                             <a href="{% url 'waveAdmin:admin_ticket_details' active_ticket.ticket_id %}" title="Expand Ticket">
                                 <img src="{% static '/images/admin/support/expand-card.svg' %}" alt="Expand Support Ticket">
                             </a>
@@ -107,44 +107,44 @@ WAVE. — Admin Ticket #{{ ticket.ticket_id }}
                 {% endfor %}
             </div>
         </div>
-        <div id="inactive-tickets">
-            <div id="inactive-tickets-heading">
-                <h5>Inactive Support Tickets: {{ inactive_tickets|length }}</h5>
+        <div id="inactive-tickets" class="w-full md:w-[50%] h-full border-[1px] border-solid border-[rgba(8,8,8,0.07)] shadow-custom-shadow-4 rounded-[15px] flex flex-col gap-[20px] pt-[25px] pb-[50px] px-[20px]">
+            <div id="inactive-tickets-heading" class="w-full flex justify-start">
+                <h5 class="font-Wanted-Bold text-[20px]">Inactive Support Tickets: {{ inactive_tickets|length }}</h5>
             </div>
 
-            <div id="inactive-tickets-body">
+            <div id="inactive-tickets-body" class="flex flex-col gap-[25px]">
                 {% for inactive_ticket in inactive_tickets %}
-                <div id="tickets">
-                    <div id="priority" class="high"></div>
-                    <div id="body">
-                        <div id="ticket-id-status">
+                <div id="tickets" class="w-full border-[1px] border-solid border-[rgba(8,8,8,0.244)] rounded-[15px] shadow-custom-shadow-4 flex flex-row">
+                    <div id="priority" class="high w-[20%] xs:max-sm:w-[10%] rounded-tl-[15px] rounded-bl-[15px] bg-[rgb(0,210,0)]"></div>
+                    <div id="body" class="w-[65%] xs:max-sm:w-[80%] py-[15px] px-[20px] flex flex-col gap-[15px]">
+                        <div id="ticket-id-status" class="w-full flex xs:max-after-xsm:flex-col xs:max-after-xsm:gap-[10px] justify-between">
                             <div id="tis-id">
                                 <div id="title">Ticket ID</div>  
-                                <div id="tid-body">#<span>{{ inactive_ticket.ticket_id }}</span> </div>
+                                <div id="tid-body" class="text-[rgba(0,0,0,0.574)]">#<span class="text-black font-Wanted-Regular">{{ inactive_ticket.ticket_id }}</span> </div>
                             </div>
                             <div id="tis-status">
                                 <div id="title">Status</div>  
-                                <div id="tid-body"><span>Inactive</span> </div>
+                                <div id="tid-body"><span class="text-black font-Wanted-Regular">Inactive</span> </div>
                             </div>
                         </div>
-                        <div id="user-name">
+                        <div id="user-name" class="font-Wanted-SemiBold flex flex-col">
                             <div id="title">Full Name</div>
-                            <div id="tid-body"><span>{{ inactive_ticket.user.first_name }} {{ inactive_ticket.user.last_name }}</span></div>  
+                            <div id="tid-body"><span class="text-black font-Wanted-Regular">{{ inactive_ticket.user.first_name }} {{ inactive_ticket.user.last_name }}</span></div>  
                         </div>
-                        <div id="user-id">
+                        <div id="user-id" class="font-Wanted-SemiBold flex flex-col">
                             <div id="title">User ID</div>
-                            <div id="tid-body"><span>{{ inactive_ticket.user.user_id }}</span></div> 
+                            <div id="tid-body"><span class="text-black font-Wanted-Regular">{{ inactive_ticket.user.user_id }}</span></div> 
                         </div>
-                        <div id="user-email">
+                        <div id="user-email" class="font-Wanted-SemiBold flex flex-col">
                             <div id="title">Email Address</div>
-                            <div id="tid-body"><span>{{ inactive_ticket.email }}</span></div>
+                            <div id="tid-body" class="w-full overflow-hidden"><span class="text-black font-Wanted-Regular whitespace-nowrap overflow-hidden text-ellipsis">{{ inactive_ticket.email }}</span></div>
                         </div>
                         <div id="time-created">
-                            <div>Created <span>{{ inactive_ticket.time_elapsed_since_created }}</span></div>
+                            <div>Created <span class="text-black font-Wanted-Regular">{{ inactive_ticket.time_elapsed_since_created }}</span></div>
                         </div>
                     </div>
-                    <div id="goto">
-                        <button title="Expand Ticket">
+                    <div id="goto" class="w-[15%] xs:max-sm:w-[10%]">
+                        <button title="Expand Ticket"  class="w-full h-full rounded-tr-[15px] rounded-br-[15px] border-l-[1px] border-solid border-l-[rgba(0,0,0,0.174)] shadow-form-shadow-4 bg-transparent cursor-pointer py-[15px] flex items-center justify-center">
                             <a href="{% url 'waveAdmin:admin_ticket_details' inactive_ticket.ticket_id %}" title="Expand Ticket">
                                 <img src="{% static '/images/admin/support/expand-card.svg' %}" alt="Expand Support Ticket">
                             </a>

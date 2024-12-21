@@ -115,6 +115,8 @@ module.exports = {
         'custom-shadow-4': '0px 4px 12px rgba(0, 0, 0, 0.272)',
         'custom-shadow-5': '2px 3px 21px 4px rgba(0, 0, 0, 0.289)',
         'custom-shadow-6': '0 0 10px rgba(89, 89, 89, 0.279)',
+        'custom-shadow-7': '0px 2px 7px 0px rgba(116, 116, 116, 0.264)',
+        'custom-shadow-8': '0px 2px 7px 0px rgba(216, 216, 216, 0.264)',
       },
       colors: {
         customGray: 'rgb(120, 120, 120)',
