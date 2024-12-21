@@ -1,0 +1,31 @@
+<div class="request-item">
+    <div class="request-left">
+        <div class="request-pfp">
+            <img src="{% static "images/socialApp/publicProfile/profile/E.L.png" %}" alt="Profile Picture" />
+        </div>
+        <div class="request-names">
+            <h1>{{ request.sender.first_name }} {{ request.sender.last_name }}</h1>
+            <p>Sent at {{ request.created_at|date:"H:i A" }}</p>
+        </div>
+    </div>
+    <div class="request-actions">
+        <form method="POST">
+            {% csrf_token %}
+            <input type="hidden" name="friend_request_id" value="{{ request.requestId }}">
+            <input type="hidden" name="action" value="acceptRequest">  
+            <button class="accept" type="submit" role="button">
+                <img src="{% static "/images/socialApp/socialHome/accept.svg" %}" alt="Accept Friend Request">
+            </button>
+            
+        </form>
+
+        <form method="POST">
+            {% csrf_token %}
+            <input type="hidden" name="friend_request_id" value="{{ request.requestId }}">
+            <input type="hidden" name="action" value="declineRequest"> 
+            <button class="decline" type="submit" role="button">
+                <img src="{% static "/images/socialApp/socialHome/decline.svg" %}" alt="Decline Friend Request">
+            </button>
+        </form>
+    </div>
+</div>

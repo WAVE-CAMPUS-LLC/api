@@ -19,7 +19,7 @@ document.addEventListener("DOMContentLoaded", function () {
   socket.onmessage = function (event) {
     const data = JSON.parse(event.data);
 
-    if (data.status == "sent") {
+    if (data.action == "send") {
       currentCount += 1;
       requestCountElement.style.display = "block";
 
@@ -28,7 +28,8 @@ document.addEventListener("DOMContentLoaded", function () {
       } else {
         requestCountElement.textContent = currentCount;
       }
-    } else {
+      document.getElementById("notification-sound").play();
+    } else if (data.action == "cancel") {
       currentCount -= 1;
       if (currentCount <= 0) {
         requestCountElement.style.display = "none";

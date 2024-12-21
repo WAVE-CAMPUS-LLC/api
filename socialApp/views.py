@@ -114,7 +114,7 @@ def publicProfileView(request, username):
                         "type": "friend_request_update",
                         "data": {
                             "message": f"{request.user.username} sent you a friend request!",
-                            "status": "sent",
+                            "action": "send",
                         },
                     },
                 )
@@ -140,7 +140,12 @@ def publicProfileView(request, username):
                         "type": "friend_request_cancel",
                         "data": {
                             "message": f"{request.user.username} sent you a friend request!",
-                            "status": "canceled",
+                            "action": "cancel",
+                            "sender": request.user.username,
+                            "receiver": receiver.user.username,
+                            "receiver_id": receiver.id,
+                            "sender_id": request.user.id,
+                            
                         },
                     },
                 )
