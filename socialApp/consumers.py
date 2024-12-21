@@ -9,6 +9,10 @@ class FriendRequestConsumer(AsyncWebsocketConsumer):
         # await self.channel_layer.group_add(self.group_name, self.channel_name)
         await self.accept()
         
+    async def friend_request_action(self, event):
+        # Send the friend request update to the client
+        await self.send(text_data=json.dumps(event["data"]))
+        
     # If you ever use socket.send() from the frontend, this is where you will receive the message - currently not used
     # async def receive(self, text_data):
         
@@ -47,6 +51,10 @@ class SocialHomeConsumer(AsyncWebsocketConsumer):
         await self.send(text_data=json.dumps(event["data"]))
         
     async def friend_request_cancel(self, event):
+        # Send the friend request update to the client
+        await self.send(text_data=json.dumps(event["data"]))
+        
+    async def friend_request_remove(self, event):
         # Send the friend request update to the client
         await self.send(text_data=json.dumps(event["data"]))
 

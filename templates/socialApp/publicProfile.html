@@ -20,6 +20,7 @@
 
 
 {% block body %}
+<input id="socketUsername" type="hidden" name="socketUsername" value="{{ user.username }}">
 <div id="content-container" class="w-full flex flex-col gap-[40px] px-[30px] after-xsm: md:px-[100px]">
     <div class="userHeader flex flex-col justify-center items-center gap-[15px] w-full h-auto p-[20px]">
         <div>
@@ -66,7 +67,6 @@
             <form method="POST" class="actionForm">
                 {% csrf_token %}
                 <input type="hidden" name="action" value="send_request">
-                <input id="socketUsername" type="hidden" name="socketUsername" value="{{ user.username }}">
                 <button class="connectBtn" type="submit" id="connectBtn">
                     <img src="{% static "images/socialApp/connect.svg" %}" alt="Connect" />
                     Connect
