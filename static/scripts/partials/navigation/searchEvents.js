@@ -1,7 +1,13 @@
 $(document).ready(function () {
     let debounceTimer;
     let idName;
+    
+     // Add this event handler
+    $(document).on('click', '.gradient-btn', function() {
+            sendConnectRequest(this);
+    });
 
+        
     $('#search-events-input-large').on('input', function () {
         idName = 'large';
         handleEmptyInput(idName); // Check and hide results if input is empty immediately
@@ -54,7 +60,32 @@ $(document).ready(function () {
             <h3 class="font-Wanted-ExtraBold text-[40px] text-center">Loading events...</h3>
         </div>`);
     }
-
+   
+    function sendConnectRequest(button) {
+        const username = button.dataset.username;
+        
+        $.ajax({
+            url: '/send-connect-request/',  // You'll need to create this endpoint
+            method: 'POST',
+            data: {
+                'action': 'send_request',
+                'socketUsername': username,
+                'csrfmiddlewaretoken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            success: function(response) {
+                if (response.status === 'success') {
+                    // Update button state
+                    button.textContent = 'Pending';
+                    button.classList.add('pending');
+                    // You might want to disable the button or change its appearance
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error sending connect request:', error);
+            }
+        });
+    }
+    
     function performSearch(idName) {
         var query = $(`#search-events-input-${idName}`).val().trim();
         showLoadingNotice(idName);
@@ -92,7 +123,7 @@ $(document).ready(function () {
                             } else if (item.username) {
                                 // Render user
                                 resultHtml = `
-                                    <a href="/user/${item.username}/" class="category-user-card hover:scale-95 transform transition duration-300 flex flex-col justify-center items-center cursor-pointer overflow-hidden p-[10px] text-black">
+                                    <div class="category-user-card hover:scale-95 transform transition duration-300 flex flex-col justify-center items-center cursor-pointer overflow-hidden p-[10px] text-black">
                                         <div class="user-image w-full rounded-2xl shadow-custom-shadow-3">
                                             <img src="${item.profile_photo_url}" alt="${item.display_name}" class="lazyload w-full h-[448px] rounded-2xl object-cover">
                                         </div>
@@ -101,8 +132,15 @@ $(document).ready(function () {
                                             <div class="userSubInfo flex flex-col items-start gap-[1px] w-full font-Wanted-Variable text-customGray5">
                                                 <p class="flex flex-row justify-start">@${item.username}</p>
                                             </div>
+                                                      <!-- Connect Button -->
+                          <button class="gradient-btn cursor-pointer text-Pre-Xl md:text-xl hover:bg-green" 
+        type="button" 
+        role="button"
+        data-username="${item.username}">
+        Connect
+    </button>
                                         </div>
-                                    </a>`;
+                                    </div>`;
                             }
                             fragment.append(resultHtml);
                         });

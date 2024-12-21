@@ -11,6 +11,9 @@ from eventManagementApp.models import (
     EventPrivacy,
     InviteEventOption,
 )
+from socialApp.models import FriendRequest
+from django.views.decorators.http import require_POST
+from django.contrib.auth.decorators import login_required
 from eventTicketsApp.models import RSVPTicket, PaidFreeTicket
 from accountManagementApp.models import UserProfile
 from .forms import RSVPForm
@@ -358,3 +361,33 @@ def search_users(request):
             for user in users
         ]
     return JsonResponse({"results": results})
+
+@login_required
+@require_POST
+def send_connect_request(request):
+    action = request.POST.get('action')
+    username = request.POST.get('socketUsername')
+    
+    if action == 'send_request':
+        try:
+            to_user = CustomUser.objects.get(username=username)
+            
+            if to_user == request.user:
+                return JsonResponse({'status': 'error', 'message': 'You cannot send a friend request to yourself.'}, status=400)
+            
+            # Attempt to get or create the FriendRequest
+            created = FriendRequest.objects.get_or_create(
+                sender=request.user,
+                receiver=to_user,
+                defaults={'status': 'pending'}
+            )
+            
+            if created:
+                return JsonResponse({'status': 'success', 'message': 'Friend request sent.'})
+            else:
+                return JsonResponse({'status': 'error', 'message': 'Friend request already sent.'}, status=400)
+        
+        except CustomUser.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'User not found.'}, status=404)
+    
+    return JsonResponse({'status': 'error', 'message': 'Invalid action.'}, status=400)

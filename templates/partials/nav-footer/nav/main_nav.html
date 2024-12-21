@@ -124,6 +124,7 @@
         <!-- Event search results container -->
         <div id="event-search-results-large" class="absolute top-full border-2 border-[#30303015] rounded-3xl bg-white shadow-form-shadow-2 w-[90%] after-xsm:w-4/5 sm:w-[65%] mt-2 hidden z-[1040]">
             <!-- Search items will be dynamically populated here -->
+            {% csrf_token %}
             <div id="events-search-items-large" class="grid sm:grid-cols-1 lg:grid-cols-2 w-full">
                 
             </div>

@@ -14,5 +14,6 @@ urlpatterns = [
     path("load-more/", views.load_more_events, name="load_more_events"),
     path("event/reserved/", views.rsvpConfirm, name="rsvpConfirm"),
     path("explore/search/", views.searchEvents, name="search"),
-    path("social/search/", views.search_users, name="search_users"),  
+    path("social/search/", views.search_users, name="search_users"),
+    path('send-connect-request/', views.send_connect_request, name='send_connect_request'),  
 ]
