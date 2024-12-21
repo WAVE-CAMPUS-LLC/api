@@ -55,15 +55,15 @@
                                 {% if events %}
                                 <div class="collegeEventContainer grid sm:grid-cols-2 lg:grid-cols-3 xssm:px-[35px] sm:px-0 md:px-[30px] pre-lg:gap-[50px] lg:gap-0">
                                     {% for event in events %}
-                                    <a target="_blank" href="{% url "core:eventDetails" eventId=event.eventId %}" class="category-event-card overflow-hidden flex flex-col justify-center items-center cursor-pointer p-[10px] text-black no-underline">
-                                        <div class="category-image w-full rounded-[20px] border-0 border-[#00000013] shadow-custom-shadow-3">
-                                            <img src="{{ event.header_photo.url }}" alt="" class="w-full h-full rounded-[20px] rounded-b-none object-cover transition-transform duration-300 ease-in-out">
+                                    <a href="{% url "core:eventDetails" eventId=event.eventId %}" class="category-event-card hover:category-image hover:scale-95 transform transition duration-300 flex flex-col justify-center items-center cursor-pointer overflow-hidden p-[10px] text-black">
+                                        <div class="category-image w-full rounded-2xl shadow-custom-shadow-3">
+                                            <img src="{{event.header_photo.url}}" alt="" class="w-full h-[448px] rounded-2xl rounded-b-none object-cover">
                                         </div>
-                                        <div class="category-event-name font-Wanted-SemiBold text-[15px] flex flex-col justify-center items-center gap-[5px] border rounded-b-[20px] shadow-custom-shadow-3 p-[10px] px-[20px] w-full">
-                                            <h2 id="eventTitle" class="whitespace-nowrap overflow-hidden text-ellipsis w-full text-left font-bold text-[1.5rem]">{{ event.title }}</h2>
-                                            <div class="eventSubInfo flex flex-col gap-[1px] w-full font-Wanted-Variable text-customColor">
-                                                <p id="eventLocation" class="flex justify-center">@{{ event.host.username }}</p>
-                                                <p id="eventDate" class="flex justify-end">{{ event.date }}</p>
+                                        <div class="category-event-name font-Wanted-SemiBold text-Base flex flex-col justify-center items-start gap-1 w-full border border-custom-rgba5 rounded-bl-2xl rounded-br-2xl shadow-custom-shadow-3 border-t-2 px-5 p-2">
+                                            <h2 id="eventTitle" class="whitespace-nowrap overflow-hidden text-ellipsis w-full text-left text-2xl">{{ event.title }}</h2>
+                                            <div class="eventSubInfo flex flex-col items-start gap-[1px] w-full font-Wanted-Variable text-customGray5">
+                                                <p id="eventHost" class="flex flex-row justify-start">Hosted by @{{ event.host.username }}</p>
+                                                <p id="eventDate" class="w-full flex justify-end font-Wanted-Bold text-Large">{{ event.date }}</p>
                                             </div>
                                         </div>
                                     </a>

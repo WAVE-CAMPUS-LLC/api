@@ -1,0 +1,40 @@
+{% extends "base/base.html" %}
+{% load static %}
+{% load widget_tweaks %}
+
+
+{% block title %}
+Come create the greatest experiences! Join WAVE. 
+{% endblock title %}
+
+
+{% block script %}
+<script type="text/javascript" src="{% static "/scripts/authenticationApp/join/joinValidations.js" %}"></script>
+{% endblock script %}
+
+
+{% block auth_body %}
+<main id="joinCardContainer" class="flex justify-center items-center pt-[150px] pb-[10px] flex-col gap-y-[20px] max-w-[100vw] max-h-[100vh] w-full h-full overflow-y-auto">
+    <header id="navHeader" class="w-full flex justify-center pt-[30px]">
+        <div id="logo" class="font-Wanted-Black text-[40px]">
+            <a href="{% url "core:index" %}" class="no-underline text-black">WAV<span>E</span>.</a>
+        </div>
+    </header>
+
+    <div class="flex flex-col gap-y-[20px] bg-white w-[90%] sm:w-[80%] md:w-[60%] pt-[20px] pb-[30px] pl-[25px] md:pl-[50px] pr-[25px] md:pr-[50px] border border-solid border-custom-rgba rounded-[20px] shadow-custom-shadow">
+        <div id="heading" class="text-black font-Wanted-ExtraBold text-[25px] flex justify-center">
+            <h3 class="text-black font-Wanted-ExtraBlack text-[22px] sm:text-[25px] md:text-[28px] flex justify-center">Enter the verification code sent to your email</h3>
+        </div>
+        <form method="POST" class="flex flex-col gap-5">
+            {% csrf_token %}
+            <label for="verification_code">
+                <input type="text" name="verification_code" id="verification_code" class="font-Wanted-SemiBold text-[13px] uppercase flex flex-col gap-[5px] w-full" autofocus>
+            </label>
+
+            <div class="w-full flex justify-end">
+                <button type="submit" class="font-Wanted-Variable text-[13px] uppercase bg-green text-black px-[20px] py-[10px] rounded-[5px]">Verify</button>
+            </div>
+        </form>
+    </div>
+</main>
+{% endblock auth_body %}

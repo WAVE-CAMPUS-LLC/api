@@ -96,53 +96,23 @@ Account Settings — WAVE.
 
             <section id="password-change" class="info-container flex flex-col w-full gap-y-[25px]">
                 <div>
-                    <h6 class="ic-headers font-Wanted-Medium text-[20px] text-black">Password & Authentication</h6>
+                    <h6 class="ic-headers font-Wanted-Medium text-[20px] text-black">Birthday</h6>
                 </div>
                 <div class="flex sm:items-center justify-end sm:justify-start">
-                    <a href="{% url "accountManagement:changePassword" %}" class="font-Wanted-Variable text-Pre-Xl bg-[#008d95] rounded-[10px] text-white border border-[#25567b39] py-2 px-4 w-auto cursor-pointer">Change Password</a>
+                    <a href="{% url "support:newTicket" %}" class="font-Wanted-Variable text-Pre-Xl bg-[#008d95] rounded-[10px] text-white border border-[#25567b39] py-2 px-4 w-auto cursor-pointer">Request Change</a>
                 </div>
             </section>
 
             <hr class="cc-divider my-[50px] border-[#8e8e8e58 border-[1.5px] w-full" />
 
-            <section id="location-change" class="info-container flex flex-col w-full gap-y-[25px]">
-                <h6 class="ic-headers font-Wanted-Medium text-[20px] text-black">Location</h6>
-                <form method="post" action="{% url "accountManagement:userSettings" %}" class="flex flex-col sm:flex-row justify-between w-full gap-[25px]">
-                    {% csrf_token %}
-                    <input type="hidden" name="form_type" value="location-info" />
-                    <div class="input-div flex flex-col gap-y-[50px]">
-                        <div class="input-box flex flex-col gap-1">
-                            <label for="{{ profile_form.country.id_for_label }}" class="font-Wanted-Variable font-bold text-[1em] text0[#02374ccb]">{{ profile_form.country.label_tag }}</label>
-                            <select
-                                name="{{ profile_form.country.html_name }}"
-                                id="{{ profile_form.country.auto_id }}"
-                                type="{{ profile_form.country.field.widget.input_type }}"
-                                value="United States"
-                                class="w-full border-2 border-[#0909091c] rounded-2xl p-3 font-Wanted-Variable text-Medium"
-                            >
-                                <option value="usa">United States</option>
-                            </select>
-                        </div>
-    
-                        <div class="input-box flex flex-col gap-1">
-                            <label for="zip-code" class="font-Wanted-Variable font-bold text-[1em] text0[#02374ccb]">ZIP Code</label
-                            >
-                            <input
-                                id="zip-code"
-                                name="zip-code"
-                                type="text"
-                                value="28167"
-                                class="w-full border-2 border-[#0909091c] rounded-2xl p-3 font-Wanted-Variable text-Medium"
-                            />
-                        </div>
-                    </div>
-                    <div class="flex sm:items-center justify-end sm:justify-center">
-                        <button type="submit" role="button" class="font-Wanted-Variable text-Pre-Xl bg-[#008d95] rounded-[10px] text-white border border-[#25567b39] py-2 px-4 w-auto cursor-pointer">Save</button>
-                    </div>
-                </form>
-            </section>
-
-            
+            <section id="password-change" class="info-container flex flex-col w-full gap-y-[25px]">
+                <div>
+                    <h6 class="ic-headers font-Wanted-Medium text-[20px] text-black">Password & Authentication</h6>
+                </div>
+                <div class="flex sm:items-center justify-end sm:justify-start">
+                    <a href="{% url "accountManagement:changePassword" %}" class="font-Wanted-Variable text-Pre-Xl bg-[#008d95] rounded-[10px] text-white border border-[#25567b39] py-2 px-4 w-auto cursor-pointer">Change Password</a>
+                </div>
+            </section>       
         </div>
 
         <div class="settings-tab-content" id="preferences-information">

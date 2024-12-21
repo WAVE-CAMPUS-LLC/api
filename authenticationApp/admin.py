@@ -16,7 +16,7 @@ class CustomUserAdmin(UserAdmin):
     readonly_fields = ("date_joined",)
     
     fieldsets = (
-        ("Account Information", {"fields": (("first_name", "last_name"), "email", "username",  "password", "user_preferences_completed", "email_verified" )}),
+        ("Account Information", {"fields": (("first_name", "last_name"), "email", ("username","birthday"),  "password", "user_preferences_completed", "is_onboarded" )}),
         ("Access Data", {"fields": ("date_joined","last_login",)}),
         ("Permissions", {"fields": ("is_staff", "is_active", "groups", "user_permissions")}),
     )
@@ -25,7 +25,7 @@ class CustomUserAdmin(UserAdmin):
         (None, {
             "classes": ("wide",),
             "fields": (
-                "email", "password1", "password2", "is_staff","first_name", "last_name",  "phone_number",
+                "email", "password1", "password2", "is_staff","first_name", "last_name",  "phone_number", "birthday",
                 "is_active", "groups", "user_permissions"
             )}
         ),

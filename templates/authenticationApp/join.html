@@ -1,13 +1,12 @@
 {% extends "base/base.html" %}
 {% load static %}
+{% load widget_tweaks %}
+
 
 {% block title %}
-Join Us! — WAVE 
+Come create the greatest experiences! Join WAVE. 
 {% endblock title %}
 
-{% block app_page_style %}
-<link rel="stylesheet" type="text/css" href="{% static "/styles/authenticationApp/join.css" %}" />
-{% endblock app_page_style %}
 
 {% block script %}
 <script type="text/javascript" src="{% static "/scripts/authenticationApp/join/joinValidations.js" %}"></script>
@@ -26,15 +25,16 @@ Join Us! — WAVE
             <h3 class="text-black font-Wanted-ExtraBlack text-[22px] sm:text-[25px] md:text-[28px] flex justify-center">Join Us</h3>
         </div>
 
-        <div id="formErrorDisplay">
+        <div id="formErrorDisplay" class="flex items-center xxsm:justify-center flex-col xxsm:flex-row gap-2">
             {% if form.errors %}
                 {% for field_errors in form.errors.values %}
+                <div class="flex flex-row gap-2">
                     {% for error in field_errors %}
-                        <div>
-                            <p></p>
+                        <div class="font-Wanted-Variable flex justify-center text-[14px] w-auto text-white p-[10px] rounded-[10px] bg-[red] border border-solid border-red">
                             <p>{{ error }}</p>
                         </div>
                     {% endfor %}
+                </div>
                 {% endfor %}
             {% endif %}
         </div>
@@ -87,7 +87,7 @@ Join Us! — WAVE
                 </label>
             </div>
 
-            <div id="rowThree">
+            <div id="rowThree" class="flex flex-col sm:flex-row gap-[10px]">
                 <label for="{{ form.username.id_for_label }}" class="font-Wanted-SemiBold text-[13px] uppercase flex flex-col gap-[5px] w-full">
                     <div class="flex flex-row gap-1">
                         {{ form.username.label }} 
@@ -101,7 +101,18 @@ Join Us! — WAVE
                     </div>
                     <div id="usernamePlaceholder" class="flex flex-row items-center gap-[10px] rounded-[10px] border border-solid border-custom-rgba p-[12px] pt-0 pb-0 pl-0">
                         <h6 class="font-Wanted-Bold text-[18px] sm:text-[20px] md:text-[23px] pl-[12px] pr-[12px] border-r border-solid border-custom-rgba">@</h6>
-                        <input type="{{ form.username.field.widget.input_type }}" name="{{ form.username.html_name }}" id="{{ form.username.auto_id }}" autocomplete="off" required class="username p-[10px] border-none focus:border-none font-Wanted-Regular text-[15px] w-full shadow-form-shadow" maxlength="20">
+                        <input type="{{ form.username.field.widget.input_type }}" name="{{ form.username.html_name }}" id="{{ form.username.auto_id }}" autocomplete="off" required class="username p-[10px] border-none outline-none focus:border-none font-Wanted-Regular text-[15px] w-full shadow-form-shadow" maxlength="20">
+                    </div>
+                </label>
+
+                <label for="{{ form.birthday.id_for_label }}" class="font-Wanted-SemiBold text-[13px] uppercase flex flex-col gap-[5px] w-full">
+                    <div class="flex flex-row gap-1">
+                        {{ form.birthday.label }} 
+                        <span id="requiredIndicator" class="text-[red] font-Wanted-Variable">*</span>
+                    </div>
+                    <div id="usernamePlaceholder" class="flex flex-row px-2 items-center gap-[10px] p-[12px] pt-0 pb-0 pl-0 h-auto">
+                        
+                        {{ form.birthday|add_class:"username border rounded-[10px] border-solid font-Wanted-Regular text-[15px] w-full p-[12px] shadow-form-shadow outline-none" }}
                     </div>
                 </label>
             </div>

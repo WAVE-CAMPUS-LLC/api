@@ -308,9 +308,12 @@ class College(models.Model):
     motto = models.CharField("What's your college's motto?", max_length=200)
     contact_website = models.URLField("College website", blank=True, null=True)
     email_domain = models.CharField("College email domain", max_length=100, blank=True)
-    
+
     managers = models.ManyToManyField(
-        settings.AUTH_USER_MODEL, blank=True, related_name="managed_colleges"
+        settings.AUTH_USER_MODEL,
+        blank=True,
+        related_name="managed_colleges",
+        verbose_name="Campus Manager",
     )
 
     created_by = models.ForeignKey(
@@ -340,20 +343,3 @@ class College(models.Model):
         if not domain:
             raise ValidationError("Invalid link. Enter your college's website.")
         return domain
-
-# class EventsLastUpdated(models.Model):
-#     last_updated = models.DateTimeField(auto_now=True)
-
-#     class Meta:
-#         default_permissions = ()  # Removing default permissions
-
-#     def __str__(self):
-#         return f"Last updated: {self.timestamp}"
-
-# event = "eventManagementApp.Event"
-# @receiver(post_save, sender=event)
-# def update_last_updated(sender, instance, created, **kwargs):
-#     # Create or update the LastUpdated entry when an event is saved
-#     time, created = EventsLastUpdated.objects.get_or_create(id=1)  # Only one row for the timestamp
-#     time.last_updated = now()
-#     time.save()
