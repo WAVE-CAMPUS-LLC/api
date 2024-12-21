@@ -186,6 +186,9 @@ class UserProfile(models.Model):
     eventTypes = models.ManyToManyField(
         "EventTypePreferences", related_name="user_preferences"
     )
+    
+    was_host = models.BooleanField(default=False)
+
 
     # Communication Preferences
     email_communication = models.BooleanField(_("Email notifications"), default=True)

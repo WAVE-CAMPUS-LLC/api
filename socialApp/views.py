@@ -5,7 +5,6 @@ import re
 from datetime import datetime
 from asgiref.sync import async_to_sync
 from ssl import MemoryBIO
-from turtle import st
 from django.http import Http404, HttpResponseBadRequest
 from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth.decorators import login_required

@@ -26,7 +26,6 @@ urlpatterns = [
         views.adminCareerDetailView,
         name="careerDetails",
     ),
-    path("finances/", views.adminFinanceView, name="finances"),
     path("support/", views.adminSupportView, name="support"),
     path("feedback/", views.adminFeedbackView, name="feedback"),
     path("colleges/", views.adminCollegeView, name="colleges"),
@@ -36,6 +35,7 @@ urlpatterns = [
     path("newsroom/create/", views.adminCreateNewsView, name="createNews"),
     path("newsroom/<uuid:newsId>/edit/", views.adminEditNewsView, name="editNews"),
     path("blog/", views.adminBlogView, name="blog"),
+    path("events/hosts/", views.adminEventHostsView, name="eventHosts"),
     
     path("emailing/", views.adminEmailingView, name="emailing"),
     path("send_emailwith_resend/", views.send_email, name="resend-emailing"),
@@ -44,5 +44,7 @@ urlpatterns = [
     path('send_ticket_reply/<str:ticket_id>/', views.admin_send_ticket_reply, name='admin_send_ticket_reply'),
     path('toggle_ticket_status/<str:ticket_id>/', views.toggle_ticket_status, name='toggle_ticket_status'),
 
-    path('stripe/profiles/', views.stripeProfiles, name='stripeProfiles'),
+    path('financial/connected/accounts/', views.adminConnectedAccountsView, name='connectedAccounts'),
+    path('financial/overview/', views.adminFinanceOverviewView, name='financialOverview'),
+    path('financial/products/', views.adminProductsView, name='stripeProducts'),
 ]
