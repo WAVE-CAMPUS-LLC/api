@@ -8,6 +8,7 @@ from django.utils.translation import gettext as _
 from django.contrib.auth.models import Group
 from django.apps import apps
 import uuid
+from django.utils.timezone import now
 
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -307,9 +308,12 @@ class College(models.Model):
     motto = models.CharField("What's your college's motto?", max_length=200)
     contact_website = models.URLField("College website", blank=True, null=True)
     email_domain = models.CharField("College email domain", max_length=100, blank=True)
-    
+
     managers = models.ManyToManyField(
-        settings.AUTH_USER_MODEL, blank=True, related_name="managed_colleges"
+        settings.AUTH_USER_MODEL,
+        blank=True,
+        related_name="managed_colleges",
+        verbose_name="Campus Manager",
     )
 
     created_by = models.ForeignKey(
@@ -339,20 +343,3 @@ class College(models.Model):
         if not domain:
             raise ValidationError("Invalid link. Enter your college's website.")
         return domain
-
-class EventsLastUpdated(models.Model):
-    last_updated = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        default_permissions = ()  # Removing default permissions
-
-    def __str__(self):
-        return f"Last updated: {self.timestamp}"
-    
-Event = "eventManagementApp.Event"
-@receiver(post_save, sender=Event)
-def update_last_updated(sender, instance, created, **kwargs):
-    # Create or update the LastUpdated entry when an event is saved
-    last_updated, created = EventsLastUpdated.objects.get_or_create(id=1)  # Only one row for the timestamp
-    last_updated.timestamp = instance.updated_at
-    last_updated.save()

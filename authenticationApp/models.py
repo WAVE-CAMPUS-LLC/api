@@ -1,5 +1,5 @@
 import datetime
-from datetime import timedelta
+from datetime import timedelta, date
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, Group
 from django.utils import timezone
@@ -43,6 +43,8 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         help_text=(_("Username")),
     )
     
+    birthday = models.DateField(_("Birthday"), null=False, blank=False, default=datetime.date.today)
+    age = models.IntegerField( null=True, blank=True)
 
     date_joined = models.DateField(auto_now_add=True)
 
@@ -53,16 +55,14 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     # The generation of a random user id for every user that signs up. 
     user_id = models.UUIDField(_("User ID"), default=uuid.uuid4, editable=False, unique=True)
     
-    
+    is_onboarded = models.BooleanField(default=False)
     is_suspended = models.BooleanField(default=False)
     suspension_end_date = models.DateTimeField(null=True, blank=True)
 
     user_preferences_completed = models.BooleanField(default=False, null=False)
-    
     # User Preferences Field
     user_preferences_completed = models.BooleanField(default=False)
     
-    email_verified = models.BooleanField(default=False)
     
     def suspend(self, hours):
         suspend_group, created = Group.objects.get_or_create(name="Suspend")
@@ -104,8 +104,14 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         
         verbose_name = "Member Account"
         verbose_name_plural = "Member Accounts"
+    
+    
+    def save(self, *args, **kwargs):
+        if self.birthday:
+            today = date.today()
+            self.age = today.year - self.birthday.year - ((today.month, today.day) < (self.birthday.month, self.birthday.day))
         
-        
+        super(CustomUser, self).save(*args, **kwargs)
 
     def __str__(self):
         return self.email
@@ -120,3 +126,15 @@ def generate_user_id(sender, instance, **kwargs):
 def create_user_profile(sender, instance, created, **kwargs):
     if created:
         UserProfile.objects.create(user=instance)
+
+
+
+class EmailVerification(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    verification_code = models.CharField(max_length=7)
+    is_verified = models.BooleanField(default=False)
+    expiration_date = models.DateTimeField()
+    
+    
+    def __str__(self):
+        return self.verification_code

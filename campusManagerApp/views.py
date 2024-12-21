@@ -14,7 +14,7 @@ from eventManagementApp.models import Event
 
 from accountManagementApp.models import UserProfile
 from authenticationApp.models import CustomUser
-from collegeManagementApp.models import Membership, Organization
+from collegeManagementApp.models import Membership, Organization, CollegeEventLink
 from .models import CampusManagerInvite
 from adminDashboardApp.models import College
 from wave_v1.decorators import campusManagerRequired
@@ -39,30 +39,26 @@ def managerDashboardView(request):
     pending organizations.
     """
 
-    colleges = College.objects.filter(managers=request.user)
-    college_info = []
+    college = get_object_or_404(College, managers=request.user)
+    college_event_links = CollegeEventLink.objects.filter(college=college)
+    
+    events = [link.event for link in college_event_links]
 
-    for managed in colleges:
-        member_count = UserProfile.objects.filter(college=managed).count()
-        organization_count = Organization.objects.filter(college=managed).count()
-        college_info.append(
-            {
-                "college": managed,
-                "member_count": member_count,
-                "organization_count": organization_count,
-            }
-        )
+    member_count = Membership.objects.filter(college=college).count()
+    organization_count = Organization.objects.filter(college=college).count()
+    
 
     pending_organizations = Organization.objects.filter(
-        status="Pending", college__in=colleges
+        status="Pending", college__collegeId=college.collegeId
     )
 
     if request.method == "POST":
         orgId = request.POST.get("orgId")
         action = request.POST.get("approvalAction")
+        event_id = request.POST.get("event_id")
 
         organization = get_object_or_404(
-            Organization, orgId=orgId, status="Pending", college__in=colleges
+            Organization, orgId=orgId, status="Pending", college=college
         )
 
         if action == "approveOrg":
@@ -77,6 +73,8 @@ def managerDashboardView(request):
             messages.success(
                 request, f"Organization '{organization.name}' has been declined."
             )
+            
+        
 
         return redirect("campusManager:dashboard")
 
@@ -84,7 +82,10 @@ def managerDashboardView(request):
         request,
         "campusManagerApp/managerDashboard.html",
         {
-            "managed_colleges": college_info,
+            "college": college,
+            "events": events,
+            "member_count": member_count,
+            "organization_count": organization_count,
             "pending_organizations": pending_organizations,
         },
     )
@@ -93,20 +94,24 @@ def managerDashboardView(request):
 @login_required
 @campusManagerRequired("Campus Manager")
 def managedCampusView(request, collegeId):
-    college = get_object_or_404(College, collegeId=collegeId)
+    college = get_object_or_404(College, managers=request.user, collegeId=collegeId)
     organizations = Organization.objects.filter(college=college)
     members = UserProfile.objects.filter(college=college)
     
+    college_event_links = CollegeEventLink.objects.filter(college=college)
     
+    events = [link.event for link in college_event_links]
     
     if request.method == "POST":
         action=request.POST.get("action")
         organizationID = request.POST.get("organizationID")
+        event_id = request.POST.get("event_id")
         
         
         if action == "deleteOrganization":
             organization = get_object_or_404(Organization, orgId=organizationID)
             organization.delete()
+            messages.success(request, "Organization deleted.")
             return redirect("campusManager:campus", collegeId=collegeId)
         
         elif action == "removeCampusMember":
@@ -117,15 +122,49 @@ def managedCampusView(request, collegeId):
                 if user_profile.college and str(user_profile.college.collegeId) == str(collegeId):
                     user_profile.college = None
                     user_profile.save()
+                    messages.success(request, f"User {user.email} removed from college.")
             return redirect("campusManager:campus", collegeId=collegeId)
-
+        
+        
+        elif action == "pause" and event_id:
+            try:
+                event = get_object_or_404(Event, eventId=event_id)
+                event.admin_status = "paused"
+                event.save()
+                messages.success(request, "Event paused.")
+                return redirect("campusManager:campus", collegeId=college.collegeId)
+            except Event.DoesNotExist:
+                messages.error(request, "Event not found.")
+                
+        elif action == "activate" and event_id:
+            try:
+                event = get_object_or_404(Event, eventId=event_id)
+                event.admin_status = "active"
+                event.save()
+                messages.success(request, "Event activated.")
+                return redirect("campusManager:campus", collegeId=college.collegeId)
+            except Event.DoesNotExist:
+                messages.error(request, "Event not found.")
+                
+        elif action == "delete" and event_id:
+            try:
+                event = get_object_or_404(Event, eventId=event_id)
+                event.delete()
+                messages.success(request, "Event deleted.")
+                return redirect("campusManager:campus", collegeId=college.collegeId)
+            except Event.DoesNotExist:
+                messages.error(request, "Event not found.")
+    
+                
+                
     return render(
         request,
         "campusManagerApp/managerCampusView.html",
         {
             "college": college,
             "organizations": organizations,
-            "collegeMembers": members
+            "collegeMembers": members,
+            "events": events,
         },
     )
 
@@ -173,6 +212,10 @@ def accept_invite(request, token, collegeId):
             campusManager_group, created = Group.objects.get_or_create(
                 name="Campus Manager"
             )
+            if not college:
+                messages.error(request, "The associated college could not be found.")
+                return redirect("core:index")
+            print(college.name)
             college.managers.add(request.user)
             inviteUser = CustomUser.objects.get(email=invite_email)
             inviteUser.groups.add(campusManager_group)

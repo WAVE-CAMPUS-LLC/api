@@ -1,5 +1,13 @@
+.tabHeaderItem {
+    display: flex;
+    justify-content: center;
+}
+
 .tabHeaderItem.tab-active {
-    border-bottom: 4px solid #008d95;
+    border: 1px solid #007379;
+    font-family: Wanted-Variable;
+    color: white;
+    background-color: #007379;
 }
 
 .section.active {

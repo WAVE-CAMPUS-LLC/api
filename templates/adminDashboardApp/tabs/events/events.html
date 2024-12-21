@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block title %}
-College Management — WAVE.
+All Events — WAVE.
 {% endblock title %}
 
 {% block app_page_style %}
@@ -69,6 +69,29 @@ College Management — WAVE.
                             <p id="eventHost" class="flex flex-row justify-start">Hosted by @{{ event.host.username }}</p>
                             <p id="eventDate" class="w-full flex justify-end font-Wanted-Bold text-Large">{{ event.date }}</p>
                         </div>
+                        <div class="flex w-full flex-col gap-1">
+                            <form method="POST" action="{% url "waveAdmin:events" %}" class="w-full flex flex-row justify-between items-center">
+                                {% csrf_token %}
+                                <input type="hidden" name="event_id" value="{{ event.eventId }}" />
+                                <button type="submit" name="eventAction" value="pause" class="bg-none border-none rounded-full">
+                                    <img src="{% static "/images/admin/events/pause.svg" %}" alt="Pause Event" class="size-20 hover:scale-95 transform transition duration-300" />
+                                </button>
+                                <button type="submit" name="eventAction" value="activate" class="bg-none border-none rounded-full" {% if event.admin_status == "active" %}disabled{% endif %}>
+                                    <img src="{% static "/images/admin/events/active.svg" %}" alt="Pause Event" class="size-20 hover:scale-95 transform transition duration-300" />
+                                </button>
+                            </form>
+
+                            <div class="w-full flex justify-center">
+                                <p class="font-Wanted-Bold text-Small text-[grey]">
+                                    {% if event.admin_status == "paused" %}
+                                    Event Paused
+                                    {% elif event.admin_status == "active" %}
+                                    Event Active
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                        
                     </div>
                 </a>
                 {% endfor %}

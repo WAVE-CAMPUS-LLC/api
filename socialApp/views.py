@@ -49,6 +49,16 @@ def socialHomeView(request):
             user.friends.add(sender) 
             sender.friends.add(user) 
             friend_request.accept_request()
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                f"user_{user.id}",
+                {
+                    "type": "friend_request_action",
+                    "data": {
+                        "message": "Request has been accepted.",
+                    },
+                },
+            )
 
         elif action == "declineRequest":
             friend_request_id = request.POST.get("friend_request_id")
@@ -57,6 +67,16 @@ def socialHomeView(request):
             user.friends.remove(sender)
             sender.friends.remove(user)
             friend_request.decline_request()
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                f"user_{user.id}",
+                {
+                    "type": "friend_request_action",
+                    "data": {
+                        "message": "Request has been declined.",
+                    },
+                },
+            )
             
         else:
             crew_id = request.POST.get("crew_id")
@@ -103,8 +123,9 @@ def publicProfileView(request, username):
         if request.method == "POST":
             action = request.POST.get("action")
             if action == "send_request":
-                success, message = send_friend_request(request.user, user_profile)
+                success, message, friend_request = send_friend_request(request.user, user_profile)
                 receiver.user.user_profile.has_pending_request(request.user)
+                
                 
                 channel_layer = get_channel_layer()
                 async_to_sync(channel_layer.group_send)(
@@ -113,7 +134,13 @@ def publicProfileView(request, username):
                         "type": "friend_request_update",
                         "data": {
                             "message": f"{request.user.username} sent you a friend request!",
-                            "status": "sent",
+                            "action": "send",
+                            "friend_request": {
+                                "requestId": str(friend_request.requestId),
+                                "sender_first_name": friend_request.sender.first_name,
+                                "sender_last_name": friend_request.sender.last_name,
+                                "created_at": friend_request.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+                                },
                         },
                     },
                 )
@@ -129,20 +156,28 @@ def publicProfileView(request, username):
                 and friend_request
                 and friend_request_status == "pending"
             ):
-                friend_request.delete()
-                messages.success(request, "Friend request canceled.")
-                friend_request_status = None
+                
                 channel_layer = get_channel_layer()
                 async_to_sync(channel_layer.group_send)(
                     f"user_{receiver.id}",
                     {
                         "type": "friend_request_cancel",
                         "data": {
-                            "message": f"{request.user.username} sent you a friend request!",
-                            "status": "canceled",
+                            "message": f"{request.user.username} canceled the friend request.",
+                            "action": "cancel",
+                            "friend_request": {
+                                "requestId": str(friend_request.requestId),
+                                "sender_first_name": friend_request.sender.first_name,
+                                "sender_last_name": friend_request.sender.last_name,
+                                "created_at": friend_request.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+                                },
                         },
                     },
                 )
+                
+                friend_request.delete()
+                messages.success(request, "Friend request canceled.")
+                friend_request_status = None
                 return redirect("social:publicProfile", username=username)
 
             elif (
@@ -150,6 +185,20 @@ def publicProfileView(request, username):
                 and friend_request
                 and friend_request_status == "accepted"
             ):
+                
+                channel_layer = get_channel_layer()
+                async_to_sync(channel_layer.group_send)(
+                    f"user_{receiver.id}",
+                    {
+                        "type": "friend_request_remove",
+                        "data": {
+                            "message": f"{request.user.username} removed you as a friend.",
+                            "action": "remove",
+                            "requestId": str(friend_request.sender.id),
+                        },
+                    },
+                )
+                
                 friend_request.delete()
                 messages.success(request, "Friend removed.")
                 friend_request_status = None
@@ -174,19 +223,19 @@ def send_friend_request(sender, receiver_username):
     receiver = get_object_or_404(UserProfile, user__username=receiver_username)
 
     if sender.user_profile.is_friends_with(receiver.user):
-        return False, "You are already friends."
+        return False, "You are already friends.", None
     
     if sender.user_profile.has_pending_request(receiver.user):
-        return False, "A friend request is already pending."
+        return False, "A friend request is already pending.", None
 
     friend_request, created = FriendRequest.objects.get_or_create(
         sender=sender, receiver=receiver.user, defaults={"status": "pending"}
     )
 
     if not created:
-        return False, "Friend request has already been sent."
+        return False, "Friend request has already been sent.", friend_request
 
-    return True, "Friend request sent successfully."
+    return True, "Friend request sent successfully.", friend_request
 
 
 @login_required
