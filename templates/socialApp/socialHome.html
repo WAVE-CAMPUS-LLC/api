@@ -8,6 +8,7 @@ My Social @{{ user.username }} — WAVE.
 
 {% block script %}
 <script type="text/javascript" src="{% static "scripts/socialApp/tabControl.js" %}?v={{ time }}" defer></script>
+<script type="text/javascript" src="{% static "scripts/socialApp/socketReceiver.js" %}?v={{ time }}" defer></script>
 {% endblock script %}
 
 
@@ -45,17 +46,17 @@ My Social @{{ user.username }} — WAVE.
                         <p>Home</p>
                     </li>
                     <li role="button" type="button" class="social-tab block cursor-pointer border-l-4 pl-4 -ml-px border-transparent hover:border-green" data-tab="friend-requests">
-                        <div id="friend-request">
+                        <div id="friend-request" class="w-full flex justify-between items-center">
                             <p>Friend Requests</p>
-                            {% if pending_friend_requests %}
-                                <span id="number-of-requests">
-                                    {% if pending_friend_requests|length > 9 %}
-                                        9+
-                                    {% else %}
-                                        {{ pending_friend_requests|length }}
-                                    {% endif %}
-                                </span>
+                            <span id="number-of-requests" data-initial-count="{{ pending_friend_requests|length }}" class="hidden font-Wanted-Variable text-white bg-[red] rounded-full px-2 py-1">
+                            {% if pending_friend_requests|length != 0 %}
+                                {% if pending_friend_requests|length > 9 %}
+                                    9+
+                                {% else %}
+                                    {{ pending_friend_requests|length }}
+                                {% endif %}
                             {% endif %}
+                            </span>
                         </div>
                     </li>
                     <li role="button" type="button" class="social-tab block cursor-pointer border-l-4 pl-4 -ml-px border-transparent hover:border-green" data-tab="invitations">

@@ -8,7 +8,8 @@
 @import "../styles/accountManagementApp/publicProfile.css";
 
 @import "../styles/adminDashboardApp/index.css";
-@import "../styles/adminDashboardApp/tabs/applications.css";
+@import "../styles/adminDashboardApp/tabs/applications/careerApplications.css";
+@import "../styles/adminDashboardApp/tabs/applications/hostApplications.css";
 @import "../styles/adminDashboardApp/tabs/careers.css";
 @import "../styles/adminDashboardApp/tabs/colleges.css";
 @import "../styles/adminDashboardApp/tabs/dashboard.css";

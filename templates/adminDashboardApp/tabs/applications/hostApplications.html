@@ -1,0 +1,155 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}
+Host Applications — WAVE.
+{% endblock title %}
+
+
+{% block script %}
+<script type="text/javascript" src="{% static "/scripts/adminDashboardApp/applications/applications.js" %}"></script>
+<script type="text/javascript" src="{% static "/scripts/adminDashboardApp/applications/applicationDetails.js" %}"></script>
+{% endblock script %}
+
+
+
+{% block header %}
+{% include "partials/nav-footer/nav/main_nav.html" %}
+{% endblock header %}
+
+
+
+
+{% block body %}
+<div id="content-container" class="flex flex-col gap-[70px] px-4 sm:px-6 md:px-[40px] pre-lg:px-[40px] lg:px-[100px] 2xl:px-48 3xl:px-96">
+    <div id="pagination-display" class="flex flex-col pre-sm:flex-row gap-2 w-full items-center font-Wanted-Variable justify-start text-gray-300">
+        <a href="{% url "waveAdmin:adminDashboard" %}" class="text-green underline">Admin Dashboard</a>
+        >
+        <a href="{% url "waveAdmin:adminDashboard" %}#applicationsManagement" class="text-green underline">Applications</a>
+        >
+        <p class="font-Wanted-Medium text-black">Host Applications</p>
+    </div>
+    
+    <div class="content-control flex flex-row gap-4 w-full">
+        <div class="applications-tab tab-active cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="host-applications">Active</div>
+    </div>
+    
+    <div id="body-content">
+        <div class="applications-tab-content " id="host-applications">
+            <div class="applications-container grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                {% if applications %}
+                    {% for hostApplication in applications %}
+                        <div id="" role="button" class="applicant-card {% if hostApplication.approval_status == "denied" %}bg-[red]{% elif hostApplication.approval_status == "approved" %}bg-[#1bb71b]{% elif hostApplication.approval_status == "pending" %}bg-green{% endif %} text-white py-5 px-2 xsm:px-4 xxsm:px-6 md:px-7 rounded-lg cursor-pointer" data-modal="viewHostApplicationModal-{{ forloop.counter }}">
+                            <h3 class="font-Wanted-Bold whitespace-nowrap overflow-hidden text-ellipsis w-full text-left md:font-Wanted-Black text-Large md:text-2xl">{{ hostApplication.firstName }} {{ hostApplication.lastName }}</h3>
+                            <p class="applicant-email font-Wanted-Regular text-Small md:text-Semi-Medium">{{ hostApplication.email }}</p>
+                            <p class="application-received flex justify-end font-Wanted-Variable text-XSmall">{{ hostApplication.created_at|date:"F d, Y" }}</p>
+                        </div>
+                        
+
+                        <div id="viewHostApplicationModal-{{ forloop.counter }}" class="hidden bg-[rgba(0, 0, 0, 0.037)] backdrop-blur-sm fixed top-0 left-0 right-0 bottom-0 z-[1005] w-full h-full cursor-default">
+                            <div class="modalContainer w-full h-full flex justify-center items-center py-5 md:py-11">
+                                <div class="modalContentCard w-11/12 xxsm:w-9/12 pre-sm:w-10/12 sm:w-10/12 md:w-10/12 pre-lg:w-10/12 lg:w-10/12 xl:w-3/5 h-full lg:h-[75%] bg-white shadow-custom-shadow rounded-2xl p-5 pb-12 flex flex-col gap-3 overflow-y-auto">
+                                    <div class="modalHeader w-full flex justify-between items-center flex-col-reverse md:flex-row"> 
+                                        <div class="modalHeading font-Wanted-ExtraBold text-Large md:text-2xl">
+                                            <h5>Host Application</h5>
+                                        </div>
+                                        <div class="modalClose">
+                                            <button type="button" role="button" id="hideModalButton">
+                                                <img src="{% static "images/admin/departments/modalClose.svg" %}" alt="Close">
+                                            </button>
+                                        </div>
+                                    </div>
+            
+                                    <div class="modalBody flex flex-col gap-5">
+                                        <section class="applicantInformation flex flex-col gap-1">
+                                            <div class="sectionHeading font-Wanted-Bold">
+                                                <h2>Personal Information</h2>
+                                            </div>
+                                            <div class="applicantName">
+                                                <h3 class="font-Wanted-Medium">Full Name</h3>
+                                                <p class="font-Wanted-Variable">{{ hostApplication.firstName }} {{ hostApplication.lastName }}</p>
+                                            </div>
+            
+                                            <div class="applicantContact flex flex-col gap-2">
+                                                <h3 class="font-Wanted-Bold text-Small">Contact</h3>
+                                                <div class="doubleDisplayRow flex w-2/3 justify-between flex-row gap-5">
+                                                    <div class="flex flex-col gap-1">
+                                                        <h6 class="font-Wanted-Medium">Email</h6>
+                                                        <p class="font-Wanted-Variable">{{ hostApplication.email }}</p>
+                                                    </div>
+                                                    <div class="flex flex-col gap-1">
+                                                        <h6 class="font-Wanted-Medium">Phone</h6>
+                                                        <p class="font-Wanted-Variable">{{ hostApplication.phone }}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </section>
+
+                                        <section class="organizationInformation flex flex-col gap-6">
+                                            <div class="sectionHeading font-Wanted-Bold">
+                                                <h2>Organization Information</h2>
+                                            </div>
+                                            <div class="orgName">
+                                                <h3 class="font-Wanted-Medium">Name</h3>
+                                                <p class="font-Wanted-Variable">{{ hostApplication.organizationName }}</p>
+                                            </div>
+            
+                                            <div class="doubleDisplayRow">
+                                                <div class="orgEmail">
+                                                    <h3 class="font-Wanted-Medium">Email</h3>
+                                                    <p class="font-Wanted-Variable">{{ hostApplication.organizationEmail }}</p>
+                                                </div>
+                                                <div class="orgLocation">
+                                                    <h3 class="font-Wanted-Medium">Location</h3>
+                                                    <p class="font-Wanted-Variable">{{ hostApplication.organizationLocation }}</p>
+                                                </div>
+                                            </div>
+                                        </section>                                
+                                        
+                                        <section class="eventInformation flex flex-col gap-6">
+                                            <div  class="sectionHeading font-Wanted-Bold">
+                                                <h2>Event Information</h2>
+                                            </div>
+                                            <div class="sectionBody">
+                                                <h3  class="font-Wanted-Medium">Types of events to be hosted</h3>
+                                                <div class="eventTypeContainer flex flex-row gap-2">
+                                                    {% for eventType in hostApplication.eventTypes.all %}
+                                                    <span class="eventType bg-green text-white rounded-full px-2 py-1">
+                                                        {{ eventType.name }}
+                                                    </span>
+                                                    {% endfor %}
+                                                </div>
+                                            </div>
+            
+                                            <div class="sectionBody">
+                                                <h3  class="font-Wanted-Medium">Expected to hold annually</h3>
+                                                <p class="font-Wanted-Variable">{{ hostApplication.eventHostedAnnually }}</p>
+                                            </div>
+                                            <div class="sectionBody">
+                                                <h3 class="font-Wanted-Medium">Average Expected Attendance per event</h3>
+                                                <p class="font-Wanted-Variable">{{ hostApplication.eventPopulation }}</p>
+                                            </div>
+                                        </section>
+                                    </div>
+
+                                    <form action="{% url "waveAdmin:hostApplications" %}" id="hostApplicationDecisionForm" method="post" class="{% if hostApplication.approval_status == "denied" or hostApplication.approval_status == "approved" %}hidden {% endif %}">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="applicantEmail" value="{{hostApplication.email}}" id="applicantEmailInput">
+
+                                        <div class="applicationDecision w-full flex flex-col md:flex-row gap-5 justify-between items-center">
+                                            <button type="submit" name="applicationAction" value="deny" id="applicationDeny" class="text-white font-Wanted-Medium py-3 px-6 rounded-lg bg-[red]">Deny</button>
+                                            <button type="submit" name="applicationAction" value="approve" id="applicationApprove" class="text-white font-Wanted-Medium py-3 px-6 rounded-lg bg-[#14c914]">Approve</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                <h3>No current pending host applications</h3>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock body %}
