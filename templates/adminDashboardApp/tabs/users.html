@@ -16,14 +16,14 @@ WAVE. — Management Dashboard
 
 
 {% block header %}
-{% include "partials/nav-footer/nav/admin_nav.html" %}
+{% include "partials/nav-footer/nav/main_nav.html" %}
 {% endblock header %}
 
 {% block container_art %}
-<div id="container-art">
+<div id="container-art" class="flex flex-col justify-center items-center w-full h-full text-center pt-[50px]">
     <div class="ticket-heading">
-        <div class="ticket-header">
-            <h3><a href="{% url 'waveAdmin:adminDashboard' %}">Management</a> > Users</h3>
+        <div class="ticket-header flex justify-center items-center">
+            <h3 class="text-black font-Wanted-Bold xs:max-xssm:text-center xs:max-xssm:text-[25px] text-[35px] md:text-[40px] underline underline-offset-[10px]"><a href="{% url 'waveAdmin:adminDashboard' %}">Management</a> > Users</h3>
         </div>
     </div>
 </div>
@@ -32,27 +32,27 @@ WAVE. — Management Dashboard
 
 
 {% block body %}
-<div id="information-container">
+<div id="information-container" class="w-full px-[20px] sm:px-[50px] pre-lg:px-[30px] lg:px-[80px] xl:px-[100px] flex flex-col gap-[100px]">
     <!-- The control container. Allows you to search for users and sort data out. Also allows you to invite new members. -->
-    <div id="information-container-header">
-        <div id="search-and-invite">
-            <div id="adminSearch-users">
+    <div id="information-container-header" class="w-full flex flex-col md:flex-row justify-between xs:max-md:gap-[25px]">
+        <div id="search-and-invite" class="xs:max-md:w-full w-[60%] md:w-[70%] flex flex-row gap-[15px]">
+            <div id="adminSearch-users" class="xs:w-[55%] sm:max-pre-lg:w-[70%] pre-lg:w-[70%]">
                 <input type="search" name="users-Search" id="users-Search"
-                    placeholder="Find user with email...">
+                    placeholder="Find user with email..." class="w-full border-[1px] border-solid border-[rgba(0,0,0,0.204)] shadow-custom-shadow-7 rounded-[15px] p-[15px] text-[15px] font-Wanted-Regular">
             </div>
-            <div id="adminInvite-users">
-                <button>Invite Member</button>
+            <div id="adminInvite-users" class="w-full border-[1px] border-solid border-[rgba(0,0,0,0.204)] shadow-custom-shadow-2 rounded-[15px] p-[15px] text-[15px] font-Wanted-Regular">
+                <button class="w-[100%] p-[15px] border-[1px] border-solid rounded-[15px] bg-[#008d95] text-white font-Wanted-Regular text-[15px] cursor-pointer">Invite Member</button>
             </div>
         </div>
 
-        <div id="adminSort-users">
-            <div role="button" id="text-description">
+        <div id="adminSort-users" class="xs:max-md:w-full w-[40%] md:w-[30%] flex flex-row items-center xs:max-md:self-end justify-end gap-[15px] ">
+            <div role="button" id="text-description" class="flex flex-row items-center font-Wanted-Bold">
                 <p>Sort By</p>
-                <img src="../../static/images/admin/filter.svg" alt="">
+                <img src="../../static/images/admin/filter.svg" alt="" class="w-[20px]">
                 :
             </div>
             <div id="adminSort-users-section">
-                <select title="support-filters" name="support-filters" id="support-filters">
+                <select title="support-filters" name="support-filters" id="support-filters" class="border-none p-[10px] font-Wanted-Regular text-[15px]">
                     <option value="latest" selected>Latest</option>
                     <option value="year">Year</option>
                     <option value="month">Month</option>
@@ -67,50 +67,50 @@ WAVE. — Management Dashboard
     </div>
 
     <!-- The main content of the body. All the details will be in this container. -->
-    <div id="information-container-body">
-        <div id="icb-heading">
-            <div id="icbh-personal-info">
+    <div id="information-container-body" class="flex flex-col gap-[20px]">
+        <div id="icb-heading" class="w-full bg-[rgba(192,192,192,0.361)] grid grid-cols-7 uppercase font-Wanted-Medium text-[20px] p-[10px] px-[20px] rounded-[15px]">
+            <div id="icbh-personal-info" class="col-span-3">
                 <h5>Member</h5>
             </div>
 
-            <div id="icbh-role-info">
+            <div id="icbh-role-info" class="col-span-4 grid grid-cols-3">
                 <h5>Role(s)</h5>
                 <h5>Last Login</h5>
                 <h5>Date Joined</h5>
             </div>
         </div>
 
-        <div id="ich-body-container"> 
+        <div id="ich-body-container" class="flex flex-col gap-[30px]"> 
             {% for user in users %}
-            <div id="ichbc-userSummaryCard">
-                <div id="icbh-personal-info">
-                    <div class="icbh-pi-container">
-                        <div id="icbhpi-name">
+            <div id="ichbc-userSummaryCard" class="px-[20px] font-Wanted-SemiBold grid grid-cols-7 items-center cursor-pointer hover:text-[#008d95]">
+                <div id="icbh-personal-info" class="col-span-3">
+                    <div class="icbh-pi-container flex flex-row gap-[20px]">
+                        <div id="icbhpi-name" class="hover:text-[#008d95]">
                             {{ user.first_name }} {{ user.last_name }}
                         </div>
-                        <div id="icbhpi-email">
+                        <div id="icbhpi-email" class="text-gray-600">
                             {{ user.email }}
                         </div>
                     </div>
                 </div>
 
-                <div id="icbh-role-info">
-                    <div id="role-name">
+                <div id="icbh-role-info" class="text-[#151515] text-[18px] grid col-span-4 grid-cols-3">
+                    <div id="role-name" class="flex items-center">
                         {% for group in user.groups.all %}
                         <p>{{ group.name }}</p>
                         {% endfor %}
                     </div>
 
-                    <h5 id="last-active">
-                        {% comment %} <span id="indicator" class="active"></span> {% endcomment %}
+                    <h5 id="last-active" class="flex flex-row items-center gap-[5px] text-gray-600">
+                        {% comment %} <span id="indicator" class="active h-[10px] rounded-[50%]"></span> {% endcomment %}
                         <p>{{user.last_login}}</p>
                     </h5>
 
-                    <div id="datejoined-expand">
+                    <div id="datejoined-expand" class="w-full flex flex-row justify-between items-center text-gray-600">
                         <h5>{{ user.date_joined }}</h5>
                         <div id="expandUserCard">
-                            <a type="button" href="{% url 'waveAdmin:user-detailed' username=user.username %}" title="View Member Details">
-                                <img src="{% static "/images/admin/users/view_user.svg" %}" alt="View Member Details">
+                            <a type="button" href="{% url 'waveAdmin:user-detailed' username=user.username %}" title="View Member Details" class="bg-white border-none cursor-pointer p-[5px]">
+                                <img src="{% static "/images/admin/users/view_user.svg" %}" alt="View Member Details" class="w-[20px]">
                             </a>
                         </div>
                     </div>
