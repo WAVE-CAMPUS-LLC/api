@@ -21,7 +21,7 @@ The Newsroom — WAVE.
 
 {% block body %}
 <div id="content-container" class="flex flex-col gap-[70px] px-4 sm:px-6 md:px-[40px] pre-lg:px-[40px] lg:px-[100px] 2xl:px-48 3xl:px-96">
-    <div id="pagination-display" class="flex flex-row gap-2 w-full items-center font-Wanted-Variable justify-start text-gray-300">
+    <div id="pagination-display" class="flex flex-col pre-sm:flex-row gap-2 w-full items-center font-Wanted-Variable justify-start text-gray-300">
         <a href="{% url "waveAdmin:adminDashboard" %}" class="text-green underline">Dashboard</a>
         >
         <a href="{% url "waveAdmin:adminDashboard" %}#productMarketing" class="text-green underline">Product Marketing</a>
@@ -29,44 +29,44 @@ The Newsroom — WAVE.
         <p class="font-Wanted-Medium text-black">Newsroom</p>
     </div>
     
-    <div class="page-header flex flex-row justify-between items-center">
+    <div class="page-header flex flex-col sm:flex-row justify-between sm:items-center">
         <div class="page-heading text-black font-Wanted-ExtraBold text-2xl">
             <h2>The Newsroom</h2>
         </div>
-        <div class="buttonContainer">
-            <a href="{% url "waveAdmin:createNews" %}" class="gradient-btn">Create New</a>
+        <div class="buttonContainer flex justify-end items-end">
+            <a href="{% url "waveAdmin:createNews" %}" class="gradient-btn">Create <span class="xs:max-sm:hidden">New</span></a>
         </div>
     </div>
 
-    <div id="content-body">
+    <div id="content-body" class="w-full">
         {% if news %}
-        <div class="newsContainer">
+        <div class="newsContainer w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-[30px]">
             {% for newsItem in news %}
-            <a href="{% url "waveAdmin:editNews" newsId=newsItem.newsId %}" class="newsCard">
-                <div class="newsHeader">
-                    <img src="{{ newsItem.headerImage.url }}" />
+            <a href="{% url "waveAdmin:editNews" newsId=newsItem.newsId %}" class="newsCard flex flex-col gap-[30px] text-black hover:#008d95">
+                <div class="newsHeader border-[1px] border-solid border-[rgba(0,0,0,0.038)] rounded-[20px] shadow-custom-shadow-2 max-w-[100%] max-h-[350px]" >
+                    <img src="{{ newsItem.headerImage.url }}" class="w-full h-full max-h-[350px] max-w-full rounded-[20px object-cover"/>
                 </div>
-                <div class="newsBody">
-                    <div class="newsType">
-                        <h6>{{ newsItem.newsCategory }}</h6>
+                <div class="newsBody flex flex-col gap-[15px]">
+                    <div class="newsType flex justify-start gap-[15px]">
+                        <h6 class="text-[#008d95] font-Wanted-Black text-[22px]">{{ newsItem.newsCategory }}</h6>
                     </div>
-                    <div class="newsTitle">
-                        <h4>{{ newsItem.title }}</h4>
+                    <div class="newsTitle flex justify-start gap-[15px]">
+                        <h4 class="font-Wanted-Bold text-[27px]">{{ newsItem.title }}</h4>
                     </div>
-                    <div class="newsDate">
-                        <p>By {{ newsItem.created_by.first_name }} {{ newsItem.created_by.last_name }}</p>
+                    <div class="newsDate flex justify-end w-full">
+                        <p class="font-Wanted-Variable text-[15px] text-black">By {{ newsItem.created_by.first_name }} {{ newsItem.created_by.last_name }}</p>
                     </div>
                 </div>
             </a> 
             {% endfor %}
         </div>
         {% else %}
-        <div class="emptyContainer">
+        <div class="emptyContainer w-full rounded-[20px] py-[70px] flex justify-center flex-col gap-[10px] items-center bg-[rgba(146,146,146,0.096)]">
             <div>
                 <img class="w-[30px] after-xsm:w-[40px] sm:w-[50px] md:w-[60px]" src="{% static "/images/collegeManagementApp/collegeInformation/empty-listing.svg" %}" />
             </div>
             <p class="font-Wanted-Variable text-[10px] after-xsm:text-[12px] sm:text-[14px] md:text-[16.5px] text-black">Currently nothing to be displayed.</p>
-            <div class="buttonContainer">
+            <div class="buttonContainer flex justify-center">
                 <a href="{% url "waveAdmin:createNews" %}" class="gradient-btn">Create New</a>
             </div>
         </div>
