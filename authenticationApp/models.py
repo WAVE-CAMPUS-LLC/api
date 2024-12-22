@@ -59,10 +59,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     is_suspended = models.BooleanField(default=False)
     suspension_end_date = models.DateTimeField(null=True, blank=True)
 
-    user_preferences_completed = models.BooleanField(default=False, null=False)
-    # User Preferences Field
-    user_preferences_completed = models.BooleanField(default=False)
-    
+    user_preferences_completed = models.BooleanField(default=False, null=False)    
     
     def suspend(self, hours):
         suspend_group, created = Group.objects.get_or_create(name="Suspend")
