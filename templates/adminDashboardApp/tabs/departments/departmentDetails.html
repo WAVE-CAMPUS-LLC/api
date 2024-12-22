@@ -31,37 +31,37 @@
 
 {% block body %}
 <div id="content-container" class="flex flex-col gap-[70px] px-4 sm:px-6 md:px-[40px] pre-lg:px-[40px] lg:px-[100px] 2xl:px-48 3xl:px-96">
-    <div id="page-heading">
+    <div id="page-heading" class="flex flex-row items-center justify-between gap-[10px]">
         <div id="deptInfo">
-            <h2>
+            <h2 class="text-[50px] font-Wanted-Bold text-[#008d95]">
                 {{ department.name }}
             </h2>
         </div>
         <div id="deptEdit">
-            <button type="button" role="button" id="deptEditButton">Edit</button>
+            <button type="button" role="button" id="deptEditButton" class="bg-none border-none font-Wanted-Bold text-[20px] text-[#008d95] hover:underline cursor-pointer">Edit</button>
         </div>
     </div>
 
-    <div id="departmentSummary">
-        <div id="displaySummary">
-            <div id="departmentLead" class="information">
-                <h5>Department Lead</h5>
-                <p>{{department.lead_name}}</p>
+    <div id="departmentSummary" class="flex flex-col gap-[20px]">
+        <div id="displaySummary" class="flex flex-col gap-[30px]">
+            <div id="departmentLead" class="information flex flex-col gap-[5px]">
+                <h5 class="text-[25px] font-Wanted-Bold">Department Lead</h5>
+                <p class="text-[20px] font-Wanted-Regular">{{department.lead_name}}</p>
             </div>
-            <div id="departmentContact" class="information">
-                <h5>Department Contact</h5>
-                <p><a href="mailto:{{department.lead_email}}">{{ department.lead_email }}</a></p>
+            <div id="departmentContact" class="information flex flex-col gap-[5px]">
+                <h5 class="text-[25px] font-Wanted-Bold">Department Contact</h5>
+                <p class="text-[20px] font-Wanted-Regular"><a href="mailto:{{department.lead_email}}" class="text-black hover:text-[#008d95]">{{ department.lead_email }}</a></p>
             </div>
-            <div id="departmentDescription" class="information">
-                <h5>Description</h5>
-                <p>
+            <div id="departmentDescription" class="information flex flex-col gap-[5px]">
+                <h5 class="text-[25px] font-Wanted-Bold">Description</h5>
+                <p class="text-[20px] font-Wanted-Regular">
                     {{ department.description }}
                 </p>
             </div>
             
-            <div id="departmentRoles" class="information">
+            <div id="departmentRoles" class="information flex flex-col gap-[5px]">
                 <div id="departmentRolesHeader">
-                    <h5 class="departmentRolesHeading">Available Roles</h5>
+                    <h5 class="departmentRolesHeading text-[25px] font-Wanted-Bold">Available Roles</h5>
                     <button type="button" role="button" id="createNewRoleButton">Create New Role</button>
                 </div>
                 
@@ -189,42 +189,42 @@
 
         {% comment %} Setup to allow the editing of a department's information. {% endcomment %}
         <div id="editSummary" style="display: {% if edit_mode %}block{% else %}none{% endif %}">
-            <form id="departmentForm" action="{% url "waveAdmin:departmentDetails" department.departmentID department.name %}" method="post">
+            <form id="departmentForm" action="{% url "waveAdmin:departmentDetails" department.departmentID department.name %}" method="post" class="w-full h-full p-[20px] pb-[50px] flex flex-col gap-[20px]">
                 {% csrf_token %}
-                <div class="singleInputRow">
-                    <label for="{{ departmentForm.name.id_for_label }}">
+                <div class="singleInputRow w-full flex justify-start">
+                    <label for="{{ departmentForm.name.id_for_label }}" class="w-full font-Wanted-Regular text-[17px] flex flex-col gap-[10px]">
                         {{ departmentForm.name.label }}
-                        <input type="{{ departmentForm.name.field.widget.input_type }}" name="{{ departmentForm.name.html_name }}" id="{{ departmentForm.name.auto_id }}" autocomplete="off" value="{{department.name}}" required>
+                        <input type="{{ departmentForm.name.field.widget.input_type }}" name="{{ departmentForm.name.html_name }}" id="{{ departmentForm.name.auto_id }}" autocomplete="off" value="{{department.name}}" class="w-full p-[15px] rounded-[15px] border-[1px] border-solid border-[rgba(0,0,0,0.153)] font-Wanted-Regular text-[16px]" required>
                     </label>
                 </div>
-                <div class="doubleInputRow">
-                    <label for="{{ departmentForm.lead_name.id_for_label }}">
+                <div class="doubleInputRow w-full flex flex-row gap-[20px]">
+                    <label for="{{ departmentForm.lead_name.id_for_label }}" class="w-full font-Wanted-Regular text-[17px] flex flex-col gap-[10px]">
                         {{ departmentForm.lead_name.label }}
-                        <input type="{{ departmentForm.lead_name.field.widget.input_type }}" name="{{ departmentForm.lead_name.html_name }}" id="{{ departmentForm.lead_name.auto_id }}" autocomplete="off" value="{{department.lead_name}}" required>
+                        <input type="{{ departmentForm.lead_name.field.widget.input_type }}" name="{{ departmentForm.lead_name.html_name }}" id="{{ departmentForm.lead_name.auto_id }}" autocomplete="off" value="{{department.lead_name}}" class="w-full p-[15px] rounded-[15px] border-[1px] border-solid border-[rgba(0,0,0,0.153)] font-Wanted-Regular text-[16px]" required>
                     </label>
-                    <label for="{{ departmentForm.lead_email.id_for_label }}">
+                    <label for="{{ departmentForm.lead_email.id_for_label }}" class="w-full font-Wanted-Regular text-[17px] flex flex-col gap-[10px]">
                         {{ departmentForm.lead_email.label }}
-                        <input type="{{ departmentForm.lead_email.field.widget.input_type }}" name="{{ departmentForm.lead_email.html_name }}" id="{{ departmentForm.lead_email.auto_id }}" autocomplete="off" value="{{department.lead_email}}" required>
+                        <input type="{{ departmentForm.lead_email.field.widget.input_type }}" name="{{ departmentForm.lead_email.html_name }}" id="{{ departmentForm.lead_email.auto_id }}" autocomplete="off" value="{{department.lead_email}}" class="w-full p-[15px] rounded-[15px] border-[1px] border-solid border-[rgba(0,0,0,0.153)] font-Wanted-Regular text-[16px]" required>
                     </label>
                 </div>
-                <div class="doubleInputRow">
-                    <label for="{{ departmentForm.capacity.id_for_label }}">
+                <div class="doubleInputRow w-full flex flex-row gap-[20px]">
+                    <label for="{{ departmentForm.capacity.id_for_label }}" class="w-full font-Wanted-Regular text-[17px] flex flex-col gap-[10px]">
                         {{ departmentForm.capacity.label }}
-                        <input type="{{ departmentForm.capacity.field.widget.input_type }}" name="{{ departmentForm.capacity.html_name }}" id="{{ departmentForm.capacity.auto_id }}" autocomplete="off" value="{{department.capacity}}" required>
+                        <input type="{{ departmentForm.capacity.field.widget.input_type }}" name="{{ departmentForm.capacity.html_name }}" id="{{ departmentForm.capacity.auto_id }}" autocomplete="off" value="{{department.capacity}}" class="w-full p-[15px] rounded-[15px] border-[1px] border-solid border-[rgba(0,0,0,0.153)] font-Wanted-Regular text-[16px]" required>
                     </label>
-                    <label for="{{ departmentForm.location.id_for_label }}">
+                    <label for="{{ departmentForm.location.id_for_label }}" class="w-full font-Wanted-Regular text-[17px] flex flex-col gap-[10px]">
                         {{ departmentForm.location.label }}
-                        <input type="{{ departmentForm.location.field.widget.input_type }}" name="{{ departmentForm.location.html_name }}" id="{{ departmentForm.location.auto_id }}" autocomplete="off" value="{{department.location}}" required>
+                        <input type="{{ departmentForm.location.field.widget.input_type }}" name="{{ departmentForm.location.html_name }}" id="{{ departmentForm.location.auto_id }}" autocomplete="off" value="{{department.location}}" class="w-full p-[15px] rounded-[15px] border-[1px] border-solid border-[rgba(0,0,0,0.153)] font-Wanted-Regular text-[16px]" required>
                     </label>
                 </div>
-                <div class="singleInputRow">
-                    <label for="{{ departmentForm.description.id_for_label }}">
+                <div class="singleInputRow w-full flex justify-start">
+                    <label for="{{ departmentForm.description.id_for_label }}" class="w-full font-Wanted-Regular text-[17px] flex flex-col gap-[10px]">
                         {{ departmentForm.description.label }}
-                        <textarea type="{{ departmentForm.description.field.widget.input_type }}" name="{{ departmentForm.description.html_name }}" id="{{ departmentForm.description.auto_id }}" autocomplete="off" required>{{department.description}}</textarea>
+                        <textarea type="{{ departmentForm.description.field.widget.input_type }}" name="{{ departmentForm.description.html_name }}" id="{{ departmentForm.description.auto_id }}" autocomplete="off" class="w-full p-[15px] rounded-[15px] border-[1px] border-solid border-[rgba(0,0,0,0.153)] font-Wanted-Regular text-[16px] min-h-[150px]" required>{{department.description}}</textarea>
                     </label>
                 </div>
 
-                <button type="submit" id="deptSaveButton">Save</button>
+                <button type="submit" id="deptSaveButton" class="bg-[#008d95] p-[15px] rounded-[15px] border-none font-Wanted-Bold text-white text-[18px]">Save</button>
             </form>
         </div>
 

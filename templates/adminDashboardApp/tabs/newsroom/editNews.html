@@ -30,7 +30,7 @@ WAVE. — Management Dashboard
 
     <div class="page-heading flex flex-col gap-[15px]">
         <div class="heading flex flex-col gap-[5px]">
-            <h2 class="flex justify-start items-center font-Wanted-Bold text-[45px] text-black">{{ newsItem.title }}</h2>
+            <h2 class="flex justify-start items-center font-Wanted-Bold text-[30px] sm:text-[45px] text-black">{{ newsItem.title }}</h2>
             <p class="font-Wanted-Variable text-[17px] text-[rgba(126,126,126,0.711)]">Edit this news article.</p>
         </div>
         <div class="delete">
@@ -43,8 +43,8 @@ WAVE. — Management Dashboard
     </div>
 
     <div id="content-body" class="w-full flex justify-center flex-col gap-[50px]">
-        <form method="POST" action="{% url "waveAdmin:editNews" newsId=newsItem.newsId %}" class="w-full items-center grid grid-cols-4 gap-[20px]">
-            <div class="formRow gap-[50px] col-span-3">
+        <form method="POST" action="{% url "waveAdmin:editNews" newsId=newsItem.newsId %}" class="w-full items-center grid grid-cols-3 md:grid-cols-4 gap-[20px]">
+            <div class="formRow gap-[50px] col-span-4 md:col-span-3">
                 <input type="hidden" name="field" value="title-info" />
                 {% csrf_token %}
                 
@@ -62,12 +62,12 @@ WAVE. — Management Dashboard
 
                 </label>
             </div>
-            <div class="submit-row w-full flex items-center justify-center">
-                <button type="submit" class="px-[15px] py-[20px] border-2 border-transparent border-r-[#13c9d3] border-l-[#008d95bc] text-white w-1/2 font-[Wanted-Regular] text-[19px] no-underline flex items-center flex-row gap-[10px] rounded-[20px] bg-gradient-to-r from-[#008d95bc] to-[#13c9d3] cursor-pointer justify-center">Submit</button>
+            <div class="submit-row w-full flex items-end justify-center self-end xs:max-xxsm:col-start-1 xs:max-xxsm:col-span-4 xxsm:max-md:col-start-2 xxsm:max-md:col-span-1">
+                <button type="submit" class="px-[15px] py-[20px] border-2 border-transparent border-r-[#13c9d3] border-l-[#008d95bc] text-white w-full md:w-1/2 font-[Wanted-Regular] text-[19px] no-underline flex items-center flex-row gap-[10px] rounded-[20px] bg-gradient-to-r from-[#008d95bc] to-[#13c9d3] cursor-pointer justify-center">Submit</button>
             </div>
         </form>
 
-        <form method="POST" action="{% url "waveAdmin:editNews" newsId=newsItem.newsId %}" class="w-full items-center grid grid-cols-4 gap-[20px]">
+        <form method="POST" action="{% url "waveAdmin:editNews" newsId=newsItem.newsId %}" class="w-full items-center grid grid-cols-3 md:grid-cols-4 gap-[20px]">
             <div class="formRow gap-[50px] col-span-3">
                 <input type="hidden" name="field" value="body-info" />
                 {% csrf_token %}
@@ -86,12 +86,12 @@ WAVE. — Management Dashboard
 
                 </label>
             </div>
-            <div class="submit-row w-full flex items-center justify-center">
-                <button type="submit" class="px-[15px] py-[20px] border-2 border-transparent border-r-[#13c9d3] border-l-[#008d95bc] text-white w-1/2 font-[Wanted-Regular] text-[19px] no-underline flex items-center flex-row gap-[10px] rounded-[20px] bg-gradient-to-r from-[#008d95bc] to-[#13c9d3] cursor-pointer justify-center">Submit</button>
+            <div class="submit-row w-full flex items-center justify-center xs:max-xxsm:col-start-1 xs:max-xxsm:col-span-4 xxsm:max-md:col-start-2 xxsm:max-md:col-span-1">
+                <button type="submit" class="px-[15px] py-[20px] border-2 border-transparent border-r-[#13c9d3] border-l-[#008d95bc] text-white w-full md:w-1/2  font-[Wanted-Regular] text-[19px] no-underline flex items-center flex-row gap-[10px] rounded-[20px] bg-gradient-to-r from-[#008d95bc] to-[#13c9d3] cursor-pointer justify-center">Submit</button>
             </div>
         </form>
 
-        <form method="POST" action="{% url 'waveAdmin:editNews' newsId=newsItem.newsId %}" class="w-full items-center grid grid-cols-4 gap-[20px]">
+        <form method="POST" action="{% url 'waveAdmin:editNews' newsId=newsItem.newsId %}" class="w-full items-center grid grid-cols-3 md:grid-cols-4 gap-[20px]">
             <div class="formRow gap-[50px] col-span-3">
                 <input type="hidden" name="field" value="urgency-info" />
                 {% csrf_token %}
@@ -106,12 +106,12 @@ WAVE. — Management Dashboard
 
                 </label>
             </div>
-            <div class="submit-row w-full flex items-center justify-center">
-                <button type="submit" class="px-[15px] py-[20px] border-2 border-transparent border-r-[#13c9d3] border-l-[#008d95bc] text-white w-1/2 font-[Wanted-Regular] text-[19px] no-underline flex items-center flex-row gap-[10px] rounded-[20px] bg-gradient-to-r from-[#008d95bc] to-[#13c9d3] cursor-pointer justify-center">Submit</button>
+            <div class="submit-row w-full flex items-center justify-center self-end xs:max-xxsm:col-start-1 xs:max-xxsm:col-span-4 xxsm:max-md:col-start-2 xxsm:max-md:col-span-1">
+                <button type="submit" class="px-[15px] py-[20px] border-2 border-transparent border-r-[#13c9d3] border-l-[#008d95bc] text-white w-full md:w-1/2 font-[Wanted-Regular] text-[19px] no-underline flex items-center flex-row gap-[10px] rounded-[20px] bg-gradient-to-r from-[#008d95bc] to-[#13c9d3] cursor-pointer justify-center">Submit</button>
             </div>
         </form>
 
-        <form method="POST" action="{% url 'waveAdmin:editNews' newsId=newsItem.newsId %}" class="w-full items-center grid grid-cols-4 gap-[20px]">
+        <form method="POST" action="{% url 'waveAdmin:editNews' newsId=newsItem.newsId %}" class="w-full items-center grid grid-cols-3 md:grid-cols-4 gap-[20px]">
             <div class="formRow gap-[50px] col-span-3">
                 <input type="hidden" name="field" value="newsCategory-info" />
                 {% csrf_token %}
@@ -129,17 +129,17 @@ WAVE. — Management Dashboard
         
                 </label>
             </div>
-            <div class="submit-row w-full flex items-center justify-center">
-                <button type="submit" class="px-[15px] py-[20px] border-2 border-transparent border-r-[#13c9d3] border-l-[#008d95bc] text-white w-1/2 font-[Wanted-Regular] text-[19px] no-underline flex items-center flex-row gap-[10px] rounded-[20px] bg-gradient-to-r from-[#008d95bc] to-[#13c9d3] cursor-pointer justify-center">Submit</button>
+            <div class="submit-row w-full flex items-center justify-center self-end xs:max-xxsm:col-start-1 xs:max-xxsm:col-span-4 xxsm:max-md:col-start-2 xxsm:max-md:col-span-1">
+                <button type="submit" class="px-[15px] py-[20px] border-2 border-transparent border-r-[#13c9d3] border-l-[#008d95bc] text-white w-full md:w-1/2  font-[Wanted-Regular] text-[19px] no-underline flex items-center flex-row gap-[10px] rounded-[20px] bg-gradient-to-r from-[#008d95bc] to-[#13c9d3] cursor-pointer justify-center">Submit</button>
             </div>
         </form>
 
-        <form method="POST" action="{% url 'waveAdmin:editNews' newsId=newsItem.newsId %}" enctype="multipart/form-data" class="w-full items-center grid grid-cols-4 gap-[20px]">
+        <form method="POST" action="{% url 'waveAdmin:editNews' newsId=newsItem.newsId %}" enctype="multipart/form-data" class="w-full items-center grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-[20px]">
             <div class="formRow gap-[50px] col-span-3">
                 <input type="hidden" name="field" value="headerImage-info" />
                 {% csrf_token %}
 
-                <div class="imageDisplays flex flex-row gap-[50px] justify-between items-center">
+                <div class="imageDisplays flex flex-col sm:flex-row gap-[50px] justify-between items-center">
                     <label for="{{ headerImageForm.headerImage.id_for_label }}" class="formLabel flex flex-col gap-[10px]">
                         <p class="rowTitle font-Wanted-Bold text-[19px] text-black">{{ headerImageForm.headerImage.label }}</p>
                         {% if newsItem.headerImage %}
@@ -160,18 +160,18 @@ WAVE. — Management Dashboard
                     </label>
                 </div>
             </div>
-            <div class="submit-row w-full flex items-center justify-center">
-                <button type="submit" class="px-[15px] py-[20px] border-2 border-transparent border-r-[#13c9d3] border-l-[#008d95bc] text-white w-1/2 font-[Wanted-Regular] text-[19px] no-underline flex items-center flex-row gap-[10px] rounded-[20px] bg-gradient-to-r from-[#008d95bc] to-[#13c9d3] cursor-pointer justify-center">Submit</button>
+            <div class="submit-row w-full flex items-center justify-center xs:max-md:col-start-1 xs:max-sm:col-span-2 md:col-span-1">
+                <button type="submit" class="px-[15px] py-[20px] border-2 border-transparent border-r-[#13c9d3] border-l-[#008d95bc] text-white w-full md:w-1/2  font-[Wanted-Regular] text-[19px] no-underline flex items-center flex-row gap-[10px] rounded-[20px] bg-gradient-to-r from-[#008d95bc] to-[#13c9d3] cursor-pointer justify-center">Submit</button>
             </div>
         </form>
         
-        <form method="POST" action="{% url 'waveAdmin:editNews' newsId=newsItem.newsId %}" enctype="multipart/form-data" class="w-full items-center grid grid-cols-4 gap-[20px]">
+        <form method="POST" action="{% url 'waveAdmin:editNews' newsId=newsItem.newsId %}" enctype="multipart/form-data" class="w-full items-center grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-[20px]">
             <div class="formRow gap-[50px] col-span-3">
                 <input type="hidden" name="field" value="imageOne-info" />
                 {% csrf_token %}
         
                 <!-- Display the current image -->
-                <div class="imageDisplays flex flex-row gap-[50px] justify-between items-center">
+                <div class="imageDisplays flex flex-col sm:flex-row gap-[50px] justify-between items-center">
                     <label for="{{ imageOneForm.imageOne.id_for_label }}" class="formLabel flex flex-col gap-[10px]">
                         <p class="rowTitle font-Wanted-Bold text-[19px] text-black">{{ imageOneForm.imageOne.label }}</p>
                         {% if newsItem.imageOne %}
@@ -192,18 +192,18 @@ WAVE. — Management Dashboard
                     </label>
                 </div>
             </div>
-            <div class="submit-row w-full flex items-center justify-center">
-                <button type="submit" class="px-[15px] py-[20px] border-2 border-transparent border-r-[#13c9d3] border-l-[#008d95bc] text-white w-1/2 font-[Wanted-Regular] text-[19px] no-underline flex items-center flex-row gap-[10px] rounded-[20px] bg-gradient-to-r from-[#008d95bc] to-[#13c9d3] cursor-pointer justify-center">Submit</button>
+            <div class="submit-row w-full flex items-center justify-center xs:max-md:col-start-1 xs:max-sm:col-span-2 md:col-span-1">
+                <button type="submit" class="px-[15px] py-[20px] border-2 border-transparent border-r-[#13c9d3] border-l-[#008d95bc] text-white w-full md:w-1/2 font-[Wanted-Regular] text-[19px] no-underline flex items-center flex-row gap-[10px] rounded-[20px] bg-gradient-to-r from-[#008d95bc] to-[#13c9d3] cursor-pointer justify-center">Submit</button>
             </div>
         </form>
         
-        <form method="POST" action="{% url 'waveAdmin:editNews' newsId=newsItem.newsId %}" enctype="multipart/form-data" class="w-full items-center grid grid-cols-4 gap-[20px]">
+        <form method="POST" action="{% url 'waveAdmin:editNews' newsId=newsItem.newsId %}" enctype="multipart/form-data" class="w-full items-center grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-[20px]">
             <div class="formRow gap-[50px] col-span-3">
                 <input type="hidden" name="field" value="imageTwo-info" />
                 {% csrf_token %}
         
                 <!-- Display the current imageTwo -->
-                <div class="imageDisplays flex flex-row gap-[50px] justify-between items-center">
+                <div class="imageDisplays flex flex-col sm:flex-row gap-[50px] justify-between items-center">
                     <label for="{{ imageTwoForm.imageTwo.id_for_label }}" class="formLabel flex flex-col gap-[10px]">
                         <p class="rowTitle font-Wanted-Bold text-[19px] text-black">{{ imageTwoForm.imageTwo.label }}</p>
                         {% if newsItem.imageTwo %}
@@ -224,18 +224,18 @@ WAVE. — Management Dashboard
                     </label>
                 </div>
             </div>
-            <div class="submit-row w-full flex items-center justify-center">
-                <button type="submit" class="px-[15px] py-[20px] border-2 border-transparent border-r-[#13c9d3] border-l-[#008d95bc] text-white w-1/2 font-[Wanted-Regular] text-[19px] no-underline flex items-center flex-row gap-[10px] rounded-[20px] bg-gradient-to-r from-[#008d95bc] to-[#13c9d3] cursor-pointer justify-center">Submit</button>
+            <div class="submit-row w-full flex items-center justify-center xs:max-md:col-start-1 xs:max-sm:col-span-2 md:col-span-1">
+                <button type="submit" class="px-[15px] py-[20px] border-2 border-transparent border-r-[#13c9d3] border-l-[#008d95bc] text-white w-full md:w-1/2 font-[Wanted-Regular] text-[19px] no-underline flex items-center flex-row gap-[10px] rounded-[20px] bg-gradient-to-r from-[#008d95bc] to-[#13c9d3] cursor-pointer justify-center">Submit</button>
             </div>
         </form>
 
-        <form method="POST" action="{% url 'waveAdmin:editNews' newsId=newsItem.newsId %}" enctype="multipart/form-data" class="w-full items-center grid grid-cols-4 gap-[20px]">
+        <form method="POST" action="{% url 'waveAdmin:editNews' newsId=newsItem.newsId %}" enctype="multipart/form-data" class="w-full items-center grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-[20px]">
             <div class="formRow gap-[50px] col-span-3">
                 <input type="hidden" name="field" value="imageThree-info" />
                 {% csrf_token %}
         
                 <!-- Display the current imageThree -->
-                <div class="imageDisplays flex flex-row gap-[50px] justify-between items-center">
+                <div class="imageDisplays flex flex-col sm:flex-row gap-[50px] justify-between items-center">
                     <label for="{{ imageThreeForm.imageThree.id_for_label }}" class="formLabel flex flex-col gap-[10px]">
                         <p class="rowTitle">{{ imageThreeForm.imageThree.label }}</p>
                         {% if newsItem.imageThree %}
@@ -257,8 +257,8 @@ WAVE. — Management Dashboard
                     </label>
                 </div>
             </div>
-            <div class="submit-row w-full flex items-center justify-center">
-                <button type="submit" class="px-[15px] py-[20px] border-2 border-transparent border-r-[#13c9d3] border-l-[#008d95bc] text-white w-1/2 font-[Wanted-Regular] text-[19px] no-underline flex items-center flex-row gap-[10px] rounded-[20px] bg-gradient-to-r from-[#008d95bc] to-[#13c9d3] cursor-pointer justify-center">Submit</button>
+            <div class="submit-row w-full flex items-center justify-center xs:max-md:col-start-1 xs:max-sm:col-span-2 md:col-span-1">
+                <button type="submit" class="px-[15px] py-[20px] border-2 border-transparent border-r-[#13c9d3] border-l-[#008d95bc] text-white w-full md:w-1/2 font-[Wanted-Regular] text-[19px] no-underline flex items-center flex-row gap-[10px] rounded-[20px] bg-gradient-to-r from-[#008d95bc] to-[#13c9d3] cursor-pointer justify-center">Submit</button>
             </div>
         </form>
         

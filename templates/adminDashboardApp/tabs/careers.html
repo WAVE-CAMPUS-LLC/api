@@ -18,21 +18,19 @@ WAVE. — Management Dashboard
 {% include "partials/nav-footer/nav/main_nav.html" %}
 {% endblock header %}
 
-{% block container_art %}
-<div id="container-art" class="flex flex-col justify-center items-center w-full h-full text-center pt-[50px]">
-    <div class="ticket-heading">
-        <div class="ticket-header flex justify-center items-center">
-            <h3 class="text-black font-Wanted-Bold xs:max-xssm:text-center xs:max-xssm:text-[25px] text-[35px] md:text-[40px] underline underline-offset-[10px]"><a href="{% url 'waveAdmin:adminDashboard' %}">Management</a> > Jobs</h3>
-        </div>
-    </div>
-</div>
-{% endblock container_art %}
 
 
 
 
 {% block body %}
 <div id="content-container" class="flex flex-col gap-[70px] px-4 sm:px-6 md:px-[40px] pre-lg:px-[40px] lg:px-[100px] 2xl:px-48 3xl:px-96">
+    <div id="pagination-display" class="flex flex-col pre-sm:flex-row gap-2 w-full items-center font-Wanted-Variable justify-start text-gray-300">
+        <a href="{% url "waveAdmin:adminDashboard" %}" class="text-green underline">Admin Dashboard</a>
+        >
+        <a href="{% url "waveAdmin:adminDashboard" %}#careerManagement" class="text-green underline">Departments & Careers</a>
+        >
+        <p class="font-Wanted-Medium text-black">Jobs</p>
+    </div>
     <div class="page-heading">
         <h2 class="font-Wanted-Bold text-[35px] md:text-[45px] text-[#008d95] xs:max-pre-sm:text-center">Active Roles</h2>
     </div>
