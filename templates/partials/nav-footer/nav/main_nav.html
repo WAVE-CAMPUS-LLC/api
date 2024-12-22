@@ -118,7 +118,7 @@
             <input type="text" name="searchEvents" id="search-events-input-large" 
                 class="w-full appearance-none h-full p-4 py-5 font-Wanted-Variable text-Semi-Medium text-black 
                 border-none rounded-3xl focus:ring-0 focus:outline-none placeholder:text-[#00000076] placeholder:font-Wanted-Regular" 
-                placeholder="Find User" autofocus>
+                placeholder="Search for a friend..." autofocus>
         </div>
         
         <!-- Event search results container -->
@@ -171,6 +171,29 @@
                 <div id="event-search-results-mobile" class="absolute top-full border-2 border-[#30303015] rounded-3xl bg-white shadow-form-shadow-2 w-[90%] after-xsm:w-4/5 sm:w-[65%] mt-2 hidden z-[1040]">
                     <!-- Search items will be dynamically populated here -->
                     <div id="events-search-items-mobile" class="grid sm:grid-cols-1 lg:grid-cols-2 w-full">
+                        
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            {% if request.path|slice:"-8:" == "/social/" %}
+            <div id="main-find-events" class="w-full flex flex-col gap-3 items-center justify-center relative h-auto">
+                <!-- Search input container -->
+                <div id="event-search-input-container" class="w-[90%] after-xsm:w-4/5 sm:w-[65%] flex flex-row gap-1 border-2 border-[#07070715] rounded-3xl bg-[#ffffff07] shadow-form-shadow-2 static">
+                    <div class="febc-img flex justify-center p-2 px-4 after-xsm:p-4">
+                        <img src="{% static 'images/explore/find.svg' %}" alt="Find Events">
+                    </div>
+                    <input type="text" name="searchEvents" id="search-events-input-large" 
+                        class="w-full appearance-none h-full p-4 py-5 font-Wanted-Variable text-Semi-Medium text-black 
+                        border-none rounded-3xl focus:ring-0 focus:outline-none placeholder:text-[#00000076] placeholder:font-Wanted-Regular" 
+                        placeholder="Search for a friend..." autofocus>
+                </div>
+                
+                <!-- Event search results container -->
+                <div id="event-search-results-large" class="absolute top-full border-2 border-[#30303015] rounded-3xl bg-white shadow-form-shadow-2 w-[90%] after-xsm:w-4/5 sm:w-[65%] mt-2 hidden z-[1040]">
+                    <!-- Search items will be dynamically populated here -->
+                    {% csrf_token %}
+                    <div id="events-search-items-large" class="grid sm:grid-cols-1 lg:grid-cols-2 w-full">
                         
                     </div>
                 </div>

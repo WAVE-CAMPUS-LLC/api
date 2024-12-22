@@ -103,12 +103,12 @@ def joinView(request):
         form = CustomUserJoinForm()
     return render(request, "authenticationApp/join.html", {"form": form})
 
-
+@login_required
 def onboardingView(request):
     if request.method == "POST":
         verification_code = request.POST.get("verification_code")
         email_verification = EmailVerification.objects.filter(user=request.user, is_verified=False).first()
-        
+        user  = CustomUser.objects.get(email=request.user.email)
         if email_verification:
             if verification_code == email_verification.verification_code and email_verification.expiration_date > timezone.now():
                 email_verification.is_verified = True
@@ -116,8 +116,10 @@ def onboardingView(request):
                 
                 unverified_group = Group.objects.get(name="Unverified Email")
                 user_verified_group, created = Group.objects.get_or_create(name="Verified")
-                request.user.groups.remove(unverified_group)
-                request.user.groups.add(user_verified_group)
+                user.groups.remove(unverified_group)
+                user.groups.add(user_verified_group)
+                user.is_onboarded = True
+                user.save()
                 
                 messages.success(request, "Email verified successfully!")
                 login(request, request.user)
@@ -139,56 +141,6 @@ def startVerificationProcess(request):
     generateVerficationLink(request, user)
     return render(request, "authenticationApp/verify/verificationLinkSent.html")
 
-
-# def generateVerficationLink(request, user):
-#     signer = TimestampSigner()
-#     token = signer.sign(user.email)
-
-#     verification_link = request.build_absolute_uri(
-#         reverse("authentication:verify", kwargs={"token": token})
-#     )
-
-#     email_content = render_to_string(
-#         "emailTemplates/authenticationApp/verify/verifyEmail.html",
-#         {"verification_link": verification_link, "user": user},
-#     )
-#     send_mail(
-#         subject="Verify your email",
-#         message="Please verify your email address.",
-#         from_email="admin@wavecampus.net",
-#         recipient_list=[user.email],
-#         html_message=email_content,
-#         fail_silently=False,
-#     )
-#     print(f"Email sent to {user.email} with verification link: {verification_link}")
-
-
-@login_required
-def verifyEmail(request, token):
-    """
-    The function `verifyEmail` verifies a user's email address using a token and updates the user's
-    email verification status in the database.
-    """
-    signer = TimestampSigner()
-    try:
-        email = signer.unsign(token, max_age=86400)
-
-        if request.user.email != email:
-            return redirect("authentication:login")
-
-        user = CustomUser.objects.get(email=email)
-
-        user.email_verified = True
-        user.groups.remove(Group.objects.get(name="Unverified Email"))
-        user.save()
-
-        messages.success(request, "Email verified successfully!")
-        return redirect("accountManagement:userPreferences")
-
-    except (SignatureExpired, BadSignature, CustomUser.DoesNotExist):
-        return render(
-            request, "emailTemplates/authenticationApp/verify/verificationExpired.html"
-        )
 
 
 def loginView(request):

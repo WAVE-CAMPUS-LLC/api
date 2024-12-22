@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', function () {
     
     function showSection(index) {
         sections.forEach((section, i) => {
-            section.classList.toggle('active', i === index);
+            section.classList.toggle('hidden', i === index);
         });
         previousButton.style.display = index === 0 ? 'none' : 'inline-block';
         nextButton.style.display = index === sections.length - 1 ? 'none' : 'inline-block';
