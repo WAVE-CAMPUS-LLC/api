@@ -1,7 +1,11 @@
 document.addEventListener('DOMContentLoaded', function () {
-    const headerPhotoInput = document.getElementById("id_profile_photo");
-    const headerPhotoPreview = document.getElementById('profile-picture-preview');
-    const profileUploadBtn = document.getElementById('profile-picture-upload-btn');
+    const headerPhotoInput = document.getElementById("photo-input");
+    const headerPhotoPreview = document.getElementById('header-photo-preview');
+
+    if (!headerPhotoInput || !headerPhotoPreview) {
+        console.error("Required elements not found in the DOM.");
+        return;
+    }
 
     headerPhotoInput.addEventListener('change', function (event) {
         const file = event.target.files[0];
@@ -10,9 +14,8 @@ document.addEventListener('DOMContentLoaded', function () {
             reader.onload = function (e) {
                 headerPhotoPreview.src = e.target.result;
                 headerPhotoPreview.style.display = 'block';
-                profileUploadBtn.style.display = 'none';
             };
             reader.readAsDataURL(file);
         }
-    })
-})
+    });
+});

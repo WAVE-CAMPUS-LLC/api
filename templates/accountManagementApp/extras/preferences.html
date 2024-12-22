@@ -1,5 +1,4 @@
 {% extends "base/base.html" %}
-
 {% load static %}
 {% load widget_tweaks %}
 
@@ -10,14 +9,14 @@ Set your preferences — WAVE.
 
 
 {% block script %}
-<script type="text/javascript" src="{% static "/scripts/accountManagementApp/extras/sectionControl.js" %}" defer></script>
-<script type="text/javascript" src="{% static "/scripts/accountManagementApp/extras/photoPreview.js" %}" defer></script>
+<script type="text/javascript" src="{% static "scripts/accountManagementApp/extras/controllerSection.js" %}" defer></script>
+
 <script type="text/javascript" src="{% static "/scripts/accountManagementApp/extras/eventTypeSelectors.js" %}" defer></script>
 {% endblock script %}
 
 
 {% block checkout_body %}
-<form method="POST" action="{% url "accountManagement:userPreferences" %}" id="profilePreferencesForm" enctype="multipart/form-data" class="p-10 flex flex-col overflow-hidden max-h-screen h-full min-h-screen items-center justify-between">
+<form method="POST" id="profilePreferencesForm" enctype="multipart/form-data" class="p-10 flex flex-col overflow-hidden max-h-screen h-full min-h-screen items-center justify-between">
     {% csrf_token %}
     <div class="w-full flex justify-center pt-[30px]">
         <div id="logo" class="font-Wanted-Black text-[40px]">
@@ -28,18 +27,16 @@ Set your preferences — WAVE.
     <div class="preferencesCardBody">
         <section class="section hidden">
             <div class="section-container body-section flex flex-col gap-y-[20px] h-full bg-white w-full pt-[20px] pb-[30px] pl-[25px] md:pl-[50px] pr-[25px] md:pr-[50px] items-center">
-                <div id="heading" class="text-black font-Wanted-ExtraBold text-[25px] flex justify-center">
+                <div id="heading" class=" font-Wanted-ExtraBold text-[25px] flex justify-center">
                     <h3 class="text-black font-Wanted-Medium text-[22px] sm:text-[25px] md:text-[28px] flex justify-center">Upload a profile picture</h3>
                 </div>
                 <div class="section-question">
                     <input type="hidden" name="action" value="profile_picture">
                     <div class="section-input">
-                        <div class="header-photo-intake flex flex-col gap-5 items-center">
-                            <!--Image Preview Element-->
-                            <img id="header-photo-preview" src="{{ profile.profile_photo.url }}" alt="Header Photo Preview" class="size-32 rounded-3xl">
-                            <!-- Button that triggers the image upload. -->
-                            <button class="upload-profile-picture gradient-btn" type="button" onclick="document.getElementById('{{updateUserProfileForm.profile_photo.auto_id}}').click();">Upload photo</button>
-                            {{updateUserProfileForm.profile_photo|add_class:"hidden"}}
+                        <div class="h-[80%] w-[80%] py-12 px-12 border-2 border-[#aeaeaeab] rounded-2xl flex flex-col justify-center items-center gap-5">
+                            <img id="header-photo-preview" class="max-w-full hidden h-auto max-h-[400px] rounded-2xl" src="#" alt="Header Photo Preview">
+                            <button class="bg-gradient-to-r  from-gradient-start to-gradient-end text-white flex flex-row items-center py-3 px-10 font-Wanted-Medium xsm:font-Wanted-SemiBold text-Large xsm:text-Pre-Xl after-xsm:text-xl xxsm:text-1xl pre-lg:text-3xl rounded-2xl" type="button" onclick="document.getElementById('photo-input').click();">Upload</button>
+                            {{ updateUserProfileForm.profile_photo|add_class:"hidden"|attr:"id:photo-input" }}
                         </div>
                     </div>
                 </div>
@@ -174,5 +171,7 @@ Set your preferences — WAVE.
             <button type="submit" role="button" id="submitButton" class="font-Wanted-Bold text-xl bg-green text-white px-[20px] py-[10px] rounded-2xl">Submit</button>
         </div>
     </div>
-</div>
+</form>
+
+<script type="text/javascript" src="{% static "/scripts/accountManagementApp/extras/photoPreview.js" %}"</script>
 {% endblock checkout_body %}
