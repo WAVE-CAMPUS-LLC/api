@@ -1,7 +1,7 @@
 from django.shortcuts import get_object_or_404, render, redirect
 from django.http import JsonResponse
 import random
-from django.db.models import Count, Q
+from django.db.models import Count, Q, Exists, OuterRef
 from django.http import JsonResponse
 from datetime import datetime, timedelta
 from django.utils.timezone import now
@@ -31,15 +31,15 @@ def exploreView(request):
     pageName = "explore"
 
     # Load initial 6 events
-    initial_events = Event.objects.filter(status="live", privacy="Discoverable", admin_status="active")[:7]
+    initial_events = Event.objects.filter(status="live", privacy="Discoverable")[:7]
     trending_events = Event.objects.filter(
-        status="live", privacy="Discoverable", admin_status="active"
+        status="live", privacy="Discoverable"
     ).order_by("date")[:3]
 
     # Retrieve the user profile and invited events
     try:
         user_profile = UserProfile.objects.get(user=request.user)
-        invited_events = user_profile.invited_events.filter(status="live", admin_status="active")
+        invited_events = user_profile.invited_events.filter(status="live")
         invitations = user_profile.invitations.all()
         invited_events_with_tokens = []
         for event in invited_events:
@@ -54,7 +54,7 @@ def exploreView(request):
         invited_events_with_tokens = None
 
     trending_categories = (
-        Event.objects.filter(status="live", admin_status="active", privacy="Discoverable")
+        Event.objects.filter(status="live", privacy="Discoverable")
         .values("event_type")
         .annotate(event_count=Count("event_type"))
         .order_by("-event_count")[:4]
@@ -65,6 +65,7 @@ def exploreView(request):
         event_type = category["event_type"]
         display_name = dict(Event.EXPLORE_TYPE_CHOICES).get(event_type, event_type)
         trending_category_choices.append((event_type, display_name))
+    print(trending_category_choices)
 
     if len(trending_category_choices) < 4:
         remaining_choices = list(
@@ -80,7 +81,7 @@ def exploreView(request):
     end_of_week = start_of_week + timedelta(days=6)
 
     weekly_events = Event.objects.filter(
-        date__range=[start_of_week, end_of_week], status="live", admin_status="active", privacy="Discoverable"
+        date__range=[start_of_week, end_of_week], status="live", privacy="Discoverable"
     ).order_by("?")[:3]
 
     return render(
@@ -116,7 +117,7 @@ def load_more_events(request):
     offset = int(request.GET.get("offset", 7))
     limit = 3
 
-    more_events = Event.objects.filter(status="live", privacy="Discoverable", admin_status="active")[
+    more_events = Event.objects.filter(status="live", privacy="Discoverable")[
         offset : offset + limit
     ]
     events_data = []
@@ -136,7 +137,7 @@ def load_more_events(request):
             }
         )
 
-    has_more = Event.objects.filter(status="live", privacy="Discoverable", admin_status="active").count() > (
+    has_more = Event.objects.filter(status="live", privacy="Discoverable").count() > (
         offset + limit
     )
 
@@ -290,7 +291,7 @@ def eventDetailsView(request, eventId, token=None):
 
 
 def categoryView(request, name):
-    category_events = Event.objects.filter(event_type=name, status="live", admin_status="active")
+    category_events = Event.objects.filter(event_type=name)
 
     if not category_events.exists():
         return render(
@@ -319,7 +320,7 @@ def searchEvents(request):
     if search_query:
         search_events = Event.objects.filter(
             Q(title__icontains=search_query) | Q(event_type__icontains=search_query),
-            status="live", admin_status="active"
+            status="live",
         )
 
         results = [
@@ -339,26 +340,49 @@ def searchEvents(request):
         ]
 
     return JsonResponse({"results": results})
-
+@login_required
 def search_users(request):
     search_query = request.GET.get("searchEvents", "").strip()
     results = []
 
     if search_query:
+        # Subqueries to check friend request status and friendship
+        sent_requests = FriendRequest.objects.filter(
+            sender=request.user,
+            receiver=OuterRef('pk'),
+            status__in=['pending', 'accepted']
+        )
+        received_requests = FriendRequest.objects.filter(
+            sender=OuterRef('pk'),
+            receiver=request.user,
+            status='pending'
+        )
+        # Assuming 'accepted' status indicates friendship
+        friends = FriendRequest.objects.filter(
+            Q(sender=request.user, receiver=OuterRef('pk'), status='accepted') |
+            Q(sender=OuterRef('pk'), receiver=request.user, status='accepted')
+        )
+
         users = CustomUser.objects.filter(
             Q(username__icontains=search_query) |
             Q(first_name__icontains=search_query) |
             Q(last_name__icontains=search_query)
-        ).distinct()[:10]
+        ).exclude(id=request.user.id).distinct()[:10].annotate(
+            has_sent_friend_request=Exists(sent_requests),
+            is_friend=Exists(friends)
+        )
 
         results = [
             {
                 "username": user.username,
                 "display_name": f"{user.first_name} {user.last_name}".strip() or user.username,
                 "profile_photo_url": user.user_profile.profile_photo.url if hasattr(user, 'user_profile') and user.user_profile.profile_photo else "/static/images/default_profile.png",
+                "has_sent_friend_request": user.has_sent_friend_request,
+                "is_friend": user.is_friend,
             }
             for user in users
         ]
+
     return JsonResponse({"results": results})
 
 @login_required

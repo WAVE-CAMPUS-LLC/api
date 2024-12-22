@@ -121,7 +121,31 @@ $(document).ready(function () {
                                         </div>
                                     </a>`;
                             } else if (item.username) {
-                                // Render user
+                                // Determine button based on friend request status
+                                let buttonHtml = '';
+                                if (item.is_friend) {
+                                    // Do not display the Connect button if already friends
+                                    buttonHtml = '';
+                                } else if (item.has_sent_friend_request) {
+                                    // Display a disabled button with "Pending" text if request is sent
+                                    buttonHtml = `
+                                        <button class="gradient-btn pending cursor-not-allowed text-Pre-Xl md:text-xl bg-gray-400" 
+                                                type="button" 
+                                                disabled>
+                                            Pending Request
+                                        </button>`;
+                                } else {
+                                    // Display the active "Connect" button if no request is sent and not friends
+                                    buttonHtml = `
+                                        <button class="gradient-btn cursor-pointer text-Pre-Xl md:text-xl hover:bg-green" 
+                                                type="button" 
+                                                role="button"
+                                                data-username="${item.username}">
+                                            Connect
+                                        </button>`;
+                                }
+                            
+                                // Render user with conditional button
                                 resultHtml = `
                                     <div class="category-user-card hover:scale-95 transform transition duration-300 flex flex-col justify-center items-center cursor-pointer overflow-hidden p-[10px] text-black">
                                         <div class="user-image w-full rounded-2xl shadow-custom-shadow-3">
@@ -132,13 +156,8 @@ $(document).ready(function () {
                                             <div class="userSubInfo flex flex-col items-start gap-[1px] w-full font-Wanted-Variable text-customGray5">
                                                 <p class="flex flex-row justify-start">@${item.username}</p>
                                             </div>
-                                                      <!-- Connect Button -->
-                          <button class="gradient-btn cursor-pointer text-Pre-Xl md:text-xl hover:bg-green" 
-        type="button" 
-        role="button"
-        data-username="${item.username}">
-        Connect
-    </button>
+                                            <!-- Connect Button -->
+                                            ${buttonHtml}
                                         </div>
                                     </div>`;
                             }
