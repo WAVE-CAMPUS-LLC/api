@@ -17,7 +17,11 @@ from django.urls import reverse
 
 
 from accountManagementApp.models import UserProfile
-from collegeManagementApp.models import Organization, OrganizationMembership
+from collegeManagementApp.models import (
+    Organization,
+    OrganizationMembership,
+    CollegeEventLink,
+)
 from .forms import HostApplicationForm, EventForm, EditEventForm
 from stripeManagementApp.getRequiredActions import getRequiredActions
 from stripeManagementApp.updateConnectWithStripeDetails import (
@@ -187,15 +191,28 @@ def eventCreationProcess(request, eventId):
                     event_privacy.save()
 
                 elif event.privacy == "Private (College)":
-                    event_privacy = EventPrivacy.objects.create(
-                        event=event,
-                        display_on_explore=False,
-                        require_invitation=False,
-                        restricted_college=event.host.user_profile.college,
-                        restricted_organization=None,
-                    )
-                    event.display_event_on_college = True
-                    event_privacy.save()
+                    if not user_profile.college:
+                        messages.error(
+                            request,
+                            "You must be a part of a college to create a college event.",
+                        )
+                        return redirect(
+                            "eventManagement:eventManagement", eventId=eventId
+                        )
+                    else:
+                        event_privacy = EventPrivacy.objects.create(
+                            event=event,
+                            display_on_explore=False,
+                            require_invitation=False,
+                            restricted_college=event.host.user_profile.college,
+                            restricted_organization=None,
+                        )
+                        event.display_event_on_college = True
+                        event_privacy.save()
+                        if user_profile.college:
+                            college_event_link = CollegeEventLink.objects.get_or_create(
+                                college=user_profile.college, event=event
+                            )
 
                 elif (
                     event.privacy == "Private (Organization)"
@@ -690,7 +707,7 @@ def hostBilling(request):
 
         elif action == "refundTransaction":
             hostStripeAccountId = hostProfile.stripe_account_id
-            
+
             if not hostStripeAccountId:
                 messages.error(request, "Stripe account not found.")
                 return redirect("eventManagement:hostPortal")
@@ -701,9 +718,11 @@ def hostBilling(request):
                 print("Invalid transaction ID provided.")
                 messages.error(request, "Invalid transaction ID provided.")
                 return redirect("eventManagement:hostBilling")
-            
+
             if hostStripeAccountId and refund_transaction_id:
-                Transactions.processRefund(request, hostStripeAccountId, refund_transaction_id)
+                Transactions.processRefund(
+                    request, hostStripeAccountId, refund_transaction_id
+                )
 
     connectedAccount = hostProfile.stripe_account_id
     external_accounts = {"bank_accounts": [], "cards": []}

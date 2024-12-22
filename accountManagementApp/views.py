@@ -3,6 +3,7 @@ from django.http import Http404, HttpResponseBadRequest, JsonResponse
 from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import get_user_model
+from django.contrib import messages
 from .forms import (
     UserProfileForm,
     UpdateContactInfo,
@@ -26,9 +27,7 @@ def profileView(request):
     userRequest = request.user
     blogItems = Blog.objects.filter(created_by=userRequest)
     userProfile = UserProfile.objects.get(user=userRequest)
-    print(userProfile.profile_photo)
-    print(userRequest.email_verified)
-    print(userRequest.user_preferences_completed)
+    
     
     return render(
         request,
@@ -55,6 +54,7 @@ def profilePreferences(request):
         if form.is_valid():
             user.user_preferences_completed = True
             form.save()
+            messages.success(request, "Profile preferences updated successfully!")
             return redirect("accountManagement:userAccount")
 
     return render(
@@ -81,19 +81,24 @@ def settingsView(request):
             form = UpdatePersonalInfo(request.POST, instance=user)
             if form.is_valid():
                 form.save()
+                messages.success(request, "Personal information updated successfully!")
         elif form_type == "email-info":
             form = UpdateContactInfo(request.POST, instance=user)
             if form.is_valid():
                 form.save()
+                messages.success(request, "Contact information updated successfully!")
         elif form_type == "phone-info":
             form = UpdateContactInfo(request.POST, instance=user)
             if form.is_valid():
                 form.save()
+                messages.success(request, "Contact information updated successfully!")
         elif form_type == "location-info":
             form = UpdateProfileForm(request.POST, instance=profile)
             if form.is_valid():
                 form.save()
+                messages.success(request, "Profile information updated successfully!")
         else:
+            messages.error(request, "Invalid form.")
             return HttpResponseBadRequest("Invalid form type")
 
         return redirect("accountManagement:userSettings")

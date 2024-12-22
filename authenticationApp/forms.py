@@ -1,4 +1,5 @@
 import datetime
+from datetime import datetime
 from django import forms
 from .models import CustomUser
 from django.core.exceptions import ValidationError
@@ -8,12 +9,14 @@ from django.contrib.auth.forms import (
     AuthenticationForm,
     PasswordResetForm,
 )
+from django.contrib import messages
 
 
 class CustomUserJoinForm(UserCreationForm):
     password1 = forms.CharField(label="Password", widget=forms.PasswordInput)
     password2 = forms.CharField(label="Confirm Password", widget=forms.PasswordInput)
-
+    current_year = datetime.now().year
+    birthday = forms.DateField(widget=forms.SelectDateWidget(years=range(1960, current_year + 1)))    
 
     class Meta:
         model = CustomUser
@@ -22,6 +25,7 @@ class CustomUserJoinForm(UserCreationForm):
             "last_name",
             "email",
             "username",
+            "birthday",
             "password1",
             "password2",
         )
@@ -38,13 +42,13 @@ class CustomUserJoinForm(UserCreationForm):
     def clean_email(self):
         email = self.cleaned_data.get("email")
         if CustomUser.objects.filter(email=email).exists():
-            raise ValidationError("Email already in use.")
+            raise ValidationError("Email taken!")
         return email
 
     def clean_username(self):
         username = self.cleaned_data.get("username")
         if CustomUser.objects.filter(username=username).exists():
-            raise ValidationError("Username already in use.")
+            raise ValidationError("Username taken!")
         return username
 
     # def clean(self):

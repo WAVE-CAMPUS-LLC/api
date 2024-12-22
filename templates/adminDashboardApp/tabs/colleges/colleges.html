@@ -4,7 +4,7 @@
 {% load user_tags %}
 
 {% block title %}
-College Management — WAVE.
+Colleges — WAVE.
 {% endblock title %}
 
 
@@ -21,14 +21,21 @@ College Management — WAVE.
 {% endblock header %}
 
 
-
 {% block body %}
 <div id="content-container" class="flex flex-col gap-[70px] px-4 sm:px-6 md:px-[40px] pre-lg:px-[40px] lg:px-[100px] 2xl:px-48 3xl:px-96">
+    <div id="pagination-display" class="flex flex-col pre-sm:flex-row gap-2 w-full items-center font-Wanted-Variable justify-start text-gray-300">
+        <a href="{% url "waveAdmin:adminDashboard" %}" class="text-green underline">Admin Dashboard</a>
+        >
+        <a href="{% url "waveAdmin:adminDashboard" %}#campusManagement" class="text-green underline">Campus Management</a>
+        >
+        <p class="font-Wanted-Medium text-black">Colleges</p>
+    </div>
+
     <div id="tabbingContent" class="flex flex-col gap-7">
         <div id="tabHeader" class="list-none flex flex-row justify-start gap-2 w-full pb-1 font-Wanted-Bold text-Base">
             <ul class="tabHeaderList list-none flex flex-row gap-2">
-                <li class="tabHeaderItem hover:border-b-4 hover:border-[#008d95a4] cursor-pointer p-2 tab-active" data-tab="activeCampuses">Active Campuses</li>
-                <li class="tabHeaderItem hover:border-b-4 hover:border-[#008d95a4] cursor-pointer p-2 px-5" data-tab="requestedCampuses">Requested Campuses</li>
+                <li class="tabHeaderItem cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center tab-active" data-tab="activeCampuses">Active Campuses</li>
+                <li class="tabHeaderItem cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="requestedCampuses">Requested Campuses</li>
             </ul>
         </div>
 

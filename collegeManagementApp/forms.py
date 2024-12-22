@@ -1,5 +1,5 @@
 from django import forms
-from .models import College, CollegeRequest, Organization
+from .models import College, CollegeRequest, Organization, Membership
 from django.forms.widgets import ClearableFileInput
 
 class CustomClearableFileInput(ClearableFileInput):
@@ -58,6 +58,12 @@ class JoinCollegeForm(forms.Form):
                 raise forms.ValidationError(
                     f"Please use your school email ending in @{self.college.email_domain}"
                 )
+                
+            user = self.user
+            
+            if Membership.objects.filter(college=self.college, user=user).exists():
+                raise forms.ValidationError("You are already a member of this college")
+        
         return email
 
 

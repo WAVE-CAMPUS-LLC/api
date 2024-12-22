@@ -709,7 +709,7 @@ def adminCollegeView(request):
         collegeForm = CollegeForm()
     return render(
         request,
-        "adminDashboardApp/tabs/colleges.html",
+        "adminDashboardApp/tabs/colleges/colleges.html",
         {
             "colleges": colleges,
             "collegeForm": collegeForm,
@@ -723,10 +723,15 @@ def adminCollegeView(request):
 @group_required("Admin")
 def adminCollegeDetailView(request, collegeId):
     college = get_object_or_404(College, collegeId=collegeId)
-    events = Event.objects.filter(college=college)
-
+    events = Event.objects.filter(display_event_on_college=True, host__user_profile__college=college)
+    organizations = Organization.objects.filter(college=college)
     action = request.POST.get("eventAction")
+    
+    # members = Membership.objects.filter(college=college)
 
+    members = UserProfile.objects.filter(college=college)
+    
+    
     if request.method == "POST":
         email = request.POST.get("inviteEmail")
 
@@ -766,7 +771,7 @@ def adminCollegeDetailView(request, collegeId):
     return render(
         request,
         "adminDashboardApp/tabs/colleges/collegeInfo.html",
-        {"college": college},
+        {"college": college, "events": events, "organizations": organizations, "members": members},
     )
 
 
@@ -813,7 +818,9 @@ def send_invite(email, college):
 @check_suspension
 @group_required("Admin")
 def adminCollegeOrgsView(request):
-    return render(request, "adminDashboardApp/tabs/organizations.html")
+    organizations = Organization.objects.all()
+    print(organizations)
+    return render(request, "adminDashboardApp/tabs/colleges/organizations.html", {"organizations": organizations})
 
 
 @login_required

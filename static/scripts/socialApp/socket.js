@@ -12,4 +12,8 @@ document.addEventListener("DOMContentLoaded", function () {
   socket.onclose = function () {
     console.log("WebSocket disconnected for friend requests");
   };
+
+  socket.onmessage = function (event) {
+    location.reload();
+  };
 });
