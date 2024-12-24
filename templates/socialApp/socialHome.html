@@ -25,8 +25,11 @@ My Social @{{ user.username }} — WAVE.
         <div class="w-full flex justify-center">
             <img src="{{ user_profile.profile_photo.url }}" alt="Profile Picture" class="rounded-full size-40" />
         </div>
-        <div class="userNames">
+        <div class="userNames flex flex-row gap-2 items-center">
             <h1 class="font-Wanted-Bold text-2xl">My Social</h1>
+            {% if isHost %}
+            <img src="{% static "images/socialApp/verifiedHost.svg" %}" class="size-5" />
+            {% endif %}
         </div>
         
         <div class="connectRow">

@@ -11,13 +11,14 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth import get_user_model
 from django.http import JsonResponse, HttpResponseRedirect
 from django.template import RequestContext
-from django.template.loader import render_to_string 
+from django.template.loader import render_to_string
 from accountManagementApp.models import UserProfile
 from django.contrib import messages
 from django.contrib.auth import login, logout, authenticate
 from .models import FriendRequest, Crew, CrewMember, CrewRequest
 from django.db.models import Q
 from .forms import createCrewForm
+from authenticationApp.models import CustomUser
 
 # Decorators to check user roles and permissions
 from wave_v1.decorators import check_suspension, member, verified, onboarded
@@ -35,6 +36,11 @@ def socialHomeView(request):
     my_crews = Crew.objects.filter(members__user=request.user)
     time = datetime.now().timestamp()
     friends = user.friends.all()
+    
+    if user.user.groups.filter(name="Host").exists():
+        isHost = True
+    else:
+        isHost = False
 
     pending_friend_requests = FriendRequest.objects.filter(
         receiver=request.user, status="pending"
@@ -42,18 +48,22 @@ def socialHomeView(request):
     pending_crew_requests = CrewRequest.objects.filter(
         receiver=request.user, status="pending"
     )
-                
+
     if request.method == "POST":
         action = request.POST.get("action")
-        
+
         if action == "acceptRequest":
-            friend_request_id = request.POST.get("friend_request_id")  
-            friend_request = FriendRequest.objects.get(requestId=friend_request_id, receiver=request.user)
+            friend_request_id = request.POST.get("friend_request_id")
+            friend_request = FriendRequest.objects.get(
+                requestId=friend_request_id, receiver=request.user
+            )
             sender = get_object_or_404(UserProfile, user=friend_request.sender)
             # We have to get the sender's user model to match the user id for the channel group name, because the channel rely's on the traditional auth user model instead of the custom user model
-            senderUserModel = get_object_or_404(UserModel, username=sender.user.username)
-            user.friends.add(sender) 
-            sender.friends.add(user) 
+            senderUserModel = get_object_or_404(
+                UserModel, username=sender.user.username
+            )
+            user.friends.add(sender)
+            sender.friends.add(user)
             friend_request.accept_request()
             channel_layer = get_channel_layer()
             async_to_sync(channel_layer.group_send)(
@@ -65,14 +75,18 @@ def socialHomeView(request):
                     },
                 },
             )
-            return redirect('social:home')
+            return redirect("social:home")
 
         elif action == "declineRequest":
             friend_request_id = request.POST.get("friend_request_id")
-            friend_request = FriendRequest.objects.get(requestId=friend_request_id, receiver=request.user)
+            friend_request = FriendRequest.objects.get(
+                requestId=friend_request_id, receiver=request.user
+            )
             sender = get_object_or_404(UserProfile, user=friend_request.sender)
             # We have to get the sender's user model to match the user id for the channel group name, because the channel relies on the traditional auth user model instead of the custom user model
-            senderUserModel = get_object_or_404(UserModel, username=sender.user.username)
+            senderUserModel = get_object_or_404(
+                UserModel, username=sender.user.username
+            )
             user.friends.remove(sender)
             sender.friends.remove(user)
             friend_request.delete()
@@ -86,17 +100,26 @@ def socialHomeView(request):
                     },
                 },
             )
-            return redirect('social:home')
-            
+            return redirect("social:home")
+
         else:
             crew_id = request.POST.get("crew_id")
             crew_invite_action(request, crew_id, action)
-        
+
     return render(
         request,
         "socialApp/socialHome.html",
-        {"pending_friend_requests": pending_friend_requests, 'user_profile':user, "pending_crew_requests": pending_crew_requests, "friends": friends, "my_crews": my_crews, "time": time},
+        {
+            "pending_friend_requests": pending_friend_requests,
+            "user_profile": user,
+            "pending_crew_requests": pending_crew_requests,
+            "friends": friends,
+            "my_crews": my_crews,
+            "time": time,
+            "isHost": isHost
+        },
     )
+
 
 @login_required
 @check_suspension
@@ -106,22 +129,30 @@ def socialHomeView(request):
 def crew_invite_action(request, crew_id, action):
     crew = get_object_or_404(Crew, crewId=crew_id)
     crew_request = get_object_or_404(CrewRequest, crew=crew, receiver=request.user)
-    
+
     if action == "joinCrew":
         crew_request.accept_request()
         CrewMember.objects.create(user=request.user, crew=crew)
-        messages.success(request, f'{request.user} joined the {crew.name} crew.')
+        messages.success(request, f"{request.user} joined the {crew.name} crew.")
     elif action == "declineCrew":
         crew_request.decline_request()
-        messages.success(request, f'{request.user} has declines the invite to join {crew.name} crew.')
-        
-    return redirect('social:home')
+        messages.success(
+            request, f"{request.user} has declines the invite to join {crew.name} crew."
+        )
+
+    return redirect("social:home")
 
 
 def publicProfileView(request, username):
     user_profile = get_object_or_404(UserProfile, user__username=username)
+
+    if user_profile.user.groups.filter(name="Host").exists():
+        isHost = True
+    else:
+        isHost = False
+
     try:
-        other_user = get_object_or_404(UserModel, username=username)
+        other_user = get_object_or_404(CustomUser, username=username)
         other_user_profile, created = UserProfile.objects.get_or_create(user=other_user)
 
         friend_request = FriendRequest.objects.filter(
@@ -139,8 +170,10 @@ def publicProfileView(request, username):
         if request.method == "POST":
             action = request.POST.get("action")
             if action == "send_request":
-                success, message, friend_request = send_friend_request(request.user, other_user_profile)
-                
+                success, message, friend_request = send_friend_request(
+                    request.user, other_user_profile
+                )
+
                 channel_layer = get_channel_layer()
                 async_to_sync(channel_layer.group_send)(
                     f"user_{other_user_profile.id}",
@@ -153,8 +186,10 @@ def publicProfileView(request, username):
                                 "requestId": str(friend_request.requestId),
                                 "sender_first_name": friend_request.sender.first_name,
                                 "sender_last_name": friend_request.sender.last_name,
-                                "created_at": friend_request.created_at.strftime("%Y-%m-%d %H:%M:%S"),
-                                },
+                                "created_at": friend_request.created_at.strftime(
+                                    "%Y-%m-%d %H:%M:%S"
+                                ),
+                            },
                         },
                     },
                 )
@@ -170,7 +205,7 @@ def publicProfileView(request, username):
                 and friend_request
                 and friend_request_status == "pending"
             ):
-                
+
                 channel_layer = get_channel_layer()
                 async_to_sync(channel_layer.group_send)(
                     f"user_{other_user_profile.id}",
@@ -183,8 +218,10 @@ def publicProfileView(request, username):
                                 "requestId": str(friend_request.requestId),
                                 "sender_first_name": friend_request.sender.first_name,
                                 "sender_last_name": friend_request.sender.last_name,
-                                "created_at": friend_request.created_at.strftime("%Y-%m-%d %H:%M:%S"),
-                                },
+                                "created_at": friend_request.created_at.strftime(
+                                    "%Y-%m-%d %H:%M:%S"
+                                ),
+                            },
                         },
                     },
                 )
@@ -200,7 +237,7 @@ def publicProfileView(request, username):
                 and friend_request
                 and friend_request_status == "accepted"
             ):
-                
+
                 other_user_profile.friends.remove(receiver)
                 receiver.friends.remove(other_user_profile)
                 friend_request_status = None
@@ -231,6 +268,7 @@ def publicProfileView(request, username):
             "user_profile": other_user_profile,
             "friend_request_status": friend_request_status,
             "is_profile": is_profile,
+            "isHost": isHost,
         },
     )
 
@@ -242,8 +280,9 @@ def publicProfileView(request, username):
 @onboarded
 def send_friend_request(sender, receiver_username):
     receiver = get_object_or_404(UserProfile, user__username=receiver_username)
-    cannot_send_request = (sender.user_profile.is_friends_with(receiver.user) 
-                           or sender.user_profile.has_pending_request(receiver.user))
+    cannot_send_request = sender.user_profile.is_friends_with(
+        receiver.user
+    ) or sender.user_profile.has_pending_request(receiver.user)
 
     if cannot_send_request:
         return False, "Friend request cannot be sent.", None
@@ -304,11 +343,23 @@ def crewView(request, crewId):
         is_in_crew = True
     except CrewMember.DoesNotExist:
         is_in_crew = False
-    friends_not_in_crew = friends.exclude(user__in=crew_members.values_list('user', flat=True))
-    pending_friends = [friend for friend in friends_not_in_crew if friend.has_pending_crew_request(request.user)]
-    declined_friends = [friend for friend in friends_not_in_crew if friend.has_declined_crew_request(request.user)]
-    not_invited_friends = friends_not_in_crew.exclude(user__username__in=pending_friends).exclude(user__username__in=declined_friends)
-    
+    friends_not_in_crew = friends.exclude(
+        user__in=crew_members.values_list("user", flat=True)
+    )
+    pending_friends = [
+        friend
+        for friend in friends_not_in_crew
+        if friend.has_pending_crew_request(request.user)
+    ]
+    declined_friends = [
+        friend
+        for friend in friends_not_in_crew
+        if friend.has_declined_crew_request(request.user)
+    ]
+    not_invited_friends = friends_not_in_crew.exclude(
+        user__username__in=pending_friends
+    ).exclude(user__username__in=declined_friends)
+
     if request.method == "POST":
         action = request.POST.get("action")
         if action == "crew_invite":
@@ -318,28 +369,35 @@ def crewView(request, crewId):
                 messages.success(request, message)
             else:
                 messages.warning(request, message)
-                
+
         elif action == "leave_crew":
             leave_crew(request, crewId)
-            return redirect('social:home')
-        
+            return redirect("social:home")
+
         elif action == "delete_crew":
             delete_crew(request, crewId)
-            return redirect('social:home')
-        
+            return redirect("social:home")
+
         elif action == "kick_member":
             member_username = request.POST.get("member")
             kick_member(request, crewId, member_username)
-            return redirect('social:crew', crewId=crewId)
-            
-    return render(request, "socialApp/crews/crew.html", 
-                    {
-                      'crew': crew, 'self': user.user, 'crewMembers': crew_members, 
-                      'pendingFriends': pending_friends, 'declinedFriends': declined_friends, 
-                      'notInvitedFriends': not_invited_friends, 'time': time,
-                      'isCrewOwner': crew.created_by == request.user, 'isInCrew': is_in_crew
-                    }
-                )
+            return redirect("social:crew", crewId=crewId)
+
+    return render(
+        request,
+        "socialApp/crews/crew.html",
+        {
+            "crew": crew,
+            "self": user.user,
+            "crewMembers": crew_members,
+            "pendingFriends": pending_friends,
+            "declinedFriends": declined_friends,
+            "notInvitedFriends": not_invited_friends,
+            "time": time,
+            "isCrewOwner": crew.created_by == request.user,
+            "isInCrew": is_in_crew,
+        },
+    )
 
 
 @login_required
@@ -351,11 +409,16 @@ def send_crew_request(sender, receiver_username, crew_id):
     sender = get_object_or_404(UserProfile, user__username=sender.user.username)
     receiver = get_object_or_404(UserProfile, user__username=receiver_username)
     crew = get_object_or_404(Crew, crewId=crew_id)
-    
+
     if CrewMember.objects.filter(crew=crew, user=receiver.user).exists():
         return False, "User is already a member of the crew."
 
-    crew_request, created = CrewRequest.objects.get_or_create(sender=sender.user, receiver=receiver.user, crew=crew, defaults={"status": "pending"})
+    crew_request, created = CrewRequest.objects.get_or_create(
+        sender=sender.user,
+        receiver=receiver.user,
+        crew=crew,
+        defaults={"status": "pending"},
+    )
 
     if not created:
         return False, "Crew request has already been sent."
@@ -372,15 +435,15 @@ def leave_crew(request, crewId):
     crew = get_object_or_404(Crew, crewId=crewId)
     crew_member = CrewMember.objects.get(crew=crew, user=request.user)
     crew_member.delete()
-    
+
     CrewRequest.objects.filter(crew=crew, receiver=crew_member.user).delete()
     CrewRequest.objects.filter(crew=crew, sender=crew_member.user).delete()
-    
+
     crew_members = CrewMember.objects.filter(crew=crew)
     if not crew_members.exists():
         crew.delete()
-        messages.success(request, f'{crew.name} crew has been deleted.')
-    messages.success(request, f'{request.user} has left the {crew.name} crew.')
+        messages.success(request, f"{crew.name} crew has been deleted.")
+    messages.success(request, f"{request.user} has left the {crew.name} crew.")
 
 
 @login_required
@@ -390,14 +453,14 @@ def leave_crew(request, crewId):
 @onboarded
 def delete_crew(request, crewId):
     crew = get_object_or_404(Crew, crewId=crewId)
-    
+
     CrewRequest.objects.filter(crew=crew).delete()
     CrewMember.objects.filter(crew=crew).delete()
-    
+
     crew.delete()
-    messages.success(request, f'{crew.name} crew has been deleted.')
-    
-    
+    messages.success(request, f"{crew.name} crew has been deleted.")
+
+
 @login_required
 @check_suspension
 @member
@@ -406,27 +469,26 @@ def delete_crew(request, crewId):
 def kick_member(request, crewId, member_username):
     crew = get_object_or_404(Crew, crewId=crewId)
     member = get_object_or_404(UserProfile, user__username=member_username)
-    
+
     CrewRequest.objects.filter(crew=crew, receiver=member.user).delete()
     CrewRequest.objects.filter(crew=crew, sender=member.user).delete()
-    
-    CrewMember.objects.filter(crew=crew, user=member.user).delete()
-    messages.success(request, f'{member.user.username} has been kicked from the {crew.name} crew.')
 
-        
-    
+    CrewMember.objects.filter(crew=crew, user=member.user).delete()
+    messages.success(
+        request, f"{member.user.username} has been kicked from the {crew.name} crew."
+    )
+
     # if request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest':
     #     query = request.GET.get('query', '')
-        
+
     #     user_friends = user.friends.all()
 
     #     # Filter friends based on the search query (e.g., name)
     #     results = user_friends.filter(
-    #         Q(user__username__icontains=query) | 
-    #         Q(user__first_name__icontains=query) | 
+    #         Q(user__username__icontains=query) |
+    #         Q(user__first_name__icontains=query) |
     #         Q(user__last_name__icontains=query)
     #     )
-
 
     #     # Render each result using the template
     #     if results.exists():
