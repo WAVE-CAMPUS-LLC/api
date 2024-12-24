@@ -20,12 +20,16 @@ from django.db.models import Q
 from .forms import createCrewForm
 
 # Decorators to check user roles and permissions
-from wave_v1.decorators import group_required, check_suspension
+from wave_v1.decorators import check_suspension, member, verified, onboarded
 
 UserModel = get_user_model()
 
 
 @login_required
+@check_suspension
+@member
+@verified
+@onboarded
 def socialHomeView(request):
     user = get_object_or_404(UserProfile, user=request.user)
     my_crews = Crew.objects.filter(members__user=request.user)
@@ -88,6 +92,11 @@ def socialHomeView(request):
         {"pending_friend_requests": pending_friend_requests, 'user_profile':user, "pending_crew_requests": pending_crew_requests, "friends": friends, "my_crews": my_crews, "time": time},
     )
 
+@login_required
+@check_suspension
+@member
+@verified
+@onboarded
 def crew_invite_action(request, crew_id, action):
     crew = get_object_or_404(Crew, crewId=crew_id)
     crew_request = get_object_or_404(CrewRequest, crew=crew, receiver=request.user)
@@ -104,9 +113,9 @@ def crew_invite_action(request, crew_id, action):
 
 
 def publicProfileView(request, username):
+    user_profile = get_object_or_404(UserProfile, user__username=username)
     try:
         user = get_object_or_404(UserModel, username=username)
-        user_profile, created = UserProfile.objects.get_or_create(user=user)
 
         friend_request = FriendRequest.objects.filter(
             (Q(sender=request.user) & Q(receiver=user))
@@ -219,6 +228,11 @@ def publicProfileView(request, username):
     )
 
 
+@login_required
+@check_suspension
+@member
+@verified
+@onboarded
 def send_friend_request(sender, receiver_username):
     receiver = get_object_or_404(UserProfile, user__username=receiver_username)
 
@@ -239,6 +253,10 @@ def send_friend_request(sender, receiver_username):
 
 
 @login_required
+@check_suspension
+@member
+@verified
+@onboarded
 def createCrewView(request):
     if request.method == "POST":
         crewForm = createCrewForm(request.POST)
@@ -263,6 +281,10 @@ def createCrewView(request):
 
 
 @login_required
+@check_suspension
+@member
+@verified
+@onboarded
 def crewView(request, crewId):
     time = datetime.now().timestamp()
     user = get_object_or_404(UserProfile, user=request.user)
@@ -313,6 +335,12 @@ def crewView(request, crewId):
                     }
                 )
 
+
+@login_required
+@check_suspension
+@member
+@verified
+@onboarded
 def send_crew_request(sender, receiver_username, crew_id):
     sender = get_object_or_404(UserProfile, user__username=sender.user.username)
     receiver = get_object_or_404(UserProfile, user__username=receiver_username)
@@ -328,6 +356,12 @@ def send_crew_request(sender, receiver_username, crew_id):
 
     return True, "Crew request sent successfully."
 
+
+@login_required
+@check_suspension
+@member
+@verified
+@onboarded
 def leave_crew(request, crewId):
     crew = get_object_or_404(Crew, crewId=crewId)
     crew_member = CrewMember.objects.get(crew=crew, user=request.user)
@@ -343,6 +377,11 @@ def leave_crew(request, crewId):
     messages.success(request, f'{request.user} has left the {crew.name} crew.')
 
 
+@login_required
+@check_suspension
+@member
+@verified
+@onboarded
 def delete_crew(request, crewId):
     crew = get_object_or_404(Crew, crewId=crewId)
     
@@ -352,6 +391,12 @@ def delete_crew(request, crewId):
     crew.delete()
     messages.success(request, f'{crew.name} crew has been deleted.')
     
+    
+@login_required
+@check_suspension
+@member
+@verified
+@onboarded
 def kick_member(request, crewId, member_username):
     crew = get_object_or_404(Crew, crewId=crewId)
     member = get_object_or_404(UserProfile, user__username=member_username)

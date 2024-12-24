@@ -9,6 +9,7 @@ from .utils import generate_profile_picture
 @receiver(post_save, sender=UserProfile)
 def create_profile_picture(sender, instance, created, **kwargs):
     if created and not instance.profile_photo:
-        initials = (instance.first_name[:1] + instance.last_name[:1]).upper()
+        user = instance.user
+        initials = (user.first_name[:1] + user.last_name[:1]).upper()
         profile_photo = generate_profile_picture(initials)
-        instance.profile_photo.save(f"{initials}_profile.png", generate_profile_picture())
+        instance.profile_photo.save(f"{initials}_profile.png", profile_photo, save=True)

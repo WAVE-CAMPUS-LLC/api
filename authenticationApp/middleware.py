@@ -16,13 +16,13 @@ class RedirectAuthenticatedUsersMiddleware:
         # Perform actions before sending the response
         if request.user.is_authenticated:
             # Check if the user has completed onboarding
-            if not getattr(request.user, "is_onboarded", False):
+            if not getattr(request.user, "email_verified", False):
                 # Redirect new users to the onboarding page
                 if request.path not in [
                     reverse("authentication:logout"),
-                    reverse("authentication:onboarding"),
+                    reverse("authentication:verifyEmail"),
                 ]:
-                    return redirect("authentication:onboarding")
+                    return redirect("authentication:verifyEmail")
 
             # Avoid accessing login or join pages when already logged in
             restricted_urls = [

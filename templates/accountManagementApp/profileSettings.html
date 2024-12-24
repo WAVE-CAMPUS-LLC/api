@@ -1,5 +1,6 @@
 {% extends "base/base.html" %}
 {% load static %}
+{% load widget_tweaks %}
 
 
 {% block title %}
@@ -10,6 +11,7 @@ Account Settings — WAVE.
 {% block script %}
 <script type="text/javascript" src="{% static "/scripts/accountManagementApp/settings/index.js" %}" defer></script>
 <script type="text/javascript" src="{% static "/scripts/accountManagementApp/settings/showPasswordFields.js" %}" defer></script>
+<script type="text/javascript" src="{% static "/scripts/accountManagementApp/extras/editPreferences.js" %}" defer></script>
 {% endblock script %}
 
 
@@ -21,20 +23,21 @@ Account Settings — WAVE.
 {% block body %}
 <div id="content-container" class="flex flex-col gap-[70px] px-4 sm:px-6 md:px-[40px] pre-lg:px-[40px] lg:px-[100px] 2xl:px-48 3xl:px-96">
     <div id="body-header" class="w-full justify-start mb-[40px]">
-        <h3 class="text-black font-Wanted-Bold text-1xl pre-lg:text-3.5xl font-extrabold">Profile Settings</h3>
+        <h3 class="text-black font-Wanted-Bold text-1xl pre-lg:text-3.5xl font-extrabold">Account Settings</h3>
     </div>
-    <div class="content-control border-b border-b-[#008d95] flex gap-[20px] justify-start font-Wanted-Bold font-bold text-black">
-        <div class="settings-tab tab-active inline-block px-[7px] cursor-pointer border-b-4 border-b-[#008d95] pb-[10px]" data-tab="profile-information">
-            Profile
+    <div class="content-control flex gap-[20px] justify-start">
+        <div class="settings-tab tab-active cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="profile-information">
+            Account
         </div>
-        <div class="settings-tab inline-block px-[7px] cursor-pointer" data-tab="preferences-information">
-            Interests
+        <div class="settings-tab cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="preferences-information">
+            Preferences
         </div>
     </div>
+
     <div id="body-content-container" class="w-full h-full">
         <div class="settings-tab-content flex flex-col gap-5 h-full" id="profile-information">
             <section id="personal-change" class="info-container flex flex-col w-full gap-y-[25px]">
-                <h6 class="ic-headers font-Wanted-Medium text-[20px] text-black">Personal Information</h6>
+                <h6 class="ic-headers font-Wanted-Bold text-[20px] text-black">Your account information, {{ user.first_name }}</h6>
                 <form method="post" action="{% url "accountManagement:userSettings" %}" class="flex flex-col sm:flex-row justify-between w-full gap-[25px]">
                     {% csrf_token %}
                     <input type="hidden" name="form_type" value="personal-info" />
@@ -116,7 +119,251 @@ Account Settings — WAVE.
         </div>
 
         <div class="settings-tab-content" id="preferences-information">
+            <form class="flex flex-col gap-6" enctype="multipart/form-data" method="POST">
+                {% csrf_token %}
+                <div class="w-full flex justify-end">
+                    <div id="edit-preferences-div" class="w-full flex justify-end gap-4">
+                        <button id="edit-preferences-button" type="button" class="py-2 px-5 rounded-2xl text-white bg-green font-Wanted-Regular text-Large">Edit</button>
+                    </div>
+                    
+                    <div id="cancel-save-preferences" class="w-full hidden">
+                        <div class="w-full flex flex-row justify-end gap-4">
+                            <button id="cancel-preferences-button" type="button" class="py-2 px-5 rounded-2xl text-white bg-[red] font-Wanted-Regular text-Large">Cancel</button>
+                            <button id="save-preferences-button" name="action" value="updateProfilePreferences" type="submit" class="py-2 px-5 rounded-2xl text-white bg-green font-Wanted-Regular text-Large">Save</button>
+                        </div>
+                    </div>
+                </div>
+
+                <section id="status" class="flex flex-col gap-1">
+                    <div id="display" class="flex flex-col gap-1">
+                        <h6 class="font-Wanted-Bold text-Pre-Xl">You currently feel</h6>
+                        <p class="font-Wanted-Variable text-Semi-Medium">{{ profile.status }}</p>
+                    </div>
+                    <div id="edit" class="w-full hidden">
+                        <div class="flex flex-col gap-1">
+                            <h6 class="font-Wanted-Bold text-Pre-Xl">Change your status</h6>
+                            {% render_field editProfileForm.status|attr:"class:p-[10px] pl-[13px] pr-[13px] w-full rounded-[10px] border border-solid border-custom-rgba font-Wanted-Regular text-Medium shadow-form-shadow" value:{{ profile.status }} %}
+                        </div>
+                    </div>
+                </section>
+    
+                <section id="gender" class="flex flex-col gap-1">
+                    <div id="display" class="flex flex-col gap-1">
+                        <h6 class="font-Wanted-Bold text-Pre-Xl">You identify as</h6>
+                        <p class="font-Wanted-Variable text-Semi-Medium">{{ profile.gender }}</p>
+                    </div>
+                    <div id="edit" class="w-full hidden">
+                        <div class="flex flex-col gap-1">
+                            <h6 class="font-Wanted-Bold text-Pre-Xl">Change your status</h6>
+                            {% render_field editProfileForm.gender|attr:"class:p-[10px] pl-[13px] pr-[13px] w-full rounded-[10px] border border-solid border-custom-rgba font-Wanted-Regular text-Medium shadow-form-shadow" %}
+                        </div>
+                    </div>
+                </section>
+
+                <section id="state" class="flex flex-col gap-1">
+                    <div id="display" class="flex flex-col gap-1">
+                        <h6 class="font-Wanted-Bold text-Pre-Xl">You are from</h6>
+                        <p class="font-Wanted-Variable text-Semi-Medium">
+                            {% if profile.home_state == "AL" %}
+                            Sweet home, Alabama! 🟥⬜🟥
+                            {% elif profile.home_state == "AK" %}
+                            The last frontier state of Alaska! 🌌✨🐻
+                            {% elif profile.home_state == "AZ" %}
+                            The Grand Canyon state of Arizona! 🌅⭐🌵
+                            {% elif profile.home_state == "AR" %}
+                            The natural state of Arkansas! 💎🌟🐷
+                            {% elif profile.home_state == "CA" %}
+                            The golden state of California! 🐻⭐🌴
+                            {% elif profile.home_state == "CO" %}
+                            The colorful state of Colorado! 🌄🌻
+                            {% elif profile.home_state == "CT" %}
+                            The constitution state of Connecticut! 🍇🛡️⚜️
+                            {% elif profile.home_state == "DE" %}
+                            The first state of Delaware! 💙💛📜
+                            {% elif profile.home_state == "FL" %}
+                            The sunshine state of Florida! 🐊❌⛱️
+                            {% elif profile.home_state == "GA" %}
+                            The peach state of Georgia! 🍑🌟🦅
+                            {% elif profile.home_state == "HI" %}
+                            The aloha state of Hawaii! 🏖️🌴🇬🇧
+                            {% elif profile.home_state == "ID" %}
+                            The gem state of Idaho! 🥔🎨💙
+                            {% elif profile.home_state == "IL" %}
+                            The prairie state of Illinois! 🦅🌽⚪
+                            {% elif profile.home_state == "IN" %}
+                            The hoosier state of Indiana! 🔥🌟💙
+                            {% elif profile.home_state == "IA" %}
+                            The hawkeye state of Iowa! 🦅🎗️🌾
+                            {% elif profile.home_state == "KS" %}
+                            The sunflower state of Kansas! 🌻🚜💛
+                            {% elif profile.home_state == "KY" %}
+                            The bluegrass state of Kentucky! 🐎🌾💙
+                            {% elif profile.home_state == "LA" %}
+                            The pelican state of Louisiana! 🐦⚜️💙
+                            {% elif profile.home_state == "ME" %}
+                            The pine tree state of Maine! 🦞🐻🌲
+                            {% elif profile.home_state == "MD" %}
+                            The old line state of Maryland! 🟨🟥⚫⬜
+                            {% elif profile.home_state == "MA" %}
+                            The bay state of Massachusetts! 🛡️🌟🔵
+                            {% elif profile.home_state == "MI" %}
+                            The great lakes state of Michigan! 🦌🌊🐻
+                            {% elif profile.home_state == "MN" %}
+                            The north star state of Minnesota! 🌸❄️💙
+                            {% elif profile.home_state == "MS" %}
+                            The magnolia state of Mississippi! ⭐❌❤️
+                            {% elif profile.home_state == "MO" %}
+                            The show me state of Missouri! 🐻🌟💙
+                            {% elif profile.home_state == "MT" %}
+                            The treasure state of Montana! ⛰️🌾💛
+                            {% elif profile.home_state == "NE" %}
+                            The cornhusker state of Nebraska!🌽🚜💙
+                            {% elif profile.home_state == "NV" %}
+                            The silver state of Nevada! 🌟💐💙
+                            {% elif profile.home_state == "NH" %}
+                            The granite state of New Hampshire! 🌲⛵🌟
+                            {% elif profile.home_state == "NJ" %}
+                            The garden state of New Jersey! ⚜️🐴🔵
+                            {% elif profile.home_state == "NM" %}
+                            The land of enchantment state of New Mexico! 🌞🌄🟥
+                            {% elif profile.home_state == "NY" %}
+                            The empire state of New York! 🗽🦅🌊
+                            {% elif profile.home_state == "NC" %}
+                            The tar heel state of North Carolina! 🐻⭐💙
+                            {% elif profile.home_state == "ND" %}
+                            The peace garden state of North Dakota! 🦅🌾🌟
+                            {% elif profile.home_state == "OH" %}
+                            The buckeye state of Ohio! 🌟🚩🔵
+                            {% elif profile.home_state == "OK" %}
+                            The sooner state of Oklahoma! 🛡️🌾⛑️
+                            {% elif profile.home_state == "OR" %}
+                            The beaver state of Oregon!🌲🦫⚜️
+                            {% elif profile.home_state == "PA" %}
+                            The keystone state of Pennsylvania! 🐴⚪🔵
+                            {% elif profile.home_state == "RI" %}
+                            The ocean state of Rhode Island! ⚓⭐💛
+                            {% elif profile.home_state == "SC" %}
+                            The palmetto state of South Carolina! 🌴🌙💙
+                            {% elif profile.home_state == "SD" %}
+                            The mount rushmore state of South Dakota! 🐃🛠️🌄
+                            {% elif profile.home_state == "TN" %}
+                            The volunteer state of Tennessee! 🎸🌟🔵
+                            {% elif profile.home_state == "TX" %}
+                            The lone star state of Texas! 🤠⭐🔵
+                            {% elif profile.home_state == "UT" %}
+                            The beehive state of Utah! 🐝⛏️⛪
+                            {% elif profile.home_state == "VT" %}
+                            The green mountain state of Vermont! 🐄🌲🍁
+                            {% elif profile.home_state == "VA" %}
+                            The old dominion state of Virginia! 🛡️👑💙
+                            {% elif profile.home_state == "WA" %}
+                            The evergreen state of Washington! 🌲🟢👴
+                            {% elif profile.home_state == "WV" %}
+                            The mountain state of West Virginia! 🏞️🐻⛏️
+                            {% elif profile.home_state == "WI" %}
+                            The badger state of Wisconsin! 🧀🐄🔵
+                            {% elif profile.home_state == "WY" %}
+                            The equality state of Wyoming! 🦬🌟⚪
+                            {% else %}
+                            {{ profile.home_state }}
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div id="edit" class="w-full hidden">
+                        <div class="flex flex-col gap-1">
+                            <h6 class="font-Wanted-Bold text-Pre-Xl">You are from</h6>
+                            {% render_field editProfileForm.home_state|attr:"class:p-[10px] pl-[13px] pr-[13px] w-full rounded-[10px] border border-solid border-custom-rgba font-Wanted-Regular text-Medium shadow-form-shadow" %}
+                        </div>
+                    </div>
+                </section>
+
+                <section id="state" class="flex flex-col gap-1">
+                    <div id="display" class="flex flex-col gap-1">
+                        <h6 class="font-Wanted-Bold text-Pre-Xl">You connected your Instgram</h6>
+                        <p class="font-Wanted-Variable text-Semi-Medium flex flex-row gap-2 items-center">
+                            <img src="{% static "/images/socialApp/publicProfile/instagram.svg" %}" class="size-8" /><a href="https://instagram.com/{{ profile.instagram }}/" class="text-black decoration-green underline">@{{ profile.instagram }}</a>
+                        </p>
+                    </div>
+                    <div id="edit" class="w-full hidden">
+                        <div class="flex flex-col gap-1">
+                            <h6 class="font-Wanted-Bold text-Pre-Xl">Connect your Instgram</h6>
+                            {% render_field editProfileForm.instagram|attr:"class:p-[10px] pl-[13px] pr-[13px] w-full rounded-[10px] border border-solid border-custom-rgba font-Wanted-Regular text-Medium shadow-form-shadow" %}
+                        </div>
+                    </div>
+                </section>
+
+                <section id="state" class="flex flex-col gap-1">
+                    <div id="display" class="flex flex-col gap-1">
+                        <h6 class="font-Wanted-Bold text-Pre-Xl">You connected your TikTok</h6>
+                        <p class="font-Wanted-Variable text-Semi-Medium flex flex-row gap-2 items-center">
+                            <img src="{% static "/images/socialApp/publicProfile/tiktok.svg" %}" class="size-8" /><a href="https://tiktok.com/@{{ profile.tiktok }}/" class="text-black decoration-green underline">@{{ profile.tiktok }}</a>
+                        </p>
+                    </div>
+                    <div id="edit" class="w-full hidden">
+                        <div class="flex flex-col gap-1">
+                            <h6 class="font-Wanted-Bold text-Pre-Xl">Connect your TikTok</h6>
+                            {% render_field editProfileForm.tiktok|attr:"class:p-[10px] pl-[13px] pr-[13px] w-full rounded-[10px] border border-solid border-custom-rgba font-Wanted-Regular text-Medium shadow-form-shadow" %}
+                        </div>
+                    </div>
+                </section>
+
+                <section id="eventPreferences" class="flex flex-col gap-1">
+                    <div class="flex flex-col gap-1">
+                        <h6 class="font-Wanted-Bold text-Pre-Xl">You are interested in these types of events</h6>
+                        <div class="flex flex-wrap gap-2 flex-row">
+                            {% for event_type in profile.event_types.all %}
+                                <span class="bg-gradient-to-tr bg-gradient-start bg-gradient-end text-white rounded-full py-2 px-4 flex items-center justify-center font-Wanted-Variable cursor-pointer hover:bg-white border hover:text-gradient-start hover:border-x-gradient-start hover:border-y-gradient-end hover:text-gradient-end">{{ event_type.name }}s</span>
+                            {% empty %}
+                                Your haven't set your event preferences!
+                            {% endfor %}
+                        </div>
+                    </div>
+                </section>
+
+                <section id="collegeName" class="flex flex-col gap-1">
+                    <div id="display" class="flex flex-col gap-1">
+                        <h6 class="font-Wanted-Bold text-Pre-Xl">You are in college at</h6>
+                        <p class="font-Wanted-Variable text-Semi-Medium flex flex-col xxsm:flex-row gap-2 items-start xxsm:items-center">{{ profile.college_name }} <a href="{% url "colleges:find" %}" class="font-Wanted-Variable text-green text-XSmall underline">Find College</a></p>
+                    </div>
+                    <div id="edit" class="w-full hidden">
+                        <div class="flex flex-col gap-1">
+                            <h6 class="font-Wanted-Bold text-Pre-Xl">What's the name of your college?</h6>
+                            {% render_field editProfileForm.college_name|attr:"class:p-[10px] pl-[13px] pr-[13px] w-full rounded-[10px] border border-solid border-custom-rgba font-Wanted-Regular text-Medium shadow-form-shadow" %}
+                        </div>
+                    </div>
+                </section>
+
+                <section id="major" class="flex flex-col gap-1">               
+                    <div id="display" class="flex flex-col gap-1">
+                        <h6 class="font-Wanted-Bold text-Pre-Xl">You decided to major in</h6>
+                        <p class="font-Wanted-Variable text-Semi-Medium">{{ profile.major }}</p>
+                    </div>
+                    <div id="edit" class="w-full hidden">
+                        <div class="flex flex-col gap-1">
+                            <h6 class="font-Wanted-Bold text-Pre-Xl">What's your major?</h6>
+                            {% render_field editProfileForm.major|attr:"class:p-[10px] pl-[13px] pr-[13px] w-full rounded-[10px] border border-solid border-custom-rgba font-Wanted-Regular text-Medium shadow-form-shadow" %}
+                        </div>
+                    </div>
+                </section>
+
+                <section id="graduationYear" class="flex flex-col gap-1">                    
+                    <div id="display" class="flex flex-col gap-1">
+                        <h6 class="font-Wanted-Bold text-Pre-Xl">Your graduation class</h6>
+                    <p class="font-Wanted-Variable text-Semi-Medium">Class of {{ profile.graduation_year }}</p>
+                    </div>
+                    <div id="edit" class="w-full hidden">
+                        <div class="flex flex-col gap-1">
+                            <h6 class="font-Wanted-Bold text-Pre-Xl">What year do you graduate?</h6>
+                            {% render_field editProfileForm.graduation_year|attr:"class:p-[10px] pl-[13px] pr-[13px] w-full rounded-[10px] border border-solid border-custom-rgba font-Wanted-Regular text-Medium shadow-form-shadow" %}
+                        </div>
+                    </div>
+                </section>
+            </form>
         </div>
+    </div>
+
+    <div class="w-full flex justify-end border-t-[2px] border-t-[rgba(146, 146, 146, 0.096)] pt-[70px] bg-clip-text text-transparent text-[35px] font-Wanted-ExtraBold bg-gradient-to-r from-gradient-start to-gradient-end">
+        <h1 class="text-end sm:text-[42px] md:text-[50px] pre-lg:text-[53px] lg:text-[56px] xl:text-[80px]">We love that you're here!</h1>
     </div>
 </div>
 {% endblock body %}

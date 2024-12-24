@@ -1,7 +1,6 @@
-from django.contrib import admin
 from .models import UserProfile
-
+from authenticationApp.admin import super_admin_restricted_site
 # Register your models here.
 
 
-admin.site.register(UserProfile)
+super_admin_restricted_site.register(UserProfile)

@@ -67,7 +67,7 @@
             <form method="POST" class="actionForm">
                 {% csrf_token %}
                 <input type="hidden" name="action" value="send_request">
-                <button class="connectBtn" type="submit" id="connectBtn">
+                <button class="connectBtn gradient-btn font-Wanted-Bold" type="submit" id="connectBtn">
                     <img src="{% static "images/socialApp/connect.svg" %}" alt="Connect" />
                     Connect
                 </button>
@@ -79,21 +79,28 @@
 
     <div class="social-body w-full flex flex-col-reverse lg:flex-row items-center lg:items-start gap-[50px]">
         <div class="verified-info flex flex-col gap-[20px] w-full lg:w-[30%] h-auto border border-solid border-custom-rgba8 rounded-[20px] shadow-custom-shadow-5 p-[40px]">
-            <h4 class="font-Wanted-SemiBold text-[18px] xssm:text-[22px] after-xsm:text-[25px]">{{ user.first_name }} has verified</h4>
+            <h4 class="font-Wanted-SemiBold text-[18px] xssm:text-[22px] after-xsm:text-[25px]">{{ user.first_name }} social's</h4>
             <div class="viContainer flex flex-col gap-[20px]">
                 <ul class="list-none flex flex-col items-center gap-[15px]">
-                    <li class="w-full flex gap-[12px] items-center font-Wanted-Variable text-[17px]">
-                        <span class="verified-indicator verified bg-[lime] border-[lime] w-[15px] h-[15px] rounded-[20px]"></span>
-                        <p class="text-[14px] xsm:text-[17px] font-Wanted-Variable">Phone Number</p>
+                    <li class="w-full flex-row flex gap-[12px] items-center font-Wanted-Variable text-[17px]">
+                        <img src="{% static "/images/socialApp/publicProfile/instagram.svg" %}" class="size-8" />
+                        <p class="text-[14px] xsm:text-[17px] font-Wanted-Medium hover:underline hover:underline-offset-2 hover:decoration-green">
+                            <a href="https://instagram.com/{{ user_profile.instagram }}/" >@{{ user_profile.instagram }}</a>
+                        </p>
                     </li>
+
                     <li class="w-full flex gap-[12px] items-center font-Wanted-Variable text-[17px]">
-                        <span class="verified-indicator unverified verified-indicator unverified bg-[red] border-[red] w-[15px] h-[15px] rounded-[20px]"></span>
-                        <p class="text-[14px] xsm:text-[17px] font-Wanted-Variable">Email Address </p>
+                        <img src="{% static "/images/socialApp/publicProfile/tiktok.svg" %}" class="size-8" />
+                        <p class="text-[14px] xsm:text-[17px] font-Wanted-Medium hover:underline hover:underline-offset-2 hover:decoration-green">
+                            <a href="https://www.tiktok.com/@{{ user_profile.tiktok }}/">@{{ user_profile.tiktok }} </a>
+                        </p>
                     </li>
+
                     <li class="w-full flex gap-[12px] items-center font-Wanted-Variable text-[17px]">
-                        <span class="verified-indicator inactive bg-[yellow] border-[yellow] w-[15px] h-[15px] rounded-[20px]"></span>
-                        <p class="text-[14px] xsm:text-[17px] font-Wanted-Variable">Student ID </p>
+                        <img src="{% static "/images/socialApp/publicProfile/email.svg" %}" class="size-8" />
+                        <p class="text-[14px] xsm:text-[17px] font-Wanted-Medium hover:underline hover:underline-offset-2 hover:decoration-green"><a href="mailto:{{user_profile.user.email}}">Contact </a></p>
                     </li>
+                    
                 </ul>
             </div>
         </div>
@@ -102,24 +109,128 @@
             <div class="siContainer flex flex-col gap-[20px]">
                 <ul class="list-none flex flex-col items-center gap-[15px]">
                     <li class="w-full flex gap-[12px] items-center font-Wanted-Variable text-[17px]">
-                        <img src="{% static "images/socialApp/publicProfile/student.svg" %}" class="size-5 after-xsm:size-7 md:size-9 lg:size-11" />
-                        <p class="text-[14px] xsm:text-[17px]">Student at Tennessee State University</p>
+                        <img src="{% static "images/socialApp/publicProfile/books.svg" %}" class="size-5 after-xsm:size-7 md:size-9 lg:size-11" />
+                        <p class="text-[14px] xsm:text-[17px]">Student at {{ user_profile.college_name }}</p>
                     </li>
                     <li class="w-full flex gap-[12px] items-center font-Wanted-Variable text-[17px]">
                         <img src="{% static "images/socialApp/publicProfile/major.svg" %}" class="size-5 after-xsm:size-7 md:size-9 lg:size-11" />
-                        <p class="text-[14px] xsm:text-[17px]">Majoring in Computer Science</p>
+                        <p class="text-[14px] xsm:text-[17px]">Majoring in {{ user_profile.major }}</p>
                     </li>
                     <li class="w-full flex gap-[12px] items-center font-Wanted-Variable text-[17px]">
-                        <img src="{% static "images/socialApp/publicProfile/hobbies.svg" %}" class="size-5 after-xsm:size-7 md:size-9 lg:size-11" />
-                        <p class="text-[14px] xsm:text-[17px]">Loves playing soccer</p>
+                        <img src="{% static "images/socialApp/publicProfile/student.svg" %}" class="size-5 after-xsm:size-7 md:size-9 lg:size-11" />
+                        <p class="text-[14px] xsm:text-[17px]">Graduates in {{ user_profile.graduation_year }}</p>
                     </li>
                     <li class="w-full flex gap-[12px] items-center font-Wanted-Variable text-[17px]">
                         <img src="{% static "images/socialApp/publicProfile/location.svg" %}" class="size-5 after-xsm:size-7 md:size-9 lg:size-11" />
-                        <p class="text-[14px] xsm:text-[17px]">From Nashville, TN</p>
+                        <p class="text-[14px] xsm:text-[17px]">From 
+                            {% if user_profile.home_state == "AL" %}
+                            sweet home, Alabama! 🟥⬜🟥
+                            {% elif user_profile.home_state == "AK" %}
+                            the last frontier state of Alaska! 🌌✨🐻
+                            {% elif user_profile.home_state == "AZ" %}
+                            the Grand Canyon state of Arizona! 🌅⭐🌵
+                            {% elif user_profile.home_state == "AR" %}
+                            the natural state of Arkansas! 💎🌟🐷
+                            {% elif user_profile.home_state == "CA" %}
+                            the golden state of California! 🐻⭐🌴
+                            {% elif user_profile.home_state == "CO" %}
+                            the colorful state of Colorado! 🌄🌻
+                            {% elif user_profile.home_state == "CT" %}
+                            the constitution state of Connecticut! 🍇🛡️⚜️
+                            {% elif user_profile.home_state == "DE" %}
+                            the first state of Delaware! 💙💛📜
+                            {% elif user_profile.home_state == "FL" %}
+                            the sunshine state of Florida! 🐊❌⛱️
+                            {% elif user_profile.home_state == "GA" %}
+                            the peach state of Georgia! 🍑🌟🦅
+                            {% elif user_profile.home_state == "HI" %}
+                            the aloha state of Hawaii! 🏖️🌴🇬🇧
+                            {% elif user_profile.home_state == "ID" %}
+                            the gem state of Idaho! 🥔🎨💙
+                            {% elif user_profile.home_state == "IL" %}
+                            the prairie state of Illinois! 🦅🌽⚪
+                            {% elif user_profile.home_state == "IN" %}
+                            the hoosier state of Indiana! 🔥🌟💙
+                            {% elif user_profile.home_state == "IA" %}
+                            the hawkeye state of Iowa! 🦅🎗️🌾
+                            {% elif user_profile.home_state == "KS" %}
+                            the sunflower state of Kansas! 🌻🚜💛
+                            {% elif user_profile.home_state == "KY" %}
+                            the bluegrass state of Kentucky! 🐎🌾💙
+                            {% elif user_profile.home_state == "LA" %}
+                            the pelican state of Louisiana! 🐦⚜️💙
+                            {% elif user_profile.home_state == "ME" %}
+                            the pine tree state of Maine! 🦞🐻🌲
+                            {% elif user_profile.home_state == "MD" %}
+                            the old line state of Maryland! 🟨🟥⚫⬜
+                            {% elif user_profile.home_state == "MA" %}
+                            the bay state of Massachusetts! 🛡️🌟🔵
+                            {% elif user_profile.home_state == "MI" %}
+                            the great lakes state of Michigan! 🦌🌊🐻
+                            {% elif user_profile.home_state == "MN" %}
+                            the north star state of Minnesota! 🌸❄️💙
+                            {% elif user_profile.home_state == "MS" %}
+                            the magnolia state of Mississippi! ⭐❌❤️
+                            {% elif user_profile.home_state == "MO" %}
+                            the show me state of Missouri! 🐻🌟💙
+                            {% elif user_profile.home_state == "MT" %}
+                            the treasure state of Montana! ⛰️🌾💛
+                            {% elif user_profile.home_state == "NE" %}
+                            the cornhusker state of Nebraska!🌽🚜💙
+                            {% elif user_profile.home_state == "NV" %}
+                            the silver state of Nevada! 🌟💐💙
+                            {% elif user_profile.home_state == "NH" %}
+                            the granite state of New Hampshire! 🌲⛵🌟
+                            {% elif user_profile.home_state == "NJ" %}
+                            the garden state of New Jersey! ⚜️🐴🔵
+                            {% elif user_profile.home_state == "NM" %}
+                            the land of enchantment state of New Mexico! 🌞🌄🟥
+                            {% elif user_profile.home_state == "NY" %}
+                            the empire state of New York! 🗽🦅🌊
+                            {% elif user_profile.home_state == "NC" %}
+                            the tar heel state of North Carolina! 🐻⭐💙
+                            {% elif user_profile.home_state == "ND" %}
+                            the peace garden state of North Dakota! 🦅🌾🌟
+                            {% elif user_profile.home_state == "OH" %}
+                            the buckeye state of Ohio! 🌟🚩🔵
+                            {% elif user_profile.home_state == "OK" %}
+                            the sooner state of Oklahoma! 🛡️🌾⛑️
+                            {% elif user_profile.home_state == "OR" %}
+                            the beaver state of Oregon!🌲🦫⚜️
+                            {% elif user_profile.home_state == "PA" %}
+                            the keystone state of Pennsylvania! 🐴⚪🔵
+                            {% elif user_profile.home_state == "RI" %}
+                            the ocean state of Rhode Island! ⚓⭐💛
+                            {% elif user_profile.home_state == "SC" %}
+                            the palmetto state of South Carolina! 🌴🌙💙
+                            {% elif user_profile.home_state == "SD" %}
+                            the mount rushmore state of South Dakota! 🐃🛠️🌄
+                            {% elif user_profile.home_state == "TN" %}
+                            the volunteer state of Tennessee! 🎸🌟🔵
+                            {% elif user_profile.home_state == "TX" %}
+                            the lone star state of Texas! 🤠⭐🔵
+                            {% elif user_profile.home_state == "UT" %}
+                            the beehive state of Utah! 🐝⛏️⛪
+                            {% elif user_profile.home_state == "VT" %}
+                            the green mountain state of Vermont! 🐄🌲🍁
+                            {% elif user_profile.home_state == "VA" %}
+                            the old dominion state of Virginia! 🛡️👑💙
+                            {% elif user_profile.home_state == "WA" %}
+                            the evergreen state of Washington! 🌲🟢👴
+                            {% elif user_profile.home_state == "WV" %}
+                            the mountain state of West Virginia! 🏞️🐻⛏️
+                            {% elif user_profile.home_state == "WI" %}
+                            the badger state of Wisconsin! 🧀🐄🔵
+                            {% elif user_profile.home_state == "WY" %}
+                            the equality state of Wyoming! 🦬🌟⚪
+                            {% else %}
+                            {{ user_profile.home_state }}
+                            {% endif %}
+                        </p>
                     </li>
                     <li class="w-full flex gap-[12px] items-center font-Wanted-Variable text-[17px]">
                         <img src="{% static "images/socialApp/publicProfile/feeling.svg" %}" class="size-5 after-xsm:size-7 md:size-9 lg:size-11" />
-                        <p class="text-[14px] xsm:text-[17px]">Feeling excited!</p>
+                        <p class="text-[14px] xsm:text-[17px]">Feeling {{ user_profile.status }}!</p>
                     </li>
                 </ul>
             </div>

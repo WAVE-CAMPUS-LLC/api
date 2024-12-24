@@ -15,6 +15,8 @@ from .forms import (
     UpdateBlogMoodForm
 )
 from .models import Blog
+from wave_v1.decorators import check_suspension, member, verified, onboarded
+
 
 # Create your views here.
 def blogHomeView(request):
@@ -23,7 +25,12 @@ def blogHomeView(request):
     
     return render(request, "blogApp/blogHome.html", {"pageName": pageName, "blogItems":blogItems})
 
+
 @login_required
+@member
+@verified
+@onboarded
+@check_suspension
 def blogCreateView(request):
     pageName = "createBlog"
     blogForm = createBlogForm(request.POST, request.FILES)
@@ -36,6 +43,7 @@ def blogCreateView(request):
             return redirect("blog:home")
             
     return render(request, "blogApp/createBlog.html", {"pageName": pageName, "createBlogForm":blogForm})
+
 
 def blogView(request, blogId):
     pageName = "blog"

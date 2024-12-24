@@ -1,9 +1,9 @@
 from django.contrib import admin
 from .models import CollegeRequest, Organization, Membership
+from authenticationApp.admin import super_admin_restricted_site
 
 
 # Register your models here.
-@admin.register(CollegeRequest)
 class CollegeRequestAdmin(admin.ModelAdmin):
     list_display = ("name", "yourName", "yourEmail")
 
@@ -23,5 +23,6 @@ class MembershipAdmin(admin.ModelAdmin):
     list_display = ("user", "college", "date_joined")
 
 
-admin.site.register(Organization, OrganizationAdmin)
-admin.site.register(Membership, MembershipAdmin)
+super_admin_restricted_site.register(Organization, OrganizationAdmin)
+super_admin_restricted_site.register(Membership, MembershipAdmin)
+super_admin_restricted_site.register(CollegeRequest, CollegeRequestAdmin)

@@ -19,7 +19,6 @@ from .models import Ticket, UserPayment
 from eventManagementApp.models import Event, HostProfile
 
 
-@login_required
 def checkoutView(request):
     stripe.api_key = settings.STRIPE_SECRET_KEY
     cart = request.session.get("cart", {})
@@ -133,7 +132,6 @@ def checkoutView(request):
     )
 
 
-@login_required
 def paymentSuccessful(request):
     stripe.api_key = settings.STRIPE_SECRET_KEY
     checkout_session_id = request.GET.get("session_id", None)
@@ -188,7 +186,6 @@ def paymentFailed(request):
 
 
 @csrf_exempt
-@login_required
 def stripeWebhook(request):
     stripe.api_key = settings.STRIPE_SECRET_KEY
     endpoint_secret = settings.STRIPE_WEBHOOK_SECRET_TEST

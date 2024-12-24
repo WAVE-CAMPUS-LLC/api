@@ -68,7 +68,7 @@ from .forms import (
     CollegeForm,
 )
 from supportCenterApp.models import SupportTicket, SupportTicketMessage
-from wave_v1.decorators import check_suspension, group_required
+from wave_v1.decorators import check_suspension, member, verified, onboarded, admin, superAdmin
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
@@ -76,14 +76,16 @@ stripe.api_key = settings.STRIPE_SECRET_KEY
 # Create your views here.
 @login_required(login_url="authentication:login")
 @check_suspension
-@group_required("Admin")
+@member
+@admin
 def adminPortalView(request):
     return render(request, "adminDashboardApp/index.html")
 
 
 @login_required(login_url="authentication:login")
 @check_suspension
-@group_required("Admin")
+@member
+@admin
 def adminDashboardView(request):
     return render(request, "adminDashboardApp/tabs/dashboard.html")
 
@@ -91,7 +93,8 @@ def adminDashboardView(request):
 # Department Management
 @login_required(login_url="authentication:login")
 @check_suspension
-@group_required("Admin")
+@member
+@admin
 def adminDepartmentView(request):
     """
     The `adminDepartmentView` function checks if the user is a superuser, processes a form submission to
@@ -125,7 +128,8 @@ def adminDepartmentView(request):
 
 @login_required(login_url="authentication:login")
 @check_suspension
-@group_required("Admin")
+@member
+@admin
 def adminDepartmentDetailedView(request, departmentID, department_name):
     """
     The function `adminDepartmentDetailedView` handles detailed view and management of department
@@ -203,7 +207,8 @@ def adminDepartmentDetailedView(request, departmentID, department_name):
 
 @login_required(login_url="authentication:login")
 @check_suspension
-@group_required("Admin")
+@member
+@admin
 def adminCareerApplicationsView(request):
     careerApplications = CareerRoleApplication.objects.all()
 
@@ -216,7 +221,8 @@ def adminCareerApplicationsView(request):
 
 @login_required(login_url="authentication:login")
 @check_suspension
-@group_required("Admin")
+@member
+@admin
 def adminEventHostsView(request):
     hostProfile = UserProfile.objects.filter(was_host=True)
     print(hostProfile)
@@ -250,7 +256,8 @@ def adminEventHostsView(request):
 
 @login_required(login_url="authentication:login")
 @check_suspension
-@group_required("Admin")
+@member
+@admin
 def adminHostApplicationsView(request):
     hostApplications = HostApplication.objects.all()
 
@@ -363,7 +370,8 @@ def sendHostDenyEmail(applicantEmail):
 
 @login_required(login_url="authentication:login")
 @check_suspension
-@group_required("Admin")
+@member
+@admin
 def adminEventsView(request):
     live_events = Event.objects.filter(status="live")
     active_events = Event.objects.filter(status="active")
@@ -410,7 +418,8 @@ def adminEventsView(request):
 
 @login_required(login_url="authentication:login")
 @check_suspension
-@group_required("Admin")
+@member
+@admin
 def adminUsersView(request):
     # Going into the CustomUser database which holds all the users and fetching them to be displayed.
     total_users = CustomUser.objects.all()
@@ -419,7 +428,8 @@ def adminUsersView(request):
 
 @login_required(login_url="authentication:login")
 @check_suspension
-@group_required("Admin")
+@member
+@admin
 def adminUserDetailedView(request, username):
     user_in_view = get_object_or_404(CustomUser, username=username)
     user_profile = UserProfile.objects.get(user=user_in_view)
@@ -471,7 +481,8 @@ def adminUserDetailedView(request, username):
 
 @login_required(login_url="authentication:login")
 @check_suspension
-@group_required("Admin")
+@member
+@admin
 def adminRoleView(request):
     createGroup = CreateGroupForm()
     all_groups = Group.objects.all()
@@ -519,7 +530,8 @@ def adminRoleView(request):
 
 @login_required(login_url="authentication:login")
 @check_suspension
-@group_required("Admin")
+@member
+@admin
 def adminCareersView(request):
     # Querying every single career role.
     all_career_roles = CareerRole.objects.all()
@@ -532,7 +544,8 @@ def adminCareersView(request):
 
 @login_required(login_url="authentication:login")
 @check_suspension
-@group_required("Admin")
+@member
+@admin
 def adminCareerDetailView(request, roleID):
     """
     The `adminCareerDetailView` function handles viewing and managing career details for admin users,
@@ -604,21 +617,24 @@ def sendDeniedApplicantEmail(applicantEmail):
 
 @login_required(login_url="authentication:login")
 @check_suspension
-@group_required("Admin")
+@member
+@admin
 def adminConnectedAccountsView(request):
     accounts = StripeAdmin.getConnectedAccounts(request)
     return render(request, "adminDashboardApp/tabs/financial/accounts.html", {"accounts": accounts})
 
 @login_required(login_url="authentication:login")
 @check_suspension
-@group_required("Admin")
+@member
+@admin
 def adminFinanceOverviewView(request):
     return render(request, "adminDashboardApp/tabs/financial/overview.html")
 
 
 @login_required(login_url="authentication:login")
 @check_suspension
-@group_required("Admin")
+@member
+@admin
 def adminProductsView(request):
     return render(request, "adminDashboardApp/tabs/financial/products.html")
 
@@ -627,7 +643,8 @@ def adminProductsView(request):
 
 @login_required(login_url="authentication:login")
 @check_suspension
-@group_required("Admin")
+@member
+@admin
 def adminSupportView(request):
     all_support_tickets = SupportTicket.objects.all()
 
@@ -653,7 +670,8 @@ def adminSupportView(request):
 
 @login_required(login_url="authentication:login")
 @check_suspension
-@group_required("Admin")
+@member
+@admin
 def adminFeedbackView(request):
     """
     The `adminFeedbackView` function displays feedback offers for superusers and redirects
@@ -680,7 +698,8 @@ def adminFeedbackView(request):
 
 @login_required
 @check_suspension
-@group_required("Admin")
+@member
+@admin
 def adminCollegeView(request):
     colleges = College.objects.annotate(member_count=Count("membership"))
     requestedColleges = CollegeRequest.objects.all()
@@ -720,7 +739,8 @@ def adminCollegeView(request):
 
 @login_required
 @check_suspension
-@group_required("Admin")
+@member
+@admin
 def adminCollegeDetailView(request, collegeId):
     college = get_object_or_404(College, collegeId=collegeId)
     events = Event.objects.filter(display_event_on_college=True, host__user_profile__college=college)
@@ -816,7 +836,8 @@ def send_invite(email, college):
 
 @login_required
 @check_suspension
-@group_required("Admin")
+@member
+@admin
 def adminCollegeOrgsView(request):
     organizations = Organization.objects.all()
     print(organizations)
@@ -825,7 +846,8 @@ def adminCollegeOrgsView(request):
 
 @login_required
 @check_suspension
-@group_required("Admin")
+@member
+@admin
 def adminNewsRoomView(request):
     """
     The function `adminNewsRoomView` retrieves all news articles from the Newsroom model and renders
@@ -845,7 +867,8 @@ def adminNewsRoomView(request):
 
 @login_required
 @check_suspension
-@group_required("Admin")
+@member
+@admin
 def adminCreateNewsView(request):
     """
     This Python function handles the creation of news articles by processing form data and saving it to
@@ -881,7 +904,8 @@ def adminCreateNewsView(request):
 
 @login_required
 @check_suspension
-@group_required("Admin")
+@member
+@admin
 def adminEditNewsView(request, newsId):
     """
     This function is likely used to display a view for editing news articles by an admin.
@@ -1004,7 +1028,8 @@ def adminEditNewsView(request, newsId):
 
 @login_required
 @check_suspension
-@group_required("Admin")
+@member
+@admin
 def adminBlogView(request):
     blogs = Blog.objects.all()
     return render(request, "adminDashboardApp/tabs/blog.html", {"blogs": blogs})
@@ -1012,7 +1037,8 @@ def adminBlogView(request):
 
 @login_required
 @check_suspension
-@group_required("Admin")
+@member
+@admin
 def adminEmailingView(request):
     """
     The `adminEmailingView` function retrieves all active user profiles and renders them in an emailing
@@ -1054,7 +1080,8 @@ resend.api_key = settings.RESEND_API_KEY
 @require_POST
 @login_required
 @check_suspension
-@group_required("Admin")
+@member
+@admin
 def send_email(request):
     try:
         data = json.loads(request.body)

@@ -340,6 +340,7 @@ def searchEvents(request):
         ]
 
     return JsonResponse({"results": results})
+
 @login_required
 def search_users(request):
     search_query = request.GET.get("searchEvents", "").strip()

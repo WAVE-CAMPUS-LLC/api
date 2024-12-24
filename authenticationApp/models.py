@@ -3,6 +3,7 @@ from datetime import timedelta, date
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, Group
 from django.utils import timezone
+from django.contrib.auth.models import Group
 import uuid
 import threading
 from django.dispatch import receiver
@@ -55,11 +56,11 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     # The generation of a random user id for every user that signs up. 
     user_id = models.UUIDField(_("User ID"), default=uuid.uuid4, editable=False, unique=True)
     
+    email_verified = models.BooleanField(default=False)
     is_onboarded = models.BooleanField(default=False)
     is_suspended = models.BooleanField(default=False)
     suspension_end_date = models.DateTimeField(null=True, blank=True)
 
-    user_preferences_completed = models.BooleanField(default=False, null=False)    
     
     def suspend(self, hours):
         suspend_group, created = Group.objects.get_or_create(name="Suspend")
@@ -124,6 +125,16 @@ def create_user_profile(sender, instance, created, **kwargs):
     if created:
         UserProfile.objects.create(user=instance)
 
+@receiver(post_save, sender=CustomUser)
+def add_super_admin_group(sender, instance, created, **kwargs):
+    # Check if the user is created and is a superuser
+    if created and instance.is_superuser:
+        # Ensure the "Super Admin" group exists
+        super_admin_group, created = Group.objects.get_or_create(name="Super Admin")
+        admin_group, created = Group.objects.get_or_create(name="Admin")
+        # Add the user to the "Super Admin" group
+        instance.groups.add(super_admin_group)
+        instance.groups.add(admin_group)
 
 
 class EmailVerification(models.Model):
