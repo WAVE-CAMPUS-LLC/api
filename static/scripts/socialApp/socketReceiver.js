@@ -39,8 +39,7 @@ document.addEventListener("DOMContentLoaded", function () {
       }
       removeFriendRequest(data.friend_request, currentCount);
     } else if (data.action == "remove") {
-      const friendRequest = document.getElementById(data.requestId);
-      friendRequest.remove();
+      location.reload();
     }
   };
 

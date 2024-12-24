@@ -15,91 +15,90 @@ WAVE. — Management Dashboard
 
 
 {% block header %}
-{% include "partials/nav-footer/nav/admin_nav.html" %}
+{% include "partials/nav-footer/nav/main_nav.html" %}
 {% endblock header %}
-
-{% block container_art %}
-<div id="container-art">
-    <div class="ticket-heading">
-        <div class="ticket-header">
-            <h3>Career Details</h3>
-        </div>
-    </div>
-</div>
-{% endblock container_art %}
 
 
 
 
 {% block body %}
 <div id="content-container" class="flex flex-col gap-[70px] px-4 sm:px-6 md:px-[40px] pre-lg:px-[40px] lg:px-[100px] 2xl:px-48 3xl:px-96">
-    <div id="page-heading">
+    <div id="pagination-display" class="flex flex-col pre-sm:flex-row gap-2 w-full items-center font-Wanted-Variable justify-start text-gray-300">
+        <a href="{% url "waveAdmin:adminDashboard" %}" class="text-green underline">Admin Dashboard</a>
+        >
+        <a href="{% url "waveAdmin:adminDashboard" %}#careerManagement" class="text-green underline">Departments & Careers</a>
+        >
+        <a href="{% url "waveAdmin:adminDashboard" %}#careerManagement" class="text-green underline">Jobs</a>
+        >
+        <p class="font-Wanted-Medium text-black">Career Details</p>
+    </div>
+    <div id="page-heading" class="flex flex-row items-center justify-between gap-[10px]">
         <div id="deptInfo">
-            <h2>
+            <h2 class="text-[35px] md:text-[50px] font-Wanted-Bold text-[#008d95]">
                 {{ careerRoles_detail.roleTitle }}
             </h2>
         </div>
     </div>
 
-    <div id="departmentSummary">
+    <div id="departmentSummary" class="flex flex-col gap-[20px]">
         <div class="roleInformation">
-            <div class="rDMC-body">
-                <div class="singleDisplayRow">
-                    <h6>Description</h6>
-                    <p>
+            <div class="rDMC-body overflow-y-auto pb-[50px] flex flex-col gap-[50px]">
+                <div class="singleDisplayRow flex flex-col gap-[5px]">
+                    <h6 class="font-Wanted-Bold text-[18px]">Description</h6>
+                    <p class="font-Wanted-Regular text-[16px]">
                         {{ careerRoles_detail.roleDescription }}
                     </p>
                 </div>
-                <div class="singleDisplayRow">
-                    <h6>Role Expectations</h6>
-                    <p>
+                <div class="singleDisplayRow flex flex-col gap-[5px]">
+                    <h6 class="font-Wanted-Bold text-[18px]">Role Expectations</h6>
+                    <p class="font-Wanted-Regular text-[16px]">
                         {{ careerRoles_detail.roleExpectation }}
                     </p>
                 </div>
-                <div class="singleDisplayRow">
-                    <h6>Role Requirements</h6>
-                    <p>
+                <div class="singleDisplayRow flex flex-col gap-[5px]">
+                    <h6 class="font-Wanted-Bold text-[18px]">Role Requirements</h6>
+                    <p class="font-Wanted-Regular text-[16px]">
                         {{ careerRoles_detail.roleRequirements }}
                     </p>
                 </div>
-                <div class="doubleDisplayRow">
-                    <div>
-                        <h6>Location</h6>
-                        <p>
+                <div class="doubleDisplayRow flex flex-col xsm:flex-row gap-[20px]">
+                    <div class="xs:max-xsm:w-full w-[50%] flex flex-col gap-[5px] xs:max-xsm:justify-center xs:max-xsm:items-center">
+                        <h6 class="font-Wanted-Bold text-[18px]">Location</h6>
+                        <p class="font-Wanted-Regular text-[16px]">
                             {{ careerRoles_detail.roleLocation }}
                         </p>
                     </div>
-                    <div>
-                        <h6>Role Type</h6>
-                        <p>
+                    <div class="xs:max-xsm:w-full w-[50%] flex flex-col gap-[5px] xs:max-xsm:justify-center xs:max-xsm:items-center">
+                        <h6 class="font-Wanted-Bold text-[18px]">Role Type</h6>
+                        <p class="font-Wanted-Regular text-[16px]">
                             {{ careerRoles_detail.roleType }}
                         </p>
                     </div>
                 </div>
-                <div class="doubleDisplayRow">
-                    <div>
-                        <h6>Ad Length Period</h6>
-                        <p>
+                <div class="doubleDisplayRow flex flex-col xsm:flex-row gap-[20px]">
+                    <div class="xs:max-xsm:w-full w-[50%] flex flex-col gap-[5px] xs:max-xsm:justify-center xs:max-xsm:items-center">
+                        <h6 class="font-Wanted-Bold text-[18px]">Ad Length Period</h6>
+                        <p class="font-Wanted-Regular text-[16px]">
                             {{ careerRoles_detail.advertisementLength }} days
                         </p>
                     </div>
-                    <div>
-                        <h6>Role Capacity</h6>
-                        <p>
+                    <div class="xs:max-xsm:w-full w-[50%] flex flex-col gap-[5px] xs:max-xsm:justify-center xs:max-xsm:items-center">
+                        <h6 class="font-Wanted-Bold text-[18px]">Role Capacity</h6>
+                        <p class="font-Wanted-Regular text-[16px]">
                             {{ careerRoles_detail.roleCapacity }}
                         </p>
                     </div>
                 </div>
-                <div class="doubleDisplayRow">
-                    <div>
-                        <h6>Created At</h6>
-                        <p>
+                <div class="doubleDisplayRow flex flex-col xsm:flex-row gap-[20px]">
+                    <div class="xs:max-xsm:w-full w-[50%] flex flex-col gap-[5px] xs:max-xsm:justify-center xs:max-xsm:items-center">
+                        <h6 class="font-Wanted-Bold text-[18px]">Created At</h6>
+                        <p class="font-Wanted-Regular text-[16px]">
                             {{ careerRoles_detail.created_at }}
                         </p>
                     </div>
-                    <div>
-                        <h6>Last Updated</h6>
-                        <p>
+                    <div class="xs:max-xsm:w-full w-[50%] flex flex-col gap-[5px] xs:max-xsm:justify-center xs:max-xsm:items-center">
+                        <h6 class="font-Wanted-Bold text-[18px]">Last Updated</h6>
+                        <p class="font-Wanted-Regular text-[16px]"> 
                             {{ careerRoles_detail.updated_at }}
                         </p>
                     </div>
@@ -107,92 +106,92 @@ WAVE. — Management Dashboard
             </div>
         </div>
 
-        <div id="roleApplicants">
-            <div class="rA-header">
+        <div id="roleApplicants" class="flex flex-col gap-[20px]">
+            <div class="rA-header font-Wanted-Bold flex justify-center text-[25px]">
                 Applications Received
             </div>
 
-            <div id="applicationsContainer">
+            <div id="applicationsContainer" class="grid xs:max-xxsm:grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-[10px]">
                 {% for application in applications %}
-                <div class="rA-Body">
+                <div class="rA-Body font-Wanted-Bold flex justify-center items-center text-[25px]">
                     
-                    <div role="button" id="applicantCard-{{ forloop.counter }}" class="applicantCard">
+                    <div role="button" id="applicantCard-{{ forloop.counter }}" class="applicantCard py-[20px] px-[60px] md:px-[50px] lg:px-[20px] border-[2px] border-solid border-[#008d95] rounded-[15px] bg-[#008d95] text-white font-Wanted-Bold text-[18px] cursor-pointer text-center">
                         <h3>{{ application.applicantFirstName }} {{ application.applicantLastName }}</h3>
                     </div>
                 </div>
 
 
-                <div id="applicantInfoModal-{{ forloop.counter }}" class="applicantInfoModal">
-                    <div class="applicantInfoModalContainer">
-                        <div class="applicantInfoModalCard">
-                            <div class="aIMC-heading">
-                                <div class="roleCloseInMC">
-                                    <button type="button" role="button" class="hideAppModalButton" id="hideAppModalButton-{{ forloop.counter }}">
+                <div id="applicantInfoModal-{{ forloop.counter }}" class="applicantInfoModal hidden bg-[rgba(0,0,0,0.037)] backdrop-blur-[2px] backdrop-saturate-[1.7] fixed top-0 left-0 right-0 bottom-0 z-[1005] w-[100%] h-[100%] cursor-default">
+                    <div class="applicantInfoModalContainer w-full h-full flex justify-center items-center">
+                        <div class="applicantInfoModalCard w-[60%] h-[90%] bg-white shadow-custom-shadow-2 rounded-[20px] p-[20px] pb-[0px] flex flex-col gap-[5px]">
+                            <div class="aIMC-heading flex flex-col">
+                                <div class="roleCloseInMC flex justify-end xs:max-xxsm:justify-center">
+                                    <button type="button" role="button" class="hideAppModalButton cursor-pointer" id="hideAppModalButton-{{ forloop.counter }}">
                                         <img src="{% static "images/admin/jobs/modalClose.svg" %}"
                                             alt="Close">
                                     </button>
                                 </div>
-                                <div class="roleHeadingInMC">
+                                <div class="roleHeadingInMC font-Wanted-Bold xs:max-sm:text-[25px] text-[40px]">
                                     <h5>{{ application.applicantFirstName }} {{ application.applicantLastName }}</h5>
                                 </div>
                             </div>
-                            <div class="aIMC-body">
-                                <div class="appContent">
-                                    <div class="singleDisplayRow">
-                                        <h6>Name</h6>
-                                        <p>{{ application.applicantFirstName }} {{ application.applicantLastName }}</p>
+                            <div class="aIMC-body w-full h-full flex flex-col gap-[20px] justify-between overflow-y-auto pb-[20px]">
+                                <div class="appContent flex flex-col gap-[15px]">
+                                    <div class="singleDisplayRow flex flex-col gap-[5px]">
+                                        <h6 class="font-Wanted-Bold text-[18px]">Name</h6>
+                                        <p class="font-Wanted-Regular text-[16px]">{{ application.applicantFirstName }} {{ application.applicantLastName }}</p>
                                     </div>
 
-                                    <div class="doubleDisplayRow">
-                                        <div>
-                                            <h6>Email</h6>
-                                            <p>{{ application.applicantEmail }}</p>
+                                    <div class="doubleDisplayRow flex xs:max-md:flex-col flex-row gap-[20px]">
+                                        <div class="w-[50%] flex flex-col gap-[5px]">
+                                            <h6 class="font-Wanted-Bold text-[18px]">Email</h6>
+                                            <p class="font-Wanted-Regular text-[16px]">{{ application.applicantEmail }}</p>
                                         </div>
-                                        <div>
-                                            <h6>Phone</h6>
-                                            <p>{{ application.applicantPhone }}</p>
+                                        <div class="w-[50%] flex flex-col gap-[5px]">
+                                            <h6 class="font-Wanted-Bold text-[18px]">Phone</h6>
+                                            <p class="font-Wanted-Regular text-[16px]">{{ application.applicantPhone }}</p>
                                         </div>
                                     </div>
 
-                                    <div class="singleDisplayRow">
-                                        <h6>Location</h6>
-                                        <p>{{ application.applicantLocation }}</p>
+                                    <div class="singleDisplayRow flex flex-col gap-[5px]">
+                                        <h6 class="font-Wanted-Bold text-[18px]">Location</h6>
+                                        <p class="font-Wanted-Regular text-[16px]">{{ application.applicantLocation }}</p>
                                     </div>
 
-                                    <div class="singleDisplayRow">
-                                        <h6>Portfolio</h6>
-                                        <p>{{ application.applicantPortfolio }}</p>
+                                    <div class="singleDisplayRow flex flex-col gap-[5px]">
+                                        <h6 class="font-Wanted-Bold text-[18px]">Portfolio</h6>
+                                        <p class="font-Wanted-Regular text-[16px]">{{ application.applicantPortfolio }}</p>
                                     </div>
 
-                                    <div  class="doubleDisplayRow">
-                                        <div>
-                                            <h6>LinkedIn</h6>
-                                            <p>{{ application.applicantLinkedIn }}</p>
+                                    <div  class="doubleDisplayRow flex xs:max-md:flex-col flex-row gap-[20px]">
+                                        <div class="w-[50%] flex flex-col gap-[5px]">
+                                            <h6 class="font-Wanted-Bold text-[18px]">LinkedIn</h6>
+                                            <p class="font-Wanted-Regular text-[16px]">{{ application.applicantLinkedIn }}</p>
                                         </div>
         
-                                        <div>
-                                            <h6>Github</h6>
-                                            <p>{{ application.applicantGithub }}</p>
+                                        <div class="w-[50%] flex flex-col gap-[5px]">
+                                            <h6 class="font-Wanted-Bold text-[18px]">Github</h6>
+                                            <p class="font-Wanted-Regular text-[16px]">{{ application.applicantGithub }}</p>
                                         </div>
                                     </div>
 
                                     
 
-                                    <div class="singleDisplayRow">
-                                        <h6>Legally allowed to work for WAVE.?</h6>
-                                        <p>
+                                    <div class="singleDisplayRow flex flex-col gap-[5px]">
+                                        <h6 class="font-Wanted-Bold text-[18px]">Legally allowed to work for WAVE.?</h6>
+                                        <p class="font-Wanted-Regular text-[16px]">
                                             {{ application.workAuthorization }}
                                         </p>
                                     </div>
 
-                                    <div class="doubleDisplayRow">
-                                        <div>
-                                            <h6>Resume or CV</h6>
-                                            <button type="button" class="downloadDoc">Download</button>
+                                    <div class="doubleDisplayRow flex xs:max-md:flex-col flex-row gap-[20px]">
+                                        <div class="xs:max-xxsm:w-full w-[50%] flex flex-col gap-[5px]"> 
+                                            <h6 class="font-Wanted-Bold text-[18px]">Resume or CV</h6>
+                                            <button type="button" class="downloadDoc p-[15px] border-[2px] rounded-[15px] border-solid border-transparent font-Wanted-Medium text-[18px] cursor-pointer text-white bg-[#008d95]">Download</button>
                                         </div>
-                                        <div>
-                                            <h6>Cover Letter</h6>
-                                            <button type="button" class="downloadDoc">Download</button>
+                                        <div class="xs:max-xxsm:w-full w-[50%] flex flex-col gap-[5px]">
+                                            <h6 class="font-Wanted-Bold text-[18px]">Cover Letter</h6>
+                                            <button type="button" class="downloadDoc p-[15px] border-[2px] rounded-[15px] border-solid border-transparent font-Wanted-Medium text-[18px] cursor-pointer text-white bg-[#008d95]">Download</button>
                                         </div>
                                     </div>
                                 </div>
@@ -200,9 +199,9 @@ WAVE. — Management Dashboard
                                 <form action="{% url "waveAdmin:careerDetails" roleID=careerRoles_detail.roleID %}" id="applicationActionForm" method="post">
                                     {% csrf_token %}
                                     <input type="hidden" name="applicantEmail" value="{{application.applicantEmail}}" id="applicantEmailInput">
-                                    <div class="appAction">
-                                        <button type="submit" name="applicationAction" value="deny" id="denyApplicant">Deny</button>
-                                        <button type="submit" name="applicationAction" value="approve" id="approveApplicant">Approve</button>
+                                    <div class="appAction flex xs:max-xxsm:flex-col xs:max-xxsm:gap-[10px] justify-between">
+                                        <button type="submit" name="applicationAction" value="deny" id="denyApplicant" class="p-[15px] rounded-[15px] border-[2px] border-solid border-transparent font-Wanted-Medium text-[18px] cursor-pointer text-white bg-red-700 hover:border-red-700 hover:text-red-700 hover:bg-white">Deny</button>
+                                        <button type="submit" name="applicationAction" value="approve" id="approveApplicant" class="p-[15px] rounded-[15px] border-[2px] border-solid border-transparent font-Wanted-Medium text-[18px] cursor-pointer text-white bg-[rgb(0,216,58)] hover:border-[rgb(0,216,58)] hover:bg-white hover:text-[rgb(0,216,58)]">Approve</button>
                                     </div>
                                 </form>
                             </div>

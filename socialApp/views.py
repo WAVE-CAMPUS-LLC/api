@@ -50,12 +50,14 @@ def socialHomeView(request):
             friend_request_id = request.POST.get("friend_request_id")  
             friend_request = FriendRequest.objects.get(requestId=friend_request_id, receiver=request.user)
             sender = get_object_or_404(UserProfile, user=friend_request.sender)
+            # We have to get the sender's user model to match the user id for the channel group name, because the channel rely's on the traditional auth user model instead of the custom user model
+            senderUserModel = get_object_or_404(UserModel, username=sender.user.username)
             user.friends.add(sender) 
             sender.friends.add(user) 
             friend_request.accept_request()
             channel_layer = get_channel_layer()
             async_to_sync(channel_layer.group_send)(
-                f"user_{user.id}",
+                f"user_{senderUserModel.id}",
                 {
                     "type": "friend_request_action",
                     "data": {
@@ -63,17 +65,20 @@ def socialHomeView(request):
                     },
                 },
             )
+            return redirect('social:home')
 
         elif action == "declineRequest":
             friend_request_id = request.POST.get("friend_request_id")
             friend_request = FriendRequest.objects.get(requestId=friend_request_id, receiver=request.user)
             sender = get_object_or_404(UserProfile, user=friend_request.sender)
+            # We have to get the sender's user model to match the user id for the channel group name, because the channel relies on the traditional auth user model instead of the custom user model
+            senderUserModel = get_object_or_404(UserModel, username=sender.user.username)
             user.friends.remove(sender)
             sender.friends.remove(user)
-            friend_request.decline_request()
+            friend_request.delete()
             channel_layer = get_channel_layer()
             async_to_sync(channel_layer.group_send)(
-                f"user_{user.id}",
+                f"user_{senderUserModel.id}",
                 {
                     "type": "friend_request_action",
                     "data": {
@@ -81,6 +86,7 @@ def socialHomeView(request):
                     },
                 },
             )
+            return redirect('social:home')
             
         else:
             crew_id = request.POST.get("crew_id")
@@ -115,30 +121,29 @@ def crew_invite_action(request, crew_id, action):
 def publicProfileView(request, username):
     user_profile = get_object_or_404(UserProfile, user__username=username)
     try:
-        user = get_object_or_404(UserModel, username=username)
+        other_user = get_object_or_404(UserModel, username=username)
+        other_user_profile, created = UserProfile.objects.get_or_create(user=other_user)
 
         friend_request = FriendRequest.objects.filter(
-            (Q(sender=request.user) & Q(receiver=user))
-            | (Q(sender=user) & Q(receiver=request.user))
+            (Q(sender=request.user) & Q(receiver=other_user))
+            | (Q(sender=other_user) & Q(receiver=request.user))
         ).first()
 
         friend_request_status = None
         if friend_request:
             friend_request_status = friend_request.status
 
-        is_profile = request.user == user
+        is_profile = request.user == other_user
 
-        receiver = get_object_or_404(UserProfile, user__username=user_profile)
+        receiver = get_object_or_404(UserProfile, user__username=request.user.username)
         if request.method == "POST":
             action = request.POST.get("action")
             if action == "send_request":
-                success, message, friend_request = send_friend_request(request.user, user_profile)
-                receiver.user.user_profile.has_pending_request(request.user)
-                
+                success, message, friend_request = send_friend_request(request.user, other_user_profile)
                 
                 channel_layer = get_channel_layer()
                 async_to_sync(channel_layer.group_send)(
-                    f"user_{receiver.id}",
+                    f"user_{other_user_profile.id}",
                     {
                         "type": "friend_request_update",
                         "data": {
@@ -168,9 +173,9 @@ def publicProfileView(request, username):
                 
                 channel_layer = get_channel_layer()
                 async_to_sync(channel_layer.group_send)(
-                    f"user_{receiver.id}",
+                    f"user_{other_user_profile.id}",
                     {
-                        "type": "friend_request_cancel",
+                        "type": "friend_request_update",
                         "data": {
                             "message": f"{request.user.username} canceled the friend request.",
                             "action": "cancel",
@@ -183,7 +188,8 @@ def publicProfileView(request, username):
                         },
                     },
                 )
-                
+                other_user_profile.friends.remove(receiver)
+                receiver.friends.remove(other_user_profile)
                 friend_request.delete()
                 messages.success(request, "Friend request canceled.")
                 friend_request_status = None
@@ -195,22 +201,23 @@ def publicProfileView(request, username):
                 and friend_request_status == "accepted"
             ):
                 
+                other_user_profile.friends.remove(receiver)
+                receiver.friends.remove(other_user_profile)
+                friend_request_status = None
+                friend_request.delete()
+
                 channel_layer = get_channel_layer()
                 async_to_sync(channel_layer.group_send)(
-                    f"user_{receiver.id}",
+                    f"user_{other_user_profile.id}",
                     {
-                        "type": "friend_request_remove",
+                        "type": "friend_request_update",
                         "data": {
                             "message": f"{request.user.username} removed you as a friend.",
                             "action": "remove",
-                            "requestId": str(friend_request.sender.id),
                         },
                     },
                 )
-                
-                friend_request.delete()
                 messages.success(request, "Friend removed.")
-                friend_request_status = None
                 return redirect("social:publicProfile", username=username)
 
     except Http404:
@@ -220,8 +227,8 @@ def publicProfileView(request, username):
         request,
         "socialApp/publicProfile.html",
         {
-            "user": user,
-            "user_profile": user_profile,
+            "user": other_user,
+            "user_profile": other_user_profile,
             "friend_request_status": friend_request_status,
             "is_profile": is_profile,
         },
@@ -235,12 +242,11 @@ def publicProfileView(request, username):
 @onboarded
 def send_friend_request(sender, receiver_username):
     receiver = get_object_or_404(UserProfile, user__username=receiver_username)
+    cannot_send_request = (sender.user_profile.is_friends_with(receiver.user) 
+                           or sender.user_profile.has_pending_request(receiver.user))
 
-    if sender.user_profile.is_friends_with(receiver.user):
-        return False, "You are already friends.", None
-    
-    if sender.user_profile.has_pending_request(receiver.user):
-        return False, "A friend request is already pending.", None
+    if cannot_send_request:
+        return False, "Friend request cannot be sent.", None
 
     friend_request, created = FriendRequest.objects.get_or_create(
         sender=sender, receiver=receiver.user, defaults={"status": "pending"}
