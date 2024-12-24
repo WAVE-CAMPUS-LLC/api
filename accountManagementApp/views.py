@@ -8,7 +8,6 @@ from .forms import (
     UserProfileForm,
     UpdateContactInfo,
     UpdatePersonalInfo,
-    UpdateProfileForm,
     EditUserProfileForm,
 )
 from django.contrib.auth.models import Group
@@ -147,8 +146,8 @@ def settingsView(request):
     personal_form = UpdatePersonalInfo(instance=user)
     profile = UserProfile.objects.get(user=user)
     contact_form = UpdateContactInfo(instance=user)
-    profile_form = UpdateProfileForm(instance=profile)
-    editProfileForm = EditUserProfileForm(request.POST, request.FILES, instance=profile)
+    editProfileForm = EditUserProfileForm(instance=profile)
+
 
     if request.method == "POST":
         form_type = request.POST.get("form_type")
@@ -168,24 +167,20 @@ def settingsView(request):
             if form.is_valid():
                 form.save()
                 messages.success(request, "Contact information updated successfully!")
-        elif form_type == "location-info":
-            form = UpdateProfileForm(request.POST, instance=profile)
-            if form.is_valid():
-                form.save()
-                messages.success(request, "Profile information updated successfully!")
-        else:
-            messages.error(request, "Invalid form.")
-            return HttpResponseBadRequest("Invalid form type")
+                
+        elif form_type == "profile-info":
+            editProfileForm = EditUserProfileForm(request.POST, instance=profile)
 
-        action = request.POST.get("action")
-        
-        if action == "updateProfilePreferences":
             if editProfileForm.is_valid():
                 editProfileForm.save()
-                messages.success(request, "Profile preferences updated successfully!")
-                return redirect("accountManagement:userAccount")
+                messages.success(request, "Profile information updated successfully!")
             else:
-                print(editProfileForm.errors)
+                messages.error(request, f"Invalid form {editProfileForm.errors}")
+                return redirect("accountManagement:userSettings")
+        else:
+            messages.error(request, "Invalid form.")
+            return redirect("accountManagement:userSettings")
+
         return redirect("accountManagement:userSettings")
 
     return render(
@@ -194,7 +189,6 @@ def settingsView(request):
         {
             "personal_form": personal_form,
             "contact_form": contact_form,
-            "profile_form": profile_form,
             "user": user,
             "profile": profile,
             "editProfileForm": editProfileForm,

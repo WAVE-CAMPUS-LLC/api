@@ -7,6 +7,9 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import HttpResponseRedirect, JsonResponse
 from wave_v1.decorators import check_suspension, member, verified, onboarded
+from datetime import datetime, timedelta
+from django.utils.timezone import now
+
 
 from .forms import (
     CollegeRequestForm,
@@ -158,7 +161,17 @@ def viewCollegeInformation(request, collegeId):
     )
 
     events = (events_restricted_to_college | display_events_on_college).distinct()
+    
+    
+    today = now().date()
+    start_of_week = today - timedelta(days=today.weekday())
+    end_of_week = start_of_week + timedelta(days=6)
 
+    weekly_events = Event.objects.filter(
+        date__range=[start_of_week, end_of_week], status="live", privacy="Discoverable", admin_status="active"
+    ).order_by("?")[:3]
+    
+    
     return render(
         request,
         "collegeManagementApp/collegeInformation.html",
@@ -169,6 +182,7 @@ def viewCollegeInformation(request, collegeId):
             "user_profile": user_profile,
             "organizations": organizations,
             "events": events,
+            "weekly_events": weekly_events,
         },
     )
 

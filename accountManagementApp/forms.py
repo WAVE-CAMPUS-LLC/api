@@ -139,7 +139,6 @@ class EditUserProfileForm(forms.ModelForm):
         model = UserProfile
         fields = [
             "status",
-            "gender",
             "college_name",
             "instagram",
             "tiktok",
@@ -177,12 +176,3 @@ class UpdatePersonalInfo(forms.ModelForm):
         model = CustomUser
         fields = ["first_name", "last_name"]
 
-
-# The class `UpdateProfileForm` is a form that allows users to update their profile information, including their status and country.
-class UpdateProfileForm(forms.ModelForm):
-    status = forms.CharField(required=False, min_length=1)
-    country = forms.CharField(required=False)
-
-    class Meta:
-        model = UserProfile
-        fields = ["status", "country"]
