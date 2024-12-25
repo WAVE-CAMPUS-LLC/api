@@ -77,9 +77,9 @@ Connected Accounts (Stripe) — WAVE.
 
                 <div class="flex flex-col px-4">
                     {% for account in accounts %}
-                        <div id="list-item" class="border-b border-[#bdbdbd69] grid grid-cols-2 gap-2 py-3">
+                        <a href="{% url "waveAdmin:connectedAccountDetail" account_id=account.id %}" id="list-item" class="group border-b border-[#bdbdbd69] grid grid-cols-2 gap-2 py-3">
                             <div class="flex flex-col gap-[2px]">
-                                <p class="font-Wanted-Bold text-black">{{ account.individual.first_name }} {{ account.individual.last_name }}</p>
+                                <p class="font-Wanted-Bold text-black group-hover:text-green">{{ account.individual.first_name }} {{ account.individual.last_name }}</p>
                                 <p class="font-Wanted-Variable text-[#808080c1]">{{ account.email }}</p>
                             </div>
                             <div class="grid grid-cols-3">
@@ -101,7 +101,7 @@ Connected Accounts (Stripe) — WAVE.
                                     {{ account.connected_date }}
                                 </div>
                             </div>
-                        </div>
+                        </a>
                     {% endfor %}
                 </div>
             </div>

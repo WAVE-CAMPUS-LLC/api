@@ -68,7 +68,14 @@ from .forms import (
     CollegeForm,
 )
 from supportCenterApp.models import SupportTicket, SupportTicketMessage
-from wave_v1.decorators import check_suspension, member, verified, onboarded, admin, superAdmin
+from wave_v1.decorators import (
+    check_suspension,
+    member,
+    verified,
+    onboarded,
+    admin,
+    superAdmin,
+)
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
@@ -251,7 +258,9 @@ def adminEventHostsView(request):
                 return redirect("waveAdmin:eventHosts")
             except CustomUser.DoesNotExist:
                 messages.error(request, "Host not found.")
-    return render(request, "adminDashboardApp/tabs/events/hosts.html", {"profiles": hostProfile})
+    return render(
+        request, "adminDashboardApp/tabs/events/hosts.html", {"profiles": hostProfile}
+    )
 
 
 @login_required(login_url="authentication:login")
@@ -265,7 +274,7 @@ def adminHostApplicationsView(request):
         action = request.POST.get("applicationAction")
         applicant_email = request.POST.get("applicantEmail")
         applicant_phone = request.POST.get("phone")
-        
+
         userProfile = UserProfile.objects.get(user__email=applicant_email)
 
         try:
@@ -378,9 +387,10 @@ def adminEventsView(request):
     incomplete_events = Event.objects.filter(status="incomplete")
     archived_events = Event.objects.filter(status="archived")
 
-    last_updated = Event.objects.aggregate(last_updated=Max('updated_at'))['last_updated']
-    
-    
+    last_updated = Event.objects.aggregate(last_updated=Max("updated_at"))[
+        "last_updated"
+    ]
+
     if request.method == "POST":
         action = request.POST.get("eventAction")
         event_id = request.POST.get("event_id")
@@ -393,7 +403,7 @@ def adminEventsView(request):
                 return redirect("waveAdmin:events")
             except Event.DoesNotExist:
                 messages.error(request, "Event not found.")
-                
+
         elif action == "activate" and event_id:
             try:
                 event = get_object_or_404(Event, eventId=event_id)
@@ -402,7 +412,7 @@ def adminEventsView(request):
                 return redirect("waveAdmin:events")
             except Event.DoesNotExist:
                 messages.error(request, "Event not found.")
-    
+
     return render(
         request,
         "adminDashboardApp/tabs/events/events.html",
@@ -614,14 +624,32 @@ def sendDeniedApplicantEmail(applicantEmail):
         print(f"Error sending email to {applicantEmail}: {e}")
 
 
-
 @login_required(login_url="authentication:login")
 @check_suspension
 @member
 @admin
 def adminConnectedAccountsView(request):
     accounts = StripeAdmin.getConnectedAccounts(request)
-    return render(request, "adminDashboardApp/tabs/financial/accounts.html", {"accounts": accounts})
+    return render(
+        request,
+        "adminDashboardApp/tabs/financial/accounts.html",
+        {"accounts": accounts},
+    )
+
+
+@login_required(login_url="authentication:login")
+@check_suspension
+@member
+@admin
+def adminConnectedAccountDetailView(request, account_id):
+    account = StripeAdmin.getConnectedAccountDetails(request, account_id)
+    transactions = StripeAdmin.getConnectedAccountTransactions(request, account_id)
+    return render(
+        request,
+        "adminDashboardApp/tabs/financial/accountDetail.html",
+        {"account": account, "transactions": transactions},
+    )
+
 
 @login_required(login_url="authentication:login")
 @check_suspension
@@ -636,9 +664,8 @@ def adminFinanceOverviewView(request):
 @member
 @admin
 def adminProductsView(request):
-    return render(request, "adminDashboardApp/tabs/financial/products.html")
-
-
+    products = StripeAdmin.getProducts(request)
+    return render(request, "adminDashboardApp/tabs/financial/products.html", {"products": products})
 
 
 @login_required(login_url="authentication:login")
@@ -743,15 +770,16 @@ def adminCollegeView(request):
 @admin
 def adminCollegeDetailView(request, collegeId):
     college = get_object_or_404(College, collegeId=collegeId)
-    events = Event.objects.filter(display_event_on_college=True, host__user_profile__college=college)
+    events = Event.objects.filter(
+        display_event_on_college=True, host__user_profile__college=college
+    )
     organizations = Organization.objects.filter(college=college)
     action = request.POST.get("eventAction")
-    
+
     # members = Membership.objects.filter(college=college)
 
     members = UserProfile.objects.filter(college=college)
-    
-    
+
     if request.method == "POST":
         email = request.POST.get("inviteEmail")
 
@@ -791,7 +819,12 @@ def adminCollegeDetailView(request, collegeId):
     return render(
         request,
         "adminDashboardApp/tabs/colleges/collegeInfo.html",
-        {"college": college, "events": events, "organizations": organizations, "members": members},
+        {
+            "college": college,
+            "events": events,
+            "organizations": organizations,
+            "members": members,
+        },
     )
 
 
@@ -841,7 +874,11 @@ def send_invite(email, college):
 def adminCollegeOrgsView(request):
     organizations = Organization.objects.all()
     print(organizations)
-    return render(request, "adminDashboardApp/tabs/colleges/organizations.html", {"organizations": organizations})
+    return render(
+        request,
+        "adminDashboardApp/tabs/colleges/organizations.html",
+        {"organizations": organizations},
+    )
 
 
 @login_required
