@@ -65,6 +65,8 @@ INSTALLED_APPS = [
     "newsroomApp",
     "blogApp",
     "campusManagerApp",
+    "dataAnalyticsApp",
+    "dataAnalyticsAPI",
     "widget_tweaks",
     "qr_code",
     "storages",

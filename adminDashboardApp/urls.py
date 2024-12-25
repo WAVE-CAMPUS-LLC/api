@@ -12,6 +12,7 @@ urlpatterns = [
         views.adminDepartmentDetailedView,
         name="departmentDetails",
     ),
+    path("analytics/users/", views.adminUserAnalyticsView, name="userAnalytics"),
     path(
         "applications/career/",
         views.adminCareerApplicationsView,
