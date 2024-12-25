@@ -97,6 +97,10 @@ def adminDashboardView(request):
     return render(request, "adminDashboardApp/tabs/dashboard.html")
 
 
+def adminUserAnalyticsView(request):
+    return render(request, "adminDashboardApp/tabs/analytics/users.html")
+
+
 # Department Management
 @login_required(login_url="authentication:login")
 @check_suspension
