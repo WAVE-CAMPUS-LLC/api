@@ -6,6 +6,7 @@ from django.http import JsonResponse
 from datetime import datetime, timedelta, date
 from django.contrib import messages
 from django.utils.timezone import now
+from .models import Visitor
 from authenticationApp.models import CustomUser
 from eventManagementApp.models import (
     Event,

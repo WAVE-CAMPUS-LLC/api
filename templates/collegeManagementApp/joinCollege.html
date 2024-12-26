@@ -31,6 +31,11 @@ Join {{ college.name }} — WAVE. on campus
         <form class="verifyForm flex flex-col gap-5 bg-white w-full xxsm:w-[90%] sm:w-9/12 pre-lg:w-8/12 lg:w-4/6 xl:w-2/5 pt-5 px-4 sm:px-7 pre-lg:px-10 xl:px-12 pb-7 rounded-2xl border-customGray4 shadow-custom-shadow-5" method="post" action="{% url "colleges:join" collegeId=college.collegeId %}">
             {% csrf_token %}
             <h5 class="flex justify-center font-Wanted-Medium text-Pre-Xl xsm:text-[30px] lg:text-[40px]">Enter your email</h5>
+            <div class="w-full flex justify-center text-center py-2 px-5 rounded-xl bg-[red] text-white font-Wanted-Variable">
+                {% if joinForm.email.errors %}
+                <p class="">{{ joinForm.email.errors }}</p>
+                {% endif %}
+            </div>
             <label class="flex flex-col gap-1" for="{{joinForm.email.id_for_label}}">
                 <p class="font-Wanted-Variable text-customGray3">{{ joinForm.email.label }}</p>
                 {{ joinForm.email|add_class:"w-full border-2 border-[#0909091c] rounded-2xl p-3 font-Wanted-Variable text-Medium" }}

@@ -9,7 +9,6 @@ from wave_v1.decorators import (
     superAdmin,
 )
 
-from .userAnalytics import UserAnalytics
 
 
 # Create your views here.
@@ -20,12 +19,26 @@ from .userAnalytics import UserAnalytics
 def analyticsHome(request):
     return render(request, "dataAnalytics/home.html")
 
+
+
+'''
+User Analytics
+'''
 @login_required(login_url="authentication:login")
 @check_suspension
 @member
 @admin
 def userSignups(request):
     return render(request, "dataAnalytics/userAnalytics/userSignups.html")
+
+
+@login_required(login_url="authentication:login")
+@check_suspension
+@member
+@admin
+def userLogins(request):
+    return render(request, "dataAnalytics/userAnalytics/userLogins.html")
+
 
 @login_required(login_url="authentication:login")
 @check_suspension
@@ -35,9 +48,30 @@ def userDemographics(request):
     return render(request, "dataAnalytics/userAnalytics/userDemographics.html")
 
 
-def userAnalytics(request):
-    return render(request, "dataAnalytics/userAnalytics.html")
+
+'''
+College Analytics
+'''
+
+@login_required(login_url="authentication:login")
+@check_suspension
+@member
+@admin
+def collegeOverview(request):
+    return render(request, "dataAnalytics/collegeAnalytics/collegeOverview.html")
 
 
-def user_count_api(request):
-    return UserAnalytics().getUserCount()
+@login_required(login_url="authentication:login")
+@check_suspension
+@member
+@admin
+def collegeMembership(request):
+    return render(request, "dataAnalytics/collegeAnalytics/collegeMembership.html")
+
+
+@login_required(login_url="authentication:login")
+@check_suspension
+@member
+@admin
+def organizationOverview(request):
+    return render(request, "dataAnalytics/collegeAnalytics/organizationOverview.html")
