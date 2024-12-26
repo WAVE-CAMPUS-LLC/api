@@ -39,6 +39,7 @@ urlpatterns = [
     path('chat/', include('supportCenterApp.urls')),
     path("admin/", super_admin_restricted_site.urls),
     path("analytics/", include("dataAnalyticsApp.urls")),
+    path("dataApi/", include("dataAnalyticsAPI.urls")),
 ]
 
 handler404 = "extras.views.error_404"

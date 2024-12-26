@@ -60,6 +60,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     is_onboarded = models.BooleanField(default=False)
     is_suspended = models.BooleanField(default=False)
     suspension_end_date = models.DateTimeField(null=True, blank=True)
+    
 
     
     def suspend(self, hours):

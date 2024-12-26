@@ -198,6 +198,7 @@ def joinCollege(request, collegeId):
 
     if request.method == "POST":
         joinForm = JoinCollegeForm(request.POST, college=college)
+        joinForm.user = request.user
         if joinForm.is_valid():
             user = request.user
             email = joinForm.cleaned_data["email"]
@@ -256,7 +257,7 @@ def verifyJoinCollege(request, collegeId):
                     request,
                     f"You have successfully joined {college.name}. Enjoy all it has to offer!",
                 )
-                return redirect("core:index")
+                return redirect("colleges:find")
             else:
                 messages.error(request, "Invalid verification code!")
 

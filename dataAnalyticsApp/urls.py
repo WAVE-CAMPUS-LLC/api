@@ -5,9 +5,14 @@ from . import views
 app_name = "dataAnalytics"
 
 urlpatterns = [
+    # User Analytics
     path("", views.analyticsHome, name="home"),
     path("user/signups/", views.userSignups, name="userSignups"),
+    path("user/logins/", views.userLogins, name="userLogins"),
     path("user/demographics/", views.userDemographics, name="userDemographics"),
-    path("user-analytics/", views.userAnalytics, name="userAnalytics"),
-    path("analytics/user/count/", views.user_count_api, name="userCountApi"),
+    
+    # College Analytics
+    path("colleges/overview/", views.collegeOverview, name="collegeOverview"),
+    path("colleges/membership/", views.collegeMembership, name="collegeMembership"),
+    path("organization/overview/", views.organizationOverview, name="organizationOverview"),
 ]

@@ -28,6 +28,7 @@
         <script type="text/javascript" src="//code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
         <script type="text/javascript" src="//cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.min.js"></script>
         <script src="{% static "scripts/base/redirectPage.js" %}" defer></script>
+        <script src="{% static "scripts/base/visitor.js" %}" defer></script>
         <script type="text/javascript" src="{% static "/scripts/partials/navigation/searchEvents.js" %}" defer></script>
         {% comment %} <script type="text/javascript" src="{% static "scripts/base/event/eventDetailsPricing.js" %}" defer></script> {% endcomment %}
 
@@ -95,4 +96,12 @@
             {% endif %}
         });
     </script>
+
+    <div id="welcome-popup" class="hidden absolute z-[1050]">
+        <div class="bg-white rounded-2xl px-3 py-7">
+            WELCOME TO WAVE.!
+        </div>
+    </div>
+
+    <input type="hidden" id="trackVisitorURL" value="{% url "core:trackVisitor" %}" />
 </html>

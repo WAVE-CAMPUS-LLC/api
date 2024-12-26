@@ -5,6 +5,7 @@ from django.db.models import Count, Q, Exists, OuterRef
 from django.http import JsonResponse
 from datetime import datetime, timedelta
 from django.utils.timezone import now
+from .models import Visitor
 from authenticationApp.models import CustomUser
 from eventManagementApp.models import (
     Event,
@@ -415,3 +416,12 @@ def send_connect_request(request):
             return JsonResponse({'status': 'error', 'message': 'User not found.'}, status=404)
     
     return JsonResponse({'status': 'error', 'message': 'Invalid action.'}, status=400)
+
+
+
+def trackVisitor(request):
+    ip_address = request.META.get("REMOTE_ADDR")
+
+    visitor, created = Visitor.objects.get_or_create(ip_address=ip_address)
+
+    return JsonResponse({"status": "success", "message": "Visitor tracked.", "created": created})
