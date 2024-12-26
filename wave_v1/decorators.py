@@ -1,6 +1,5 @@
 from functools import wraps
 from django.shortcuts import redirect, render
-from django.core.exceptions import PermissionDenied
 from django.contrib.auth.models import Group
 
 
@@ -45,8 +44,8 @@ def member(view_func):
     @wraps(view_func)
     def wrapped_view(request, *args, **kwargs):
         if request.user.is_authenticated:
-            # Check if the user is in the specified group
-            if Group.objects.filter(name="Member", user=request.user).exists():
+            # Check if the user is in the group named "Member"
+            if request.user.groups.filter(name="Member").exists():
                 return view_func(request, *args, **kwargs)
         return render(request, "extras/invalid/invalid.html")
 
@@ -65,7 +64,7 @@ def verified(view_func):
         if request.user.is_authenticated:
             if (
                 request.user.email_verified
-                and Group.objects.filter(name="Verified", user=request.user).exists()
+                and request.user.groups.filter(name="Verified").exists()
             ):
                 return view_func(request, *args, **kwargs)
         return redirect("authentication:verifyEmail")
@@ -99,7 +98,7 @@ def onboarded(view_func):
         if request.user.is_authenticated:
             if (
                 request.user.is_onboarded
-                and Group.objects.filter(name="Onboarded", user=request.user).exists()
+                and request.user.groups.filter(name="Onboarded").exists()
             ):
                 return view_func(request, *args, **kwargs)
         return redirect("accountManagement:onboarding")
@@ -117,7 +116,7 @@ def admin(view_func):
     @wraps(view_func)
     def wrapped_view(request, *args, **kwargs):
         if request.user.is_authenticated:
-            if Group.objects.filter(name="Admin", user=request.user).exists():
+            if request.user.groups.filter(name="Admin").exists():
                 return view_func(request, *args, **kwargs)
         return render(request, "extras/invalid/invalid.html")
 
@@ -134,7 +133,7 @@ def superAdmin(view_func):
     @wraps(view_func)
     def wrapped_view(request, *args, **kwargs):
         if request.user.is_authenticated:
-            if Group.objects.filter(name="Super Admin", user=request.user).exists():
+            if request.user.groups.filter(name="Super Admin").exists():
                 return view_func(request, *args, **kwargs)
         return render(request, "extras/invalid/invalid.html")
 
@@ -151,7 +150,7 @@ def host(view_func):
     @wraps(view_func)
     def wrapped_view(request, *args, **kwargs):
         if request.user.is_authenticated:
-            if Group.objects.filter(name="Host", user=request.user).exists():
+            if request.user.groups.filter(name="Host").exists():
                 return view_func(request, *args, **kwargs)
         return render(request, "extras/invalid/invalid.html")
 
@@ -163,7 +162,7 @@ def campusManagerRequired(group_name):
         def wrapped_view(request, *args, **kwargs):
             if request.user.is_authenticated:
                 # Check if the user is in the specified group
-                if Group.objects.filter(name=group_name, user=request.user).exists():
+                if request.user.groups.filter(name=group_name).exists():
                     return view_func(request, *args, **kwargs)
             return render(request, "extras/invalid/notAManager.html")
 

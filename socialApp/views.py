@@ -171,12 +171,12 @@ def publicProfileView(request, username):
             action = request.POST.get("action")
             if action == "send_request":
                 success, message, friend_request = send_friend_request(
-                    request.user, other_user_profile
+                    request.user, other_user_profile.user.username
                 )
 
                 channel_layer = get_channel_layer()
                 async_to_sync(channel_layer.group_send)(
-                    f"user_{other_user_profile.id}",
+                    f"user_{other_user_profile.user.id}",
                     {
                         "type": "friend_request_update",
                         "data": {
@@ -208,7 +208,7 @@ def publicProfileView(request, username):
 
                 channel_layer = get_channel_layer()
                 async_to_sync(channel_layer.group_send)(
-                    f"user_{other_user_profile.id}",
+                    f"user_{other_user_profile.user.id}",
                     {
                         "type": "friend_request_update",
                         "data": {
@@ -245,7 +245,7 @@ def publicProfileView(request, username):
 
                 channel_layer = get_channel_layer()
                 async_to_sync(channel_layer.group_send)(
-                    f"user_{other_user_profile.id}",
+                    f"user_{other_user_profile.user.id}",
                     {
                         "type": "friend_request_update",
                         "data": {
@@ -273,11 +273,7 @@ def publicProfileView(request, username):
     )
 
 
-@login_required
-@check_suspension
-@member
-@verified
-@onboarded
+# Helper function to send friend request, decorator will make this not work because it is not a view
 def send_friend_request(sender, receiver_username):
     receiver = get_object_or_404(UserProfile, user__username=receiver_username)
     cannot_send_request = sender.user_profile.is_friends_with(
@@ -400,11 +396,7 @@ def crewView(request, crewId):
     )
 
 
-@login_required
-@check_suspension
-@member
-@verified
-@onboarded
+# Helper function to send friend request, decorator will make this not work because it is not a view
 def send_crew_request(sender, receiver_username, crew_id):
     sender = get_object_or_404(UserProfile, user__username=sender.user.username)
     receiver = get_object_or_404(UserProfile, user__username=receiver_username)
