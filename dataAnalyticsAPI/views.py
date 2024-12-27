@@ -2,14 +2,14 @@ from django.db.models import Count, Max, Avg, F, ExpressionWrapper, DurationFiel
 from django.db.models.functions import TruncDay, TruncWeek, TruncMonth, TruncHour
 from django.http import JsonResponse
 from datetime import timedelta
-from django.utils.timezone import now
+from django.utils.timezone import now, datetime
 from django.utils.formats import date_format
 
 from authenticationApp.models import CustomUser
 from accountManagementApp.models import UserProfile
 from adminDashboardApp.models import LoginHistoryModel
 from adminDashboardApp.models import College
-from collegeManagementApp.models import Membership, Organization
+from collegeManagementApp.models import Membership, Organization, OrganizationMembership
 
 
 # User Analytics API
@@ -254,7 +254,93 @@ def organizationOverview(request):
         .order_by("privacy")
     )
 
-    return JsonResponse({
-        "organizations_by_college_privacy": list(organizations_by_college_privacy),
-        "organizations_by_privacy": list(organizations_by_privacy),
-    })
+    return JsonResponse(
+        {
+            "organizations_by_college_privacy": list(organizations_by_college_privacy),
+            "organizations_by_privacy": list(organizations_by_privacy),
+        }
+    )
+
+
+def organizationMembership(request):
+    total_memberships = OrganizationMembership.objects.count()
+
+    # Churn Rate (percentage of members who left in the last month, as an example)
+    current_month = OrganizationMembership.objects.filter(
+        joined_on__month=datetime.now().month
+    ).count()
+    last_month = OrganizationMembership.objects.filter(
+        joined_on__month=(datetime.now().month - 1) % 12
+    ).count()
+    churn_rate = ((last_month - current_month) / last_month * 100) if last_month else 0
+
+    # Privacy comparison
+    privacy_counts = Organization.objects.values("privacy").annotate(
+        count=Count("organizationmembership")
+    )
+
+    # College comparison
+    college_counts = College.objects.values("name").annotate(
+        count=Count("organizations__organizationmembership")
+    )
+
+    # Membership distribution
+    organization_sizes = Organization.objects.annotate(
+        member_count=Count("organizationmembership")
+    ).values("name", "member_count")
+
+    # Top organizations with the highest number of members
+    top_organizations = (
+        Organization.objects.annotate(member_count=Count("organizationmembership"))
+        .order_by("-member_count")[:5]
+        .values("name", "member_count")
+    )
+
+    # Most active colleges
+    active_colleges = (
+        College.objects.annotate(
+            total_memberships=Count("organizations__organizationmembership")
+        )
+        .order_by("-total_memberships")[:5]
+        .values("name", "total_memberships")
+    )
+
+    # User membership count
+    user_membership_distribution = (
+        OrganizationMembership.objects.values("user__username")
+        .annotate(org_count=Count("organization"))
+        .order_by("-org_count")
+    )
+
+    # Repeat memberships
+    repeat_memberships = sum(
+        1 for user in user_membership_distribution if user["org_count"] > 1
+    )
+
+    # Membership trends over time
+    membership_trends = (
+        OrganizationMembership.objects.annotate(month=TruncMonth("joined_on"))
+        .values("month")
+        .annotate(count=Count("id"))
+        .order_by("month")
+    )
+    # Convert `month` to a string
+    membership_trends = [
+        {"month": trend["month"].strftime("%Y-%m"), "count": trend["count"]}
+        for trend in membership_trends
+    ]
+
+    return JsonResponse(
+        {
+            "total_memberships": total_memberships,
+            "churn_rate": churn_rate,
+            "privacy_comparison": list(privacy_counts),
+            "college_comparison": list(college_counts),
+            "organization_sizes": list(organization_sizes),
+            "top_organizations": list(top_organizations),
+            "active_colleges": list(active_colleges),
+            "user_membership_distribution": list(user_membership_distribution),
+            "repeat_memberships": repeat_memberships,
+            "membership_trends": membership_trends,
+        }
+    )

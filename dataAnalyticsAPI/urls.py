@@ -23,4 +23,5 @@ urlpatterns = [
         name="collegeMembership",
     ),
     path('analyticsApi/organizations/overview/', views.organizationOverview, name='organizationOverview'),
+    path('analyticsApi/organizations/membership/', views.organizationMembership, name='organizationMembership'),
 ]

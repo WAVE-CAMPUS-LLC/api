@@ -95,11 +95,23 @@ WAVE. — Management Dashboard
 
             <a id="optionCard" href="{% url 'dataAnalytics:organizationOverview' %}" class="border-[2px] border-solid border-[rgba(0,0,0,0.038)] rounded-[20px] py-[40px] px-[20px] cursor-pointer flex flex-row gap-[12px] md:gap-[30px] lg:gap-[50px] w-full shadow-custom-shadow-2">
                 <div class="w-[30%] flex justify-center items-center" >
-                    <img src="{% static "/images/dataAnalytics/membership.svg" %}" alt="Support Management Dashboard" class="size-24">
+                    <img src="{% static "/images/dataAnalytics/organization.svg" %}" alt="Support Management Dashboard" class="size-24">
                 </div>
                 <div class="w-[70%] h-[100%] flex flex-col">
                     <div class="h-[100%] flex flex-col justify-center gap-[10px]">
                         <h3 class="font-Wanted-Bold text-Large sm:text-2xl md:text-[40px]">Organizations</h3>
+                        <p class="font-Wanted-Regular">Last Update: 5th March, 2024</p>
+                    </div>
+                </div>
+            </a>
+
+            <a id="optionCard" href="{% url 'dataAnalytics:organizationMembership' %}" class="border-[2px] border-solid border-[rgba(0,0,0,0.038)] rounded-[20px] py-[40px] px-[20px] cursor-pointer flex flex-row gap-[12px] md:gap-[30px] lg:gap-[50px] w-full shadow-custom-shadow-2">
+                <div class="w-[30%] flex justify-center items-center" >
+                    <img src="{% static "/images/dataAnalytics/membership.svg" %}" alt="Support Management Dashboard" class="size-24">
+                </div>
+                <div class="w-[70%] h-[100%] flex flex-col">
+                    <div class="h-[100%] flex flex-col justify-center gap-[10px]">
+                        <h3 class="font-Wanted-Bold text-Large sm:text-2xl md:text-[40px]">O. Membership</h3>
                         <p class="font-Wanted-Regular">Last Update: 5th March, 2024</p>
                     </div>
                 </div>

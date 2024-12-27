@@ -2,13 +2,13 @@
 {% load static %}
 
 {% block title %}
-Organization Analytics — WAVE.
+Organization Membership Analytics — WAVE.
 {% endblock title %}
 
 
 {% block script %}
 <script type="text/javascript" src="{% static "/scripts/adminDashboardApp/applications/applications.js" %}"></script>
-<script type="text/javascript" src="{% static "/scripts/dataAnalyticsAPI/collegeAnalytics/organizationOverview.js" %}" defer></script>
+<script type="text/javascript" src="{% static "/scripts/dataAnalyticsAPI/collegeAnalytics/organizationMembership.js" %}" defer></script>
 {% endblock script %}
 
 
@@ -28,7 +28,7 @@ Organization Analytics — WAVE.
         <a href="{% url "dataAnalytics:home" %}#collegeAnalytics" class="text-green underline">College Analytics</a>
         >
         <p class="font-Wanted-Medium text-black">Organization Overview</p>
-        <input type="hidden" id="organizationOverviewURL" value="{% url "analyticsAPI:organizationOverview" %}" />
+        <input type="hidden" id="organizationMembershipURL" value="{% url "analyticsAPI:organizationMembership" %}" />
     </div>
 
 
@@ -38,15 +38,22 @@ Organization Analytics — WAVE.
             id="dataTypeSelect"
             class="cursor-pointer font-Wanted-Variable border border-gray-100 p-2 px-5 rounded-xl w-auto"
         >
-            <option value="college">By College</option>
-            <option value="privacy">By Privacy</option>
+            <option value="churnRate">Churn Rate</option>
+            <option value="privacy">Privacy Comparison</option>
+            <option value="college">College Comparison</option>
+            <option value="topOrganizations">Top Organizations</option>
+            <option value="activeColleges">Most Active Colleges</option>
+            <option value="membershipTrends">Membership Trends</option>
         </select>
     </div>
-
-    <!-- Canvas for displaying the chart -->
+    
     <div id="chart-container">
-        <canvas id="organizationChart" class="font-Wanted-Bold w-[600px] h-[500px] text-green"></canvas>
-    </div>
+        <canvas id="churnRateChart" class="font-Wanted-Bold w-[600px] h-[500px] text-green"></canvas>
+        <canvas id="privacyComparisonChart" class="font-Wanted-Bold w-[600px] h-[500px] text-green hidden"></canvas>
+        <canvas id="collegeComparisonChart" class="font-Wanted-Bold w-[600px] h-[500px] text-green hidden"></canvas>
+        <canvas id="topOrganizationsChart" class="font-Wanted-Bold w-[600px] h-[500px] text-green hidden"></canvas>
+        <canvas id="activeCollegesChart" class="font-Wanted-Bold w-[600px] h-[500px] text-green hidden"></canvas>
+        <canvas id="membershipTrendsChart" class="font-Wanted-Bold w-[600px] h-[500px] text-green hidden"></canvas>
     </div>
 </div>
 {% endblock body %}
