@@ -17,7 +17,7 @@ from wave_v1.decorators import (
 @member
 @admin
 def analyticsHome(request):
-    return render(request, "dataAnalytics/home.html")
+    return render(request, "dataAnalyticsApp/home.html")
 
 
 
@@ -29,7 +29,7 @@ User Analytics
 @member
 @admin
 def userSignups(request):
-    return render(request, "dataAnalytics/userAnalytics/userSignups.html")
+    return render(request, "dataAnalyticsApp/userAnalytics/userSignups.html")
 
 
 @login_required(login_url="authentication:login")
@@ -37,7 +37,7 @@ def userSignups(request):
 @member
 @admin
 def userLogins(request):
-    return render(request, "dataAnalytics/userAnalytics/userLogins.html")
+    return render(request, "dataAnalyticsApp/userAnalytics/userLogins.html")
 
 
 @login_required(login_url="authentication:login")
@@ -45,7 +45,7 @@ def userLogins(request):
 @member
 @admin
 def userDemographics(request):
-    return render(request, "dataAnalytics/userAnalytics/userDemographics.html")
+    return render(request, "dataAnalyticsApp/userAnalytics/userDemographics.html")
 
 
 
@@ -58,7 +58,7 @@ College Analytics
 @member
 @admin
 def collegeOverview(request):
-    return render(request, "dataAnalytics/collegeAnalytics/collegeOverview.html")
+    return render(request, "dataAnalyticsApp/collegeAnalytics/collegeOverview.html")
 
 
 @login_required(login_url="authentication:login")
@@ -66,7 +66,7 @@ def collegeOverview(request):
 @member
 @admin
 def collegeMembership(request):
-    return render(request, "dataAnalytics/collegeAnalytics/collegeMembership.html")
+    return render(request, "dataAnalyticsApp/collegeAnalytics/collegeMembership.html")
 
 
 @login_required(login_url="authentication:login")
@@ -74,4 +74,12 @@ def collegeMembership(request):
 @member
 @admin
 def organizationOverview(request):
-    return render(request, "dataAnalytics/collegeAnalytics/organizationOverview.html")
+    return render(request, "dataAnalyticsApp/collegeAnalytics/organizationOverview.html")
+
+
+@login_required(login_url="authentication:login")
+@check_suspension
+@member
+@admin
+def organizationMembership(request):
+    return render(request, "dataAnalyticsApp/collegeAnalytics/organizationMembership.html")
