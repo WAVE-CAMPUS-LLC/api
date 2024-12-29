@@ -26,6 +26,7 @@ What's the wave?! — WAVE.
         <div id="row-header" class="font-Wanted-Bold text-Large after-xsm:text-2xl text-black">
             <h3>Trending now</h3>
         </div>
+        <input type="hidden" id="eventClickURL" value="{% url "analyticsAPI:trackEventClicks" %}"/>
         <div id="trending-slideshow" class="w-full h-full relative overflow-hidden">
             {% for trending in trending_events %}
             <div id="ehim-img-cont" class="trending-event-element w-full h-full min-w-full min-h-full relative rounded-3xl flex justify-center items-center bg-cover bg-top bg-no-repeat" style="background-image: url('{{ trending.header_photo.url }}');">
@@ -55,7 +56,7 @@ What's the wave?! — WAVE.
 
             <div  class="row-body event-row-body grid sm:grid-cols-1 pre-lg:grid-cols-2 lg:grid-cols-3">
                 {% for event in weekly_events %}
-                <a href="{% url "core:eventDetails" eventId=event.eventId %}" class="category-event-card hover:category-image hover:scale-95 transform transition duration-300 flex flex-col justify-center items-center cursor-pointer overflow-hidden p-[10px] text-black">
+                <a href="{% url "core:eventDetails" eventId=event.eventId %}" class="category-event-card hover:category-image hover:scale-95 transform transition duration-300 flex flex-col justify-center items-center cursor-pointer overflow-hidden p-[10px] text-black" data-event-id="{{ event.eventId }}">
                     <div class="category-image w-full rounded-2xl shadow-custom-shadow-3">
                         <img src="{{event.header_photo.url}}" alt="" class="w-full h-[448px] rounded-2xl rounded-b-none object-cover">
                     </div>
@@ -105,7 +106,7 @@ What's the wave?! — WAVE.
 
             <div class="row-body event-row-body grid sm:grid-cols-1 pre-lg:grid-cols-2 lg:grid-cols-3" id="events-container">
                 {% for event, token in invited_events_with_tokens %}
-                <a href="{% url "core:eventDetails_withToken" eventId=event.eventId token=token %}" class="category-event-card hover:category-image hover:scale-95 transform transition duration-300 flex flex-col justify-center items-center cursor-pointer overflow-hidden p-[10px] text-black">
+                <a href="{% url "core:eventDetails_withToken" eventId=event.eventId token=token %}" class="category-event-card hover:category-image hover:scale-95 transform transition duration-300 flex flex-col justify-center items-center cursor-pointer overflow-hidden p-[10px] text-black" data-event-id="{{ event.eventId }}">
                     <div class="category-image w-full rounded-2xl shadow-custom-shadow-3">
                         <img src="{{event.header_photo.url}}" alt="" class="w-full h-[448px] rounded-2xl rounded-b-none object-cover">
                     </div>
@@ -126,7 +127,7 @@ What's the wave?! — WAVE.
             <div class="row-body event-row-body grid sm:grid-cols-1 pre-lg:grid-cols-2 lg:grid-cols-3" id="events-container">
                 {% for event in events %}
                     {% if event.status == "live" %}
-                    <a href="{% url "core:eventDetails" eventId=event.eventId %}" class="category-event-card hover:category-image hover:scale-95 transform transition duration-300 flex flex-col justify-center items-center cursor-pointer overflow-hidden p-[10px] text-black">
+                    <a href="{% url "core:eventDetails" eventId=event.eventId %}" class="category-event-card hover:category-image hover:scale-95 transform transition duration-300 flex flex-col justify-center items-center cursor-pointer overflow-hidden p-[10px] text-black" data-event-id="{{ event.eventId }}">
                         <div class="category-image w-full rounded-2xl shadow-custom-shadow-3">
                             <img src="{{event.header_photo.url}}" alt="" class="w-full h-[448px] rounded-2xl rounded-b-none object-cover">
                         </div>

@@ -24,4 +24,7 @@ urlpatterns = [
     ),
     path('analyticsApi/organizations/overview/', views.organizationOverview, name='organizationOverview'),
     path('analyticsApi/organizations/membership/', views.organizationMembership, name='organizationMembership'),
+
+    # Host Event Analytics
+    path("analyticsApi/host/events/interaction/track/clicks/", views.trackEventClicks, name="trackEventClicks"),
 ]

@@ -4,12 +4,18 @@ from django.http import JsonResponse
 from datetime import timedelta
 from django.utils.timezone import now, datetime
 from django.utils.formats import date_format
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt 
 
+import json
+
+from dataAnalyticsApp.models import  GuestUser, EventInteractionControl
 from authenticationApp.models import CustomUser
 from accountManagementApp.models import UserProfile
 from adminDashboardApp.models import LoginHistoryModel
 from adminDashboardApp.models import College
 from collegeManagementApp.models import Membership, Organization, OrganizationMembership
+from eventManagementApp.models import Event
 
 
 # User Analytics API
@@ -344,3 +350,36 @@ def organizationMembership(request):
             "membership_trends": membership_trends,
         }
     )
+
+
+
+# Host Analytics API
+def trackEventClicks(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            eventId = data.get("eventId")
+            guestId = data.get("guestId")
+            interaction_type = data.get("interaction_type", "Clicked")
+            duration = data.get("duration")
+            user = request.user if request.user.is_authenticated else None
+
+            # Retrieve or create the guest user
+            guest_user = None
+            if not user and guestId:
+                guest_user, _ = GuestUser.objects.get_or_create(guestId=guestId)
+
+            event = Event.objects.get(eventId=eventId)
+            # Log the interaction
+            EventInteractionControl.objects.create(
+                event=event,
+                user=user,
+                guest=guest_user,
+                interaction_type=interaction_type,
+                duration=duration if interaction_type == "Stayed" else None,
+            )
+
+            return JsonResponse({"status": "success", "message": "Interaction logged successfully."})
+        except Exception as e:
+            return JsonResponse({"status": "error", "message": str(e)}, status=400)
+    return JsonResponse({"status": "error", "message": "Invalid request method."}, status=405)
