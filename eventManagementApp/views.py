@@ -848,3 +848,12 @@ def hostBillingCashout(request):
                 {"success": False, "error": "An error occurred"}, status=400
             )
     return JsonResponse({"success": False, "error": "Invalid request"}, status=405)
+
+
+
+@login_required
+@host
+@member
+@check_suspension
+def hostAnalyticsHome(request):
+    return render(request, "eventManagementApp/host/analytics/analyticsHome.html")
