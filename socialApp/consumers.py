@@ -44,7 +44,22 @@ class SocialHomeConsumer(AsyncWebsocketConsumer):
         await self.channel_layer.group_add(self.group_name, self.channel_name)
         await self.accept()
 
-    async def friend_request_update(self, event):
+    async def social_update(self, event):
+        # Send the friend request update to the client
+        await self.send(text_data=json.dumps(event["data"]))
+
+    async def disconnect(self, close_code):
+        # Remove the user from the group
+        await self.channel_layer.group_discard(self.group_name, self.channel_name)
+        
+class CrewConsumer(AsyncWebsocketConsumer):
+    async def connect(self):
+        # Authenticate the user and create a group based on the user ID
+        self.group_name = f"user_{self.scope['user'].id}"
+        await self.channel_layer.group_add(self.group_name, self.channel_name)
+        await self.accept()
+
+    async def crew_request_update(self, event):
         # Send the friend request update to the client
         await self.send(text_data=json.dumps(event["data"]))
         
@@ -52,4 +67,3 @@ class SocialHomeConsumer(AsyncWebsocketConsumer):
     async def disconnect(self, close_code):
         # Remove the user from the group
         await self.channel_layer.group_discard(self.group_name, self.channel_name)
-

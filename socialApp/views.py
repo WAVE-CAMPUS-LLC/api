@@ -120,29 +120,53 @@ def socialHomeView(request):
         },
     )
 
+def crew_invite_action(request, crew_id, action):
+    crew = get_object_or_404(Crew, crewId=crew_id)
+    crew_request = get_object_or_404(CrewRequest, crew=crew, receiver=request.user)
+    sender = get_object_or_404(UserProfile, user=crew_request.sender)
+
+    if action == "joinCrew":
+        crew_request.accept_request()
+        CrewMember.objects.create(user=request.user, crew=crew)
+        messages.success(request, f"You joined the {crew.name} crew.")
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            f"user_{sender.user.id}",
+            {
+                "type": "crew_request_update",
+                "data": {
+                    "message": f"{request.user.username} sent you a friend request!",
+                    "action": "send",
+                },
+            },
+        )
+        
+    elif action == "declineCrew":
+        crew_request.decline_request()
+        messages.success(
+            request, f"Crew Invite Declined"
+        )
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            f"user_{sender.user.id}",
+            {
+                "type": "crew_request_update",
+                "data": {
+                    "message": f"{request.user.username} sent you a friend request!",
+                    "action": "send",
+                },
+            },
+        )
+        crew_request.delete()
+
+    return redirect("social:home")
+
 
 @login_required
 @check_suspension
 @member
 @verified
 @onboarded
-def crew_invite_action(request, crew_id, action):
-    crew = get_object_or_404(Crew, crewId=crew_id)
-    crew_request = get_object_or_404(CrewRequest, crew=crew, receiver=request.user)
-
-    if action == "joinCrew":
-        crew_request.accept_request()
-        CrewMember.objects.create(user=request.user, crew=crew)
-        messages.success(request, f"{request.user} joined the {crew.name} crew.")
-    elif action == "declineCrew":
-        crew_request.decline_request()
-        messages.success(
-            request, f"{request.user} has declines the invite to join {crew.name} crew."
-        )
-
-    return redirect("social:home")
-
-
 def publicProfileView(request, username):
     user_profile = get_object_or_404(UserProfile, user__username=username)
 
@@ -178,7 +202,7 @@ def publicProfileView(request, username):
                 async_to_sync(channel_layer.group_send)(
                     f"user_{other_user_profile.user.id}",
                     {
-                        "type": "friend_request_update",
+                        "type": "social_update",
                         "data": {
                             "message": f"{request.user.username} sent you a friend request!",
                             "action": "send",
@@ -210,7 +234,7 @@ def publicProfileView(request, username):
                 async_to_sync(channel_layer.group_send)(
                     f"user_{other_user_profile.user.id}",
                     {
-                        "type": "friend_request_update",
+                        "type": "social_update",
                         "data": {
                             "message": f"{request.user.username} canceled the friend request.",
                             "action": "cancel",
@@ -247,7 +271,7 @@ def publicProfileView(request, username):
                 async_to_sync(channel_layer.group_send)(
                     f"user_{other_user_profile.user.id}",
                     {
-                        "type": "friend_request_update",
+                        "type": "social_update",
                         "data": {
                             "message": f"{request.user.username} removed you as a friend.",
                             "action": "remove",
@@ -360,11 +384,32 @@ def crewView(request, crewId):
         action = request.POST.get("action")
         if action == "crew_invite":
             inviteeUsername = request.POST.get("invitee_username")
-            success, message = send_crew_request(user, inviteeUsername, crewId)
+            receiver = get_object_or_404(UserProfile, user__username=inviteeUsername)
+            success, message, crew_request = send_crew_request(user, inviteeUsername, crewId)
             if success:
                 messages.success(request, message)
+                channel_layer = get_channel_layer()
+                async_to_sync(channel_layer.group_send)(
+                    f"user_{receiver.user.id}",
+                    {
+                        "type": "social_update",
+                        "data": {
+                            "message": f"{request.user.username} sent you a crew invite.",
+                            "action": "sendCrew",
+                            "crew_request": {
+                                "requestId": str(crew_request.requestId),
+                                "crew": str(crew.name),
+                                "crewId": str(crew.crewId),
+                                "sender": {
+                                    "username": str(user.user.username),
+                                },
+                            },
+                        },
+                    },
+                )
             else:
                 messages.warning(request, message)
+            return redirect("social:crew", crewId=crewId)
 
         elif action == "leave_crew":
             leave_crew(request, crewId)
@@ -377,6 +422,25 @@ def crewView(request, crewId):
         elif action == "kick_member":
             member_username = request.POST.get("member")
             kick_member(request, crewId, member_username)
+            receiver = get_object_or_404(UserProfile, user__username=member_username)
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                f"user_{receiver.user.id}",
+                {
+                    "type": "social_update",
+                    "data": {
+                        "message": f"{request.user.username} kicked you from the crew.",
+                        "action": "kickCrew",
+                        "crew_request": {
+                            "crew": str(crew.name),
+                            "crewId": str(crew.crewId),
+                            "sender": {
+                                "username": str(user.user.username),
+                            },
+                        },
+                    },
+                },
+            )
             return redirect("social:crew", crewId=crewId)
 
     return render(
@@ -403,7 +467,7 @@ def send_crew_request(sender, receiver_username, crew_id):
     crew = get_object_or_404(Crew, crewId=crew_id)
 
     if CrewMember.objects.filter(crew=crew, user=receiver.user).exists():
-        return False, "User is already a member of the crew."
+        return False, "User is already a member of the crew.", None
 
     crew_request, created = CrewRequest.objects.get_or_create(
         sender=sender.user,
@@ -413,9 +477,9 @@ def send_crew_request(sender, receiver_username, crew_id):
     )
 
     if not created:
-        return False, "Crew request has already been sent."
+        return False, "Crew request has already been sent.", None
 
-    return True, "Crew request sent successfully."
+    return True, "Crew request sent successfully.", crew_request
 
 
 @login_required
