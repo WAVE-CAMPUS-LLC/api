@@ -1,8 +1,12 @@
 import resend
 import json
 import stripe
+from docx import Document
+from reportlab.pdfgen import canvas
+from io import BytesIO
 
 from django.conf import settings
+from django.http import FileResponse, Http404
 from django.db.models import Max
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
@@ -66,6 +70,7 @@ from .forms import (
     UpdateImageTwoForm,
     UpdateImageThreeForm,
     CollegeForm,
+    EditCollegeForm,
 )
 from supportCenterApp.models import SupportTicket, SupportTicketMessage
 from wave_v1.decorators import (
@@ -224,6 +229,58 @@ def adminCareerApplicationsView(request):
         "adminDashboardApp/tabs/applications/careerApplications.html",
         {"applications": careerApplications},
     )
+
+
+@login_required(login_url="authentication:login")
+@check_suspension
+@member
+@admin
+def adminCareerApplicationsDetailView(request, applicationId):
+    application = get_object_or_404(CareerRoleApplication, applicationId=applicationId)
+
+    if request.method == "POST":
+        action = request.POST.get('eventAction')
+        email = request.POST.get('applicantEmail')
+        
+        if action == "approveApplicant":
+            application.approval_status = "approved"
+            application.save()
+            sendApprovedCareerApplicantEmail(email)
+            return redirect("waveAdmin:careerApplications")
+        elif action == "denyApplicant":
+            application.approval_status = "denied"
+            application.save()
+            sendDeniedCareerApplicantEmail(email)
+            return redirect("waveAdmin:careerApplications")
+            
+            
+    return render(
+        request,
+        "adminDashboardApp/tabs/applications/careerApplicationDetail.html",
+        {
+            "application": application,
+        },
+    )
+
+def sendApprovedCareerApplicantEmail(applicantEmail):
+    try:
+        subject = "Welcome to WAVE.!"
+        emailMessageHtml = render_to_string("emailTemplates/adminDashboardApp/careers/applicationApproved.html", {})
+        plainMessage = strip_tags(emailMessageHtml)
+        send_mail(subject, plainMessage, None, [applicantEmail], html_message=emailMessageHtml)
+    except Exception as e:
+        print(f"Error sending email to {applicantEmail}: {e}")
+
+
+def sendDeniedCareerApplicantEmail(applicantEmail):
+    try:
+        subject = "Thank you for your application!"
+        emailMessageHtml = render_to_string("emailTemplates/adminDashboardApp/careers/applicationDenied.html", {})
+        plainMessage = strip_tags(emailMessageHtml)
+        send_mail(subject, plainMessage, None, [applicantEmail], html_message=emailMessageHtml)
+    except Exception as e:
+        print(f"Error sending email to {applicantEmail}: {e}")
+        
 
 
 @login_required(login_url="authentication:login")
@@ -644,7 +701,7 @@ def adminConnectedAccountsView(request):
 def adminConnectedAccountDetailView(request, account_id):
     account = StripeAdmin.getConnectedAccountDetails(request, account_id)
     transactions = StripeAdmin.getConnectedAccountTransactions(request, account_id)
-    
+
     if request.method == "POST":
         action = request.POST.get("eventAction")
         if action == "deleteStripeAccount":
@@ -660,14 +717,17 @@ def adminConnectedAccountDetailView(request, account_id):
     )
 
 
-
 @login_required(login_url="authentication:login")
 @check_suspension
 @member
 @admin
 def adminProductsView(request):
     products = StripeAdmin.getProducts(request)
-    return render(request, "adminDashboardApp/tabs/financial/products.html", {"products": products})
+    return render(
+        request,
+        "adminDashboardApp/tabs/financial/products.html",
+        {"products": products},
+    )
 
 
 @login_required(login_url="authentication:login")
@@ -777,25 +837,34 @@ def adminCollegeDetailView(request, collegeId):
     )
     organizations = Organization.objects.filter(college=college)
     action = request.POST.get("eventAction")
+    editCollegeForm = EditCollegeForm(instance=college)
 
     # members = Membership.objects.filter(college=college)
 
     members = UserProfile.objects.filter(college=college)
 
+    # Check if requested user has role of super admin
+    user = request.user
+    if user.groups.filter(name="Super Admin").exists():
+        isSuperAdmin = True
+    else:
+        isSuperAdmin = False
+
     if request.method == "POST":
-        email = request.POST.get("inviteEmail")
+        if action == "inviteManager":
+            email = request.POST.get("inviteEmail")
 
-        if email:
-            try:
-                send_invite(email, college)
+            if email:
+                try:
+                    send_invite(email, college)
 
-                messages.success(request, "Invite sent successfully")
-            except Exception as e:
-                messages.error(request, f"Error sending invite: {str(e)}")
-        else:
-            messages.error(request, "Please provide an email address")
+                    messages.success(request, "Invite sent successfully")
+                except Exception as e:
+                    messages.error(request, f"Error sending invite: {str(e)}")
+            else:
+                messages.error(request, "Please provide an email address")
 
-        if action == "removeManager":
+        elif action == "removeManager":
             manager_email = request.POST.get("managerEmail")
             if manager_email:
                 try:
@@ -816,6 +885,19 @@ def adminCollegeDetailView(request, collegeId):
                     messages.error(request, f"Error removing manager: {str(e)}")
             else:
                 messages.error(request, "No manager email provided.")
+
+        elif action == "editCollege":
+            editCollegeForm = EditCollegeForm(request.POST, instance=college)
+            if editCollegeForm.is_valid():
+                editCollegeForm.save()
+                messages.success(request, "College details updated successfully.")
+            else:
+                messages.error(request, "Error updating college details.")
+
+        elif action == "deleteCollege":
+            college.delete()
+            return redirect("waveAdmin:colleges")
+
         return redirect("waveAdmin:collegeDetail", collegeId=collegeId)
 
     return render(
@@ -826,6 +908,8 @@ def adminCollegeDetailView(request, collegeId):
             "events": events,
             "organizations": organizations,
             "members": members,
+            "editCollegeForm": editCollegeForm,
+            "isSuperAdmin": isSuperAdmin,
         },
     )
 
@@ -875,7 +959,6 @@ def send_invite(email, college):
 @admin
 def adminCollegeOrgsView(request):
     organizations = Organization.objects.all()
-    print(organizations)
     return render(
         request,
         "adminDashboardApp/tabs/colleges/organizations.html",

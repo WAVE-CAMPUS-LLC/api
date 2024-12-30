@@ -1,5 +1,6 @@
 {% extends "base/base.html" %}
 {% load static %}
+{% load widget_tweaks %}
 
 {% block title %}
 Careers @ Wave.  
@@ -173,7 +174,7 @@ Careers @ Wave.
             </div>
 
 
-            <form action="{% url "careers:roleDetails" careerRole.roleID %}" class="h-full flex justify-between" method="post">
+            <form action="{% url "careers:roleDetails" careerRole.roleID %}" class="h-full flex justify-between" method="post" enctype="multipart/form-data">
                 {% csrf_token %}
                 {% for error in careerAppForm.errors %}
                     <p>{{ error }}</p>
@@ -213,7 +214,7 @@ Careers @ Wave.
                                 <div class="resumeUpload gradient-btn">
                                     Attach
                                 </div>
-                                <input class="hidden" type="{{ careerAppForm.applicantResume.field.widget.input_type }}" name="{{ careerAppForm.applicantResume.html_name }}" id="{{ careerAppForm.applicantResume.auto_id }}" accept=".doc,.docx,.pdf,.txt" class="input-file">
+                                {{ careerAppForm.applicantResume|add_class:"hidden" }}
                             </label>
 
                             <label class="w-full flex flex-col gap-1" for="{{ careerAppForm.applicantCoverLetter.id_for_label }}" class="file-upload">
@@ -221,7 +222,7 @@ Careers @ Wave.
                                 <div class="coverLetterUpload gradient-btn">
                                     Attach
                                 </div>
-                                <input class="hidden" type="{{ careerAppForm.applicantCoverLetter.field.widget.input_type }}" name="{{ careerAppForm.applicantCoverLetter.html_name }}" id="{{ careerAppForm.applicantCoverLetter.auto_id }}" accept=".doc,.docx,.pdf,.txt" class="input-file">
+                                {{ careerAppForm.applicantCoverLetter|add_class:"hidden" }}
                             </label>
                         </div>
 

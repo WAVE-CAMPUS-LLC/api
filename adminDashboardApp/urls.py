@@ -13,6 +13,7 @@ urlpatterns = [
         name="departmentDetails",
     ),
     path("applications/career/", views.adminCareerApplicationsView, name="careerApplications"),
+    path("applications/career/<uuid:applicationId>/review/", views.adminCareerApplicationsDetailView, name="careerApplicationDetail"),
     path("applications/host/", views.adminHostApplicationsView, name="hostApplications"),
     path("events/", views.adminEventsView, name="events"),
     # User Management

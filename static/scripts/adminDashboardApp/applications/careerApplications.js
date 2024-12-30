@@ -18,11 +18,11 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // Close button functionality for modals
-    const closeButtons = document.querySelectorAll('.modalClose button');
+    const closeButtons = document.querySelectorAll('#hideModalButton');
     closeButtons.forEach(button => {
         button.addEventListener('click', function () {
             // Get the closest modal (parent element) to the close button and hide it
-            const modal = button.closest('.hidden');
+            const modal = button.closest('.hidden') || button.closest('.modalContentCard').parentElement.parentElement;
             if (modal) {
                 modal.classList.add('hidden');
             }
