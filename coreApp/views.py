@@ -31,7 +31,7 @@ def exploreView(request):
     pageName = "explore"
 
     # Load initial 6 events
-    initial_events = Event.objects.filter(status="live", privacy="Discoverable")[:7]
+    initial_events = Event.objects.filter(status="live", privacy="Discoverable", admin_status="active")[:7]
     trending_events = Event.objects.filter(
         status="live", privacy="Discoverable"
     ).order_by("date")[:3]
@@ -54,7 +54,7 @@ def exploreView(request):
         invited_events_with_tokens = None
 
     trending_categories = (
-        Event.objects.filter(status="live", privacy="Discoverable")
+        Event.objects.filter(status="live", privacy="Discoverable",admin_status="active")
         .values("event_type")
         .annotate(event_count=Count("event_type"))
         .order_by("-event_count")[:4]
@@ -81,7 +81,7 @@ def exploreView(request):
     end_of_week = start_of_week + timedelta(days=6)
 
     weekly_events = Event.objects.filter(
-        date__range=[start_of_week, end_of_week], status="live", privacy="Discoverable"
+        date__range=[start_of_week, end_of_week], status="live", privacy="Discoverable", admin_status="active"
     ).order_by("?")[:3]
 
     return render(
@@ -117,7 +117,7 @@ def load_more_events(request):
     offset = int(request.GET.get("offset", 7))
     limit = 3
 
-    more_events = Event.objects.filter(status="live", privacy="Discoverable")[
+    more_events = Event.objects.filter(status="live", privacy="Discoverable", admin_status="active")[
         offset : offset + limit
     ]
     events_data = []
@@ -137,7 +137,7 @@ def load_more_events(request):
             }
         )
 
-    has_more = Event.objects.filter(status="live", privacy="Discoverable").count() > (
+    has_more = Event.objects.filter(status="live", privacy="Discoverable", admin_status="active").count() > (
         offset + limit
     )
 

@@ -1,4 +1,6 @@
+from authenticationApp.admin import super_admin_restricted_site
 from django.contrib import admin
+
 from .models import CollegeRequest, Organization, Membership
 from authenticationApp.admin import super_admin_restricted_site
 

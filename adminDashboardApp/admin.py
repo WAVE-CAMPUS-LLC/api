@@ -1,4 +1,6 @@
+from authenticationApp.admin import super_admin_restricted_site
 from django.contrib import admin
+
 from .models import College, LoginHistoryModel, Department, CareerRole, Newsroom
 from authenticationApp.admin import super_admin_restricted_site
 

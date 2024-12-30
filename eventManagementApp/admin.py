@@ -1,6 +1,10 @@
+from authenticationApp.admin import super_admin_restricted_site
 from django.contrib import admin
 from .models import HostApplication, Event, EventPrivacy, HostProfile
 from eventTicketsApp.models import RSVPTicket, PaidFreeTicket, Ticket
+from authenticationApp.admin import super_admin_restricted_site
+
+
 
 
 # Register your models here.
@@ -96,12 +100,12 @@ class HostProfileAdmin(admin.ModelAdmin):
         
     )
 
-admin.site.register(Ticket, TicketAdmin)
-admin.site.register(HostProfile, HostProfileAdmin)
+super_admin_restricted_site.register(Ticket, TicketAdmin)
+super_admin_restricted_site.register(HostProfile, HostProfileAdmin)
 
 
-admin.site.register(Event, EventAdmin)
-admin.site.register(EventPrivacy, EventPrivacyAdmin)
-admin.site.register(RSVPTicket, RSVPTicketAdmin)
-admin.site.register(PaidFreeTicket, PaidFreeTicketAdmin)
-admin.site.register(HostApplication, HostApplicationAdmin)
+super_admin_restricted_site.register(Event, EventAdmin)
+super_admin_restricted_site.register(EventPrivacy, EventPrivacyAdmin)
+super_admin_restricted_site.register(RSVPTicket, RSVPTicketAdmin)
+super_admin_restricted_site.register(PaidFreeTicket, PaidFreeTicketAdmin)
+super_admin_restricted_site.register(HostApplication, HostApplicationAdmin)

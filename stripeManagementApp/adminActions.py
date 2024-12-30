@@ -179,3 +179,22 @@ class StripeAdmin:
         except stripe.error.StripeError as e:
             messages.error(request, f"Error: {e}")
             return []
+        
+        
+    def removeStripeAccount(request, stripeAccountId):
+        try:
+            stripe.Account.delete(stripeAccountId)
+            messages.success(request, "Stripe account deleted successfully.")
+            return {"status": "success"}
+        except stripe.error.StripeError as e:
+            messages.error(request, f"Error: {e}")
+            return {"status": "error", "message": str(e)}
+        
+    def rejectStripeAccount(request, stripeAccountId):
+        try:
+            stripe.Account.reject(stripeAccountId, reason="other")
+            messages.success(request, "Stripe account rejected successfully.")
+            return {"status": "success"}
+        except stripe.error.StripeError as e:
+            messages.error(request, f"Error: {e}")
+            return {"status": "error", "message": str(e)}

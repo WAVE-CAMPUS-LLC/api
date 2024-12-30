@@ -46,6 +46,5 @@ urlpatterns = [
 
     path('financial/connected/accounts/', views.adminConnectedAccountsView, name='connectedAccounts'),
     path('financial/connected/accounts/<str:account_id>/', views.adminConnectedAccountDetailView, name='connectedAccountDetail'),
-    path('financial/overview/', views.adminFinanceOverviewView, name='financialOverview'),
     path('financial/products/', views.adminProductsView, name='stripeProducts'),
 ]

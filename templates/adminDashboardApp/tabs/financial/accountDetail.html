@@ -110,6 +110,14 @@ Connected Accounts (Stripe) — WAVE.
                             </div>
                         </div>
                     </div>
+
+                    <div id="account-control" class="flex flex-col gap-6">
+                        <form method="POST" class="w-full flex flex-row justify-between">
+                            {% csrf_token %}
+                            <button id="deleteStripeAccount" value="rejectStripeAccount" type="submit" name="eventAction" class="bg-[yellow] text-white font-Wanted-Variable py-3 px-7 rounded-2xl">Reject Account</button>
+                            <button id="deleteStripeAccount" value="deleteStripeAccount" type="submit" name="eventAction" class="bg-[red] text-white font-Wanted-Variable py-3 px-7 rounded-2xl">Delete Account</button>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>

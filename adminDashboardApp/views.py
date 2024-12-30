@@ -495,8 +495,8 @@ def adminUserDetailedView(request, username):
 @admin
 def adminRoleView(request):
     createGroup = CreateGroupForm()
-    all_groups = Group.objects.all()
-    all_permissions = Permission.objects.all()
+    all_groups = Group.objects.all()[:20]
+    all_permissions = Permission.objects.all()[:20]
 
     if request.method == "POST":
         action = request.POST.get("roleControlAction")
@@ -644,19 +644,21 @@ def adminConnectedAccountsView(request):
 def adminConnectedAccountDetailView(request, account_id):
     account = StripeAdmin.getConnectedAccountDetails(request, account_id)
     transactions = StripeAdmin.getConnectedAccountTransactions(request, account_id)
+    
+    if request.method == "POST":
+        action = request.POST.get("eventAction")
+        if action == "deleteStripeAccount":
+            StripeAdmin.removeStripeAccount(request, account_id)
+            return redirect("waveAdmin:connectedAccounts")
+        elif action == "rejectStripeAccount":
+            StripeAdmin.rejectStripeAccount(request, account_id)
+            return redirect("waveAdmin:connectedAccounts")
     return render(
         request,
         "adminDashboardApp/tabs/financial/accountDetail.html",
         {"account": account, "transactions": transactions},
     )
 
-
-@login_required(login_url="authentication:login")
-@check_suspension
-@member
-@admin
-def adminFinanceOverviewView(request):
-    return render(request, "adminDashboardApp/tabs/financial/overview.html")
 
 
 @login_required(login_url="authentication:login")
