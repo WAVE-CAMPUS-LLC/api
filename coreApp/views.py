@@ -249,7 +249,13 @@ def eventDetailsView(request, eventId, token=None):
 
             user = get_object_or_404(UserProfile, user=request.user)
 
-            SharedEvent.objects.get_or_create(crew=crew, sender=user, event=event)
+            for member in crew.members.all():
+                SharedEvent.objects.get_or_create(
+                    crew=crew,
+                    sender=user,
+                    receiver=member.user_profile,
+                    event=event,
+                )
 
             messages.success(request, f"Event shared with {crew.name}")
             return redirect("core:eventDetails", eventId=event.eventId)

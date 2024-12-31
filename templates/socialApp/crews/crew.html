@@ -5,9 +5,6 @@
 {{ crew.name}} — WAVE.
 {% endblock title %}
 
-{% block app_page_style %}
-<link rel="stylesheet" type="text/css" href="{% static "/styles/socialApp/crews/crew.css" %}?v={{time}}" />
-{% endblock app_page_style %}
 
 {% block script %}
 <script type="text/javascript" src="{% static "scripts/socialApp/tabControl.js" %}?v={{time}}" defer></script>
@@ -109,7 +106,7 @@
                                 <div id="memberItem" class="flex flex-col sm:flex-row text-start sm:justify-between sm:gap-[20px] items-start sm:items-center w-full">
                                     <a target="_blank" class="no-underline text-black flex gap-[30px] justify-between items-center" href="{% url "social:publicProfile" username=member.user.username %}">
                                         <div class="ir-pfp flex items-center justify-center">
-                                            <img src="{% static "/images/socialApp/publicProfile/profile/E.L.png" %}" alt="crew member" class="w-[70px] xxsm:w-[100px] h-[70px] xxsm:h-[100px] rounded-[50%]" />
+                                            <img src="{{ member.profile_photo.url }}" alt="@{{ member.user.username }}" class="w-[70px] xxsm:w-[100px] h-[70px] xxsm:h-[100px] rounded-[50%]" />
                                         </div>
                                         <div class="member-info flex flex-col gap-[5px] no-underline">
                                             <h3 class="member-name font-bold no-underline font-Wanted-Bold text-[18px] xssm:text-[20px]">
@@ -187,7 +184,7 @@
                             <div class="friendItem flex flex-col sm:flex-row justify-between items-start sm:items-center p-[20px]">
                                 <div class="friendInfoo flex gap-[20px] items-center">
                                     <div class="friendPfp">
-                                        <img src="{% static "/images/socialApp/publicProfile/profile/E.L.png" %}"
+                                        <img src="{{ friend.profile_photo.url }}"
                                             alt="Profile Picture" class="w-[50px] after-xsm:w-[70px] h-[50px] after-xsm:h-[70px] rounded-[70%]"/>
                                     </div>
                                     <div class="friendNames font-Wanted-Bold text-[18px] xssm:text-[20px]">
@@ -206,7 +203,7 @@
                             <div class="friendItem flex flex-col sm:flex-row justify-between items-start sm:items-center p-[20px]">
                                 <div class="friendInfoo flex gap-[20px] items-center">
                                     <div class="friendPfp">
-                                        <img src="{% static "/images/socialApp/publicProfile/profile/E.L.png" %}"
+                                        <img src="{{ friend.profile_photo.url }}"
                                             alt="Profile Picture" class="w-[50px] after-xsm:w-[70px] h-[50px] after-xsm:h-[70px] rounded-[70%]"/>
                                     </div>
                                     <div class="friendNames font-Wanted-Bold text-[18px] xssm:text-[20px]">
@@ -225,7 +222,7 @@
                             <div class="friendItem flex flex-col sm:flex-row justify-between items-start sm:items-center p-[20px]">
                                 <div class="friendInfoo flex gap-[20px] items-center">
                                     <div class="friendPfp">
-                                        <img src="{% static "/images/socialApp/publicProfile/profile/E.L.png" %}"
+                                        <img src="{{ friend.profile_photo.url }}"
                                             alt="Profile Picture" class="w-[50px] after-xsm:w-[70px] h-[50px] after-xsm:h-[70px] rounded-[70%]"/>
                                     </div>
                                     <div class="friendNames font-Wanted-Bold text-[18px] xssm:text-[20px]">
