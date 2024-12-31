@@ -40,6 +40,7 @@
                     {% if isActiveUser %}
                     <a href="{% url "extras:activeMembers" %}" title="{{ user.first_name }} is a verified member">
                         <img src="{% static "images/socialApp/activeMember.svg" %}" class="size-5" />
+                    </a>
                     {% endif %}
                 </div>
                 
@@ -90,34 +91,46 @@
         </div>
     </div>
 
+    <div class="w-full flex justify-center">
+        <div class="w-auto border border-solid rounded-2xl p-5 font-Wanted-Regular text-Large">
+            {% if user.user_profile.friends.count <= 1 %}
+            <p>{{ user.first_name }} has {{ user.user_profile.friends.count }} connection</p>
+            {% elif user.user_profile.friends.count == 0 %}
+            <p>{{ user.first_name }} has no connections. Connect now!</p>
+            {% else %}
+            <p>{{ user.first_name }} has {{ user.user_profile.friends.count }} connections</p>
+            {% endif %}
+        </div>
+    </div>
+
     <div class="social-body w-full flex flex-col-reverse lg:flex-row items-center lg:items-start gap-[50px]">
-        <div class="verified-info flex flex-col gap-[20px] w-full lg:w-[30%] h-auto border border-solid border-custom-rgba8 rounded-[20px] shadow-custom-shadow-5 p-[40px]">
+        <div class="verified-info flex flex-col gap-[20px] w-full lg:w-[30%] h-auto border border-solid border-custom-rgba8 shadow-custom-shadow-2 rounded-[20px] p-[40px]">
             <h4 class="font-Wanted-SemiBold text-[18px] xssm:text-[22px] after-xsm:text-[25px]">{{ user.first_name }} social's</h4>
             <div class="viContainer flex flex-col gap-[20px]">
                 <ul class="list-none flex flex-col items-center gap-[15px]">
                     <li class="w-full flex-row flex gap-[12px] items-center font-Wanted-Variable text-[17px]">
-                        <img src="{% static "/images/socialApp/publicProfile/instagram.svg" %}" class="size-8" />
+                        <img src="{% static "/images/socialApp/publicProfile/instagram.svg" %}" class="size-5 after-xsm:size-7 md:size-9 lg:size-11" />
                         <p class="text-[14px] xsm:text-[17px] font-Wanted-Medium hover:underline hover:underline-offset-2 hover:decoration-green">
                             <a href="https://instagram.com/{{ user_profile.instagram }}/" >@{{ user_profile.instagram }}</a>
                         </p>
                     </li>
 
                     <li class="w-full flex gap-[12px] items-center font-Wanted-Variable text-[17px]">
-                        <img src="{% static "/images/socialApp/publicProfile/tiktok.svg" %}" class="size-8" />
+                        <img src="{% static "/images/socialApp/publicProfile/tiktok.svg" %}" class="size-5 after-xsm:size-7 md:size-9 lg:size-11" />
                         <p class="text-[14px] xsm:text-[17px] font-Wanted-Medium hover:underline hover:underline-offset-2 hover:decoration-green">
                             <a href="https://www.tiktok.com/@{{ user_profile.tiktok }}/">@{{ user_profile.tiktok }} </a>
                         </p>
                     </li>
 
                     <li class="w-full flex gap-[12px] items-center font-Wanted-Variable text-[17px]">
-                        <img src="{% static "/images/socialApp/publicProfile/email.svg" %}" class="size-8" />
+                        <img src="{% static "/images/socialApp/publicProfile/email.svg" %}" class="size-5 after-xsm:size-7 md:size-9 lg:size-11" />
                         <p class="text-[14px] xsm:text-[17px] font-Wanted-Medium hover:underline hover:underline-offset-2 hover:decoration-green"><a href="mailto:{{user_profile.user.email}}">Contact </a></p>
                     </li>
                     
                 </ul>
             </div>
         </div>
-        <div class="social-info flex flex-col gap-[20px] w-full lg:w-[70%] border border-custom-rgba8 rounded-[20px] shadow-custom-shadow-5 p-6 after-xsm:p-[40px]">
+        <div class="social-info flex flex-col gap-[20px] w-full lg:w-[70%] border border-custom-rgba8 shadow-custom-shadow-2 rounded-[20px] p-6 after-xsm:p-[40px]">
             <h4 class="font-Wanted-SemiBold text-[18px] xssm:text-[22px] after-xsm:text-[25px]">A little about {{ user.first_name }}</h4>
             <div class="siContainer flex flex-col gap-[20px]">
                 <ul class="list-none flex flex-col items-center gap-[15px]">

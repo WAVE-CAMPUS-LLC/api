@@ -296,3 +296,4 @@ class UserProfile(models.Model):
 
     def get_shared_events(self):
         return SharedEvent.objects.filter(receiver=self.user)  
+    
