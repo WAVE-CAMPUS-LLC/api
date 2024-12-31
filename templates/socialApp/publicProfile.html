@@ -30,11 +30,16 @@
             <div class="userNames flex flex-col justify-center items-center">
                 <h1 class="font-Wanted-Bold text-[25px] after-xsm:text-[30px] font-bold text-center">{{ user.first_name }} {{ user.last_name }}</h1>
                 <h2 class="font-Wanted-Variable text-[20px] text-customColor2 font-bold">@{{ user.username }}</h2>
-                <div class="w-full flex justify-center items-center gap-[10px]">
+                <div class="w-full flex justify-center flex-row items-center gap-2">
                     {% if isHost %}
                         <a href="{% url "extras:verifiedHosts" %}">
                             <img src="{% static "images/socialApp/verifiedHost.svg" %}" class="size-5" title="{{ user.first_name }} is a verified host" />
                         </a>
+                    {% endif %}
+
+                    {% if isActiveUser %}
+                    <a href="{% url "extras:activeMembers" %}" title="{{ user.first_name }} is a verified member">
+                        <img src="{% static "images/socialApp/activeMember.svg" %}" class="size-5" />
                     {% endif %}
                 </div>
                 

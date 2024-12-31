@@ -1,7 +1,5 @@
-from calendar import c
-from os import name
 from channels.layers import get_channel_layer
-import re
+import random
 from datetime import datetime
 from asgiref.sync import async_to_sync
 from ssl import MemoryBIO
@@ -16,7 +14,7 @@ from accountManagementApp.models import UserProfile
 from django.contrib import messages
 from django.contrib.auth import login, logout, authenticate
 from .models import FriendRequest, Crew, CrewMember, CrewRequest
-from django.db.models import Q
+from django.db.models import Q, F
 from .forms import createCrewForm
 from authenticationApp.models import CustomUser
 from eventManagementApp.models import SharedEvent
@@ -34,7 +32,35 @@ UserModel = get_user_model()
 @onboarded
 def socialHomeView(request):
     user = get_object_or_404(UserProfile, user=request.user)
-    my_crews = Crew.objects.filter(members__user=request.user)
+
+    myCrews = Crew.objects.filter(created_by=request.user)
+    crewsImIn = Crew.objects.filter(crew_members__user=request.user).exclude(
+        created_by=request.user
+    )
+
+    def get_random_members(crew):
+        crew_members = list(crew.members.all())  # Assuming `members` is a related field
+        return random.sample(crew_members, min(3, len(crew_members)))
+
+    myCrews_with_members = [
+        {
+            "crew": crew,
+            "random_members": get_random_members(crew),
+            "joined_at": (
+                crew.crew_members.filter(user=request.user).first().joined_at
+                if crew.crew_members.filter(user=request.user).exists()
+                else None
+            ),
+        }
+        for crew in myCrews
+    ]
+
+    crewsImIn_with_members = [
+        {"crew": crew, "random_members": get_random_members(crew)} for crew in crewsImIn
+    ]
+
+    allCrews = Crew.objects.filter(crew_members__user=request.user)
+
     time = datetime.now().timestamp()
     friends = user.friends.all()
 
@@ -42,7 +68,7 @@ def socialHomeView(request):
         "event", "receiver", "crew"
     )
     shared_with_me = SharedEvent.objects.filter(
-        Q(receiver=user) | Q(crew__in=my_crews)
+        Q(receiver=user) | Q(crew__in=allCrews)
     ).select_related("event", "sender", "crew")
 
     if user.user.groups.filter(name="Host").exists():
@@ -50,17 +76,44 @@ def socialHomeView(request):
     else:
         isHost = False
 
+    if (
+        user.user.groups.filter(name="Onboarded").exists()
+        and user.user.groups.filter(name="Verified").exists()
+    ):
+        isActiveUser = True
+    else:
+        isActiveUser = False
+
     pending_friend_requests = FriendRequest.objects.filter(
         receiver=request.user, status="pending"
     )
     sent_friend_requests = FriendRequest.objects.filter(
         sender=request.user, status="pending"
     )
-    
+
     pending_crew_requests = CrewRequest.objects.filter(
         receiver=request.user, status="pending"
     )
-    
+    sent_crew_requests = CrewRequest.objects.filter(sender=request.user, status="pending")
+
+    def get_pending_crew_request_random_members(crew_request):
+        crew = crew_request.crew  # Access the related Crew object from the CrewRequest
+        crew_members = list(
+            crew.crew_members.all()
+        )  # Assuming `crew_members` is a related field
+        return random.sample(crew_members, min(3, len(crew_members)))
+
+    pendingCrewRequestsWithMembers = [
+        {
+            "crew": crew_request.crew,
+            "sender": crew_request.sender,
+            "receiver": crew_request.receiver,
+            "created_at": crew_request.created_at,
+            "random_members": get_pending_crew_request_random_members(crew_request),
+        }
+        for crew_request in pending_crew_requests
+    ]
+
     print(pending_friend_requests)
 
     if request.method == "POST":
@@ -116,10 +169,53 @@ def socialHomeView(request):
             )
             return redirect("social:home")
 
-        else:
-            crew_id = request.POST.get("crew_id")
-            crew_invite_action(request, crew_id, action)
+        elif action == "cancelRequest":
+            friend_request_id = request.POST.get("friend_request_id")
+            friend_request = FriendRequest.objects.get(
+                requestId=friend_request_id, sender=request.user
+            )
+            receiver = get_object_or_404(UserProfile, user=friend_request.receiver)
+            # We have to get the receiver's user model to match the user id for the channel group name, because the channel relies on the traditional auth user model instead of the custom user model
+            receiverUserModel = get_object_or_404(
+                UserModel, username=receiver.user.username
+            )
+            user.friends.remove(receiver)
+            receiver.friends.remove(user)
+            friend_request.delete()
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                f"user_{receiverUserModel.id}",
+                {
+                    "type": "friend_request_action",
+                    "data": {
+                        "message": "Request has been canceled.",
+                    },
+                },
+            )
+            return redirect("social:home")
 
+        elif action == "cancelCrewInvite":
+            crew_request_id = request.POST.get("request_id")
+            crew_request = CrewRequest.objects.get(
+                requestId=crew_request_id, sender=request.user
+            )
+            receiver = get_object_or_404(UserProfile, user=crew_request.receiver)
+            # We have to get the receiver's user model to match the user id for the channel group name, because the channel relies on the traditional auth user model instead of the custom user model
+            receiverUserModel = get_object_or_404(
+                UserModel, username=receiver.user.username
+            )
+            crew_request.delete()
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                f"user_{receiverUserModel.id}",
+                {
+                    "type": "crew_request_action",
+                    "data": {
+                        "message": "Crew invite has been canceled.",
+                    },
+                },
+            )
+            return redirect("social:home")
     return render(
         request,
         "socialApp/socialHome.html",
@@ -127,11 +223,14 @@ def socialHomeView(request):
             "pending_friend_requests": pending_friend_requests,
             "sent_friend_requests": sent_friend_requests,
             "user_profile": user,
-            "pending_crew_requests": pending_crew_requests,
+            "pending_crew_requests": pendingCrewRequestsWithMembers,
+            "sent_crew_requests": sent_crew_requests,
             "friends": friends,
-            "my_crews": my_crews,
+            "myCrews": myCrews_with_members,
+            "crewsImIn": crewsImIn_with_members,
             "time": time,
             "isHost": isHost,
+            "isActiveUser": isActiveUser,
             "my_shared_events": my_shared_events,
             "shared_with_me": shared_with_me,
         },
@@ -158,6 +257,7 @@ def crew_invite_action(request, crew_id, action):
                 },
             },
         )
+        crew_request.delete()
         return redirect("social:crew", crewId=crew_id)
 
     elif action == "declineCrew":
@@ -191,6 +291,14 @@ def publicProfileView(request, username):
         isHost = True
     else:
         isHost = False
+
+    if (
+        user_profile.user.groups.filter(name="Onboarded").exists()
+        and user_profile.user.groups.filter(name="Verified").exists()
+    ):
+        isActiveUser = True
+    else:
+        isActiveUser = False
 
     try:
         other_user = get_object_or_404(CustomUser, username=username)
@@ -310,6 +418,7 @@ def publicProfileView(request, username):
             "friend_request_status": friend_request_status,
             "is_profile": is_profile,
             "isHost": isHost,
+            "isActiveUser": isActiveUser,
         },
     )
 

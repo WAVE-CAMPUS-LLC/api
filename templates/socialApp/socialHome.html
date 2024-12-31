@@ -26,11 +26,17 @@ My Social @{{ user.username }} — WAVE.
         <div class="w-full flex justify-center">
             <img src="{{ user_profile.profile_photo.url }}" alt="Profile Picture" class="rounded-full size-40" />
         </div>
-        <div class="userNames flex flex-row gap-2 items-center">
+        <div class="userNames flex flex-col gap-2 items-center">
             <h1 class="font-Wanted-Bold text-2xl">My Social</h1>
-            {% if isHost %}
-            <img src="{% static "images/socialApp/verifiedHost.svg" %}" class="size-5" />
-            {% endif %}
+            <div class="flex flex-row gap-2 items-center">
+                {% if isHost %}
+                <img src="{% static "images/socialApp/verifiedHost.svg" %}" class="size-5" />
+                {% endif %}
+
+                {% if isActiveUser %}
+                <img src="{% static "images/socialApp/activeMember.svg" %}" class="size-5" />
+                {% endif %}
+            </div>
         </div>
         
         <div class="connectRow">
@@ -67,7 +73,7 @@ My Social @{{ user.username }} — WAVE.
                     </li>
                     <li role="button" type="button" class="social-tab block cursor-pointer border-l-4 pl-4 -ml-px border-transparent hover:border-green" data-tab="invitations">
                         <div id="crew-invitations" class="w-full flex justify-between items-center">
-                            <p>Crew Invitations</p>
+                            <p>Crew Invites</p>
                             <span id="number-of-requests-crew" data-initial-count="{{ pending_crew_requests|length }}" class="hidden font-Wanted-Variable text-white bg-[red] rounded-full px-2 py-1">
                             {% if pending_crew_requests %}
                                 {% if pending_crew_requests|length > 9 %}
@@ -144,7 +150,7 @@ My Social @{{ user.username }} — WAVE.
                                     {% for request in pending_friend_requests %}
                                     <div class="flex flex-col gap-4 items-center cursor-pointer border border-custom-rgba8 hover:border-green shadow-custom-shadow-3 rounded-2xl p-5 " id="{{ request.requestId }}">
                                         <div class="request-left">
-                                            <div class="user-pfp w-full flex justify-center">
+                                            <div class="w-full flex justify-center">
                                                 <img src="{{ request.receiver.user_profile.profile_photo.url }}" alt="Profile Picture" class="rounded-full size-14" />
                                             </div>
                                             <div class="user-names flex flex-col gap-1 justify-center items-center">
@@ -203,7 +209,7 @@ My Social @{{ user.username }} — WAVE.
                                         <form method="POST" class="flex justify-center items-center gap-4">
                                             {% csrf_token %}
                                             <input type="hidden" name="friend_request_id" value="{{ request.requestId }}">
-                                            <input type="hidden" name="action" value="declineRequest"> 
+                                            <input type="hidden" name="action" value="cancelRequest"> 
                                             <button class="decline flex justify-center font-Wanted-Bold text-white bg-[red] rounded-xl py-2 px-4" type="submit" role="button">
                                                Cancel
                                             </button>
@@ -227,94 +233,155 @@ My Social @{{ user.username }} — WAVE.
             </div>
 
             <div class="social-home-elements" id="invitations">
-                <div class="info-container">
+                <div id="crewRequestsBody" class="info-container px-5 flex flex-col gap-5">
                     <div class="home-header">
-                        <h4>
-                            Crew Invitations
-                        </h4>
+                        <div id="shareControl" class="content-control flex flex-row justify-start gap-4 w-full"> 
+                            <div class="crewRequestTab tab-active cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="receivedCrewInvites">My Invites</div>
+                            <div class="crewRequestTab cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="sentCrewInvites">Sent Invites</div>
+                        </div>
                     </div>
-                    <div class="crew-invitation-body" id="crew-invitations-container">
-                        {% if pending_crew_requests %}
-                            {% for request in pending_crew_requests %}
-                            <div class="crew-invite-item" id="{{ request.crew.crewId }}">
-                                <div class="cit-left">
-                                    <div class="cit-pfp">
-                                        <img src="{% static "/images/socialApp/publicProfile/profile/E.L.png" %}" alt="Profile Picture" />
+
+                    <div>
+                        <div class="crewRequestTabContainer" id="receivedCrewInvites">
+                            {% if pending_crew_requests %}
+                            <div class="grid grid-cols-3 gap-5 flex-wrap">
+                                {% for request in pending_crew_requests %}
+                                <div class="flex flex-col gap-3 items-center cursor-pointer border border-custom-rgba8 hover:border-green shadow-custom-shadow-3 rounded-2xl p-5" id="{{ request.crew.crewId }}">
+                                    <div class="flex flex-col gap-2 items-center">
+                                        <div class="memberProfilePictures flex flex-row justify-center gap-2">
+                                            {% for member in request.random_members %}
+                                                <img src="{{ member.user.user_profile.profile_photo.url }}" alt="{{ member.user.first_name }}" class="w-10 h-10 rounded-full border border-gray-300 shadow-sm" />
+                                            {% endfor %}
+                                        </div>
+                                        <div class="cit-name text-center flex flex-col justify-center items-center">
+                                            <h5 class="font-Wanted-SemiBold text-Medium">{{request.crew}} has invited you!</h5>
+                                            <p class="font-Wanted-Variable text-XSmall text-center text-customGray5">
+                                                Invited by 
+                                                <a href="{% url "social:publicProfile" username=request.sender.username %}" target="_blank">
+                                                    @{{request.sender.username}}
+                                                </a>
+                                            </p>
+                                        </div>
                                     </div>
-                                    <div class="cit-name">
-                                        <h5><span class="crew-name">{{request.crew}}</span> has invited you!</h5>
-                                        <p>Invited by <a href="{% url "social:publicProfile" username=request.sender.username %}" target="_blank">
-                                            @{{request.sender.username}}</a>
+                                    <div class="cit-right">
+                                        <form method="POST" class="flex flex-row gap-2 justify-between">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="crew_id" value="{{ request.crew.crewId }}" />
+                                            <button class="accept bg-[green] flex justify-center font-Wanted-Bold text-white rounded-xl py-2 px-4" type="submit" name="action" value="joinCrew" role="button">
+                                                Join
+                                            </button>
+                                            <button class="decline flex justify-center font-Wanted-Bold text-white bg-[red] rounded-xl py-2 px-4" type="submit" name="action" value="declineCrew" role="button">
+                                                Decline
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                                <div class="emptyContainer" id="empty-crew-invitations">
+                                    <div>
+                                        <img src="{% static "/images/collegeManagementApp/collegeInformation/empty-listing.svg" %}" />
+                                    </div>
+                                    <div>
+                                        <p>
+                                            Ask your friends to invite you to their crews!
                                         </p>
                                     </div>
                                 </div>
-                                <div class="cit-right">
-                                    <form method="POST">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="crew_id" value="{{ request.crew.crewId }}" />
-                                        <button class="accept" type="submit" name="action" value="joinCrew" role="button">
-                                            <img src="{% static "/images/socialApp/socialHome/accept.svg" %}" alt="Accept Friend Request">
-                                        </button>
-                                        <button class="decline" type="submit" name="action" value="declineCrew" role="button">
-                                            <img src="{% static "/images/socialApp/socialHome/decline.svg" %}" alt="Decline Friend Request">
-                                        </button>
-                                    </form>
+                            {% endif %}
+                        </div>
+
+                        <div class="crewRequestTabContainer" id="sentCrewInvites">
+                            {% if sent_crew_requests %}
+                            <div class="grid grid-cols-3 gap-5 flex-wrap">
+                                {% for request in sent_crew_requests %}
+                                <div class="flex flex-col gap-3 items-center cursor-pointer border border-custom-rgba8 hover:border-green shadow-custom-shadow-3 rounded-2xl p-5" id="{{ request.crew.crewId }}">
+                                    <div class="flex flex-col gap-2 items-center">
+                                        <div class="memberProfilePictures flex flex-row justify-center gap-2">
+                                            <img src="{{ request.receiver.user_profile.profile_photo.url }}" alt="{{ request.receiver.first_name }}" class="w-10 h-10 rounded-full border border-gray-300 shadow-sm" />
+                                        </div>
+                                        <div class="cit-name text-center flex flex-col justify-center items-center">
+                                            <h5 class="font-Wanted-SemiBold text-Medium">Invited to {{request.crew}}</h5>
+                                            <p class="font-Wanted-Variable text-XSmall text-center text-customGray5">
+                                                You invited
+                                                <a href="{% url "social:publicProfile" username=request.receiver.username %}" target="_blank">
+                                                    @{{request.receiver.username}}
+                                                </a>
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div class="cit-right">
+                                        <form method="POST" class="flex flex-row gap-2 justify-between">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="request_id" value="{{ request.requestId }}" />
+                                            <button class="decline flex justify-center font-Wanted-Bold text-white bg-[red] rounded-xl py-2 px-4" type="submit" name="action" value="cancelCrewInvite" role="button">
+                                                Cancel
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                            <div class="emptyContainer" id="empty-crew-invitations">
+                                <div>
+                                    <img src="{% static "/images/collegeManagementApp/collegeInformation/empty-listing.svg" %}" />
+                                </div>
+                                <div>
+                                    <p>
+                                        Invite your friends to your crews!
+                                    </p>
                                 </div>
                             </div>
-                            {% endfor %}
-                        {% else %}
-                        <div class="emptyContainer" id="empty-crew-invitations">
-                            <div>
-                                <img src="{% static "/images/collegeManagementApp/collegeInformation/empty-listing.svg" %}" />
-                            </div>
-                            <div>
-                                <p>
-                                    Create a crew and invite your friends!
-                                </p>
-                            </div>
+                            {% endif %}
                         </div>
-                        {% endif %}
                     </div>
+                    
                 </div>
             </div>
 
             <div class="social-home-elements" id="my-crews">
-                <div class="info-container">
-                    <div class="home-header">
-                        <h4>
-                            My Crews
-                        </h4>
-                        <div class="create-crew-row">
-                            <a href="{% url "social:createCrew" %}" id="create-crew" class="create-crew" >
-                                <img src="{% static "/images/socialApp/socialHome/create-crew.svg" %}" alt="Create Crew">
-                                Create Crew
+                <div id="myCrewsBody" class="info-container px-5 flex flex-col gap-5">
+                    <div class="home-header flex flex-row justify-between items-center">
+                        <div id="shareControl" class="content-control flex flex-row justify-start gap-4 flex-grow"> 
+                            <div class="myCrewsTab tab-active cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="crewsImIn">Crews I'm in</div>
+                            <div class="myCrewsTab cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="myCrews">My Crews</div>
+                        </div>
+                        <div class="w-fit flex justify-end">
+                            <a href="{% url "social:createCrew" %}" id="create-crew" class="bg-gradient-to-r bg-gradient-start bg-gradient-end rounded-xl py-2 px-3 create-crew w-full flex flex-row items-center gap-2 text-white font-Wanted-Variable text-Medium" >
+                                <img src="{% static "/images/socialApp/socialHome/create-crew.svg" %}" class="size-7" alt="Create Crew">
+                                Create
                             </a>
                         </div>
                     </div>
-                    <div class="crew-home-body" id="crews-body">
-                        {% if my_crews %}
-                            {% for crew in my_crews %}
-                            <div class="crew-item" id="{{ crew.crewId }}">
-                                <div class="crewI-left">
-                                    <div class="crew-pfp">
-                                        <img src="{% static "/images/socialApp/publicProfile/profile/E.L.png" %}" alt="Profile Picture" />
+
+                    <div>
+                        <div class="myCrewsTabContainer" id="crewsImIn">
+                            {% if crewsImIn %}
+                            <div class="grid grid-cols-3 gap-5">
+                                {% for crew in crewsImIn %}
+                                <a target="_blank" href="{% url 'social:crew' crewId=crew.crew.crewId %}" class="flex flex-col gap-3 items-center cursor-pointer border border-custom-rgba8 hover:border-green shadow-custom-shadow-3 rounded-2xl p-5" id="{{ my_crews.crew.crewId }}">
+                                    <div class="memberProfilePictures flex flex-row justify-center gap-2">
+                                        {% for member in crew.random_members %}
+                                            <img src="{{ member.user_profile.profile_photo.url }}" alt="{{ member.first_name }}" class="w-10 h-10 rounded-full border border-gray-300 shadow-sm" />
+                                        {% endfor %}
                                     </div>
-                                    <div class="crew-name">
-                                        <h5>{{ crew.name }}</h5>
-                                        <p>
-                                            Created by: {{ crew.created_by.first_name }} {{ crew.created_by.last_name }}
+                                    <div class="flex justify-center items-center text-center">
+                                        <h5 class="font-Wanted-Bold text-Pre-Xl">{{ crew.crew.name }}</h5>
+                                    </div>
+                                    <div class="flex flex-row gap-4 items-center">
+                                        <p class="font-Wanted-Variable text-XSmall text-center text-customGray5">
+                                            Created {{ crew.crew.created_at|date:"F j, Y" }}
                                         </p>
                                     </div>
-                                </div>
-                                <div class="crewI-right">
-                                    <a target="_blank" href="{% url "social:crew" crewId=crew.crewId %}" class="view-crew">View Crew</a>
-                                </div>
+                                    <div class="flex justify-center">
+                                        <p class="bg-gradient-to-t bg-gradient-start to-gradient-end text-white font-Wanted-Regular rounded-xl py-2 px-3 view-crew">View</p>
+                                    </div>
+                                </a>
+                                {% endfor %}
                             </div>
-                            {% if not forLoop.last %}
-                            <hr/>
-                            {% endif %}
-                            {% endfor %}
-                        {% else %}
+                            {% else %}
                             <div class="emptyContainer" id="emptyCrewView">
                                 <div>
                                     <img src="{% static "/images/collegeManagementApp/collegeInformation/empty-listing.svg" %}" />
@@ -325,7 +392,46 @@ My Social @{{ user.username }} — WAVE.
                                     </p>
                                 </div>
                             </div>
-                        {% endif %}
+                            {% endif %}
+                        </div>
+
+                        <div class="myCrewsTabContainer" id="myCrews">
+                            {% if myCrews %}
+                            <div class="grid grid-cols-3 gap-5">
+                                {% for my_crews in myCrews %}
+                                    <a target="_blank" href="{% url 'social:crew' crewId=my_crews.crew.crewId %}" class="flex flex-col gap-3 items-center cursor-pointer border border-custom-rgba8 hover:border-green shadow-custom-shadow-3 rounded-2xl p-5" id="{{ my_crews.crew.crewId }}">
+                                        <div class="memberProfilePictures flex flex-row justify-center gap-2">
+                                            {% for member in my_crews.random_members %}
+                                                <img src="{{ member.user_profile.profile_photo.url }}" alt="{{ member.first_name }}" class="w-10 h-10 rounded-full border border-gray-300 shadow-sm" />
+                                            {% endfor %}
+                                        </div>
+                                        <div class="flex justify-center items-center text-center">
+                                            <h5 class="font-Wanted-Bold text-Pre-Xl">{{ my_crews.crew.name }}</h5>
+                                        </div>
+                                        <div class="flex flex-row gap-4 items-center">
+                                            <p class="font-Wanted-Variable text-XSmall text-center text-customGray5">
+                                                Joined {{ my_crews.joined_at|date:"F j, Y" }}
+                                            </p>
+                                        </div>
+                                        <div class="flex justify-center">
+                                            <p class="bg-gradient-to-t bg-gradient-start to-gradient-end text-white font-Wanted-Regular rounded-xl py-2 px-3 view-crew">Manage</p>
+                                        </div>
+                                    </a>
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                                <div class="emptyContainer" id="emptyCrewView">
+                                    <div>
+                                        <img src="{% static "/images/collegeManagementApp/collegeInformation/empty-listing.svg" %}" />
+                                    </div>
+                                    <div>
+                                        <p>
+                                            Create a crew and invite your friends!
+                                        </p>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -334,13 +440,13 @@ My Social @{{ user.username }} — WAVE.
                 <div id="sharedEventBody" class="info-container px-5 flex flex-col gap-5">
                     <div class="home-header">
                         <div id="shareControl" class="content-control flex flex-row justify-start gap-4 w-full"> 
-                            <div class="shareTab tab-active cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="myShares">My shares</div>
-                            <div class="shareTab cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="sharedWithMe">Shared with me</div>
+                            <div class="shareEventTab tab-active cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="myShares">My shares</div>
+                            <div class="shareEventTab cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="sharedWithMe">Shared with me</div>
                         </div>
                     </div>
 
                     <div>
-                        <div class="sharedEventsTabContainer" id="myShares">
+                        <div class="sharedEventsWithTabContainer" id="myShares">
                             {% if my_shared_events %}
                             <div class="grid grid-cols-3 gap-2">
                                 {% for shared_event in my_shared_events %}
@@ -373,7 +479,7 @@ My Social @{{ user.username }} — WAVE.
                             </div>
                             {% endif %}
                         </div>
-                        <div class="sharedEventsTabContainer" id="sharedWithMe">
+                        <div class="sharedEventsWithTabContainer" id="sharedWithMe">
                             {% if shared_with_me %}
                             <div class="grid grid-cols-3 gap-2">
                                 {% for shared_event in shared_with_me %}
