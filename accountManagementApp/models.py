@@ -1,7 +1,15 @@
 import uuid
 import re
+import qrcode
+from io import BytesIO
+from django.core.files.uploadedfile import InMemoryUploadedFile
+from PIL import Image
 from django.db import models
-from django.shortcuts import get_object_or_404
+from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
+
+from django.shortcuts import get_object_or_404, redirect
+from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.conf import settings
 from django.core.validators import MinValueValidator, MaxValueValidator
@@ -195,7 +203,7 @@ class UserProfile(models.Model):
     event_types = models.ManyToManyField(
         EventTypePreferences, related_name="user_preferences", blank=True
     )
-    
+
     # Social Media Profiles
     instagram = models.CharField(max_length=100, blank=True, default="")
     tiktok = models.CharField(max_length=100, blank=True, default="")
@@ -209,7 +217,10 @@ class UserProfile(models.Model):
     invitations = models.ManyToManyField(
         InviteEventOption, related_name="invitations", blank=True
     )
-    
+
+    profile_qr_code = models.ImageField(
+        upload_to="profile/qr_code/", null=True, blank=True
+    )
 
     class Meta:
         default_permissions = ()
@@ -219,18 +230,45 @@ class UserProfile(models.Model):
     def __str__(self):
         return self.user.username
 
+    def generate_qr_code(self):
+        part_url = reverse("social:publicProfile", kwargs={"username": self.user.username})
+        
+        url = f"{settings.SITE_URL}{url}"
+        qr = qrcode.make(url)
+
+        img_io = BytesIO()
+        qr.save(img_io, "PNG")
+        img_io.seek(0)
+
+        self.profile_qr_code.save(
+            f"{self.user.username}_qr_code.png",
+            InMemoryUploadedFile(
+                img_io,
+                None,
+                f"{self.user.username}_qr_code.png",
+                "image/png",
+                img_io.tell(),
+                None,
+            ),
+            save=False,
+        )
+
     def save(self, *args, event_types=None, **kwargs):
         if event_types is not None:
             event_type_preferences = []
             for event_type_name in event_types:
-                event_type, created = EventTypePreferences.objects.get_or_create(name=event_type_name)
+                event_type, created = EventTypePreferences.objects.get_or_create(
+                    name=event_type_name
+                )
                 event_type_preferences.append(event_type)
 
             self.event_types.set(event_type_preferences)
 
+        if not self.profile_qr_code:
+            self.generate_qr_code()
         # Now call the parent save method, ensuring to use the correct arguments
-        super(UserProfile, self).save(*args, **kwargs)   
-        
+        super(UserProfile, self).save(*args, **kwargs)
+
     def is_friends_with(self, other_user):
         return self.friends.filter(
             user=other_user
@@ -295,5 +333,4 @@ class UserProfile(models.Model):
         return all_crews
 
     def get_shared_events(self):
-        return SharedEvent.objects.filter(receiver=self.user)  
-    
+        return SharedEvent.objects.filter(receiver=self.user)

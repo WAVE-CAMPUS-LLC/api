@@ -7,6 +7,8 @@ from django.http import Http404, HttpResponseBadRequest
 from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import get_user_model
+from django.conf import settings
+from django.urls import reverse
 from django.http import JsonResponse, HttpResponseRedirect
 from django.template import RequestContext
 from django.template.loader import render_to_string
@@ -32,6 +34,10 @@ UserModel = get_user_model()
 @onboarded
 def socialHomeView(request):
     user = get_object_or_404(UserProfile, user=request.user)
+    siteUrl = settings.SITE_URL
+    link = reverse("social:publicProfile", kwargs={"username": user.user.username})
+    
+    profileLink = f"{siteUrl}{link}"
 
     myCrews = Crew.objects.filter(created_by=request.user)
     crewsImIn = Crew.objects.filter(crew_members__user=request.user).exclude(
@@ -233,8 +239,15 @@ def socialHomeView(request):
             "isActiveUser": isActiveUser,
             "my_shared_events": my_shared_events,
             "shared_with_me": shared_with_me,
+            'profileLink': profileLink
         },
     )
+
+
+def copyLinkSuccessView(request):
+    messages.success(request, "Profile link copied to clipboard!")
+    
+    return JsonResponse({"message": "Profile link copied to clipboard!"})
 
 
 def crew_invite_action(request, crew_id, action):
