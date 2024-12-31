@@ -19,6 +19,7 @@ from .models import FriendRequest, Crew, CrewMember, CrewRequest
 from django.db.models import Q
 from .forms import createCrewForm
 from authenticationApp.models import CustomUser
+from eventManagementApp.models import SharedEvent
 
 # Decorators to check user roles and permissions
 from wave_v1.decorators import check_suspension, member, verified, onboarded
@@ -36,7 +37,14 @@ def socialHomeView(request):
     my_crews = Crew.objects.filter(members__user=request.user)
     time = datetime.now().timestamp()
     friends = user.friends.all()
-    
+
+    my_shared_events = SharedEvent.objects.filter(sender=user).select_related(
+        "event", "receiver", "crew"
+    )
+    shared_with_me = SharedEvent.objects.filter(
+        Q(receiver=user) | Q(crew__in=my_crews)
+    ).select_related("event", "sender", "crew")
+
     if user.user.groups.filter(name="Host").exists():
         isHost = True
     else:
@@ -45,9 +53,15 @@ def socialHomeView(request):
     pending_friend_requests = FriendRequest.objects.filter(
         receiver=request.user, status="pending"
     )
+    sent_friend_requests = FriendRequest.objects.filter(
+        sender=request.user, status="pending"
+    )
+    
     pending_crew_requests = CrewRequest.objects.filter(
         receiver=request.user, status="pending"
     )
+    
+    print(pending_friend_requests)
 
     if request.method == "POST":
         action = request.POST.get("action")
@@ -111,14 +125,18 @@ def socialHomeView(request):
         "socialApp/socialHome.html",
         {
             "pending_friend_requests": pending_friend_requests,
+            "sent_friend_requests": sent_friend_requests,
             "user_profile": user,
             "pending_crew_requests": pending_crew_requests,
             "friends": friends,
             "my_crews": my_crews,
             "time": time,
-            "isHost": isHost
+            "isHost": isHost,
+            "my_shared_events": my_shared_events,
+            "shared_with_me": shared_with_me,
         },
     )
+
 
 def crew_invite_action(request, crew_id, action):
     crew = get_object_or_404(Crew, crewId=crew_id)
@@ -140,12 +158,11 @@ def crew_invite_action(request, crew_id, action):
                 },
             },
         )
-        
+        return redirect("social:crew", crewId=crew_id)
+
     elif action == "declineCrew":
         crew_request.decline_request()
-        messages.success(
-            request, f"Crew Invite Declined"
-        )
+        messages.success(request, f"Crew Invite Declined")
         channel_layer = get_channel_layer()
         async_to_sync(channel_layer.group_send)(
             f"user_{sender.user.id}",
@@ -385,7 +402,9 @@ def crewView(request, crewId):
         if action == "crew_invite":
             inviteeUsername = request.POST.get("invitee_username")
             receiver = get_object_or_404(UserProfile, user__username=inviteeUsername)
-            success, message, crew_request = send_crew_request(user, inviteeUsername, crewId)
+            success, message, crew_request = send_crew_request(
+                user, inviteeUsername, crewId
+            )
             if success:
                 messages.success(request, message)
                 channel_layer = get_channel_layer()
@@ -413,6 +432,21 @@ def crewView(request, crewId):
 
         elif action == "leave_crew":
             leave_crew(request, crewId)
+            crew_request = get_object_or_404(
+                CrewRequest, crew=crew, receiver=request.user
+            )
+            sender = get_object_or_404(UserProfile, user=crew_request.sender)
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                f"user_{sender.user.id}",
+                {
+                    "type": "crew_request_update",
+                    "data": {
+                        "message": f"{request.user.username} left the crew.",
+                        "action": "leaveCrew",
+                    },
+                },
+            )
             return redirect("social:home")
 
         elif action == "delete_crew":

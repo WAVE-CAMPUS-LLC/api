@@ -11,6 +11,8 @@
 {% block script %}
 <script type="text/javascript" src="{% static "scripts/coreApp/event/eventDetailsTabs.js" %}"></script>
 <script type="text/javascript" src="{% static "scripts/coreApp/event/eventDetailsTicketsTab.js" %}" defer></script>
+<script type="text/javascript" src="{% static "scripts/adminDashboardApp/applications/applications.js" %}" defer></script>
+<script type="text/javascript" src="{% static "scripts/coreApp/eventDetails/shareEvent.js" %}" defer></script>
 <script type="text/javascript" src="{% static "scripts/coreApp/eventDetails/ticketCount.js" %}" defer nonce="{{ nonce }}"></script>
 {% endblock script %}
 
@@ -36,13 +38,21 @@
         <div class="event-title">
             <h3 class="font-Wanted-ExtraBold pre-sm:font-Wanted-Black text-Medium xsm:text-Large after-xsm:text-Pre-Xl xxsm:text-1xl pre-sm:text-1xl sm:text-2xl md:text-3xl text-black">{{ event.title }}</h3>
         </div>
-        <div class="hosted-by font-Wanted-Variable text-XSmall after-xsm:text-Small pre-sm:text-Medium text-[#a6a6a6]">
+        <div class="hosted-by font-Wanted-Variable text-XSmall after-xsm:text-Small pre-sm:text-Medium text-[#a6a6a6] flex flex-row gap-2 items-center">
             <p>
                 Hosted by {{ event.host.first_name }} {{ event.host.last_name }}
                 <a class="font-Wanted-Regular text-[#a6a6a6] underline underline-offset-2" target="_blank" href="{% url "social:publicProfile" username=event.host.username %}">
                    @ {{ event.host.username }}
                 </a>
             </p>
+
+            {% if request.user.is_authenticated %}
+            <div class="flex items-start justify-center">
+                <button id="shareEventButton" type="button" class="border-3 border-green bg-white rounded-full py-3 px-3 cursor-pointer" role="button">
+                    <img src="{% static "/images/coreApp/eventDetails/share-event.svg" %}" class="size-5" />
+                </button>
+            </div>
+            {% endif %}
         </div>
     </div>
 
@@ -316,6 +326,92 @@
                     </div>
                 </div>
                 {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="shareEventPopup" class="hidden bg-[rgba(0, 0, 0, 0.037)] backdrop-blur-sm fixed top-0 left-0 right-0 bottom-0 z-[1005] w-full h-full cursor-default">
+    <div class="modalContainer w-full h-full flex justify-center items-center py-5 md:py-11">
+        <div class="modalContentCard w-4/12 h-full lg:h-[75%] bg-white shadow-custom-shadow rounded-2xl p-5 pb-12 flex flex-col gap-3 overflow-y-auto">
+            <div class="modalHeader w-full flex justify-between items-center flex-col"> 
+                <div class="modalClose">
+                    <button type="button" role="button" id="closeShareEventPopup">
+                        <img src="{% static "images/admin/departments/modalClose.svg" %}" alt="Close">
+                    </button>
+                </div>
+                <div class="modalHeading font-Wanted-ExtraBold text-Large md:text-2xl">
+                    <h5>Share</h5>
+                </div>
+                
+            </div>
+
+            <div id="shareModalBody" class="flex flex-col gap-5">
+                <div id="shareControl" class="content-control flex flex-row justify-center gap-4 w-full"> 
+                    <div class="shareTab tab-active cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="shareFriendList">Friends</div>
+                    <div class="shareTab cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="shareCrewList">Crews</div>
+                </div>
+
+                <form method="POST">
+                    {% csrf_token %}
+                    <div id="shareFriendList" class="shareTabInformation">
+                        {% if friends %}
+                        <div class="flex flex-col gap-4">
+                            {% for friend in friends %}
+                            <div class="flex flex-row justify-between w-full items-center">
+                                <div class="col-span-2 flex flex-row gap-4 items-center">
+                                    <div>
+                                        <img src="{{ friend.profile_photo.url }}" class="rounded-full size-10" />
+                                    </div>
+                                    <div>
+                                        <p class="font-Wanted-Medium text-Medium text-black">{{ friend.user.first_name }} {{ friend.user.last_name }}</p>
+                                    </div>
+                                </div>
+                                <div>
+                                    <input type="hidden" name="shareFriendUsername" value="{{ friend.user.username }}">
+                                    <button type="submit" name="eventAction" value="shareEventWithFriend"  class="shareFriendButton border-3 hover:bg-green border-green bg-gradient-to-br bg-gradient-start bg-gradient-end font-Wanted-Bold text-white rounded-xl py-2 px-5 cursor-pointer" role="button">
+                                        Share
+                                    </button>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="emptyContainer h-full w-full rounded-[20px] py-[70px] flex justify-center flex-col gap-[10px] items-center bg-[rgba(146,146,146,0.096)]">
+                            <div>
+                                <img class="w-[30px] after-xsm:w-[40px] sm:w-[50px] md:w-[60px]" src="{% static "/images/coreApp/eventDetails/friends.svg" %}" />
+                            </div>
+                            <p class="font-Wanted-Variable text-[10px] after-xsm:text-[12px] sm:text-[14px] md:text-[16.5px] text-black text-center">No friends to share events with. Invite your friends!</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div id="shareCrewList" class="shareTabInformation">
+                        {% if crews %}
+                        <div class="flex flex-col gap-4">
+                            {% for crew in crews %}
+                            <div class="flex flex-row justify-between w-full items-center">
+                                <div class="flex justify-start items-center">
+                                    <p class="font-Wanted-Medium text-Medium text-black">{{ crew.name }}</p>
+                                </div>
+                                <div>
+                                    <input type="hidden" name="shareCrewId" value="{{ crew.crewId }}">
+                                    <button type="submit" name="eventAction" value="shareEventWithCrew" class="shareFriendButton border-3 hover:bg-green border-green bg-gradient-to-br bg-gradient-start bg-gradient-end font-Wanted-Bold text-white rounded-xl py-2 px-5 cursor-pointer" role="button">
+                                        Share
+                                    </button>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="emptyContainer h-full w-full rounded-[20px] py-[70px] flex justify-center flex-col gap-[10px] items-center bg-[rgba(146,146,146,0.096)]">
+                            <div>
+                                <img class="w-[30px] after-xsm:w-[40px] sm:w-[50px] md:w-[60px]" src="{% static "/images/coreApp/eventDetails/friends.svg" %}" />
+                            </div>
+                            <p class="font-Wanted-Variable text-[10px] after-xsm:text-[12px] sm:text-[14px] md:text-[16.5px] text-black text-center">Currently nothing to be displayed.</p>
+                        </div>
+                        {% endif %}                        
+                    </div>
+                </form>
             </div>
         </div>
     </div>

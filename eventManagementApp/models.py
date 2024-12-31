@@ -10,6 +10,7 @@ from datetime import timedelta
 from django.dispatch import receiver
 from django.conf import settings
 from adminDashboardApp.models import College
+from socialApp.models import Crew
 
 from collegeManagementApp.models import Organization
 from eventTicketsApp.models import InviteEventOption
@@ -471,3 +472,16 @@ class HostProfile(models.Model):
 
     def __str__(self):
         return f"{self.user.first_name} {self.user.last_name}'s Host Profile"
+    
+class SharedEvent(models.Model):
+    sender = models.ForeignKey('accountManagementApp.UserProfile', on_delete=models.CASCADE, related_name='sent_shared_events')
+    receiver = models.ForeignKey('accountManagementApp.UserProfile', on_delete=models.CASCADE, related_name='received_shared_events', null=True, blank=True)
+    crew = models.ForeignKey(Crew, on_delete=models.CASCADE, null=True, blank=True)
+    event = models.ForeignKey(Event, on_delete=models.CASCADE)
+    shared_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['receiver', 'event'], name='unique_event_per_receiver')
+        ]
+

@@ -11,13 +11,15 @@ from django.db.models.signals import pre_save, post_save
 from django.utils.translation import gettext_lazy as _
 
 from accountManagementApp.models import UserProfile
+from eventManagementApp.models import SharedEvent
+from socialApp.models import CrewMember
 
 
 from .managers import CustomUserManager
 
 
 # Create your models here.
-class CustomUser(AbstractBaseUser, PermissionsMixin):    
+class CustomUser(AbstractBaseUser, PermissionsMixin):
     first_name = models.CharField(
         _("First Name"),
         max_length=50,
@@ -83,8 +85,9 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
                 
             self.groups.add(member_group)
             self.save()
-        
     
+    def get_shared_events(self):
+        return SharedEvent.objects.filter(receiver=self.user)  
 
     objects = CustomUserManager()
 

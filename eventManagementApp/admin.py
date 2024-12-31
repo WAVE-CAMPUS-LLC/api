@@ -1,6 +1,6 @@
 from authenticationApp.admin import super_admin_restricted_site
 from django.contrib import admin
-from .models import HostApplication, Event, EventPrivacy, HostProfile
+from .models import HostApplication, Event, EventPrivacy, HostProfile, SharedEvent
 from eventTicketsApp.models import RSVPTicket, PaidFreeTicket, Ticket
 from authenticationApp.admin import super_admin_restricted_site
 
@@ -99,11 +99,20 @@ class HostProfileAdmin(admin.ModelAdmin):
         "apple_pay_id",
         
     )
+    
+    
+class SharedEventAdmin(admin.ModelAdmin):
+    list_display = (
+        "sender",
+        "receiver",
+        "crew",
+        "event",
+        "shared_at",
+    )
 
 super_admin_restricted_site.register(Ticket, TicketAdmin)
 super_admin_restricted_site.register(HostProfile, HostProfileAdmin)
-
-
+super_admin_restricted_site.register(SharedEvent, SharedEventAdmin)
 super_admin_restricted_site.register(Event, EventAdmin)
 super_admin_restricted_site.register(EventPrivacy, EventPrivacyAdmin)
 super_admin_restricted_site.register(RSVPTicket, RSVPTicketAdmin)

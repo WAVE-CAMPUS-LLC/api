@@ -4,3 +4,18 @@
 .social-tab:hover {
     border-color: #008d95; /* Ensure hover matches active color */
 }
+
+
+
+
+.friendRequestTab {
+    display: flex;
+    justify-content: center;
+}
+
+.friendRequestTab.tab-active {
+    border: 1px solid #007379;
+    font-family: Wanted-Variable;
+    color: white;
+    background-color: #007379;
+}

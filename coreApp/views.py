@@ -4,14 +4,16 @@ import random
 from django.db.models import Count, Q, Exists, OuterRef
 from django.http import JsonResponse
 from datetime import datetime, timedelta
+from django.contrib import messages
 from django.utils.timezone import now
 from authenticationApp.models import CustomUser
 from eventManagementApp.models import (
     Event,
     EventPrivacy,
     InviteEventOption,
+    SharedEvent,
 )
-from socialApp.models import FriendRequest
+from socialApp.models import FriendRequest, Crew
 from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
 from eventTicketsApp.models import RSVPTicket, PaidFreeTicket
@@ -31,7 +33,9 @@ def exploreView(request):
     pageName = "explore"
 
     # Load initial 6 events
-    initial_events = Event.objects.filter(status="live", privacy="Discoverable", admin_status="active")[:7]
+    initial_events = Event.objects.filter(
+        status="live", privacy="Discoverable", admin_status="active"
+    )[:7]
     trending_events = Event.objects.filter(
         status="live", privacy="Discoverable"
     ).order_by("date")[:3]
@@ -54,7 +58,9 @@ def exploreView(request):
         invited_events_with_tokens = None
 
     trending_categories = (
-        Event.objects.filter(status="live", privacy="Discoverable",admin_status="active")
+        Event.objects.filter(
+            status="live", privacy="Discoverable", admin_status="active"
+        )
         .values("event_type")
         .annotate(event_count=Count("event_type"))
         .order_by("-event_count")[:4]
@@ -81,7 +87,10 @@ def exploreView(request):
     end_of_week = start_of_week + timedelta(days=6)
 
     weekly_events = Event.objects.filter(
-        date__range=[start_of_week, end_of_week], status="live", privacy="Discoverable", admin_status="active"
+        date__range=[start_of_week, end_of_week],
+        status="live",
+        privacy="Discoverable",
+        admin_status="active",
     ).order_by("?")[:3]
 
     return render(
@@ -117,9 +126,9 @@ def load_more_events(request):
     offset = int(request.GET.get("offset", 7))
     limit = 3
 
-    more_events = Event.objects.filter(status="live", privacy="Discoverable", admin_status="active")[
-        offset : offset + limit
-    ]
+    more_events = Event.objects.filter(
+        status="live", privacy="Discoverable", admin_status="active"
+    )[offset : offset + limit]
     events_data = []
     for event in more_events:
         events_data.append(
@@ -137,9 +146,9 @@ def load_more_events(request):
             }
         )
 
-    has_more = Event.objects.filter(status="live", privacy="Discoverable", admin_status="active").count() > (
-        offset + limit
-    )
+    has_more = Event.objects.filter(
+        status="live", privacy="Discoverable", admin_status="active"
+    ).count() > (offset + limit)
 
     return JsonResponse({"events": events_data, "has_more": has_more})
 
@@ -152,6 +161,14 @@ def eventDetailsView(request, eventId, token=None):
 
     rsvpForm = RSVPForm() if event.ticketing == "RSVP Required" else None
     rsvp_guests = RSVPTicket.objects.filter(event=event, display_on_guestlist=True)
+    user = None
+    user_friends = None
+    user_crews = None
+
+    if request.user.is_authenticated:
+        user = get_object_or_404(UserProfile, user=request.user)
+        user_friends = user.friends.all()
+        user_crews = user.get_all_crews()
 
     if request.method == "POST":
         action = request.POST.get("eventAction")
@@ -173,6 +190,8 @@ def eventDetailsView(request, eventId, token=None):
                         "rsvpForm": rsvpForm,
                         "paidFreeTickets": eventPaidFreeTickets,
                         "existingRSVP": True,
+                        "friends": user_friends,
+                        "crews": user_crews,
                     },
                 )
 
@@ -203,8 +222,37 @@ def eventDetailsView(request, eventId, token=None):
                             "rsvpForm": rsvpForm,
                             "paidFreeTickets": eventPaidFreeTickets,
                             "newRSVP": True,
+                            "friends": user_friends,
+                            "crews": user_crews,
                         },
                     )
+
+        elif action == "shareEventWithFriend":
+
+            friend_username = request.POST.get("shareFriendUsername")
+            friendUserAccount = get_object_or_404(CustomUser, username=friend_username)
+            friend = get_object_or_404(UserProfile, user=friendUserAccount)
+
+            myUserAccount = get_object_or_404(
+                CustomUser, username=request.user.username
+            )
+            user = get_object_or_404(UserProfile, user=myUserAccount)
+
+            SharedEvent.objects.get_or_create(sender=user, receiver=friend, event=event)
+
+            print(f"Event shared with {friend}")
+            return redirect("core:eventDetails", eventId=event.eventId)
+
+        elif action == "shareEventWithCrew":
+            crew_id = request.POST.get("shareCrewId")
+            crew = get_object_or_404(Crew, crewId=crew_id)
+
+            user = get_object_or_404(UserProfile, user=request.user)
+
+            SharedEvent.objects.get_or_create(crew=crew, sender=user, event=event)
+
+            messages.success(request, f"Event shared with {crew.name}")
+            return redirect("core:eventDetails", eventId=event.eventId)
 
     if eventprivacy.require_invitation:
         if token:
@@ -218,6 +266,8 @@ def eventDetailsView(request, eventId, token=None):
                     "eventPrivacy": eventprivacy,
                     "rsvpForm": rsvpForm,
                     "paidFreeTickets": eventPaidFreeTickets,
+                    "friends": user_friends,
+                    "crews": user_crews,
                 },
             )
         else:
@@ -237,6 +287,8 @@ def eventDetailsView(request, eventId, token=None):
                     "event": event,
                     "rsvpForm": rsvpForm,
                     "paidFreeTickets": eventPaidFreeTickets,
+                    "friends": user_friends,
+                    "crews": user_crews,
                 },
             )
         else:
@@ -264,6 +316,8 @@ def eventDetailsView(request, eventId, token=None):
                     "event": event,
                     "rsvpForm": rsvpForm,
                     "paidFreeTickets": eventPaidFreeTickets,
+                    "friends": user_friends,
+                    "crews": user_crews,
                 },
             )
         else:
@@ -286,6 +340,8 @@ def eventDetailsView(request, eventId, token=None):
                 "event": event,
                 "rsvpForm": rsvpForm,
                 "paidFreeTickets": eventPaidFreeTickets,
+                "friends": user_friends,
+                "crews": user_crews,
             },
         )
 
@@ -341,6 +397,7 @@ def searchEvents(request):
 
     return JsonResponse({"results": results})
 
+
 @login_required
 def search_users(request):
     search_query = request.GET.get("searchEvents", "").strip()
@@ -350,34 +407,41 @@ def search_users(request):
         # Subqueries to check friend request status and friendship
         sent_requests = FriendRequest.objects.filter(
             sender=request.user,
-            receiver=OuterRef('pk'),
-            status__in=['pending', 'accepted']
+            receiver=OuterRef("pk"),
+            status__in=["pending", "accepted"],
         )
         received_requests = FriendRequest.objects.filter(
-            sender=OuterRef('pk'),
-            receiver=request.user,
-            status='pending'
+            sender=OuterRef("pk"), receiver=request.user, status="pending"
         )
         # Assuming 'accepted' status indicates friendship
         friends = FriendRequest.objects.filter(
-            Q(sender=request.user, receiver=OuterRef('pk'), status='accepted') |
-            Q(sender=OuterRef('pk'), receiver=request.user, status='accepted')
+            Q(sender=request.user, receiver=OuterRef("pk"), status="accepted")
+            | Q(sender=OuterRef("pk"), receiver=request.user, status="accepted")
         )
 
-        users = CustomUser.objects.filter(
-            Q(username__icontains=search_query) |
-            Q(first_name__icontains=search_query) |
-            Q(last_name__icontains=search_query)
-        ).exclude(id=request.user.id).distinct()[:10].annotate(
-            has_sent_friend_request=Exists(sent_requests),
-            is_friend=Exists(friends)
+        users = (
+            CustomUser.objects.filter(
+                Q(username__icontains=search_query)
+                | Q(first_name__icontains=search_query)
+                | Q(last_name__icontains=search_query)
+            )
+            .exclude(id=request.user.id)
+            .distinct()[:10]
+            .annotate(
+                has_sent_friend_request=Exists(sent_requests), is_friend=Exists(friends)
+            )
         )
 
         results = [
             {
                 "username": user.username,
-                "display_name": f"{user.first_name} {user.last_name}".strip() or user.username,
-                "profile_photo_url": user.user_profile.profile_photo.url if hasattr(user, 'user_profile') and user.user_profile.profile_photo else "/static/images/default_profile.png",
+                "display_name": f"{user.first_name} {user.last_name}".strip()
+                or user.username,
+                "profile_photo_url": (
+                    user.user_profile.profile_photo.url
+                    if hasattr(user, "user_profile") and user.user_profile.profile_photo
+                    else "/static/images/default_profile.png"
+                ),
                 "has_sent_friend_request": user.has_sent_friend_request,
                 "is_friend": user.is_friend,
             }
@@ -386,32 +450,44 @@ def search_users(request):
 
     return JsonResponse({"results": results})
 
+
 @login_required
 @require_POST
 def send_connect_request(request):
-    action = request.POST.get('action')
-    username = request.POST.get('socketUsername')
-    
-    if action == 'send_request':
+    action = request.POST.get("action")
+    username = request.POST.get("socketUsername")
+
+    if action == "send_request":
         try:
             to_user = CustomUser.objects.get(username=username)
-            
+
             if to_user == request.user:
-                return JsonResponse({'status': 'error', 'message': 'You cannot send a friend request to yourself.'}, status=400)
-            
+                return JsonResponse(
+                    {
+                        "status": "error",
+                        "message": "You cannot send a friend request to yourself.",
+                    },
+                    status=400,
+                )
+
             # Attempt to get or create the FriendRequest
             created = FriendRequest.objects.get_or_create(
-                sender=request.user,
-                receiver=to_user,
-                defaults={'status': 'pending'}
+                sender=request.user, receiver=to_user, defaults={"status": "pending"}
             )
-            
+
             if created:
-                return JsonResponse({'status': 'success', 'message': 'Friend request sent.'})
+                return JsonResponse(
+                    {"status": "success", "message": "Friend request sent."}
+                )
             else:
-                return JsonResponse({'status': 'error', 'message': 'Friend request already sent.'}, status=400)
-        
+                return JsonResponse(
+                    {"status": "error", "message": "Friend request already sent."},
+                    status=400,
+                )
+
         except CustomUser.DoesNotExist:
-            return JsonResponse({'status': 'error', 'message': 'User not found.'}, status=404)
-    
-    return JsonResponse({'status': 'error', 'message': 'Invalid action.'}, status=400)
+            return JsonResponse(
+                {"status": "error", "message": "User not found."}, status=404
+            )
+
+    return JsonResponse({"status": "error", "message": "Invalid action."}, status=400)

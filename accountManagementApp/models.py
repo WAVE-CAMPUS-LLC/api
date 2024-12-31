@@ -7,7 +7,7 @@ from django.conf import settings
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils import timezone
 
-from eventManagementApp.models import Event
+from eventManagementApp.models import Event, SharedEvent
 from eventTicketsApp.models import InviteEventOption
 from .utils import generate_profile_picture
 from django.contrib.auth.models import Group
@@ -286,3 +286,13 @@ class UserProfile(models.Model):
     def is_crew_owner(self, crewId):
         crew = get_object_or_404(Crew, crewId=crewId)
         return crew.created_by == self.user
+
+    def get_all_crews(self):
+        all_crew_members = CrewMember.objects.filter(user=self.user).all()
+        all_crews = []
+        for member in all_crew_members:
+            all_crews.append(member.crew)
+        return all_crews
+
+    def get_shared_events(self):
+        return SharedEvent.objects.filter(receiver=self.user)  
