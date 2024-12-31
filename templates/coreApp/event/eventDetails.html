@@ -120,6 +120,12 @@
                                 </p>
                             </div>
 
+                            {% if event.age_restriction %}
+                            <div class="font-Wanted-Variable text-Large text-[#000000c3] pt-4">
+                              <strong>Age Restriction:</strong> 
+                              {{ event.get_age_restriction_display }}
+                            </div>
+                            {% endif %}
 
                             <div class="hostInformation py-5 border-t border-customGray5 flex flex-col gap-7">
                                 <h3 class="flex justify-start text-Pre-Xl font-Wanted-SemiBold">Attendee list</h3>

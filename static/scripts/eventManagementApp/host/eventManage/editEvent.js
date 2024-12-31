@@ -3,6 +3,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const cancelEdit = document.getElementById("cancelEdit");
   const submitBtn = document.getElementById("submitBtn");
 
+  // "View" elements: shown when not editing
   const viewElements = [
     document.getElementById("eventTitle"),
     document.getElementById("eventType"),
@@ -18,8 +19,11 @@ document.addEventListener("DOMContentLoaded", function () {
     document.getElementById("eventBodyImageThree"),
     document.getElementById("eventBodyImageFour"),
     document.getElementById("eventBodyImageFive"),
+    // Age Restriction in view mode
+    document.getElementById("ageRestrictionView"),
   ].filter(Boolean);
 
+  // "Edit" elements: shown only when editing
   const editElements = [
     document.querySelector(".editEventTitle"),
     document.querySelector(".editEventType"),
@@ -40,16 +44,18 @@ document.addEventListener("DOMContentLoaded", function () {
     document.querySelector(".editEventBodyImageThree"),
     document.querySelector(".editEventBodyImageFour"),
     document.querySelector(".editEventBodyImageFive"),
+    // Age Restriction in edit mode (the Django radio field)
+    document.querySelector(".editEventAgeRestriction"),
   ].filter(Boolean);
 
   function hideElements(elements) {
     elements.forEach((el) => el.classList.add("hidden"));
   }
-
   function showElements(elements) {
     elements.forEach((el) => el.classList.remove("hidden"));
   }
 
+  // ----- EDIT BUTTON -----
   editButton.addEventListener("click", function () {
     cancelEdit.classList.remove("hidden");
     editButton.classList.add("hidden");
@@ -59,6 +65,7 @@ document.addEventListener("DOMContentLoaded", function () {
     showElements(editElements);
   });
 
+  // ----- CANCEL BUTTON -----
   cancelEdit.addEventListener("click", function () {
     cancelEdit.classList.add("hidden");
     editButton.classList.remove("hidden");

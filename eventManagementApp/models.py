@@ -386,6 +386,21 @@ class Event(models.Model):
         max_length=500,
     )
 
+    # Possibly store age_restriction as a CharField with choices:
+    AGE_CHOICES = (
+        ('', 'No Age Restriction'),  # or you can skip empty
+        ('18+', '18+'),
+        ('21+', '21+'),
+    )
+
+    age_restriction = models.CharField(
+        max_length=5,
+        choices=AGE_CHOICES,
+        blank=True,
+        default='',  # means no restriction
+    )
+
+
     created_at = models.DateTimeField(auto_now=True)
     updated_at = models.DateTimeField(auto_now=True)
 
