@@ -6,6 +6,7 @@ from django.contrib.auth import get_user_model
 from django.conf import settings
 
 
+
 class FriendRequest(models.Model):
     STATUS_CHOICES = [
         ("pending", "Pending"),
@@ -62,6 +63,7 @@ class Crew(models.Model):
         related_name="crews_created",  # Updated for clarity
     )
     created_at = models.DateTimeField(auto_now_add=True)
+    members = models.ManyToManyField(settings.AUTH_USER_MODEL, through='CrewMember', related_name='member_of_crews')
     
     class Meta:
         default_permissions = ()
@@ -71,8 +73,8 @@ class Crew(models.Model):
 
 
 class CrewMember(models.Model):
-    crew = models.ForeignKey(Crew, on_delete=models.CASCADE, related_name='members')
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    crew = models.ForeignKey(Crew, on_delete=models.CASCADE, related_name='crew_members')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='crew_memberships')
     joined_at = models.DateTimeField(auto_now_add=True)
     is_admin = models.BooleanField(default=False)
 

@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block title %}
-Financial Overview — WAVE.
+Financial Products — WAVE.
 {% endblock title %}
 
 
@@ -28,6 +28,37 @@ Financial Overview — WAVE.
         <a href="{% url "waveAdmin:adminDashboard" %}#financialManagement" class="text-green underline">Billing & Finance</a>
         >
         <p class="font-Wanted-Medium text-black">Products</p>
+    </div>
+
+    <div class="page-heading flex flex-col gap-2">
+        <h2 class="font-Wanted-Bold text-3.5xl text-black">All Products</h2>
+        <p class="font-Wanted-Variable text-Semi-Medium text-[#808080c1]">
+            Every product in the system.
+        </p>
+    </div>
+
+    <div class="flex flex-col gap-5">
+        <div class="w-full grid grid-cols-2">
+            <div class="flex justify-start items-center">
+                <p class="font-Wanted-Regular text-Semi-Medium text-[#808080c1]">Product Name</p>
+            </div>
+            <div class="flex justify-end items-center">
+                <p class="font-Wanted-Regular text-Semi-Medium text-[#808080c1]">Created</p>
+            </div>
+        </div>
+
+        {% for product in products %}
+        <div class="w-full grid grid-cols-2 gap-5">
+            <div class="flex justify-start items-center">
+                <p class="font-Wanted-Regular text-Semi-Medium text-black">{{ product.name }}</p>
+            </div>
+            
+            <div class="flex justify-end items-center">
+                <p class="font-Wanted-Regular text-Semi-Medium text-black">{{ product.formatted_created }}</p>
+            </div>
+        </div>
+        {% endfor %}
+        
     </div>
 </div>
 {% endblock %}

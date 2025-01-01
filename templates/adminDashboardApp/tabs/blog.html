@@ -29,5 +29,43 @@ Applications Management — WAVE.
         >
         <p class="font-Wanted-Medium text-black">Blog</p>
     </div>
+
+    <div class="page-header flex flex-col sm:flex-row justify-between sm:items-center">
+        <div class="page-heading text-black font-Wanted-ExtraBold text-2xl">
+            <h2>All Blogs</h2>
+        </div>
+    </div>
+
+    <div id="content-body" class="w-full">
+        {% if blogs %}
+        <div class="newsContainer w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-[30px]">
+            {% for blog in blogs %}
+            <a href="{% url "blog:blogView" blogId=blog.blogId %}" class="newsCard flex flex-col gap-[30px] text-black hover:#008d95">
+                <div class="newsHeader border-[1px] border-solid border-[rgba(0,0,0,0.038)] rounded-[20px] shadow-custom-shadow-2 max-w-[100%] max-h-[350px]" >
+                    <img src="{{ blog.imageOne.url }}" class="w-full h-full max-h-[350px] max-w-full rounded-[20px object-cover"/>
+                </div>
+                <div class="newsBody flex flex-col gap-[15px]">
+                    <div class="newsType flex justify-start gap-[15px]">
+                        <h6 class="text-[#008d95] font-Wanted-Black text-[22px]">{{ blog.newsCategory }}</h6>
+                    </div>
+                    <div class="newsTitle flex justify-start gap-[15px]">
+                        <h4 class="font-Wanted-Bold text-[27px]">{{ blog.title }}</h4>
+                    </div>
+                    <div class="newsDate flex justify-end w-full">
+                        <p class="font-Wanted-Variable text-[15px] text-black">By {{ blog.created_by.first_name }} {{ blog.created_by.last_name }}</p>
+                    </div>
+                </div>
+            </a> 
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="emptyContainer w-full rounded-[20px] py-[70px] flex justify-center flex-col gap-[10px] items-center bg-[rgba(146,146,146,0.096)]">
+            <div>
+                <img class="w-[30px] after-xsm:w-[40px] sm:w-[50px] md:w-[60px]" src="{% static "/images/collegeManagementApp/collegeInformation/empty-listing.svg" %}" />
+            </div>
+            <p class="font-Wanted-Variable text-[10px] after-xsm:text-[12px] sm:text-[14px] md:text-[16.5px] text-black text-center">Currently nothing to be displayed.</p>
+        </div>
+        
+        {% endif %}
 </div>
 {% endblock body %}

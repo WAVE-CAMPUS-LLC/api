@@ -1,8 +1,12 @@
 import resend
 import json
 import stripe
+from docx import Document
+from reportlab.pdfgen import canvas
+from io import BytesIO
 
 from django.conf import settings
+from django.http import FileResponse, Http404
 from django.db.models import Max
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
@@ -66,9 +70,17 @@ from .forms import (
     UpdateImageTwoForm,
     UpdateImageThreeForm,
     CollegeForm,
+    EditCollegeForm,
 )
 from supportCenterApp.models import SupportTicket, SupportTicketMessage
-from wave_v1.decorators import check_suspension, group_required
+from wave_v1.decorators import (
+    check_suspension,
+    member,
+    verified,
+    onboarded,
+    admin,
+    superAdmin,
+)
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
@@ -76,14 +88,16 @@ stripe.api_key = settings.STRIPE_SECRET_KEY
 # Create your views here.
 @login_required(login_url="authentication:login")
 @check_suspension
-@group_required("Admin")
+@member
+@admin
 def adminPortalView(request):
     return render(request, "adminDashboardApp/index.html")
 
 
 @login_required(login_url="authentication:login")
 @check_suspension
-@group_required("Admin")
+@member
+@admin
 def adminDashboardView(request):
     return render(request, "adminDashboardApp/tabs/dashboard.html")
 
@@ -91,7 +105,8 @@ def adminDashboardView(request):
 # Department Management
 @login_required(login_url="authentication:login")
 @check_suspension
-@group_required("Admin")
+@member
+@admin
 def adminDepartmentView(request):
     """
     The `adminDepartmentView` function checks if the user is a superuser, processes a form submission to
@@ -125,7 +140,8 @@ def adminDepartmentView(request):
 
 @login_required(login_url="authentication:login")
 @check_suspension
-@group_required("Admin")
+@member
+@admin
 def adminDepartmentDetailedView(request, departmentID, department_name):
     """
     The function `adminDepartmentDetailedView` handles detailed view and management of department
@@ -203,7 +219,8 @@ def adminDepartmentDetailedView(request, departmentID, department_name):
 
 @login_required(login_url="authentication:login")
 @check_suspension
-@group_required("Admin")
+@member
+@admin
 def adminCareerApplicationsView(request):
     careerApplications = CareerRoleApplication.objects.all()
 
@@ -216,7 +233,60 @@ def adminCareerApplicationsView(request):
 
 @login_required(login_url="authentication:login")
 @check_suspension
-@group_required("Admin")
+@member
+@admin
+def adminCareerApplicationsDetailView(request, applicationId):
+    application = get_object_or_404(CareerRoleApplication, applicationId=applicationId)
+
+    if request.method == "POST":
+        action = request.POST.get('eventAction')
+        email = request.POST.get('applicantEmail')
+        
+        if action == "approveApplicant":
+            application.approval_status = "approved"
+            application.save()
+            sendApprovedCareerApplicantEmail(email)
+            return redirect("waveAdmin:careerApplications")
+        elif action == "denyApplicant":
+            application.approval_status = "denied"
+            application.save()
+            sendDeniedCareerApplicantEmail(email)
+            return redirect("waveAdmin:careerApplications")
+            
+            
+    return render(
+        request,
+        "adminDashboardApp/tabs/applications/careerApplicationDetail.html",
+        {
+            "application": application,
+        },
+    )
+
+def sendApprovedCareerApplicantEmail(applicantEmail):
+    try:
+        subject = "Welcome to WAVE.!"
+        emailMessageHtml = render_to_string("emailTemplates/adminDashboardApp/careers/applicationApproved.html", {})
+        plainMessage = strip_tags(emailMessageHtml)
+        send_mail(subject, plainMessage, None, [applicantEmail], html_message=emailMessageHtml)
+    except Exception as e:
+        print(f"Error sending email to {applicantEmail}: {e}")
+
+
+def sendDeniedCareerApplicantEmail(applicantEmail):
+    try:
+        subject = "Thank you for your application!"
+        emailMessageHtml = render_to_string("emailTemplates/adminDashboardApp/careers/applicationDenied.html", {})
+        plainMessage = strip_tags(emailMessageHtml)
+        send_mail(subject, plainMessage, None, [applicantEmail], html_message=emailMessageHtml)
+    except Exception as e:
+        print(f"Error sending email to {applicantEmail}: {e}")
+        
+
+
+@login_required(login_url="authentication:login")
+@check_suspension
+@member
+@admin
 def adminEventHostsView(request):
     hostProfile = UserProfile.objects.filter(was_host=True)
     print(hostProfile)
@@ -245,12 +315,15 @@ def adminEventHostsView(request):
                 return redirect("waveAdmin:eventHosts")
             except CustomUser.DoesNotExist:
                 messages.error(request, "Host not found.")
-    return render(request, "adminDashboardApp/tabs/events/hosts.html", {"profiles": hostProfile})
+    return render(
+        request, "adminDashboardApp/tabs/events/hosts.html", {"profiles": hostProfile}
+    )
 
 
 @login_required(login_url="authentication:login")
 @check_suspension
-@group_required("Admin")
+@member
+@admin
 def adminHostApplicationsView(request):
     hostApplications = HostApplication.objects.all()
 
@@ -258,7 +331,7 @@ def adminHostApplicationsView(request):
         action = request.POST.get("applicationAction")
         applicant_email = request.POST.get("applicantEmail")
         applicant_phone = request.POST.get("phone")
-        
+
         userProfile = UserProfile.objects.get(user__email=applicant_email)
 
         try:
@@ -363,16 +436,18 @@ def sendHostDenyEmail(applicantEmail):
 
 @login_required(login_url="authentication:login")
 @check_suspension
-@group_required("Admin")
+@member
+@admin
 def adminEventsView(request):
     live_events = Event.objects.filter(status="live")
     active_events = Event.objects.filter(status="active")
     incomplete_events = Event.objects.filter(status="incomplete")
     archived_events = Event.objects.filter(status="archived")
 
-    last_updated = Event.objects.aggregate(last_updated=Max('updated_at'))['last_updated']
-    
-    
+    last_updated = Event.objects.aggregate(last_updated=Max("updated_at"))[
+        "last_updated"
+    ]
+
     if request.method == "POST":
         action = request.POST.get("eventAction")
         event_id = request.POST.get("event_id")
@@ -385,7 +460,7 @@ def adminEventsView(request):
                 return redirect("waveAdmin:events")
             except Event.DoesNotExist:
                 messages.error(request, "Event not found.")
-                
+
         elif action == "activate" and event_id:
             try:
                 event = get_object_or_404(Event, eventId=event_id)
@@ -394,7 +469,7 @@ def adminEventsView(request):
                 return redirect("waveAdmin:events")
             except Event.DoesNotExist:
                 messages.error(request, "Event not found.")
-    
+
     return render(
         request,
         "adminDashboardApp/tabs/events/events.html",
@@ -410,7 +485,8 @@ def adminEventsView(request):
 
 @login_required(login_url="authentication:login")
 @check_suspension
-@group_required("Admin")
+@member
+@admin
 def adminUsersView(request):
     # Going into the CustomUser database which holds all the users and fetching them to be displayed.
     total_users = CustomUser.objects.all()
@@ -419,7 +495,8 @@ def adminUsersView(request):
 
 @login_required(login_url="authentication:login")
 @check_suspension
-@group_required("Admin")
+@member
+@admin
 def adminUserDetailedView(request, username):
     user_in_view = get_object_or_404(CustomUser, username=username)
     user_profile = UserProfile.objects.get(user=user_in_view)
@@ -471,11 +548,12 @@ def adminUserDetailedView(request, username):
 
 @login_required(login_url="authentication:login")
 @check_suspension
-@group_required("Admin")
+@member
+@admin
 def adminRoleView(request):
     createGroup = CreateGroupForm()
-    all_groups = Group.objects.all()
-    all_permissions = Permission.objects.all()
+    all_groups = Group.objects.all()[:20]
+    all_permissions = Permission.objects.all()[:20]
 
     if request.method == "POST":
         action = request.POST.get("roleControlAction")
@@ -519,7 +597,8 @@ def adminRoleView(request):
 
 @login_required(login_url="authentication:login")
 @check_suspension
-@group_required("Admin")
+@member
+@admin
 def adminCareersView(request):
     # Querying every single career role.
     all_career_roles = CareerRole.objects.all()
@@ -532,7 +611,8 @@ def adminCareersView(request):
 
 @login_required(login_url="authentication:login")
 @check_suspension
-@group_required("Admin")
+@member
+@admin
 def adminCareerDetailView(request, roleID):
     """
     The `adminCareerDetailView` function handles viewing and managing career details for admin users,
@@ -601,33 +681,59 @@ def sendDeniedApplicantEmail(applicantEmail):
         print(f"Error sending email to {applicantEmail}: {e}")
 
 
-
 @login_required(login_url="authentication:login")
 @check_suspension
-@group_required("Admin")
+@member
+@admin
 def adminConnectedAccountsView(request):
     accounts = StripeAdmin.getConnectedAccounts(request)
-    return render(request, "adminDashboardApp/tabs/financial/accounts.html", {"accounts": accounts})
-
-@login_required(login_url="authentication:login")
-@check_suspension
-@group_required("Admin")
-def adminFinanceOverviewView(request):
-    return render(request, "adminDashboardApp/tabs/financial/overview.html")
+    return render(
+        request,
+        "adminDashboardApp/tabs/financial/accounts.html",
+        {"accounts": accounts},
+    )
 
 
 @login_required(login_url="authentication:login")
 @check_suspension
-@group_required("Admin")
+@member
+@admin
+def adminConnectedAccountDetailView(request, account_id):
+    account = StripeAdmin.getConnectedAccountDetails(request, account_id)
+    transactions = StripeAdmin.getConnectedAccountTransactions(request, account_id)
+
+    if request.method == "POST":
+        action = request.POST.get("eventAction")
+        if action == "deleteStripeAccount":
+            StripeAdmin.removeStripeAccount(request, account_id)
+            return redirect("waveAdmin:connectedAccounts")
+        elif action == "rejectStripeAccount":
+            StripeAdmin.rejectStripeAccount(request, account_id)
+            return redirect("waveAdmin:connectedAccounts")
+    return render(
+        request,
+        "adminDashboardApp/tabs/financial/accountDetail.html",
+        {"account": account, "transactions": transactions},
+    )
+
+
+@login_required(login_url="authentication:login")
+@check_suspension
+@member
+@admin
 def adminProductsView(request):
-    return render(request, "adminDashboardApp/tabs/financial/products.html")
-
-
+    products = StripeAdmin.getProducts(request)
+    return render(
+        request,
+        "adminDashboardApp/tabs/financial/products.html",
+        {"products": products},
+    )
 
 
 @login_required(login_url="authentication:login")
 @check_suspension
-@group_required("Admin")
+@member
+@admin
 def adminSupportView(request):
     all_support_tickets = SupportTicket.objects.all()
 
@@ -653,7 +759,8 @@ def adminSupportView(request):
 
 @login_required(login_url="authentication:login")
 @check_suspension
-@group_required("Admin")
+@member
+@admin
 def adminFeedbackView(request):
     """
     The `adminFeedbackView` function displays feedback offers for superusers and redirects
@@ -680,7 +787,8 @@ def adminFeedbackView(request):
 
 @login_required
 @check_suspension
-@group_required("Admin")
+@member
+@admin
 def adminCollegeView(request):
     colleges = College.objects.annotate(member_count=Count("membership"))
     requestedColleges = CollegeRequest.objects.all()
@@ -720,32 +828,43 @@ def adminCollegeView(request):
 
 @login_required
 @check_suspension
-@group_required("Admin")
+@member
+@admin
 def adminCollegeDetailView(request, collegeId):
     college = get_object_or_404(College, collegeId=collegeId)
-    events = Event.objects.filter(display_event_on_college=True, host__user_profile__college=college)
+    events = Event.objects.filter(
+        display_event_on_college=True, host__user_profile__college=college
+    )
     organizations = Organization.objects.filter(college=college)
     action = request.POST.get("eventAction")
-    
+    editCollegeForm = EditCollegeForm(instance=college)
+
     # members = Membership.objects.filter(college=college)
 
     members = UserProfile.objects.filter(college=college)
-    
-    
+
+    # Check if requested user has role of super admin
+    user = request.user
+    if user.groups.filter(name="Super Admin").exists():
+        isSuperAdmin = True
+    else:
+        isSuperAdmin = False
+
     if request.method == "POST":
-        email = request.POST.get("inviteEmail")
+        if action == "inviteManager":
+            email = request.POST.get("inviteEmail")
 
-        if email:
-            try:
-                send_invite(email, college)
+            if email:
+                try:
+                    send_invite(email, college)
 
-                messages.success(request, "Invite sent successfully")
-            except Exception as e:
-                messages.error(request, f"Error sending invite: {str(e)}")
-        else:
-            messages.error(request, "Please provide an email address")
+                    messages.success(request, "Invite sent successfully")
+                except Exception as e:
+                    messages.error(request, f"Error sending invite: {str(e)}")
+            else:
+                messages.error(request, "Please provide an email address")
 
-        if action == "removeManager":
+        elif action == "removeManager":
             manager_email = request.POST.get("managerEmail")
             if manager_email:
                 try:
@@ -766,12 +885,32 @@ def adminCollegeDetailView(request, collegeId):
                     messages.error(request, f"Error removing manager: {str(e)}")
             else:
                 messages.error(request, "No manager email provided.")
+
+        elif action == "editCollege":
+            editCollegeForm = EditCollegeForm(request.POST, instance=college)
+            if editCollegeForm.is_valid():
+                editCollegeForm.save()
+                messages.success(request, "College details updated successfully.")
+            else:
+                messages.error(request, "Error updating college details.")
+
+        elif action == "deleteCollege":
+            college.delete()
+            return redirect("waveAdmin:colleges")
+
         return redirect("waveAdmin:collegeDetail", collegeId=collegeId)
 
     return render(
         request,
         "adminDashboardApp/tabs/colleges/collegeInfo.html",
-        {"college": college, "events": events, "organizations": organizations, "members": members},
+        {
+            "college": college,
+            "events": events,
+            "organizations": organizations,
+            "members": members,
+            "editCollegeForm": editCollegeForm,
+            "isSuperAdmin": isSuperAdmin,
+        },
     )
 
 
@@ -816,16 +955,21 @@ def send_invite(email, college):
 
 @login_required
 @check_suspension
-@group_required("Admin")
+@member
+@admin
 def adminCollegeOrgsView(request):
     organizations = Organization.objects.all()
-    print(organizations)
-    return render(request, "adminDashboardApp/tabs/colleges/organizations.html", {"organizations": organizations})
+    return render(
+        request,
+        "adminDashboardApp/tabs/colleges/organizations.html",
+        {"organizations": organizations},
+    )
 
 
 @login_required
 @check_suspension
-@group_required("Admin")
+@member
+@admin
 def adminNewsRoomView(request):
     """
     The function `adminNewsRoomView` retrieves all news articles from the Newsroom model and renders
@@ -845,7 +989,8 @@ def adminNewsRoomView(request):
 
 @login_required
 @check_suspension
-@group_required("Admin")
+@member
+@admin
 def adminCreateNewsView(request):
     """
     This Python function handles the creation of news articles by processing form data and saving it to
@@ -881,7 +1026,8 @@ def adminCreateNewsView(request):
 
 @login_required
 @check_suspension
-@group_required("Admin")
+@member
+@admin
 def adminEditNewsView(request, newsId):
     """
     This function is likely used to display a view for editing news articles by an admin.
@@ -1004,7 +1150,8 @@ def adminEditNewsView(request, newsId):
 
 @login_required
 @check_suspension
-@group_required("Admin")
+@member
+@admin
 def adminBlogView(request):
     blogs = Blog.objects.all()
     return render(request, "adminDashboardApp/tabs/blog.html", {"blogs": blogs})
@@ -1012,7 +1159,8 @@ def adminBlogView(request):
 
 @login_required
 @check_suspension
-@group_required("Admin")
+@member
+@admin
 def adminEmailingView(request):
     """
     The `adminEmailingView` function retrieves all active user profiles and renders them in an emailing
@@ -1054,7 +1202,8 @@ resend.api_key = settings.RESEND_API_KEY
 @require_POST
 @login_required
 @check_suspension
-@group_required("Admin")
+@member
+@admin
 def send_email(request):
     try:
         data = json.loads(request.body)

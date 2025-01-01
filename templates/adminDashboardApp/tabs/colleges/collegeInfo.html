@@ -1,5 +1,6 @@
 {% extends "base/base.html" %}
 {% load static %}
+{% load widget_tweaks %}
 
 {% block title %}
 College Management — WAVE.
@@ -7,7 +8,8 @@ College Management — WAVE.
 
 
 {% block script %}
-<script type="text/javascript" src="{% static "scripts/adminDashboardApp/tabControl.js" %}" defer></script> 
+<script type="text/javascript" src="{% static "scripts/adminDashboardApp/tabControl.js" %}" defer></script>
+<script type="text/javascript" src="{% static "scripts/adminDashboardApp/colleges/editCollegeInfo.js" %}" defer></script> 
 {% endblock script %}
 
 
@@ -53,74 +55,94 @@ College Management — WAVE.
 
             <div id="tabBody" class="flex flex-row gap-10 min-w-full">
                 <div id="overviewInformation" class="adminCollegeTabInformation w-full">
-                    <div class="tabInformationContainer flex flex-col gap-7">
+                    <form method="POST"  class="tabInformationContainer flex flex-col gap-7">
+                        <div class="w-full flex justify-end">
+                            {% csrf_token %}
+                            <div id="editInfoDiv" class="flex flex-row gap-3">
+                                <button id="editCollege" type="button" class="py-2 px-7 text-white font-Wanted-Regular text-Large bg-gradient-to-br bg-gradient-start bg-gradient-end rounded-xl hover:bg-green">Edit</button>
+                                {% if isSuperAdmin %}
+                                <button type="button" name="eventAction" value="deleteCollege" class="py-2 px-7 text-white font-Wanted-Regular text-Large bg-[#ff0000] rounded-xl">Delete Campus</button>
+                                {% endif %}
+                            </div>
+                            
+                            
+                            <div id="saveCancel" class="hidden w-full">
+                                <div class="w-full flex justify-end gap-3 flex-row">
+                                    <button id="cancelEditCollege" type="button" class="py-2 px-7 text-white font-Wanted-Regular text-Large bg-[#ff0000] rounded-xl">Cancel</button>
+                                    <button id="saveCollege" name="eventAction" value="editCollege" type="submit" class="py-2 px-7 text-white font-Wanted-Regular text-Large bg-green rounded-xl">Save</button>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="w-full  flex flex-row justify-between items-center">
                             <div class=" flex flex-col gap-2">
                                 <h6 class="font-Wanted-Bold text-Large">Campus Name</h6>
-                                <p class="font-Wanted-Variable text-Small text-black font-Wanted-Variable text-Medium">{{ college.name }}</p>
+                                <p class="displayInfo font-Wanted-Variable text-Small text-black font-Wanted-Variable text-Medium">{{ college.name }}</p>
+                                {{ editCollegeForm.name|add_class:"editInput hidden editInput hidden w-full appearance-none h-full p-4 py-3 font-Wanted-Variable text-Semi-Medium text-black border rounded-xl focus:ring-0 focus:none placeholder:text-[#00000076] placeholder:font-Wanted-Regular" }}
                             </div>
-                            
-                            <button type="button" role="button" class="font-Wanted-Bold text-Base uppercase cursor-pointer border-none bg-none font-Wanted-Bold text-Base uppercase cursor-pointer border-none bg-none">Edit</button>
                         </div>
                 
                         <div class="w-full flex flex-row justify-between items-center">
                             <div class="flex flex-col gap-2">
                                 <h6 class="font-Wanted-Bold text-Large">Campus Address</h6>
-                                <span class="address-container flex flex-col gap-1 font-Wanted-Variable text-Small text-black">
+                                <span class="displayInfo address-container flex flex-col gap-1 font-Wanted-Variable text-Small text-black">
                                     <p class="font-Wanted-Variable text-Small text-black">{{ college.address }},</p>
                                     <p class="font-Wanted-Variable text-Small text-black">{{ college.city }}, {{ college.state }}, {{ college.zip_code }},</p>
                                     <p class="font-Wanted-Variable text-Small text-black">{{ college.country }}</p>
                                 </span>
-                            </div>
-                            
-                            <button type="button" role="button" class="font-Wanted-Bold text-Base uppercase cursor-pointer border-none bg-none">Edit</button>
+                                <span class="editInput hidden">
+                                    <div class="flex flex-col gap-2">
+                                        {{ editCollegeForm.address|add_class:"w-full appearance-none h-full p-4 py-3 font-Wanted-Variable text-Semi-Medium text-black border rounded-xl focus:ring-0 focus:none placeholder:text-[#00000076] placeholder:font-Wanted-Regular" }}
+                                        {{ editCollegeForm.city|add_class:" w-full appearance-none h-full p-4 py-3 font-Wanted-Variable text-Semi-Medium text-black border rounded-xl focus:ring-0 focus:none placeholder:text-[#00000076] placeholder:font-Wanted-Regular" }}
+                                        {{ editCollegeForm.state|add_class:"w-full appearance-none h-full p-4 py-3 font-Wanted-Variable text-Semi-Medium text-black border rounded-xl focus:ring-0 focus:none placeholder:text-[#00000076] placeholder:font-Wanted-Regular" }}
+                                        {{ editCollegeForm.zip_code|add_class:"w-full appearance-none h-full p-4 py-3 font-Wanted-Variable text-Semi-Medium text-black border rounded-xl focus:ring-0 focus:none placeholder:text-[#00000076] placeholder:font-Wanted-Regular" }}
+                                        {{ editCollegeForm.country|add_class:"w-full appearance-none h-full p-4 py-3 font-Wanted-Variable text-Semi-Medium text-black border rounded-xl focus:ring-0 focus:none placeholder:text-[#00000076] placeholder:font-Wanted-Regular" }}
+                                    </div>
+                                </span>
+                            </div>                  
                         </div>
                 
                         <div class="w-full flex flex-row justify-between items-center">
                             <div class="flex flex-col gap-2">
                                 <h6 class="font-Wanted-Bold text-Large">Campus Logo</h6>
-                                <p class="font-Wanted-Variable text-Small text-black">
+                                <p class="displayInfo font-Wanted-Variable text-Small text-black">
                                     <img class="campus-logo size-28 rounded-2xl" src="{{ college.logo.url }}">
                                 </p>
+                                {{ editCollegeForm.logo|add_class:"editInput hidden w-full appearance-none h-full p-4 py-3 font-Wanted-Variable text-Semi-Medium text-black border rounded-xl focus:ring-0 focus:none placeholder:text-[#00000076] placeholder:font-Wanted-Regular" }}
                             </div>
-                            
-                            <button type="button" role="button" class="font-Wanted-Bold text-Base uppercase cursor-pointer border-none bg-none">Edit</button>
                         </div>
                 
                         <div class="w-full flex flex-row justify-between items-center">
                             <div class="flex flex-col gap-2">
                                 <h6 class="font-Wanted-Bold text-Large">Campus Motto</h6>
-                                <p class="font-Wanted-Variable text-Small text-black">
+                                <p class="displayInfo font-Wanted-Variable text-Small text-black">
                                     {{ college.motto }}
                                 </p>
+                                {{ editCollegeForm.motto|add_class:"editInput hidden w-full appearance-none h-full p-4 py-3 font-Wanted-Variable text-Semi-Medium text-black border rounded-xl focus:ring-0 focus:none placeholder:text-[#00000076] placeholder:font-Wanted-Regular" }}
                             </div>
-                            
-                            <button type="button" role="button" class="font-Wanted-Bold text-Base uppercase cursor-pointer border-none bg-none">Edit</button>
                         </div>
                 
                         <div class="w-full flex flex-row justify-between items-center">
                             <div class="flex flex-col gap-2">
                                 <h6 class="font-Wanted-Bold text-Large">Website</h6>
-                                <p class="font-Wanted-Variable text-Small text-black">
+                                <p class="displayInfo font-Wanted-Variable text-Small text-black">
                                     <a target="_blank" href="{{college.contact_website}}">{{ college.contact_website }}</a>
                                 </p>
+                                
+                                {{ editCollegeForm.contact_website|add_class:"editInput hidden w-full appearance-none h-full p-4 py-3 font-Wanted-Variable text-Semi-Medium text-black border rounded-xl focus:ring-0 focus:none placeholder:text-[#00000076] placeholder:font-Wanted-Regular" }}
                             </div>
-                            
-                            <button type="button" role="button" class="font-Wanted-Bold text-Base uppercase cursor-pointer border-none bg-none">Edit</button>
                         </div>
                 
-                        <div class="w-full flex flex-row justify-between items-center">
+                        <div class="displayInfo w-full flex flex-row justify-between items-center">
                             <div class="flex flex-col gap-2">
                                 <h6 class="font-Wanted-Bold text-Large">Email Domain</h6>
-                                <p class="font-Wanted-Variable text-Small text-black">
+                                <p class=" font-Wanted-Variable text-Small text-black">
                                     {{ college.email_domain }}
                                 </p>
                             </div>
-                            
-                            <button type="button" role="button" class="font-Wanted-Bold text-Base uppercase cursor-pointer border-none bg-none">Edit</button>
                         </div>
 
-                        <div class="w-full flex flex-row justify-between items-center">
+                        <div class="w-full displayInfo flex flex-row justify-between items-center">
                             <div class="flex flex-col gap-2">
                                 <h6 class="font-Wanted-Bold text-Large">Campus Manager</h6>
                                 <p class="font-Wanted-Variable text-Small text-black">
@@ -136,10 +158,8 @@ College Management — WAVE.
                                     {% endif %}
                                 </p>
                             </div>
-
-                            <button type="button" role="button" class="font-Wanted-Bold text-Base uppercase cursor-pointer border-none bg-none">Edit</button>
                         </div>
-                    </div>
+                    </form>
                 </div>
 
                 <div id="eventInformation" class="adminCollegeTabInformation w-full">
@@ -248,8 +268,8 @@ College Management — WAVE.
                             <div>
                                 <form method="POST" class="searchUserEmail w-full flex justify-end flex-row gap-3">
                                     {% csrf_token %}
-                                    <input type="email" name="inviteEmail" class="w-full appearance-none h-full p-4 py-5 font-Wanted-Variable text-Semi-Medium text-black border rounded-3xl focus:ring-0 focus:outline-none placeholder:text-[#00000076] placeholder:font-Wanted-Regular" placeholder="Enter an email address to send an invite">
-                                    <button type="submit" role="button" class="gradient-btn text-Large">Invite</button>
+                                    <input type="email" name="inviteEmail" class="w-full appearance-none h-full p-4 py-3 font-Wanted-Variable text-Semi-Medium text-black border rounded-xl focus:ring-0 focus:outline-none placeholder:text-[#00000076] placeholder:font-Wanted-Regular" placeholder="Enter an email address to send an invite">
+                                    <button type="submit" name="eventAction" value="inviteManager" role="button" class="gradient-btn text-Large">Invite</button>
                                 </form>
                             </div>
 

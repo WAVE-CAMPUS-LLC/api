@@ -27,7 +27,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Initialize tab systems for each body section
     initializeTabSystem('contentContainerBodyOne', 'eventDetailsTab', 'eventDetailsTabInformation');
-    
 
     // Function to initialize tab system for a specific body section
     function initializeTabSystem(bodyId, tabClass, contentClass) {

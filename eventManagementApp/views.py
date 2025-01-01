@@ -12,7 +12,7 @@ from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from django.core.mail import send_mail
 import stripe.error
-from wave_v1.decorators import group_required
+from wave_v1.decorators import check_suspension, host, member, verified, onboarded
 from django.urls import reverse
 
 
@@ -50,6 +50,7 @@ def hostView(request):
 
 
 @login_required
+@check_suspension
 def hostApplyView(request):
     print("Request method:", request.method)  # Debugging
     applicant = request.user
@@ -85,7 +86,8 @@ def hostApplyView(request):
 
 
 @login_required
-@group_required("Host")
+@host
+@check_suspension
 def hostPortalView(request):
     live_event = Event.objects.filter(host=request.user, status="live")
     incomplete_event = Event.objects.filter(host=request.user, status="incomplete")
@@ -124,18 +126,23 @@ def hostPortalView(request):
     )
 
 
+
 def hostGuideView(request):
     return render(request, "eventManagementApp/host/hostGuide.html")
 
 
 @login_required
-@group_required("Host")
+@host
+@member
+@check_suspension
 def hostCreateEvent(request):
     return render(request, "eventManagementApp/host/createEvent.html")
 
 
 @login_required
-@group_required("Host")
+@host
+@member
+@check_suspension
 def hostCreateEventGenerator(request):
     event = Event.objects.create(host=request.user)
 
@@ -143,7 +150,9 @@ def hostCreateEventGenerator(request):
 
 
 @login_required
-@group_required("Host")
+@host
+@member
+@check_suspension
 def eventCreationProcess(request, eventId):
     event = get_object_or_404(Event, eventId=eventId)
     event_type_choices = Event.EVENT_TYPE_CHOICES
@@ -260,7 +269,9 @@ def eventCreationProcess(request, eventId):
 
 
 @login_required
-@group_required("Host")
+@host
+@member
+@check_suspension
 def save_event_progress(request, eventId):
     if request.method == "POST":
         # Retrieve the event object
@@ -315,7 +326,9 @@ def save_event_progress(request, eventId):
 
 
 @login_required
-@group_required("Host")
+@host
+@member
+@check_suspension
 def eventManagement(request, eventId):
     event = get_object_or_404(Event, eventId=eventId)
     user_profile = UserProfile.objects.get(user=request.user)
@@ -473,7 +486,9 @@ def eventManagement(request, eventId):
 
 
 @login_required
-@group_required("Host")
+@host
+@member
+@check_suspension
 def hostBilling(request):
     hostProfile = HostProfile.objects.get(user=request.user)
 
@@ -801,7 +816,9 @@ def get_client_ip(request):
 
 
 @login_required
-@group_required("Host")
+@host
+@member
+@check_suspension
 def hostBillingCashout(request):
     hostProfile = HostProfile.objects.get(user=request.user)
     if request.method == "POST":

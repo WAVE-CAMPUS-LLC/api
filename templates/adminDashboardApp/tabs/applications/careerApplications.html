@@ -40,59 +40,11 @@ Career Applications — WAVE.
             {% if applications %}
             <div class="applications-container grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
                 {% for application in applications %}
-                    <div class="applicant-card bg-green text-white py-5 px-7 rounded-lg cursor-pointer">
+                    <a target="_blank" href="{% url "waveAdmin:careerApplicationDetail" applicationId=application.applicationId %}" class="applicant-card {% if application.approval_status == 'pending' %}bg-green {% elif application.approval_status == 'approved' %}bg-[green]{% elif application.approval_status == 'denied' %}bg-[red]{% endif %} text-white py-5 px-7 rounded-lg cursor-pointer" data-counter="{{ forloop.counter }}">
                         <h3 class="font-Wanted-Bold whitespace-nowrap overflow-hidden text-ellipsis w-full text-left md:font-Wanted-Black text-Large md:text-2xl">{{ application.applicantFirstName }} {{ application.applicantLastName }}</h3>
-                            <p class="applicant-email font-Wanted-Regular text-Small md:text-Semi-Medium">{{ application.role }}</p>
-                            <p class="application-received flex justify-end font-Wanted-Variable text-XSmall">{{ application.applicationDate }}</p>
-                    </div>
-
-                    <div id="viewHostApplicationModal-{{ forloop.counter }}" class="hidden bg-[rgba(0, 0, 0, 0.037)] backdrop-blur-sm fixed top-0 left-0 right-0 bottom-0 z-[1005] w-full h-full cursor-default">
-                        <div class="modalContainer w-full h-full flex justify-center items-center py-5 md:py-11">
-                            <div class="modalContentCard w-11/12 xxsm:w-9/12 pre-sm:w-10/12 sm:w-10/12 md:w-10/12 pre-lg:w-10/12 lg:w-10/12 xl:w-3/5 h-full lg:h-[75%] bg-white shadow-custom-shadow rounded-2xl p-5 pb-12 flex flex-col gap-3 overflow-y-auto">
-                                <div class="modalHeader w-full flex justify-between items-center flex-col-reverse md:flex-row"> 
-                                    <div class="modalHeading font-Wanted-ExtraBold text-Large md:text-2xl">
-                                        <h5>Career Application</h5>
-                                    </div>
-                                    <div class="modalClose">
-                                        <button type="button" role="button" id="hideModalButton">
-                                            <img src="{% static "images/admin/departments/modalClose.svg" %}" alt="Close">
-                                        </button>
-                                    </div>
-                                </div>
-        
-                                <div class="modalBody flex flex-col gap-5">
-                                    <div class="applicantDetails flex flex-col gap-3">
-                                        <div class="applicantName flex flex-col gap-1">
-                                            <label for="applicantName" class="font-Wanted-Regular text-Semi-Medium">Name</label>
-                                            <p id="applicantName" class="font-Wanted-Variable text-black">{{ application.applicantFirstName }} {{ application.applicantLastName }}</p>
-                                        </div>
-                                        <div class="applicantEmail flex flex-col gap-1">
-                                            <label for="applicantEmail" class="font-Wanted-Regular text-Semi-Medium">Email</label>
-                                            <p id="applicantEmail" class="font-Wanted-Variable text-black">{{ application.email }}</p>
-                                        </div>
-                                        <div class="applicantRole flex flex-col gap-1">
-                                            <label for="applicantRole" class="font-Wanted-Regular text-Semi-Medium">Role</label>
-                                            <p id="applicantRole" class="font-Wanted-Variable text-black">{{ application.role }}</p>
-                                        </div>
-                                        <div class="applicantApplicationDate flex flex-col gap-1">
-                                            <label for="applicantApplicationDate" class="font-Wanted-Regular text-Semi-Medium">Application Date</label>
-                                            <p id="applicantApplicationDate" class="font-Wanted-Variable text-black">{{ application.applicationDate }}</p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <form action="{% url "waveAdmin:hostApplications" %}" id="hostApplicationDecisionForm" method="post" class="{% if hostApplication.approval_status == "denied" or hostApplication.approval_status == "approved" %}hidden {% endif %}">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="applicantEmail" value="{{hostApplication.email}}" id="applicantEmailInput">
-
-                                    <div class="applicationDecision w-full flex flex-col md:flex-row gap-5 justify-between items-center">
-                                        <button type="submit" name="applicationAction" value="deny" id="applicationDeny" class="text-white font-Wanted-Medium py-3 px-6 rounded-lg bg-[red]">Deny</button>
-                                        <button type="submit" name="applicationAction" value="approve" id="applicationApprove" class="text-white font-Wanted-Medium py-3 px-6 rounded-lg bg-[#14c914]">Approve</button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
+                        <p class="applicant-email font-Wanted-Regular text-Small md:text-Semi-Medium">{{ application.role }}</p>
+                        <p class="application-received flex justify-end font-Wanted-Variable text-XSmall">{{ application.applicationDate }}</p>
+                    </a>
                 {% endfor %}
             </div>
             {% else %}

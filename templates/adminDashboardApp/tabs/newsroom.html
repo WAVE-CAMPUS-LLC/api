@@ -44,7 +44,7 @@ The Newsroom — WAVE.
             {% for newsItem in news %}
             <a href="{% url "waveAdmin:editNews" newsId=newsItem.newsId %}" class="newsCard flex flex-col gap-[30px] text-black hover:#008d95">
                 <div class="newsHeader border-[1px] border-solid border-[rgba(0,0,0,0.038)] rounded-[20px] shadow-custom-shadow-2 max-w-[100%] max-h-[350px]" >
-                    <img src="{{ newsItem.headerImage.url }}" class="w-full h-full max-h-[350px] max-w-full rounded-[20px object-cover"/>
+                    <img src="{{ newsItem.headerImage.url }}" class="w-full h-full max-h-[350px] rounded-2xl min-h-[350px] max-w-full rounded-[20px object-cover"/>
                 </div>
                 <div class="newsBody flex flex-col gap-[15px]">
                     <div class="newsType flex justify-start gap-[15px]">

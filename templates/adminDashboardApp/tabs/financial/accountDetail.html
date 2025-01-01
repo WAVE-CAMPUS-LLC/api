@@ -1,0 +1,126 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}
+Connected Accounts (Stripe) — WAVE.
+{% endblock title %}
+
+
+{% block script %}
+<script type="text/javascript" src="{% static "/scripts/adminDashboardApp/applications/applications.js" %}"></script>
+{% endblock script %}
+
+
+{% block header %}
+{% include "partials/nav-footer/nav/main_nav.html" %}
+{% endblock header %}
+
+
+{% block body %}
+<div class="flex flex-col gap-[70px] px-4 sm:px-6 md:px-[40px] pre-lg:px-[40px] lg:px-[100px] 2xl:px-48 3xl:px-96">
+    <div id="pagination-display" class="flex flex-col pre-sm:flex-row gap-2 w-full items-center font-Wanted-Variable justify-start text-gray-300">
+        <a href="{% url "waveAdmin:adminDashboard" %}" class="text-green underline">Admin Dashboard</a>
+        >
+        <a href="{% url "waveAdmin:adminDashboard" %}#financialManagement" class="text-green underline">Billing & Finance</a>
+        >
+        <p class="font-Wanted-Medium text-black">Connected Accounts</p>
+    </div>
+
+    <div class="page-heading flex flex-col gap-2">
+        <h2 class="font-Wanted-Bold text-3.5xl text-black">{{ account.individual.first_name }} {{ account.individual.last_name }}</h2>
+        <p class="font-Wanted-Variable text-Semi-Medium text-[#808080c1]">
+            See details about {{ account.individual.first_name }} {{ account.individual.last_name }}'s Stripe account.
+        </p>
+    </div>
+
+    <div id="content-container" class="flex flex-col gap-[40px]">
+        <div id="tab-control" class="flex flex-row gap-4 w-full">
+            <div class="applications-tab tab-active cursor-pointer flex flex-col gap-1 font-Wanted-Variable border border-gray-100 p-2 px-5 rounded-xl w-auto flex justify-center" data-tab="profile">
+                Profile
+            </div>
+        </div>
+
+        <div id="body-content">
+            <div class="applications-tab-content" id="profile">
+                <div class="flex flex-col gap-10">
+                    <div id="account-information" class="flex flex-col gap-6">
+                        <div class="w-full flex flex-row gap-4">
+                            <div class="flex flex-col w-full gap-2">
+                                <p class="font-Wanted-Bold text-Base text-[#808080c1]">Account ID</p>
+                                <p class="font-Wanted-Variable">{{ account.id }}</p>
+                            </div>
+    
+                            <div class="flex flex-col w-full gap-2">
+                                <p class="font-Wanted-Bold text-Base text-[#808080c1]">Account Type</p>
+                                <p class="font-Wanted-Variable capitalize">{{ account.type }}</p>
+                            </div>
+                        </div>
+    
+                        <div class="w-full flex flex-row gap-4">
+                            <div class="flex flex-col w-full gap-2">
+                                <p class="font-Wanted-Bold text-Base text-[#808080c1]">Terms of Acceptance Date</p>
+                                <p class="font-Wanted-Variable">
+                                    {% if account.tos_acceptance.date == None %}
+                                    Incomplete
+                                    {% else %}
+                                    {{ account.tos_acceptance.date }}
+                                    {% endif %}
+                                </p>
+                            </div>
+    
+                            <div class="flex flex-col w-full gap-2">
+                                <p class="font-Wanted-Bold text-Base text-[#808080c1]">Agreement Type</p>
+                                <p class="font-Wanted-Variable capitalize">
+                                    {% if account.tos_acceptance.service_agreement %}
+                                        {{ account.tos_acceptance.service_agreement }}
+                                    {% else %}
+                                        Not specified
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+    
+                    <div id="contact-information" class="flex flex-col gap-6">
+                        <div class="w-full flex flex-row gap-4">
+                            <div class="flex flex-col w-full gap-2">
+                                <p class="font-Wanted-Bold text-Base text-[#808080c1]">Email</p>
+                                <p class="font-Wanted-Variable">{{ account.email }}</p>
+                            </div>
+    
+                            <div class="flex flex-col w-full gap-2">
+                                <p class="font-Wanted-Bold text-Base text-[#808080c1]">SSN Last 4</p>
+                                <p class="font-Wanted-Variable capitalize">{{ account.individual.ssn_last_4_provided }}</p>
+                            </div>
+                        </div>
+    
+                        <div class="w-full flex flex-row gap-4">
+                            <div class="flex flex-col w-full gap-2">
+                                <p class="font-Wanted-Bold text-Base text-[#808080c1]">Phone</p>
+                                <p class="font-Wanted-Variable">
+                                    {{ account.individual.phone }}
+                                </p>
+                            </div>
+    
+                            <div class="flex flex-col w-full gap-2">
+                                <p class="font-Wanted-Bold text-Base text-[#808080c1]">Website</p>
+                                <p class="font-Wanted-Variable capitalize">
+                                    {{ account.individual.website }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="account-control" class="flex flex-col gap-6">
+                        <form method="POST" class="w-full flex flex-row justify-between">
+                            {% csrf_token %}
+                            <button id="deleteStripeAccount" value="rejectStripeAccount" type="submit" name="eventAction" class="bg-[yellow] text-white font-Wanted-Variable py-3 px-7 rounded-2xl">Reject Account</button>
+                            <button id="deleteStripeAccount" value="deleteStripeAccount" type="submit" name="eventAction" class="bg-[red] text-white font-Wanted-Variable py-3 px-7 rounded-2xl">Delete Account</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

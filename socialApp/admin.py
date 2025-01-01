@@ -1,3 +1,4 @@
+from authenticationApp.admin import super_admin_restricted_site
 from django.contrib import admin
 from .models import Crew, CrewMember, CrewRequest, FriendRequest
 
@@ -20,4 +21,4 @@ class CrewRequestAdmin(admin.ModelAdmin):
 class CrewAdmin(admin.ModelAdmin):
     list_display = ("name", "created_by", "created_at")
 
-admin.site.register(FriendRequest, FreindRequestAdmin)
+super_admin_restricted_site.register(FriendRequest, FreindRequestAdmin)

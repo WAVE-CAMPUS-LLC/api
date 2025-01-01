@@ -6,8 +6,8 @@ app_name = "authentication"
 
 urlpatterns = [
     path("join/", views.joinView, name="join"),
-    path("join/onboarding/", views.onboardingView, name="onboarding"),
-    path("verify/", views.startVerificationProcess, name="generateVerification"),
+    path("join/verify/", views.emailVerifyView, name="verifyEmail"),
+    # path("verify/", views.startVerificationProcess, name="generateVerification"),
     path("login/", views.loginView, name="login"),
     path("logout/", views.logoutView, name="logout"),
     path("forgot/", views.forgotPasswordView, name="forgot"),

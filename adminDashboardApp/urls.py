@@ -13,6 +13,7 @@ urlpatterns = [
         name="departmentDetails",
     ),
     path("applications/career/", views.adminCareerApplicationsView, name="careerApplications"),
+    path("applications/career/<uuid:applicationId>/review/", views.adminCareerApplicationsDetailView, name="careerApplicationDetail"),
     path("applications/host/", views.adminHostApplicationsView, name="hostApplications"),
     path("events/", views.adminEventsView, name="events"),
     # User Management
@@ -45,6 +46,6 @@ urlpatterns = [
     path('toggle_ticket_status/<str:ticket_id>/', views.toggle_ticket_status, name='toggle_ticket_status'),
 
     path('financial/connected/accounts/', views.adminConnectedAccountsView, name='connectedAccounts'),
-    path('financial/overview/', views.adminFinanceOverviewView, name='financialOverview'),
+    path('financial/connected/accounts/<str:account_id>/', views.adminConnectedAccountDetailView, name='connectedAccountDetail'),
     path('financial/products/', views.adminProductsView, name='stripeProducts'),
 ]

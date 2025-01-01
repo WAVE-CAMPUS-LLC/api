@@ -6,6 +6,10 @@ from django.utils.crypto import get_random_string
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import HttpResponseRedirect, JsonResponse
+from wave_v1.decorators import check_suspension, member, verified, onboarded
+from datetime import datetime, timedelta
+from django.utils.timezone import now
+
 
 from .forms import (
     CollegeRequestForm,
@@ -97,6 +101,11 @@ def collegeCampusesView(request):
     )
 
 
+@login_required
+@member
+@verified
+@onboarded
+@check_suspension
 def requestCollege(request):
     pageName = "Colleges"
 
@@ -121,6 +130,10 @@ def requestCollege(request):
 
 
 @login_required
+@member
+@verified
+@onboarded
+@check_suspension
 def viewCollegeInformation(request, collegeId):
     pageName = "Colleges"
 
@@ -148,7 +161,17 @@ def viewCollegeInformation(request, collegeId):
     )
 
     events = (events_restricted_to_college | display_events_on_college).distinct()
+    
+    
+    today = now().date()
+    start_of_week = today - timedelta(days=today.weekday())
+    end_of_week = start_of_week + timedelta(days=6)
 
+    weekly_events = Event.objects.filter(
+        date__range=[start_of_week, end_of_week], status="live", privacy="Discoverable", admin_status="active"
+    ).order_by("?")[:3]
+    
+    
     return render(
         request,
         "collegeManagementApp/collegeInformation.html",
@@ -159,11 +182,16 @@ def viewCollegeInformation(request, collegeId):
             "user_profile": user_profile,
             "organizations": organizations,
             "events": events,
+            "weekly_events": weekly_events,
         },
     )
 
 
 @login_required
+@member
+@verified
+@onboarded
+@check_suspension
 def joinCollege(request, collegeId):
     pageName = "Colleges"
     college = get_object_or_404(College, collegeId=collegeId)
@@ -206,6 +234,10 @@ def joinCollege(request, collegeId):
 
 
 @login_required
+@member
+@verified
+@onboarded
+@check_suspension
 def verifyJoinCollege(request, collegeId):
     pageName = "Colleges"
     college = get_object_or_404(College, collegeId=collegeId)
@@ -238,6 +270,10 @@ def verifyJoinCollege(request, collegeId):
 
 
 @login_required
+@member
+@verified
+@onboarded
+@check_suspension
 def exitCollege(request, collegeId):
     user_profile = get_object_or_404(UserProfile, user=request.user)
     college = get_object_or_404(College, collegeId=collegeId)
@@ -263,6 +299,10 @@ def exitCollege(request, collegeId):
 
 
 @login_required
+@member
+@verified
+@onboarded
+@check_suspension
 def createOrg(request, collegeId):
     pageName = "Colleges"
     college = get_object_or_404(College, collegeId=collegeId)
@@ -311,6 +351,10 @@ def createOrg(request, collegeId):
 
 
 @login_required
+@member
+@verified
+@onboarded
+@check_suspension
 def viewOrganization(request, collegeId, orgId):
     pageName = "Colleges"
     college = get_object_or_404(College, collegeId=collegeId)
@@ -429,6 +473,10 @@ def viewOrganization(request, collegeId, orgId):
 
 
 @login_required
+@member
+@verified
+@onboarded
+@check_suspension
 def joinOrganization(request, collegeId, orgId):
     college = get_object_or_404(College, collegeId=collegeId)
     organization = get_object_or_404(Organization, orgId=orgId, college=college)
@@ -447,6 +495,10 @@ def joinOrganization(request, collegeId, orgId):
 
 
 @login_required
+@member
+@verified
+@onboarded
+@check_suspension
 def leaveOrganization(request, collegeId, orgId):
     college = get_object_or_404(College, collegeId=collegeId)
     organization = get_object_or_404(Organization, orgId=orgId, college=college)

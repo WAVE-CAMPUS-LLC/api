@@ -51,15 +51,6 @@ class CustomUserJoinForm(UserCreationForm):
             raise ValidationError("Username taken!")
         return username
 
-    # def clean(self):
-    #     cleaned_data = super().clean()
-    #     password2 = cleaned_data.get("password2")
-    #     email = cleaned_data.get("email")
-
-    #     if email and (email.lower() in password2.lower() or password2.lower() in email.lower()):
-    #         raise ValidationError("Password similar to email.")
-
-    #     return cleaned_data
 
     # In the defined function below, we loop through the first_name to see if it meets the set criteria.
     def clean_first_name(self):

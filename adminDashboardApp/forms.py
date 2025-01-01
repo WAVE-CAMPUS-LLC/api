@@ -136,7 +136,9 @@ class UpdateNewsTitleForm(forms.ModelForm):
 class UpdateNewsBodyForm(forms.ModelForm):
     class Meta:
         model = Newsroom
-        fields = ["body",]
+        fields = [
+            "body",
+        ]
 
         widgets = {
             "body": forms.Textarea(
@@ -173,29 +175,32 @@ class UpdateHeaderImageForm(forms.ModelForm):
         fields = [
             "headerImage",
         ]
-        
+
+
 class UpdateImageOneForm(forms.ModelForm):
     class Meta:
         model = Newsroom
         fields = [
             "imageOne",
         ]
-        
+
+
 class UpdateImageTwoForm(forms.ModelForm):
     class Meta:
         model = Newsroom
         fields = [
             "imageTwo",
         ]
-        
+
+
 class UpdateImageThreeForm(forms.ModelForm):
     class Meta:
         model = Newsroom
         fields = [
             "imageThree",
         ]
-        
-        
+
+
 class CollegeForm(forms.ModelForm):
     class Meta:
         model = College
@@ -212,6 +217,29 @@ class CollegeForm(forms.ModelForm):
         ]
 
         widgets = {"state": forms.Select(), "country": forms.Select()}
-        
-        
-        
+
+
+class EditCollegeForm(forms.ModelForm):
+    class Meta:
+        model = College
+        fields = [
+            "name",
+            "address",
+            "city",
+            "state",
+            "zip_code",
+            "country",
+            "logo",
+            "motto",
+            "contact_website",
+        ]
+
+        widgets = {
+            "state": forms.Select(),
+            "country": forms.Select(),
+            "logo": forms.ClearableFileInput(
+                attrs={
+                    "class": "editInput hidden w-full appearance-none h-full p-4 py-3 font-Wanted-Variable text-Semi-Medium text-black border rounded-xl focus:ring-0 focus:none placeholder:text-[#00000076] placeholder:font-Wanted-Regular"
+                }
+            ),
+        }

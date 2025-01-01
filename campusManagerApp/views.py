@@ -1,4 +1,3 @@
-from enum import member
 from django.utils import timezone
 from django.urls import reverse
 from django.contrib import messages
@@ -17,13 +16,17 @@ from authenticationApp.models import CustomUser
 from collegeManagementApp.models import Membership, Organization, CollegeEventLink
 from .models import CampusManagerInvite
 from adminDashboardApp.models import College
-from wave_v1.decorators import campusManagerRequired
+from wave_v1.decorators import check_suspension, campusManagerRequired, member, verified, onboarded
+
 
 
 User = get_user_model()
 
 # Create your views here.
 @login_required
+@check_suspension
+@member
+@verified
 @campusManagerRequired("Campus Manager")
 def managerDashboardView(request):
     """
@@ -92,6 +95,9 @@ def managerDashboardView(request):
 
 
 @login_required
+@check_suspension
+@member
+@verified
 @campusManagerRequired("Campus Manager")
 def managedCampusView(request, collegeId):
     college = get_object_or_404(College, managers=request.user, collegeId=collegeId)
@@ -235,6 +241,10 @@ def accept_invite(request, token, collegeId):
         return redirect(f"{reverse('authentication:login')}?next={request.path}")
     
 @login_required
+@check_suspension
+@member
+@verified
+@campusManagerRequired("Campus Manager")
 def college_detail_view(request, collegeId):  # Changed from college_id to collegeId
     college = get_object_or_404(College, collegeId=collegeId)  # Using collegeId instead of id
     events = Event.objects.all()

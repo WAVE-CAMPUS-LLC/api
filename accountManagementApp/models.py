@@ -1,12 +1,21 @@
+import uuid
 import re
+import qrcode
+from io import BytesIO
+from django.core.files.uploadedfile import InMemoryUploadedFile
+from PIL import Image
 from django.db import models
-from django.shortcuts import get_object_or_404
+from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
+
+from django.shortcuts import get_object_or_404, redirect
+from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.conf import settings
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils import timezone
 
-from eventManagementApp.models import Event
+from eventManagementApp.models import Event, SharedEvent
 from eventTicketsApp.models import InviteEventOption
 from .utils import generate_profile_picture
 from django.contrib.auth.models import Group
@@ -15,6 +24,18 @@ from socialApp.models import CrewMember, CrewRequest, FriendRequest, Crew
 
 
 # Create your models here.
+
+
+class EventTypePreferences(models.Model):
+    name = models.CharField(max_length=50, unique=True)
+
+    class Meta:
+        default_permissions = ()
+
+    def __str__(self):
+        return self.name
+
+
 class UserProfile(models.Model):
     USER_STATUS_OPTION = [
         ("Happy 😊", "Happy 😊"),
@@ -131,7 +152,10 @@ class UserProfile(models.Model):
     ]
 
     user = models.OneToOneField(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="user_profile", null=True
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="user_profile",
+        null=True,
     )
     group = models.ManyToManyField(Group, related_name="user_group")
     college = models.ForeignKey(
@@ -143,7 +167,6 @@ class UserProfile(models.Model):
     status = models.TextField(
         _("How do you feel right now?"), blank=True, choices=USER_STATUS_OPTION
     )
-    birthday = models.DateField(_("Enter your birthday"), null=True, blank=True)
     gender = models.CharField(
         _("What gender do you indentify as?"),
         max_length=17,
@@ -151,7 +174,7 @@ class UserProfile(models.Model):
         choices=GENDER_OPTIONS,
     )
     profile_photo = models.ImageField(
-        _("Upload a profile picture"),
+        _("Profile picture"),
         upload_to="profile/profilePictures/",
         null=True,
         blank=True,
@@ -177,22 +200,15 @@ class UserProfile(models.Model):
     major = models.CharField(_("What's your major?"), max_length=150, blank=True)
 
     # Event Preferences
-    event_size = models.CharField(
-        _("What's your preferred event size?"),
-        max_length=22,
-        choices=EVENT_SIZE_CHOICES,
-        default="Medium (50-100 people)",
+    event_types = models.ManyToManyField(
+        EventTypePreferences, related_name="user_preferences", blank=True
     )
-    eventTypes = models.ManyToManyField(
-        "EventTypePreferences", related_name="user_preferences"
-    )
-    
+
+    # Social Media Profiles
+    instagram = models.CharField(max_length=100, blank=True, default="")
+    tiktok = models.CharField(max_length=100, blank=True, default="")
+
     was_host = models.BooleanField(default=False)
-
-
-    # Communication Preferences
-    email_communication = models.BooleanField(_("Email notifications"), default=True)
-    text_communication = models.BooleanField(_("Text notifications"), default=True)
 
     # Invited Events
     invited_events = models.ManyToManyField(
@@ -200,6 +216,10 @@ class UserProfile(models.Model):
     )
     invitations = models.ManyToManyField(
         InviteEventOption, related_name="invitations", blank=True
+    )
+
+    profile_qr_code = models.ImageField(
+        upload_to="profile/qr_code/", null=True, blank=True
     )
 
     class Meta:
@@ -210,15 +230,44 @@ class UserProfile(models.Model):
     def __str__(self):
         return self.user.username
 
-    def save(self, *args, **kwargs):
-        if not self.profile_photo:
-            initials = f"{self.user.first_name[0]}{self.user.last_name[0]}".upper()
-            self.profile_photo.save(
-                f"{self.user.username}_profile.png",
-                generate_profile_picture(initials),
-                save=False,
-            )
-        super().save(*args, **kwargs)
+    def generate_qr_code(self):
+        part_url = reverse("social:publicProfile", kwargs={"username": self.user.username})
+        
+        url = f"{settings.SITE_URL}{part_url}"
+        qr = qrcode.make(url)
+
+        img_io = BytesIO()
+        qr.save(img_io, "PNG")
+        img_io.seek(0)
+
+        self.profile_qr_code.save(
+            f"{self.user.username}_qr_code.png",
+            InMemoryUploadedFile(
+                img_io,
+                None,
+                f"{self.user.username}_qr_code.png",
+                "image/png",
+                img_io.tell(),
+                None,
+            ),
+            save=False,
+        )
+
+    def save(self, *args, event_types=None, **kwargs):
+        if event_types is not None:
+            event_type_preferences = []
+            for event_type_name in event_types:
+                event_type, created = EventTypePreferences.objects.get_or_create(
+                    name=event_type_name
+                )
+                event_type_preferences.append(event_type)
+
+            self.event_types.set(event_type_preferences)
+
+        if not self.profile_qr_code:
+            self.generate_qr_code()
+        # Now call the parent save method, ensuring to use the correct arguments
+        super(UserProfile, self).save(*args, **kwargs)
 
     def is_friends_with(self, other_user):
         return self.friends.filter(
@@ -276,12 +325,12 @@ class UserProfile(models.Model):
         crew = get_object_or_404(Crew, crewId=crewId)
         return crew.created_by == self.user
 
+    def get_all_crews(self):
+        all_crew_members = CrewMember.objects.filter(user=self.user).all()
+        all_crews = []
+        for member in all_crew_members:
+            all_crews.append(member.crew)
+        return all_crews
 
-class EventTypePreferences(models.Model):
-    name = models.CharField(max_length=50, unique=True)
-
-    class Meta:
-        default_permissions = ()
-
-    def __str__(self):
-        return self.name
+    def get_shared_events(self):
+        return SharedEvent.objects.filter(receiver=self.user)

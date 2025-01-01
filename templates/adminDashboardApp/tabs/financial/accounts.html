@@ -36,22 +36,18 @@ Connected Accounts (Stripe) — WAVE.
     <div class="content-control flex flex-row gap-4 w-full">
         <div class="applications-tab tab-active cursor-pointer flex flex-col gap-1 font-Wanted-Variable border border-gray-100 p-2 px-5 rounded-xl w-auto flex justify-center" data-tab="active-accounts">
             <p class="font-Wanted-Regular text-Semi-Medium">All accounts</p>
-            <span class="font-Wanted-Bold">10</span>
         </div>
 
         <div class="applications-tab cursor-pointer flex flex-col gap-1 font-Wanted-Variable border border-gray-100 p-2 px-5 rounded-xl w-auto flex justify-center" data-tab="restricted-accounts">
             <p class="font-Wanted-Regular text-Semi-Medium">Restricted</p>
-            <span class="font-Wanted-Bold">3</span>
         </div>
 
         <div class="applications-tab cursor-pointer flex flex-col gap-1 font-Wanted-Variable border border-gray-100 p-2 px-5 rounded-xl w-auto flex justify-center" data-tab="enabled-accounts">
             <p class="font-Wanted-Regular text-Semi-Medium">Enabled</p>
-            <span class="font-Wanted-Bold">1</span>
         </div>
 
         <div class="applications-tab cursor-pointer flex flex-col gap-1 font-Wanted-Variable border border-gray-100 p-2 px-5 rounded-xl w-auto flex justify-center" data-tab="complete-accounts">
             <p class="font-Wanted-Regular text-Semi-Medium">Complete</p>
-            <span class="text-[#808080c1] font-Wanted-Bold">1</span>
         </div>
     </div>
 
@@ -77,9 +73,9 @@ Connected Accounts (Stripe) — WAVE.
 
                 <div class="flex flex-col px-4">
                     {% for account in accounts %}
-                        <div id="list-item" class="border-b border-[#bdbdbd69] grid grid-cols-2 gap-2 py-3">
+                        <a href="{% url "waveAdmin:connectedAccountDetail" account_id=account.id %}" id="list-item" class="group border-b border-[#bdbdbd69] grid grid-cols-2 gap-2 py-3">
                             <div class="flex flex-col gap-[2px]">
-                                <p class="font-Wanted-Bold text-black">{{ account.individual.first_name }} {{ account.individual.last_name }}</p>
+                                <p class="font-Wanted-Bold text-black group-hover:text-green">{{ account.individual.first_name }} {{ account.individual.last_name }}</p>
                                 <p class="font-Wanted-Variable text-[#808080c1]">{{ account.email }}</p>
                             </div>
                             <div class="grid grid-cols-3">
@@ -101,27 +97,168 @@ Connected Accounts (Stripe) — WAVE.
                                     {{ account.connected_date }}
                                 </div>
                             </div>
-                        </div>
+                        </a>
                     {% endfor %}
                 </div>
             </div>
         </div>
 
         <div class="applications-tab-content" id="restricted-accounts">
-            <div id="tab-container-elements" class="border border-[#bdbdbd69] rounded-2xl p-5">
-                Restricted
+            <div id="tab-container-elements" class="border border-[#bdbdbd69] rounded-2xl p-5 flex flex-col gap-3">
+                <div id="list-header" class="border-b border-[#bdbdbd69] pb-2 grid grid-cols-2 font-Wanted-Bold text-[#a3a3a3a2]">
+                    <div class="">
+                        Account
+                    </div>
+                    <div class="grid grid-cols-3">
+                        <div class="flex items-center justify-center">
+                            Status
+                        </div>
+                        <div class="flex items-center justify-center">
+                            Balance
+                        </div>
+                        <div class="flex items-center justify-center">
+                            Connected
+                        </div>
+                    </div>
+                </div>
+                <div class="flex flex-col px-4">
+                    {% for account in accounts %}
+                        {% if account.charges_enabled == False and account.payouts_enabled == False %}
+                        
+                        <a href="{% url "waveAdmin:connectedAccountDetail" account_id=account.id %}" id="list-item" class="group border-b border-[#bdbdbd69] grid grid-cols-2 gap-2 py-3">
+                            <div class="flex flex-col gap-[2px]">
+                                <p class="font-Wanted-Bold text-black group-hover:text-green">{{ account.individual.first_name }} {{ account.individual.last_name }}</p>
+                                <p class="font-Wanted-Variable text-[#808080c1]">{{ account.email }}</p>
+                            </div>
+                            <div class="grid grid-cols-3">
+                                <div class="flex items-center justify-center">
+                                    {% if account.charges_enabled == True and account.payouts_enabled == True %}
+                                    <span class="bg-[#109610] border border-[#109610] text-white uppercase font-Wanted-Medium text-XSmall py-2 px-4 rounded-2xl">Complete</span>
+                                    {% elif account.charges_enabled == True and account.payouts_enabled == False %}
+                                    <span class="bg-[#f5eb23] border border-[#f5eb23] text-white uppercase font-Wanted-Medium text-XSmall py-2 px-4 rounded-2xl">Enabled</span>
+                                    {% elif account.charges_enabled == False and account.payouts_enabled == True %}
+                                    <span class="bg-[#f5eb23] border border-[#f5eb23] text-white uppercase font-Wanted-Medium text-XSmall py-2 px-4 rounded-2xl">Enabled</span>
+                                    {% elif account.charges_enabled == False and account.payouts_enabled == False %}
+                                    <span class="bg-[#f52323] border border-[#f52323] text-white uppercase font-Wanted-Medium text-XSmall py-2 px-4 rounded-2xl">Restricted</span>
+                                    {% endif %}
+                                </div>
+                                <div class="flex w-full items-center justify-center font-Wanted-Medium text-black">
+                                    US$ {{ account.available_balance|default:0 }} USD
+                                </div>
+                                <div class="flex w-full items-center justify-center font-Wanted-Medium text-black">
+                                    {{ account.connected_date }}
+                                </div>
+                            </div>
+                        </a>
+                        {% endif %}
+                    {% endfor %}
+                </div>
             </div>
         </div>
 
         <div class="applications-tab-content" id="enabled-accounts">
-            <div id="tab-container-elements" class="border border-[#bdbdbd69] rounded-2xl p-5">
-                Enabled
+            <div id="tab-container-elements" class="border border-[#bdbdbd69] rounded-2xl p-5 flex flex-col gap-3">
+                <div id="list-header" class="border-b border-[#bdbdbd69] pb-2 grid grid-cols-2 font-Wanted-Bold text-[#a3a3a3a2]">
+                    <div class="">
+                        Account
+                    </div>
+                    <div class="grid grid-cols-3">
+                        <div class="flex items-center justify-center">
+                            Status
+                        </div>
+                        <div class="flex items-center justify-center">
+                            Balance
+                        </div>
+                        <div class="flex items-center justify-center">
+                            Connected
+                        </div>
+                    </div>
+                </div>
+                <div class="flex flex-col px-4">
+                    {% for account in accounts %}
+                        {% if account.charges_enabled == True and account.payouts_enabled == False or account.charges_enabled == False and account.payouts_enabled == True %}
+                        
+                            <a href="{% url "waveAdmin:connectedAccountDetail" account_id=account.id %}" id="list-item" class="group border-b border-[#bdbdbd69] grid grid-cols-2 gap-2 py-3">
+                                <div class="flex flex-col gap-[2px]">
+                                    <p class="font-Wanted-Bold text-black group-hover:text-green">{{ account.individual.first_name }} {{ account.individual.last_name }}</p>
+                                    <p class="font-Wanted-Variable text-[#808080c1]">{{ account.email }}</p>
+                                </div>
+                                <div class="grid grid-cols-3">
+                                    <div class="flex items-center justify-center">
+                                        {% if account.charges_enabled == True and account.payouts_enabled == True %}
+                                        <span class="bg-[#109610] border border-[#109610] text-white uppercase font-Wanted-Medium text-XSmall py-2 px-4 rounded-2xl">Complete</span>
+                                        {% elif account.charges_enabled == True and account.payouts_enabled == False %}
+                                        <span class="bg-[#f5eb23] border border-[#f5eb23] text-white uppercase font-Wanted-Medium text-XSmall py-2 px-4 rounded-2xl">Enabled</span>
+                                        {% elif account.charges_enabled == False and account.payouts_enabled == True %}
+                                        <span class="bg-[#f5eb23] border border-[#f5eb23] text-white uppercase font-Wanted-Medium text-XSmall py-2 px-4 rounded-2xl">Enabled</span>
+                                        {% elif account.charges_enabled == False and account.payouts_enabled == False %}
+                                        <span class="bg-[#f52323] border border-[#f52323] text-white uppercase font-Wanted-Medium text-XSmall py-2 px-4 rounded-2xl">Restricted</span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="flex w-full items-center justify-center font-Wanted-Medium text-black">
+                                        US$ {{ account.available_balance|default:0 }} USD
+                                    </div>
+                                    <div class="flex w-full items-center justify-center font-Wanted-Medium text-black">
+                                        {{ account.connected_date }}
+                                    </div>
+                                </div>
+                            </a>
+                        {% endif %}
+                    {% endfor %}
+                </div>
             </div>
         </div>
 
         <div class="applications-tab-content" id="complete-accounts">
-            <div id="tab-container-elements" class="border border-[#bdbdbd69] rounded-2xl p-5">
-                Complete
+            <div id="tab-container-elements" class="border border-[#bdbdbd69] rounded-2xl p-5 flex flex-col gap-5 ">
+                <div id="list-header" class="border-b border-[#bdbdbd69] pb-2 grid grid-cols-2 font-Wanted-Bold text-[#a3a3a3a2]">
+                    <div class="">
+                        Account
+                    </div>
+                    <div class="grid grid-cols-3">
+                        <div class="flex items-center justify-center">
+                            Status
+                        </div>
+                        <div class="flex items-center justify-center">
+                            Balance
+                        </div>
+                        <div class="flex items-center justify-center">
+                            Connected
+                        </div>
+                    </div>
+                </div>
+                <div class="flex flex-col px-4">
+                    {% for account in accounts %}
+                        {% if account.charges_enabled == True and account.payouts_enabled == True %}
+                            <a href="{% url "waveAdmin:connectedAccountDetail" account_id=account.id %}" id="list-item" class="group border-b border-[#bdbdbd69] grid grid-cols-2 gap-2 py-3">
+                                <div class="flex flex-col gap-[2px]">
+                                    <p class="font-Wanted-Bold text-black group-hover:text-green">{{ account.individual.first_name }} {{ account.individual.last_name }}</p>
+                                    <p class="font-Wanted-Variable text-[#808080c1]">{{ account.email }}</p>
+                                </div>
+                                <div class="grid grid-cols-3">
+                                    <div class="flex items-center justify-center">
+                                        {% if account.charges_enabled == True and account.payouts_enabled == True %}
+                                        <span class="bg-[#109610] border border-[#109610] text-white uppercase font-Wanted-Medium text-XSmall py-2 px-4 rounded-2xl">Complete</span>
+                                        {% elif account.charges_enabled == True and account.payouts_enabled == False %}
+                                        <span class="bg-[#f5eb23] border border-[#f5eb23] text-white uppercase font-Wanted-Medium text-XSmall py-2 px-4 rounded-2xl">Enabled</span>
+                                        {% elif account.charges_enabled == False and account.payouts_enabled == True %}
+                                        <span class="bg-[#f5eb23] border border-[#f5eb23] text-white uppercase font-Wanted-Medium text-XSmall py-2 px-4 rounded-2xl">Enabled</span>
+                                        {% elif account.charges_enabled == False and account.payouts_enabled == False %}
+                                        <span class="bg-[#f52323] border border-[#f52323] text-white uppercase font-Wanted-Medium text-XSmall py-2 px-4 rounded-2xl">Restricted</span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="flex w-full items-center justify-center font-Wanted-Medium text-black">
+                                        US$ {{ account.available_balance|default:0 }} USD
+                                    </div>
+                                    <div class="flex w-full items-center justify-center font-Wanted-Medium text-black">
+                                        {{ account.connected_date }}
+                                    </div>
+                                </div>
+                            </a>
+                        {% endif %}
+                    {% endfor %}
+                    
+                </div>
             </div>
         </div>
     </div>

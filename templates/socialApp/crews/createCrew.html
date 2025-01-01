@@ -28,7 +28,7 @@ Create a crew — WAVE.
     <div id="pageBody" class="flex flex-col gap-[30px]">
         <form id="createCrewForm" method="POST" action="{% url 'social:createCrew' %}" class="flex flex-col gap-[30px]">
             {% csrf_token %}
-            <section class="section active hidden">
+            <section class="section active">
                 <div class="section-container body-section flex flex-col gap-[15px]">
                     <div class="section-title w-full flex justify-center items-center flex-col gap-[5px]">
                         <h4 class="font-bold font-Wanted-Bold text-[22px] after-xsm:text-[25px] xxsm:text-[30px] md:text-[35px]">{{ crewForm.name.label }}</h4>
@@ -39,7 +39,7 @@ Create a crew — WAVE.
                 </div>
             </section>
 
-            <section class="section active hidden">
+            <section class="section">
                 <div class="section-container body-section flex flex-col gap-[15px]">
                     <div class="section-title w-full flex justify-center items-center flex-col gap-[5px]">
                         <h4 class="font-bold font-Wanted-Bold text-[22px] after-xsm:text-[25px] xxsm:text-[30px] md:text-[35px]">{{ crewForm.bio.label }}</h4>
