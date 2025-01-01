@@ -106,7 +106,7 @@
                                 <div id="memberItem" class="flex flex-col sm:flex-row text-start sm:justify-between sm:gap-[20px] items-start sm:items-center w-full">
                                     <a target="_blank" class="no-underline text-black flex gap-[30px] justify-between items-center" href="{% url "social:publicProfile" username=member.user.username %}">
                                         <div class="ir-pfp flex items-center justify-center">
-                                            <img src="{{ member.profile_photo.url }}" alt="@{{ member.user.username }}" class="w-[70px] xxsm:w-[100px] h-[70px] xxsm:h-[100px] rounded-[50%]" />
+                                            <img src="{{ member.user.user_profile.profile_photo.url }}" alt="@{{ member.user.username }}" class="w-[70px] xxsm:w-[100px] h-[70px] xxsm:h-[100px] rounded-[50%]" />
                                         </div>
                                         <div class="member-info flex flex-col gap-[5px] no-underline">
                                             <h3 class="member-name font-bold no-underline font-Wanted-Bold text-[18px] xssm:text-[20px]">

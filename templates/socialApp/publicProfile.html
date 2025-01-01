@@ -37,11 +37,11 @@
                         </a>
                     {% endif %}
 
-                    {% if isActiveUser %}
+                    {% comment %} {% if isActiveUser %}
                     <a href="{% url "extras:activeMembers" %}" title="{{ user.first_name }} is a verified member">
                         <img src="{% static "images/socialApp/activeMember.svg" %}" class="size-5" />
                     </a>
-                    {% endif %}
+                    {% endif %} {% endcomment %}
                 </div>
                 
             </div>

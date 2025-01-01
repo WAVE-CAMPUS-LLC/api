@@ -34,22 +34,22 @@ My Social @{{ user.username }} — WAVE.
                 <img src="{% static "images/socialApp/verifiedHost.svg" %}" class="size-5" />
                 {% endif %}
 
-                {% if isActiveUser %}
+                {% comment %} {% if isActiveUser %}
                 <img src="{% static "images/socialApp/activeMember.svg" %}" class="size-5" />
-                {% endif %}
+                {% endif %} {% endcomment %}
             </div>
         </div>
         
         <div class="connectRow">
-            <button id="shareMyProfile" class="gradient-btn cursor-pointer text-Pre-Xl md:text-xl hover:bg-green" type="button" role="button">
+            <button id="shareMyProfile" class="bg-gradient-to-br bg-gradient-end to-gradient-start text-white font-Wanted-Medium cursor-pointer rounded-2xl flex flex-row items-center py-2 px-4 gap-1 text-Pre-Xl md:text-xl hover:bg-green" type="button" role="button">
                 <img src="{% static "images/socialApp/share-profile.svg" %}" class="size-7 md:size-8" />
-                Share Profile
+                Share
             </button>
         </div>
     </div>
 
-    <div class="social-body w-full flex flex-row items-start gap-12" id="socialBody">
-        <div class="w-[30%] h-auto border border-custom-rgba8 p-7 flex flex-col gap-9 shadow-custom-shadow-2 rounded-3xl">
+    <div class="social-body w-full flex flex-col pre-lg:flex-row items-start gap-12" id="socialBody">
+        <div class="w-full pre-lg:w-[30%] h-auto border border-custom-rgba8 p-7 flex flex-col gap-9 shadow-custom-shadow-2 rounded-3xl">
             <div class="menu-header flex justify-start w-full border-b pb-9">
                 <h4 class="font-Wanted-ExtraBold text-xl">Manage Social</h4>
             </div>
@@ -96,7 +96,7 @@ My Social @{{ user.username }} — WAVE.
             </div>
         </div>
         
-        <div class="w-[70%] py-9 pt-6 flex flex-col shadow-custom-shadow-2 border rounded-3xl">
+        <div class="w-full pre-lg:w-[70%] py-9 pt-6 flex flex-col shadow-custom-shadow-2 border rounded-3xl">
             <div class="social-home-elements" id="home">
                 <div id="sharedEventBody" class="info-container px-5 flex flex-col gap-5">
                     <div id="shareControl" class="content-control flex flex-row justify-start gap-4 w-full"> 
@@ -106,7 +106,7 @@ My Social @{{ user.username }} — WAVE.
                     <div>
                         <div class="sharedEventsTabContainer" id="myFriends">
                             {% if friends %}
-                                <div class="home-container flex flex-row gap-5 flex-wrap">
+                                <div class="home-container grid grid-cols-1 xxsm:grid-cols-2 md:grid-cols-3 3xl:grid-cols-4 gap-5">
                                     {% for friend in friends %}
                                     <a target="_blank" href="{% url "social:publicProfile" username=friend.user.username %}" id="{{ friend.id }}" class="flex flex-col gap-4 items-center cursor-pointer border border-custom-rgba8 hover:border-green shadow-custom-shadow-3 rounded-2xl p-5 ">
                                         <div class="user-pfp w-full flex justify-center">
@@ -147,7 +147,7 @@ My Social @{{ user.username }} — WAVE.
                     <div>
                         <div id="incomingFriendRequests" class="friendRequestTabContainer">
                             {% if pending_friend_requests %}
-                                <div class="flex flex-row gap-5 flex-wrap">
+                                <div class="grid grid-cols-1 xxsm:grid-cols-2 md:grid-cols-3 3xl:grid-cols-4 gap-5">
                                     {% for request in pending_friend_requests %}
                                     <div class="flex flex-col gap-4 items-center cursor-pointer border border-custom-rgba8 hover:border-green shadow-custom-shadow-3 rounded-2xl p-5 " id="{{ request.requestId }}">
                                         <div class="request-left">
@@ -194,7 +194,7 @@ My Social @{{ user.username }} — WAVE.
 
                         <div id="sentFriendRequests" class="friendRequestTabContainer">
                             {% if sent_friend_requests %}
-                            <div class="grid grid-cols-3 gap-5 flex-wrap">
+                            <div class="grid grid-cols-1 xxsm:grid-cols-2 md:grid-cols-3 3xl:grid-cols-4 gap-5">
                                 {% for request in sent_friend_requests %}
                                 <div class="flex flex-col gap-4 items-center cursor-pointer border border-custom-rgba8 hover:border-green shadow-custom-shadow-3 rounded-2xl p-5 " id="{{ request.requestId }}">
                                     <div class="request-left">
@@ -245,7 +245,7 @@ My Social @{{ user.username }} — WAVE.
                     <div>
                         <div class="crewRequestTabContainer" id="receivedCrewInvites">
                             {% if pending_crew_requests %}
-                            <div class="grid grid-cols-3 gap-5 flex-wrap">
+                            <div class="grid grid-cols-1 xxsm:grid-cols-2 md:grid-cols-3 3xl:grid-cols-4 gap-5">
                                 {% for request in pending_crew_requests %}
                                 <div class="flex flex-col gap-3 items-center cursor-pointer border border-custom-rgba8 hover:border-green shadow-custom-shadow-3 rounded-2xl p-5" id="{{ request.crew.crewId }}">
                                     <div class="flex flex-col gap-2 items-center">
@@ -295,7 +295,7 @@ My Social @{{ user.username }} — WAVE.
 
                         <div class="crewRequestTabContainer" id="sentCrewInvites">
                             {% if sent_crew_requests %}
-                            <div class="grid grid-cols-3 gap-5 flex-wrap">
+                            <div class="grid grid-cols-1 xxsm:grid-cols-2 md:grid-cols-3 3xl:grid-cols-4 gap-5">
                                 {% for request in sent_crew_requests %}
                                 <div class="flex flex-col gap-3 items-center cursor-pointer border border-custom-rgba8 hover:border-green shadow-custom-shadow-3 rounded-2xl p-5" id="{{ request.crew.crewId }}">
                                     <div class="flex flex-col gap-2 items-center">
@@ -344,13 +344,13 @@ My Social @{{ user.username }} — WAVE.
 
             <div class="social-home-elements" id="my-crews">
                 <div id="myCrewsBody" class="info-container px-5 flex flex-col gap-5">
-                    <div class="home-header flex flex-row justify-between items-center">
-                        <div id="shareControl" class="content-control flex flex-row justify-start gap-4 flex-grow"> 
+                    <div class="home-header flex flex-col xxsm:flex-row xxsm:justify-between xxsm:items-center">
+                        <div id="shareControl" class="content-control flex flex-row w-full justify-start gap-4 flex-grow"> 
                             <div class="myCrewsTab tab-active cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="crewsImIn">Crews I'm in</div>
                             <div class="myCrewsTab cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="myCrews">My Crews</div>
                         </div>
-                        <div class="w-fit flex justify-end">
-                            <a href="{% url "social:createCrew" %}" id="create-crew" class="bg-gradient-to-r bg-gradient-start bg-gradient-end rounded-xl py-2 px-3 create-crew w-full flex flex-row items-center gap-2 text-white font-Wanted-Variable text-Medium" >
+                        <div class="w-full xxsm:w-fit flex justify-end">
+                            <a href="{% url "social:createCrew" %}" id="create-crew" class="bg-gradient-to-r bg-gradient-start bg-gradient-end rounded-xl py-2 px-3 create-crew flex flex-row items-center gap-2 text-white font-Wanted-Variable text-Medium" >
                                 <img src="{% static "/images/socialApp/socialHome/create-crew.svg" %}" class="size-7" alt="Create Crew">
                                 Create
                             </a>
@@ -360,7 +360,7 @@ My Social @{{ user.username }} — WAVE.
                     <div>
                         <div class="myCrewsTabContainer" id="crewsImIn">
                             {% if crewsImIn %}
-                            <div class="grid grid-cols-3 gap-5">
+                            <div class="grid grid-cols-1 xxsm:grid-cols-2 md:grid-cols-3 3xl:grid-cols-4 gap-5">
                                 {% for crew in crewsImIn %}
                                 <a target="_blank" href="{% url 'social:crew' crewId=crew.crew.crewId %}" class="flex flex-col gap-3 items-center cursor-pointer border border-custom-rgba8 hover:border-green shadow-custom-shadow-3 rounded-2xl p-5" id="{{ my_crews.crew.crewId }}">
                                     <div class="memberProfilePictures flex flex-row justify-center gap-2">
@@ -398,7 +398,7 @@ My Social @{{ user.username }} — WAVE.
 
                         <div class="myCrewsTabContainer" id="myCrews">
                             {% if myCrews %}
-                            <div class="grid grid-cols-3 gap-5">
+                            <div class="grid grid-cols-1 xxsm:grid-cols-2 md:grid-cols-3 3xl:grid-cols-4 gap-5">
                                 {% for my_crews in myCrews %}
                                     <a target="_blank" href="{% url 'social:crew' crewId=my_crews.crew.crewId %}" class="flex flex-col gap-3 items-center cursor-pointer border border-custom-rgba8 hover:border-green shadow-custom-shadow-3 rounded-2xl p-5" id="{{ my_crews.crew.crewId }}">
                                         <div class="memberProfilePictures flex flex-row justify-center gap-2">
@@ -449,7 +449,7 @@ My Social @{{ user.username }} — WAVE.
                     <div>
                         <div class="sharedEventsWithTabContainer" id="myShares">
                             {% if my_shared_events %}
-                            <div class="grid grid-cols-3 gap-2">
+                            <div class="grid grid-cols-1 xxsm:grid-cols-2 md:grid-cols-3 3xl:grid-cols-4 gap-5">
                                 {% for shared_event in my_shared_events %}
                                     {% with shared_event.event as event %}
                                     <a target="_blank" href="{% url "core:eventDetails" eventId=event.eventId %}" class="category-event-card hover:category-image hover:scale-95 transform transition duration-300 flex flex-col justify-center items-center cursor-pointer overflow-hidden p-[10px] text-black">
@@ -488,7 +488,7 @@ My Social @{{ user.username }} — WAVE.
                         </div>
                         <div class="sharedEventsWithTabContainer" id="sharedWithMe">
                             {% if shared_with_me %}
-                            <div class="grid grid-cols-3 gap-2">
+                            <div class="grid grid-cols-1 xxsm:grid-cols-2 md:grid-cols-3 3xl:grid-cols-4 gap-5">
                                 {% for shared_event in shared_with_me %}
                                     {% with shared_event.event as event %}
                                     <a target="_blank" href="{% url "core:eventDetails" eventId=event.eventId %}" class="category-event-card hover:category-image hover:scale-95 transform transition duration-300 flex flex-col justify-center items-center cursor-pointer overflow-hidden p-[10px] text-black">
@@ -541,7 +541,7 @@ My Social @{{ user.username }} — WAVE.
                         {% else %}
                         <button type="submit" name="action" value="generateProfileQRCode" class="bg-gradient-to-bl bg-gradient-end bg-gradient-start hover:bg-green text-white font-Wanted-Regular rounded-xl py-2 px-5">Generate QR Code</button>
                         {% endif %}
-                    </div>
+                    </form>
 
                     <div class="flex justify-center items-center gap-2 text-center">
                         <input type="text" id="shareLink" readonly value="{{ profileLink }}" class="hidden">
