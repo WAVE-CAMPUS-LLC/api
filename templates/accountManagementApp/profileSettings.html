@@ -37,7 +37,34 @@ Account Settings — WAVE.
     <div id="body-content-container" class="w-full h-full">
         <div class="settings-tab-content flex flex-col gap-5 h-full" id="profile-information">
             <section id="personal-change" class="info-container flex flex-col w-full gap-y-[25px]">
-                <h6 class="ic-headers font-Wanted-Bold text-[20px] text-black">Your account information, {{ user.first_name }}</h6>
+                <h6 class="ic-headers font-Wanted-Bold text-[20px] text-black">Your account, {{ user.first_name }}</h6>
+                <form method="post" enctype="multipart/form-data" action="{% url "accountManagement:userSettings" %}" class="flex flex-col sm:flex-row justify-between w-full gap-[25px]">
+                    {% csrf_token %}
+                    <input type="hidden" name="form_type" value="profile-picture" />
+                    <div class="input-div flex flex-col gap-y-[50px]">
+                        <div class="input-box flex flex-col gap-1">
+                            <label for="{{ editProfilePictureForm.profile_photo.id_for_label }}" class="font-Wanted-Variable font-bold text-[1em] text0[#02374ccb]">{{ editProfilePictureForm.profile_photo.label_tag }}</label>
+                            {% if profile.profile_photo %}
+                            <img src="{{ profile.profile_photo.url }}" class="rounded-lg size-32" />
+                            {% endif %}
+                            <input
+                                name="{{ editProfilePictureForm.profile_photo.html_name }}"
+                                id="{{ editProfilePictureForm.profile_photo.auto_id }}"
+                                type="{{ editProfilePictureForm.profile_photo.field.widget.input_type }}"
+                                value="{{ profile.profile_photo.url }}"
+                                class="w-full border-2 border-[#0909091c] rounded-2xl p-3 font-Wanted-Variable text-Medium"
+                            />
+                        </div>
+                    </div>
+                    <div class="flex sm:items-center justify-end sm:justify-center">
+                        <button type="submit" role="button" class="font-Wanted-Variable text-Pre-Xl bg-[#008d95] rounded-[10px] text-white border border-[#25567b39] py-2 px-4 w-auto cursor-pointer">Save</button>
+                    </div>
+                </form>
+            </section>
+
+            <hr class="cc-divider my-[50px] border-[#8e8e8e58 border-[1.5px] w-full" />
+
+            <section id="personal-change" class="info-container flex flex-col w-full gap-y-[25px]">
                 <form method="post" action="{% url "accountManagement:userSettings" %}" class="flex flex-col sm:flex-row justify-between w-full gap-[25px]">
                     {% csrf_token %}
                     <input type="hidden" name="form_type" value="personal-info" />

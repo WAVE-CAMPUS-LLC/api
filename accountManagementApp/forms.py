@@ -148,6 +148,21 @@ class EditUserProfileForm(forms.ModelForm):
         ]
 
 
+class UpdateProfilePhotoForm(forms.ModelForm):
+    """
+    The `UpdateProfilePhotoForm` class is a form that allows users to update their profile photo.
+    """
+
+    profile_photo = forms.ImageField(
+        required=False,
+        widget=forms.FileInput(attrs={"class": "custom-file-input"}),
+        label="Profile picture",
+    )
+
+    class Meta:
+        model = UserProfile
+        fields = ["profile_photo"]
+
 # The class UpdateContactInfo is a form that allows users to update their email and phone number information. Used in the accountManagementApp/views.py
 class UpdateContactInfo(forms.ModelForm):
 

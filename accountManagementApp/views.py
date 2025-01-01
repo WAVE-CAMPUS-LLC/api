@@ -9,6 +9,7 @@ from .forms import (
     UpdateContactInfo,
     UpdatePersonalInfo,
     EditUserProfileForm,
+    UpdateProfilePhotoForm
 )
 from django.contrib.auth.models import Group
 from .models import UserProfile, EventTypePreferences
@@ -147,12 +148,19 @@ def settingsView(request):
     profile = UserProfile.objects.get(user=user)
     contact_form = UpdateContactInfo(instance=user)
     editProfileForm = EditUserProfileForm(instance=profile)
-
+    editProfilePictureForm = UpdateProfilePhotoForm(instance=profile)
+    
 
     if request.method == "POST":
         form_type = request.POST.get("form_type")
 
-        if form_type == "personal-info":
+
+        if form_type == "profile-picture":
+            form = UpdateProfilePhotoForm(request.POST, request.FILES, instance=profile)
+            if form.is_valid():
+                form.save()
+                messages.success(request, "Profile picture updated successfully!")
+        elif form_type == "personal-info":
             form = UpdatePersonalInfo(request.POST, instance=user)
             if form.is_valid():
                 form.save()
@@ -188,6 +196,7 @@ def settingsView(request):
         "accountManagementApp/profileSettings.html",
         {
             "personal_form": personal_form,
+            "editProfilePictureForm": editProfilePictureForm,
             "contact_form": contact_form,
             "user": user,
             "profile": profile,
