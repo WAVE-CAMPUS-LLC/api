@@ -162,4 +162,16 @@ class UserPayment(models.Model):
     def create_user_payment(sender, instance, created, **kwargs):
         if created:
             UserPayment.objects.create(user=instance)
+
+
+class StripePlatformSettings(models.Model):
+    salesTaxPercentage = models.DecimalField("Sales Tax Percentage", max_digits=5, decimal_places=2, default=7.0)
+    salesFeeAmount = models.DecimalField("Sales Fee Amount", max_digits=10, decimal_places=2, default=0.99)
+    percentageMadeAvailableToHost = models.DecimalField("Percentage Made Available to Host", max_digits=5, decimal_places=2, default=50.0)
+    percentageStayingOnPlatform = models.DecimalField("Percentage Staying on Platform", max_digits=5, decimal_places=2, default=50.0)
+    
+    class Meta:
+        default_permissions = ()
         
+    def __str__(self):
+        return "Stripe Platform Settings"

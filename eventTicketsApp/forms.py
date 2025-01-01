@@ -1,5 +1,5 @@
 from django import forms
-from .models import PaidFreeTicket
+from .models import PaidFreeTicket, StripePlatformSettings
 from django.utils.translation import gettext_lazy as _
 from adminDashboardApp.models import College
 from accountManagementApp.models import UserProfile
@@ -49,3 +49,9 @@ class PaidFreeTicketForm(forms.ModelForm):
             "ticket_description",
             "ticket_quantity",
         ]
+
+
+class StripePlatformSettingsForm(forms.ModelForm):
+    class Meta:
+        model = StripePlatformSettings
+        fields = ["salesTaxPercentage", "salesFeeAmount", "percentageMadeAvailableToHost", "percentageStayingOnPlatform"]

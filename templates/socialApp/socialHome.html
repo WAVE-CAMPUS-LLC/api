@@ -441,8 +441,11 @@ My Social @{{ user.username }} — WAVE.
                 <div id="sharedEventBody" class="info-container px-5 flex flex-col gap-5">
                     <div class="home-header">
                         <div id="shareControl" class="content-control flex flex-row justify-start gap-4 w-full"> 
-                            <div class="shareEventTab tab-active cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="myShares">My shares</div>
-                            <div class="shareEventTab cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="sharedWithMe">Shared with me</div>
+                            <div class="shareEventTab tab-active cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="myShares">My Shares</div>
+                            <div class="shareEventTab cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="sharedWithMe">
+                                <span class="hidden after-xsm:flex">Shared With Me</span> 
+                                <span class="after-xsm:hidden flex">To Me</span>
+                            </div>
                         </div>
                     </div>
 

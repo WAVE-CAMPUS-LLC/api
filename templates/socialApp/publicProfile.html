@@ -111,20 +111,34 @@
                     <li class="w-full flex-row flex gap-[12px] items-center font-Wanted-Variable text-[17px]">
                         <img src="{% static "/images/socialApp/publicProfile/instagram.svg" %}" class="size-5 after-xsm:size-7 md:size-9 lg:size-11" />
                         <p class="text-[14px] xsm:text-[17px] font-Wanted-Medium hover:underline hover:underline-offset-2 hover:decoration-green">
+                            {% if user_profile.instagram %}
                             <a href="https://instagram.com/{{ user_profile.instagram }}/" >@{{ user_profile.instagram }}</a>
+                            {% else %}
+                            Follow <a href="https://instagram.com/waveoncamp/" class="text-black underline decoration-green">@WAVE.</a>
+                            {% endif %}
                         </p>
                     </li>
 
                     <li class="w-full flex gap-[12px] items-center font-Wanted-Variable text-[17px]">
                         <img src="{% static "/images/socialApp/publicProfile/tiktok.svg" %}" class="size-5 after-xsm:size-7 md:size-9 lg:size-11" />
                         <p class="text-[14px] xsm:text-[17px] font-Wanted-Medium hover:underline hover:underline-offset-2 hover:decoration-green">
+                            {% if user_profile.tiktok %}
                             <a href="https://www.tiktok.com/@{{ user_profile.tiktok }}/">@{{ user_profile.tiktok }} </a>
+                            {% else %}
+                            Follow <a href="https://www.tiktok.com/@waveoncamp/" class="text-black underline decoration-green">@WAVE.</a>
+                            {% endif %}
                         </p>
                     </li>
 
                     <li class="w-full flex gap-[12px] items-center font-Wanted-Variable text-[17px]">
                         <img src="{% static "/images/socialApp/publicProfile/email.svg" %}" class="size-5 after-xsm:size-7 md:size-9 lg:size-11" />
-                        <p class="text-[14px] xsm:text-[17px] font-Wanted-Medium hover:underline hover:underline-offset-2 hover:decoration-green"><a href="mailto:{{user_profile.user.email}}">Contact </a></p>
+                        <p class="text-[14px] xsm:text-[17px] font-Wanted-Medium hover:underline hover:underline-offset-2 hover:decoration-green">
+                            {% if user_profile.email %}
+                            <a href="mailto:{{user_profile.user.email}}">Contact </a>
+                            {% else %}
+                            <a href="mailto:support@wavecampus.net">Contact </a>
+                            {% endif %}
+                        </p>
                     </li>
                     
                 </ul>

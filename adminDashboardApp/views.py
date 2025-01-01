@@ -39,6 +39,7 @@ from collegeManagementApp.models import (
     OrganizationMembership,
     Membership,
 )
+from eventTicketsApp.models import StripePlatformSettings
 from eventManagementApp.models import Event
 from stripeManagementApp.updateConnectWithStripeDetails import (
     updateConnectWithStripeDetails,
@@ -81,6 +82,7 @@ from wave_v1.decorators import (
     admin,
     superAdmin,
 )
+from eventTicketsApp.forms import StripePlatformSettingsForm
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
@@ -239,9 +241,9 @@ def adminCareerApplicationsDetailView(request, applicationId):
     application = get_object_or_404(CareerRoleApplication, applicationId=applicationId)
 
     if request.method == "POST":
-        action = request.POST.get('eventAction')
-        email = request.POST.get('applicantEmail')
-        
+        action = request.POST.get("eventAction")
+        email = request.POST.get("applicantEmail")
+
         if action == "approveApplicant":
             application.approval_status = "approved"
             application.save()
@@ -252,8 +254,7 @@ def adminCareerApplicationsDetailView(request, applicationId):
             application.save()
             sendDeniedCareerApplicantEmail(email)
             return redirect("waveAdmin:careerApplications")
-            
-            
+
     return render(
         request,
         "adminDashboardApp/tabs/applications/careerApplicationDetail.html",
@@ -262,12 +263,17 @@ def adminCareerApplicationsDetailView(request, applicationId):
         },
     )
 
+
 def sendApprovedCareerApplicantEmail(applicantEmail):
     try:
         subject = "Welcome to WAVE.!"
-        emailMessageHtml = render_to_string("emailTemplates/adminDashboardApp/careers/applicationApproved.html", {})
+        emailMessageHtml = render_to_string(
+            "emailTemplates/adminDashboardApp/careers/applicationApproved.html", {}
+        )
         plainMessage = strip_tags(emailMessageHtml)
-        send_mail(subject, plainMessage, None, [applicantEmail], html_message=emailMessageHtml)
+        send_mail(
+            subject, plainMessage, None, [applicantEmail], html_message=emailMessageHtml
+        )
     except Exception as e:
         print(f"Error sending email to {applicantEmail}: {e}")
 
@@ -275,12 +281,15 @@ def sendApprovedCareerApplicantEmail(applicantEmail):
 def sendDeniedCareerApplicantEmail(applicantEmail):
     try:
         subject = "Thank you for your application!"
-        emailMessageHtml = render_to_string("emailTemplates/adminDashboardApp/careers/applicationDenied.html", {})
+        emailMessageHtml = render_to_string(
+            "emailTemplates/adminDashboardApp/careers/applicationDenied.html", {}
+        )
         plainMessage = strip_tags(emailMessageHtml)
-        send_mail(subject, plainMessage, None, [applicantEmail], html_message=emailMessageHtml)
+        send_mail(
+            subject, plainMessage, None, [applicantEmail], html_message=emailMessageHtml
+        )
     except Exception as e:
         print(f"Error sending email to {applicantEmail}: {e}")
-        
 
 
 @login_required(login_url="authentication:login")
@@ -727,6 +736,32 @@ def adminProductsView(request):
         request,
         "adminDashboardApp/tabs/financial/products.html",
         {"products": products},
+    )
+
+
+@login_required(login_url="authentication:login")
+@check_suspension
+@member
+@admin
+def adminFinancialSettingsView(request):
+    stripe_settings = StripePlatformSettings.objects.first()
+    stripe_settings_form = StripePlatformSettingsForm(instance=stripe_settings)
+    
+    if request.method == "POST":
+        stripe_settings_form = StripePlatformSettingsForm(request.POST, instance=stripe_settings)
+        if stripe_settings_form.is_valid():
+            stripe_settings_form.save()
+            messages.success(request, "Settings saved successfully.")
+            return redirect("waveAdmin:financialSettings")
+        else:
+            messages.error(request, "Error saving settings.")
+    return render(
+        request,
+        "adminDashboardApp/tabs/financial/stripeSettings.html",
+        {
+            "stripeSettings": stripe_settings,
+            "stripeSettingsForm": stripe_settings_form,
+        },
     )
 
 
