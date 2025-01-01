@@ -222,6 +222,13 @@ def socialHomeView(request):
                 },
             )
             return redirect("social:home")
+        
+        elif action == "generateProfileQRCode":
+            profile = UserProfile.objects.get(user=request.user)
+            profile.generate_qr_code()
+            profile.save()
+            messages.success(request, "QR code generated successfully!")
+            return redirect("social:home")
     return render(
         request,
         "socialApp/socialHome.html",

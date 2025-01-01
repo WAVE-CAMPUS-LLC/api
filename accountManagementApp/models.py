@@ -233,7 +233,7 @@ class UserProfile(models.Model):
     def generate_qr_code(self):
         part_url = reverse("social:publicProfile", kwargs={"username": self.user.username})
         
-        url = f"{settings.SITE_URL}{url}"
+        url = f"{settings.SITE_URL}{part_url}"
         qr = qrcode.make(url)
 
         img_io = BytesIO()

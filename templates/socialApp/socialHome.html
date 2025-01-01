@@ -534,8 +534,13 @@ My Social @{{ user.username }} — WAVE.
 
             <div class="modalBody flex flex-col gap-[20px] items-center">
                 <div class="modalContent flex flex-col gap-[20px] items-center">
-                    <div class="modalImage">
+                    <form method="POST" class="modalImage">
+                        {% csrf_token %}
+                        {% if user_profile.profile_qr_code %}
                         <img src="{{ user_profile.profile_qr_code.url }}" alt="Profile Picture" class="rounded-2xl size-44" />
+                        {% else %}
+                        <button type="submit" name="action" value="generateProfileQRCode" class="bg-gradient-to-bl bg-gradient-end bg-gradient-start hover:bg-green text-white font-Wanted-Regular rounded-xl py-2 px-5">Generate QR Code</button>
+                        {% endif %}
                     </div>
 
                     <div class="flex justify-center items-center gap-2 text-center">
