@@ -21,19 +21,16 @@ Applications Management — WAVE.
 {% include "partials/nav-footer/nav/main_nav.html" %}
 {% endblock header %}
 
-{% block container_art %}
-<div id="container-art" class="flex flex-col justify-center items-center w-full h-full text-center pt-[50px]">
-    <div class="ticket-heading">
-        <div class="ticket-header flex justify-center items-center">
-            <h3 class="text-black font-Wanted-Bold xs:max-xssm:text-center xs:max-xssm:text-[25px] text-[35px] md:text-[40px] underline underline-offset-[10px]"><a href="{% url 'waveAdmin:adminDashboard' %}">Management</a> > User Roles</h3>
-        </div>
-    </div>
-</div>
-{% endblock container_art %}
-
 
 {% block body %}
 <div id="content-container" class="flex flex-col gap-[70px] px-4 sm:px-6 md:px-[40px] pre-lg:px-[40px] lg:px-[100px] 2xl:px-48 3xl:px-96">
+    <div id="pagination-display" class="flex flex-col pre-sm:flex-row gap-2 w-full items-center font-Wanted-Variable justify-start text-gray-300">
+        <a href="{% url "waveAdmin:adminDashboard" %}" class="text-green underline">Dashboard</a>
+        >
+        <a href="{% url "waveAdmin:adminDashboard" %}#userManagement" class="text-green underline">User Management</a>
+        >
+        <p class="font-Wanted-Medium text-black">User Roles</p>
+    </div>
     <div id="page-heading" class="flex justify-center items-center">
         <div id="heading-text" class="flex flex-col gap-[10px]">
             <h6 class="text-[50px] font-Wanted-ExtraBold text-[#008d95]">Roles & Permissions</h6>
@@ -103,13 +100,13 @@ Applications Management — WAVE.
                         </div>
                         <div class="viewGC-body">   
                             <section class="viewEditRole-tab-content" id="viewDisplay-information-{{ forloop.counter }}">
-                                <div class="viewEditRole-tab-content-container">
-                                    <label class="cols" for="id_name">
-                                        <h6>Group Name</h6>
-                                        <input type="text" name="name" id="id_name" class="createRoleName" autocomplete="off" value="{{ group.name }}" data-original="{{ group.name }}">
+                                <div class="viewEditRole-tab-content-container flex flex-col gap-[30px]">
+                                    <label class="cols flex flex-col gap-[5px] w-[60%] font-Wanted-Medium" for="id_name">
+                                        <h6 class="font-Wanted-SemiBold text-[18px]">Group Name</h6>
+                                        <input type="text" name="name" id="id_name" class="createRoleName p-[10px] px-[13px] rounded-[10px] bg-[#eeeded45] border-[1px] border-solid border-[rgba(9,9,9,0.057)] font-Wanted-Regular text-[15px] shadow-form-shadow" autocomplete="off" value="{{ group.name }}" data-original="{{ group.name }}">
                                     </label>
-                                    <label class="cols" for="id_role_color">
-                                        <h6>Role Color</h6>
+                                    <label class="cols flex flex-col gap-[5px] w-[60%] font-Wanted-Medium" for="id_role_color">
+                                        <h6 class="font-Wanted-SemiBold text-[18px]">Role Color</h6>
                                         <input type="color" name="role_color" id="id_role_color" value="{{ group.role_color }}" autocomplete="off" data-original="{{ group.role_color }}">
                                     </label>
                                 </div>
@@ -148,8 +145,8 @@ Applications Management — WAVE.
                 <div class="header-rowOne flex flex-col w-full gap-[25px]">
                     <div class="cH-heading font-Wanted-Bold text-[25px] text-[#000000] flex flex-row justify-between items-center">
                         <h4>Create Role - <span id="liveRoleNameUpdate">Role Name</span></h4>
-                        <div class="content-Submit">
-                            <button type="submit" id="saveRolebtnOne">CREATE</button>
+                        <div class="content-Submit flex justify-center">
+                            <button type="submit" id="saveRolebtnOne" class="bg-[#000000] p-[15px] border-none rounded-[15px] text-white font-Wanted-Medium text-[16px] tracking-[1px] cursor-pointer">CREATE</button>
                         </div>
                     </div>
                     <div class="heading-tabs w-full border-b-[2px] border-solid border-[#000000] flex justify-start gap-[35px] font-Wanted-Medium">
@@ -161,30 +158,30 @@ Applications Management — WAVE.
                 </div>
             </div>
 
-            <div class="cardBody">
+            <div class="cardBody overflow-y-auto pb-[30px]">
                 <div class="createRole-tab-content" id="display-information">
-                    <div class="tab-content-container">
-                        <div class="form-fields">
-                            <label class="cols" for="{{ createGroupForm.name.id_for_label }}">
-                                <h6>{{ createGroupForm.name.label }}</h6>
-                                <input type="{{ createGroupForm.name.field.widget.input_type }}" name="{{ createGroupForm.name.html_name }}" id="{{ createGroupForm.name.auto_id }}" class="createRoleName" autocomplete="off">
+                    <div class="tab-content-container flex flex-col gap-[35px] w-full h-full min-h-full justify-between">
+                        <div class="form-fields flex flex-col gap-[35px]">
+                            <label class="cols flex flex-col gap-[5px] w-[60%] font-Wanted-Medium" for="{{ createGroupForm.name.id_for_label }}">
+                                <h6 class="font-Wanted-SemiBold text-[18px]">{{ createGroupForm.name.label }}</h6>
+                                <input type="{{ createGroupForm.name.field.widget.input_type }}" name="{{ createGroupForm.name.html_name }}" id="{{ createGroupForm.name.auto_id }}" class="createRoleName p-[10px] px-[13px] rounded-[10px] bg-[#eeeded45] border-[1px] border-solid border-[rgba(9,9,9,0.057)] font-Wanted-Regular text-[15px] shadow-form-shadow" autocomplete="off">
                             </label>
 
-                            <label class="cols" for="{{ createGroupForm.role_color.id_for_label }}">
-                                <h6>{{ createGroupForm.role_color.label }}</h6>
+                            <label class="cols flex flex-col gap-[5px] w-[60%] font-Wanted-Medium" for="{{ createGroupForm.role_color.id_for_label }}">
+                                <h6 class="font-Wanted-SemiBold text-[18px]">{{ createGroupForm.role_color.label }}</h6>
                                 <input type="{{ createGroupForm.role_color.field.widget.input_type }}" name="{{ createGroupForm.role_color.html_name }}" id="{{ createGroupForm.role_color.auto_id }}" autocomplete="off">
                             </label>
                         </div>
                     </div>
                 </div>
                 <div class="createRole-tab-content" id="permissions-information">
-                    <div class="tab-content-container">
-                        <div class="form-fields">
+                    <div class="tab-content-container flex flex-col gap-[35px] w-full h-full min-h-full justify-between">
+                        <div class="form-fields flex flex-col gap-[35px]">
                             {% for permission in createGroupForm.permissions.field.queryset %}
-                                <label class="toggle-container" for="id_permissions_{{ forloop.counter0 }}">
-                                    <h6>{{ permission.name }}</h6>
+                                <label class="toggle-container flex justify-between items-center" for="id_permissions_{{ forloop.counter0 }}">
+                                    <h6 class="font-Wanted-SemiBold text-[18px]">{{ permission.name }}</h6>
                                     <div class="labelSwitch">
-                                        <input type="checkbox" name="permissions" id="id_permissions_{{ forloop.counter0 }}" value="{{ permission.id }}" class="permissions-toggle">
+                                        <input type="checkbox" name="permissions" id="id_permissions_{{ forloop.counter0 }}" value="{{ permission.id }}" class="permissions-toggle font-Wanted-Medium text-[15px]">
                                     </div>
                                 </label>
                                 <hr>
