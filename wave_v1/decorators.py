@@ -11,10 +11,8 @@ def check_suspension(view_func):
     @wraps(view_func)
     def wrapped_view(request, *args, **kwargs):
         if request.user.is_authenticated:
-            if request.user.is_suspended and request.user.has_perm(
-                "adminDashboardApp.user_suspension"
-            ):
-                return render(request, "extras/appControl/suspension.html")
+            if request.user.is_suspended:
+                return render(request, "extras/appControl/suspended.html")
         return view_func(request, *args, **kwargs)
 
     return wrapped_view

@@ -12,20 +12,12 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
 
-    const suspendButton = document.getElementById("pause");
-    const suspendModal = document.getElementById("suspendPeriodModal");
+    // const banButton = document.getElementById("ban");
+    // const banModal = document.getElementById("banPeriodModal");
 
-    suspendButton.addEventListener('click', function () {
-        suspendModal.style.display = 'block';
-    });
-
-
-    const banButton = document.getElementById("ban");
-    const banModal = document.getElementById("banPeriodModal");
-
-    banButton.addEventListener('click', function () {
-        banModal.style.display = 'block';
-    });
+    // banButton.addEventListener('click', function () {
+    //     banModal.style.display = 'block';
+    // });
 
 
     // Close the suspend or ban card
@@ -34,9 +26,5 @@ document.addEventListener('DOMContentLoaded', function () {
 
     closeBanModalButton.addEventListener('click', function() {
         banModal.style.display = 'none';
-    });
-
-    closeSuspendModalButton.addEventListener('click', function() {
-        suspendModal.style.display = 'none';
     });
 })

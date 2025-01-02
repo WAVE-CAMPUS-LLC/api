@@ -84,53 +84,57 @@
         </div>
     </div>
 
-    {% if page == "explore" %}
-    <div id="main-find-events" class="w-full flex flex-col gap-3 items-center justify-center relative h-auto">
-        <!-- Search input container -->
-        <div id="event-search-input-container" class="w-[90%] after-xsm:w-4/5 sm:w-[65%] flex flex-row gap-1 border-2 border-[#07070715] rounded-3xl bg-[#ffffff07] shadow-form-shadow-2 static">
-            <div class="febc-img flex justify-center p-2 px-4 after-xsm:p-4">
-                <img src="{% static 'images/explore/find.svg' %}" alt="Find Events">
+    <form method="post">
+        {% csrf_token %}
+        {% if page == "explore" or page == "home" %}
+        <div id="main-find-events" class="w-full flex flex-col gap-3 items-center justify-center relative h-auto">
+            <!-- Search input container -->
+            <input type="hidden" id="searchUrl" value="{% url 'core:search' %}">
+            <div id="event-search-input-container" class="w-[90%] after-xsm:w-4/5 sm:w-[65%] flex flex-row gap-1 border-2 border-[#07070715] rounded-3xl bg-[#ffffff07] shadow-form-shadow-2 static">
+                <div class="febc-img flex justify-center p-2 px-4 after-xsm:p-4">
+                    <img src="{% static 'images/explore/find.svg' %}" alt="Find Events">
+                </div>
+                <input type="text" name="searchEvents" data-context="event" data-id="large"
+                    class="search-input w-full appearance-none h-full p-4 py-5 font-Wanted-Variable text-Semi-Medium text-black 
+                    border-none rounded-3xl focus:ring-0 focus:outline-none placeholder:text-[#00000076] placeholder:font-Wanted-Regular" 
+                    placeholder="Find event by category or title" autofocus>
             </div>
-            <input type="text" name="searchEvents" id="search-events-input-large" 
-                class="w-full appearance-none h-full p-4 py-5 font-Wanted-Variable text-Semi-Medium text-black 
-                border-none rounded-3xl focus:ring-0 focus:outline-none placeholder:text-[#00000076] placeholder:font-Wanted-Regular" 
-                placeholder="Find event by category or title" autofocus>
+            
+            <!-- Event search results container -->
+            <div class="event-search-results-large absolute top-full border-2 border-[#30303015] rounded-3xl bg-white shadow-form-shadow-2 w-[90%] after-xsm:w-4/5 sm:w-[65%] mt-2 hidden z-[1040]">
+                <!-- Search items will be dynamically populated here -->
+                <div class="event-search-items-large grid sm:grid-cols-1 lg:grid-cols-2 w-full">
+                    
+                </div>
+            </div>
         </div>
+        {% endif %}
         
-        <!-- Event search results container -->
-        <div id="event-search-results-large" class="absolute top-full border-2 border-[#30303015] rounded-3xl bg-white shadow-form-shadow-2 w-[90%] after-xsm:w-4/5 sm:w-[65%] mt-2 hidden z-[1040]">
-            <!-- Search items will be dynamically populated here -->
-            <div id="events-search-items-large" class="grid sm:grid-cols-1 lg:grid-cols-2 w-full">
-                
+        {% if request.path|slice:"-8:" == "/social/" %}
+        <div id="main-find-events" class="w-full flex flex-col gap-3 items-center justify-center relative h-auto">
+            <!-- Search input container -->
+            <input type="hidden" id="searchUrl" value="{% url 'core:search_users' %}">
+            <div class="w-[90%] after-xsm:w-4/5 sm:w-[65%] flex flex-row gap-1 border-2 border-[#07070715] rounded-3xl bg-[#ffffff07] shadow-form-shadow-2 static">
+                <div class="febc-img flex justify-center p-2 px-4 after-xsm:p-4">
+                    <img src="{% static 'images/explore/find.svg' %}" alt="Find Events">
+                </div>
+                <input type="text" name="searchEvents" data-context="friend" data-id="large"
+                    class="search-friends-input-large search-input w-full appearance-none h-full p-4 py-5 font-Wanted-Variable text-Semi-Medium text-black 
+                    border-none rounded-3xl focus:ring-0 focus:outline-none placeholder:text-[#00000076] placeholder:font-Wanted-Regular" 
+                    placeholder="Search for a friend..." autofocus>
+            </div>
+            
+            <!-- Event search results container -->
+            <div class="friend-search-results-large absolute top-full border-2 border-[#30303015] rounded-3xl bg-white shadow-form-shadow-2 w-[90%] after-xsm:w-4/5 sm:w-[65%] mt-2 hidden z-[1040]">
+                <!-- Search items will be dynamically populated here -->
+                {% csrf_token %}
+                <div class="friend-search-items-large flex flex-col gap-3 w-full p-5">
+                    
+                </div>
             </div>
         </div>
-    </div>
-    
-    {% endif %}
-
-    {% if request.path|slice:"-8:" == "/social/" %}
-    <div id="main-find-events" class="w-full flex flex-col gap-3 items-center justify-center relative h-auto">
-        <!-- Search input container -->
-        <div id="event-search-input-container" class="w-[90%] after-xsm:w-4/5 sm:w-[65%] flex flex-row gap-1 border-2 border-[#07070715] rounded-3xl bg-[#ffffff07] shadow-form-shadow-2 static">
-            <div class="febc-img flex justify-center p-2 px-4 after-xsm:p-4">
-                <img src="{% static 'images/explore/find.svg' %}" alt="Find Events">
-            </div>
-            <input type="text" name="searchEvents" id="search-events-input-large" 
-                class="w-full appearance-none h-full p-4 py-5 font-Wanted-Variable text-Semi-Medium text-black 
-                border-none rounded-3xl focus:ring-0 focus:outline-none placeholder:text-[#00000076] placeholder:font-Wanted-Regular" 
-                placeholder="Search for a friend..." autofocus>
-        </div>
-        
-        <!-- Event search results container -->
-        <div id="event-search-results-large" class="absolute top-full border-2 border-[#30303015] rounded-3xl bg-white shadow-form-shadow-2 w-[90%] after-xsm:w-4/5 sm:w-[65%] mt-2 hidden z-[1040]">
-            <!-- Search items will be dynamically populated here -->
-            {% csrf_token %}
-            <div id="events-search-items-large" class="grid sm:grid-cols-1 lg:grid-cols-2 w-full">
-                
-            </div>
-        </div>
-    </div>
-    {% endif %}
+        {% endif %}
+    </form>
     
 </div>
 
@@ -139,7 +143,8 @@
 
 <div class="top-0 pre-lg:hidden">
     <nav class="mt-5 right-0 left-0 w-full">
-        <div class="flex flex-col gap-2">
+        <form method="post" class="flex flex-col gap-2">
+            {% csrf_token %}
             <div id="nav-container" class="w-full h-full mx-auto px-4 pr-1 sm:px-8 flex items-center justify-between">
                 <div id="brand-logo" class=" h-full flex items-center justify-center">
                     <div id="logo">
@@ -154,52 +159,55 @@
                     </button>
                 </div>
             </div>
-            {% if page == "explore" %}
+            {% if page == "explore" or page == "home" %}
             <div id="main-find-events" class="w-full flex flex-col gap-3 items-center justify-center relative h-auto">
                 <!-- Search input container -->
+                <input type="hidden" id="searchUrl" value="{% url 'core:search' %}">
                 <div id="event-search-input-container" class="w-[90%] after-xsm:w-4/5 sm:w-[65%] flex flex-row gap-1 border-2 border-[#07070715] rounded-3xl bg-[#ffffff07] shadow-form-shadow-2 static">
                     <div class="febc-img flex justify-center p-2 px-4 after-xsm:p-4">
                         <img src="{% static 'images/explore/find.svg' %}" alt="Find Events">
                     </div>
-                    <input type="text" name="searchEvents" id="search-events-input-mobile" 
-                        class="w-full appearance-none h-full p-4 py-5 font-Wanted-Variable text-Semi-Medium text-black 
+                    <input type="text" name="searchEvents" data-context="event" data-id="mobile"
+                        class="w-full search-input appearance-none h-full p-4 py-5 font-Wanted-Variable text-Semi-Medium text-black 
                         border-none rounded-3xl focus:ring-0 focus:outline-none placeholder:text-[#00000076] placeholder:font-Wanted-Regular" 
                         placeholder="Find event by category or title" autofocus>
                 </div>
                 
                 <!-- Event search results container -->
-                <div id="event-search-results-mobile" class="absolute top-full border-2 border-[#30303015] rounded-3xl bg-white shadow-form-shadow-2 w-[90%] after-xsm:w-4/5 sm:w-[65%] mt-2 hidden z-[1040]">
+                <div class="event-search-results-mobile absolute top-full border-2 border-[#30303015] rounded-3xl bg-white shadow-form-shadow-2 w-[90%] after-xsm:w-4/5 sm:w-[65%] mt-2 hidden z-[1040]">
                     <!-- Search items will be dynamically populated here -->
-                    <div id="events-search-items-mobile" class="grid sm:grid-cols-1 lg:grid-cols-2 w-full">
+                    <div class="event-search-items-mobile grid sm:grid-cols-1 lg:grid-cols-2 w-full">
                         
                     </div>
                 </div>
             </div>
             {% endif %}
             {% if request.path|slice:"-8:" == "/social/" %}
-            <div id="main-find-events" class="w-full flex flex-col gap-3 items-center justify-center relative h-auto">
+            <div class="w-full flex flex-col gap-3 items-center justify-center relative h-auto">
                 <!-- Search input container -->
-                <div id="event-search-input-container" class="w-[90%] after-xsm:w-4/5 sm:w-[65%] flex flex-row gap-1 border-2 border-[#07070715] rounded-3xl bg-[#ffffff07] shadow-form-shadow-2 static">
+                <input type="hidden" id="searchUrl" value="{% url 'core:search_users' %}">
+
+                <div class="w-[90%] after-xsm:w-4/5 sm:w-[65%] flex flex-row gap-1 border-2 border-[#07070715] rounded-3xl bg-[#ffffff07] shadow-form-shadow-2 static">
                     <div class="febc-img flex justify-center p-2 px-4 after-xsm:p-4">
                         <img src="{% static 'images/explore/find.svg' %}" alt="Find Events">
                     </div>
-                    <input type="text" name="searchEvents" id="search-events-input-large" 
-                        class="w-full appearance-none h-full p-4 py-5 font-Wanted-Variable text-Semi-Medium text-black 
+                    <input type="text" name="searchEvents" data-context="friend" data-id="mobile"
+                        class="search-friends-input-mobile search-input w-full appearance-none h-full p-4 py-5 font-Wanted-Variable text-Semi-Medium text-black 
                         border-none rounded-3xl focus:ring-0 focus:outline-none placeholder:text-[#00000076] placeholder:font-Wanted-Regular" 
                         placeholder="Search for a friend..." autofocus>
                 </div>
                 
                 <!-- Event search results container -->
-                <div id="event-search-results-large" class="absolute top-full border-2 border-[#30303015] rounded-3xl bg-white shadow-form-shadow-2 w-[90%] after-xsm:w-4/5 sm:w-[65%] mt-2 hidden z-[1040]">
+                <div id="" class="friend-search-results-mobile absolute top-full border-2 border-[#30303015] rounded-3xl bg-white shadow-form-shadow-2 w-[90%] after-xsm:w-4/5 sm:w-[65%] mt-2 hidden z-[1040]">
                     <!-- Search items will be dynamically populated here -->
                     {% csrf_token %}
-                    <div id="events-search-items-large" class="grid sm:grid-cols-1 lg:grid-cols-2 w-full">
+                    <div class="friend-search-items-mobile flex flex-col gap-3 w-full p-5">
                         
                     </div>
                 </div>
             </div>
             {% endif %}
-        </div>
+        </form>
         
     </nav>
 

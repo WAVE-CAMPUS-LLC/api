@@ -5,41 +5,36 @@
 WAVE. — Member Details
 {% endblock title %}
 
-{% block app_page_style %}
-<link rel="stylesheet" type="text/css" href="{% static "/styles/adminDashboardApp/tabs/users/user.css" %}" />
-{% endblock app_page_style %}
-
-
 {% block script %}
 <script type="text/javascript" src="{% static "scripts/adminDashboardApp/users/addRoleToUser.js" %}"></script>
 {% endblock script %}
 
 
 {% block header %}
-{% include "partials/nav-footer/nav/admin_nav.html" %}
+{% include "partials/nav-footer/nav/main_nav.html" %}
 {% endblock header %}
 
-{% block container_art %}
-<div id="container-art">
-    <div class="ticket-heading">
-        <div class="ticket-header">
-            <h3><a href="{% url 'waveAdmin:adminDashboard' %}">Management</a> > <a href="{% url "waveAdmin:users" %}">Users</a> > {{ user.first_name }} {{ user.last_name }}</h3>
-        </div>
-    </div>
-</div>
-{% endblock container_art %}
 
 
 {% block body %}
 <div id="content-container" class="flex flex-col gap-[70px] px-4 sm:px-6 md:px-[40px] pre-lg:px-[40px] lg:px-[100px] 2xl:px-48 3xl:px-96">
-    <div id="body-content-heading" class="w-full flex justify-start">
-        <input type="search" name="find-user" id="find-user" placeholder="Search using member e-mail..." class="w-[50%] p-[15px_20px] rounded-[15px] border-[1px] border-solid border-[rgba(0,0,0,0.204)] shadow-custom-shadow-7 font-Wanted-Regular text-[15px]">
+    <div id="pagination-display" class="flex flex-col pre-sm:flex-row gap-2 w-full items-center font-Wanted-Variable justify-start text-gray-300">
+        <a href="{% url "waveAdmin:adminDashboard" %}" class="text-green underline">Admin Dashboard</a>
+        >
+        <a href="{% url "waveAdmin:adminDashboard" %}#userManagement" class="text-green underline">Users</a>
+        >
+        <p class="font-Wanted-Medium text-black">{{ user.first_name }} {{ user.last_name }}</p>
     </div>
 
     <div id="body-content-body" class="w-full flex flex-col gap-[50px]">
         <div id="user-details-login-history" class="flex flex-row gap-[20px]">
             <div id="user-details" class="p-[25px] flex flex-col justify-between gap-[20px] w-[30%] shadow-custom-shadow-2 rounded-[20px]">
                 <div id="user-full_name" class="w-full text-center flex flex-col">
+                    <div class="flex justify-center">
+                        {% if user.user_profile.profile_photo %}
+                        <img src="{{ user.user_profile.profile_photo.url }}" alt="User Profile Picture" class="w-[100px] h-[100px] rounded-full">
+                        {% endif %}
+                    </div>
                     <h3 class="font-Wanted-Bold text-[25px]">{{ user.first_name }} {{ user.last_name }}</h3>
                     <p class="font-Wanted-Medium text-[18px] text-gray-600"><a href="{% url "social:publicProfile" username=user.username %} " target="_blank" class="text-[#008d95] hover:underline">@ {{ user.username }}</a></p>
                 </div>
@@ -56,14 +51,14 @@ WAVE. — Member Details
                     </div>
 
                     <div>
-                        <h6 class="font-Wanted-Medium text-[15px]">Phone Number</h6>
-                        <p class="font-Wanted-Regular text-[15px] text-gray-600">{{ user.phone_number }}</p>
+                        <h6 class="font-Wanted-Medium text-[15px]">Birthday</h6>
+                        <p class="font-Wanted-Regular text-[15px] text-gray-600">{{ user.birthday }}</p>
                     </div>
 
                     <div>
-                        <h6 class="font-Wanted-Medium text-[15px]">Birthday</h6>
-                        <p class="font-Wanted-Regular text-[15px] text-gray-600">{{ user.birthday_year }}-{{ user.birthday_month }}-{{ user.birthday_day }}</p>
-                    </div>
+                        <h6 class="font-Wanted-Medium text-[15px]">Date Joined</h6>
+                        <p class="font-Wanted-Regular text-[15px] text-gray-600">{{ user.date_joined }}</p>
+                    </div>                    
 
                     <div class="roleDisplay flex flex-row justify-between w-full">
                         <div class="roleDisplay-info">
@@ -82,13 +77,13 @@ WAVE. — Member Details
 
                             <div id="addRoleCardContainer" class="hidden bg-[rgba(0,0,0,0.037)] backdrop-blur-[2px] backdrop-saturate-[1.7] fixed top-0 left-0 right-0 bottom-0 z-[1005] w-full h-full cursor-default">
                                 <div class="roleAdditionContainer w-full h-full flex justify-center items-center">
-                                    <div id="addRoleCard" class="w-[30%] h-[50%] bg-white shadow-custom-shadow-2 rounded-[20px] p-[20px] overflow-y-auto flex flex-col justify-between">
+                                    <div id="addRoleCard" class="w-[70%] h-[70%] bg-white shadow-custom-shadow-2 rounded-[20px] p-[20px] overflow-y-hidden flex flex-col justify-between">
                                         <div class="addRolesContainer flex flex-col gap-[50px]">
                                             <div class="activeRole flex flex-col gap-[12px]">
-                                                <h5 class="flex flex-col gap-[12px]">Active Roles</h5>
-                                                <div class="activeRoleContainer flex flex-row gap-[20px]">
+                                                <h5 class="flex flex-col gap-[12px] font-Wanted-Bold text-Semi-Medium">Active Roles</h5>
+                                                <div class="activeRoleContainer flex flex-row gap-[20px] flex-wrap">
                                                     {% for groupname in user_groups %}
-                                                    <span id="activerolee" class="p-[5px] px-[10px] rounded-[15px] border-[1px] border-solid border-[rgba(9,9,9,0.057)] font-Wanted-Medium text-[15px] flex flex-row gap-[10px] items-center">
+                                                    <span id="activerolee" class="p-[5px] px-[10px] rounded-[15px] border-[1px] min-w-fit border-solid border-[rgba(9,9,9,0.057)] font-Wanted-Medium text-[15px] flex flex-row gap-[10px] items-center">
                                                         {{ groupname.name }} 
                                                         <form method="post">
                                                             {% csrf_token %}
@@ -103,16 +98,16 @@ WAVE. — Member Details
                                             </div>
 
                                             <div class="activeRole flex flex-col gap-[12px]">
-                                                <h5 class="flex flex-col gap-[12px]">Available Roles</h5>
+                                                <h5 class="flex flex-col gap-[12px] font-Wanted-Bold text-Semi-Medium">Available Roles</h5>
                                                 <div class="activeRoleContainer flex flex-row gap-[20px]">
                                                     {% for groupname in available_groups %}
-                                                    <span id="activerolee" class="p-[5px] px-[10px] rounded-[15px] border-[1px] border-solid border-[rgba(9,9,9,0.057)] font-Wanted-Medium text-[15px] flex flex-row gap-[10px] items-center">
+                                                    <span id="activerolee" class="p-[5px] px-[10px] min-w-fit rounded-[15px] border-[1px] border-solid border-[rgba(9,9,9,0.057)] font-Wanted-Medium text-[15px] flex flex-row gap-[10px] items-center">
                                                         {{ groupname.name }} 
                                                         <form method="post">
                                                             {% csrf_token %}
                                                             <input type="hidden" name="group_id" value="{{ groupname.id }}">
 
-                                                            <button type="submit" name="addRole" id="removeRoleFromUserButton" class="border-none bg-none cursor-pointer">
+                                                            <button type="submit" name="addRole" id="addRoleFromUserButton" class="border-none bg-none cursor-pointer">
                                                                 <img src="{% static "/images/admin/users/user/addRole.svg" %}" alt="Remove role from user" class="w-[15px]">
                                                             </button>
                                                         </form>
@@ -130,10 +125,6 @@ WAVE. — Member Details
                             </div>
                         </div>
                     </div>
-                </div>
-
-                <div id="user-download_data" class="w-full flex justify-center">
-                    <button class="p-[15px_25px] bg-[#008d95] border-[1px] border-solid border-transparent rounded-[15px] text-white font-Wanted-Bold text-[17px] cursor-pointer">Download Member Data</button>
                 </div>
             </div>
 
@@ -202,13 +193,19 @@ WAVE. — Member Details
                 </div>
             </div>
         </div>
+
+
         <div id="admin-user-control" class="w-full flex justify-center flex-row gap-[20px]">            
-            <div id="pause-btn" class="flex justify-center flex-col text-center gap-[10px] w-[100px] max-w-[100px] font-Wanted-Bold text-red-600">
-                <button id="pause" class="border-[2px] border-solid border-gray-600 rounded-[20px] bg-transparent cursor-pointer p-[10px] shadow-custom-shadow-7 hover:bg-[#e700004d] flex justify-center items-center">
+            {% if user.is_suspended %}
+            <form method="post" id="pause-btn" class="flex justify-center flex-col text-center gap-[10px] w-[100px] max-w-[100px] font-Wanted-Bold text-red-600">
+                {% csrf_token %}
+                <button name="action" value="suspend" class="border-[2px] border-solid border-gray-600 rounded-[20px] bg-transparent cursor-pointer p-[10px] shadow-custom-shadow-7 hover:bg-[#e700004d] flex justify-center items-center">
                     <img src="{% static "/images/admin/users/red-flag.svg" %}" alt="Suspend User Account" title="Suspend Member Account">
                 </button>
                 <p>Suspend</p>
-            </div>
+            </form>
+            {% endif %}
+            
             
             <div id="resume-btn">
                 <form method="post" class="flex justify-center flex-col text-center gap-[10px] w-full max-w-[100px] font-Wanted-Bold text-[#00e704]">
@@ -224,32 +221,4 @@ WAVE. — Member Details
     </div>
 </div>
 
-<div id="suspendPeriodModal" class="hidden bg-[rgba(0,0,0,0.037)] backdrop-blur-[2px] backdrop-saturate-[1.7] fixed top-0 left-0 right-0 bottom-0 z-[1005] w-full h-full cursor-default">
-    <div class="suspendPeriodModalContainer w-full h-full flex justify-center items-center">
-        <form id="suspendPeriodForm" method="post" class="w-[20%] h-auto bg-white shadow-custom-shadow-2 rounded-[20px] p-[20px] overflow-y-auto flex flex-col justify-between gap-[20px]">
-            {% csrf_token %}
-            <input type="hidden" name="action" value="suspend" />
-
-            <div class="closeModal w-full flex justify-end">
-                <button type="button" role="button" id="closeSuspendModalButton" class="border-none bg-none cursor-pointer">
-                    <img src="{% static '/images/admin/users/modalClose.svg' %}" alt="">
-                    <p class="font-Wanted-SemiBold text-[#6e6e6ef0]">CLOSE</p>
-                </button>
-            </div>
-
-            <h3 class="font-Wanted-Bold text-[16px] text-center">Suspension length?</h3>
-
-            <div class="field-container flex justify-center">    
-                <label for="{{ suspend_form.hours.id_for_label }}" class="font-Wanted-Bold text-center">
-                    <h6>{{ suspend_form.hours.label }}</h6>
-                    <input type="{{ suspend_form.hours.widget.input_type }}" name="{{ suspend_form.hours.html_name }}" id="{{ suspend_form.hours.auto_id }}" autocomplete="off" min="0" class="p-[15px] rounded-[10px] border-[1px] border-solid border-[rgba(110,109,109,0.293)] w-[50%]"/>    
-                </label>
-            </div>
-            
-            <div class="suspendControl w-full flex justify-center items-center">
-                <button type="submit" id="suspendActionButton" class="border-[2px] border-solid rounded-[20px] bg-transparent cursor-pointer p-[15px] text-center shadow-custom-shadow-7 border-red-500 flex justify-center gap-[10px] font-Wanted-Bold text-[17px] text-red-600 w-[70%]">Suspend</button>
-            </div>
-        </form>
-    </div>
-</div>
 {% endblock body %}

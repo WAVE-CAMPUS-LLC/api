@@ -247,12 +247,12 @@ def adminCareerApplicationsDetailView(request, applicationId):
         if action == "approveApplicant":
             application.approval_status = "approved"
             application.save()
-            sendApprovedCareerApplicantEmail(email)
+            sendApprovedCareerApplicantEmail(request, email)
             return redirect("waveAdmin:careerApplications")
         elif action == "denyApplicant":
             application.approval_status = "denied"
             application.save()
-            sendDeniedCareerApplicantEmail(email)
+            sendDeniedCareerApplicantEmail(request, email)
             return redirect("waveAdmin:careerApplications")
 
     return render(
@@ -264,7 +264,7 @@ def adminCareerApplicationsDetailView(request, applicationId):
     )
 
 
-def sendApprovedCareerApplicantEmail(applicantEmail):
+def sendApprovedCareerApplicantEmail(request, applicantEmail):
     try:
         subject = "Welcome to WAVE.!"
         emailMessageHtml = render_to_string(
@@ -274,11 +274,12 @@ def sendApprovedCareerApplicantEmail(applicantEmail):
         send_mail(
             subject, plainMessage, None, [applicantEmail], html_message=emailMessageHtml
         )
+        messages.success(request, "Email sent successfully.")
     except Exception as e:
-        print(f"Error sending email to {applicantEmail}: {e}")
+        messages.error(request, f"Error sending email to {applicantEmail}: {e}")
 
 
-def sendDeniedCareerApplicantEmail(applicantEmail):
+def sendDeniedCareerApplicantEmail(request, applicantEmail):
     try:
         subject = "Thank you for your application!"
         emailMessageHtml = render_to_string(
@@ -288,8 +289,9 @@ def sendDeniedCareerApplicantEmail(applicantEmail):
         send_mail(
             subject, plainMessage, None, [applicantEmail], html_message=emailMessageHtml
         )
+        messages.success(request, "Email sent successfully.")
     except Exception as e:
-        print(f"Error sending email to {applicantEmail}: {e}")
+        messages.error(request, f"Error sending email to {applicantEmail}: {e}")
 
 
 @login_required(login_url="authentication:login")
@@ -298,7 +300,6 @@ def sendDeniedCareerApplicantEmail(applicantEmail):
 @admin
 def adminEventHostsView(request):
     hostProfile = UserProfile.objects.filter(was_host=True)
-    print(hostProfile)
 
     if request.method == "POST":
         action = request.POST.get("eventAction")
@@ -349,7 +350,7 @@ def adminHostApplicationsView(request):
             messages.error(request, "Application not found.")
 
         if action == "approve":
-            sendHostApprovalEmail(applicant_email)
+            sendHostApprovalEmail(request, applicant_email)
 
             try:
                 applicant = CustomUser.objects.get(email=applicant_email)
@@ -387,13 +388,16 @@ def adminHostApplicationsView(request):
                     )
 
                 if profile_created:
-                    print(f"HostProfile created for user: {applicant_email}")
+                    messages.success(
+                        request,
+                        f"HostProfile created for user: {applicant_email}",
+                    )
 
                 applicant.save()
                 userProfile.save()
 
             except CustomUser.DoesNotExist:
-                pass
+                messages.error(request, "User not found.")
 
             application.approval_status = "approved"
             application.save()
@@ -401,7 +405,7 @@ def adminHostApplicationsView(request):
             return redirect("waveAdmin:hostApplications")
 
         elif action == "deny":
-            sendHostDenyEmail(applicant_email)
+            sendHostDenyEmail(request, applicant_email)
             application.approval_status = "denied"
             application.save()
             return redirect("waveAdmin:hostApplications")
@@ -413,7 +417,7 @@ def adminHostApplicationsView(request):
     )
 
 
-def sendHostApprovalEmail(applicantEmail):
+def sendHostApprovalEmail(request, applicantEmail):
     try:
         subject = (
             "Congratulations, You are a WAVE. host! Start hosting your events now."
@@ -425,11 +429,12 @@ def sendHostApprovalEmail(applicantEmail):
         send_mail(
             subject, plainMessage, None, [applicantEmail], html_message=emailMessageHtml
         )
+        messages.success(request, "Email sent successfully.")
     except Exception as e:
-        print(f"Error sending email to {applicantEmail}: {e}")
+        messages.error(request, f"Error sending email to {applicantEmail}: {e}")
 
 
-def sendHostDenyEmail(applicantEmail):
+def sendHostDenyEmail(request, applicantEmail):
     try:
         subject = "Thank you for your application to be a host!"
         emailMessageHtml = render_to_string(
@@ -439,8 +444,9 @@ def sendHostDenyEmail(applicantEmail):
         send_mail(
             subject, plainMessage, None, [applicantEmail], html_message=emailMessageHtml
         )
+        messages.success(request, "Email sent successfully.")
     except Exception as e:
-        print(f"Error sending email to {applicantEmail}: {e}")
+        messages.error(request, f"Error sending email to {applicantEmail}: {e}")
 
 
 @login_required(login_url="authentication:login")
@@ -518,11 +524,8 @@ def adminUserDetailedView(request, username):
         action = request.POST.get("action")
 
         if action == "suspend":
-            suspend_form = SuspendUserForm(request.POST)
-            if suspend_form.is_valid():
-                hours = suspend_form.cleaned_data.get("hours", 0)
-                user_in_view.suspend(hours)
-                return redirect("waveAdmin:user-detailed", username=username)
+            user_in_view.suspend()
+            return redirect("waveAdmin:user-detailed", username=username)
 
         elif action == "allow":
             user_in_view.remove_suspension_OR_ban()
@@ -538,8 +541,6 @@ def adminUserDetailedView(request, username):
                 user_in_view.groups.remove(group)
             return redirect("waveAdmin:user-detailed", username=username)
 
-    else:
-        suspend_form = SuspendUserForm()
 
     return render(
         request,
@@ -550,7 +551,6 @@ def adminUserDetailedView(request, username):
             "login_history": login_history,
             "user_groups": user_groups,
             "available_groups": available_groups,
-            "suspend_form": suspend_form,
         },
     )
 
@@ -572,6 +572,7 @@ def adminRoleView(request):
             try:
                 group = get_object_or_404(Group, id=group_id)
                 group.delete()
+                messages.success(request, "Group deleted successfully.")
                 return redirect("waveAdmin:roles")
             except Group.DoesNotExist:
                 pass
@@ -581,15 +582,15 @@ def adminRoleView(request):
             updateForm = UpdateGroupForm(request.POST, instance=group)
             if updateForm.is_valid():
                 updateForm.save()
+                messages.success(request, "Group updated successfully.")
                 return redirect("waveAdmin:roles")
 
         else:
             createGroup = CreateGroupForm(request.POST)
             if createGroup.is_valid():
-                print(createGroup.cleaned_data)
                 group = createGroup.save()
-                print("Group created: ", group)
-                print("Assigned permissions: ", group.permissions.all())
+
+                messages.success(request, "Group created successfully.")
 
                 return redirect("waveAdmin:roles")
 
@@ -649,11 +650,11 @@ def adminCareerDetailView(request, roleID):
         applicant_email = request.POST.get("applicantEmail")
 
         if action == "approve":
-            sendApprovedApplicantEmail(applicant_email)
+            sendApprovedApplicantEmail(request, applicant_email)
             return redirect("waveAdmin:careers")
 
         elif action == "deny":
-            sendDeniedApplicantEmail(applicant_email)
+            sendDeniedApplicantEmail(request, applicant_email)
             return redirect("waveAdmin:careers")
     return render(
         request,
@@ -662,7 +663,7 @@ def adminCareerDetailView(request, roleID):
     )
 
 
-def sendApprovedApplicantEmail(applicantEmail):
+def sendApprovedApplicantEmail(request, applicantEmail):
     try:
         subject = "Welcome to WAVE.!"
         emailMessageHtml = render_to_string(
@@ -672,11 +673,12 @@ def sendApprovedApplicantEmail(applicantEmail):
         send_mail(
             subject, plainMessage, None, [applicantEmail], html_message=emailMessageHtml
         )
+        messages.success(request, "Email sent successfully.")
     except Exception as e:
-        print(f"Error sending email to {applicantEmail}: {e}")
+        messages.error(request, f"Error sending email to {applicantEmail}: {e}")
 
 
-def sendDeniedApplicantEmail(applicantEmail):
+def sendDeniedApplicantEmail(request, applicantEmail):
     try:
         subject = "Thank you for your application!"
         emailMessageHtml = render_to_string(
@@ -686,8 +688,9 @@ def sendDeniedApplicantEmail(applicantEmail):
         send_mail(
             subject, plainMessage, None, [applicantEmail], html_message=emailMessageHtml
         )
+        messages.success(request, "Email sent successfully.")
     except Exception as e:
-        print(f"Error sending email to {applicantEmail}: {e}")
+        messages.error(request, f"Error sending email to {applicantEmail}: {e}")
 
 
 @login_required(login_url="authentication:login")
@@ -746,9 +749,11 @@ def adminProductsView(request):
 def adminFinancialSettingsView(request):
     stripe_settings = StripePlatformSettings.objects.first()
     stripe_settings_form = StripePlatformSettingsForm(instance=stripe_settings)
-    
+
     if request.method == "POST":
-        stripe_settings_form = StripePlatformSettingsForm(request.POST, instance=stripe_settings)
+        stripe_settings_form = StripePlatformSettingsForm(
+            request.POST, instance=stripe_settings
+        )
         if stripe_settings_form.is_valid():
             stripe_settings_form.save()
             messages.success(request, "Settings saved successfully.")
@@ -1045,10 +1050,13 @@ def adminCreateNewsView(request):
             news_instance = createNewsForm.save(commit=False)
             news_instance.created_by = request.user
             news_instance.save()
+            messages.success(request, "News article created successfully.")
             return redirect("waveAdmin:newsroom")
 
         else:
-            print(createNewsForm.errors)
+            messages.error(
+                request, f"Error creating news article.{createNewsForm.errors}"
+            )
 
     else:
         createNewsForm = CreateNewsForm()

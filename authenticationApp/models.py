@@ -61,20 +61,18 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     email_verified = models.BooleanField(default=False)
     is_onboarded = models.BooleanField(default=False)
     is_suspended = models.BooleanField(default=False)
-    suspension_end_date = models.DateTimeField(null=True, blank=True)
 
     
-    def suspend(self, hours):
+    def suspend(self):
         suspend_group, created = Group.objects.get_or_create(name="Suspend")
         member_group = Group.objects.get(name="Member")
         self.groups.remove(member_group)
         self.groups.add(suspend_group)
         self.is_suspended = True
-        self.suspension_end_date = timezone.now() + timedelta(hours=hours)
         self.save()
         
     def remove_suspension_OR_ban(self):
-        if self.is_suspended or self.is_banned:
+        if self.is_suspended:
             suspend_group = Group.objects.get(name="Suspend")
             member_group = Group.objects.get(name="Member")
             

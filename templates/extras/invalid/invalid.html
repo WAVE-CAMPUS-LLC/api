@@ -26,9 +26,7 @@ Page Not Found | WAVE.
                 This link is invalid or might have expired <span class="lostFace text-[#008d95]">:(</span>
             </p>
             <div id="bcLinks" class="font-Wanted-SemiBold text-[25px] text-black mt-[20px]">
-                <a href="" class="text-[#008d95] no-underline hover:underline">Explore</a>
-                <span>•</span>
-                <a href="#" class="text-[#008d95] no-underline hover:underline">Our Status</a>
+                <a href="{% url "core:explore" %}" class="text-[#008d95] no-underline hover:underline">Explore</a>
                 <span>•</span>
                 <a href="{% url "support:home" %}" class="text-[#008d95] no-underline hover:underline">Support</a>
             </div>

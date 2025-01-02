@@ -376,7 +376,7 @@ def rsvpConfirm(request):
 
 
 def searchEvents(request):
-    search_query = request.GET.get("searchEvents", "")
+    search_query = request.GET.get("query", "")
     results = []
 
     if search_query:
@@ -404,9 +404,9 @@ def searchEvents(request):
     return JsonResponse({"results": results})
 
 
-@login_required
+
 def search_users(request):
-    search_query = request.GET.get("searchEvents", "").strip()
+    search_query = request.GET.get("query", "").strip()
     results = []
 
     if search_query:
