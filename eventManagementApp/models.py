@@ -1,6 +1,5 @@
 import uuid
 import json
-from cryptography.fernet import Fernet
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext as _
@@ -16,7 +15,6 @@ from collegeManagementApp.models import Organization
 from eventTicketsApp.models import InviteEventOption
 
 
-fernet = Fernet(settings.CRYPTOGRAPHY_KEY)
 
 
 class HostApplication(models.Model):
@@ -107,7 +105,7 @@ class Event(models.Model):
         ("paused", "Paused"),
         ("active", "Active"),
     ]
-    
+
     EVENT_TYPE_CHOICES = [
         ("Academic", "Academic"),
         ("Adventure", "Adventure"),
@@ -237,8 +235,10 @@ class Event(models.Model):
         null=True,
         blank=True,
     )
-    
-    admin_status = models.CharField(max_length=20, choices=ADMIN_STATUS_CHOICES, default="active")
+
+    admin_status = models.CharField(
+        max_length=20, choices=ADMIN_STATUS_CHOICES, default="active"
+    )
 
     title = models.CharField(
         _("What would you like to title the event?"),
@@ -387,20 +387,18 @@ class Event(models.Model):
         max_length=500,
     )
 
-    # Possibly store age_restriction as a CharField with choices:
     AGE_CHOICES = (
-        ('', 'No Age Restriction'),  # or you can skip empty
-        ('18+', '18+'),
-        ('21+', '21+'),
+        ("", "No Age Restriction"), 
+        ("18+", "18+"),
+        ("21+", "21+"),
     )
 
     age_restriction = models.CharField(
         max_length=5,
         choices=AGE_CHOICES,
         blank=True,
-        default='',  # means no restriction
+        default="",
     )
-
 
     created_at = models.DateTimeField(auto_now=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -487,16 +485,28 @@ class HostProfile(models.Model):
 
     def __str__(self):
         return f"{self.user.first_name} {self.user.last_name}'s Host Profile"
-    
+
+
 class SharedEvent(models.Model):
-    sender = models.ForeignKey('accountManagementApp.UserProfile', on_delete=models.CASCADE, related_name='sent_shared_events')
-    receiver = models.ForeignKey('accountManagementApp.UserProfile', on_delete=models.CASCADE, related_name='received_shared_events', null=True, blank=True)
+    sender = models.ForeignKey(
+        "accountManagementApp.UserProfile",
+        on_delete=models.CASCADE,
+        related_name="sent_shared_events",
+    )
+    receiver = models.ForeignKey(
+        "accountManagementApp.UserProfile",
+        on_delete=models.CASCADE,
+        related_name="received_shared_events",
+        null=True,
+        blank=True,
+    )
     crew = models.ForeignKey(Crew, on_delete=models.CASCADE, null=True, blank=True)
     event = models.ForeignKey(Event, on_delete=models.CASCADE)
     shared_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=['receiver', 'event'], name='unique_event_per_receiver')
+            models.UniqueConstraint(
+                fields=["receiver", "event"], name="unique_event_per_receiver"
+            )
         ]
-

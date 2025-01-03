@@ -9,6 +9,8 @@ from django.http import HttpResponseRedirect, JsonResponse
 from wave_v1.decorators import check_suspension, member, verified, onboarded
 from datetime import datetime, timedelta
 from django.utils.timezone import now
+from django.db.models import Q
+from datetime import date
 
 
 from .forms import (
@@ -144,21 +146,49 @@ def viewCollegeInformation(request, collegeId):
     members = UserProfile.objects.filter(college=college)
     organizations = Organization.objects.filter(college=college, status="Accepted")
 
+
+    if not request.user.is_authenticated:
+        # Restrict events with age restrictions for anonymous users
+        age_filter = Q(age_restriction="")
+    else:
+        # For authenticated users, calculate age and apply restrictions
+        user_age = request.user.age
+        if user_age is None and request.user.birthday:
+            today = date.today()
+            user_age = (
+                today.year
+                - request.user.birthday.year
+                - (
+                    (today.month, today.day)
+                    < (request.user.birthday.month, request.user.birthday.day)
+                )
+            )
+            request.user.age = user_age
+            request.user.save()
+
+        age_filter = Q(age_restriction="")
+        if user_age:
+            if user_age >= 21:
+                age_filter |= Q(age_restriction="21+")
+            if user_age >= 18:
+                age_filter |= Q(age_restriction="18+")
+    
+
     events = Event.objects.filter(
         display_event_on_college=True, host__user_profile__college=college
-    )
+    ).filter(age_filter).order_by("-date")
 
     events_restricted_to_college = Event.objects.filter(
         privacy="Private (College)",
         privacy_details__restricted_college=college,
         status="live",
-    )
+    ).filter(age_filter).order_by("-date")
 
     display_events_on_college = Event.objects.filter(
         display_event_on_college=True,
         host__user_profile__college=college,
         status="live",
-    )
+    ).filter(age_filter).order_by("-date")
 
     events = (events_restricted_to_college | display_events_on_college).distinct()
     
@@ -169,7 +199,7 @@ def viewCollegeInformation(request, collegeId):
 
     weekly_events = Event.objects.filter(
         date__range=[start_of_week, end_of_week], status="live", privacy="Discoverable", admin_status="active"
-    ).order_by("?")[:3]
+    ).filter(age_filter).order_by("?")[:3]
     
     
     return render(
@@ -395,11 +425,38 @@ def viewOrganization(request, collegeId, orgId):
         organization=organization
     ).select_related("user")
 
+
+    if not request.user.is_authenticated:
+        # Restrict events with age restrictions for anonymous users
+        age_filter = Q(age_restriction="")
+    else:
+        # For authenticated users, calculate age and apply restrictions
+        user_age = request.user.age
+        if user_age is None and request.user.birthday:
+            today = date.today()
+            user_age = (
+                today.year
+                - request.user.birthday.year
+                - (
+                    (today.month, today.day)
+                    < (request.user.birthday.month, request.user.birthday.day)
+                )
+            )
+            request.user.age = user_age
+            request.user.save()
+
+        age_filter = Q(age_restriction="")
+        if user_age:
+            if user_age >= 21:
+                age_filter |= Q(age_restriction="21+")
+            if user_age >= 18:
+                age_filter |= Q(age_restriction="18+")
+
     # Get events restricted to this organization
     restricted_events = Event.objects.filter(
         privacy="Private (Organization)", 
         privacy_details__restricted_organization=organization
-    )
+    ).filter(age_filter).order_by("-date")
     
     org_privacy = organization.privacy
     org_owner = organization.created_by

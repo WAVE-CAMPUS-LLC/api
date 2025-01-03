@@ -47,7 +47,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     )
     
     birthday = models.DateField(_("Birthday"), null=False, blank=False, default=datetime.date.today)
-    age = models.IntegerField( null=True, blank=True)
+    age = models.IntegerField( null=True, blank=True,)
 
     date_joined = models.DateField(auto_now_add=True)
 

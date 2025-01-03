@@ -2,7 +2,6 @@ from datetime import datetime
 import time
 import json
 import stripe
-from cryptography.fernet import Fernet
 from django.conf import settings
 from django.shortcuts import get_object_or_404, redirect, render
 from django.http import JsonResponse, HttpResponse
