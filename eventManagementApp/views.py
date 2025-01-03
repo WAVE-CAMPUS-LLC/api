@@ -318,6 +318,15 @@ def save_event_progress(request, eventId):
         event.body_photo_four = request.FILES.get("body_photo_four", None)
         event.body_photo_five = request.FILES.get("body_photo_five", None)
 
+         # **Handle Age Restriction**
+        age_restriction = request.POST.get("age_restriction", "").strip()
+        event.age_restriction = age_restriction  # Save the age restriction
+    
+        # Optional: Validate age restriction
+        valid_restrictions = ["18+", "21+", ""]
+        if age_restriction not in valid_restrictions:
+            return JsonResponse({"error": "Invalid age restriction value"}, status=400)
+
         event.save()  # Save changes to the database
 
         return JsonResponse({"success": True})
@@ -359,7 +368,7 @@ def eventManagement(request, eventId):
             )
             event_to_update.display_event_on_college = (
                 request.POST["displayOnCollege"] == "True"
-            )  # Check for 'true'
+            )
             event_to_update.save()
             return redirect("eventManagement:eventManagement", eventId=eventId)
 
@@ -377,7 +386,7 @@ def eventManagement(request, eventId):
                     )
                     user_profile.invited_events.add(event)
                     user_profile.invitations.add(invitation)
-                    # invitation.generate_token()
+
                     invitation.save()
 
                     invitation_link = request.build_absolute_uri(
@@ -406,7 +415,7 @@ def eventManagement(request, eventId):
         elif action == "saveChanges":
             editEventForm = EditEventForm(request.POST, request.FILES, instance=event)
             if editEventForm.is_valid():
-                # first check to see if user deleted any photos
+                # Handle removing body photos if checked
                 if "remove_body_photo_one" in request.POST:
                     event.body_photo_one.delete(save=False)
                     event.body_photo_one = None
@@ -438,6 +447,10 @@ def eventManagement(request, eventId):
                 if "bodyPhotoFive" in request.FILES:
                     edits.body_photo_five = request.FILES["bodyPhotoFive"]
 
+                # >>>>>> HERE IS THE KEY LINE: <<<<<<
+                # Capture the new 'age_restriction' from POST and save it:
+                edits.age_restriction = request.POST.get("age_restriction", "")
+
                 edits.save()
             else:
                 print(editEventForm.errors)
@@ -448,7 +461,6 @@ def eventManagement(request, eventId):
             if paidFreeForm.is_valid():
                 new_ticket = paidFreeForm.save(commit=False)
                 new_ticket.event = event
-
                 new_ticket.save()
                 eventStripeId = event.stripeProductId
                 print("Event Stripe ID:", eventStripeId)

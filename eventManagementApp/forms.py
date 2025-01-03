@@ -123,6 +123,19 @@ class EventForm(forms.ModelForm):
         }
 
 class EditEventForm(forms.ModelForm):
+    AGE_RESTRICTION_CHOICES = [
+        ("", "No Age Restriction"),
+        ("18+", "18+"),
+        ("21+", "21+"),
+    ]
+
+    age_restriction = forms.ChoiceField(
+        label=_("Age Restriction"),
+        required=False,
+        choices=AGE_RESTRICTION_CHOICES,
+        widget=forms.RadioSelect(attrs={'class': 'age-restriction-radio'}),
+    )
+
     date = forms.DateField(
         label=_("Choose date"),
         required=False,
@@ -143,6 +156,7 @@ class EditEventForm(forms.ModelForm):
         widget=forms.TimeInput(format="%H:%M", attrs={"type": "time"}),
         input_formats=["%H:%M"],
     )
+    
     header_photo = forms.ImageField(
         required=False,
         widget=forms.FileInput(attrs={'class': 'custom-file-input'})
@@ -170,7 +184,6 @@ class EditEventForm(forms.ModelForm):
 
     class Meta:
         model = Event
-
         fields = [
             "title",
             "event_type",
@@ -194,8 +207,8 @@ class EditEventForm(forms.ModelForm):
             "body_photo_three",
             "body_photo_four",
             "body_photo_five",
+            "age_restriction",  # Added age_restriction field
         ]
-        
         
 class HostProfileForm(forms.ModelForm):
     class Meta:
