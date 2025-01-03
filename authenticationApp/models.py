@@ -79,7 +79,6 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
             if self.is_suspended:
                 self.groups.remove(suspend_group)
                 self.is_suspended = False
-                self.suspension_end_date = None
                 
             self.groups.add(member_group)
             self.save()
