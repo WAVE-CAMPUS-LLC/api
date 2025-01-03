@@ -229,6 +229,10 @@ def socialHomeView(request):
             profile.save()
             messages.success(request, "QR code generated successfully!")
             return redirect("social:home")
+        
+        else:
+            crew_invite_action(request, request.POST.get("crew_id"), action)
+            
     return render(
         request,
         "socialApp/socialHome.html",
@@ -261,6 +265,7 @@ def crew_invite_action(request, crew_id, action):
     crew = get_object_or_404(Crew, crewId=crew_id)
     crew_request = get_object_or_404(CrewRequest, crew=crew, receiver=request.user)
     sender = get_object_or_404(UserProfile, user=crew_request.sender)
+    receiver = get_object_or_404(UserProfile, user=request.user)
 
     if action == "joinCrew":
         crew_request.accept_request()
@@ -277,11 +282,23 @@ def crew_invite_action(request, crew_id, action):
                 },
             },
         )
-        crew_request.delete()
+        async_to_sync(channel_layer.group_send)(
+            f"user_{receiver.user.id}",
+            {
+                "type": "social_update",
+                "data": {
+                    "message": f"{request.user.username} sent you a crew invite.",
+                    "action": "acceptCrewRequest",
+                },
+            },
+        )
         return redirect("social:crew", crewId=crew_id)
 
     elif action == "declineCrew":
         crew_request.decline_request()
+        print(crew_request)
+        crew_request.delete()
+        crew_request = None
         messages.success(request, f"Crew Invite Declined")
         channel_layer = get_channel_layer()
         async_to_sync(channel_layer.group_send)(
@@ -294,7 +311,16 @@ def crew_invite_action(request, crew_id, action):
                 },
             },
         )
-        crew_request.delete()
+        async_to_sync(channel_layer.group_send)(
+            f"user_{receiver.user.id}",
+            {
+                "type": "social_update",
+                "data": {
+                    "message": f"{request.user.username} sent you a crew invite.",
+                    "action": "declineCrewRequest",
+                },
+            },
+        )
 
     return redirect("social:home")
 
@@ -358,6 +384,7 @@ def publicProfileView(request, username):
                                 "created_at": friend_request.created_at.strftime(
                                     "%Y-%m-%d %H:%M:%S"
                                 ),
+                                "profile_picture": friend_request.sender.user_profile.profile_photo.url,
                             },
                         },
                     },
@@ -551,6 +578,7 @@ def crewView(request, crewId):
                                 "sender": {
                                     "username": str(user.user.username),
                                 },
+                                "profile_picture": user.profile_photo.url,
                             },
                         },
                     },
