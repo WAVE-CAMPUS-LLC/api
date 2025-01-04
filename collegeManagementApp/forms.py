@@ -47,6 +47,7 @@ class JoinCollegeForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         self.college = kwargs.pop("college", None)
+        self.user = kwargs.pop("user", None) 
         super().__init__(*args, **kwargs)
 
     def clean_email(self):
@@ -56,7 +57,7 @@ class JoinCollegeForm(forms.Form):
 
             if self.college.email_domain not in email_domain:
                 raise forms.ValidationError(
-                    f"Please use your school email ending in @{self.college.email_domain}"
+                    f"Use school email ending in @{self.college.email_domain}"
                 )
                 
             user = self.user

@@ -38,5 +38,6 @@ urlpatterns = [
         views.hostBillingCashout,
         name="hostBillingCashout",
     ),
+    path("analytics/", views.hostAnalyticsHome, name="hostAnalytics"),
     path("billing/add/card/new/", views.addCard, name="hostBillingAddCard"),
 ]
