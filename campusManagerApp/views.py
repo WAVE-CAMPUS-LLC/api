@@ -15,12 +15,19 @@ from accountManagementApp.models import UserProfile
 from authenticationApp.models import CustomUser
 from collegeManagementApp.models import Membership, Organization, CollegeEventLink
 from .models import CampusManagerInvite
+from .forms import EditCampusAsManagerForm
 from adminDashboardApp.models import College
-from wave_v1.decorators import check_suspension, campusManagerRequired, member, verified, onboarded
-
+from wave_v1.decorators import (
+    check_suspension,
+    campusManagerRequired,
+    member,
+    verified,
+    onboarded,
+)
 
 
 User = get_user_model()
+
 
 # Create your views here.
 @login_required
@@ -44,12 +51,11 @@ def managerDashboardView(request):
 
     college = get_object_or_404(College, managers=request.user)
     college_event_links = CollegeEventLink.objects.filter(college=college)
-    
+
     events = [link.event for link in college_event_links]
 
     member_count = Membership.objects.filter(college=college).count()
     organization_count = Organization.objects.filter(college=college).count()
-    
 
     pending_organizations = Organization.objects.filter(
         status="Pending", college__collegeId=college.collegeId
@@ -76,8 +82,6 @@ def managerDashboardView(request):
             messages.success(
                 request, f"Organization '{organization.name}' has been declined."
             )
-            
-        
 
         return redirect("campusManager:dashboard")
 
@@ -103,35 +107,38 @@ def managedCampusView(request, collegeId):
     college = get_object_or_404(College, managers=request.user, collegeId=collegeId)
     organizations = Organization.objects.filter(college=college)
     members = UserProfile.objects.filter(college=college)
-    
+
     college_event_links = CollegeEventLink.objects.filter(college=college)
-    
+
     events = [link.event for link in college_event_links]
-    
+    editCampusForm = EditCampusAsManagerForm(instance=college)
+
     if request.method == "POST":
-        action=request.POST.get("action")
+        action = request.POST.get("action")
         organizationID = request.POST.get("organizationID")
         event_id = request.POST.get("event_id")
-        
-        
+
         if action == "deleteOrganization":
             organization = get_object_or_404(Organization, orgId=organizationID)
             organization.delete()
             messages.success(request, "Organization deleted.")
             return redirect("campusManager:campus", collegeId=collegeId)
-        
+
         elif action == "removeCampusMember":
             memberEmail = request.POST.get("memberEmail")
             if memberEmail:
                 user = get_object_or_404(User, email=memberEmail)
                 user_profile = get_object_or_404(UserProfile, user=user)
-                if user_profile.college and str(user_profile.college.collegeId) == str(collegeId):
+                if user_profile.college and str(user_profile.college.collegeId) == str(
+                    collegeId
+                ):
                     user_profile.college = None
                     user_profile.save()
-                    messages.success(request, f"User {user.email} removed from college.")
+                    messages.success(
+                        request, f"User {user.email} removed from college."
+                    )
             return redirect("campusManager:campus", collegeId=collegeId)
-        
-        
+
         elif action == "pause" and event_id:
             try:
                 event = get_object_or_404(Event, eventId=event_id)
@@ -141,7 +148,7 @@ def managedCampusView(request, collegeId):
                 return redirect("campusManager:campus", collegeId=college.collegeId)
             except Event.DoesNotExist:
                 messages.error(request, "Event not found.")
-                
+
         elif action == "activate" and event_id:
             try:
                 event = get_object_or_404(Event, eventId=event_id)
@@ -151,7 +158,7 @@ def managedCampusView(request, collegeId):
                 return redirect("campusManager:campus", collegeId=college.collegeId)
             except Event.DoesNotExist:
                 messages.error(request, "Event not found.")
-                
+
         elif action == "delete" and event_id:
             try:
                 event = get_object_or_404(Event, eventId=event_id)
@@ -160,9 +167,18 @@ def managedCampusView(request, collegeId):
                 return redirect("campusManager:campus", collegeId=college.collegeId)
             except Event.DoesNotExist:
                 messages.error(request, "Event not found.")
-    
-                
-                
+
+        elif action == "saveCampusEdit":
+            editCampusForm = EditCampusAsManagerForm(
+                request.POST, request.FILES, instance=college
+            )
+            if editCampusForm.is_valid():
+                editCampusForm.save()
+                messages.success(request, "Campus information updated.")
+                return redirect("campusManager:campus", collegeId=college.collegeId)
+            else:
+                messages.error(request, "Error updating campus information.")
+
     return render(
         request,
         "campusManagerApp/managerCampusView.html",
@@ -171,6 +187,7 @@ def managedCampusView(request, collegeId):
             "organizations": organizations,
             "collegeMembers": members,
             "events": events,
+            "editCampusForm": editCampusForm,
         },
     )
 
@@ -239,18 +256,21 @@ def accept_invite(request, token, collegeId):
         request.session["collegeId"] = collegeId
         request.session["invite_token"] = token
         return redirect(f"{reverse('authentication:login')}?next={request.path}")
-    
+
+
 @login_required
 @check_suspension
 @member
 @verified
 @campusManagerRequired("Campus Manager")
 def college_detail_view(request, collegeId):  # Changed from college_id to collegeId
-    college = get_object_or_404(College, collegeId=collegeId)  # Using collegeId instead of id
+    college = get_object_or_404(
+        College, collegeId=collegeId
+    )  # Using collegeId instead of id
     events = Event.objects.all()
-    
+
     context = {
-        'college': college,
-        'events': events,
+        "college": college,
+        "events": events,
     }
-    return render(request, 'adminDashboardApp/tabs/colleges/collegeInfo.html', context)
+    return render(request, "adminDashboardApp/tabs/colleges/collegeInfo.html", context)

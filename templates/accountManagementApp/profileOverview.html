@@ -1,5 +1,7 @@
 {% extends "base/base.html" %}
 {% load static %}
+{% load user_tags %}
+{% load widget_tweaks %}
 
 {% block title %}
 Profile Overview
@@ -99,26 +101,42 @@ Profile Overview
                         <li class="profile-tab tab-active border-b border-b-custom-rgba11 p-[20px] font-Wanted-Regular cursor-pointer" data-tab="myEvents-information">
                             <a class="text-black no-underline hover:text-green cursor-pointer">My Events</a>
                         </li>
-                        <li class="border-b border-b-custom-rgba11 p-[20px] font-Wanted-Regular cursor-pointer">
-                            <a class="text-black no-underline hover:text-green cursor-pointer" target="_blank" href="{% url "eventManagement:hostHome" %}">Event Hosting</a>
+                        <li class="profile-tab border-b border-b-custom-rgba11 p-[20px] font-Wanted-Medium cursor-pointer" href="{% url "social:home" %}">
+                            <a class="text-green no-underline hover:underline cursor-pointer">The Social</a>
                         </li>
+                        {% if userRequest|has_group:"Host" %}
+                        <li class="profile-tab border-b border-b-custom-rgba11 p-[20px] font-Wanted-Regular cursor-pointer" target="_blank" href="{% url "eventManagement:hostHome" %}">
+                            <a class="text-black no-underline hover:text-green cursor-pointer">Host Portal</a>
+                        </li>
+                        {% endif %}
+                        
                         <li class="profile-tab border-b border-b-custom-rgba11 p-[20px] font-Wanted-Regular cursor-pointer" data-tab="myBlog-information">
-                            <a class="text-black no-underline hover:text-green cursor-pointer">Blog</a>
+                            <a class="text-black no-underline hover:text-green cursor-pointer">My Blog Posts</a>
                         </li>
                         <li class="profile-tab border-b border-b-custom-rgba11 p-[20px] font-Wanted-Regular cursor-pointer">
-                            <a class="text-black no-underline hover:text-green cursor-pointer" href="{% url "accountManagement:userSettings" %}">Settings</a>
+                            <a class="text-black no-underline hover:text-green cursor-pointer" href="{% url "accountManagement:userSettings" %}">My Settings</a>
                         </li>
                         <li class="profile-tab border-b border-b-custom-rgba11 p-[20px] font-Wanted-Regular cursor-pointer">
-                            <a class="text-black no-underline hover:text-green cursor-pointer" href="#">My Preferences</a>
+                            <a class="text-black no-underline hover:text-green cursor-pointer" href="{% url "accountManagement:userSettings" %}">My Preferences</a>
                         </li>
                         <li class="profile-tab border-b border-b-custom-rgba11 p-[20px] font-Wanted-Regular cursor-pointer">
                             <a class="text-black no-underline hover:text-green cursor-pointer" href="#">Payment Methods</a>
                         </li>
+                        {% if userRequest|has_group:"Campus Manager" %}
                         <li class="profile-tab border-b border-b-custom-rgba11 p-[20px] font-Wanted-Regular cursor-pointer">
-                            <a class="text-black no-underline hover:text-green cursor-pointer" href="#">Promo Codes & Gifting</a>
+                            <a class="text-black no-underline hover:text-green cursor-pointer" target="_blank" href="{% url "campusManager:dashboard" %}">Campus Management</a>
+                        </li>
+                        {% endif %}
+                        {% if userRequest|has_group:"Admin" %}
+                        <li class="profile-tab border-b border-b-custom-rgba11 p-[20px] font-Wanted-Regular cursor-pointer">
+                            <a class="text-black no-underline hover:text-green cursor-pointer" target="_blank" href="{% url "waveAdmin:dashboard" %}">Admin Portal</a>
                         </li>
                         <li class="profile-tab border-b border-b-custom-rgba11 p-[20px] font-Wanted-Regular cursor-pointer">
-                            <a class="text-black no-underline hover:text-green cursor-pointer" href="#">Account Activity</a>
+                            <a class="text-black no-underline hover:text-green cursor-pointer" target="_blank" href="{% url "campusManager:dashboard" %}">Campus Management</a>
+                        </li>
+                        {% endif %}
+                        <li class="profile-tab border-b border-b-custom-rgba11 p-[20px] font-Wanted-Regular cursor-pointer">
+                            <a class="text-[red] no-underline hover:underline cursor-pointer" href="{% url "authentication:logout" %}">Sign Out</a>
                         </li>
                     </ul>
                 </div>
@@ -144,33 +162,13 @@ Profile Overview
                 </div>
             </div>
             <div class="main-content xl:w-[75%]">
-                <div class="host-info profile-tab-content w-full flex flex-col gap-y-[17px]" id="myEvents-information">
-                    <div class="mchi-heading font-Wanted-Medium text-[25px] text-[#1b4965]">
-                        <h5>Host Your Event</h5>
-                    </div>
-                    <div class="host-container border border-custom-rgba11 rounded-[10px] w-full flex flex-col pre-lg:flex-row gap-[20px] py-[20px] px-[30px] shadow-custom-shadow-6">
-                        <div class="hc-info pre-lg:w-[85%]">
-                            <h6 class="font-bold font-Wanted-Regular text-[16px] after-xsm:text-[18.5px] text-[#1b4965]">
-                                The most exciting way to host your
-                                events! Use Wave.
-                            </h6>
-                            <p class="font-light font-Wanted-Variable text-[15px] text-[#1b4965cf]">
-                                Sell tickets to your events in a quick
-                                and simple way. Tap into thousands of
-                                fans who are looking to tick events off
-                                their bucket lists.
-                            </p>
-                        </div>
-                        <div class="hc-link flex items-center justify-center w-[90px]">
-                            <div class="w-full font-Wanted-Medium bg-[#25567b] rounded-[10px] p-[10px] hover:shadow-custom-shadow-6">
-                                <a target="_blank" href="{% url "eventManagement:hostHome" %}" class="text-white no-underline flex justify-center items-center text-[13px] text-nowrap">Learn More</a>
-                            </div>
-                        </div>
-                    </div>
+                <div class="profile-tab-content" id="myEvents-information">
+                    <div class=" border border-custom-rgba11 rounded-[10px] w-full flex flex-col pre-lg:flex-row gap-[20px] py-[20px] px-[30px] shadow-custom-shadow-6"></div>
                 </div>
 
+
                 <!-- inline style to stop blogs briefly showing on page refresh -->
-                <div class="profile-tab-content" id="myBlog-information" style="display:none;">
+                <div class="profile-tab-content hidden" id="myBlog-information">
                     <div class="blog-tab flex flex-col gap-[25px] mt-[15px]">
                         <div class="header flex justify-between items-center flex-col xxsm:flex-row">
                             <div class="headerRow w-full">

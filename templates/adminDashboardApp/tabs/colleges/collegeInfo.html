@@ -55,7 +55,7 @@ College Management — WAVE.
 
             <div id="tabBody" class="flex flex-row gap-10 min-w-full">
                 <div id="overviewInformation" class="adminCollegeTabInformation w-full">
-                    <form method="POST"  class="tabInformationContainer flex flex-col gap-7">
+                    <form method="POST" enctype="multipart/form-data"  class="tabInformationContainer flex flex-col gap-7">
                         <div class="w-full flex justify-end">
                             {% csrf_token %}
                             <div id="editInfoDiv" class="flex flex-row gap-3">

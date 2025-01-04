@@ -90,12 +90,17 @@ Campus Manager — WAVE.
                                                 <h5 class="font-Wanted-SemiBold text-[20px] md:text-[25px]">{{ org.name }}</h5>
                                             </div>
                                             <div class="organizationCardBody flex flex-col gap-[5px]">
+                                                {% if org.created_by %}
                                                 <p class="organization-created font-Wanted-Variable text-[15px] text-[rgba(128,128,128,0.798)]">
-                                                    Created by: {{ org.created_by.first_name }} {{ org.created_by.last_name }} 
-                                                    <a href="{% url "social:publicProfile" username=org.created_by.username %}">
-                                                        {{ org.created_by.username }}
+                                                    Created by: {{ org.created_by.first_name }} {{ org.created_by.last_name }} (<a href="{% url "social:publicProfile" username=org.created_by.username %}" class="underline">
+                                                        @{{ org.created_by.username }}
                                                     </a>
+                                                    )
                                                 </p>
+                                                {% else %}
+                                                <p class="organization-created font-Wanted-Variable text-[15px] text-[rgba(128,128,128,0.798)]">Unknown Creator</p>
+                                                {% endif %}
+                                                
                                                 <p class="organization-display font-Wanted-Variable text-[15px] text-[rgba(128,128,128,0.798)]">Created on: {{ org.date_added }}</p>
                                             </div>
                                         </div>
