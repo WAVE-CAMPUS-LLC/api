@@ -637,3 +637,35 @@ def send_connect_request(request):
             )
 
     return JsonResponse({"status": "error", "message": "Invalid action."}, status=400)
+
+
+
+def track_visitor(request):
+    if request.method == "GET":
+        # Retrieve the visitor's IP address
+        ip_address = get_client_ip(request)
+
+        # Check if the IP address is already recorded
+        visitor, created = Visitor.objects.get_or_create(
+            ip_address=ip_address, defaults={"first_visit": now()}
+        )
+
+        # Prepare a JSON response
+        response_data = {
+            "new_visitor": created,
+            "ip_address": visitor.ip_address,
+            "first_visit": visitor.first_visit,
+        }
+        return JsonResponse(response_data)
+    else:
+        return JsonResponse({"error": "Invalid request method"}, status=400)
+
+
+def get_client_ip(request):
+    """Get the client's IP address from the request object."""
+    x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
+    if x_forwarded_for:
+        ip = x_forwarded_for.split(",")[0]
+    else:
+        ip = request.META.get("REMOTE_ADDR")
+    return ip
