@@ -881,6 +881,6 @@ def hostEventAnalytics(request, eventId):
     event = get_object_or_404(Event, eventId=eventId)
     return render(
         request,
-        "eventManagementApp/host/analytics/analyticsEvent.html",
+        "eventManagementApp/host/analytics/event/event.html",
         {"event": event},
     )
