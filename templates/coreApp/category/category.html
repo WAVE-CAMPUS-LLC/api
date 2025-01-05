@@ -10,7 +10,7 @@
 
 
 {% block script %}
-{% comment %} <script type="text/javascript" src="{% static "scripts/coreApp/eventCountdown.js" %}"></script> {% endcomment %}
+<script type="text/javascript" src="{% static "scripts/dataAnalyticsAPI/hostAnalytics/eventClick.js" %}" defer></script>
 {% endblock script %}
 
 {% block header %}
@@ -26,7 +26,7 @@
     <div id="content-body">
         <div id="events-container" class="grid sm:grid-cols-1 pre-lg:grid-cols-2 lg:grid-cols-3">
             {% for event in events %}
-                <a target="_blank" href="{% url "core:eventDetails" eventId=event.eventId %}" class="category-event-card hover:category-image hover:scale-95 transform transition duration-300 flex flex-col justify-center items-center cursor-pointer overflow-hidden p-[10px] text-black">
+                <a target="_blank" href="{% url "core:eventDetails" eventId=event.eventId %}" class="category-event-card hover:category-image hover:scale-95 transform transition duration-300 flex flex-col justify-center items-center cursor-pointer overflow-hidden p-[10px] text-black" data-event-id="{{ event.eventId }}" onclick="trackEventClick({{ trending.eventId }})">
                     <div class="category-image w-full rounded-2xl shadow-custom-shadow-3">
                         {% if event.header_photo %}
                         <img src="{{event.header_photo.url}}" alt="" class="w-full h-[448px] rounded-2xl rounded-b-none object-cover">

@@ -1,0 +1,11 @@
+.analytics-tab {
+    display: flex;
+    justify-content: center;
+}
+
+.analytics-tab.tab-active {
+    border: 1px solid #007379;
+    font-family: Wanted-Variable;
+    color: white;
+    background-color: #007379;
+}

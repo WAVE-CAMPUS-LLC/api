@@ -14,6 +14,7 @@
 <script type="text/javascript" src="{% static "scripts/adminDashboardApp/applications/applications.js" %}" defer></script>
 <script type="text/javascript" src="{% static "scripts/coreApp/eventDetails/shareEvent.js" %}" defer></script>
 <script type="text/javascript" src="{% static "scripts/coreApp/eventDetails/ticketCount.js" %}" defer nonce="{{ nonce }}"></script>
+<script type="text/javascript" src="{% static "scripts/dataAnalyticsAPI/hostAnalytics/eventViewing.js" %}" defer></script>
 {% endblock script %}
 
 
@@ -74,18 +75,18 @@
 
         <div id="contentContainerTabs" class="w-full flex flex-col gap-12">
             <div id="tabHeaderParent" class="w-full flex justify-center flex-col">
-                <ul id="tabHeader" class="list-none grid grid-cols-1 gap-2 xsm:grid-cols-2 xxsm:grid-cols-3 w-full pb-1 font-Wanted-Medium text-Semi-Medium md:text-Large">
-                    <li class="eventDetailsTab p-2 px-5 text-center hover:border-b-customGray6 cursor-pointer" data-tab="eventDescription">
+                <ul id="tabHeader" class="list-none flex flex-row gap-4 w-full font-Wanted-Medium text-Semi-Medium md:text-Large">
+                    <li class="eventDetailsTab cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="eventDescription">
                         Description
                     </li>
                     {% if paidFreeTickets or event.ticketing == "RSVP Required" %}
-                    <li class="eventDetailsTab p-2 px-5 text-center hover:border-b-customGray6 cursor-pointer" data-tab="eventTicketInformation">
+                    <li class="eventDetailsTab cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="eventTicketInformation">
                         Ticketing
                     </li>
                     {% endif %}
 
                     {% if event.body_photo_one or event.body_photo_two or event.body_photo_three or event.body_photo_four or event.body_photo_five %}
-                    <li class="eventDetailsTab p-2 px-5 text-center hover:border-b-customGray6 cursor-pointer " data-tab="eventPhotosVideos">
+                    <li class="eventDetailsTab cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="eventPhotosVideos">
                         Photos
                     </li>
                     {% endif %}
@@ -106,6 +107,8 @@
                                         </h5>
                                         
                                     </div>
+
+                                    <input type="hidden" id="trackEventViewURL" value="{% url "analyticsAPI:trackEventViews" %}" />
                                                                         
                                     <p class="event-dated-timed font-Wanted-Medium  md:font-Wanted-Bold text-Medium xxsm:text-Large md:text-Pre-Xl text-[#008d95] flex items-start xsm:items-center flex-col xsm:flex-row gap-0 xsm:gap-1">
                                         {{ event.date|custom_date }} 

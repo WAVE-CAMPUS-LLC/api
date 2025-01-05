@@ -41,4 +41,5 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     initializeTabSystem('portal-body', 'dashboard-tab', 'pbc-element-content');
+    initializeTabSystem('portal-body', 'analytics-tab', 'analytics-tab-content');
 });
