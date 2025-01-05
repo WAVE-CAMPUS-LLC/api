@@ -1,33 +1,34 @@
 let csrfToken;
+
 document.addEventListener("DOMContentLoaded", function () {
   csrfToken = document
     .querySelector('meta[name="csrf-token"]')
     .getAttribute("content");
+
   const requestCountElement = document.getElementById("number-of-requests");
-
-  let currentCount = parseInt(
-    requestCountElement.getAttribute("data-initial-count")
-  );
-
-  if (currentCount == 0) {
-    requestCountElement.style.display = "none";
-  } else {
-    requestCountElement.style.display = "block";
-  }
-
   const requestCountElementCrew = document.getElementById(
     "number-of-requests-crew"
   );
 
+  let currentCount = parseInt(
+    requestCountElement.getAttribute("data-initial-count")
+  );
   let currentCountCrew = parseInt(
     requestCountElementCrew.getAttribute("data-initial-count")
   );
 
-  if (currentCountCrew == 0) {
-    requestCountElementCrew.style.display = "none";
-  } else {
-    requestCountElementCrew.style.display = "block";
-  }
+  requestCountElement.style.display = currentCount == 0 ? "none" : "block";
+  requestCountElementCrew.style.display =
+    currentCountCrew == 0 ? "none" : "block";
+
+  const sharedEventsContainer = document.getElementById("shared-events");
+  const sharedEventsIndicator = document.getElementById(
+    "shared-events-indicator"
+  );
+  // on click function for the shared event
+  sharedEventsContainer.addEventListener("click", (e) => {
+    sharedEventsIndicator.style.display = "none";
+  });
 
   const socket = new WebSocket(`ws://${window.location.host}/social/`);
 
@@ -38,106 +39,104 @@ document.addEventListener("DOMContentLoaded", function () {
   socket.onclose = function () {
     console.log("WebSocket closed for crew requests");
 
-    // Create the overlay
-    const overlay = document.createElement("div");
-    overlay.style.position = "fixed";
-    overlay.style.top = "0";
-    overlay.style.left = "0";
-    overlay.style.width = "100%";
-    overlay.style.height = "100%";
-    overlay.style.backgroundColor = "rgba(0, 0, 0, 0.5)";
-    overlay.style.display = "flex";
-    overlay.style.justifyContent = "center";
-    overlay.style.alignItems = "center";
-    overlay.style.zIndex = "9999";
-
-    // Create the pop-up container
-    const popup = document.createElement("div");
-    popup.style.position = "relative";
-    popup.style.width = "400px";
-    popup.style.backgroundColor = "#fff";
-    popup.style.borderRadius = "10px";
-    popup.style.boxShadow = "0 4px 8px rgba(0, 0, 0, 0.2)";
-    popup.style.padding = "20px";
-    popup.style.textAlign = "center";
-
-    // Create the close button
-    const closeButton = document.createElement("button");
-    closeButton.innerHTML = "&times;";
-    closeButton.style.position = "absolute";
-    closeButton.style.top = "10px";
-    closeButton.style.right = "10px";
-    closeButton.style.border = "none";
-    closeButton.style.background = "none";
-    closeButton.style.fontSize = "20px";
-    closeButton.style.cursor = "pointer";
-
-    // Add close functionality
-    closeButton.onclick = function () {
-      document.body.removeChild(overlay);
-    };
-
-    // Add content to the pop-up
-    popup.innerHTML = `
-      <h4><strong>Live Updates are off!</strong></h4>
+    // 1) Create the HTML for your overlay + popup
+    const overlayHTML = `
+      <div id="crew-updates-overlay" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-[9999]">
+        <div class="relative w-[400px] bg-white rounded-[10px] shadow-lg p-[20px] text-center">
+          <button id="closeOverlayBtn" 
+                  class="absolute top-[10px] right-[10px] text-2xl border-none bg-none cursor-pointer">
+            &times;
+          </button>
+              <h4><strong>Live Updates are off!</strong></h4>
+        </div>
+      </div>
     `;
-    popup.appendChild(closeButton);
 
-    // Add pop-up to the overlay
-    overlay.appendChild(popup);
+    // 2) Insert this HTML into the DOM
+    document.body.insertAdjacentHTML("beforeend", overlayHTML);
 
-    // Append the overlay to the body
-    document.body.appendChild(overlay);
+    // 3) Attach close functionality to the button
+    document.getElementById("closeOverlayBtn").onclick = function () {
+      document.getElementById("crew-updates-overlay").remove();
+    };
   };
 
   socket.onmessage = function (event) {
     const data = JSON.parse(event.data);
 
-    if (data.action == "send") {
-      currentCount += 1;
-      requestCountElement.style.display = "block";
-
-      if (currentCount > 9) {
-        requestCountElement.textContent = "9+";
-      } else {
-        requestCountElement.textContent = currentCount;
-      }
-      renderFriendRequest(data.friend_request);
-    } else if (data.action == "cancel") {
-      currentCount -= 1;
-      if (currentCount <= 0) {
-        requestCountElement.style.display = "none";
-      } else {
+    switch (data.action) {
+      case "send":
+        currentCount += 1;
         requestCountElement.style.display = "block";
-        requestCountElement.textContent = currentCount;
-      }
-      removeFriendRequest(data.friend_request, currentCount);
-    } else if (data.action == "remove") {
-      location.reload();
-    } else if (data.action == "sendCrew") {
-      currentCountCrew += 1;
-      requestCountElementCrew.style.display = "block";
 
-      if (currentCountCrew > 9) {
-        requestCountElementCrew.textContent = "9+";
-      } else {
-        requestCountElementCrew.textContent = currentCountCrew;
-      }
-      renderCrewRequest(data.crew_request, currentCountCrew);
-    } else if (data.action == "kickCrew") {
-      currentCountCrew -= 1;
-      if (currentCountCrew <= 0) {
-        requestCountElementCrew.style.display = "none";
-      } else {
+        if (currentCount > 9) {
+          requestCountElement.textContent = "9+";
+        } else {
+          requestCountElement.textContent = currentCount;
+        }
+        renderFriendRequest(data.friend_request);
+        break;
+
+      case "cancel":
+        currentCount -= 1;
+        if (currentCount <= 0) {
+          requestCountElement.style.display = "none";
+        } else {
+          requestCountElement.style.display = "block";
+          requestCountElement.textContent = currentCount;
+        }
+        removeFriendRequest(data.friend_request, currentCount);
+        break;
+
+      case "remove":
+        location.reload();
+        break;
+
+      case "sendCrew":
+        currentCountCrew += 1;
         requestCountElementCrew.style.display = "block";
-        requestCountElementCrew.textContent = currentCountCrew;
-      }
-      removeCrew(data.crew_request, currentCountCrew);
-    } else if (
-      data.action == "declineCrewRequest" ||
-      data.action == "acceptCrewRequest"
-    ) {
-      location.reload();
+
+        if (currentCountCrew > 9) {
+          requestCountElementCrew.textContent = "9+";
+        } else {
+          requestCountElementCrew.textContent = currentCountCrew;
+        }
+        renderCrewRequest(data.crew_request, currentCountCrew);
+        break;
+
+      case "kickCrew":
+        currentCountCrew -= 1;
+        if (currentCountCrew <= 0) {
+          requestCountElementCrew.style.display = "none";
+        } else {
+          requestCountElementCrew.style.display = "block";
+          requestCountElementCrew.textContent = currentCountCrew;
+        }
+        removeCrew(data.crew_request, currentCountCrew);
+        break;
+
+      case "declineCrewRequest":
+      case "acceptCrewRequest":
+        location.reload();
+        break;
+
+      case "shared_event":
+        console.log("Shared event received");
+        console.log("Shared event received");
+        console.log("Shared event received");
+        const sharedTab = document.querySelector(
+          '.social-tab[data-tab="shared"]'
+        );
+        const isSharedTabActive = sharedTab.classList.contains("tab-active");
+        if (!isSharedTabActive) {
+          sharedEventsIndicator.style.display = "block";
+        }
+        renderSharedEvent(data.shared_event);
+        break;
+
+      default:
+        console.error("Unknown action:", data.action);
+        break;
     }
   };
 });
@@ -273,4 +272,27 @@ const removeCrew = (request, currentCount) => {
       emptyCrewRequestsHTML
     );
   }
+};
+
+const renderSharedEvent = (request) => {
+  const emptyContainer = document.getElementById("empty-shared-events");
+  const sharedEventsContainer = document.getElementById("sharedEventsWithMe");
+  emptyContainer?.remove();
+
+  const sharedEventHTML = `
+    <a target="_blank" href="/event/${request.event_id}/" class="category-event-card hover:category-image hover:scale-95 transform transition duration-300 flex flex-col justify-center items-center cursor-pointer overflow-hidden p-[10px] text-black">
+        <div class="category-image w-full rounded-2xl shadow-custom-shadow-3">
+            <img src="${request.header_photo}" alt="" class="w-full h-[200px] rounded-2xl rounded-b-none object-cover">
+        </div>
+        <div class="category-event-name font-Wanted-SemiBold text-Base flex flex-col justify-center items-start gap-1 w-full border border-custom-rgba5 rounded-bl-2xl rounded-br-2xl shadow-custom-shadow-3 border-t-2 px-5 p-2">
+            <h2 id="eventTitle" class="whitespace-nowrap overflow-hidden text-ellipsis w-full text-left text-xl">${request.event}</h2>
+            <div class="eventSubInfo flex flex-col items-start gap-[1px] w-full font-Wanted-Variable text-customGray5">
+                <p id="eventHost" class="flex flex-row justify-start">Shared by @${request.sender.username}</p>
+                <p id="eventDate" class="w-full flex justify-end font-Wanted-Bold text-Large">${request.date}</p>
+            </div>
+        </div>
+    </a>
+  `;
+
+  sharedEventsContainer.insertAdjacentHTML("beforeend", sharedEventHTML);
 };
