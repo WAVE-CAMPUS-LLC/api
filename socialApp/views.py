@@ -73,9 +73,10 @@ def socialHomeView(request):
     my_shared_events = SharedEvent.objects.filter(sender=user).select_related(
         "event", "receiver", "crew"
     )
-    shared_with_me = SharedEvent.objects.filter(receiver=user)
-    print("This is the user: ", user)
-
+    shared_with_me = SharedEvent.objects.filter(receiver=user).select_related(
+        "event", "sender", "crew"
+    )
+    
     if user.user.groups.filter(name="Host").exists():
         isHost = True
     else:

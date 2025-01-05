@@ -22,7 +22,7 @@ from socialApp.models import FriendRequest, Crew
 from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
 from eventTicketsApp.models import RSVPTicket, PaidFreeTicket
-from accountManagementApp.models import UserProfile
+from accountManagementApp.models import FavoriteEvent, UserProfile
 from .forms import RSVPForm
 from collegeManagementApp.models import OrganizationMembership
 from eventTicketsApp.views import generateTicket
@@ -248,6 +248,7 @@ def eventDetailsView(request, eventId, token=None):
         # Anonymous users cannot bypass age restrictions
         user_age = None
         
+    isFavoriteEvent = FavoriteEvent.objects.filter(user=user, event=event).exists()
 
     if request.method == "POST":
         action = request.POST.get("eventAction")
@@ -271,6 +272,7 @@ def eventDetailsView(request, eventId, token=None):
                         "existingRSVP": True,
                         "friends": user_friends,
                         "crews": user_crews,
+                        "isFavoriteEvent": isFavoriteEvent,
                     },
                 )
 
@@ -303,6 +305,7 @@ def eventDetailsView(request, eventId, token=None):
                             "newRSVP": True,
                             "friends": user_friends,
                             "crews": user_crews,
+                            "isFavoriteEvent": isFavoriteEvent,
                         },
                     )
 
@@ -342,7 +345,7 @@ def eventDetailsView(request, eventId, token=None):
                     },
                 )
             else:
-                messages.warning(request, f"Event already shared with {friend}")
+                messages.error(request, f"Event already shared with {friend}")
             return redirect("core:eventDetails", eventId=event.eventId)
 
         elif action == "shareEventWithCrew":
@@ -361,6 +364,27 @@ def eventDetailsView(request, eventId, token=None):
 
             messages.success(request, f"Event shared with {crew.name}")
             return redirect("core:eventDetails", eventId=event.eventId)
+        
+        elif action == "favoriteEvent":
+            favorite_event, created = FavoriteEvent.objects.get_or_create(
+                user=user, event=event
+            )
+            print(favorite_event, created)
+            print(favorite_event, created)
+            print(favorite_event, created)
+            print(favorite_event, created)
+            print(favorite_event, created)
+                
+        
+        elif action == "unfavoriteEvent":
+            favorite_event = FavoriteEvent.objects.filter(user=user, event=event).first()
+            print(favorite_event)
+            print(favorite_event)
+            print(favorite_event)
+
+            if favorite_event:
+                favorite_event.delete()
+            
 
 
     # if event.age_restriction:
@@ -392,6 +416,7 @@ def eventDetailsView(request, eventId, token=None):
                     "paidFreeTickets": eventPaidFreeTickets,
                     "friends": user_friends,
                     "crews": user_crews,
+                    "isFavoriteEvent": isFavoriteEvent,
                 },
             )
         else:
@@ -413,6 +438,7 @@ def eventDetailsView(request, eventId, token=None):
                     "paidFreeTickets": eventPaidFreeTickets,
                     "friends": user_friends,
                     "crews": user_crews,
+                    "isFavoriteEvent": isFavoriteEvent,
                 },
             )
         else:
@@ -442,6 +468,7 @@ def eventDetailsView(request, eventId, token=None):
                     "paidFreeTickets": eventPaidFreeTickets,
                     "friends": user_friends,
                     "crews": user_crews,
+                    "isFavoriteEvent": isFavoriteEvent,
                 },
             )
         else:
@@ -466,6 +493,7 @@ def eventDetailsView(request, eventId, token=None):
                 "paidFreeTickets": eventPaidFreeTickets,
                 "friends": user_friends,
                 "crews": user_crews,
+                "isFavoriteEvent": isFavoriteEvent,
             },
         )
 

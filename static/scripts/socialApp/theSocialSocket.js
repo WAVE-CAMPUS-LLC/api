@@ -121,13 +121,11 @@ document.addEventListener("DOMContentLoaded", function () {
         break;
 
       case "shared_event":
-        console.log("Shared event received");
-        console.log("Shared event received");
-        console.log("Shared event received");
         const sharedTab = document.querySelector(
           '.social-tab[data-tab="shared"]'
         );
-        const isSharedTabActive = sharedTab.classList.contains("tab-active");
+        const isSharedTabActive =
+          sharedTab.classList.contains("social-tab-active");
         if (!isSharedTabActive) {
           sharedEventsIndicator.style.display = "block";
         }
@@ -276,10 +274,13 @@ const removeCrew = (request, currentCount) => {
 
 const renderSharedEvent = (request) => {
   const emptyContainer = document.getElementById("empty-shared-events");
-  const sharedEventsContainer = document.getElementById("sharedEventsWithMe");
   emptyContainer?.remove();
 
-  const sharedEventHTML = `
+  let sharedEventHTML;
+  let sharedEventsContainer = document.getElementById("sharedEventsWithMe");
+
+  if (sharedEventsContainer) {
+    sharedEventHTML = `
     <a target="_blank" href="/event/${request.event_id}/" class="category-event-card hover:category-image hover:scale-95 transform transition duration-300 flex flex-col justify-center items-center cursor-pointer overflow-hidden p-[10px] text-black">
         <div class="category-image w-full rounded-2xl shadow-custom-shadow-3">
             <img src="${request.header_photo}" alt="" class="w-full h-[200px] rounded-2xl rounded-b-none object-cover">
@@ -293,6 +294,25 @@ const renderSharedEvent = (request) => {
         </div>
     </a>
   `;
+  } else {
+    sharedEventsContainer = document.getElementById("sharedWithMe");
+    sharedEventHTML = `
+    <div id="sharedEventsWithMe" class="grid grid-cols-1 xxsm:grid-cols-2 md:grid-cols-3 3xl:grid-cols-4 gap-5">
+      <a target="_blank" href="/event/${request.event_id}/" class="category-event-card hover:category-image hover:scale-95 transform transition duration-300 flex flex-col justify-center items-center cursor-pointer overflow-hidden p-[10px] text-black">
+          <div class="category-image w-full rounded-2xl shadow-custom-shadow-3">
+              <img src="${request.header_photo}" alt="" class="w-full h-[200px] rounded-2xl rounded-b-none object-cover">
+          </div>
+          <div class="category-event-name font-Wanted-SemiBold text-Base flex flex-col justify-center items-start gap-1 w-full border border-custom-rgba5 rounded-bl-2xl rounded-br-2xl shadow-custom-shadow-3 border-t-2 px-5 p-2">
+              <h2 id="eventTitle" class="whitespace-nowrap overflow-hidden text-ellipsis w-full text-left text-xl">${request.event}</h2>
+              <div class="eventSubInfo flex flex-col items-start gap-[1px] w-full font-Wanted-Variable text-customGray5">
+                  <p id="eventHost" class="flex flex-row justify-start">Shared by @${request.sender.username}</p>
+                  <p id="eventDate" class="w-full flex justify-end font-Wanted-Bold text-Large">${request.date}</p>
+              </div>
+          </div>
+      </a>
+    </div>
+    `;
+  }
 
   sharedEventsContainer.insertAdjacentHTML("beforeend", sharedEventHTML);
 };

@@ -334,3 +334,15 @@ class UserProfile(models.Model):
 
     def get_shared_events(self):
         return SharedEvent.objects.filter(receiver=self.user)
+
+class FavoriteEvent(models.Model):
+    user = models.ForeignKey(
+        UserProfile,
+        on_delete=models.CASCADE,
+        related_name="favorite_events",
+    )
+    event = models.ForeignKey(
+        Event,
+        on_delete=models.CASCADE,
+        related_name="favorited_by",
+    )

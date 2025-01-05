@@ -14,6 +14,7 @@
 <script type="text/javascript" src="{% static "scripts/adminDashboardApp/applications/applications.js" %}" defer></script>
 <script type="text/javascript" src="{% static "scripts/coreApp/eventDetails/shareEvent.js" %}" defer></script>
 <script type="text/javascript" src="{% static "scripts/coreApp/eventDetails/ticketCount.js" %}" defer nonce="{{ nonce }}"></script>
+<script type="text/javascript" src="{% static "scripts/coreApp/eventDetails/favoriteEvent.js" %}" defer></script>
 {% endblock script %}
 
 
@@ -47,11 +48,35 @@
             </p>
 
             {% if request.user.is_authenticated %}
-            <div class="flex items-start justify-center">
-                <button id="shareEventButton" type="button" class="border-3 border-green bg-white rounded-full py-3 px-3 cursor-pointer" role="button">
-                    <img src="{% static "/images/coreApp/eventDetails/share-event.svg" %}" class="size-5" />
-                </button>
-            </div>
+                <div class="flex items-start justify-center">
+                    <button id="shareEventButton" type="button" class="border-3 border-green bg-white rounded-full py-3 px-3 cursor-pointer" role="button">
+                        <img src="{% static "/images/coreApp/eventDetails/share-event.svg" %}" class="size-5" />
+                    </button>
+                </div>
+
+                <input type="hidden" id="isFavoriteEvent" value="{{ isFavoriteEvent }}">
+
+                <form method="POST" class="hidden" id="favoriteEventForm">
+                    {% csrf_token %}
+                    <div class="flex items-start justify-center">
+                        <input type="hidden" name="eventAction" value="favoriteEvent">
+                        <input type="hidden" name="eventId" value="{{ event.eventId }}">
+                        <button type="submit" id="favoriteEventButton" class="border-3 border-green bg-white rounded-full py-3 px-3 cursor-pointer" role="button">
+                            <img src="{% static "/images/coreApp/eventDetails/outline-heart.svg" %}" class="size-7" />
+                        </button>
+                    </div>
+                </form>
+
+                <form method="POST" class="hidden" id="unFavoriteEventForm">
+                    {% csrf_token %}
+                    <div class="flex items-start justify-center">
+                        <input type="hidden" name="eventAction" value="unfavoriteEvent">
+                        <input type="hidden" name="eventId" value="{{ event.eventId }}">
+                        <button type="submit" id="unFavoriteEventButton" class="border-3 border-green bg-white rounded-full py-3 px-3 cursor-pointer" role="button">
+                            <img src="{% static "/images/coreApp/eventDetails/filled-heart.svg" %}" class="size-6" />
+                        </button>
+                    </div>
+                </form>
             {% endif %}
         </div>
     </div>
@@ -358,66 +383,69 @@
                     <div class="shareTab cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="shareCrewList">Crews</div>
                 </div>
 
-                <form method="POST">
-                    {% csrf_token %}
-                    <div id="shareFriendList" class="shareTabInformation">
-                        {% if friends %}
-                        <div class="flex flex-col gap-4">
-                            {% for friend in friends %}
-                            <div class="flex flex-row justify-between w-full items-center">
-                                <div class="col-span-2 flex flex-row gap-4 items-center">
-                                    <div>
-                                        <img src="{{ friend.profile_photo.url }}" class="rounded-full size-10" />
-                                    </div>
-                                    <div>
-                                        <p class="font-Wanted-Medium text-Medium text-black">{{ friend.user.first_name }} {{ friend.user.last_name }}</p>
-                                    </div>
+                <div id="shareFriendList" class="shareTabInformation">
+                    {% if friends %}
+                    <div class="flex flex-col gap-4">
+                        {% for friend in friends %}
+                        <div class="flex flex-row justify-between w-full items-center">
+                            <div class="col-span-2 flex flex-row gap-4 items-center">
+                                <div>
+                                    <img src="{{ friend.profile_photo.url }}" class="rounded-full size-10" />
                                 </div>
                                 <div>
+                                    <p class="font-Wanted-Medium text-Medium text-black">{{ friend.user.first_name }} {{ friend.user.last_name }}</p>
+                                </div>
+                            </div>
+                            <div>
+                                <form method="POST">
+                                    {% csrf_token %}
                                     <input type="hidden" name="shareFriendUsername" value="{{ friend.user.username }}">
                                     <button type="submit" name="eventAction" value="shareEventWithFriend"  class="shareFriendButton border-3 hover:bg-green border-green bg-gradient-to-br bg-gradient-start bg-gradient-end font-Wanted-Bold text-white rounded-xl py-2 px-5 cursor-pointer" role="button">
                                         Share
                                     </button>
-                                </div>
+                                </form>
                             </div>
-                            {% endfor %}
                         </div>
-                        {% else %}
-                        <div class="emptyContainer h-full w-full rounded-[20px] py-[70px] flex justify-center flex-col gap-[10px] items-center bg-[rgba(146,146,146,0.096)]">
-                            <div>
-                                <img class="w-[30px] after-xsm:w-[40px] sm:w-[50px] md:w-[60px]" src="{% static "/images/coreApp/eventDetails/friends.svg" %}" />
-                            </div>
-                            <p class="font-Wanted-Variable text-[10px] after-xsm:text-[12px] sm:text-[14px] md:text-[16.5px] text-black text-center">No friends to share events with. Invite your friends!</p>
-                        </div>
-                        {% endif %}
+                        {% endfor %}
                     </div>
-                    <div id="shareCrewList" class="shareTabInformation">
-                        {% if crews %}
-                        <div class="flex flex-col gap-4">
-                            {% for crew in crews %}
-                            <div class="flex flex-row justify-between w-full items-center">
-                                <div class="flex justify-start items-center">
-                                    <p class="font-Wanted-Medium text-Medium text-black">{{ crew.name }}</p>
-                                </div>
-                                <div>
+                    {% else %}
+                    <div class="emptyContainer h-full w-full rounded-[20px] py-[70px] flex justify-center flex-col gap-[10px] items-center bg-[rgba(146,146,146,0.096)]">
+                        <div>
+                            <img class="w-[30px] after-xsm:w-[40px] sm:w-[50px] md:w-[60px]" src="{% static "/images/coreApp/eventDetails/friends.svg" %}" />
+                        </div>
+                        <p class="font-Wanted-Variable text-[10px] after-xsm:text-[12px] sm:text-[14px] md:text-[16.5px] text-black text-center">No friends to share events with. Invite your friends!</p>
+                    </div>
+                    {% endif %}
+                </div>
+                <div id="shareCrewList" class="shareTabInformation">
+                    {% if crews %}
+                    <div class="flex flex-col gap-4">
+                        {% for crew in crews %}
+                        <div class="flex flex-row justify-between w-full items-center">
+                            <div class="flex justify-start items-center">
+                                <p class="font-Wanted-Medium text-Medium text-black">{{ crew.name }}</p>
+                            </div>
+                            <div>
+                                <form method="POST">
+                                    {% csrf_token %}
                                     <input type="hidden" name="shareCrewId" value="{{ crew.crewId }}">
                                     <button type="submit" name="eventAction" value="shareEventWithCrew" class="shareFriendButton border-3 hover:bg-green border-green bg-gradient-to-br bg-gradient-start bg-gradient-end font-Wanted-Bold text-white rounded-xl py-2 px-5 cursor-pointer" role="button">
                                         Share
                                     </button>
-                                </div>
+                                </form>
                             </div>
-                            {% endfor %}
                         </div>
-                        {% else %}
-                        <div class="emptyContainer h-full w-full rounded-[20px] py-[70px] flex justify-center flex-col gap-[10px] items-center bg-[rgba(146,146,146,0.096)]">
-                            <div>
-                                <img class="w-[30px] after-xsm:w-[40px] sm:w-[50px] md:w-[60px]" src="{% static "/images/coreApp/eventDetails/friends.svg" %}" />
-                            </div>
-                            <p class="font-Wanted-Variable text-[10px] after-xsm:text-[12px] sm:text-[14px] md:text-[16.5px] text-black text-center">Currently nothing to be displayed.</p>
-                        </div>
-                        {% endif %}                        
+                        {% endfor %}
                     </div>
-                </form>
+                    {% else %}
+                    <div class="emptyContainer h-full w-full rounded-[20px] py-[70px] flex justify-center flex-col gap-[10px] items-center bg-[rgba(146,146,146,0.096)]">
+                        <div>
+                            <img class="w-[30px] after-xsm:w-[40px] sm:w-[50px] md:w-[60px]" src="{% static "/images/coreApp/eventDetails/friends.svg" %}" />
+                        </div>
+                        <p class="font-Wanted-Variable text-[10px] after-xsm:text-[12px] sm:text-[14px] md:text-[16.5px] text-black text-center">Currently nothing to be displayed.</p>
+                    </div>
+                    {% endif %}                        
+                </div>
             </div>
         </div>
     </div>
