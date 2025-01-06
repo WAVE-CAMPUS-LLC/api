@@ -34,7 +34,9 @@ SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['.vercel.app', 'localhost']
+WSGI_APPLICATION = 'wave_v1.wsgi.app'
+
 
 # Stripe API Key (Test)
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SK")
