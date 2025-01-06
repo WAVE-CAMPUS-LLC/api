@@ -165,7 +165,7 @@ function renderFriendRequest(request) {
                 <input type="hidden" name="csrfmiddlewaretoken" value="${csrfToken}">
                 <input type="hidden" name="friend_request_id" value="${request.requestId}">
                 <input type="hidden" name="action" value="acceptRequest">  
-                <button class="accept bg-[red] flex justify-center font-Wanted-Bold text-white rounded-xl py-2 px-4" type="submit" role="button">
+                <button class="accept bg-[#0f960f] flex justify-center font-Wanted-Bold text-white rounded-xl py-2 px-4" type="submit" role="button">
                     Accept
                 </button>
             </form>
@@ -231,7 +231,7 @@ const renderCrewRequest = (request, currentCount) => {
         <form method="POST" class="flex flex-row gap-2 justify-between">
           <input type="hidden" name="csrfmiddlewaretoken" value="${csrfToken}">
           <input type="hidden" name="crew_id" value="${request.crewId}" />
-          <button class="accept bg-[red] flex justify-center font-Wanted-Bold text-white rounded-xl py-2 px-4" type="submit" name="action" value="joinCrew" role="button">
+          <button class="accept bg-[#0f960f] flex justify-center font-Wanted-Bold text-white rounded-xl py-2 px-4" type="submit" name="action" value="joinCrew" role="button">
             Join
           </button>
           <button class="decline flex justify-center font-Wanted-Bold text-white bg-[red] rounded-xl py-2 px-4" type="submit" name="action" value="declineCrew" role="button">

@@ -75,7 +75,7 @@ My Social @{{ user.username }} — WAVE.
                     <li role="button" type="button" class="social-tab block cursor-pointer border-l-4 pl-4 -ml-px border-transparent hover:border-green" data-tab="invitations">
                         <div id="crew-invitations" class="w-full flex justify-between items-center">
                             <p>Crew Invites</p>
-                            <span id="number-of-requests-crew" data-initial-count="{{ pending_crew_requests|length }}" class="hidden font-Wanted-Variable text-white bg-[red] rounded-full px-2 py-1">
+                            <span id="number-of-requests-crew" data-initial-count="{{ pending_crew_requests|length|default_if_none:'0' }}" class="hidden font-Wanted-Variable text-white bg-[red] rounded-full px-2 py-1">
                             {% if pending_crew_requests %}
                                 {% if pending_crew_requests|length > 9 %}
                                     9+

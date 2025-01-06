@@ -56,6 +56,7 @@
 
                 <input type="hidden" id="isFavoriteEvent" value="{{ isFavoriteEvent }}">
 
+                
                 <form method="POST" class="hidden" id="favoriteEventForm">
                     {% csrf_token %}
                     <div class="flex items-start justify-center">
@@ -73,7 +74,7 @@
                         <input type="hidden" name="eventAction" value="unfavoriteEvent">
                         <input type="hidden" name="eventId" value="{{ event.eventId }}">
                         <button type="submit" id="unFavoriteEventButton" class="border-3 border-green bg-white rounded-full py-3 px-3 cursor-pointer" role="button">
-                            <img src="{% static "/images/coreApp/eventDetails/filled-heart.svg" %}" class="size-6" />
+                            <img src="{% static "/images/coreApp/eventDetails/filled-heart.svg" %}" class="size-6 " />
                         </button>
                     </div>
                 </form>

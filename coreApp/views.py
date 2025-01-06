@@ -367,7 +367,6 @@ def eventDetailsView(request, eventId, token=None):
         
         elif action == "favoriteEvent":
             user.favorite_events.add(event)
-                
         
         elif action == "unfavoriteEvent":
             user.favorite_events.remove(event)
