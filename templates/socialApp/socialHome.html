@@ -75,7 +75,7 @@ My Social @{{ user.username }} — WAVE.
                     <li role="button" type="button" class="social-tab block cursor-pointer border-l-4 pl-4 -ml-px border-transparent hover:border-green" data-tab="invitations">
                         <div id="crew-invitations" class="w-full flex justify-between items-center">
                             <p>Crew Invites</p>
-                            <span id="number-of-requests-crew" data-initial-count="{{ pending_crew_requests|length }}" class="hidden font-Wanted-Variable text-white bg-[red] rounded-full px-2 py-1">
+                            <span id="number-of-requests-crew" data-initial-count="{{ pending_crew_requests|length|default_if_none:'0' }}" class="hidden font-Wanted-Variable text-white bg-[red] rounded-full px-2 py-1">
                             {% if pending_crew_requests %}
                                 {% if pending_crew_requests|length > 9 %}
                                     9+
@@ -90,7 +90,12 @@ My Social @{{ user.username }} — WAVE.
                         <p>My Crews</p>
                     </li>
                     <li role="button" type="button" class="social-tab block cursor-pointer border-l-4 pl-4 -ml-px border-transparent hover:border-green" data-tab="shared">
-                        <p>Shared</p>
+                        <div id="shared-events" class="w-full flex justify-between items-center">
+                            <p>Shared</p>
+                            <span id="shared-events-indicator" class="hidden font-Wanted-Variable text-white bg-[red] rounded-full px-2 py-1">
+                                !
+                            </span>
+                        </div>
                     </li>
                 </ul>
             </div>
@@ -485,7 +490,7 @@ My Social @{{ user.username }} — WAVE.
                         </div>
                         <div class="sharedEventsWithTabContainer" id="sharedWithMe">
                             {% if shared_with_me %}
-                            <div class="grid grid-cols-1 xxsm:grid-cols-2 md:grid-cols-3 3xl:grid-cols-4 gap-5">
+                            <div id="sharedEventsWithMe" class="grid grid-cols-1 xxsm:grid-cols-2 md:grid-cols-3 3xl:grid-cols-4 gap-5">
                                 {% for shared_event in shared_with_me %}
                                     {% with shared_event.event as event %}
                                     <a target="_blank" href="{% url "core:eventDetails" eventId=event.eventId %}" class="category-event-card hover:category-image hover:scale-95 transform transition duration-300 flex flex-col justify-center items-center cursor-pointer overflow-hidden p-[10px] text-black">
@@ -504,7 +509,7 @@ My Social @{{ user.username }} — WAVE.
                                 {% endfor %}
                             </div>
                             {% else %}
-                            <div class="emptyContainer w-full rounded-[20px] py-[70px] flex justify-center flex-col gap-[10px] items-center bg-[rgba(146,146,146,0.096)]">
+                            <div id="empty-shared-events" class="emptyContainer w-full rounded-[20px] py-[70px] flex justify-center flex-col gap-[10px] items-center bg-[rgba(146,146,146,0.096)]">
                                 <div>
                                     <img class="w-[30px] after-xsm:w-[40px] sm:w-[50px] md:w-[60px]" src="{% static "/images/collegeManagementApp/collegeInformation/empty-listing.svg" %}" />
                                 </div>

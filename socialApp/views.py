@@ -73,10 +73,10 @@ def socialHomeView(request):
     my_shared_events = SharedEvent.objects.filter(sender=user).select_related(
         "event", "receiver", "crew"
     )
-    shared_with_me = SharedEvent.objects.filter(
-        Q(receiver=user) | Q(crew__members=user.user)
-    ).select_related("event", "sender", "crew")
-
+    shared_with_me = SharedEvent.objects.filter(receiver=user).select_related(
+        "event", "sender", "crew"
+    )
+    
     if user.user.groups.filter(name="Host").exists():
         isHost = True
     else:
@@ -747,3 +747,34 @@ def kick_member(request, crewId, member_username):
     #     else:
     #         no_results_html = render_to_string('socialApp/extras/no-result.html')
     #         return JsonResponse({'results_html': [], 'no_results': True, 'no_results_html': no_results_html})
+
+def send_social_socket_message(shared_event, receiver, message, action):
+    try:
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            f"user_{receiver.user.id}",
+            {
+                "type": "social_update",
+                "data": {
+                    "message": message,
+                    "action": action,
+                    "shared_event": {
+                        "event": shared_event.event.name,
+                        "event_id": shared_event.event.eventId,
+                        "header_photo": shared_event.event.header_photo.url,
+                        "date": shared_event.event.date,
+                        "sender": {
+                            "username": shared_event.sender.user.username,
+                        },
+                        "crew": {
+                            "name": shared_event.crew.name,
+                            "crew_id": shared_event.crew.crewId,
+                        },
+                    },
+                },
+            },
+        )
+    except Exception as e:
+        print(e)
+        return False
+    return True

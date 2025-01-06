@@ -1,4 +1,6 @@
 from django.shortcuts import get_object_or_404, render, redirect
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 from django.http import JsonResponse
 import random
 from django.db.models import Count, Q, Exists, OuterRef
@@ -6,6 +8,8 @@ from django.http import JsonResponse
 from datetime import datetime, timedelta, date
 from django.contrib import messages
 from django.utils.timezone import now
+
+from socialApp.views import send_social_socket_message
 from .models import Visitor
 from authenticationApp.models import CustomUser
 from eventManagementApp.models import (
@@ -236,6 +240,8 @@ def eventDetailsView(request, eventId, token=None):
     else:
         # Anonymous users cannot bypass age restrictions
         user_age = None
+        
+    isFavoriteEvent = user.favorite_events.filter(eventId=event.eventId).exists()
 
     if request.method == "POST":
         action = request.POST.get("eventAction")
@@ -259,6 +265,7 @@ def eventDetailsView(request, eventId, token=None):
                         "existingRSVP": True,
                         "friends": user_friends,
                         "crews": user_crews,
+                        "isFavoriteEvent": isFavoriteEvent,
                     },
                 )
 
@@ -291,6 +298,7 @@ def eventDetailsView(request, eventId, token=None):
                             "newRSVP": True,
                             "friends": user_friends,
                             "crews": user_crews,
+                            "isFavoriteEvent": isFavoriteEvent,
                         },
                     )
 
@@ -305,9 +313,32 @@ def eventDetailsView(request, eventId, token=None):
             )
             user = get_object_or_404(UserProfile, user=myUserAccount)
 
-            SharedEvent.objects.get_or_create(sender=user, receiver=friend, event=event)
+            shared_event, created = SharedEvent.objects.get_or_create(sender=user, receiver=friend, event=event)
 
-            print(f"Event shared with {friend}")
+            if created:
+                messages.success(request, f"Event shared with {friend}")
+                channel_layer = get_channel_layer()
+                async_to_sync(channel_layer.group_send)(
+                    f"user_{friend.user.id}",
+                    {
+                        "type": "social_update",
+                        "data": {
+                            "message": "Event shared with friend",
+                            "action": "shared_event",
+                            "shared_event": {
+                                "event": event.title,
+                                "event_id": str(event.eventId),
+                                "header_photo": event.header_photo.url,
+                                "date": event.date.strftime("%b. %d, %Y"),
+                                "sender": {
+                                    "username": shared_event.sender.user.username,
+                                },
+                            },
+                        },
+                    },
+                )
+            else:
+                messages.error(request, f"Event already shared with {friend}")
             return redirect("core:eventDetails", eventId=event.eventId)
 
         elif action == "shareEventWithCrew":
@@ -326,6 +357,13 @@ def eventDetailsView(request, eventId, token=None):
 
             messages.success(request, f"Event shared with {crew.name}")
             return redirect("core:eventDetails", eventId=event.eventId)
+        
+        elif action == "favoriteEvent":
+            user.favorite_events.add(event)
+        
+        elif action == "unfavoriteEvent":
+            user.favorite_events.remove(event)
+            
 
     # if event.age_restriction:
     #     if user_age is None or (
@@ -356,6 +394,7 @@ def eventDetailsView(request, eventId, token=None):
                     "paidFreeTickets": eventPaidFreeTickets,
                     "friends": user_friends,
                     "crews": user_crews,
+                    "isFavoriteEvent": isFavoriteEvent,
                 },
             )
         else:
@@ -377,6 +416,7 @@ def eventDetailsView(request, eventId, token=None):
                     "paidFreeTickets": eventPaidFreeTickets,
                     "friends": user_friends,
                     "crews": user_crews,
+                    "isFavoriteEvent": isFavoriteEvent,
                 },
             )
         else:
@@ -406,6 +446,7 @@ def eventDetailsView(request, eventId, token=None):
                     "paidFreeTickets": eventPaidFreeTickets,
                     "friends": user_friends,
                     "crews": user_crews,
+                    "isFavoriteEvent": isFavoriteEvent,
                 },
             )
         else:
@@ -430,6 +471,7 @@ def eventDetailsView(request, eventId, token=None):
                 "paidFreeTickets": eventPaidFreeTickets,
                 "friends": user_friends,
                 "crews": user_crews,
+                "isFavoriteEvent": isFavoriteEvent,
             },
         )
 
@@ -658,4 +700,5 @@ def get_client_ip(request):
         ip = x_forwarded_for.split(",")[0]
     else:
         ip = request.META.get("REMOTE_ADDR")
+
     return ip

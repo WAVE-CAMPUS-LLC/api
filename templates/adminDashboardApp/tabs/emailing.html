@@ -73,7 +73,7 @@ Emailing — WAVE. Management Dashboard
     
     <div id="emailModal" class="hidden bg-[rgba(0,0,0,0.037)] backdrop-blur-[2px] backdrop-saturate-[1.7] fixed top-0 left-0 right-0 bottom-0 z-[1005] w-full h-full cursor-default">
         <div class="emailModalBg w-full h-full flex justify-center items-center">
-            <form class="emailModalCard w-[60%] h-[90%] bg-white shadow-custom-shadow-2 rounded-[20px] p-[20px] pb-[50px] flex flex-col gap-[10px] overflow-x-auto" method="POST" action="{% url "waveAdmin:resend-emailing" %}">
+            <form class="emailModalCard w-[90%] md:w-[60%] h-[90%] bg-white shadow-custom-shadow-2 rounded-[20px] p-[20px] pb-[50px] flex flex-col gap-[10px] overflow-x-auto" method="POST" action="{% url "waveAdmin:resend-emailing" %}">
                 {% csrf_token %}
                 <div class="modalHeader w-full flex flex-col sm:flex-row justify-between items-center">
                     <h4 class="font-Wanted-Bold text-[25px] sm:text-[35px] xs:max-sm:text-center xs:max-sm:order-2">Compose an email</h4>

@@ -32,6 +32,7 @@ def profileView(request):
     userRequest = request.user
     blogItems = Blog.objects.filter(created_by=userRequest)
     userProfile = UserProfile.objects.get(user=userRequest)
+    favorite_events = userProfile.favorite_events.all()
     
 
     return render(
@@ -41,6 +42,7 @@ def profileView(request):
             "blogItems": blogItems,
             "userRequest": userRequest,
             "userProfile": userProfile,
+            "favoriteEvents": favorite_events,
         },
     )
 

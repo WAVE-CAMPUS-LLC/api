@@ -221,6 +221,10 @@ class UserProfile(models.Model):
     profile_qr_code = models.ImageField(
         upload_to="profile/qr_code/", null=True, blank=True
     )
+    
+    favorite_events = models.ManyToManyField(
+        Event, related_name="favorited_by", blank=True, null=True
+    )
 
     class Meta:
         default_permissions = ()
