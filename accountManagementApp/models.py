@@ -221,6 +221,10 @@ class UserProfile(models.Model):
     profile_qr_code = models.ImageField(
         upload_to="profile/qr_code/", null=True, blank=True
     )
+    
+    favorite_events = models.ManyToManyField(
+        Event, related_name="favorited_by", blank=True, null=True
+    )
 
     class Meta:
         default_permissions = ()
@@ -334,15 +338,3 @@ class UserProfile(models.Model):
 
     def get_shared_events(self):
         return SharedEvent.objects.filter(receiver=self.user)
-
-class FavoriteEvent(models.Model):
-    user = models.ForeignKey(
-        UserProfile,
-        on_delete=models.CASCADE,
-        related_name="favorite_events",
-    )
-    event = models.ForeignKey(
-        Event,
-        on_delete=models.CASCADE,
-        related_name="favorited_by",
-    )

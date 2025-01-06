@@ -22,7 +22,7 @@ from socialApp.models import FriendRequest, Crew
 from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
 from eventTicketsApp.models import RSVPTicket, PaidFreeTicket
-from accountManagementApp.models import FavoriteEvent, UserProfile
+from accountManagementApp.models import UserProfile
 from .forms import RSVPForm
 from collegeManagementApp.models import OrganizationMembership
 from eventTicketsApp.views import generateTicket
@@ -248,7 +248,7 @@ def eventDetailsView(request, eventId, token=None):
         # Anonymous users cannot bypass age restrictions
         user_age = None
         
-    isFavoriteEvent = FavoriteEvent.objects.filter(user=user, event=event).exists()
+    isFavoriteEvent = user.favorite_events.filter(eventId=event.eventId).exists()
 
     if request.method == "POST":
         action = request.POST.get("eventAction")
@@ -366,24 +366,11 @@ def eventDetailsView(request, eventId, token=None):
             return redirect("core:eventDetails", eventId=event.eventId)
         
         elif action == "favoriteEvent":
-            favorite_event, created = FavoriteEvent.objects.get_or_create(
-                user=user, event=event
-            )
-            print(favorite_event, created)
-            print(favorite_event, created)
-            print(favorite_event, created)
-            print(favorite_event, created)
-            print(favorite_event, created)
+            user.favorite_events.add(event)
                 
         
         elif action == "unfavoriteEvent":
-            favorite_event = FavoriteEvent.objects.filter(user=user, event=event).first()
-            print(favorite_event)
-            print(favorite_event)
-            print(favorite_event)
-
-            if favorite_event:
-                favorite_event.delete()
+            user.favorite_events.remove(event)
             
 
 
