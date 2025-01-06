@@ -15,98 +15,96 @@ Emailing — WAVE. Management Dashboard
 
 
 {% block header %}
-{% include "partials/nav-footer/nav/admin_nav.html" %}
+{% include "partials/nav-footer/nav/main_nav.html" %}
 {% endblock header %}
 
-{% block container_art %}
-<div id="container-art">
-    <div class="ticket-heading">
-        <div class="ticket-header">
-            <h3><a href="{% url 'waveAdmin:adminDashboard' %}">Management</a> > Emailing</h3>
-        </div>
-    </div>
-</div>
-{% endblock container_art %}
 
 
 
 
 {% block body %}
 <div id="content-container" class="flex flex-col gap-[70px] px-4 sm:px-6 md:px-[40px] pre-lg:px-[40px] lg:px-[100px] 2xl:px-48 3xl:px-96">
-    <div class="page-header">
+    <div id="pagination-display" class="flex flex-col pre-sm:flex-row gap-2 w-full items-center font-Wanted-Variable justify-start text-gray-300">
+        <a href="{% url "waveAdmin:adminDashboard" %}" class="text-green underline">Dashboard</a>
+        >
+        <a href="{% url "waveAdmin:adminDashboard" %}#productMarketing" class="text-green underline">Product Marketing</a>
+        >
+        <p class="font-Wanted-Medium text-black">Emailing</p>
+    </div>
+    <div class="page-header flex justify-between flex-row w-full items-center">
         <div class="page-heading">
-            <h2>Member Emailing</h2>
+            <h2 class="flex justify-center items-center font-Wanted-ExtraBold text-[30px] sm:text-[45px] text-black">Member Emailing</h2>
         </div>
     </div>
 
-    <div id="content-body">
-        <div class="search-filters">
-            <input type="search" placeholder="Find member by name or email" />
+    <div id="content-body" class="w-full flex flex-col gap-[30px]">
+        <div class="search-filters flex justify-end">
+            <input type="search" placeholder="Find member by name or email" class="xs:max-after-xsm:w-[80%] xxsm:w-[60%] sm:w-[40%] border-[1px] border-solid border-[rgba(130,130,130,0.204)] shadow-custom-shadow-8 rounded-[15px] p-[15px] text-[15px] font-Wanted-Regular" />
         </div>
 
-        <div class="user-display">
-            <div class="select-all-row">
+        <div class="user-display flex flex-col gap-[15px]">
+            <div class="select-all-row flex justify-between w-full">
                 <button type="button" role="button" class="emailUser" id="emailAllButton">Email All</button>
-                <button type="button" role="button" class="emailUser emailSelected" id="emailSelectedButton">Email Selected</button>
+                <button type="button" role="button" class="emailUser emailSelected hidden" id="emailSelectedButton">Email Selected</button>
             </div>
             {% for active in activeUsers %}
-            <div class="user-item">
-                <div class="firstSection">
-                    <button class="selectButton" type="button" role="button">
-                        <input type="checkbox" class="userCheckbox" data-email="{{ active.user.email }}" />
+            <div class="user-item grid grid-cols-2 md:grid-cols-3 gap-[15px]">
+                <div class="firstSection flex flex-row gap-[15px] items-center">
+                    <button class="selectButton border-none bg-none w-[20px] h-[20px]" type="button" role="button">
+                        <input type="checkbox" class="userCheckbox w-full h-full" data-email="{{ active.user.email }}" />
                     </button>
-                    <div class="user_Fullname">
-                        <p>{{ active.user.first_name }} {{ active.user.last_name }}</p>
+                    <div class="user_Fullname flex items-center">
+                        <p class="font-Wanted-Variable text-[18px] text-black">{{ active.user.first_name }} {{ active.user.last_name }}</p>
                     </div>
                 </div>
-                <div class="secondSection">
-                    <button type="button" class="emailUser singleEmailButton" data-email="{{ active.user.email }}">
+                <div class="secondSection flex justify-center xs:max-md:justify-end">
+                    <button type="button" class="emailUser singleEmailButton bg-[#008d95] p-[12px] rounded-[12px] text-white border-[1px] border-solid border-transparent font-Wanted-Variable text-[16px] cursor-pointer" data-email="{{ active.user.email }}">
                         Email
                     </button>
                 </div>
 
-                <div class="thirdSection">
-                    <p class="user_Email">{{ active.user.email }}</p>
+                <div class="thirdSection flex justify-start items-center xs:max-md:justify-center xs:max-md:col-span-3 xs:max-md:pb-[10px]">
+                    <p class="user_Email font-Wanted-Variable text-[18px] xs:max-sm:text-center text-black">{{ active.user.email }}</p>
                 </div>
             </div>
             {% endfor %}
         </div>
     </div>
     
-    <div id="emailModal">
-        <div class="emailModalBg">
-            <form class="emailModalCard" method="POST" action="{% url "waveAdmin:resend-emailing" %}">
+    <div id="emailModal" class="hidden bg-[rgba(0,0,0,0.037)] backdrop-blur-[2px] backdrop-saturate-[1.7] fixed top-0 left-0 right-0 bottom-0 z-[1005] w-full h-full cursor-default">
+        <div class="emailModalBg w-full h-full flex justify-center items-center">
+            <form class="emailModalCard w-[90%] md:w-[60%] h-[90%] bg-white shadow-custom-shadow-2 rounded-[20px] p-[20px] pb-[50px] flex flex-col gap-[10px] overflow-x-auto" method="POST" action="{% url "waveAdmin:resend-emailing" %}">
                 {% csrf_token %}
-                <div class="modalHeader">
-                    <h4>Compose an email</h4>
+                <div class="modalHeader w-full flex flex-col sm:flex-row justify-between items-center">
+                    <h4 class="font-Wanted-Bold text-[25px] sm:text-[35px] xs:max-sm:text-center xs:max-sm:order-2">Compose an email</h4>
 
-                    <button role="button" type="button" id="contentCardClose-button">
+                    <button role="button" type="button" id="contentCardClose-button" class="border-none bg-none cursor-pointer xs:max-sm:order-1">
                         <img src="{% static "images/career/jobAppClose.svg" %}" alt="Minimize Card">
                     </button>
                 </div>
 
-                <div class="modalBody">
-                    <div class="senderRecipient">
-                        <div class="fields">
-                            <p>To</p>
-                            <input type="text" id="emailToField" />
+                <div class="modalBody flex flex-col gap-[25px]">
+                    <div class="senderRecipient flex flex-col gap-[20px]">
+                        <div class="fields flex flex-col sm:flex-row gap-[15px] xs:max-sm:items-left sm:items-center">
+                            <p class="font-Wanted-Variable text-[17px] text-[rgba(70,70,70,0.683)]">To</p>
+                            <input type="text" id="emailToField" class="w-full border-[1px] border-solid border-[rgba(130,130,130,0.204)] shadow-custom-shadow-8 rounded-[15px] p-[15px] text-[15px] font-Wanted-Regular"/>
                         </div>
-                        <div class="fields">
-                            <p>From</p>
-                            <input type="text" value="support@wavecampus.net" />
+                        <div class="fields flex flex-col sm:flex-row gap-[15px] xs:max-sm:items-left sm:items-center">
+                            <p class="font-Wanted-Variable text-[17px] text-[rgba(70,70,70,0.683)]">From</p>
+                            <input type="text" value="support@wavecampus.net" class="w-full border-[1px] border-solid border-[rgba(130,130,130,0.204)] shadow-custom-shadow-8 rounded-[15px] p-[15px] text-[15px] font-Wanted-Regular" />
                         </div>
-                        <div class="fields">
-                            <p>Subject</p>
-                            <input type="text"  id="emailSubject" />
+                        <div class="fields flex flex-col sm:flex-row gap-[15px] xs:max-sm:items-left sm:items-center">
+                            <p class="font-Wanted-Variable text-[17px] text-[rgba(70,70,70,0.683)]">Subject</p>
+                            <input type="text"  id="emailSubject" class="w-full border-[1px] border-solid border-[rgba(130,130,130,0.204)] shadow-custom-shadow-8 rounded-[15px] p-[15px] text-[15px] font-Wanted-Regular"/>
                         </div>
                     </div>
 
                     <div class="sendBody">
-                        <textarea id="emailMessage"></textarea>
+                        <textarea id="emailMessage" class="w-full border-[1px] border-solid border-[rgba(130,130,130,0.204)] shadow-custom-shadow-8 rounded-[15px] p-[15px] text-[15px] font-Wanted-Regular min-h-[500px]"></textarea>
                     </div>
 
-                    <div class="sendButton">
-                        <button class="sendEmailButton" role="button" type="submit">Send Email</button>
+                    <div class="sendButton flex justify-center">
+                        <button class="sendEmailButton p-[12px] w-[80%] border-[4px] border-solid border-transparent border-r-[#13c9d3] border-l-[#008d95bc] justify-center text-white font-Wanted-Regular text-[19px] flex items-center flex-row gap-[10px] rounded-[20px] bg-gradient-to-r from-[#008d95bc] to-[#13c9d3] cursor-pointer" role="button" type="submit">Send Email</button>
                     </div>
                 </div>
             </form>

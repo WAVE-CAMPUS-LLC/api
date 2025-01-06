@@ -1,0 +1,229 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}
+All Events — WAVE.
+{% endblock title %}
+
+{% block app_page_style %}
+<link rel="stylesheet" type="text/css" href="{% static "/styles/adminDashboardApp/tabs/colleges/collegeInfo.css" %}" />
+{% endblock app_page_style %}
+
+{% block script %}
+<script type="text/javascript" src="{% static "scripts/adminDashboardApp/tabControl.js" %}" defer></script> 
+{% endblock script %}
+
+
+{% block header %}
+{% include "partials/nav-footer/nav/main_nav.html" %}
+{% endblock header %}
+
+
+
+
+{% block body %}
+<div id="content-container" class="flex flex-col gap-[70px] px-4 sm:px-6 md:px-[40px] pre-lg:px-[40px] lg:px-[100px] 2xl:px-48 3xl:px-96">
+    <div id="pagination-display" class="flex flex-col pre-sm:flex-row gap-2 w-full items-center font-Wanted-Variable justify-start text-gray-300">
+        <a href="{% url "waveAdmin:adminDashboard" %}" class="text-green underline">Admin Dashboard</a>
+        >
+        <a href="{% url "waveAdmin:adminDashboard" %}#eventManagement" class="text-green underline">Event Management</a>
+        >
+        <p class="font-Wanted-Medium text-black">Events</p>
+    </div>
+
+    <div class="page-heading flex flex-col gap-2">
+        <h2 class="font-Wanted-Bold text-3.5xl text-black">All Events</h2>
+        <p class="font-Wanted-Variable text-Semi-Medium text-black">
+            Last Updated: <span class="text-green">
+                {% if last_updated %}
+                    {{ last_updated|date:"F j, Y, g:i a" }}
+                    {% else %}
+                    No updates yet. 
+                {% endif %}
+            </span>
+        </p>
+    </div>
+
+    <div id="pageBody" class="flex flex-col gap-8 w-full">
+        <div class="flex flex-col gap-3">
+            <div class="w-full flex justify-start">
+                <h3 class="font-Wanted-Bold text-Large after-xsm:text-2xl">Live</h3>
+            </div>
+
+            {% if liveEvents %}
+            <div id="eventContainer" class="grid sm:grid-cols-1 pre-lg:grid-cols-2 lg:grid-cols-3">
+                {% for event in liveEvents %}
+                <a href="{% url "core:eventDetails" eventId=event.eventId %}" target="_blank" class="category-event-card hover:category-image hover:scale-95 transform transition duration-300 flex flex-col justify-center items-center cursor-pointer overflow-hidden p-[10px] text-black">
+                    <div class="category-image w-full rounded-2xl shadow-custom-shadow-3">
+                        <img src="{% if event.header_photo %}{{ event.header_photo.url }}{% else %}#{% endif %}" alt="" class="w-full h-[448px] rounded-2xl rounded-b-none object-cover">
+                    </div>
+                    <div class="category-event-name font-Wanted-SemiBold text-Base flex flex-col justify-center items-start gap-1 w-full border border-custom-rgba5 rounded-bl-2xl rounded-br-2xl shadow-custom-shadow-3 border-t-2 px-5 p-2">
+                        <h2 id="eventTitle" class="whitespace-nowrap overflow-hidden text-ellipsis w-full text-left text-2xl">
+                            {% if not event.title %}
+                            No Title 
+                            {% else %}
+                            {{ event.title }}
+                            {% endif %}
+                        </h2>
+                        <div class="eventSubInfo flex flex-col items-start gap-[1px] w-full font-Wanted-Variable text-customGray5">
+                            <p id="eventHost" class="flex flex-row justify-start">Hosted by @{{ event.host.username }}</p>
+                            <p id="eventDate" class="w-full flex justify-end font-Wanted-Bold text-Large">{{ event.date }}</p>
+                        </div>
+                        <div class="flex w-full flex-col gap-1">
+                            <form method="POST" action="{% url "waveAdmin:events" %}" class="w-full flex flex-row justify-between items-center">
+                                {% csrf_token %}
+                                <input type="hidden" name="event_id" value="{{ event.eventId }}" />
+                                <button type="submit" name="eventAction" value="pause" class="bg-none border-none rounded-full">
+                                    <img src="{% static "/images/admin/events/pause.svg" %}" alt="Pause Event" class="size-20 hover:scale-95 transform transition duration-300" />
+                                </button>
+                                <button type="submit" name="eventAction" value="activate" class="bg-none border-none rounded-full" {% if event.admin_status == "active" %}disabled{% endif %}>
+                                    <img src="{% static "/images/admin/events/active.svg" %}" alt="Pause Event" class="size-20 hover:scale-95 transform transition duration-300" />
+                                </button>
+                            </form>
+
+                            <div class="w-full flex justify-center">
+                                <p class="font-Wanted-Bold text-Small text-[grey]">
+                                    {% if event.admin_status == "paused" %}
+                                    Event Paused
+                                    {% elif event.admin_status == "active" %}
+                                    Event Active
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                        
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="emptyContainer">
+                <div>
+                    <img class="w-[30px] after-xsm:w-[40px] sm:w-[50px] md:w-[60px]" src="{% static "/images/collegeManagementApp/collegeInformation/empty-listing.svg" %}" />
+                </div>
+                <p class="font-Wanted-Variable text-[10px] after-xsm:text-[12px] sm:text-[14px] md:text-[16.5px] text-black">No live events.</p>
+                
+            </div>
+            {% endif %}
+            
+        </div>
+        
+        <div class="flex flex-col gap-3">
+            <div class="w-full flex justify-start">
+                <h3 class="font-Wanted-Bold text-Large after-xsm:text-2xl">Active</h3>
+            </div>
+
+            {% if activeEvents %}
+            <div id="eventContainer" class="grid sm:grid-cols-1 pre-lg:grid-cols-2 lg:grid-cols-3">
+                {% for event in activeEvents %}
+                <div href="#" target="_blank" class="category-event-card hover:category-image hover:scale-95 transform transition duration-300 flex flex-col justify-center items-center cursor-pointer overflow-hidden p-[10px] text-black">
+                    <div class="category-image w-full rounded-2xl shadow-custom-shadow-3">
+                        <img src="{% if event.header_photo %}{{ event.header_photo.url }}{% else %}#{% endif %}" alt="" class="w-full h-[448px] rounded-2xl rounded-b-none object-cover">
+                    </div>
+                    <div class="category-event-name font-Wanted-SemiBold text-Base flex flex-col justify-center items-start gap-1 w-full border border-custom-rgba5 rounded-bl-2xl rounded-br-2xl shadow-custom-shadow-3 border-t-2 px-5 p-2">
+                        <h2 id="eventTitle" class="whitespace-nowrap overflow-hidden text-ellipsis w-full text-left text-2xl">
+                            {% if not event.title %}
+                            No Title 
+                            {% else %}
+                            {{ event.title }}
+                            {% endif %}
+                        </h2>
+                        <div class="eventSubInfo flex flex-col items-start gap-[1px] w-full font-Wanted-Variable text-customGray5">
+                            <p id="eventHost" class="flex flex-row justify-start">Hosted by @{{ event.host.username }}</p>
+                            <p id="eventDate" class="w-full flex justify-end font-Wanted-Bold text-Large">{{ event.date }}</p>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="emptyContainer">
+                <div>
+                    <img class="w-[30px] after-xsm:w-[40px] sm:w-[50px] md:w-[60px]" src="{% static "/images/collegeManagementApp/collegeInformation/empty-listing.svg" %}" />
+                </div>
+                <p class="font-Wanted-Variable text-[10px] after-xsm:text-[12px] sm:text-[14px] md:text-[16.5px] text-black">No active events</p>
+                
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="flex flex-col gap-3">
+            <div class="w-full flex justify-start">
+                <h3 class="font-Wanted-Bold text-Large after-xsm:text-2xl">Incomplete</h3>
+            </div>
+
+            {% if incompleteEvents %}
+            <div id="eventContainer" class="grid sm:grid-cols-1 pre-lg:grid-cols-2 lg:grid-cols-3">
+                {% for event in incompleteEvents %}
+                <div href="#" target="_blank" class="category-event-card hover:category-image hover:scale-95 transform transition duration-300 flex flex-col justify-center items-center cursor-pointer overflow-hidden p-[10px] text-black">
+                    <div class="category-image w-full rounded-2xl shadow-custom-shadow-3">
+                        <img src="{% if event.header_photo %}{{ event.header_photo.url }}{% else %}#{% endif %}" alt="" class="w-full h-[448px] rounded-2xl rounded-b-none object-cover">
+                    </div>
+                    <div class="category-event-name font-Wanted-SemiBold text-Base flex flex-col justify-center items-start gap-1 w-full border border-custom-rgba5 rounded-bl-2xl rounded-br-2xl shadow-custom-shadow-3 border-t-2 px-5 p-2">
+                        <h2 id="eventTitle" class="whitespace-nowrap overflow-hidden text-ellipsis w-full text-left text-2xl">
+                            {% if not event.title %}
+                            No Title 
+                            {% else %}
+                            {{ event.title }}
+                            {% endif %}
+                        </h2>
+                        <div class="eventSubInfo flex flex-col items-start gap-[1px] w-full font-Wanted-Variable text-customGray5">
+                            <p id="eventHost" class="flex flex-row justify-start">Hosted by @{{ event.host.username }}</p>
+                            <p id="eventDate" class="w-full flex justify-end font-Wanted-Bold text-Large">{{ event.date }}</p>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="emptyContainer">
+                <div>
+                    <img class="w-[30px] after-xsm:w-[40px] sm:w-[50px] md:w-[60px]" src="{% static "/images/collegeManagementApp/collegeInformation/empty-listing.svg" %}" />
+                </div>
+                <p class="font-Wanted-Variable text-[10px] after-xsm:text-[12px] sm:text-[14px] md:text-[16.5px] text-black">No events incomplete</p>
+                
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="flex flex-col gap-3">
+            <div class="w-full flex justify-start">
+                <h3 class="font-Wanted-Bold text-Large after-xsm:text-2xl">Archived</h3>
+            </div>
+
+            {% if archivedEvents %}
+            <div id="eventContainer" class="grid sm:grid-cols-1 pre-lg:grid-cols-2 lg:grid-cols-3">
+                {% for event in archivedEvents %}
+                <div href="#" target="_blank" class="category-event-card hover:category-image hover:scale-95 transform transition duration-300 flex flex-col justify-center items-center cursor-pointer overflow-hidden p-[10px] text-black">
+                    <div class="category-image w-full rounded-2xl shadow-custom-shadow-3">
+                        <img src="{% if event.header_photo %}{{ event.header_photo.url }}{% else %}#{% endif %}" alt="" class="w-full h-[448px] rounded-2xl rounded-b-none object-cover">
+                    </div>
+                    <div class="category-event-name font-Wanted-SemiBold text-Base flex flex-col justify-center items-start gap-1 w-full border border-custom-rgba5 rounded-bl-2xl rounded-br-2xl shadow-custom-shadow-3 border-t-2 px-5 p-2">
+                        <h2 id="eventTitle" class="whitespace-nowrap overflow-hidden text-ellipsis w-full text-left text-2xl">
+                            {% if not event.title %}
+                            No Title 
+                            {% else %}
+                            {{ event.title }}
+                            {% endif %}
+                        </h2>
+                        <div class="eventSubInfo flex flex-col items-start gap-[1px] w-full font-Wanted-Variable text-customGray5">
+                            <p id="eventHost" class="flex flex-row justify-start">Hosted by @{{ event.host.username }}</p>
+                            <p id="eventDate" class="w-full flex justify-end font-Wanted-Bold text-Large">{{ event.date }}</p>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="emptyContainer">
+                <div>
+                    <img class="w-[30px] after-xsm:w-[40px] sm:w-[50px] md:w-[60px]" src="{% static "/images/collegeManagementApp/collegeInformation/empty-listing.svg" %}" />
+                </div>
+                <p class="font-Wanted-Variable text-[10px] after-xsm:text-[12px] sm:text-[14px] md:text-[16.5px] text-black">No events archived</p>
+                
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

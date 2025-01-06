@@ -27,7 +27,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Initialize tab systems for each body section
     initializeTabSystem('content-container', 'applications-tab', 'applications-tab-content');
-    
+    initializeTabSystem('shareModalBody', 'shareTab', 'shareTabInformation');
+    initializeTabSystem('sharedEventBody', 'shareEventTab', 'sharedEventsWithTabContainer');
+    initializeTabSystem('crewRequestsBody', 'crewRequestTab', 'crewRequestTabContainer');
+    initializeTabSystem('myCrewsBody', 'myCrewsTab', 'myCrewsTabContainer');
+    initializeTabSystem('sharedFriendRequestsBody', 'friendRequestTab', 'friendRequestTabContainer');
+
 
     // Function to initialize tab system for a specific body section
     function initializeTabSystem(bodyId, tabClass, contentClass) {

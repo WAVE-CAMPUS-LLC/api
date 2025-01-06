@@ -106,6 +106,7 @@ class Membership(models.Model):
 
     class Meta:
         unique_together = ("user", "college")
+        default_permissions = ()
 
     def __str__(self):
         return f"{self.user} - {self.college}"
@@ -118,3 +119,18 @@ class OrganizationMembership(models.Model):
 
     class Meta:
         unique_together = ("user", "organization")
+        default_permissions = ()
+
+
+Event = "eventManagementApp.Event"
+class CollegeEventLink(models.Model):
+    college = models.ForeignKey(College, on_delete=models.CASCADE, related_name="college_events")
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="linked_colleges")
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        default_permissions = ()
+        unique_together = ("college", "event")
+        
+    def __str__(self):
+        return f'{self.college.name} - {self.event.title}'

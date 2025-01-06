@@ -15,6 +15,9 @@ import json
 import os
 from difflib import SequenceMatcher
 
+from wave_v1.decorators import check_suspension, member, verified, onboarded
+
+
 # Hardcoded platform-specific questions
 # When adding a question take special care to add unique keywords that are not present in other questions.
 # Also for keywords that are likely to appear in other questions but are not necessarily the keywords for the question,

@@ -8,6 +8,7 @@ from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
 import uuid
 from io import BytesIO
+from decimal import Decimal
 from django.core.files import File
 import json
 import os
@@ -15,69 +16,121 @@ import time
 from qr_code.qrcode import maker
 from qr_code.qrcode.utils import QRCodeOptions
 import stripe
-from .models import Ticket, UserPayment
-from eventManagementApp.models import Event
+from .models import Ticket, UserPayment, StripePlatformSettings
+from eventManagementApp.models import Event, HostProfile
 
 
-@login_required
 def checkoutView(request):
     stripe.api_key = settings.STRIPE_SECRET_KEY
     cart = request.session.get("cart", {})
-    total_amount = sum(ticket["price"] * ticket["quantity"] for ticket in cart.values())
-    
-    
+    event_id = None
+    platform_settings = StripePlatformSettings.objects.first()
+
+    if not platform_settings:
+        return JsonResponse({"error": "Stripe platform settings not found"}, status=500)
+
+    sales_tax_percentage = platform_settings.salesTaxPercentage
+    sales_fee_amount = platform_settings.salesFeeAmount
+
+    # Calculate totals and ensure single-event assumption
+    total_amount = Decimal(0.0)
+    host_total = Decimal(0.0)
+    adjusted_line_items = []
+    event_id = None
+
+    for _, ticket in cart.items():
+        ticket_price = Decimal(ticket["price"])
+        ticket_quantity = int(ticket["quantity"])
+        event_id = ticket["eventId"]  # Assumes all tickets are for the same event
+
+        # Calculate sales tax and final ticket price
+        sales_tax = ticket_price * (sales_tax_percentage / Decimal(100))
+        final_ticket_price = ticket_price + sales_tax + sales_fee_amount
+
+        # Update totals
+        total_amount += final_ticket_price * ticket_quantity
+        host_total += ticket_price * ticket_quantity
+
+        # Add item to Stripe line items
+        adjusted_line_items.append(
+            {
+                "price_data": {
+                    "currency": "usd",
+                    "product_data": {"name": "Event Ticket"},
+                    "unit_amount": int(final_ticket_price * 100),  # Stripe uses cents
+                },
+                "quantity": ticket_quantity,
+            }
+        )
+
+    if not event_id:
+        return JsonResponse({"error": "Event ID not found in cart."}, status=400)
+
+    # Retrieve event and host details
+    event = get_object_or_404(Event, eventId=event_id)
+    host = event.host
+    hostProfile = get_object_or_404(HostProfile, user=host)
+    hostStripeAccountId = hostProfile.stripe_account_id
+
+    # Customer information
     if request.user.is_authenticated:
-        request.session["checkout_user_info"] = {
-            "username": request.user.username,
-            "email": request.user.email,
-            "first_name": request.user.first_name,
-            "last_name": request.user.last_name,
+        customerEmail = request.user.email
+        customer_metadata = {
+            "Customer Name": f"{request.user.first_name} {request.user.last_name}",
+            "Customer Email": customerEmail,
         }
     else:
         guest_info = {
-            "first_name": request.POST.get("first_name", None),
-            "last_name": request.POST.get("last_name", None),
-            "email": request.POST.get("email", None),
+            "first_name": request.POST.get("first_name"),
+            "last_name": request.POST.get("last_name"),
+            "email": request.POST.get("email"),
         }
-        
-        request.session["checkout_guest_info"] = guest_info
-    
-    if request.method == "POST":
-        try:
-            customer = stripe.Customer.create(
-                metadata={
-                    "user_id": str(request.user.id),
-                    "username": request.user.username,
-                }
+
+        if not all(guest_info.values()):
+            return JsonResponse(
+                {"error": "Complete guest information is required."}, status=400
             )
 
-            line_items = []
-            for ticket_id, ticket in cart.items():
-                line_items.append(
-                    {
-                        "price_data": {
-                            "currency": "usd",
-                            "product_data": {
-                                "name": "Event Ticket",
-                            },
-                            "unit_amount": int(ticket["price"] * 100),
-                        },
-                        "quantity": ticket["quantity"],
-                    }
-                )
+        customerEmail = guest_info["email"]
+        customer_metadata = {
+            "Customer Name": f"{guest_info['first_name']} {guest_info['last_name']}",
+            "Customer Email": customerEmail,
+        }
 
+    if request.method == "POST":
+        try:
+            # Create a Stripe customer
+            customer = stripe.Customer.create(
+                email=customerEmail, metadata=customer_metadata
+            )
+
+            # Calculate application fee
+            application_fee_amount = (
+                host_total
+                * platform_settings.percentageStayingOnPlatform
+                / Decimal(100)
+            )
+
+            # Create Stripe checkout session
             checkout_session = stripe.checkout.Session.create(
                 payment_method_types=["card"],
-                line_items=line_items,
+                line_items=adjusted_line_items,
                 mode="payment",
                 success_url="http://127.0.0.1:8000/paymentSuccessful/?session_id={CHECKOUT_SESSION_ID}",
                 cancel_url="http://127.0.0.1:8000/paymentFailed/",
                 customer=customer.id,
+                payment_intent_data={
+                    "application_fee_amount": int(application_fee_amount * 100),
+                    "transfer_data": {"destination": hostStripeAccountId},
+                },
             )
 
-            return redirect(checkout_session.url, code=303)
+            return JsonResponse({"url": checkout_session.url})
+
+        except stripe.error.StripeError as e:
+            return JsonResponse({"error": str(e)}, status=400)
         except Exception as e:
-            return JsonResponse({"error": str(e)}, status=500)
+            return JsonResponse({"error": "An unexpected error occurred."}, status=500)
 
     return render(
         request,
@@ -85,49 +138,59 @@ def checkoutView(request):
         {"cart": cart, "total_amount": total_amount},
     )
 
-@login_required
+
 def paymentSuccessful(request):
     stripe.api_key = settings.STRIPE_SECRET_KEY
     checkout_session_id = request.GET.get("session_id", None)
+
     if checkout_session_id:
         session = stripe.checkout.Session.retrieve(checkout_session_id)
         customer = stripe.Customer.retrieve(session.customer)
 
         user_payment = UserPayment.objects.create(
-            user=request.user,
+            user=request.user if request.user.is_authenticated else None,
             stripe_checkout_id=checkout_session_id,
         )
         user_payment.success = True
         user_payment.save()
-        
+
         user_info = request.session.get("checkout_user_info", {})
         cart = request.session.get("cart", {})
-        
+
         for ticket_id, ticket in cart.items():
             eventId = ticket.get("eventId")
             if eventId:
-                event = Event.objects.get(eventId=eventId)
-            
-                for _ in range(ticket["quantity"]):
-                    generateTicket(
-                        request=request,
-                        event=event,
-                        user=request.user if request.user.is_authenticated else None,
-                        guestFirstName=user_info.get("first_name"),
-                        guestLastName=user_info.get("last_name"),
-                        guestEmail=user_info.get("email"),
-                    )
+                try:
+                    event = Event.objects.get(eventId=eventId)
+                    for _ in range(ticket["quantity"]):
+                        generateTicket(
+                            request=request,
+                            event=event,
+                            user=(
+                                request.user if request.user.is_authenticated else None
+                            ),
+                            guestFirstName=user_info.get("first_name"),
+                            guestLastName=user_info.get("last_name"),
+                            guestEmail=user_info.get("email"),
+                        )
+                except Event.DoesNotExist:
+                    print(f"Event with ID {eventId} not found.")
             else:
-                print(f'Event ID not found for ticket: {ticket}')
-        del request.session["cart"]
-        del request.session["checkout_user_info"]
-        
+                print(f"Event ID not found for ticket: {ticket}")
+
+        # Safely delete session keys
+        if "cart" in request.session:
+            del request.session["cart"]
+        if "checkout_user_info" in request.session:
+            del request.session["checkout_user_info"]
+
         customer_username = customer.metadata.get("username")
         return render(
             request,
             "eventTicketsApp/checkoutSession/paymentSuccessful.html",
             {"customer": customer, "customerUsername": customer_username},
         )
+
     return JsonResponse({"error": "Session ID not provided."}, status=400)
 
 
@@ -136,9 +199,9 @@ def paymentFailed(request):
 
 
 @csrf_exempt
-@login_required
 def stripeWebhook(request):
     stripe.api_key = settings.STRIPE_SECRET_KEY
+    endpoint_secret = settings.STRIPE_WEBHOOK_SECRET_TEST
     time.sleep(10)
     payload = request.body
     signature_header = request.META.get("HTTP_STRIPE_SIGNATURE")
@@ -148,12 +211,14 @@ def stripeWebhook(request):
     event = None
     try:
         event = stripe.Webhook.construct_event(
-            payload, signature_header, settings.STRIPE_WEBHOOK_SECRET_TEST
+            payload, signature_header, endpoint_secret
         )
     except ValueError as e:
         return HttpResponse(status=400)
+
     except stripe.error.SignatureVerificationError as e:
         return HttpResponse(status=400)
+
     if event["type"] == "checkout.session.completed":
         session = event["data"]["object"]
         session_id = session.get("id", None)

@@ -77,7 +77,6 @@ document.addEventListener("DOMContentLoaded", function() {
             const selectedOptions = document.querySelectorAll('.eventTypeSelectorButtons input[type="checkbox"]:checked');
             if (selectedOptions.length > 3) {
                 option.checked = false;
-                alert('You can select a maximum of 3 event types.');
             }
         });
     });
@@ -107,4 +106,15 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     });
     
+});
+
+
+document.querySelector("#hostEventApplication").addEventListener("submit", (e) => {
+    const eventTypesField = document.querySelector("[name='eventTypes']");
+    if (eventTypesField && eventTypesField.offsetParent === null) {
+        e.preventDefault(); // Prevent submission
+        alert("Please fill out the event type field."); // Inform the user
+        // Optionally make the field visible
+        eventTypesField.closest(".hidden").classList.remove("hidden");
+    }
 });

@@ -1,18 +1,32 @@
 from django import forms
-from .models import HostApplication, Event
+from .models import HostApplication, Event, HostProfile
 from django.utils.translation import gettext_lazy as _
 from adminDashboardApp.models import College
 from accountManagementApp.models import UserProfile
 from collegeManagementApp.models import OrganizationMembership, Organization
 
 
-class HostApplicationForm(forms.ModelForm):
+class HostApplicationForm(forms.ModelForm):    
     EVENT_TYPE_CHOICES = [
-        ("conference", "Conference"),
-        ("workshop", "Workshop"),
-        ("seminar", "Seminar"),
-        ("webinar", "Webinar"),
-        ("networking", "Networking Event"),
+        ("Academic", "Academic"),
+        ("Adventure", "Adventure"),
+        ("Art", "Art"),
+        ("Conference", "Conference"),
+        ("Dance", "Dance"),
+        ("Exhibition", "Exhibition"),
+        ("Fashion", "Fashion"),
+        ("Fundraiser", "Fundraiser"),
+        ("Greek", "Greek"),
+        ("Health", "Health"),
+        ("Music", "Music"),
+        ("Networking", "Networking"),
+        ("Photography", "Photography"),
+        ("Social", "Social"),
+        ("Spiritual", "Spiritual"),
+        ("Sports", "Sports"),
+        ("Technology", "Technology"),
+        ("Volunteer", "Volunteer"),
+        ("Workshop", "Workshop"),
     ]
 
     eventTypes = forms.MultipleChoiceField(
@@ -36,6 +50,17 @@ class HostApplicationForm(forms.ModelForm):
             "eventHostedAnnually",
             "eventPopulation",
         ]
+        
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop("user", None)
+        super().__init__(*args, **kwargs)
+        if user:
+            self.fields["firstName"].initial = user.first_name
+            self.fields["lastName"].initial = user.last_name
+            self.fields["email"].initial = user.email
+            self.fields["firstName"].disabled = True
+            self.fields["lastName"].disabled = True
+            self.fields["email"].disabled = True
 
 
 class EventForm(forms.ModelForm):
@@ -97,60 +122,27 @@ class EventForm(forms.ModelForm):
             "status": forms.HiddenInput(),
         }
 
-
-class EventTitleForm(forms.ModelForm):
-    title = forms.CharField(max_length=200, required=False)
-        
-    class Meta:
-        model = Event
-        fields = ["title"]  
-
-class EventTypeForm(forms.ModelForm):
-    EVENT_TYPE_CHOICES = [
-        ("Sports", "Sports"),
-        ("Social", "Social"),
-        ("Networking", "Networking"),
-        ("Greek", "Greek"),
-        ("Music", "Music"),
-        ("Conference", "Conference"),
-        ("Workshop", "Workshop"),
-        ("Exhibition", "Exhibition"),
-        ("Technology", "Technology"),
-        ("Health", "Health"),
-        ("Fundraiser", "Fundraiser"),
-        ("Volunteer", "Volunteer"),
-        ("Fashion", "Fashion"),
-        ("Adventure", "Adventure"),
-        ("Spiritual", "Spiritual"),
-        ("Academic", "Academic"),
-        ("Photography", "Photography"),
-        ("Art", "Art"),
-        ("Dance", "Dance"),
+class EditEventForm(forms.ModelForm):
+    AGE_RESTRICTION_CHOICES = [
+        ("", "No Age Restriction"),
+        ("18+", "18+"),
+        ("21+", "21+"),
     ]
-        
-    event_type = forms.ChoiceField(
-        choices=EVENT_TYPE_CHOICES,
+
+    age_restriction = forms.ChoiceField(
+        label=_("Age Restriction"),
         required=False,
-        initial="",
+        choices=AGE_RESTRICTION_CHOICES,
+        widget=forms.RadioSelect(attrs={'class': 'age-restriction-radio'}),
     )
-    
-    class Meta:
-        model = Event
-        fields = ["event_type"]
-    
-class EventDateForm(forms.ModelForm):
+
     date = forms.DateField(
         label=_("Choose date"),
         required=False,
         widget=forms.DateInput(format="%Y-%m-%d", attrs={"type": "date"}),
         input_formats=["%Y-%m-%d"],
     )
-    
-    class Meta:
-        model = Event
-        fields = ["date"]
-        
-class EventStartTimeForm(forms.ModelForm):
+
     start_time = forms.TimeField(
         label=_("Start time"),
         required=False,
@@ -158,121 +150,69 @@ class EventStartTimeForm(forms.ModelForm):
         input_formats=["%H:%M"],
     )
 
-    class Meta:
-        model = Event
-        fields = ["start_time"]
-
-class EventEndTimeForm(forms.ModelForm):
     end_time = forms.TimeField(
         label=_("End time"),
         required=False,
         widget=forms.TimeInput(format="%H:%M", attrs={"type": "time"}),
         input_formats=["%H:%M"],
     )
-
-    class Meta:
-        model = Event
-        fields = ["end_time"]
-        
-class EventDescriptionForm(forms.ModelForm):
-    description = forms.CharField(max_length=2000, required=False)
-        
-    class Meta:
-        model = Event
-        fields = ["description"]
-        
-class EventPrivacyForm(forms.ModelForm):
-    PRIVACY_CHOICES = [
-        ("Discoverable", "Discoverable"),
-        ("Invite Only", "Invite Only"),
-        ("Private (College)", "Private (College)"),
-        ("Private (Organization)", "Private (Organization)"),
-    ]
     
-    privacy = forms.ChoiceField(
-        choices=PRIVACY_CHOICES,
-        required=False,
-        initial="",
-    )
-    
-    class Meta:
-        model = Event
-        fields = ["privacy"]
-
-class EventLocationForm(forms.ModelForm):
-    STATE_CHOICES = [
-        ("AL", "Alabama"),
-        ("AK", "Alaska"),
-        ("AZ", "Arizona"),
-        ("AR", "Arkansas"),
-        ("CA", "California"),
-        ("CO", "Colorado"),
-        ("CT", "Connecticut"),
-        ("DE", "Delaware"),
-        ("FL", "Florida"),
-        ("GA", "Georgia"),
-        ("HI", "Hawaii"),
-        ("ID", "Idaho"),
-        ("IL", "Illinois"),
-        ("IN", "Indiana"),
-        ("IA", "Iowa"),
-        ("KS", "Kansas"),
-        ("KY", "Kentucky"),
-        ("LA", "Louisiana"),
-        ("ME", "Maine"),
-        ("MD", "Maryland"),
-        ("MA", "Massachusetts"),
-        ("MI", "Michigan"),
-        ("MN", "Minnesota"),
-        ("MS", "Mississippi"),
-        ("MO", "Missouri"),
-        ("MT", "Montana"),
-        ("NE", "Nebraska"),
-        ("NV", "Nevada"),
-        ("NH", "New Hampshire"),
-        ("NJ", "New Jersey"),
-        ("NM", "New Mexico"),
-        ("NY", "New York"),
-        ("NC", "North Carolina"),
-        ("ND", "North Dakota"),
-        ("OH", "Ohio"),
-        ("OK", "Oklahoma"),
-        ("OR", "Oregon"),
-        ("PA", "Pennsylvania"),
-        ("RI", "Rhode Island"),
-        ("SC", "South Carolina"),
-        ("SD", "South Dakota"),
-        ("TN", "Tennessee"),
-        ("TX", "Texas"),
-        ("UT", "Utah"),
-        ("VT", "Vermont"),
-        ("VA", "Virginia"),
-        ("WA", "Washington"),
-        ("WV", "West Virginia"),
-        ("WI", "Wisconsin"),
-        ("WY", "Wyoming"),
-    ]
-    building_name = forms.CharField(max_length=200, required=False)
-    street = forms.CharField(max_length=200, required=False)
-    apt_suite_unit = forms.CharField(
-        max_length=200, 
-        required=False, 
-        widget=forms.TextInput(attrs={'placeholder': 'Input your apt here (optional)'})
-    )
-    city = forms.CharField(max_length=200, required=False)
-    state = forms.ChoiceField(choices=STATE_CHOICES, required=False, initial="")
-    zip_code = forms.CharField(max_length=200, required=False)
-    
-    class Meta:
-        model = Event
-        fields = ["building_name", "street", "apt_suite_unit", "city", "state", "zip_code"]
-        
-class EventHeaderImageForm(forms.ModelForm):
     header_photo = forms.ImageField(
         required=False,
         widget=forms.FileInput(attrs={'class': 'custom-file-input'})
     )
-    
+    body_photo_one = forms.ImageField(
+        required=False,
+        widget=forms.FileInput(attrs={'class': 'custom-file-input'})
+    )
+    body_photo_two = forms.ImageField(
+        required=False,
+        widget=forms.FileInput(attrs={'class': 'custom-file-input'})
+    )
+    body_photo_three = forms.ImageField(
+        required=False,
+        widget=forms.FileInput(attrs={'class': 'custom-file-input'})
+    )
+    body_photo_four = forms.ImageField(
+        required=False,
+        widget=forms.FileInput(attrs={'class': 'custom-file-input'})
+    )
+    body_photo_five = forms.ImageField(
+        required=False,
+        widget=forms.FileInput(attrs={'class': 'custom-file-input'})
+    )
+
     class Meta:
         model = Event
-        fields = ["header_photo"]
+        fields = [
+            "title",
+            "event_type",
+            "date",
+            "start_time",
+            "end_time",
+            "description",
+            "building_name",
+            "street",
+            "apt_suite_unit",
+            "city",
+            "state",
+            "zip_code",
+            "contact_email",
+            "contact_phone",
+            "contact_website",
+            "contact_instagram",
+            "header_photo",
+            "body_photo_one",
+            "body_photo_two",
+            "body_photo_three",
+            "body_photo_four",
+            "body_photo_five",
+            "age_restriction",  # Added age_restriction field
+        ]
+        
+class HostProfileForm(forms.ModelForm):
+    class Meta:
+        model = HostProfile
+        fields = [ "cashapp_id", "google_pay_id", "apple_pay_id"]
+        
+    # bank_account_details = forms.JSONField(widget=forms.Textarea, required=False)

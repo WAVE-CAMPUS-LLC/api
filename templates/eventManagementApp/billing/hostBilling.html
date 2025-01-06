@@ -1,0 +1,667 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+
+{% block title %}
+Host Dashboard | WAVE.
+{% endblock title %}
+
+
+{% block script %}
+<script src="https://js.stripe.com/v3/"></script>
+<script type="text/javascript" src="{% static "scripts/eventManagementApp/host/eventManage/tabControl.js" %}" defer></script>
+<script type="module" src="{% static "scripts/base/stripe.js" %}" defer></script>
+<script type="text/javascript" src="{% static "scripts/eventManagementApp/billing/addPayoutMethod.js" %}" defer></script>
+<script type="text/javascript" src="{% static "scripts/eventManagementApp/billing/cashoutEarnings.js" %}" defer></script>
+{% endblock script %}
+
+
+{% block header %}
+{% include "partials/nav-footer/nav/host/host_portal.html" %}
+{% endblock header %}
+
+
+{% block body %}
+<div class="flex flex-col gap-[70px] px-[20px] after-xsm:px-[30px] xxsm:px-[60px] sm:px-[70px] md:px-[60px] pre-lg:px-[70px] lg:px-[100px] xl:px-[140px] 2xl:px-[200px] 3xl:px-[300px]">
+    <div class="page-heading font-Wanted-SemiBold text-[25px] md:text-[30px] flex flex-col sm:flex-row sm:justify-between gap-[10px] w-full">
+        <h2>Your Billing Information, {{ request.user.first_name }}!</h2>
+    </div>
+
+    <div id="billing-body" class="flex flex-col w-full gap-5">
+        <div class="control-row grid grid-cols-2 after-xsm:grid-cols-3 pre-sm:flex flex-row gap-4 w-full">
+            <div role="button" type="button" class="billing-tab tab-active cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="billing-overview">Overview</div>
+            <div role="button" type="button" class="billing-tab cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="previous-transactions">Transactions</div>
+            <div role="button" type="button" class="billing-tab cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="payout-methods">Accounts</div>
+            {% if requiredActions %}
+            <div role="button" type="button" class="billing-tab cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center bg-[red] text-white" data-tab="required-actions">Required Actions!</div>
+            {% endif %}
+            
+        </div>
+
+        <div id="billing-body-content">
+            <div class="billing-content" id="billing-overview">
+                <div class="w-full flex flex-col gap-20">
+                    <div class="flex flex-col gap-7">
+                        <div class="flex w-full flex-col gap-1">
+                            <h3 class="font-Wanted-Bold text-[30px]">Total Earnings</h3>
+                            <p class="font-Wanted-Regular text-[20px]" id="totalEarning">${{ totalEarnings|floatformat:2 }}</p>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-2">
+                            <div class="flex flex-col gap-1">
+                                <h3 class="font-Wanted-Bold text-[20px]">Pending Balance</h3>
+                                <p class="font-Wanted-Variable text-[15px]" id="pendingEarnings">${{ stripeAccountBalance.pending|floatformat:2 }}</p>
+                            </div>
+                            <div class="grid grid-cols-2">
+                                <div class="flex flex-col gap-1">
+                                    <div class="flex flex-col gap-1">
+                                        <h3 class="font-Wanted-Bold text-[20px]">Available for Cashout</h3>
+                                    <p class="font-Wanted-Variable text-[15px]" id="availableForCashout">${{ stripeAccountBalance.available|floatformat:2 }}</p>
+                                    </div>
+
+                                    {% if stripeAccountBalance.available == 0 and stripeAccountBalance.pending > 0 %}
+                                        <p class="text-[red] font-Wanted-Variable text-Small">Your available balance is $0. However, ${{ stripeAccountBalance.pending|floatformat:2 }} is pending and will become available soon.</p>
+                                    {% endif %}
+                                </div>
+                                <div class="flex justify-end items-center">
+                                    <button class="font-Wanted-Regular bg-[#1cb913] h-auto text-white text-Base cursor-pointer py-2 px-5 rounded-2xl disabled:bg-[#00800063] disabled:cursor-default" id="cashoutButton" {% if stripeAccountBalance.available == 0 %}disabled{% endif %}>Cashout</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="billing-content" id="previous-transactions">
+                <div class="w-full flex flex-col gap-12">
+                    {% if transactions %}
+                    <div class="flex flex-col gap-5">
+                        <h3 class="font-Wanted-Bold text-2xl">Transactions</h3>
+
+                        <div class="flex flex-col gap-2 w-full">
+                            <div id="transaction-container" class="w-full flex flex-col gap-3">
+                                <div class="w-full flex flex-col gap-4">
+                                    {% for date, transaction in transactions.items %}
+                                    <div class="w-full flex justify-start font-Wanted-SemiBold text-black">
+                                        <h6>{{ date }}</h6>
+                                    </div>
+
+                                    {% for transactionProcess in transaction %}
+                                    <div class="border border-[#b7b7b79c] shadow-custom-shadow-6 w-full rounded-xl flex flex-row gap-2 py-4 px-8 items-center justify-between">
+                                        <div class="flex flex-row gap-9 min-w-[80%]">
+                                            <div class="flex items-center justify-center w-auto">
+                                                {% if transactionProcess.type == "payment" or transactionProcess.type == "payout" %}
+                                                    <img src="{% static 'images/eventManagementApp/billing/transactions/transaction-complete.svg' %}" alt="Transaction Complete" class="size-14">
+                                                {% elif transactionProcess.type == "dispute" %}
+                                                    <img src="{% static 'images/eventManagementApp/billing/transactions/transaction-pending.svg' %}" alt="Transaction Pending" class="size-14">
+                                                {% elif transactionProcess.type == "payment_failure" %}
+                                                    <img src="{% static 'images/eventManagementApp/billing/transactions/transaction-failed.svg' %}" alt="Transaction Failed" class="size-14">
+                                                {% endif %}
+                                            </div>
+                                            <div class="flex flex-col justify-between gap-2 w-full">
+                                                <h6 class="font-Wanted-Bold text-xl">{{ transactionProcess.type|title }}</h6>
+                                                <p class="font-Wanted-Variable text-[13px]">Processed at {{ transactionProcess.created_readable|date:"g:i A" }}</p>
+                                                <p class="font-Wanted-Variable text-[13px]">{{ transactionProcess.customer }}</p>
+                                                <div class="w-full flex flex-row justify-between">
+                                                    <p class="font-Wanted-Variable text-Small">Transaction ID: {{ transactionProcess.id }}</p>
+                                                    {% if transactionProcess.status == "available" %}
+                                                    <span class="border border-[#2fc12f] p-1 uppercase rounded-md font-Wanted-Variable text-XSmall text-white bg-[#2fc12f]">{{ transactionProcess.status }}</span>
+                                                    {% elif transactionProcess.status == "pending" %}
+                                                    <span class="border border-[#ffff00] p-1 uppercase rounded-md font-Wanted-Variable text-XSmall text-white bg-[#ffff00]">{{ transactionProcess.status }}</span>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="flex flex-col gap-2 w-auto items-center justify-center">
+                                            <p class="{% if transactionProcess.amount_in_dollars < 0 %}text-[red] {% elif  transactionProcess.amount_in_dollars > 0 %}text-[#2fc12f]{% endif %}  font-Wanted-Variable text-Semi-Medium flex flex-row gap-1 justify-center items-center">
+                                                ${{ transactionProcess.amount_in_dollars|floatformat:2 }}
+                                            </p>
+                                            <form method="POST">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="refundTransactionID" value="{{ transactionProcess.payment_id }}">
+                                                <button type="submit" name="billingAction" value="refundTransaction" class="border-[#ff0000] border-2 {% if transactionProcess.type != "payment" or transactionProcess.payment_id == None %}hidden{% endif %} hover:text-[red] hover:bg-white bg-[red] text-white rounded-xl font-Wanted-Regular text-Base px-4 py-2">Refund</button>
+                                            </form>
+                                            
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                    {% endfor %}
+                                    
+                                </div>
+                            </div>
+
+                            
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="w-full">
+                        <div class="flex flex-col gap-1 w-[70%]">
+                            <h4 class="font-Wanted-Medium text-[15px]">No Transactions Yet</h4>
+                            <p class="font-Wanted-Variable text-[13px]">You have not made any transactions yet.</p>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if payouts %}
+                    <div class="flex flex-col gap-5">
+                        <h3 class="font-Wanted-Bold text-2xl">Payouts</h3>
+
+                        <div class="flex flex-col gap-2 w-full">
+                            <div id="transaction-container" class="w-full flex flex-col gap-3">
+                                <div class="w-full flex flex-col gap-4">
+                                    {% for date, transaction in payouts.items %}
+                                    <div class="w-full flex justify-start font-Wanted-SemiBold text-black">
+                                        <h6>{{ date }}</h6>
+                                    </div>
+
+                                    {% for transactionProcess in transaction %}
+                                    <div class="border border-[#b7b7b79c] shadow-custom-shadow-6 w-full rounded-xl flex flex-row gap-2 py-4 px-8 items-center justify-between">
+                                        <div class="flex flex-row gap-9 min-w-[80%]">
+                                            <div class="flex items-center justify-center w-auto">
+                                                {% if transactionProcess.type == "bank_account" %}
+                                                <img src="{% static "images/eventManagementApp/billing/transactions/payout-bank.svg" %}" alt="Payout to Bank" class="size-14">
+                                                {% elif transactionProcess.type == "card" %}
+                                                <img src="{% static "images/eventManagementApp/billing/transactions/payout-card.svg" %}" alt="Payout to Card" class="size-14">
+                                                {% endif %}
+                                            </div>
+                                            <div class="flex flex-col justify-between gap-2 w-full">
+                                                <h6 class="font-Wanted-Bold text-xl">
+                                                    {% if transactionProcess.type == "bank_account" %}
+                                                    To Bank Account
+                                                    {% elif transactionProcess.type == "card" %}
+                                                    To Card
+                                                    {% endif %}
+                                                </h6>
+                                                <p class="font-Wanted-Variable text-[13px]">Processed at {{ transactionProcess.created_readable|date:"g:i A" }}</p>
+                                                <p class="font-Wanted-Variable text-[13px]">{{ transactionProcess.customer }}</p>
+                                                <div class="w-full flex flex-row justify-between">
+                                                    <p class="font-Wanted-Variable text-Small">Transaction ID: {{ transactionProcess.id }}</p>
+                                                    <span class="border border-[#2fc12f] p-1 rounded-md font-Wanted-Variable text-XSmall text-white uppercase bg-[#2fc12f98]">{{ transactionProcess.status }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="flex flex-col gap-2 w-auto items-center justify-center">
+                                            <p class="text-[#2fc12f] font-Wanted-Variable text-Semi-Medium flex flex-row gap-1 justify-center items-center">
+                                                <span class="font-Wanted-Bold">+</span> 
+                                                ${{ transactionProcess.amount_in_dollars|floatformat:2 }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="w-full">
+                        <div class="flex flex-col gap-1 w-[70%]">
+                            <h4 class="font-Wanted-Medium text-[15px]">No Payouts Yet</h4>
+                            <p class="font-Wanted-Variable text-[13px]">You have not made any payout yet.</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="billing-content" id="payout-methods">
+                <div class="w-full flex flex-col gap-12">
+                    <div class="flex flex-col gap-2 w-full">
+                        {% if externalAccounts.bank_accounts %}
+                            <h3 class="font-Wanted-Bold text-[20px]">Payout Methods (Bank Accounts)</h3>
+                            {% for bank in externalAccounts.bank_accounts %}
+                            <div class="flex flex-row gap-2 w-full border items-center rounded-lg py-3 px-5 text-black">
+                                <div class="flex flex-col gap-1 w-[70%]">
+                                    <h4 class="font-Wanted-Bold text-[15px]">Name: {{ bank.account_holder_name }}</h4>
+                                    <p class="font-Wanted-Variable text-[13px]">Account Number: ****{{ bank.last4 }}</p>
+                                    <p class="font-Wanted-Variable text-[13px]">Routing Number: {{ bank.routing_number }}</p>
+                                </div>
+
+                                <form method="POST" class="w-[30%] flex flex-col gap-2 items-end h-full">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="setBankDefaultAccountID" value="{{ bank.id }}">
+                                    <input type="hidden" name="externalBankAccountID" value="{{ bank.id }}">
+                                    {% if bank.default_for_currency %}
+                                    <button type="submit" class="font-Wanted-Regular w-auto rounded-xl bg-transparent border-2 bg-[#00575c] border-green text-green py-3 px-6 ">Default</button>
+                                    {% else %}
+                                    <button type="submit" name="billingAction" value="setBankDefaultPaymentMethod" class="font-Wanted-Regular w-auto rounded-xl bg-green border-green text-white py-3 px-6">Set Default</button>
+                                    {% endif %}
+                                    <button type="submit" name="billingAction" value="removeBankAccount" class="font-Wanted-Regular w-auto rounded-xl bg-[red] text-white py-3 px-6 hover:bg-[red] disabled:bg-[#7a0c0c]" id="addPayoutMethodButton" {% if bank.default_for_currency %}disabled{% endif %}>Remove</button>
+                                </form>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="flex flex-row gap-2 w-full">
+                                <div class="flex flex-col gap-1 w-[70%]">
+                                    <h4 class="font-Wanted-Medium text-[15px]">Bank Account</h4>
+                                    <p class="font-Wanted-Variable text-[13px]">You have not added a bank account yet.</p>
+                                </div>
+
+                                <div class="w-[30%] flex justify-end items-center h-full">
+                                    <button class="font-Wanted-Regular gradient-btn hover:bg-green" id="addBankAccountButton">Add Bank</button>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="flex flex-col gap-2 w-full">
+                        {% if externalAccounts.cards %}
+                            <h3 class="font-Wanted-Bold text-[20px]">Payout Methods (Cards)</h3>
+                            {% for card in externalAccounts.cards %}
+                            <div class="flex flex-row gap-2 w-full border items-center rounded-lg py-3 px-5 text-black">
+                                <div class="flex flex-col gap-1 w-[70%]">
+                                    <h4 class="font-Wanted-Bold text-[15px]">Name: {{ card.name }}</h4>
+                                    <p class="font-Wanted-Variable text-[13px]">Card Number: ****{{ card.last4 }}</p>
+                                    <p class="font-Wanted-Variable text-[13px]">Card Type: ****{{ card.brand | title }}</p>
+                                    <p class="font-Wanted-Variable text-[13px]">Expiry: {{ card.exp_month }}/{{ card.exp_year }}</p>
+                                </div>
+
+                                <form method="POST" class="w-[30%] flex flex-col gap-2 items-end h-full">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="externalCardAccountID" value="{{ card.id }}">
+                                    <input type="hidden" name="setCardDefaultAccountID" value="{{ card.id }}">
+                                    {% if card.default_for_currency %}
+                                    <button type="button" class="font-Wanted-Regular w-auto rounded-xl bg-transparent border-2 bg-[#00575c] border-green text-green py-3 px-6">Default</button>
+                                    {% else %}
+                                    <button type="submit" name="billingAction" value="setCardDefaultPaymentMethod" class="font-Wanted-Regular w-auto rounded-xl bg-green border-green text-white py-3 px-6">Set Default</button>
+                                    {% endif %}
+                                    <button type="submit" name="billingAction" value="removeCardMethod" class="font-Wanted-Regular w-auto rounded-xl bg-[red] text-white py-3 px-6 hover:bg-[red] disabled:bg-[#7a0c0c]" id="addPayoutMethodButton" {% if card.default_for_currency %}disabled{% endif %}>Remove</button>
+                                </form>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="flex flex-row gap-2 w-full">
+                                <div class="flex flex-col gap-1 w-[70%]">
+                                    <h4 class="font-Wanted-Medium text-[15px]">Connected Cards</h4>
+                                    <p class="font-Wanted-Variable text-[13px]">You have not added a card yet.</p>
+                                </div>
+
+                                <div class="w-[30%] flex justify-end items-center h-full">
+                                    <button class="font-Wanted-Regular gradient-btn hover:bg-green" id="addCardButton">Add Card</button>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            {% if requiredActions %}
+            <div class="billing-content" id="required-actions">
+                <form method="POST" class="w-full flex flex-col gap-10">
+                    <div class="flex flex-col gap-1">
+                        <h3 class="font-Wanted-Bold text-[20px]">Complete Required Actions</h3>
+                        <p class="font-Wanted-Variable text-[15px]">Please complete the following actions to continue.</p>
+                    </div>
+                    {% csrf_token %}
+
+                    <ul class="w-full flex flex-col gap-8">
+                        {% if "individual" in requiredActions or "individual.last_name" in requiredActions or "individual.dob.day" in requiredActions or "individual.dob.month" in requiredActions or "individual.dob.year" in requiredActions or "individual.ssn_last_4" in requiredActions %}
+                        <li>
+                            <div class="flex flex-col gap-7">
+                                {% if individual.first_name in requiredActions or individual.last_name in requiredActions %}
+                                <div class="flex flex-col gap-3">
+                                    <div>
+                                        <h3 class="font-Wanted-SemiBold">Personal Details</h3>
+                                    </div>
+
+                                    <div class="flex flex-row gap-2">
+                                        {% if individual.first_name %}
+                                        <div id="inputRows" class="w-full">
+                                            <label class="flex flex-col gap-1">
+                                                <p class="font-Wanted-Regular text-Base">First Name</p>
+                                                <input type="text" name="firstName" class="font-Wanted-Variable border border-gray-300 rounded-lg p-2" required>
+                                            </label>
+                                        </div>
+                                        {% endif %}
+                                        
+                                        {% if individual.last_name %}
+                                        <div id="inputRows" class="w-full">
+                                            <label class="flex flex-col gap-1">
+                                                <p class="font-Wanted-Regular text-Base">Last Name</p>
+                                                <input type="text" name="lastName" class="font-Wanted-Variable border border-gray-300 rounded-lg p-2" required>
+                                            </label>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% endif %}
+                                
+                                
+                                {% if "individual.dob.day" in requiredActions or "individual.dob.month" in requiredActions or "individual.dob.year" in requiredActions %}
+                                <div class="flex flex-col gap-3">
+                                    <div>
+                                        <h3 class="font-Wanted-SemiBold text-Pre-Xl">Representative Date of Birth</h3>
+                                    </div>
+
+                                    <div class="flex flex-row gap-2">
+                                        {% if "individual.dob.day" in requiredActions %}
+                                        <div id="inputRows" class="w-full">
+                                            <label class="flex flex-col gap-1">
+                                                <p class="font-Wanted-Regular text-Base">Day</p>
+                                                <input type="number" name="dobDay" class="font-Wanted-Variable border border-gray-300 rounded-lg p-2" required>
+                                            </label>
+                                        </div>
+                                        {% endif %}
+                                        
+                                        {% if "individual.dob.month" in requiredActions %}
+                                        <div id="inputRows" class="w-full">
+                                            <label class="flex flex-col gap-1">
+                                                <p class="font-Wanted-Regular text-Base">Month</p>
+                                                <input type="number" name="dobMonth" class="font-Wanted-Variable border border-gray-300 rounded-lg p-2" required>
+                                            </label>
+                                        </div>
+                                        {% endif %}
+                                        
+                                        {% if "individual.dob.year" in requiredActions %}
+                                        <div id="inputRows" class="w-full">
+                                            <label class="flex flex-col gap-1">
+                                                <p class="font-Wanted-Regular text-Base">Year</p>
+                                                <input type="number" name="dobYear" class="font-Wanted-Variable border border-gray-300 rounded-lg p-2" required>
+                                            </label>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% endif %}
+                                
+                                {% if "individual.address" in requiredAction %}
+                                <div class="flex flex-col gap-3">
+                                    <div>
+                                        <h3 class="font-Wanted-SemiBold text-Pre-Xl">Business Address</h3>
+                                    </div>
+
+                                    <div class="flex flex-col gap-2">
+                                        <div class="flex flex-row gap-2">
+                                            <div id="inputRows" class="w-full">
+                                                <label class="flex flex-col gap-1">
+                                                    <p class="font-Wanted-Regular text-Base">Street</p>
+                                                    <input type="text" name="street" class="font-Wanted-Variable border border-gray-300 rounded-lg p-2" required>
+                                                </label>
+                                            </div>
+                                            
+                                            <div id="inputRows" class="w-full">
+                                                <label class="flex flex-col gap-1">
+                                                    <p class="font-Wanted-Regular text-Base">City</p>
+                                                    <input type="text" name="city" class="font-Wanted-Variable border border-gray-300 rounded-lg p-2" required>
+                                                </label>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="flex flex-row gap-2">
+                                            <div id="inputRows" class="w-full">
+                                                <label class="flex flex-col gap-1">
+                                                    <p class="font-Wanted-Regular text-Base">State</p>
+                                                    <input type="text" name="state" class="font-Wanted-Variable border border-gray-300 rounded-lg p-2" required>
+                                                </label>
+                                            </div>
+    
+                                            <div id="inputRows" class="w-full">
+                                                <label class="flex flex-col gap-1">
+                                                    <p class="font-Wanted-Regular text-Base">Postcode</p>
+                                                    <input type="text" name="postalCode" class="font-Wanted-Variable border border-gray-300 rounded-lg p-2" required>
+                                                </label>
+                                            </div>
+                                        </div>
+                                        
+
+                                        <div id="inputRows" class="w-full">
+                                            <label class="flex flex-col gap-1">
+                                                <p class="font-Wanted-Regular text-Base">Country</p>
+                                                <select name="country" class="font-Wanted-Variable border border-gray-300 rounded-lg p-2">
+                                                    <option value="US">United States</option>
+                                                </select>  
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                
+                                    
+                                {% if "individual.ssn_last_4" in requiredActions %}
+                                <div class="flex flex-col gap-3">
+                                    <div>
+                                        <h3 class="font-Wanted-SemiBold text-Pre-Xl">Social Security Number</h3>
+                                    </div>
+
+                                    <div id="inputRows" class="w-full">
+                                        <label class="flex flex-col gap-1">
+                                            <p class="font-Wanted-Regular text-Base">Last 4 Digits</p>
+                                            <input type="password" name="ssn" maxlength="4" class="font-Wanted-Variable border border-gray-300 rounded-lg p-2" required>
+                                        </label>
+                                    </div>
+                                </div>
+                                {% endif %}
+
+                            </div>
+                        </li>
+                        {% endif %}
+
+
+                        {% if "business_profile.url" in requiredActions or "business_profile" in requiredActions %}
+                        <li>
+                            <div class="flex flex-col gap-3">
+                                <div>
+                                    <h3 class="font-Wanted-SemiBold">Business Information</h3>
+                                </div>
+
+                                <div class="flex flex-row gap-2">
+                                    <div id="inputRows" class="w-full">
+                                        <label class="flex flex-col gap-1">
+                                            <p class="font-Wanted-Regular text-Base">Business Name</p>
+                                            <input type="text" name="businessName" class="font-Wanted-Variable border border-gray-300 rounded-lg p-2" required>
+                                        </label>
+                                    </div>
+
+                                    <div id="inputRows" class="w-full">
+                                        <label class="flex flex-col gap-1">
+                                            <p class="font-Wanted-Regular text-Base">Website</p>
+                                            <input type="url" placeholder="https://yourwebsite.com" name="businessProfileURL" class="font-Wanted-Variable border border-gray-300 rounded-lg p-2" required>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="flex flex-col gap-1">
+                                        <p class="font-Wanted-Regular text-Base">Briefly describe your business</p>
+                                        <textarea name="businessProductDescription" class="font-Wanted-Variable border min-h-[300px] border-gray-300 rounded-lg p-2" required></textarea>
+                                    </label>
+                                </div>
+
+                                <div class="flex flex-row gap-2">
+                                    <div id="inputRows" class="w-full">
+                                        <label class="flex flex-col gap-1">
+                                            <p class="font-Wanted-Regular text-Base">Support Phone</p>
+                                            <input type="number" name="supportPhone" class="font-Wanted-Variable border border-gray-300 rounded-lg p-2" required>
+                                        </label>
+                                    </div>
+
+                                    <div id="inputRows" class="w-full">
+                                        <label class="flex flex-col gap-1">
+                                            <p class="font-Wanted-Regular text-Base">Support Email</p>
+                                            <input type="email" placeholder="support@example.com" name="supportEmail" class="font-Wanted-Variable border border-gray-300 rounded-lg p-2" required>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                        {% endif %}
+    
+                        {% if "external_account" in requiredActions %}
+                        <li>
+                            <div class="flex flex-col gap-3">
+                                <div>
+                                    <h3 class="font-Wanted-SemiBold">Bank Account Details</h3>
+                                </div>
+
+                                <div class="flex flex-row gap-2">
+                                    <div id="inputRows" class="w-full">
+                                        <label class="flex flex-col gap-1">
+                                            <p class="font-Wanted-Regular text-Base">Account Holder Name</p>
+                                            <input type="text" placeholder="Account Holder Name" name="accountHolderName" class="font-Wanted-Variable border border-gray-300 rounded-lg p-2" required>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="flex flex-row gap-2">
+                                    <div id="inputRows" class="w-full">
+                                        <label class="flex flex-col gap-1">
+                                            <p class="font-Wanted-Regular text-Base">Account Number</p>
+                                            <input type="text" placeholder="Account Number" name="accountNumber" class="font-Wanted-Variable border border-gray-300 rounded-lg p-2" required>                                        </label>
+                                    </div>
+
+                                    <div id="inputRows" class="w-full">
+                                        <label class="flex flex-col gap-1">
+                                            <p class="font-Wanted-Regular text-Base">Routing Number</p>
+                                            <input type="text" placeholder="Routing Number" name="accountRoutingNumber" class="font-Wanted-Variable border border-gray-300 rounded-lg p-2" required>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                        {% endif %}
+    
+                        
+    
+                        {% if "tos_acceptance.date" in requiredActions or "tos_acceptance.ip" in requiredActions or "tos_acceptance.service_agreement" in requiredActions or "tos_acceptance.user_agent" in requiredActions %}
+                        <li>
+                            <div class="flex flex-row w-full items-center justify-between gap-1">
+                                <label class="font-Wanted-Variable">
+                                    Accept Terms of Service
+                                </label>
+                                <div id="tos-input">
+                                    <input type="checkbox" name="tos_acceptance" value="true" class="cursor-pointer border-2 border-gray-500 rounded-full w-5 h-5 shadow-custom-shadow-6" required>                                    {% comment %} <span class="checkbox absolute h-5 w-5 rounded-md border-2 border-gray-300 duration-100 ease-in cursor-pointer" required> {% endcomment %}
+                                </div>
+                            </div>
+                        </li>
+                        {% endif %}
+                    </ul>
+                    <button type="submit" name="billingAction" value="completeRequiredActions" class="bg-green font-Wanted-Bold text-xl py-3 px-6 rounded-2xl text-white cursor-pointer">Complete Required Actions</button>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+        
+    </div>
+    
+</div>
+
+<div id="addBankAccountModal" class="hidden bg-[rgba(0, 0, 0, 0.037)] backdrop-blur-sm fixed top-0 left-0 right-0 bottom-0 z-[1005] w-full h-full cursor-default">
+    <div class="w-full h-full flex justify-center items-center">
+        <div class="w-11/12 xxsm:w-9/12 pre-sm:w-10/12 sm:w-10/12 md:w-10/12 pre-lg:w-10/12 lg:w-10/12 xl:w-3/5 h-auto min-h-[80%] lg:min-h-fit max-h-[90%] bg-white shadow-custom-shadow rounded-2xl p-5 pb-12 flex flex-col gap-3 overflow-y-auto">
+            <div class="w-full flex justify-between">
+                <div class="w-full flex justify-start font-Wanted-Bold text-Pre-Xl">
+                    Add Bank Account
+                </div>
+
+                <div class="w-full flex justify-end">
+                    <button role="button" type="button" id="closeBankAccountButton" class="border-none flex flex-col gap-1 justify-center items-center font-Wanted-Bold text-XSmall bg-none cursor-pointer">
+                        <img src="{% static "images/career/jobAppClose.svg" %}" alt="Minimize Card">
+                        <p>esc</p>
+                    </button>
+                </div>
+            </div>
+
+            <div id="bankAccountForm">
+                <div class="flex flex-col gap-2">
+                    <h4 class="font-Wanted-Bold text-Large text-black">Bank Account Details</h4>
+                    <form method="POST" class="flex flex-col gap-3">
+                        {% csrf_token %}
+                        <div class="flex flex-col gap-2">
+                            <label for="accountHolderName" class="font-Wanted-Medium text-[15px]">Account Holder Name</label>
+                            <input type="text" name="accountHolderName" id="accountHolderName" class="font-Wanted-Variable text-[13px] border border-gray-300 rounded-lg p-2" required>
+                        </div>
+                        <div class="flex flex-col gap-2">
+                            <label for="accountHolderName" class="font-Wanted-Medium text-[15px]">Account Number</label>
+                            <input type="text" name="accountNumber" id="accountNumber" class="font-Wanted-Variable text-[13px] border border-gray-300 rounded-lg p-2" required>
+                        </div>
+                        <div class="flex flex-col gap-2">
+                            <label for="accountHolderName" class="font-Wanted-Medium text-[15px]">Account Routing Number</label>
+                            <input type="text" name="accountRoutingNumber" id="accountRoutingNumber" class="font-Wanted-Variable text-[13px] border border-gray-300 rounded-lg p-2" required>
+                        </div>
+
+                        <div class="w-full flex justify-end">
+                            <button type="submit" name="billingAction" value="addBankAccountNew" class="bg-green py-3 px-6 rounded-2xl text-white cursor-pointer">Confirm</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="addCardModal" class="hidden bg-[rgba(0, 0, 0, 0.037)] backdrop-blur-sm fixed top-0 left-0 right-0 bottom-0 z-[1005] w-full h-full cursor-default">
+    <div class="w-full h-full flex justify-center items-center">
+        <div class="w-11/12 xxsm:w-9/12 pre-sm:w-10/12 sm:w-10/12 md:w-10/12 pre-lg:w-10/12 lg:w-10/12 xl:w-3/5 h-auto min-h-[80%] lg:min-h-fit max-h-[90%] bg-white shadow-custom-shadow rounded-2xl p-5 pb-12 flex flex-col gap-3 overflow-y-auto">
+            <div class="w-full flex justify-between">
+                <div class="w-full flex justify-start font-Wanted-Bold text-Pre-Xl">
+                    Add Card
+                </div>
+
+                <div class="w-full flex justify-end">
+                    <button role="button" type="button" id="closeCardPaymentButton" class="border-none flex flex-col gap-1 justify-center items-center font-Wanted-Bold text-XSmall bg-none cursor-pointer">
+                        <img src="{% static "images/career/jobAppClose.svg" %}" alt="Minimize Card">
+                        <p>esc</p>
+                    </button>
+                </div>
+            </div>
+
+            <div class="">
+                <div class="flex flex-col gap-2">
+                    <form method="POST" id="addCardModalForm" class="flex flex-col gap-3">
+                        {% csrf_token %}
+                        <input type="hidden" id="stripeKey" value="{{ stripeKey }}">
+                        <input type="hidden" id="addCardUrl" value="{% url 'eventManagement:hostBillingAddCard' %}">
+                        <div class="flex flex-col gap-2">
+                            <label for="cardName" class="font-Wanted-Medium text-[15px]">Name</label>
+                            <input type="text" name="cardName" id="cardName" class="font-Wanted-Variable text-[13px] border border-gray-300 rounded-lg p-2" required placeholder="Name on Card">
+                        </div>
+                        <div class="flex flex-col gap-2" id="card-element">
+                            
+                        </div>
+                        
+
+                        <div class="w-full flex justify-end">
+                            <button type="submit" class="bg-green py-3 px-6 rounded-2xl text-white cursor-pointer">Confirm</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="cashoutEarningsModal" class="hidden bg-[rgba(0, 0, 0, 0.037)] backdrop-blur-sm fixed top-0 left-0 right-0 bottom-0 z-[1005] w-full h-full cursor-default">
+    <div class="w-full h-full flex justify-center items-center">
+        <div class="w-11/12 xxsm:w-9/12 pre-sm:w-10/12 sm:w-10/12 md:w-10/12 pre-lg:w-10/12 lg:w-10/12 xl:w-3/5 h-auto min-h-[80%] lg:min-h-fit max-h-[90%] bg-white shadow-custom-shadow rounded-2xl p-5 pb-12 flex flex-col gap-3 overflow-y-auto">
+            <div class="w-full flex justify-between">
+                <div class="w-full flex justify-start font-Wanted-Bold text-Pre-Xl">
+                    Enter Amount to Cashout
+                </div>
+
+                <div class="w-full flex justify-end">
+                    <button role="button" type="button" id="closeCashoutEarningsButton" class="border-none flex flex-col gap-1 justify-center items-center font-Wanted-Bold text-XSmall bg-none cursor-pointer">
+                        <img src="{% static "images/career/jobAppClose.svg" %}" alt="Minimize Card">
+                        <p>esc</p>
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex flex-col gap-2">
+                <h4 class="font-Wanted-Bold text-Large text-black">Available for cashout: ${{ stripeAccountBalance.available|floatformat:2 }}</h4>
+                <form method="POST" class="flex flex-col gap-3">
+                    {% csrf_token %}
+                    <div class="flex flex-col gap-2">
+                        <input type="number" name="cashoutAmount" id="cashoutInputAmount" class="font-Wanted-Variable text-[13px] border border-gray-300 rounded-lg p-2" placeholder="Enter amount to cash out" min="1" max="{{ stripeAccountBalance.available }}" required>
+                    </div>
+
+                    <div class="w-full flex justify-end">
+                        <input type="hidden" id="billingCashoutUrl" value="{% url 'eventManagement:hostBillingCashout' %}">
+                        <input type="hidden" id="cashoutAvailableAmount" value="{{ stripeAccountBalance.available }}">
+                        <button id="processCashoutButton" class="bg-green py-3 px-6 rounded-2xl text-white cursor-pointer">Cashout</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock body %}

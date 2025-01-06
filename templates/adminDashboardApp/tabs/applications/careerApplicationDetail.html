@@ -1,0 +1,117 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}
+{{ application.applicantFirstName }} {{ application.applicantLastName }} - {{ application.role }} — WAVE.
+{% endblock title %}
+
+
+{% block script %}
+{% endblock script %}
+
+
+{% block header %}
+{% include "partials/nav-footer/nav/main_nav.html" %}
+{% endblock header %}
+
+
+
+{% block body %}
+<div id="content-container" class="flex flex-col gap-[70px] px-4 sm:px-6 md:px-[40px] pre-lg:px-[40px] lg:px-[100px] 2xl:px-48 3xl:px-96">
+    <div id="pagination-display" class="flex flex-col pre-sm:flex-row gap-2 w-full items-center font-Wanted-Variable justify-start text-gray-300">
+        <a href="{% url "waveAdmin:adminDashboard" %}" class="text-green underline">Admin Dashboard</a>
+        >
+        <a href="{% url "waveAdmin:adminDashboard" %}#applicationsManagement" class="text-green underline">Applications</a>
+        >
+        <a href="{% url "waveAdmin:careerApplications" %}" class="text-green underline">Career Applications</a>
+        >
+        <p class="font-Wanted-Medium text-black">{{ application.applicantFirstName }} {{ application.applicantLastName }} - {{ application.role }}</p>
+    </div>
+
+    <div id="body-content" class="flex flex-col gap-8">
+        <div class="flex flex-col gap-5">
+            <div class="flex justify-start font-Wanted-Bold text-black text-3xl">
+                <h3>{{ application.applicantFirstName }} {{ application.applicantLastName }} - {{ application.role }}</h3>
+            </div>
+            {% if application.approval_status == 'pending' %}
+            <form method="POST" class="w-full flex justify-end flex-row gap-3">
+                <input type="hidden" name="applicantEmail" value="{{ application.applicantEmail }}">
+                {% csrf_token %}
+                <button type="submit" name="eventAction" value="approveApplicant" class="font-Wanted-Regular bg-[#14ea14] text-white py-2 px-6 rounded-xl">Approve</button>
+                <button type="submit" name="eventAction" value="denyApplicant" class="font-Wanted-Regular bg-[red] text-white py-2 px-6 rounded-xl">Reject</button>
+            </form>
+            {% endif %}
+        </div>
+
+        <div class="flex flex-col gap-5">
+            <div class="flex flex-col gap-1">
+                <h6 class="font-Wanted-Bold text-black">Applicant Name</h6>
+                <p class="font-Wanted-Regular text-gray-600">{{ application.applicantFirstName }} {{ application.applicantLastName }}</p>
+            </div>
+
+            <div class="flex flex-col gap-1">
+                <h6 class="font-Wanted-Bold text-black">Applied Role</h6>
+                <p class="font-Wanted-Regular text-gray-600">{{ application.role.roleTitle }} | Applied on {{ application.applicationDate }}</p>
+            </div>
+
+            <div class="flex flex-col gap-1">
+                <h6 class="font-Wanted-Bold text-black">Applicant Email</h6>
+                <p class="font-Wanted-Regular text-gray-600">{{ application.applicantEmail }}</p>
+            </div>
+
+            <div class="flex flex-col gap-1">
+                <h6 class="font-Wanted-Bold text-black">Applicant Phone Number</h6>
+                <p class="font-Wanted-Regular text-gray-600">{{ application.applicantPhone }}</p>
+            </div>
+
+            <div class="flex flex-col gap-1">
+                <h6 class="font-Wanted-Bold text-black">Applicant Github</h6>
+                <a target="_blank" href="{{ application.applicantGithub }}" class="font-Wanted-Regular text-green underline">View Github</a>
+            </div>
+
+            <div class="flex flex-col gap-1">
+                <h6 class="font-Wanted-Bold text-black">Applicant LinkedIn</h6>
+                <a target="_blank" href="{{ application.applicantLinkedIn }}" class="font-Wanted-Regular text-green underline">View LinkedIn</a>
+            </div>
+
+            <div class="flex flex-col gap-1">
+                <h6 class="font-Wanted-Bold text-black">Applicant Portfolio</h6>
+                <a target="_blank" href="{{ application.applicantPortfolio }}" class="font-Wanted-Regular text-green underline">View Portfolio</a>
+            </div>
+
+            <div class="flex flex-col gap-1">
+                <h6 class="font-Wanted-Bold text-black">Applicant Location</h6>
+                <p class="font-Wanted-Regular text-gray-600">{{ application.applicantLocation }}</p>
+            </div>
+
+            <div class="flex flex-col gap-1">
+                <h6 class="font-Wanted-Bold text-black">Applicant Skills</h6>
+                <p class="font-Wanted-Regular text-gray-600">{{ application.whatYouBring }}</p>
+            </div>
+
+            <div class="flex flex-col gap-1">
+                <h6 class="font-Wanted-Bold text-black">Applicant Work Authorization</h6>
+                <p class="font-Wanted-Regular text-gray-600">{{ application.workAuthorization }}</p>
+            </div>
+
+            <div class="flex flex-col gap-1">
+                <h6 class="font-Wanted-Bold text-black">Applicant Cover Letter</h6>
+                {% if application.applicantCoverLetter %}
+                <a href="{{ application.applicantCoverLetter.url }}" class="font-Wanted-Regular text-blue-600 underline" download>Download Resume</a>
+                {% else %}
+                    <p>No file uploaded.</p>
+                {% endif %}
+            </div>
+
+            <div class="flex flex-col gap-1">
+                <h6 class="font-Wanted-Bold text-black">Applicant Resume</h6>
+                {% if application.applicantResume %}
+                <a href="{{ application.applicantResume.url }}" class="font-Wanted-Regular text-blue-600 underline" download>Download Resume</a>
+                {% else %}
+                    <p>No file uploaded.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock body %}

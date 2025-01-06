@@ -8,7 +8,8 @@
 @import "../styles/accountManagementApp/publicProfile.css";
 
 @import "../styles/adminDashboardApp/index.css";
-@import "../styles/adminDashboardApp/tabs/applications.css";
+@import "../styles/adminDashboardApp/tabs/applications/careerApplications.css";
+@import "../styles/adminDashboardApp/tabs/applications/hostApplications.css";
 @import "../styles/adminDashboardApp/tabs/careers.css";
 @import "../styles/adminDashboardApp/tabs/colleges.css";
 @import "../styles/adminDashboardApp/tabs/dashboard.css";
@@ -73,6 +74,7 @@
 @import "../styles/eventManagementApp/host/hostHome.css";
 @import "../styles/eventManagementApp/host/hostPortal.css";
 @import "../styles/eventManagementApp/host/eventManagement.css";
+@import "../styles/eventManagementApp/billing/hostBilling.css";
 
 @import "../styles/extras/company/about.css";
 @import "../styles/extras/company/team.css";

@@ -8,15 +8,15 @@ document.addEventListener('DOMContentLoaded', function () {
     function showSection(index) {
         sections.forEach((section, i) => {
             if (i === index) {
-                section.classList.remove('hidden'); // Show current section
-                section.classList.add('block'); // Ensure it's displayed as a block
+                section.classList.add('active'); // Ensure it's displayed as a block
+                section.style.display = 'block'; // Explicitly set display to block for visibility
             } else {
-                section.classList.add('hidden'); // Hide other sections
-                section.classList.remove('block');
+                section.classList.remove('active');
+                section.style.display = 'none'; // Hide non-active sections
             }
         });
 
-        // Toggle button visibility based on current index
+        // Toggle button visibility based on the current index
         if (index === 0) {
             previousButton.classList.add('hidden');
             previousButton.classList.remove('flex');

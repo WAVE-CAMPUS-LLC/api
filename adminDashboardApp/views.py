@@ -1,5 +1,13 @@
 import resend
 import json
+import stripe
+from docx import Document
+from reportlab.pdfgen import canvas
+from io import BytesIO
+
+from django.conf import settings
+from django.http import FileResponse, Http404
+from django.db.models import Max
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 from django.views.decorators.http import require_POST
@@ -19,22 +27,34 @@ from django.core.signing import Signer
 from django.utils import timezone
 import uuid
 
-
+from stripeManagementApp.adminActions import StripeAdmin
 from accountManagementApp.models import UserProfile
 from authenticationApp.models import CustomUser
 from supportCenterApp.models import SupportTicket, FeedbackModel
 from careerApp.models import CareerRoleApplication
-from eventManagementApp.models import HostApplication
+from eventManagementApp.models import HostApplication, HostProfile
 from collegeManagementApp.models import (
     CollegeRequest,
     Organization,
     OrganizationMembership,
     Membership,
 )
+from eventTicketsApp.models import StripePlatformSettings
+from eventManagementApp.models import Event
+from stripeManagementApp.updateConnectWithStripeDetails import (
+    updateConnectWithStripeDetails,
+)
 from blogApp.models import Blog
 from campusManagerApp.models import CampusManagerInvite
 from django.conf import settings
-from .models import Department, CareerRole, LoginHistoryModel, Newsroom, College
+from .models import (
+    Department,
+    # EventsLastUpdated,
+    CareerRole,
+    LoginHistoryModel,
+    Newsroom,
+    College,
+)
 from .forms import (
     CreateGroupForm,
     UpdateGroupForm,
@@ -51,33 +71,48 @@ from .forms import (
     UpdateImageTwoForm,
     UpdateImageThreeForm,
     CollegeForm,
+    EditCollegeForm,
 )
 from supportCenterApp.models import SupportTicket, SupportTicketMessage
-from wave_v1.decorators import (    
+from wave_v1.decorators import (
     check_suspension,
-    group_required
+    member,
+    verified,
+    onboarded,
+    admin,
+    superAdmin,
 )
+from eventTicketsApp.forms import StripePlatformSettingsForm
+
+stripe.api_key = settings.STRIPE_SECRET_KEY
 
 
 # Create your views here.
 @login_required(login_url="authentication:login")
 @check_suspension
-@group_required("Admin")
+@member
+@admin
 def adminPortalView(request):
     return render(request, "adminDashboardApp/index.html")
 
 
 @login_required(login_url="authentication:login")
 @check_suspension
-@group_required("Admin")
+@member
+@admin
 def adminDashboardView(request):
     return render(request, "adminDashboardApp/tabs/dashboard.html")
+
+
+def adminUserAnalyticsView(request):
+    return render(request, "adminDashboardApp/tabs/analytics/users.html")
 
 
 # Department Management
 @login_required(login_url="authentication:login")
 @check_suspension
-@group_required("Admin")
+@member
+@admin
 def adminDepartmentView(request):
     """
     The `adminDepartmentView` function checks if the user is a superuser, processes a form submission to
@@ -111,7 +146,8 @@ def adminDepartmentView(request):
 
 @login_required(login_url="authentication:login")
 @check_suspension
-@group_required("Admin")
+@member
+@admin
 def adminDepartmentDetailedView(request, departmentID, department_name):
     """
     The function `adminDepartmentDetailedView` handles detailed view and management of department
@@ -189,39 +225,203 @@ def adminDepartmentDetailedView(request, departmentID, department_name):
 
 @login_required(login_url="authentication:login")
 @check_suspension
-@group_required("Admin")
-def adminApplicationsView(request):
+@member
+@admin
+def adminCareerApplicationsView(request):
+    careerApplications = CareerRoleApplication.objects.all()
+
+    return render(
+        request,
+        "adminDashboardApp/tabs/applications/careerApplications.html",
+        {"applications": careerApplications},
+    )
+
+
+@login_required(login_url="authentication:login")
+@check_suspension
+@member
+@admin
+def adminCareerApplicationsDetailView(request, applicationId):
+    application = get_object_or_404(CareerRoleApplication, applicationId=applicationId)
+
+    if request.method == "POST":
+        action = request.POST.get("eventAction")
+        email = request.POST.get("applicantEmail")
+
+        if action == "approveApplicant":
+            application.approval_status = "approved"
+            application.save()
+            sendApprovedCareerApplicantEmail(request, email)
+            return redirect("waveAdmin:careerApplications")
+        elif action == "denyApplicant":
+            application.approval_status = "denied"
+            application.save()
+            sendDeniedCareerApplicantEmail(request, email)
+            return redirect("waveAdmin:careerApplications")
+
+    return render(
+        request,
+        "adminDashboardApp/tabs/applications/careerApplicationDetail.html",
+        {
+            "application": application,
+        },
+    )
+
+
+def sendApprovedCareerApplicantEmail(request, applicantEmail):
+    try:
+        subject = "Welcome to WAVE.!"
+        emailMessageHtml = render_to_string(
+            "emailTemplates/adminDashboardApp/careers/applicationApproved.html", {}
+        )
+        plainMessage = strip_tags(emailMessageHtml)
+        send_mail(
+            subject, plainMessage, None, [applicantEmail], html_message=emailMessageHtml
+        )
+        messages.success(request, "Email sent successfully.")
+    except Exception as e:
+        messages.error(request, f"Error sending email to {applicantEmail}: {e}")
+
+
+def sendDeniedCareerApplicantEmail(request, applicantEmail):
+    try:
+        subject = "Thank you for your application!"
+        emailMessageHtml = render_to_string(
+            "emailTemplates/adminDashboardApp/careers/applicationDenied.html", {}
+        )
+        plainMessage = strip_tags(emailMessageHtml)
+        send_mail(
+            subject, plainMessage, None, [applicantEmail], html_message=emailMessageHtml
+        )
+        messages.success(request, "Email sent successfully.")
+    except Exception as e:
+        messages.error(request, f"Error sending email to {applicantEmail}: {e}")
+
+
+@login_required(login_url="authentication:login")
+@check_suspension
+@member
+@admin
+def adminEventHostsView(request):
+    hostProfile = UserProfile.objects.filter(was_host=True)
+
+    if request.method == "POST":
+        action = request.POST.get("eventAction")
+        host_id = request.POST.get("hostUsername")
+
+        if action == "pause" and host_id:
+            try:
+                host = get_object_or_404(CustomUser, username=host_id)
+                host.groups.remove("Host")
+                host.save()
+                hostProfile.was_host = True
+                hostProfile.save()
+                return redirect("waveAdmin:eventHosts")
+            except CustomUser.DoesNotExist:
+                messages.error(request, "Host not found.")
+        elif action == "activate" and host_id:
+            try:
+                host = get_object_or_404(CustomUser, username=host_id)
+                host.groups.add("Host")
+                host.save()
+                hostProfile.was_host = True
+                hostProfile.save()
+                return redirect("waveAdmin:eventHosts")
+            except CustomUser.DoesNotExist:
+                messages.error(request, "Host not found.")
+    return render(
+        request, "adminDashboardApp/tabs/events/hosts.html", {"profiles": hostProfile}
+    )
+
+
+@login_required(login_url="authentication:login")
+@check_suspension
+@member
+@admin
+def adminHostApplicationsView(request):
     hostApplications = HostApplication.objects.all()
 
     if request.method == "POST":
         action = request.POST.get("applicationAction")
         applicant_email = request.POST.get("applicantEmail")
+        applicant_phone = request.POST.get("phone")
+
+        userProfile = UserProfile.objects.get(user__email=applicant_email)
+
+        try:
+            application = HostApplication.objects.get(email=applicant_email)
+        except HostApplication.DoesNotExist:
+            messages.error(request, "Application not found.")
 
         if action == "approve":
-            sendHostApprovalEmail(applicant_email)
+            sendHostApprovalEmail(request, applicant_email)
 
             try:
                 applicant = CustomUser.objects.get(email=applicant_email)
                 host_group, created = Group.objects.get_or_create(name="Host")
+                userProfile.was_host = True
                 applicant.groups.add(host_group)
+
+                host_profile, profile_created = HostProfile.objects.get_or_create(
+                    user=applicant
+                )
+                try:
+                    stripeAccount = stripe.Account.create(
+                        type="custom",
+                        country="US",
+                        email=applicant_email,
+                        business_type="individual",
+                        individual={
+                            "email": applicant_email,
+                            "phone": applicant_phone,
+                            "first_name": applicant.first_name,
+                            "last_name": applicant.last_name,
+                        },
+                        capabilities={"transfers": {"requested": True}},
+                    )
+                    host_profile.stripe_account_id = stripeAccount.id
+                    host_profile.save()
+
+                except stripe.error.StripeError as e:
+                    return JsonResponse(
+                        {"status": "error", "message": str(e)}, status=400
+                    )
+                except Exception as e:
+                    return JsonResponse(
+                        {"status": "error", "message": str(e)}, status=500
+                    )
+
+                if profile_created:
+                    messages.success(
+                        request,
+                        f"HostProfile created for user: {applicant_email}",
+                    )
+
                 applicant.save()
+                userProfile.save()
 
             except CustomUser.DoesNotExist:
-                pass
+                messages.error(request, "User not found.")
 
-            return redirect("waveAdmin:applications")
+            application.approval_status = "approved"
+            application.save()
+
+            return redirect("waveAdmin:hostApplications")
 
         elif action == "deny":
-            sendHostDenyEmail(applicant_email)
-            return redirect("waveAdmin:applications")
+            sendHostDenyEmail(request, applicant_email)
+            application.approval_status = "denied"
+            application.save()
+            return redirect("waveAdmin:hostApplications")
+
     return render(
         request,
-        "adminDashboardApp/tabs/applications.html",
-        {"hostApps": hostApplications},
+        "adminDashboardApp/tabs/applications/hostApplications.html",
+        {"applications": hostApplications},
     )
 
 
-def sendHostApprovalEmail(applicantEmail):
+def sendHostApprovalEmail(request, applicantEmail):
     try:
         subject = (
             "Congratulations, You are a WAVE. host! Start hosting your events now."
@@ -233,11 +433,12 @@ def sendHostApprovalEmail(applicantEmail):
         send_mail(
             subject, plainMessage, None, [applicantEmail], html_message=emailMessageHtml
         )
+        messages.success(request, "Email sent successfully.")
     except Exception as e:
-        print(f"Error sending email to {applicantEmail}: {e}")
+        messages.error(request, f"Error sending email to {applicantEmail}: {e}")
 
 
-def sendHostDenyEmail(applicantEmail):
+def sendHostDenyEmail(request, applicantEmail):
     try:
         subject = "Thank you for your application to be a host!"
         emailMessageHtml = render_to_string(
@@ -247,20 +448,64 @@ def sendHostDenyEmail(applicantEmail):
         send_mail(
             subject, plainMessage, None, [applicantEmail], html_message=emailMessageHtml
         )
+        messages.success(request, "Email sent successfully.")
     except Exception as e:
-        print(f"Error sending email to {applicantEmail}: {e}")
+        messages.error(request, f"Error sending email to {applicantEmail}: {e}")
 
 
 @login_required(login_url="authentication:login")
 @check_suspension
-@group_required("Admin")
+@member
+@admin
 def adminEventsView(request):
-    return render(request, "adminDashboardApp/tabs/events.html")
+    live_events = Event.objects.filter(status="live")
+    active_events = Event.objects.filter(status="active")
+    incomplete_events = Event.objects.filter(status="incomplete")
+    archived_events = Event.objects.filter(status="archived")
+
+    last_updated = Event.objects.aggregate(last_updated=Max("updated_at"))[
+        "last_updated"
+    ]
+
+    if request.method == "POST":
+        action = request.POST.get("eventAction")
+        event_id = request.POST.get("event_id")
+
+        if action == "pause" and event_id:
+            try:
+                event = get_object_or_404(Event, eventId=event_id)
+                event.admin_status = "paused"
+                event.save()
+                return redirect("waveAdmin:events")
+            except Event.DoesNotExist:
+                messages.error(request, "Event not found.")
+
+        elif action == "activate" and event_id:
+            try:
+                event = get_object_or_404(Event, eventId=event_id)
+                event.admin_status = "active"
+                event.save()
+                return redirect("waveAdmin:events")
+            except Event.DoesNotExist:
+                messages.error(request, "Event not found.")
+
+    return render(
+        request,
+        "adminDashboardApp/tabs/events/events.html",
+        {
+            "liveEvents": live_events,
+            "last_updated": last_updated,
+            "activeEvents": active_events,
+            "incompleteEvents": incomplete_events,
+            "archivedEvents": archived_events,
+        },
+    )
 
 
 @login_required(login_url="authentication:login")
 @check_suspension
-@group_required("Admin")
+@member
+@admin
 def adminUsersView(request):
     # Going into the CustomUser database which holds all the users and fetching them to be displayed.
     total_users = CustomUser.objects.all()
@@ -269,7 +514,8 @@ def adminUsersView(request):
 
 @login_required(login_url="authentication:login")
 @check_suspension
-@group_required("Admin")
+@member
+@admin
 def adminUserDetailedView(request, username):
     user_in_view = get_object_or_404(CustomUser, username=username)
     user_profile = UserProfile.objects.get(user=user_in_view)
@@ -282,11 +528,8 @@ def adminUserDetailedView(request, username):
         action = request.POST.get("action")
 
         if action == "suspend":
-            suspend_form = SuspendUserForm(request.POST)
-            if suspend_form.is_valid():
-                hours = suspend_form.cleaned_data.get("hours", 0)
-                user_in_view.suspend(hours)
-                return redirect("waveAdmin:user-detailed", username=username)
+            user_in_view.suspend()
+            return redirect("waveAdmin:user-detailed", username=username)
 
         elif action == "allow":
             user_in_view.remove_suspension_OR_ban()
@@ -302,8 +545,6 @@ def adminUserDetailedView(request, username):
                 user_in_view.groups.remove(group)
             return redirect("waveAdmin:user-detailed", username=username)
 
-    else:
-        suspend_form = SuspendUserForm()
 
     return render(
         request,
@@ -314,18 +555,18 @@ def adminUserDetailedView(request, username):
             "login_history": login_history,
             "user_groups": user_groups,
             "available_groups": available_groups,
-            "suspend_form": suspend_form,
         },
     )
 
 
 @login_required(login_url="authentication:login")
 @check_suspension
-@group_required("Admin")
+@member
+@admin
 def adminRoleView(request):
     createGroup = CreateGroupForm()
-    all_groups = Group.objects.all()
-    all_permissions = Permission.objects.all()
+    all_groups = Group.objects.all()[:20]
+    all_permissions = Permission.objects.all()[:20]
 
     if request.method == "POST":
         action = request.POST.get("roleControlAction")
@@ -335,6 +576,7 @@ def adminRoleView(request):
             try:
                 group = get_object_or_404(Group, id=group_id)
                 group.delete()
+                messages.success(request, "Group deleted successfully.")
                 return redirect("waveAdmin:roles")
             except Group.DoesNotExist:
                 pass
@@ -344,15 +586,15 @@ def adminRoleView(request):
             updateForm = UpdateGroupForm(request.POST, instance=group)
             if updateForm.is_valid():
                 updateForm.save()
+                messages.success(request, "Group updated successfully.")
                 return redirect("waveAdmin:roles")
 
         else:
             createGroup = CreateGroupForm(request.POST)
             if createGroup.is_valid():
-                print(createGroup.cleaned_data)
                 group = createGroup.save()
-                print("Group created: ", group)
-                print("Assigned permissions: ", group.permissions.all())
+
+                messages.success(request, "Group created successfully.")
 
                 return redirect("waveAdmin:roles")
 
@@ -369,7 +611,8 @@ def adminRoleView(request):
 
 @login_required(login_url="authentication:login")
 @check_suspension
-@group_required("Admin")
+@member
+@admin
 def adminCareersView(request):
     # Querying every single career role.
     all_career_roles = CareerRole.objects.all()
@@ -382,7 +625,8 @@ def adminCareersView(request):
 
 @login_required(login_url="authentication:login")
 @check_suspension
-@group_required("Admin")
+@member
+@admin
 def adminCareerDetailView(request, roleID):
     """
     The `adminCareerDetailView` function handles viewing and managing career details for admin users,
@@ -410,11 +654,11 @@ def adminCareerDetailView(request, roleID):
         applicant_email = request.POST.get("applicantEmail")
 
         if action == "approve":
-            sendApprovedApplicantEmail(applicant_email)
+            sendApprovedApplicantEmail(request, applicant_email)
             return redirect("waveAdmin:careers")
 
         elif action == "deny":
-            sendDeniedApplicantEmail(applicant_email)
+            sendDeniedApplicantEmail(request, applicant_email)
             return redirect("waveAdmin:careers")
     return render(
         request,
@@ -423,7 +667,7 @@ def adminCareerDetailView(request, roleID):
     )
 
 
-def sendApprovedApplicantEmail(applicantEmail):
+def sendApprovedApplicantEmail(request, applicantEmail):
     try:
         subject = "Welcome to WAVE.!"
         emailMessageHtml = render_to_string(
@@ -433,11 +677,12 @@ def sendApprovedApplicantEmail(applicantEmail):
         send_mail(
             subject, plainMessage, None, [applicantEmail], html_message=emailMessageHtml
         )
+        messages.success(request, "Email sent successfully.")
     except Exception as e:
-        print(f"Error sending email to {applicantEmail}: {e}")
+        messages.error(request, f"Error sending email to {applicantEmail}: {e}")
 
 
-def sendDeniedApplicantEmail(applicantEmail):
+def sendDeniedApplicantEmail(request, applicantEmail):
     try:
         subject = "Thank you for your application!"
         emailMessageHtml = render_to_string(
@@ -447,20 +692,92 @@ def sendDeniedApplicantEmail(applicantEmail):
         send_mail(
             subject, plainMessage, None, [applicantEmail], html_message=emailMessageHtml
         )
+        messages.success(request, "Email sent successfully.")
     except Exception as e:
-        print(f"Error sending email to {applicantEmail}: {e}")
+        messages.error(request, f"Error sending email to {applicantEmail}: {e}")
 
 
 @login_required(login_url="authentication:login")
 @check_suspension
-@group_required("Admin")
-def adminFinanceView(request):
-    return render(request, "adminDashboardApp/tabs/financial.html")
+@member
+@admin
+def adminConnectedAccountsView(request):
+    accounts = StripeAdmin.getConnectedAccounts(request)
+    return render(
+        request,
+        "adminDashboardApp/tabs/financial/accounts.html",
+        {"accounts": accounts},
+    )
 
 
 @login_required(login_url="authentication:login")
 @check_suspension
-@group_required("Admin")
+@member
+@admin
+def adminConnectedAccountDetailView(request, account_id):
+    account = StripeAdmin.getConnectedAccountDetails(request, account_id)
+    transactions = StripeAdmin.getConnectedAccountTransactions(request, account_id)
+
+    if request.method == "POST":
+        action = request.POST.get("eventAction")
+        if action == "deleteStripeAccount":
+            StripeAdmin.removeStripeAccount(request, account_id)
+            return redirect("waveAdmin:connectedAccounts")
+        elif action == "rejectStripeAccount":
+            StripeAdmin.rejectStripeAccount(request, account_id)
+            return redirect("waveAdmin:connectedAccounts")
+    return render(
+        request,
+        "adminDashboardApp/tabs/financial/accountDetail.html",
+        {"account": account, "transactions": transactions},
+    )
+
+
+@login_required(login_url="authentication:login")
+@check_suspension
+@member
+@admin
+def adminProductsView(request):
+    products = StripeAdmin.getProducts(request)
+    return render(
+        request,
+        "adminDashboardApp/tabs/financial/products.html",
+        {"products": products},
+    )
+
+
+@login_required(login_url="authentication:login")
+@check_suspension
+@member
+@admin
+def adminFinancialSettingsView(request):
+    stripe_settings = StripePlatformSettings.objects.first()
+    stripe_settings_form = StripePlatformSettingsForm(instance=stripe_settings)
+
+    if request.method == "POST":
+        stripe_settings_form = StripePlatformSettingsForm(
+            request.POST, instance=stripe_settings
+        )
+        if stripe_settings_form.is_valid():
+            stripe_settings_form.save()
+            messages.success(request, "Settings saved successfully.")
+            return redirect("waveAdmin:financialSettings")
+        else:
+            messages.error(request, "Error saving settings.")
+    return render(
+        request,
+        "adminDashboardApp/tabs/financial/stripeSettings.html",
+        {
+            "stripeSettings": stripe_settings,
+            "stripeSettingsForm": stripe_settings_form,
+        },
+    )
+
+
+@login_required(login_url="authentication:login")
+@check_suspension
+@member
+@admin
 def adminSupportView(request):
     all_support_tickets = SupportTicket.objects.all()
 
@@ -486,7 +803,8 @@ def adminSupportView(request):
 
 @login_required(login_url="authentication:login")
 @check_suspension
-@group_required("Admin")
+@member
+@admin
 def adminFeedbackView(request):
     """
     The `adminFeedbackView` function displays feedback offers for superusers and redirects
@@ -513,7 +831,8 @@ def adminFeedbackView(request):
 
 @login_required
 @check_suspension
-@group_required("Admin")
+@member
+@admin
 def adminCollegeView(request):
     colleges = College.objects.annotate(member_count=Count("membership"))
     requestedColleges = CollegeRequest.objects.all()
@@ -542,7 +861,7 @@ def adminCollegeView(request):
         collegeForm = CollegeForm()
     return render(
         request,
-        "adminDashboardApp/tabs/colleges.html",
+        "adminDashboardApp/tabs/colleges/colleges.html",
         {
             "colleges": colleges,
             "collegeForm": collegeForm,
@@ -553,26 +872,43 @@ def adminCollegeView(request):
 
 @login_required
 @check_suspension
-@group_required("Admin")
+@member
+@admin
 def adminCollegeDetailView(request, collegeId):
     college = get_object_or_404(College, collegeId=collegeId)
-
+    events = Event.objects.filter(
+        display_event_on_college=True, host__user_profile__college=college
+    )
+    organizations = Organization.objects.filter(college=college)
     action = request.POST.get("eventAction")
+    editCollegeForm = EditCollegeForm(instance=college)
+
+    # members = Membership.objects.filter(college=college)
+
+    members = UserProfile.objects.filter(college=college)
+
+    # Check if requested user has role of super admin
+    user = request.user
+    if user.groups.filter(name="Super Admin").exists():
+        isSuperAdmin = True
+    else:
+        isSuperAdmin = False
 
     if request.method == "POST":
-        email = request.POST.get("inviteEmail")
+        if action == "inviteManager":
+            email = request.POST.get("inviteEmail")
 
-        if email:
-            try:
-                send_invite(email, college)
-                
-                messages.success(request, "Invite sent successfully")
-            except Exception as e:
-                messages.error(request, f"Error sending invite: {str(e)}")
-        else:
-            messages.error(request, "Please provide an email address")
+            if email:
+                try:
+                    send_invite(email, college)
 
-        if action == "removeManager":
+                    messages.success(request, "Invite sent successfully")
+                except Exception as e:
+                    messages.error(request, f"Error sending invite: {str(e)}")
+            else:
+                messages.error(request, "Please provide an email address")
+
+        elif action == "removeManager":
             manager_email = request.POST.get("managerEmail")
             if manager_email:
                 try:
@@ -593,12 +929,32 @@ def adminCollegeDetailView(request, collegeId):
                     messages.error(request, f"Error removing manager: {str(e)}")
             else:
                 messages.error(request, "No manager email provided.")
+
+        elif action == "editCollege":
+            editCollegeForm = EditCollegeForm(request.POST, instance=college)
+            if editCollegeForm.is_valid():
+                editCollegeForm.save()
+                messages.success(request, "College details updated successfully.")
+            else:
+                messages.error(request, "Error updating college details.")
+
+        elif action == "deleteCollege":
+            college.delete()
+            return redirect("waveAdmin:colleges")
+
         return redirect("waveAdmin:collegeDetail", collegeId=collegeId)
 
     return render(
         request,
         "adminDashboardApp/tabs/colleges/collegeInfo.html",
-        {"college": college},
+        {
+            "college": college,
+            "events": events,
+            "organizations": organizations,
+            "members": members,
+            "editCollegeForm": editCollegeForm,
+            "isSuperAdmin": isSuperAdmin,
+        },
     )
 
 
@@ -606,7 +962,7 @@ def send_invite(email, college):
     """
     The function `send_invite` sends an invitation email to a user to become a Campus Manager at a
     specific college, handling existing invites and generating a unique invite link.
-    
+
     :param email: The `email` parameter in the `send_invite` function is the email address of the person
     to whom the invitation will be sent
     :param college: The `college` parameter in the `send_invite` function is likely an object
@@ -643,19 +999,26 @@ def send_invite(email, college):
 
 @login_required
 @check_suspension
-@group_required("Admin")
+@member
+@admin
 def adminCollegeOrgsView(request):
-    return render(request, "adminDashboardApp/tabs/organizations.html")
+    organizations = Organization.objects.all()
+    return render(
+        request,
+        "adminDashboardApp/tabs/colleges/organizations.html",
+        {"organizations": organizations},
+    )
 
 
 @login_required
 @check_suspension
-@group_required("Admin")
+@member
+@admin
 def adminNewsRoomView(request):
     """
     The function `adminNewsRoomView` retrieves all news articles from the Newsroom model and renders
     them in the newsroom.html template for display in the admin dashboard.
-    
+
     :param request: The `request` parameter in the `adminNewsRoomView` function is an object that
     contains information about the current HTTP request, such as the request method, headers, user
     session, and more. It is typically passed to view functions in Django to handle incoming requests
@@ -670,12 +1033,13 @@ def adminNewsRoomView(request):
 
 @login_required
 @check_suspension
-@group_required("Admin")
+@member
+@admin
 def adminCreateNewsView(request):
     """
     This Python function handles the creation of news articles by processing form data and saving it to
     the database.
-    
+
     :param request: The `request` parameter in the `adminCreateNewsView` function is an HttpRequest
     object that represents the current HTTP request. It contains information about the request made by
     the client, such as the request method (GET, POST, etc.), request data, user session information,
@@ -690,10 +1054,13 @@ def adminCreateNewsView(request):
             news_instance = createNewsForm.save(commit=False)
             news_instance.created_by = request.user
             news_instance.save()
+            messages.success(request, "News article created successfully.")
             return redirect("waveAdmin:newsroom")
 
         else:
-            print(createNewsForm.errors)
+            messages.error(
+                request, f"Error creating news article.{createNewsForm.errors}"
+            )
 
     else:
         createNewsForm = CreateNewsForm()
@@ -706,11 +1073,12 @@ def adminCreateNewsView(request):
 
 @login_required
 @check_suspension
-@group_required("Admin")
+@member
+@admin
 def adminEditNewsView(request, newsId):
     """
     This function is likely used to display a view for editing news articles by an admin.
-    
+
     :param request: The `request` parameter in the `adminEditNewsView` function is typically an
     HttpRequest object that represents the current request from the user. It contains information about
     the request, such as the user's session, any data submitted through forms, and other metadata
@@ -826,21 +1194,25 @@ def adminEditNewsView(request, newsId):
         },
     )
 
-@login_required
-@check_suspension
-@group_required("Admin")
-def adminBlogView(request):
-    blogs = Blog.objects.all()
-    return render(request, "adminDashboardApp/tabs/blogs.html", {"blogs": blogs})
 
 @login_required
 @check_suspension
-@group_required("Admin")
+@member
+@admin
+def adminBlogView(request):
+    blogs = Blog.objects.all()
+    return render(request, "adminDashboardApp/tabs/blog.html", {"blogs": blogs})
+
+
+@login_required
+@check_suspension
+@member
+@admin
 def adminEmailingView(request):
     """
     The `adminEmailingView` function retrieves all active user profiles and renders them in an emailing
     template for the admin dashboard.
-    
+
     :param request: The `request` parameter in the `adminEmailingView` function is an HttpRequest object
     that represents the current HTTP request. It contains metadata about the request, such as the
     request method, headers, user session information, and more. This parameter is typically passed to
@@ -871,17 +1243,20 @@ resend.api_key = settings.RESEND_API_KEY
     the email fails to send, it returns a JSON response with `"success": False` and an error message
     indicating the reason for the failure.
     """
+
+
 @csrf_exempt
 @require_POST
 @login_required
 @check_suspension
-@group_required("Admin")
+@member
+@admin
 def send_email(request):
     try:
         data = json.loads(request.body)
-        recipients = data.get('recipients')
-        subject = data.get('subject')
-        message = data.get('message')
+        recipients = data.get("recipients")
+        subject = data.get("subject")
+        message = data.get("message")
 
         email_params: resend.Emails.SendParams = {
             "from": "Support @ WAVE. <support@wavecampus.net>",
@@ -892,7 +1267,7 @@ def send_email(request):
 
         email_response = resend.Emails.send(email_params)
 
-        if email_response.get("id"):  
+        if email_response.get("id"):
             return JsonResponse({"success": True, "data": email_response})
         else:
             return JsonResponse({"success": False, "error": "Failed to send email."})
@@ -900,52 +1275,57 @@ def send_email(request):
     except Exception as e:
         return JsonResponse({"success": False, "error": f"Error: {str(e)}"})
 
+
 @login_required
 def admin_ticket_details(request, ticket_id):
     ticket = get_object_or_404(SupportTicket, ticket_id=ticket_id)
-    return render(request, 'adminDashboardApp/tabs/admin_ticket_details.html', {'ticket': ticket})
+    return render(
+        request, "adminDashboardApp/tabs/admin_ticket_details.html", {"ticket": ticket}
+    )
+
 
 @login_required
 def admin_send_ticket_reply(request, ticket_id):
     ticket = get_object_or_404(SupportTicket, ticket_id=ticket_id)
-    if request.method == 'POST':
-        message = request.POST.get('message')
+    if request.method == "POST":
+        message = request.POST.get("message")
         if message:
             SupportTicketMessage.objects.create(
-                ticket=ticket,
-                sender=request.user,
-                message=message
+                ticket=ticket, sender=request.user, message=message
             )
-    return redirect('waveAdmin:admin_ticket_details', ticket_id=ticket_id)
+    return redirect("waveAdmin:admin_ticket_details", ticket_id=ticket_id)
+
 
 @login_required
 def toggle_ticket_status(request, ticket_id):
     ticket = get_object_or_404(SupportTicket, ticket_id=ticket_id)
-    if request.method == 'POST':
-        if ticket.status == 'Closed':
-            ticket.status = 'Open'
+    if request.method == "POST":
+        if ticket.status == "Closed":
+            ticket.status = "Open"
         else:
-            ticket.status = 'Closed'
+            ticket.status = "Closed"
         ticket.save()
-        return redirect('waveAdmin:admin_ticket_details', ticket_id=ticket_id)
+        return redirect("waveAdmin:admin_ticket_details", ticket_id=ticket_id)
+
 
 def ticket_messages(request, ticket_id):
     ticket = SupportTicket.objects.get(ticket_id=ticket_id)
     messages = ticket.messages.all()
     return render(request, "partials/messages.html", {"messages": messages})
 
+
 @login_required
 def admin_send_ticket_reply(request, ticket_id):
     ticket = get_object_or_404(SupportTicket, ticket_id=ticket_id)
-    if request.method == 'POST':
-        message = request.POST.get('message')
+    if request.method == "POST":
+        message = request.POST.get("message")
         if message:
             # Save the message to the database
             new_message = SupportTicketMessage.objects.create(
                 ticket=ticket,
                 sender=request.user,
                 message=message,
-                sent_at=timezone.now()
+                sent_at=timezone.now(),
             )
 
             # Send the message to the WebSocket group
@@ -957,6 +1337,6 @@ def admin_send_ticket_reply(request, ticket_id):
                     "message": new_message.message,
                     "sender": new_message.sender.username,
                     "sent_at": new_message.sent_at.strftime("%Y-%m-%d %H:%M:%S"),
-                }
+                },
             )
-    return redirect('waveAdmin:admin_ticket_details', ticket_id=ticket_id)
+    return redirect("waveAdmin:admin_ticket_details", ticket_id=ticket_id)

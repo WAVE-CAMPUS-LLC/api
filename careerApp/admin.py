@@ -1,4 +1,6 @@
+from authenticationApp.admin import super_admin_restricted_site
 from django.contrib import admin
+
 from .models import CareerRoleApplication
 
 
@@ -20,4 +22,4 @@ class CareerAppAdmin(admin.ModelAdmin):
     )
 
 
-admin.site.register(CareerRoleApplication, CareerAppAdmin)
+super_admin_restricted_site.register(CareerRoleApplication, CareerAppAdmin)

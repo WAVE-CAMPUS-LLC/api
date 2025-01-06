@@ -32,6 +32,13 @@ def partnersView(request):
     pageName = "Partnership"
     return render(request, "extras/resources/partners.html", {"pageName": pageName})
 
+def verifiedHostsView(request):
+    pageName = "Verified-Hosts"
+    return render(request, "extras/policy/verifiedHost.html", {"pageName": pageName})
+
+def activeMembersView(request):
+    pageName = "Active-Members"
+    return render(request, "extras/policy/activeMembers.html", {"pageName": pageName})
 
 def error_404(request, exception):
     return render(request, 'extras/invalid/invalid.html', status=404)

@@ -8,8 +8,12 @@ Manage {{ event.title }} | WAVE.
 {% endblock title %}
 
 {% block script %}
-    <script type="text/javascript" src="{% static "scripts/eventManagementApp/host/eventManage/editEvent.js" %}" d efer></script>
-    <script type="text/javascript" src="{% static "scripts/eventManagementApp/host/eventManage/tabControl.js" %}" d efer></script>
+<script>
+    // Initialize the age restriction value
+    window.currentAgeRestriction = "{{ event.age_restriction|default_if_none:''|escapejs }}";
+</script>
+    <script type="text/javascript" src="{% static "scripts/eventManagementApp/host/eventManage/editEvent.js" %}" defer></script>
+    <script type="text/javascript" src="{% static "scripts/eventManagementApp/host/eventManage/tabControl.js" %}" defer></script>
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     <script type="text/javascript" src="{% static "scripts/eventTicketsApp/eventManagementScanner/scanner.js" %}" defer></script>
     {% if isInCollege %}
@@ -53,8 +57,10 @@ Manage {{ event.title }} | WAVE.
         </div>
 
         <div id="portal-body-content">
+            <!-- OVERVIEW TAB -->
             <div class="pbc-element-content" id="event-information">
-                <div class="tab-information-body flex flex-col gap-10">
+                <form method="POST"  class="tab-information-body flex flex-col gap-10" enctype="multipart/form-data">
+                    {% csrf_token %}
                     <div class="font-Wanted-Variable text-Base text-[#000000c3]">
                         <p>
                             This tab provides an overview of all the key information 
@@ -65,42 +71,97 @@ Manage {{ event.title }} | WAVE.
                             <br/>To make changes to the event information, simply click on the "Edit" button to update the details as needed.
                         </p>
                     </div>
+                    <div class="flex justify-end">
+                        <div class="flex flex-row">
+                            <button id="editEventBtn" type="button" class="editEventButton p-[6px] sm:p-[8px] md:p-[15px] border border-transparent border-r-gradient-start border-l-gradient-end text-white font-Wanted-SemiBold no-underline flex items-center gap-[10px] text-Semi-Medium md:text-Large rounded-[10px] xxsm:rounded-[10px] sm:rounded-[15px] md:rounded-[20px] bg-gradient-to-r from-gradient-start to-gradient-end">
+                                <img src="{% static 'images/eventManagementApp/host/edit.svg' %}"  class="w-[25px] h-[25px]" />
+                                Edit Event
+                            </button>
+                            <button id="cancelEdit" type="button" class="cancelEdit hidden p-[6px] sm:p-[8px] md:p-[15px] border border-transparent border-r-gradient-start border-l-gradient-end text-white font-Wanted-SemiBold no-underline items-center gap-[10px] text-Semi-Medium md:text-Large rounded-[10px] xxsm:rounded-[10px] sm:rounded-[15px] md:rounded-[20px] bg-gradient-to-r from-gradient-start to-gradient-end">
+                                Cancel Edit
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Header Photo -->
+                    <div class="flex flex-col gap-1">
+                        <div class="header-image hidden pre-sm:inline-block w-full h-full min-w-full min-h-full relative rounded-3xl flex justify-center items-center bg-cover bg-top bg-no-repeat" style="background-image: url('{{ event.header_photo.url }}');">
+                            <div class="placeHolderImage flex items-center justify-center w-full h-full min-h-[500px] relative p-20">
+                                <img id="trending-img" class="w-full h-[300px] xxsm:h-full max-w-[400px] max-h-[400px] object-contain rounded-3xl" src="{{event.header_photo.url}}" />
+                            </div>
+                        </div>
+                
+                        <div class="w-full inline-block pre-sm:hidden">
+                            <img id="trending-img" class="w-full h-[300px] xxsm:h-full max-h-[400px] rounded-3xl" src="{{event.header_photo.url}}" />
+                        </div>
+                        <input 
+                        type="file" 
+                        name="headerPhoto"
+                        class="hidden editEventHeaderPhoto font-Wanted-Variable p-[12px] xxsm:p-[15px] rounded-[20px] border border-custom-rgba after-xsm:text-[20px] w-[90%] sm:w-2/3 lg:w-1/2 shadow-form-shadow" 
+                        accept="image/*"/>
+                    </div>
+
+                    <!-- Title -->
                     <div class="flex flex-col gap-1 flex flex-col gap-1">
                         <h3 class="font-Wanted-ExtraBold text-Medium">Title</h3>
-                        <p class="font-Wanted-Variable text-Pre-Xl">{{ event.title }}</p>
+                        <p id="eventTitle" class="font-Wanted-Variable text-Pre-Xl">{{ event.title }}</p>
+                        {{ editEventForm.title|add_class:"hidden editEventTitle font-Wanted-Variable p-[12px] xxsm:p-[15px] rounded-[20px] border border-custom-rgba after-xsm:text-[20px] w-[90%] shadow-form-shadow" }}
                     </div>
+
+                    <!-- Event Type -->
                     <div class="flex flex-col gap-1">
                         <h3 class="font-Wanted-ExtraBold text-Medium">Type of Event</h3>
-                        <p class="font-Wanted-Variable text-Pre-Xl">{{ event.event_type }}</p>
+                        <p id="eventType" class="font-Wanted-Variable text-Pre-Xl">{{ event.event_type }}</p>
+                        {{ editEventForm.event_type|add_class:"hidden editEventType font-Wanted-Variable p-[12px] xxsm:p-[15px] rounded-[20px] border border-custom-rgba after-xsm:text-[20px] w-[90%] shadow-form-shadow" }}
                     </div>
+
+                    <!-- Event Date -->
                     <div class="flex flex-col gap-1">
                         <h3 class="font-Wanted-ExtraBold text-Medium">Event Date</h3>
-                        <p class="font-Wanted-Variable text-Pre-Xl">{{ event.date }}</p>
+                        <p id="eventDate" class="font-Wanted-Variable text-Pre-Xl">{{ event.date }}</p>
+                        {{ editEventForm.date|add_class:"hidden editEventDate font-Wanted-Variable p-[12px] xxsm:p-[15px] rounded-[20px] border border-custom-rgba after-xsm:text-[20px] w-[90%] shadow-form-shadow"}}
                     </div>
+
+                    <!-- AGE RESTRICTION (MOVED HERE) -->
+                    <div class="flex flex-col gap-3 mt-5" id="ageRestrictionWrapper">
+                        <h3 class="font-Wanted-ExtraBold text-Medium">Age Restriction</h3>
+                        <!-- View mode: read-only text for the user’s current setting (e.g. “18+” or “No age restriction”). -->
+                        <p id="ageRestrictionView" class="font-Wanted-Variable text-Pre-Xl">
+                            {{ event.get_age_restriction_display }}
+                        </p>
+
+                        <!-- EDIT MODE: the Django form radio buttons -->
+                        <div class="hidden editEventAgeRestriction">
+                             {{ editEventForm.age_restriction }}
+                        </div>
+                    </div>
+                    <!-- END AGE RESTRICTION -->
+
+                    <!-- Start & End Times -->
                     <div class="time-row grid grid-cols-1 gap-6 md:grid-cols-2 w-full">
                         <div class="flex flex-col gap-1">
                             <h3 class="font-Wanted-ExtraBold text-Medium">Start Time</h3>
-                            <p class="font-Wanted-Variable text-Pre-Xl">{{ event.start_time }}</p>
+                            <p id="eventStartTime" class="font-Wanted-Variable text-Pre-Xl">{{ event.start_time }}</p>
+                            {{ editEventForm.start_time|add_class:"hidden editEventStartTime font-Wanted-Variable p-[12px] xxsm:p-[15px] rounded-[20px] border border-custom-rgba after-xsm:text-[20px] w-[90%] shadow-form-shadow" }}
                         </div>
                         <div class="flex flex-col gap-1">
                             <h3 class="font-Wanted-ExtraBold text-Medium">End Time</h3>
-                            <p class="font-Wanted-Variable text-Pre-Xl">{{ event.end_time }}</p>
+                            <p id="eventEndTime" class="font-Wanted-Variable text-Pre-Xl">{{ event.end_time }}</p>
+                            {{ editEventForm.end_time|add_class:"hidden editEventEndTime font-Wanted-Variable p-[12px] xxsm:p-[15px] rounded-[20px] border border-custom-rgba after-xsm:text-[20px] w-[90%] shadow-form-shadow"}}
                         </div>
-                    </div>
-                    <div class="flex flex-col gap-1 quill-content">
-                        <h3 class="font-Wanted-ExtraBold text-Medium">Description</h3>
-                        <p class="font-Wanted-Variable text-Pre-Xl">{{ event.description|safe }}</p>
                     </div>
 
-                    <div class="privacy-row">
-                        <div class="flex flex-col gap-1">
-                            <h3 class="font-Wanted-ExtraBold text-Medium">Privacy</h3>
-                            <p class="font-Wanted-Variable text-Pre-Xl">{{ event.privacy }}</p>
-                        </div>
+                    <!-- Description -->
+                    <div class="flex flex-col gap-1 quill-content">
+                        <h3 class="font-Wanted-ExtraBold text-Medium">Description</h3>
+                        <p id="eventDescription" class="font-Wanted-Variable text-Pre-Xl">{{ event.description|safe }}</p>
+                        {{ editEventForm.description|add_class:"hidden editEventDescription font-Wanted-Variable p-[12px] xxsm:p-[15px] rounded-[20px] border border-custom-rgba after-xsm:text-[20px] w-[90%] min-h-[300px] max-h-[350px] h-[300px] shadow-form-shadow" }}
                     </div>
+
+                    <!-- Location -->
                     <div class="flex flex-col gap-1">
                         <h3 class="font-Wanted-ExtraBold text-Medium">Location</h3>
-                        <p class="font-Wanted-Variable text-Pre-Xl">
+                        <p id="eventLocation" class="font-Wanted-Variable text-Pre-Xl">
                             {{ event.building_name }}, 
                             <br/> 
                             {{ event.street }}, 
@@ -111,37 +172,123 @@ Manage {{ event.title }} | WAVE.
                             {{ event.state }}, 
                             {{ event.zip_code }}
                         </p>
-                    </div>
-                    <div class="flex flex-col gap-1">
-                        <h3 class="font-Wanted-ExtraBold text-Medium">Flyer Image</h3>
-                        <img class="flyer-image max-w-[400px] max-h-[400px] w-auto rounded-2xl h-auto" src="{{ event.header_photo.url }}" />
+                        {{ editEventForm.building_name|add_class:"hidden editEventBuildingName font-Wanted-Variable p-[12px] xxsm:p-[15px] rounded-[20px] border border-custom-rgba after-xsm:text-[20px] w-[90%] shadow-form-shadow" }}
+                        {{ editEventForm.street|add_class:"hidden editEventStreet font-Wanted-Variable p-[12px] xxsm:p-[15px] rounded-[20px] border border-custom-rgba after-xsm:text-[20px] w-[90%] shadow-form-shadow" }}
+                        {{ editEventForm.apt_suite_unit|add_class:"hidden editEventAptSuit font-Wanted-Variable p-[12px] xxsm:p-[15px] rounded-[20px] border border-custom-rgba after-xsm:text-[20px] w-[90%] shadow-form-shadow" }}
+                        {{ editEventForm.city|add_class:"hidden editEventCity font-Wanted-Variable p-[12px] xxsm:p-[15px] rounded-[20px] border border-custom-rgba after-xsm:text-[20px] w-[90%] shadow-form-shadow" }}
+                        {{ editEventForm.state|add_class:"hidden editEventState font-Wanted-Variable p-[12px] xxsm:p-[15px] rounded-[20px] border border-custom-rgba after-xsm:text-[20px] w-[90%] shadow-form-shadow" }} 
+                        {{ editEventForm.zip_code|add_class:"hidden editEventZipCode font-Wanted-Variable p-[12px] xxsm:p-[15px] rounded-[20px] border border-custom-rgba after-xsm:text-[20px] w-[90%] shadow-form-shadow" }}
                     </div>
                     
-                    {% if event.body_photo_one or event.body_photo_two or event.body_photo_three or event.body_photo_four or event.body_photo_five %}
+                    <!-- Body Images -->
                     <div class="flex flex-col gap-1">
-                        <h3 class="font-Wanted-ExtraBold text-Medium">Extra Images</h3>
+                        {% if event.body_photo_one or event.body_photo_two or event.body_photo_three or event.body_photo_four or event.body_photo_five %}
+                            <h3 class="font-Wanted-ExtraBold text-Medium" id="bodyImagesTitle">Body Images</h3>
+                        {% endif %}
                         <div class="body-image-container grid sm:grid-cols-1 pre-lg:grid-cols-2 lg:grid-cols-3">
                             {% if event.body_photo_one %}
-                            <img src="{{ event.body_photo_one.url }}" class="w-full h-full rounded-3xl" />
+                                <img id="eventBodyImageOne" src="{{ event.body_photo_one.url }}" class="w-full h-full rounded-3xl" />
                             {% endif %}
+                            <div class="hidden editEventBodyImageOne">
+                                <h3 class="font-Wanted-ExtraBold text-Medium">Body Image 1</h3>
+                                {% if event.body_photo_one %}
+                                    <img src="{{ event.body_photo_one.url }}" class="w-full h-full rounded-3xl" />
+                                    <label>
+                                        <input type="checkbox" name="remove_body_photo_one" class="mr-2">
+                                        Remove
+                                    </label>
+                                {% endif %}
+                                <input 
+                                type="file" 
+                                name="bodyPhotoOne"
+                                class="font-Wanted-Variable p-[12px] xxsm:p-[15px] rounded-[20px] border border-custom-rgba after-xsm:text-[20px] w-[90%] sm:w-2/3 lg:w-1/2 shadow-form-shadow" 
+                                accept="image/*"/>
+                            </div>
                             {% if event.body_photo_two %}
-                            <img src="{{ event.body_photo_two.url }}" class="w-full h-full rounded-3xl" />
+                                <img id="eventBodyImageTwo" src="{{ event.body_photo_two.url }}" class="w-full h-full rounded-3xl" />
                             {% endif %}
+                            <div class="hidden editEventBodyImageTwo">
+                                <h3 class="font-Wanted-ExtraBold text-Medium">Body Image 2</h3>
+                                {% if event.body_photo_two %}
+                                    <img src="{{ event.body_photo_two.url }}" class="w-full h-full rounded-3xl" />
+                                    <label>
+                                        <input type="checkbox" name="remove_body_photo_two" class="mr-2">
+                                        Remove
+                                    </label>
+                                {% endif %}
+                                <input
+                                type="file"
+                                name="bodyPhotoTwo"
+                                class="font-Wanted-Variable p-[12px] xxsm:p-[15px] rounded-[20px] border border-custom-rgba after-xsm:text-[20px] w-[90%] sm:w-2/3 lg:w-1/2 shadow-form-shadow"
+                                accept="image/*"/>
+                            </div>
                             {% if event.body_photo_three %}
-                            <img src="{{ event.body_photo_three.url }}" class="w-full h-full rounded-3xl" />
+                                <img id="eventBodyImageThree" src="{{ event.body_photo_three.url }}" class="w-full h-full rounded-3xl" />
                             {% endif %}
+                            <div class="hidden editEventBodyImageThree">
+                                <h3 class="font-Wanted-ExtraBold text-Medium">Body Image 3</h3>
+                                {% if event.body_photo_three %}
+                                    <img src="{{ event.body_photo_three.url }}" class="w-full h-full rounded-3xl" />
+                                    <label>
+                                        <input type="checkbox" name="remove_body_photo_three" class="mr-2">
+                                        Remove
+                                    </label>
+                                {% endif %}
+                                <input
+                                type="file"
+                                name="bodyPhotoThree"
+                                class="font-Wanted-Variable p-[12px] xxsm:p-[15px] rounded-[20px] border border-custom-rgba after-xsm:text-[20px] w-[90%] sm:w-2/3 lg:w-1/2 shadow-form-shadow"
+                                accept="image/*"/>
+                            </div>
                             {% if event.body_photo_four %}
-                            <img src="{{ event.body_photo_four.url }}" class="w-full h-full rounded-3xl" />
+                                <img id="eventBodyImageFour" src="{{ event.body_photo_four.url }}" class="w-full h-full rounded-3xl" />
                             {% endif %}
+                            <div class="hidden editEventBodyImageFour">
+                                <h3 class="font-Wanted-ExtraBold text-Medium">Body Image 4</h3>
+                                {% if event.body_photo_four %}
+                                    <img src="{{ event.body_photo_four.url }}" class="w-full h-full rounded-3xl" />
+                                    <label>
+                                        <input type="checkbox" name="remove_body_photo_four" class="mr-2">
+                                        Remove
+                                    </label>
+                                {% endif %}
+                                <input
+                                type="file"
+                                name="bodyPhotoFour"
+                                class="font-Wanted-Variable p-[12px] xxsm:p-[15px] rounded-[20px] border border-custom-rgba after-xsm:text-[20px] w-[90%] sm:w-2/3 lg:w-1/2 shadow-form-shadow"
+                                accept="image/*"/>
+                            </div>
                             {% if event.body_photo_five %}
-                            <img src="{{ event.body_photo_five.url }}" class="w-full h-full rounded-3xl" />
+                                <img id="eventBodyImageFive" src="{{ event.body_photo_five.url }}" class="w-full h-full rounded-3xl" />
                             {% endif %}
+                            <div class="hidden editEventBodyImageFive">
+                                <h3 class="font-Wanted-ExtraBold text-Medium">Body Image 5</h3>
+                                {% if event.body_photo_five %}
+                                    <img id="eventBodyImageFive" src="{{ event.body_photo_five.url }}" class="w-full h-full rounded-3xl" />
+                                    <label>
+                                        <input type="checkbox" name="remove_body_photo_five" class="mr-2">
+                                        Remove
+                                    </label>
+                                {% endif %}
+                                <input
+                                type="file"
+                                name="bodyPhotoFive"
+                                class="font-Wanted-Variable p-[12px] xxsm:p-[15px] rounded-[20px] border border-custom-rgba after-xsm:text-[20px] w-[90%] sm:w-2/3 lg:w-1/2 shadow-form-shadow"
+                                accept="image/*"/>
+                            </div>
                         </div>
                     </div>
-                    {% endif %}
-                </div>
-            </div>
 
+                    <div id="submitBtn" class="hidden flex-row gap-[20px]">
+                        <button name="eventAction" value="saveChanges" type="submit" role="button" class="joinCollegeButton p-[6px] sm:p-[8px] md:p-[15px] border border-transparent border-r-gradient-start border-l-gradient-end text-white font-Wanted-SemiBold no-underline flex items-center gap-[10px] text-Semi-Medium md:text-Large rounded-[10px] xxsm:rounded-[10px] sm:rounded-[15px] md:rounded-[20px] bg-gradient-to-r from-gradient-start to-gradient-end">
+                            Save Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+            <!-- END OVERVIEW TAB -->
+
+            <!-- PRIVACY TAB -->
             <div class="pbc-element-content" id="event-privacy">
                 <div class="container-information flex flex-col gap-10">
                     <div class="font-Wanted-Variable text-Base text-[#000000c3]">
@@ -152,11 +299,12 @@ Manage {{ event.title }} | WAVE.
                             <br/>
                             To make changes to the event privacy, simply click on the "Edit" button to update the details as needed.
                         </p>
+                        <!-- NOTE: Age restriction code has been removed from here. -->
                     </div>
 
                     <div class="tab-information-body flex flex-col gap-10">
                         <div class="flex flex-col gap-1">
-                            <h class="font-Wanted-ExtraBold text-Medium"3>Current Privacy Setting</h3>
+                            <h3 class="font-Wanted-ExtraBold text-Medium">Current Privacy Setting</h3>
                             <p class="font-Wanted-Variable text-Pre-Xl">{{ event.privacy }}</p>
                         </div>
 
@@ -177,7 +325,9 @@ Manage {{ event.title }} | WAVE.
                     </div>
                 </div>
             </div>
+            <!-- END PRIVACY TAB -->
 
+            <!-- TICKETING TAB -->
             <div class="pbc-element-content" id="event-ticketing">
                 <div class="container-information flex flex-col gap-10">
                     <div class="flex flex-col gap-1">
@@ -305,7 +455,9 @@ Manage {{ event.title }} | WAVE.
                     </div>
                 </div>
             </div>
+            <!-- END TICKETING TAB -->
 
+            <!-- QR SCANNER TAB -->
             <div class="pbc-element-content" id="event-scanner">
                 <div class="event-scanner-container flex flex-col gap-10">
                     <div class="scannerHeader">
@@ -338,11 +490,13 @@ Manage {{ event.title }} | WAVE.
                     </div>
                 </div>
             </div>
+            <!-- END SCANNER TAB -->
         </div>
     </div>
 </div>
 
-<div class="hidden bg-[rgba(0, 0, 0, 0.037)] backdrop-blur-sm fixed top-0 left-0 right-0 bottom-0 z-[1005] w-full h-full cursor-default">
+<!-- TICKET CREATION MODAL -->
+<div id="ticketCreationModal" class="hidden bg-[rgba(0, 0, 0, 0.037)] backdrop-blur-sm fixed top-0 left-0 right-0 bottom-0 z-[1005] w-full h-full cursor-default">
     <div class="w-full h-full flex justify-center items-center py-10">
         <div class="w-11/12 xxsm:w-9/12 pre-sm:w-10/12 sm:w-10/12 md:w-10/12 pre-lg:w-10/12 lg:w-10/12 xl:w-3/5 h-auto min-h-[80%] max-h-[90%] bg-white shadow-custom-shadow rounded-2xl p-5 pb-12 flex flex-col gap-3 overflow-y-auto">
             <div class="w-full flex justify-between">
@@ -356,7 +510,6 @@ Manage {{ event.title }} | WAVE.
                         <img src="{% static '/images/admin/roles/modalClose.svg' %}" alt="Close create ticket tab">
                     </button>
                 </div>
-                
             </div>
 
             <form class="flex flex-col gap-5" method="post">

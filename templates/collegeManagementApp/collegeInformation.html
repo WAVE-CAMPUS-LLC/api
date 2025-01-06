@@ -52,18 +52,43 @@
                     <div id="tabBodyContent" class="w-full">
                         <div id="eventInformation" class="events-body collegeTabInformation">
                             <div class="collegeTabInformationRow flex flex-col gap-[20px]">
+                                {% if weekly_events %}
+                                <div id="categories-row" class="row-container w-full h-full flex flex-col gap-12">
+                                    <div class="w-full flex justify-start">
+                                        <h3 class="font-Wanted-Bold text-Large after-xsm:text-2xl">Happening this week!</h3>
+                                    </div>
+
+                                    <div  class="row-body event-row-body grid sm:grid-cols-1 pre-lg:grid-cols-2 lg:grid-cols-3">
+                                        {% for event in weekly_events %}
+                                        <a href="{% url "core:eventDetails" eventId=event.eventId %}" class="category-event-card hover:category-image hover:scale-95 transform transition duration-300 flex flex-col justify-center items-center cursor-pointer overflow-hidden p-[10px] text-black">
+                                            <div class="category-image w-full rounded-2xl shadow-custom-shadow-3">
+                                                <img src="{{event.header_photo.url}}" alt="" class="w-full h-[448px] rounded-2xl rounded-b-none object-cover">
+                                            </div>
+                                            <div class="category-event-name font-Wanted-SemiBold text-Base flex flex-col justify-center items-start gap-1 w-full border border-custom-rgba5 rounded-bl-2xl rounded-br-2xl shadow-custom-shadow-3 border-t-2 px-5 p-2">
+                                                <h2 id="eventTitle" class="whitespace-nowrap overflow-hidden text-ellipsis w-full text-left text-2xl">{{ event.title }}</h2>
+                                                <div class="eventSubInfo flex flex-col items-start gap-[1px] w-full font-Wanted-Variable text-customGray5">
+                                                    <p id="eventHost" class="flex flex-row justify-start">Hosted by @{{ event.host.username }}</p>
+                                                    <p id="eventDate" class="w-full flex justify-end font-Wanted-Bold text-Large">{{ event.date }}</p>
+                                                </div>
+                                            </div>
+                                        </a>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                {% endif %}
+                                
                                 {% if events %}
                                 <div class="collegeEventContainer grid sm:grid-cols-2 lg:grid-cols-3 xssm:px-[35px] sm:px-0 md:px-[30px] pre-lg:gap-[50px] lg:gap-0">
                                     {% for event in events %}
-                                    <a target="_blank" href="{% url "core:eventDetails" eventId=event.eventId %}" class="category-event-card overflow-hidden flex flex-col justify-center items-center cursor-pointer p-[10px] text-black no-underline">
-                                        <div class="category-image w-full rounded-[20px] border-0 border-[#00000013] shadow-custom-shadow-3">
-                                            <img src="{{ event.header_photo.url }}" alt="" class="w-full h-full rounded-[20px] object-cover transition-transform duration-300 ease-in-out">
+                                    <a href="{% url "core:eventDetails" eventId=event.eventId %}" class="category-event-card hover:category-image hover:scale-95 transform transition duration-300 flex flex-col justify-center items-center cursor-pointer overflow-hidden p-[10px] text-black">
+                                        <div class="category-image w-full rounded-2xl shadow-custom-shadow-3">
+                                            <img src="{{event.header_photo.url}}" alt="" class="w-full h-[448px] rounded-2xl rounded-b-none object-cover">
                                         </div>
-                                        <div class="category-event-name font-Wanted-SemiBold text-[15px] flex flex-col justify-center items-center gap-[5px] border rounded-b-[20px] shadow-custom-shadow-3 p-[10px] px-[20px] w-full">
-                                            <h2 id="eventTitle" class="whitespace-nowrap overflow-hidden text-ellipsis w-full text-left font-bold text-[1.5rem]">{{ event.title }}</h2>
-                                            <div class="eventSubInfo flex flex-col gap-[1px] w-full font-Wanted-Variable text-customColor">
-                                                <p id="eventLocation" class="flex justify-center">@{{ event.host.username }}</p>
-                                                <p id="eventDate" class="flex justify-end">{{ event.date }}</p>
+                                        <div class="category-event-name font-Wanted-SemiBold text-Base flex flex-col justify-center items-start gap-1 w-full border border-custom-rgba5 rounded-bl-2xl rounded-br-2xl shadow-custom-shadow-3 border-t-2 px-5 p-2">
+                                            <h2 id="eventTitle" class="whitespace-nowrap overflow-hidden text-ellipsis w-full text-left text-2xl">{{ event.title }}</h2>
+                                            <div class="eventSubInfo flex flex-col items-start gap-[1px] w-full font-Wanted-Variable text-customGray5">
+                                                <p id="eventHost" class="flex flex-row justify-start">Hosted by @{{ event.host.username }}</p>
+                                                <p id="eventDate" class="w-full flex justify-end font-Wanted-Bold text-Large">{{ event.date }}</p>
                                             </div>
                                         </div>
                                     </a>
@@ -90,11 +115,11 @@
                                 </div>
                                 <div class="collegeOrganizationsContainer w-full">
                                     {% if organizations %}
-                                    <div class="collegeOrgsGrid grid sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 xssm:px-[35px] sm:px-0 md:px-[30px] pre-lg:gap-[50px] lg:gap-0">
+                                    <div class="collegeOrgsGrid grid sm:grid-cols-2 lg:grid-cols-3 xssm:px-[35px] sm:px-0 md:px-[30px] pre-lg:gap-[50px] lg:gap-0 w-full">
                                         {% for org in organizations %}
                                         <div class="organization-card flex flex-col justify-center items-center cursor-pointer overflow-hidden p-[10px] text-black no-underline">
                                             <div class="orgCard-image-container w-full max-w-[350px] rounded-[20px] border-0 border-[#00000013] rounded-b-[20px] shadow-custom-shadow-3">
-                                                <img src="{{org.logo.url}}" class="orgCard-image w-full h-full max-h-[350px] max-w-[350px] rounded-[20px] object-cover"/>
+                                                <img src="{{org.logo.url}}" class="orgCard-image w-full h-full min-h-[400px] max-h-[350px] max-w-[350px] rounded-[20px] rounded-b-none object-cover"/>
                                             </div>
                                             <div class="orgCard-body-container font-Wanted-SemiBold text-[15px] flex flex-col justify-center items-start gap-[10px] w-full max-w-[350px] border-solid border-custom-rgba5 rounded-b-[20px] shadow-custom-shadow-3 border-t-[1px] p-[10px] px-[20px] box-border">
                                                 <h3 class="font-Wanted-Bold text-[22px] whitespace-nowrap overflow-hidden text-ellipsis w-full text-start font-bold"> {{ org.name }}</h3>
@@ -138,15 +163,15 @@
                                 {% if collegeMembers %}
                                 <div class="collegeMembersContainer grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 xsm:px-[15px] xssm:px-[35px] sm:px-0 md:px-[30px] gap-[30px] pre-lg:gap-[50px] lg:gap-[50px] w-full">
                                     {% for member in collegeMembers %}
-                                    <a target="_blank" href="{% url "social:publicProfile" username=member.user.username %}" class="collegeMemberCard border-solid border-custom-rgba6 rounded-[20px] py-[20px] px-[40px] flex flex-col gap-[30px] shadow-custom-shadow-4 no-underline text-black cursor-auto">
-                                        <div class="memberPfp flex justify-center">
-                                            <img src="{{ user_profile.profile_photo.url }}" class="w-[120px] h-[120px] rounded-[100%]"/>
+                                        <div class="collegeMemberCard border-solid border-custom-rgba6 rounded-[20px] py-[20px] px-[40px] flex flex-col gap-[30px] shadow-custom-shadow-4 no-underline text-black cursor-auto">
+                                            <div class="memberPfp flex justify-center">
+                                                <img src="{{ user_profile.profile_photo.url }}" class="w-[120px] h-[120px] rounded-[100%]"/>
+                                            </div>
+                                            <div class="memberBody flex flex-col justify-center items-center text-center gap-[10px]">
+                                                <h5 class="font-Wanted-Regular text-[22px] font-bold">{{member.user.first_name}} {{member.user.last_name}}</h5>
+                                                <a href="{% url "social:publicProfile" username=member.user.username %}" class="font-Wanted-Variable text-[15px] text-green underline">View Social</a>
+                                            </div>
                                         </div>
-                                        <div class="memberBody flex flex-col justify-center items-center text-center gap-[10px]">
-                                            <h5 class="font-Wanted-Regular text-[22px] font-bold">{{member.user.first_name}} {{member.user.last_name}}</h5>
-                                            <p class="font-Wanted-Variable text-[15px] text-[#5e5e5edb]">Class of '26</p>
-                                        </div>
-                                    </a>
                                     {% endfor %}
                                 </div>
                                 {% else %}

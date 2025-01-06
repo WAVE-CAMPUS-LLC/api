@@ -1,3 +1,4 @@
+from authenticationApp.admin import super_admin_restricted_site
 from django.contrib import admin
 from django.utils import timezone
 from django.core.mail import send_mail
@@ -50,5 +51,5 @@ class FeedbackModelAdmin(admin.ModelAdmin):
     search_fields = ('full_name', 'email')
     list_filter = ('email', 'created_at')
 
-admin.site.register(SupportTicket, SupportTicketAdmin)
-admin.site.register(FeedbackModel, FeedbackModelAdmin)
+super_admin_restricted_site.register(SupportTicket, SupportTicketAdmin)
+super_admin_restricted_site.register(FeedbackModel, FeedbackModelAdmin)

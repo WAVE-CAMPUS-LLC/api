@@ -13,6 +13,8 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 from pathlib import Path
 import os
 from urllib.parse import urlparse
+from django.contrib.messages import constants as messages_constants
+
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -37,7 +39,7 @@ ALLOWED_HOSTS = []
 # Stripe API Key (Test)
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SK")
 STRIPE_WEBHOOK_SECRET_TEST = os.getenv("STRIPE_WEBHOOK_SK")
-
+STRIPE_PUBLISHABLE_KEY = os.getenv("STRIPE_PK")
 
 # Application definition
 
@@ -63,10 +65,12 @@ INSTALLED_APPS = [
     "newsroomApp",
     "blogApp",
     "campusManagerApp",
+    "dataAnalyticsApp",
+    "dataAnalyticsAPI",
     "widget_tweaks",
     "qr_code",
-    'storages',
-    'channels',
+    "storages",
+    "channels",
 ]
 
 MIDDLEWARE = [
@@ -80,6 +84,12 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "authenticationApp.middleware.RedirectAuthenticatedUsersMiddleware",
 ]
+
+# CSP_DEFAULT_SRC = ("'self'",)
+# CSP_SCRIPT_SRC = (
+#     "'self'",
+#     "'nonce-'",
+# )
 
 # CSRF_FAILURE_VIEW = 'wave_v1.middleware.csrf_handlers.csrf_failure'
 
@@ -102,23 +112,26 @@ TEMPLATES = [
     },
 ]
 
-ASGI_APPLICATION = 'wave_v1.asgi.application'  
+ASGI_APPLICATION = "wave_v1.asgi.application"
 CHANNEL_LAYERS = {
     "default": {
-        "BACKEND": "channels.layers.InMemoryChannelLayer"  #TODO: Change to Redis for production
+        "BACKEND": "channels.layers.InMemoryChannelLayer"  # TODO: Change to Redis for production
     }
 }
 WSGI_APPLICATION = "wave_v1.wsgi.application"
 
+
+MESSAGE_TAGS = {
+    messages_constants.DEBUG: 'debug',
+    messages_constants.INFO: 'info',
+    messages_constants.SUCCESS: 'success',
+    messages_constants.WARNING: 'warning',
+    messages_constants.ERROR: 'error',
+}
+
+
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
-
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
-    }
-}
 
 # DATABASES = {
 #     "default": {
@@ -146,19 +159,16 @@ if DATABASE_URL is None:
     raise ValueError("DATABASE_URL environment variable not set")
 
 # Parse the DATABASE_URL
-tmpPostgres = urlparse(DATABASE_URL)
+tmpPostgres = urlparse(os.getenv("DATABASE_URL"))
 
-# Ensure that all components are handled as strings
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": str(
-            tmpPostgres.path.lstrip("/")
-        ),  # Convert to string and remove leading slash
+        "NAME": tmpPostgres.path.replace("/", ""),
         "USER": str(tmpPostgres.username),
         "PASSWORD": str(tmpPostgres.password),
         "HOST": str(tmpPostgres.hostname),
-        "PORT": str(tmpPostgres.port) if tmpPostgres.port else "",
+        "PORT": 5432,
     }
 }
 
@@ -172,7 +182,7 @@ EMAIL_HOST_USER = "larteyokle@gmail.com"
 EMAIL_HOST_PASSWORD = "lrxkfnqqxxkyzgct"
 
 # Resend Email Configurations
-RESEND_API_KEY = 're_UutAuVEz_34S8yutMqLPTUr5644vau6n9'
+RESEND_API_KEY = "re_UutAuVEz_34S8yutMqLPTUr5644vau6n9"
 
 
 # Password validation

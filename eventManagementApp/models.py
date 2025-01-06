@@ -1,5 +1,7 @@
 import uuid
+import json
 from django.db import models
+from django.utils import timezone
 from django.utils.translation import gettext as _
 from django.utils import timezone
 from django.db.models.signals import post_save
@@ -7,9 +9,12 @@ from datetime import timedelta
 from django.dispatch import receiver
 from django.conf import settings
 from adminDashboardApp.models import College
+from socialApp.models import Crew
 
 from collegeManagementApp.models import Organization
 from eventTicketsApp.models import InviteEventOption
+
+
 
 
 class HostApplication(models.Model):
@@ -21,10 +26,22 @@ class HostApplication(models.Model):
         ("networking", "Networking Event"),
     ]
 
-    firstName = models.CharField(verbose_name="First Name", max_length=70)
-    lastName = models.CharField(verbose_name="Last Name", max_length=70)
-    email = models.EmailField(verbose_name="Email")
-    phone = models.CharField(verbose_name="Phone", max_length=10)
+    APPROVAL_STATUS_CHOICES = [
+        ("pending", "Pending"),
+        ("approved", "Approved"),
+        ("denied", "Denied"),
+    ]
+
+    firstName = models.CharField(
+        verbose_name="First Name", max_length=70, null=False, blank=False
+    )
+    lastName = models.CharField(
+        verbose_name="Last Name", max_length=70, null=False, blank=False
+    )
+    email = models.EmailField(verbose_name="Email", null=False, blank=False)
+    phone = models.CharField(
+        verbose_name="Phone", max_length=10, null=False, blank=False
+    )
 
     organizationName = models.CharField(
         verbose_name="Organization Name", max_length=150
@@ -34,10 +51,21 @@ class HostApplication(models.Model):
         verbose_name="Organization Location", max_length=150
     )
 
-    eventTypes = models.ManyToManyField("EventType", related_name="applications")
+    eventTypes = models.ManyToManyField(
+        "EventType", related_name="applications", null=False, blank=False
+    )
+
+    approval_status = models.CharField(
+        verbose_name="Approval Status",
+        max_length=100,
+        choices=APPROVAL_STATUS_CHOICES,
+        default="pending",
+    )
 
     eventHostedAnnually = models.CharField(
-        verbose_name="How many events do you plan on hosting annually?", max_length=100
+        verbose_name="How many events do you plan on hosting annually?",
+        max_length=100,
+        null=False,
     )
     eventPopulation = models.CharField(
         verbose_name="How many people do you expect at each event?", max_length=1000
@@ -71,6 +99,11 @@ class Event(models.Model):
         ("active", "Active"),
         ("live", "Live"),
         ("archived", "Archived"),
+    ]
+
+    ADMIN_STATUS_CHOICES = [
+        ("paused", "Paused"),
+        ("active", "Active"),
     ]
 
     EVENT_TYPE_CHOICES = [
@@ -184,9 +217,12 @@ class Event(models.Model):
         ("volunteer", "Volunteer"),
         ("workshop", "Workshop"),
     ]
+
     eventId = models.UUIDField(
         primary_key=True, default=uuid.uuid4, editable=False, unique=True
     )
+
+    stripeProductId = models.CharField(max_length=255, blank=True, null=True)
 
     host = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="events"
@@ -198,6 +234,10 @@ class Event(models.Model):
         default="incomplete",
         null=True,
         blank=True,
+    )
+
+    admin_status = models.CharField(
+        max_length=20, choices=ADMIN_STATUS_CHOICES, default="active"
     )
 
     title = models.CharField(
@@ -308,27 +348,64 @@ class Event(models.Model):
         upload_to="event_images/header/",
         null=True,
         blank=True,
+        max_length=500,
     )
 
     body_photo_one = models.ImageField(
-        _("(Optional)"), upload_to="event_images/body/one/", null=True, blank=True
+        _("(Optional)"),
+        upload_to="event_images/body/one/",
+        null=True,
+        blank=True,
+        max_length=500,
     )
     body_photo_two = models.ImageField(
-        _("(Optional)"), upload_to="event_images/body/two/", null=True, blank=True
+        _("(Optional)"),
+        upload_to="event_images/body/two/",
+        null=True,
+        blank=True,
+        max_length=500,
     )
     body_photo_three = models.ImageField(
-        _("(Optional)"), upload_to="event_images/body/three", null=True, blank=True
+        _("(Optional)"),
+        upload_to="event_images/body/three",
+        null=True,
+        blank=True,
+        max_length=500,
     )
     body_photo_four = models.ImageField(
-        _("(Optional)"), upload_to="event_images/body/four/", null=True, blank=True
+        _("(Optional)"),
+        upload_to="event_images/body/four/",
+        null=True,
+        blank=True,
+        max_length=500,
     )
     body_photo_five = models.ImageField(
-        _("(Optional)"), upload_to="event_images/body/five/", null=True, blank=True
+        _("(Optional)"),
+        upload_to="event_images/body/five/",
+        null=True,
+        blank=True,
+        max_length=500,
     )
+
+    AGE_CHOICES = (
+        ("", "No Age Restriction"), 
+        ("18+", "18+"),
+        ("21+", "21+"),
+    )
+
+    age_restriction = models.CharField(
+        max_length=5,
+        choices=AGE_CHOICES,
+        blank=True,
+        default="",
+    )
+
+    created_at = models.DateTimeField(auto_now=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.title
-    
+
     class Meta:
         default_permissions = ()
 
@@ -358,9 +435,78 @@ class EventPrivacy(models.Model):
     restricted_organization = models.ForeignKey(
         Organization, on_delete=models.SET_NULL, blank=True, null=True
     )
-    
+
     class Meta:
         default_permissions = ()
 
     def __str__(self):
         return f"{self.event.title} Privacy Settings"
+
+
+class HostProfile(models.Model):
+    hostProfileId = models.UUIDField(
+        primary_key=True, default=uuid.uuid4, editable=False, unique=True
+    )
+    user = models.OneToOneField(
+        "authenticationApp.CustomUser",
+        on_delete=models.CASCADE,
+        related_name="host_profile",
+    )
+    stripe_account_id = models.CharField(
+        max_length=255, blank=True, null=True, help_text="Stripe account ID"
+    )
+    bank_account_details = models.TextField(null=True, blank=True)
+    cashapp_id = models.CharField(
+        max_length=255, blank=True, null=True, help_text="CashApp ID"
+    )
+    google_pay_id = models.CharField(
+        max_length=255, blank=True, null=True, help_text="Google Pay ID"
+    )
+    apple_pay_id = models.CharField(
+        max_length=255, blank=True, null=True, help_text="Apple Pay ID"
+    )
+    connected_on = models.DateTimeField(auto_now_add=True)
+    updated_on = models.DateTimeField(auto_now=True)
+
+    def set_bank_account_details(self, details):
+        # Save bank account details as plain text (no encryption)
+        self.bank_account_details = json.dumps(details)
+        self.save()
+
+    def get_bank_account_details(self):
+        if not self.bank_account_details:
+            return None
+        try:
+            # Just return the details as plain text
+            return json.loads(self.bank_account_details)
+        except Exception as e:
+            print(f"Error loading bank account details: {e}")
+        return None
+
+    def __str__(self):
+        return f"{self.user.first_name} {self.user.last_name}'s Host Profile"
+
+
+class SharedEvent(models.Model):
+    sender = models.ForeignKey(
+        "accountManagementApp.UserProfile",
+        on_delete=models.CASCADE,
+        related_name="sent_shared_events",
+    )
+    receiver = models.ForeignKey(
+        "accountManagementApp.UserProfile",
+        on_delete=models.CASCADE,
+        related_name="received_shared_events",
+        null=True,
+        blank=True,
+    )
+    crew = models.ForeignKey(Crew, on_delete=models.CASCADE, null=True, blank=True)
+    event = models.ForeignKey(Event, on_delete=models.CASCADE)
+    shared_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["receiver", "event"], name="unique_event_per_receiver"
+            )
+        ]

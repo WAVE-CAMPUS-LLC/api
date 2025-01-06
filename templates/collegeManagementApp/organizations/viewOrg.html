@@ -1,16 +1,15 @@
 {% extends "base/base.html" %}
 {% load static %}
+{% load widget_tweaks %}
+
 
 {% block title %}
 {{ college.name }} — WAVE. on Campus 
 {% endblock title %}
 
-{% block app_page_style %}
-<link rel="stylesheet" type="text/css" href="{% static "/styles/collegeManagementApp/organizations/viewOrg.css" %}" />
-{% endblock app_page_style %}
-
 {% block script %}
 <script type="text/javascript" src="{% static "scripts/collegeManagementApp/tabControl.js" %}"></script>
+<script type="text/javascript" src="{% static "scripts/collegeManagementApp/editOrg.js" %}" defer></script>
 {% endblock script %}
 
 {% block header %}
@@ -26,8 +25,14 @@
             </h3>
             <p class="font-Wanted-Variable text-[17px] text-customGray3">Explore all {{ organization.name }} have to offer!</p>
         </div>
-        <div id="joinCollege">
+        <div id="joinCollege" class="flex flex-row gap-[20px]">
             {% if user.is_authenticated %}
+                {% if isOwner %}
+                    <button id="editOrgBtn" class="joinCollegeButton p-[6px] sm:p-[8px] md:p-[15px] border border-transparent border-r-gradient-start border-l-gradient-end text-white font-Wanted-SemiBold no-underline flex items-center gap-[10px] text-Semi-Medium md:text-Large rounded-[10px] xxsm:rounded-[10px] sm:rounded-[15px] md:rounded-[20px] bg-gradient-to-r from-gradient-start to-gradient-end">
+                        <img src="{% static 'images/eventManagementApp/host/edit.svg' %}"  class="w-[25px] h-[25px]" />
+                        Edit Org
+                    </button>
+                {% endif %}
                 {% if is_member %}
                     <a href="{% url 'colleges:leaveOrg' college.collegeId organization.orgId %}" class="joinCollegeButton p-[6px] sm:p-[8px] md:p-[15px] border border-transparent border-r-gradient-start border-l-gradient-end text-white font-Wanted-SemiBold no-underline flex items-center gap-[10px] text-Semi-Medium md:text-Large rounded-[10px] xxsm:rounded-[10px] sm:rounded-[15px] md:rounded-[20px] bg-gradient-to-r from-gradient-start to-gradient-end">
                         <img src="{% static 'images/collegeManagementApp/collegeInformation/exit-college.svg' %}"  class="w-[25px] h-[25px]" />
@@ -41,6 +46,22 @@
                 {% endif %}
             {% endif %}
         </div>
+        <div id="newButtons" class="hidden flex-row gap-[20px]">
+            <button id="cancelEditBtn" class="joinCollegeButton p-[6px] sm:p-[8px] md:p-[15px] border border-transparent border-r-gradient-start border-l-gradient-end text-white font-Wanted-SemiBold no-underline flex items-center gap-[10px] text-Semi-Medium md:text-Large rounded-[10px] xxsm:rounded-[10px] sm:rounded-[15px] md:rounded-[20px] bg-gradient-to-r from-gradient-start to-gradient-end">
+                Cancel Edit
+            </button>
+            <form id="deleteOrgForm" method="POST">
+                {% csrf_token %}
+                <button type="submit" role="button" id="deleteOrg" name="action" value="deleteOrg" class="joinCollegeButton p-[6px] sm:p-[8px] md:p-[15px] border border-transparent border-r-gradient-start border-l-gradient-end text-white font-Wanted-SemiBold no-underline flex items-center gap-[10px] text-Semi-Medium md:text-Large rounded-[10px] xxsm:rounded-[10px] sm:rounded-[15px] md:rounded-[20px] bg-[red]">
+                    <img src="{% static 'images/eventManagementApp/host/delete.svg' %}"  class="w-[25px] h-[25px]" />
+                    Delete Org
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="w-full flex justify-center">
+        <img id="headerImage" src="{{ organization.logo.url }}" class="w-[100%] h-[300px] object-cover rounded-[20px] shadow-custom-shadow-3" />
     </div>
 
     <div id="pageBody" class="flex flex-col gap-[30px] w-full">
@@ -48,23 +69,87 @@
             <div id="contentContainerTabs" class="w-full flex flex-col gap-[50px]">
                 <div id="tabHeaderParent" class="w-full flex flex-col justify-center">
                     <ul id="tabHeader" class="list-none flex justify-start text-center gap-[10px] w-full pb-[5px] font-Wanted-Regular text-[14px] xxsm:text-[16px]">
-                        <li class="collegeDetailsTab cursor-pointer p-[10px] px-[10px] xxsm:px-[20px] hover:border-b-[4px] hover:border-[#008d95a4] border-b-[4px] border-[#008d95] tab-active" data-tab="eventInformation">Events</li>
-                        <li class="collegeDetailsTab cursor-pointer p-[10px] px-[10px] xxsm:px-[20px] hover:border-b-[4px] hover:border-[#008d95a4] border-b-[4px] border-[#008d95]" data-tab="overviewInformation">Overview</li>
-                        <li class="collegeDetailsTab cursor-pointer p-[10px] px-[10px] xxsm:px-[20px] hover:border-b-[4px] hover:border-[#008d95a4] border-b-[4px] border-[#008d95]" data-tab="memberInformation">Members</li>
+                        <li class="collegeDetailsTab cursor-pointer p-[10px] px-[10px] xxsm:px-[20px] hover:border-b-[4px] hover:border-[#008d95a4]  tab-active" data-tab="overviewInformation">Overview</li>
+                        <li class="collegeDetailsTab cursor-pointer p-[10px] px-[10px] xxsm:px-[20px] hover:border-b-[4px] hover:border-[#008d95a4] " data-tab="eventInformation">Events</li>
+                        <li class="collegeDetailsTab cursor-pointer p-[10px] px-[10px] xxsm:px-[20px] hover:border-b-[4px] hover:border-[#008d95a4]" data-tab="memberInformation">Members</li>
+                        {% if isOwner %}
+                            <li class="collegeDetailsTab cursor-pointer p-[10px] px-[10px] xxsm:px-[20px] hover:border-b-[4px] hover:border-[#008d95a4]" data-tab="manageOrg">Manage (Owner Only)</li>
+                        {% endif %}
                     </ul>
                 </div>
 
                 <div id="tabBody" class="flex gap-[40px]">
                     <div id="tabBodyContent" class="w-full">
+                        <div id="overviewInformation" class="overview-body collegeTabInformation">
+                            <div class="collegeTabInformationRow flex flex-col gap-[20px]">
+                                <form id="editOrgForm" method="POST" class="flex flex-col gap-[20px] w-full" enctype="multipart/form-data">
+                                    {% csrf_token %}
+                                    <div id="headerImageInput" class="descriptionRow hidden flex-col gap-[7px]">
+                                        <h3 class="font-Wanted-Bold text-[17px]">Org Header Image</h3>
+                                        <img src="{{ organization.logo.url }}" class="w-[100%] h-[300px] object-cover rounded-[20px] shadow-custom-shadow-3 pb-[10px]" />
+                                        <input 
+                                        type="file" 
+                                        id="headerImageInput"
+                                        name="logo"
+                                        class="font-Wanted-Variable p-[12px] xxsm:p-[15px] rounded-[20px] border border-custom-rgba after-xsm:text-[20px] w-[90%] sm:w-2/3 lg:w-1/2 shadow-form-shadow" 
+                                        accept="image/*"/>
+                                    </div>
+
+                                    <div id="location" class="descriptionRow flex flex-col gap-[7px]">
+                                        <h3 class="font-Wanted-Bold text-[17px]">Location</h3>
+                                        <p class="font-Wanted-Variable text-[18px]">{{ college.name }}</p>
+                                    </div>
+
+                                    <div class="descriptionRow flex flex-col gap-[7px]">
+                                        <h3 class="font-Wanted-Bold text-[17px]">Description</h3>
+                                        <p id="description" class="font-Wanted-Variable text-[18px]">{{ organization.description }}</p>
+                                        {{ form.description|add_class:'font-Wanted-Variable p-[12px] xxsm:p-[15px] rounded-[20px] border border-custom-rgba after-xsm:text-[20px] w-[90%] sm:w-2/3 lg:w-1/2 shadow-form-shadow hidden'|attr:'id:descriptionInput' }}
+                                    </div>
+                                
+
+                                    <div class="descriptionRow flex flex-col gap-[7px]">
+                                        <h3 class="font-Wanted-Bold text-[17px]">Privacy Status</h3>
+                                        <p id="privacy" class="font-Wanted-Variable text-[18px]">{{ organization.privacy }}</p>
+                                        {{ form.privacy|add_class:'font-Wanted-Variable p-[12px] xxsm:p-[15px] rounded-[20px] border border-custom-rgba after-xsm:text-[20px] w-[90%] sm:w-2/3 lg:w-1/2 shadow-form-shadow hidden'|attr:'id:privacyInput' }}
+                                    </div>
+    
+                                    <div class="descriptionRow flex flex-col gap-[7px]">
+                                        <h3 class="font-Wanted-Bold text-[17px]">Contact Name</h3>
+                                        <p id="contactName" class="font-Wanted-Variable text-[18px]">{{ organization.contact_name }}</p>
+                                        {{ form.contact_name|add_class:'font-Wanted-Variable p-[12px] xxsm:p-[15px] rounded-[20px] border border-custom-rgba after-xsm:text-[20px] w-[90%] sm:w-2/3 lg:w-1/2 shadow-form-shadow hidden'|attr:'id:contactNameInput' }}
+                                    </div>
+
+                                    <div class="descriptionRow flex flex-col gap-[7px]">
+                                        <h3 class="font-Wanted-Bold text-[17px]">Email</h3>
+                                        <p id="email" class="font-Wanted-Variable text-[18px]">{{ organization.contact_email }}</p>
+                                        {{ form.contact_email|add_class:'font-Wanted-Variable p-[12px] xxsm:p-[15px] rounded-[20px] border border-custom-rgba after-xsm:text-[20px] w-[90%] sm:w-2/3 lg:w-1/2 shadow-form-shadow hidden'|attr:'id:emailInput' }}
+                                    </div>
+
+                                    <div class="descriptionRow flex flex-col gap-[7px]">
+                                        <h3 class="font-Wanted-Bold text-[17px]">Org Website</h3>
+                                        <p id="website" class="font-Wanted-Variable text-[18px]">{{ organization.contact_website }}</p>
+                                        {{ form.contact_website|add_class:'font-Wanted-Variable p-[12px] xxsm:p-[15px] rounded-[20px] border border-custom-rgba after-xsm:text-[20px] w-[90%] sm:w-2/3 lg:w-1/2 shadow-form-shadow hidden'|attr:'id:websiteInput' }}
+                                    </div>
+
+                                    <div class="descriptionRow flex flex-col gap-[7px]">
+                                        <h3 class="font-Wanted-Bold text-[17px]">Org Instagram</h3>
+                                        <p id="instagram" class="font-Wanted-Variable text-[18px]">{{ organization.instagram }}</p>
+                                        {{ form.instagram|add_class:'font-Wanted-Variable p-[12px] xxsm:p-[15px] rounded-[20px] border border-custom-rgba after-xsm:text-[20px] w-[90%] sm:w-2/3 lg:w-1/2 shadow-form-shadow hidden'|attr:'id:instagramInput' }}
+                                    </div>
+
+                                    <div id="submitBtn" class="hidden flex-row gap-[20px]">
+                                        <button name="action" value="saveChanges" type="submit" role="button" class="joinCollegeButton p-[6px] sm:p-[8px] md:p-[15px] border border-transparent border-r-gradient-start border-l-gradient-end text-white font-Wanted-SemiBold no-underline flex items-center gap-[10px] text-Semi-Medium md:text-Large rounded-[10px] xxsm:rounded-[10px] sm:rounded-[15px] md:rounded-[20px] bg-gradient-to-r from-gradient-start to-gradient-end">
+                                            Save Changes
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                        
                         <div id="eventInformation" class="events-body collegeTabInformation">
                             <div class="collegeTabInformationRow flex flex-col gap-[20px]">
-                                <div class="createEventRow w-full flex justify-start sm:justify-end mt-8 sm:mt-0">
-                                    <a class="createEventButton p-[15px] py-[6px] sm:py-[10px] mb-9 sm:mb-0 border border-transparent border-r-[#13c9d3] border-l-[#008d95bc] text-white font-Wanted-SemiBold no-underline flex items-center gap-[10px] text-Semi-Medium md:text-Large rounded-[10px] xxsm:rounded-[10px] sm:rounded-[15px] md:rounded-[20px] bg-gradient-to-r from-gradient-start to-gradient-end" href="{% url "" %}">
-                                        <img src="{% static "/images/collegeManagementApp/add.svg" %}" />
-                                        Create Event
-                                    </a>
-                                </div>
-                                <div class="collegeEventContainer sm:gap-[20px] grid xxsm:grid-cols-2 pre-lg:grid-cols-3 xl:grid-cols-4">
+                                {% if events %}
+                                <div class="collegeEventContainer sm:gap-[20px] grid xxsm:grid-cols-2 pre-lg:grid-cols-3">
                                     {% for event in events %}
                                     <a target="_blank" href="{% url "core:eventDetails" eventId=event.eventId %}" class="category-event-card flex flex-col justify-center items-center cursor-pointer overflow-hidden p-[10px] text-black no-underline hover:scale-96 hover:transition-transform hover:duration-300 hover:ease-in-out">
                                         <div class="category-image w-full rounded-[20px] shadow-custom-shadow-3">
@@ -79,36 +164,18 @@
                                         </div>
                                     </a>
                                     {% endfor %}
+                                    
                                 </div>
-                            </div>
-                        </div>
-
-                        <div id="overviewInformation" class="overview-body collegeTabInformation">
-                            <div class="collegeTabInformationRow flex flex-col gap-[20px]">
-                                <div class="descriptionRow flex flex-col gap-[7px]">
-                                    <h3 class="font-Wanted-Bold text-[17px]">Location</h3>
-                                    <p class="font-Wanted-Variable text-[18px]">{{ college.name }}</p>
-                                </div>
-
-                                <div class="descriptionRow flex flex-col gap-[7px]">
-                                    <h3 class="font-Wanted-Bold text-[17px]">Description</h3>
-                                    <p class="font-Wanted-Variable text-[18px]">{{ organization.description }}</p>
-                                </div>
-
-                                <div class="descriptionRow flex flex-col gap-[7px]">
-                                    <h3 class="font-Wanted-Bold text-[17px]">Privacy Status</h3>
-                                    <p class="font-Wanted-Variable text-[18px]">{{ organization.privacy }}</p>
-                                </div>
-
-                                <div class="descriptionRow flex flex-col gap-[7px]">
-                                    <h3 class="font-Wanted-Bold text-[17px]">Email</h3>
-                                    <p class="font-Wanted-Variable text-[18px]">{{ organization.contact_email }}</p>
-                                </div>
-
-                                <div class="descriptionRow flex flex-col gap-[7px]">
-                                    <h3 class="font-Wanted-Bold text-[17px]">Org Website</h3>
-                                    <p class="font-Wanted-Variable text-[18px]">{{ organization.contact_website }}</p>
-                                </div>
+                                {% else %}
+                                        <div class="emptyContainer w-full rounded-[20px] py-[70px] flex flex-col justify-center items-center gap-[10px] bg-customGray4">
+                                            <div>
+                                                <img src="{% static "/images/collegeManagementApp/collegeInformation/empty-listing.svg" %}" class="w-[60px]" />
+                                            </div>
+                                            <div>
+                                                <p class="font-Wanted-Variable text-[16.5px] text-black">This org has no events yet!</p>
+                                            </div>
+                                        </div>
+                                    {% endif %}
                             </div>
                         </div>
 
@@ -119,7 +186,7 @@
                                     {% for member in members %}
                                     <a target="_blank" href="{% url "social:publicProfile" username=member.user.username %}" class="collegeMemberCard border border-custom-rgba6 rounded-[20px] py-[20px] px-[40px] flex flex-col gap-[30px] no-underline text-black shadow-custom-shadow-4">
                                         <div class="memberPfp flex justify-center">
-                                            <img src="{% static "/images/collegeManagementApp/pfp.jpg" %}" class="w-[100px] h-[100px] rounded-[100%]" />
+                                            <img src="{{ member.user.user_profile.profile_photo.url }}" class="w-[100px] h-[100px] rounded-[100%]" />
                                         </div>
                                         <div class="memberBody flex flex-col justify-center items-center gap-[10px]">
                                             <h5 class="font-Wanted-SemiBold text-[22px]">{{member.user.first_name}} {{member.user.last_name}}</h5>
@@ -144,6 +211,34 @@
                                 {% endif %}
                             </div>
                         </div>
+
+                        {% if isOwner %}
+                        <div id="manageOrg" class="members-body collegeTabInformation flex flex-col gap-[20px]">
+                            <div class="collegeTabInformationRowflex flex-col gap-[20px]">
+                                <div class="collegeMembersContainer grid grid-col-1 after-xsm:grid-cols-2 pre-lg:grid-cols-3 xl:grid-cols-4 gap-[20px] w-full">
+                                    {% for member in members %}
+                                    <a target="_blank" href="{% url "social:publicProfile" username=member.user.username %}" class="collegeMemberCard border border-custom-rgba6 rounded-[20px] py-[20px] px-[40px] flex flex-col gap-[30px] no-underline text-black shadow-custom-shadow-4">
+                                        <div class="memberPfp flex justify-center">
+                                            <img src="{{ member.user.user_profile.profile_photo.url }}" class="w-[100px] h-[100px] rounded-[100%]" />
+                                        </div>
+                                        <div class="memberBody flex flex-col justify-center items-center gap-[10px]">
+                                            <h5 class="font-Wanted-SemiBold text-[22px]">{{member.user.first_name}} {{member.user.last_name}}</h5>
+                                            {% if member.user == orgOwner %}
+                                                <p class="font-Wanted-Variable text-[15.5px] text-[#5e5e5edb]">(You)</p>
+                                            {% else %}
+                                                <form method="POST">
+                                                    {% csrf_token %}
+                                                    <input type="hidden" name="leavingMemberUsername" value="{{ member.user.username }}" />
+                                                    <button type="submit" role="button" class="font-Wanted-Variable text-[15.5px] bg-[red] rounded-md py-1 px-3 w-full text-white" name="action" value="kickMember">Kick Member</button>
+                                                </form>
+                                            {% endif %}
+                                        </div>
+                                    </a>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>

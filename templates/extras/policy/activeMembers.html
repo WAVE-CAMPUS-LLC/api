@@ -1,0 +1,27 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}
+Active Members @ WAVE.  
+{% endblock title %}
+
+{% block app_page_style %}
+<link rel="stylesheet" type="text/css" href="{% static "/styles/extras/policy/safety.css" %}" />
+{% endblock app_page_style %}
+
+{% block header %}
+{% include "partials/nav-footer/nav/main_nav.html" %}
+{% endblock header %}
+
+{% block body %}
+<div id="body-content">
+    <div id="page-heading">
+        <h2>
+            Active Members @ <span id="body-logo">WAVE<span class="spot">.</span></span>
+        </h2>
+    </div>
+    <div id="content-container" class="flex flex-col gap-[70px] px-4 sm:px-6 md:px-[40px] pre-lg:px-[40px] lg:px-[100px] 2xl:px-48 3xl:px-96">
+        Verified Host
+    </div>
+</div>
+{% endblock body %}

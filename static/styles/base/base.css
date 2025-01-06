@@ -1,0 +1,30 @@
+.notification {
+    padding: 15px;
+    margin: 10px;
+    border-radius: 5px;
+    width: auto;
+    max-width: 80%;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: opacity 0.3s ease;
+}
+
+/* Customize for different types of messages */
+.notification.success {
+    background-color: #09bd0f;
+    color: white;
+}
+
+.notification.error {
+    background-color: #ff0000;
+    color: white;
+}
+
+.notification.info {
+    background-color: #008d95;
+    color: white;
+}
+
+.notification.warning {
+    background-color: #fbff00;
+    color: white;
+}

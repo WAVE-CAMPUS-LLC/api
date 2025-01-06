@@ -15,22 +15,20 @@ Page Not Found | WAVE.
 
 {% block body %}
 <main>
-    <div id="body-content">
-        <div id="bcContainer">
-            <h2>
+    <div id="body-content" class="pl-[150px] pr-[150px] h-full w-full flex items-center justify-center">
+        <div id="bcContainer" class="h-full w-full flex flex-col gap-[15px]">
+            <h2 class="font-Wanted-ExtraBlack text-[50px] uppercase text-[#008d95]">
                 Wrong turn?
             </h2>
-            <p>
+            <p class="font-Wanted-Regular text-[20px] text-black">
                 You look like you're lost! 
                 <br /> 
-                This link is invalid or might have expired <span class="lostFace">:(</span>
+                This link is invalid or might have expired <span class="lostFace text-[#008d95]">:(</span>
             </p>
-            <div id="bcLinks">
-                <a href="">Explore</a>
+            <div id="bcLinks" class="font-Wanted-SemiBold text-[25px] text-black mt-[20px]">
+                <a href="{% url "core:explore" %}" class="text-[#008d95] no-underline hover:underline">Explore</a>
                 <span>•</span>
-                <a href="#">Our Status</a>
-                <span>•</span>
-                <a href="{% url "support:home" %}">Support</a>
+                <a href="{% url "support:home" %}" class="text-[#008d95] no-underline hover:underline">Support</a>
             </div>
         </div>
     </div>

@@ -8,6 +8,10 @@ from django.utils.translation import gettext as _
 from django.contrib.auth.models import Group
 from django.apps import apps
 import uuid
+from django.utils.timezone import now
+
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 
 # Create your models here.
@@ -304,9 +308,12 @@ class College(models.Model):
     motto = models.CharField("What's your college's motto?", max_length=200)
     contact_website = models.URLField("College website", blank=True, null=True)
     email_domain = models.CharField("College email domain", max_length=100, blank=True)
-    
+
     managers = models.ManyToManyField(
-        settings.AUTH_USER_MODEL, blank=True, related_name="managed_colleges"
+        settings.AUTH_USER_MODEL,
+        blank=True,
+        related_name="managed_colleges",
+        verbose_name="Campus Manager",
     )
 
     created_by = models.ForeignKey(
@@ -336,4 +343,3 @@ class College(models.Model):
         if not domain:
             raise ValidationError("Invalid link. Enter your college's website.")
         return domain
-

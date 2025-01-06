@@ -1,0 +1,54 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}
+User Signups — WAVE.
+{% endblock title %}
+
+
+{% block script %}
+<script type="text/javascript" src="{% static "/scripts/adminDashboardApp/applications/applications.js" %}"></script>
+<script type="text/javascript" src="{% static "/scripts/dataAnalyticsAPI/userAnalytics/userLogins.js" %}" defer></script>
+{% endblock script %}
+
+
+
+{% block header %}
+{% include "partials/nav-footer/nav/main_nav.html" %}
+{% endblock header %}
+
+
+
+
+{% block body %}
+<div id="content-container" class="flex flex-col gap-[70px] px-4 sm:px-6 md:px-[40px] pre-lg:px-[40px] lg:px-[100px] 2xl:px-48 3xl:px-96">
+    <div id="pagination-display" class="flex flex-col pre-sm:flex-row gap-2 w-full items-center font-Wanted-Variable justify-start text-gray-300">
+        <a href="{% url "dataAnalytics:home" %}" class="text-green underline">Analytics</a>
+        >
+        <a href="{% url "dataAnalytics:home" %}#userAnalytics" class="text-green underline">User Analytics</a>
+        >
+        <p class="font-Wanted-Medium text-black">User Logins</p>
+        <input type="hidden" id="userLoginURL" value="{% url "analyticsAPI:userLogins" %}" />
+    </div>
+
+
+    <div class="content-control flex flex-row items-center gap-4 w-full">
+        <label for="periodSelect" class="font-Wanted-Bold">Select Period:</label>
+        <select id="trendSelect" class="cursor-pointer font-Wanted-Variable border border-gray-100 p-2 px-5 rounded-xl w-auto">
+            <option value="general">General</option>
+            <option value="user_activity">User Activity</option>
+            <option value="time_trends">Time Trends</option>
+            <option value="ip_insights">IP Insights</option>
+            <option value="security">Security</option>
+            <option value="retention">Retention</option>
+        </select>
+    </div>
+    
+    <!-- Canvas for displaying the chart -->
+    <div id="body-content">
+        <div class="applications-tab-content" id="overall">
+            <canvas id="userLoginsChartOverall" class="font-Wanted-Bold w-[600px] h-[500px] text-green"></canvas>
+        </div>
+    </div>
+</div>
+{% endblock body %}

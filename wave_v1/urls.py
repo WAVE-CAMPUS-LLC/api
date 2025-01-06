@@ -15,11 +15,11 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 
-from django.contrib import admin
 from django.conf import settings
 from django.urls import path, include
 from django.conf.urls.static import static
 from django.conf.urls import handler404
+from authenticationApp.admin import super_admin_restricted_site
 
 urlpatterns = [
     path("", include("extras.urls")),
@@ -37,7 +37,9 @@ urlpatterns = [
     path("manager/", include("campusManagerApp.urls")),
     path("blog/", include("blogApp.urls")),
     path('chat/', include('supportCenterApp.urls')),
-    path("admin/", admin.site.urls),
+    path("admin/", super_admin_restricted_site.urls),
+    path("analytics/", include("dataAnalyticsApp.urls")),
+    path("dataApi/", include("dataAnalyticsAPI.urls")),
 ]
 
 handler404 = "extras.views.error_404"

@@ -14,15 +14,19 @@
         <div id="menu-options" class="flex items-center">
             <ul class="flex gap-4 list-none text-black font-Wanted-Variable text-Semi-Medium">
                 <li>
-                    <a href="{% url "eventManagement:hostPortal" %}" class="hover:underline">Dashboard</a>
+                    <a href="{% url "eventManagement:hostPortal" %}" class="hover:underline hover:decoration-green">Dashboard</a>
                 </li>
     
                 <li>
-                    <a href="" class="hover:underline">Listings</a>
+                    <a href="{% url "eventManagement:hostBilling" %}" class="hover:underline hover:decoration-green">Billing</a>
+                </li>
+
+                <li>
+                    <a href="{% url "eventManagement:hostGuide" %}" class="hover:underline hover:decoration-green">Guide</a>
                 </li>
     
                 <li>
-                    <a href="" class="hover:underline">Insights</a>
+                    <a href="{% url "eventManagement:hostAnalytics" %}" class="hover:underline hover:decoration-green">Analytics</a>
                 </li>
             </ul>
         </div>

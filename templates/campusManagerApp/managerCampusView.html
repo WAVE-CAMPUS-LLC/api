@@ -1,15 +1,13 @@
 {% extends "base/base.html" %}
 {% load static %}
+{% load widget_tweaks %}
 
 {% block title %}
 Campus Manager — WAVE.
 {% endblock title %}
 
-{% block app_page_style %}
-<link rel="stylesheet" type="text/css" href="{% static "/styles/campusManagerApp/managerCampusView.css" %}" />
-{% endblock app_page_style %}
-
 {% block script %}
+<script type="text/javascript" src="{% static "scripts/campusManagerApp/editCampus.js" %}" defer></script>
 <script type="text/javascript" src="{% static "scripts/collegeManagementApp/tabControl.js" %}"></script>
 {% endblock script %}
 
@@ -28,20 +26,70 @@ Campus Manager — WAVE.
     <div id="tabbingContent" class="flex flex-col gap-[30px]">
         <div id="tabControlHeader">
             <ul id="tabControl" class="list-none flex flex-row justify-start gap-[10px] w-full pb-[5px] font-Wanted-Bold text-[16px]">
-                <li class="managerTab tab-active cursor-pointer p-[10px] px-[20px] hover:border-b-[4px] hover:border-solid hover:border-[#008d95a4]" data-tab="eventsInformation">
+                <li class="managerTab tab-active cursor-pointer flex flex-row gap-1 font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="eventsInformation">
                     Events
                 </li>
-                <li class="managerTab cursor-pointer p-[10px] px-[20px] hover:border-b-[4px] hover:border-solid hover:border-[#008d95a4]" data-tab="organizationInformation" title="View all organizations. Pending and approved!">Organizations</li>
-                <li  class="managerTab cursor-pointer p-[10px] px-[20px] hover:border-b-[4px] hover:border-solid hover:border-[#008d95a4]" data-tab="membersInformation">Members</li>
+                <li class="managerTab cursor-pointer flex flex-row gap-1 font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="organizationInformation" title="View all organizations. Pending and approved!">Organizations</li>
+                <li  class="managerTab cursor-pointer flex flex-row gap-1 font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="membersInformation">Members</li>
+                <li  class="managerTab cursor-pointer flex flex-row gap-1 font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="settingsInformation">Settings</li>
             </ul>        
         </div>
     
         <div id="tabBody">
             <div id="tabBodyContent">
                 <div id="eventsInformation" class="campusManagerInformation">
-                    <div class="eventsInfoContainer">
-                        Events Container
+                    {% if events %}
+                    <div  class="row-body event-row-body grid sm:grid-cols-1 pre-lg:grid-cols-2 lg:grid-cols-3">
+                        {% for event in events %}
+                        <a href="{% url "core:eventDetails" eventId=event.eventId %}" class="category-event-card hover:category-image hover:scale-95 transform transition duration-300 flex flex-col justify-center items-center cursor-pointer overflow-hidden p-[10px] text-black">
+                            <div class="category-image w-full rounded-2xl shadow-custom-shadow-3">
+                                <img src="{{event.header_photo.url}}" alt="" class="w-full h-[448px] rounded-2xl rounded-b-none object-cover">
+                            </div>
+                            <div class="category-event-name font-Wanted-SemiBold text-Base flex flex-col justify-center items-start gap-1 w-full border border-custom-rgba5 rounded-bl-2xl rounded-br-2xl shadow-custom-shadow-3 border-t-2 px-5 p-2">
+                                <h2 id="eventTitle" class="whitespace-nowrap overflow-hidden text-ellipsis w-full text-left text-2xl">{{ event.title }}</h2>
+                                <div class="eventSubInfo flex flex-col items-start gap-[1px] w-full font-Wanted-Variable text-customGray5">
+                                    <p id="eventHost" class="flex flex-row justify-start">Hosted by @{{ event.host.username }}</p>
+                                    <p id="eventDate" class="w-full flex justify-end font-Wanted-Bold text-Large">{{ event.date }}</p>
+                                </div>
+
+                                <div class="flex flex-col gap-1 w-full justify-center items-center">
+                                    <form method="POST" class="w-full flex flex-row justify-between items-center">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="event_id" value="{{ event.eventId }}" />
+                                        <button type="submit" name="action" value="pause" class="bg-none border-none rounded-full">
+                                            <img src="{% static "/images/campusManager/pause.svg" %}" alt="Pause Event" class="size-10 hover:scale-95 transform transition duration-300" />
+                                        </button>
+                                        <button type="submit" name="action" value="activate" class="bg-none border-none rounded-full" {% if event.admin_status == "active" %}disabled{% endif %}>
+                                            <img src="{% static "/images/campusManager/active.svg" %}" alt="Pause Event" class="size-10 hover:scale-95 transform transition duration-300" />
+                                        </button>
+                                        <button type="submit" name="action" value="delete" class="bg-none border-none rounded-full">
+                                            <img src="{% static "/images/campusManager/delete.svg" %}" alt="Pause Event" class="size-10 hover:scale-95 transform transition duration-300" />
+                                        </button>
+                                    </form>
+                                    <div class="w-full flex justify-center">
+                                        <p class="font-Wanted-Bold text-Small text-[grey]">
+                                            {% if event.admin_status == "paused" %}
+                                            Event Paused
+                                            {% elif event.admin_status == "active" %}
+                                            Event Active
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                        </a>
+                        {% endfor %}
                     </div>
+                    {% else %}
+                    <div class="emptyContainer">
+                        <div>
+                            <img class="w-[30px] after-xsm:w-[40px] sm:w-[50px] md:w-[60px]" src="{% static "/images/collegeManagementApp/collegeInformation/empty-listing.svg" %}" />
+                        </div>
+                        <p class="font-Wanted-Variable text-[10px] after-xsm:text-[12px] sm:text-[14px] md:text-[16.5px] text-black">No events to display.</p>
+                        
+                    </div>
+                    {% endif %}
                 </div>
 
                 <div id="organizationInformation" class="campusManagerInformation">
@@ -98,11 +146,11 @@ Campus Manager — WAVE.
                 <div id="membersInformation" class="campusManagerInformation">
                     <div class="membersInfoContainer">
                         {% if collegeMembers %}
-                        <div class="collegeMembersContainer grid xs:max-xxsm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[20px] w-full">
+                        <div class="collegeMembersContainer grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 xsm:px-[15px] xssm:px-[35px] sm:px-0 md:px-[30px] gap-[30px] pre-lg:gap-[50px] lg:gap-[50px] w-full">
                             {% for member in collegeMembers %}
-                            <div class="collegeMemberCard border-[1px] border-solid border-[rgba(116,116,116,0.031)] rounded-[20px] px-[40px] py-[20px] flex flex-col gap-[30px] shadow-form-shadow-6 text-black">
+                            <div class="collegeMemberCard border-solid border-custom-rgba6 rounded-[20px] py-[20px] px-[40px] flex flex-col gap-[30px] shadow-custom-shadow-4 no-underline text-black cursor-auto">
                                 <div class="memberPfp flex justify-center">
-                                    <img src="{% static "/images/collegeManagementApp/pfp.jpg" %}" class="w-[120px] h-[120px] rounded-[100%]" />
+                                    <img src="{{ member.profile_photo.url }}" class="w-[120px] h-[120px] rounded-[100%]" />
                                 </div>
                                 <div class="memberBody flex flex-col justify-center items-center gap-[10px]">
                                     <h5 class="font-Wanted-Regular text-[22px]">{{member.user.first_name}} {{member.user.last_name}}</h5>
@@ -128,6 +176,137 @@ Campus Manager — WAVE.
                         </div>
                         {% endif %}
                     </div>
+                </div>
+
+                <div id="settingsInformation" class="campusManagerInformation">
+                    <form method="POST" enctype="multipart/form-data" class="flex flex-col gap-5">
+                        {% csrf_token %}
+                        <div class="w-full flex justify-end">
+                            <div id="editCampusButtonRow" class="w-full flex justify-end">
+                                <button class="bg-gradient-to-b bg-gradient-start bg-gradient-end text-white font-Wanted-Bold text-[15px] p-[10px] rounded-xl" id="editCampusButton" type="button">Edit Campus</button>
+                            </div>
+                            <div id="saveCancelRow" class="hidden">
+                                <div class="w-full flex justify-end gap-4">
+                                    <button type="button" id="cancelEditButton" class="bg-[red] text-white font-Wanted-Bold text-[15px] p-[10px] rounded-[10px]">Cancel</button>
+                                    <button type="submit" name="action" value="saveCampusEdit" class="bg-gradient-to-b bg-gradient-start bg-gradient-end text-white font-Wanted-Bold text-[15px] p-[10px] rounded-xl">Confirm</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="display-row">
+                            <div class="display-info flex flex-col gap-2">
+                                <h3 class="font-Wanted-Bold text-[20px]">College Name</h3>
+                                <p class="font-Wanted-Variable text-[15px]">{{ college.name }}</p>
+                            </div>
+                            <div class="edit-info hidden">
+                                <div class="flex flex-col gap-2">
+                                    <h6 class="font-Wanted-Bold text-Large">Edit College Name</h6>
+                                    {{ editCampusForm.name|add_class:"w-full appearance-none h-full p-4 py-3 font-Wanted-Variable text-Semi-Medium text-black border rounded-xl focus:ring-0 focus:none placeholder:text-[#00000076] placeholder:font-Wanted-Regular" }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="display-row">
+                            <div class="display-info flex flex-col gap-2">
+                                <h3 class="font-Wanted-Bold text-[20px]">College Name</h3>
+                                <span class="displayInfo address-container flex flex-col gap-1 font-Wanted-Variable text-Small text-black">
+                                    <p class="font-Wanted-Variable text-Small text-black">{{ college.address }},</p>
+                                    <p class="font-Wanted-Variable text-Small text-black">{{ college.city }}, {{ college.state }}, {{ college.zip_code }},</p>
+                                    <p class="font-Wanted-Variable text-Small text-black">{{ college.country }}</p>
+                                </span>
+                            </div>
+                            <div class="edit-info hidden">
+                                <div class="flex flex-col gap-2">
+                                    <h6 class="font-Wanted-Bold text-Large">Edit College Address</h6>
+                                    <div class="flex flex-col gap-2">
+                                        {{ editCampusForm.address|add_class:"w-full appearance-none h-full p-4 py-3 font-Wanted-Variable text-Semi-Medium text-black border rounded-xl focus:ring-0 focus:none placeholder:text-[#00000076] placeholder:font-Wanted-Regular" }}
+                                        {{ editCampusForm.city|add_class:" w-full appearance-none h-full p-4 py-3 font-Wanted-Variable text-Semi-Medium text-black border rounded-xl focus:ring-0 focus:none placeholder:text-[#00000076] placeholder:font-Wanted-Regular" }}
+                                        {{ editCampusForm.state|add_class:"w-full appearance-none h-full p-4 py-3 font-Wanted-Variable text-Semi-Medium text-black border rounded-xl focus:ring-0 focus:none placeholder:text-[#00000076] placeholder:font-Wanted-Regular" }}
+                                        {{ editCampusForm.zip_code|add_class:"w-full appearance-none h-full p-4 py-3 font-Wanted-Variable text-Semi-Medium text-black border rounded-xl focus:ring-0 focus:none placeholder:text-[#00000076] placeholder:font-Wanted-Regular" }}
+                                        {{ editCampusForm.country|add_class:"w-full appearance-none h-full p-4 py-3 font-Wanted-Variable text-Semi-Medium text-black border rounded-xl focus:ring-0 focus:none placeholder:text-[#00000076] placeholder:font-Wanted-Regular" }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="display-row">
+                            <div class="display-info flex flex-col gap-2">
+                                <h3 class="font-Wanted-Bold text-[20px]">Campus Logo</h3>
+                                <p class="font-Wanted-Variable text-Small text-black">
+                                    <img class="campus-logo size-28 rounded-2xl" src="{{ college.logo.url }}">
+                                </p>
+                            </div>
+                            <div class="edit-info hidden">
+                                <div class="flex flex-col gap-2">
+                                    <h6 class="font-Wanted-Bold text-Large">Campus Logo</h6>
+                                    {{ editCampusForm.logo|add_class:"w-full appearance-none h-full p-4 py-3 font-Wanted-Variable text-Semi-Medium text-black border rounded-xl focus:ring-0 focus:none placeholder:text-[#00000076] placeholder:font-Wanted-Regular" }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="display-row">
+                            <div class="display-info flex flex-col gap-2">
+                                <h6 class="font-Wanted-Bold text-Large">Campus Motto</h6>
+                                <p class="displayInfo font-Wanted-Variable text-Small text-black">
+                                    {{ college.motto }}
+                                </p>
+                            </div>
+                            
+                            <div class="edit-info hidden">
+                                <div class="flex flex-col gap-2">
+                                    <h6 class="font-Wanted-Bold text-Large">Campus Motto</h6>
+                                    {{ editCampusForm.motto|add_class:"w-full appearance-none h-full p-4 py-3 font-Wanted-Variable text-Semi-Medium text-black border rounded-xl focus:ring-0 focus:none placeholder:text-[#00000076] placeholder:font-Wanted-Regular" }}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="display-row">
+                            <div class="display-info flex flex-col gap-2">
+                                <h6 class="font-Wanted-Bold text-Large">Website</h6>
+                                <p class="displayInfo font-Wanted-Variable text-Small text-black">
+                                    <a target="_blank" href="{{college.contact_website}}">{{ college.contact_website }}</a>
+                                </p>
+                            </div>
+
+                            <div class="edit-info hidden">
+                                <div class="flex flex-col gap-2">
+                                    <h6 class="font-Wanted-Bold text-Large">Campus Website</h6>
+                                    {{ editCampusForm.contact_website|add_class:"w-full appearance-none h-full p-4 py-3 font-Wanted-Variable text-Semi-Medium text-black border rounded-xl focus:ring-0 focus:none placeholder:text-[#00000076] placeholder:font-Wanted-Regular" }}
+                                </div>
+                            </div>
+                        </div>
+                
+                        <div class="displayInfo w-full flex flex-row justify-between items-center">
+                            <div class="flex flex-col gap-2">
+                                <h6 class="font-Wanted-Bold text-Large">Email Domain</h6>
+                                <p class=" font-Wanted-Variable text-Small text-black">
+                                    {{ college.email_domain }}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="w-full displayInfo flex flex-row justify-between items-center">
+                            <div class="flex flex-col gap-2">
+                                <h6 class="font-Wanted-Bold text-Large">Campus Manager</h6>
+                                <p class="font-Wanted-Variable text-Small text-black">
+                                    {% if college.managers.exists %}
+                                        {% for manager in college.managers.all %}
+                                            <span class="bg-green py-2 px-4 rounded-full text-white">
+                                                {% if manager == request.user %}
+                                                Yourself
+                                                {% else %}
+                                                {{ manager.first_name }} {{ manager.last_name }} <a href="" target="_blank">@{{ manager.username }}</a>
+                                                {% endif %}
+                                            </span>
+                                            {% if not forloop.last %},{% endif %}
+                                        {% endfor %}
+                                    {% else %}
+                                        No manager assigned.
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>

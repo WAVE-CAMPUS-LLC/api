@@ -10,13 +10,15 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'wave_v1.settings')
 application = get_asgi_application()
 
 import supportCenterApp.routing
+import socialApp.routing
 
 application = ProtocolTypeRouter({
     'http': get_asgi_application(),
     "websocket": AllowedHostsOriginValidator(
         AuthMiddlewareStack(
             URLRouter(
-                supportCenterApp.routing.websocket_urlpatterns
+                supportCenterApp.routing.websocket_urlpatterns +
+                socialApp.routing.websocket_urlpatterns
             )
         )
     ),

@@ -1,8 +1,9 @@
 import datetime
-from datetime import timedelta
+from datetime import timedelta, date
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, Group
 from django.utils import timezone
+from django.contrib.auth.models import Group
 import uuid
 import threading
 from django.dispatch import receiver
@@ -10,13 +11,15 @@ from django.db.models.signals import pre_save, post_save
 from django.utils.translation import gettext_lazy as _
 
 from accountManagementApp.models import UserProfile
+from eventManagementApp.models import SharedEvent
+from socialApp.models import CrewMember
 
 
 from .managers import CustomUserManager
 
 
 # Create your models here.
-class CustomUser(AbstractBaseUser, PermissionsMixin):    
+class CustomUser(AbstractBaseUser, PermissionsMixin):
     first_name = models.CharField(
         _("First Name"),
         max_length=50,
@@ -43,6 +46,8 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         help_text=(_("Username")),
     )
     
+    birthday = models.DateField(_("Birthday"), null=False, blank=False, default=datetime.date.today)
+    age = models.IntegerField( null=True, blank=True,)
 
     date_joined = models.DateField(auto_now_add=True)
 
@@ -53,40 +58,33 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     # The generation of a random user id for every user that signs up. 
     user_id = models.UUIDField(_("User ID"), default=uuid.uuid4, editable=False, unique=True)
     
-    
-    is_suspended = models.BooleanField(default=False)
-    suspension_end_date = models.DateTimeField(null=True, blank=True)
-
-    user_preferences_completed = models.BooleanField(default=False, null=False)
-    
-    # User Preferences Field
-    user_preferences_completed = models.BooleanField(default=False)
-    
     email_verified = models.BooleanField(default=False)
+    is_onboarded = models.BooleanField(default=False)
+    is_suspended = models.BooleanField(default=False)
+
     
-    def suspend(self, hours):
+    def suspend(self):
         suspend_group, created = Group.objects.get_or_create(name="Suspend")
         member_group = Group.objects.get(name="Member")
         self.groups.remove(member_group)
         self.groups.add(suspend_group)
         self.is_suspended = True
-        self.suspension_end_date = timezone.now() + timedelta(hours=hours)
         self.save()
         
     def remove_suspension_OR_ban(self):
-        if self.is_suspended or self.is_banned:
+        if self.is_suspended:
             suspend_group = Group.objects.get(name="Suspend")
             member_group = Group.objects.get(name="Member")
             
             if self.is_suspended:
                 self.groups.remove(suspend_group)
                 self.is_suspended = False
-                self.suspension_end_date = None
                 
             self.groups.add(member_group)
             self.save()
-        
     
+    def get_shared_events(self):
+        return SharedEvent.objects.filter(receiver=self.user)  
 
     objects = CustomUserManager()
 
@@ -104,8 +102,14 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         
         verbose_name = "Member Account"
         verbose_name_plural = "Member Accounts"
+    
+    
+    def save(self, *args, **kwargs):
+        if self.birthday:
+            today = date.today()
+            self.age = today.year - self.birthday.year - ((today.month, today.day) < (self.birthday.month, self.birthday.day))
         
-        
+        super(CustomUser, self).save(*args, **kwargs)
 
     def __str__(self):
         return self.email
@@ -120,3 +124,25 @@ def generate_user_id(sender, instance, **kwargs):
 def create_user_profile(sender, instance, created, **kwargs):
     if created:
         UserProfile.objects.create(user=instance)
+
+@receiver(post_save, sender=CustomUser)
+def add_super_admin_group(sender, instance, created, **kwargs):
+    # Check if the user is created and is a superuser
+    if created and instance.is_superuser:
+        # Ensure the "Super Admin" group exists
+        super_admin_group, created = Group.objects.get_or_create(name="Super Admin")
+        admin_group, created = Group.objects.get_or_create(name="Admin")
+        # Add the user to the "Super Admin" group
+        instance.groups.add(super_admin_group)
+        instance.groups.add(admin_group)
+
+
+class EmailVerification(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    verification_code = models.CharField(max_length=7)
+    is_verified = models.BooleanField(default=False)
+    expiration_date = models.DateTimeField()
+    
+    
+    def __str__(self):
+        return self.verification_code

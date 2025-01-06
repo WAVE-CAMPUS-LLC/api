@@ -1,5 +1,8 @@
+from authenticationApp.admin import super_admin_restricted_site
 from django.contrib import admin
+
 from .models import College, LoginHistoryModel, Department, CareerRole, Newsroom
+from authenticationApp.admin import super_admin_restricted_site
 
 
 class DepartmentAdmin(admin.ModelAdmin):
@@ -13,7 +16,6 @@ class DepartmentAdmin(admin.ModelAdmin):
         "description",
     )
 
-@admin.register(College)
 class CollegeAdmin(admin.ModelAdmin):
     list_display = (
         "name",
@@ -60,7 +62,8 @@ class NewsroomAdmin(admin.ModelAdmin):
 
 
 # Register your models here.
-admin.site.register(Department, DepartmentAdmin)
-admin.site.register(CareerRole, CareersAdmin)
-admin.site.register(LoginHistoryModel)
-admin.site.register(Newsroom, NewsroomAdmin)
+super_admin_restricted_site.register(Department, DepartmentAdmin)
+super_admin_restricted_site.register(CareerRole, CareersAdmin)
+super_admin_restricted_site.register(LoginHistoryModel)
+super_admin_restricted_site.register(Newsroom, NewsroomAdmin)
+super_admin_restricted_site.register(College, CollegeAdmin)

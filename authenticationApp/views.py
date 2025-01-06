@@ -1,4 +1,5 @@
 import datetime
+import random
 from django.utils import timezone
 from django.contrib import messages
 from django.contrib.auth.tokens import default_token_generator
@@ -18,17 +19,22 @@ from .forms import (
     NewPasswordForm,
 )
 from django.contrib.auth import login, logout, authenticate
-from .models import CustomUser
+from .models import CustomUser, EmailVerification
 from adminDashboardApp.models import College, LoginHistoryModel
 from campusManagerApp.models import CampusManagerInvite
 from django.contrib.auth.models import Group
 
 from wave_v1.decorators import (
     check_suspension,
+    emailUnverified
 )
 
 
 # Create your views here.
+def generateVerificationCode():
+    return str(random.randint(100000, 999999))
+
+
 def joinView(request):
     invite_token = request.session.get("invite_token")
     invite_email = request.session.get("invite_email")
@@ -40,13 +46,30 @@ def joinView(request):
             user = form.save()
 
             group, created = Group.objects.get_or_create(name="Member")
-            unverified_group, created = Group.objects.get_or_create(
-                name="Unverified Email"
-            )
+            unverified_group, created = Group.objects.get_or_create(name="Unverified")
+            unboarded_group, created = Group.objects.get_or_create(name="Unboarded")
             user.groups.add(group)
             user.groups.add(unverified_group)
+            user.groups.add(unboarded_group)
 
-            generateVerficationLink(request, user)
+            verification_code = generateVerificationCode()
+            expiration_time = timezone.now() + timedelta(hours=12)
+            email_verification = EmailVerification.objects.create(
+                user=user,
+                verification_code=verification_code,
+                expiration_date=expiration_time,
+            )
+
+            send_mail(
+                subject="Your Verification Code",
+                message=f"Your verification code is {verification_code}",
+                from_email="no-reply@wavecampus.net",
+                recipient_list=[user.email],
+                fail_silently=False,
+            )
+
+            user = CustomUser.objects.get(email=user.email)
+            user.email_verified = False
 
             if invite_email and collegeId and invite_token:
                 college = College.objects.get(collegeId=collegeId)
@@ -64,76 +87,98 @@ def joinView(request):
                 del request.session["invite_token"]
 
                 login(request, user)
+                messages.success(
+                    request,
+                    f"You have successfully joined {college.name} as a manager!",
+                )
                 return redirect("campusManager:dashboard")
 
+            messages.info(request, "A verification code has been sent to your email.")
             login(request, user)
-            return redirect("accountManagement:userPreferences")
+            next_url = request.GET.get("next", "authentication:verifyEmail")
+            return redirect(next_url)
         else:
-            print(form.errors)
+            messages.error(request, "Invalid form")
     else:
         form = CustomUserJoinForm()
     return render(request, "authenticationApp/join.html", {"form": form})
 
 
 @login_required
-def startVerificationProcess(request):
-    group, created = Group.objects.get_or_create(name="Unverified Email")
-    user = request.user
-    user.groups.add(group)
-    user.save()
-    generateVerficationLink(request, user)
-    return render(request, "authenticationApp/verify/verificationLinkSent.html")
+@emailUnverified
+def emailVerifyView(request):
+    if request.method == "POST":
+        action = request.POST.get("action")
+        verification_code = request.POST.get("verification_code")
+        email_verification = EmailVerification.objects.filter(
+            user=request.user, is_verified=False
+        ).first()
+        user = CustomUser.objects.get(email=request.user.email)
+        if action == "verifyEmailCode":
+            if email_verification:
+                if (
+                    verification_code == email_verification.verification_code
+                    and email_verification.expiration_date > timezone.now()
+                ):
+                    email_verification.is_verified = True
+                    email_verification.save()
+
+                    unverified_group = Group.objects.get(name="Unverified")
+                    user_verified_group, created = Group.objects.get_or_create(
+                        name="Verified"
+                    )
+                    user.groups.remove(unverified_group)
+                    user.groups.add(user_verified_group)
+                    user.email_verified = True
+                    user.save()
+
+                    messages.success(request, "Email verified successfully!")
+                    login(request, request.user)
+                    return redirect("accountManagement:onboarding")
+                else:
+                    messages.error(request, "Invalid verification code.")
+            else:
+                messages.error(request, "No email record found.")
+        elif action == "sendEmailCode":
+            if not email_verification:
+                print("No EmailVerification record found.")
+                email_verification = EmailVerification.objects.create(
+                    user=request.user,
+                    verification_code=generateVerificationCode(),
+                    expiration_date=timezone.now() + timedelta(hours=12),
+                )
+            else:
+                print("EmailVerification record found.")
+                email_verification.verification_code = generateVerificationCode()
+                email_verification.expiration_date = timezone.now() + timedelta(hours=12)
+                email_verification.save()
+
+                try:
+                    send_mail(
+                        subject="Your Verification Code",
+                        message=f"Your verification code is {email_verification.verification_code}",
+                        from_email="no-reply@wavecampus.net",
+                        recipient_list=[user.email],
+                        fail_silently=False,
+                    )
+                    messages.success(request, "Verification code sent successfully!")
+                except Exception as e:
+                    messages.error(request, "Failed to send verification code. Please try again.")
+                    print(f"Error sending email: {e}")
+        else:
+            messages.error(request, "No email record found.")
+    return render(request, "authenticationApp/verifyEmail.html")
 
 
-
-def generateVerficationLink(request, user):
-    signer = TimestampSigner()
-    token = signer.sign(user.email)
-
-    verification_link = request.build_absolute_uri(
-        reverse("authentication:verify", kwargs={"token": token})
-    )
-
-    email_content = render_to_string(
-        "emailTemplates/authenticationApp/verify/verifyEmail.html",
-        {"verification_link": verification_link, "user": user},
-    )
-    send_mail(
-        subject="Verify your email",
-        message="Please verify your email address.",
-        from_email="admin@wavecampus.net",
-        recipient_list=[user.email],
-        html_message=email_content,
-        fail_silently=False,
-    )
-    print(f"Email sent to {user.email} with verification link: {verification_link}")
-
-
-@login_required
-def verifyEmail(request, token):
-    """
-    The function `verifyEmail` verifies a user's email address using a token and updates the user's
-    email verification status in the database.
-    """
-    signer = TimestampSigner()
-    try:
-        email = signer.unsign(token, max_age=86400) 
-
-        if request.user.email != email:
-            return redirect("authentication:login")
-
-        user = CustomUser.objects.get(email=email)
-
-        user.email_verified = True
-        user.groups.remove(Group.objects.get(name="Unverified Email"))
-        user.save()
-
-        return redirect("accountManagement:userPreferences")
-
-    except (SignatureExpired, BadSignature, CustomUser.DoesNotExist):
-        return render(
-            request, "emailTemplates/authenticationApp/verify/verificationExpired.html"
-        )
+# @login_required
+# def startVerificationProcess(request):
+#     group, created = Group.objects.get_or_create(name="Unverified Email")
+#     user = request.user
+#     user.groups.add(group)
+#     user.save()
+#     messages.info(request, "Verification email sent successfully!")
+#     generateVerficationLink(request, user)
+#     return render(request, "authenticationApp/verify/verificationLinkSent.html")
 
 
 def loginView(request):

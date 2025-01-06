@@ -28,4 +28,16 @@ urlpatterns = [
         views.eventManagement,
         name="eventManagement",
     ),
+    path(
+        "billing/",
+        views.hostBilling,
+        name="hostBilling",
+    ),
+    path(
+        "billing/withdraw/",
+        views.hostBillingCashout,
+        name="hostBillingCashout",
+    ),
+    path("analytics/", views.hostAnalyticsHome, name="hostAnalytics"),
+    path("billing/add/card/new/", views.addCard, name="hostBillingAddCard"),
 ]

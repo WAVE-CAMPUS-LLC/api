@@ -1,5 +1,9 @@
 from django import forms
-from .models import College, CollegeRequest, Organization
+from .models import College, CollegeRequest, Organization, Membership
+from django.forms.widgets import ClearableFileInput
+
+class CustomClearableFileInput(ClearableFileInput):
+    template_name = 'custom_clearable_file_input.html'  # Custom template for the widget
 
 
 class CollegeRequestForm(forms.ModelForm):
@@ -43,6 +47,7 @@ class JoinCollegeForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         self.college = kwargs.pop("college", None)
+        self.user = kwargs.pop("user", None) 
         super().__init__(*args, **kwargs)
 
     def clean_email(self):
@@ -52,8 +57,14 @@ class JoinCollegeForm(forms.Form):
 
             if self.college.email_domain not in email_domain:
                 raise forms.ValidationError(
-                    f"Please use your school email ending in @{self.college.email_domain}"
+                    f"Use school email ending in @{self.college.email_domain}"
                 )
+                
+            user = self.user
+            
+            if Membership.objects.filter(college=self.college, user=user).exists():
+                raise forms.ValidationError("You are already a member of this college")
+        
         return email
 
 
@@ -86,3 +97,21 @@ class OrganizationForm(forms.ModelForm):
         ]
 
         widgets = {"privacy": forms.Select()}
+        
+class EditOrganizationForm(forms.ModelForm):
+    class Meta:
+        model = Organization
+        fields = [
+            "description",
+            "privacy",
+            "logo",
+            "contact_name",
+            "contact_email",
+            "contact_website",
+            "instagram",
+        ]
+
+        widgets = {
+            "privacy": forms.Select(choices=Organization.PRIVACY_CHOICES),
+            "logo": forms.ClearableFileInput(attrs={"class": "custom-file-input"})
+        }

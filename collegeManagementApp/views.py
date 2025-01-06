@@ -6,12 +6,19 @@ from django.utils.crypto import get_random_string
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import HttpResponseRedirect, JsonResponse
+from wave_v1.decorators import check_suspension, member, verified, onboarded
+from datetime import datetime, timedelta
+from django.utils.timezone import now
+from django.db.models import Q
+from datetime import date
+
 
 from .forms import (
     CollegeRequestForm,
     JoinCollegeForm,
     OrganizationForm,
     VerifyCollegeJoinForm,
+    EditOrganizationForm
 )
 from .models import (
     CollegeRequest,
@@ -96,6 +103,11 @@ def collegeCampusesView(request):
     )
 
 
+@login_required
+@member
+@verified
+@onboarded
+@check_suspension
 def requestCollege(request):
     pageName = "Colleges"
 
@@ -120,6 +132,10 @@ def requestCollege(request):
 
 
 @login_required
+@member
+@verified
+@onboarded
+@check_suspension
 def viewCollegeInformation(request, collegeId):
     pageName = "Colleges"
 
@@ -130,24 +146,62 @@ def viewCollegeInformation(request, collegeId):
     members = UserProfile.objects.filter(college=college)
     organizations = Organization.objects.filter(college=college, status="Accepted")
 
+
+    if not request.user.is_authenticated:
+        # Restrict events with age restrictions for anonymous users
+        age_filter = Q(age_restriction="")
+    else:
+        # For authenticated users, calculate age and apply restrictions
+        user_age = request.user.age
+        if user_age is None and request.user.birthday:
+            today = date.today()
+            user_age = (
+                today.year
+                - request.user.birthday.year
+                - (
+                    (today.month, today.day)
+                    < (request.user.birthday.month, request.user.birthday.day)
+                )
+            )
+            request.user.age = user_age
+            request.user.save()
+
+        age_filter = Q(age_restriction="")
+        if user_age:
+            if user_age >= 21:
+                age_filter |= Q(age_restriction="21+")
+            if user_age >= 18:
+                age_filter |= Q(age_restriction="18+")
+    
+
     events = Event.objects.filter(
         display_event_on_college=True, host__user_profile__college=college
-    )
+    ).filter(age_filter).order_by("-date")
 
     events_restricted_to_college = Event.objects.filter(
         privacy="Private (College)",
         privacy_details__restricted_college=college,
         status="live",
-    )
+    ).filter(age_filter).order_by("-date")
 
     display_events_on_college = Event.objects.filter(
         display_event_on_college=True,
         host__user_profile__college=college,
         status="live",
-    )
+    ).filter(age_filter).order_by("-date")
 
     events = (events_restricted_to_college | display_events_on_college).distinct()
+    
+    
+    today = now().date()
+    start_of_week = today - timedelta(days=today.weekday())
+    end_of_week = start_of_week + timedelta(days=6)
 
+    weekly_events = Event.objects.filter(
+        date__range=[start_of_week, end_of_week], status="live", privacy="Discoverable", admin_status="active"
+    ).filter(age_filter).order_by("?")[:3]
+    
+    
     return render(
         request,
         "collegeManagementApp/collegeInformation.html",
@@ -158,17 +212,23 @@ def viewCollegeInformation(request, collegeId):
             "user_profile": user_profile,
             "organizations": organizations,
             "events": events,
+            "weekly_events": weekly_events,
         },
     )
 
 
 @login_required
+@member
+@verified
+@onboarded
+@check_suspension
 def joinCollege(request, collegeId):
     pageName = "Colleges"
     college = get_object_or_404(College, collegeId=collegeId)
 
     if request.method == "POST":
         joinForm = JoinCollegeForm(request.POST, college=college)
+        joinForm.user = request.user
         if joinForm.is_valid():
             user = request.user
             email = joinForm.cleaned_data["email"]
@@ -205,6 +265,10 @@ def joinCollege(request, collegeId):
 
 
 @login_required
+@member
+@verified
+@onboarded
+@check_suspension
 def verifyJoinCollege(request, collegeId):
     pageName = "Colleges"
     college = get_object_or_404(College, collegeId=collegeId)
@@ -223,7 +287,7 @@ def verifyJoinCollege(request, collegeId):
                     request,
                     f"You have successfully joined {college.name}. Enjoy all it has to offer!",
                 )
-                return redirect("core:index")
+                return redirect("colleges:find")
             else:
                 messages.error(request, "Invalid verification code!")
 
@@ -237,6 +301,10 @@ def verifyJoinCollege(request, collegeId):
 
 
 @login_required
+@member
+@verified
+@onboarded
+@check_suspension
 def exitCollege(request, collegeId):
     user_profile = get_object_or_404(UserProfile, user=request.user)
     college = get_object_or_404(College, collegeId=collegeId)
@@ -262,6 +330,10 @@ def exitCollege(request, collegeId):
 
 
 @login_required
+@member
+@verified
+@onboarded
+@check_suspension
 def createOrg(request, collegeId):
     pageName = "Colleges"
     college = get_object_or_404(College, collegeId=collegeId)
@@ -297,6 +369,7 @@ def createOrg(request, collegeId):
             organization.created_by = request.user
             organization.status = "Pending"
             organization.save()
+            OrganizationMembership.objects.create(user=request.user, organization=organization)
 
             return redirect("colleges:find")
     else:
@@ -309,6 +382,10 @@ def createOrg(request, collegeId):
 
 
 @login_required
+@member
+@verified
+@onboarded
+@check_suspension
 def viewOrganization(request, collegeId, orgId):
     pageName = "Colleges"
     college = get_object_or_404(College, collegeId=collegeId)
@@ -336,6 +413,8 @@ def viewOrganization(request, collegeId, orgId):
         return redirect("colleges:find")
     organization = get_object_or_404(Organization, orgId=orgId, college=college)
 
+    is_owner = organization.created_by == user_profile.user
+
     is_member = OrganizationMembership.objects.filter(
         user=request.user, organization=organization
     ).exists()
@@ -347,28 +426,115 @@ def viewOrganization(request, collegeId, orgId):
         organization=organization
     ).select_related("user")
 
+
+    if not request.user.is_authenticated:
+        # Restrict events with age restrictions for anonymous users
+        age_filter = Q(age_restriction="")
+    else:
+        # For authenticated users, calculate age and apply restrictions
+        user_age = request.user.age
+        if user_age is None and request.user.birthday:
+            today = date.today()
+            user_age = (
+                today.year
+                - request.user.birthday.year
+                - (
+                    (today.month, today.day)
+                    < (request.user.birthday.month, request.user.birthday.day)
+                )
+            )
+            request.user.age = user_age
+            request.user.save()
+
+        age_filter = Q(age_restriction="")
+        if user_age:
+            if user_age >= 21:
+                age_filter |= Q(age_restriction="21+")
+            if user_age >= 18:
+                age_filter |= Q(age_restriction="18+")
+
     # Get events restricted to this organization
     restricted_events = Event.objects.filter(
         privacy="Private (Organization)", 
         privacy_details__restricted_organization=organization
-    )
+    ).filter(age_filter).order_by("-date")
+    
+    org_privacy = organization.privacy
+    org_owner = organization.created_by
 
-    return render(
-        request,
-        "collegeManagementApp/organizations/viewOrg.html",
-        {
-            "pageName": pageName,
-            "college": college,
-            "organization": organization,
-            "is_member": is_member,
-            "member_count": member_count,
-            "members": members,
-            "events": restricted_events,
-        },
-    )
+    if request.method == "POST":
+        action = request.POST.get("action")
+        if action == "kickMember":
+            member_username = request.POST.get("leavingMemberUsername")
+            member = UserProfile.objects.filter(user__username=member_username).first()
+            if member:
+                OrganizationMembership.objects.filter(
+                    user=member.user, organization=organization
+                ).delete()
+                messages.success(request, f"{member.user.username} has been removed from the organization.")
+            
+            elif not member:
+                messages.error(request, "User not found.")
+                
+            else:
+                messages.error(request, "An error occurred.", extra_tags="danger")
+            
+            return redirect("colleges:viewOrg", collegeId=collegeId, orgId=orgId)
+        if action == "deleteOrg":
+            all_memberships = OrganizationMembership.objects.filter(organization=organization)
+            all_memberships.delete()
+            
+            events = Event.objects.filter(privacy="Private (Organization)", privacy_details__restricted_organization=organization)
+            events.delete()
+            
+            event_privacy = EventPrivacy.objects.filter(restricted_organization=organization)
+            event_privacy.delete()
+            
+            organization.delete()
+            messages.success(request, f"{organization.name} has been deleted.")
+            return redirect("colleges:find")
+        if action == "saveChanges":
+            orgForm = EditOrganizationForm(request.POST, request.FILES, instance=organization)
+            
+            if orgForm.is_valid():
+                org = orgForm.save(commit=False)
+
+                if 'logo' in request.FILES:
+                    org.logo = request.FILES['logo']
+    
+                org.save()
+
+                messages.success(request, "Changes saved successfully.")
+                return redirect("colleges:viewOrg", collegeId=collegeId, orgId=orgId)
+            
+    form = EditOrganizationForm(instance=organization)
+    
+    if org_privacy == "Private" and not is_member:
+        return render(request, "collegeManagementApp/extras/privateOrg.html", {"pageName": pageName, "college": college, "organization": organization})
+    else:
+        return render(
+            request,
+            "collegeManagementApp/organizations/viewOrg.html",
+            {
+                "pageName": pageName,
+                "college": college,
+                "organization": organization,
+                "is_member": is_member,
+                "member_count": member_count,
+                "members": members,
+                "events": restricted_events,
+                "isOwner": is_owner,
+                "orgOwner": org_owner,
+                "form" : form
+            },
+        )
 
 
 @login_required
+@member
+@verified
+@onboarded
+@check_suspension
 def joinOrganization(request, collegeId, orgId):
     college = get_object_or_404(College, collegeId=collegeId)
     organization = get_object_or_404(Organization, orgId=orgId, college=college)
@@ -387,6 +553,10 @@ def joinOrganization(request, collegeId, orgId):
 
 
 @login_required
+@member
+@verified
+@onboarded
+@check_suspension
 def leaveOrganization(request, collegeId, orgId):
     college = get_object_or_404(College, collegeId=collegeId)
     organization = get_object_or_404(Organization, orgId=orgId, college=college)
