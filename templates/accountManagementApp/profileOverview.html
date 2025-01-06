@@ -106,7 +106,7 @@ Profile Overview
                         </li>
                         {% if userRequest|has_group:"Host" %}
                         <li class="profile-tab border-b border-b-custom-rgba11 p-[20px] font-Wanted-Regular cursor-pointer" target="_blank" href="{% url "eventManagement:hostHome" %}">
-                            <a class="text-black no-underline hover:text-green cursor-pointer">Host Portal</a>
+                            <a href="{% url "eventManagement:hostPortal" %}" class="text-black no-underline hover:text-green cursor-pointer">Host Portal</a>
                         </li>
                         {% endif %}
                         

@@ -10,7 +10,7 @@
 
 
 {% block script %}
-{% comment %} <script type="text/javascript" src="{% static "scripts/coreApp/eventCountdown.js" %}"></script> {% endcomment %}
+<script type="text/javascript" src="{% static "scripts/dataAnalyticsAPI/hostAnalytics/eventClick.js" %}" defer></script>
 {% endblock script %}
 
 {% block header %}
@@ -26,15 +26,43 @@
     <div id="content-body">
         <div id="events-container" class="grid sm:grid-cols-1 pre-lg:grid-cols-2 lg:grid-cols-3">
             {% for event in events %}
-                <a target="_blank" href="{% url "core:eventDetails" eventId=event.eventId %}" class="category-event-card hover:category-image hover:scale-95 transform transition duration-300 flex flex-col justify-center items-center cursor-pointer overflow-hidden p-[10px] text-black">
+                <a target="_blank" href="{% url "core:eventDetails" eventId=event.eventId %}" class="category-event-card hover:category-image hover:scale-95 transform transition duration-300 flex flex-col justify-center items-center cursor-pointer overflow-hidden p-[10px] text-black" data-event-id="{{ event.eventId }}" onclick="trackEventClick({{ trending.eventId }})">
                     <div class="category-image w-full rounded-2xl shadow-custom-shadow-3">
-                        <img src="{{ event.header_photo.url }}" alt="" class="w-full h-[448px] rounded-2xl rounded-b-none object-cover">
+                        {% if event.header_photo %}
+                        <img src="{{event.header_photo.url}}" alt="" class="w-full h-[448px] rounded-2xl rounded-b-none object-cover">
+                        {% else %}
+                        <img src="{% static "/images/coreApp/boombox.png" %}" alt="" class="w-full h-[448px] rounded-2xl rounded-b-none object-cover">
+                        {% endif %}
                     </div>
                     <div class="category-event-name font-Wanted-SemiBold text-Base flex flex-col justify-center items-start gap-1 w-full border border-custom-rgba5 rounded-bl-2xl rounded-br-2xl shadow-custom-shadow-3 border-t-2 px-5 p-2">
-                        <h2 id="eventTitle" class="whitespace-nowrap overflow-hidden text-ellipsis w-full text-left text-2xl">{{ event.title }}</h2>
+                        <h2 id="eventTitle" class="whitespace-nowrap overflow-hidden text-ellipsis w-full text-left text-2xl">
+                            {% if event.title %}
+                            {{ event.title }}
+                            {% else %}
+                            Title not available
+                            {% endif %}
+                        </h2>
                         <div class="eventSubInfo flex flex-col items-start gap-[1px] w-full font-Wanted-Variable text-customGray5">
-                            <p class="flex flex-row justify-start">Hosted by @{{ event.host.username }}</p>
-                            <p class="w-full flex justify-end font-Wanted-Bold text-Large">{{ event.date }}</p>
+                            <p class="flex flex-row justify-start">
+                                {% if event.host %}
+                                Hosted by @{{ event.host.username }}
+                                {% else %}
+                                Host not available
+                                {% endif %}
+                            </p>
+                            <div class="flex flex-row justify-between w-full items-center">
+                                <p id="eventDate" class="w-full flex justify-start font-Wanted-Bold text-Medium">
+                                    {% if event.date %}
+                                    {{ event.date }}
+                                    {% else %}
+                                    Date not available
+                                    {% endif %}
+                                </p>
+
+                                <button type="button">
+                                    <img src="{% static "/images/coreApp/eventDetails/favorite.svg" %}" />
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </a>

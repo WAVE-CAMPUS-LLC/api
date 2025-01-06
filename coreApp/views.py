@@ -61,11 +61,9 @@ def exploreView(request):
     initial_events = Event.objects.filter(
         status="live", privacy="Discoverable", admin_status="active"
     )[:7]
-    trending_events = (
-        Event.objects.filter(status="live", privacy="Discoverable")
-        
-        .order_by("date")[:3]
-    )
+    trending_events = Event.objects.filter(
+        status="live", privacy="Discoverable"
+    ).order_by("date")[:3]
 
     # Retrieve the user profile and invited events
     try:
@@ -90,7 +88,6 @@ def exploreView(request):
         Event.objects.filter(
             status="live", privacy="Discoverable", admin_status="active"
         )
-        
         .values("event_type")
         .annotate(event_count=Count("event_type"))
         .order_by("-event_count")[:4]
@@ -116,16 +113,12 @@ def exploreView(request):
     start_of_week = today - timedelta(days=today.weekday())
     end_of_week = start_of_week + timedelta(days=6)
 
-    weekly_events = (
-        Event.objects.filter(
-            date__range=[start_of_week, end_of_week],
-            status="live",
-            privacy="Discoverable",
-            admin_status="active",
-        )
-        
-        .order_by("?")[:3]
-    )
+    weekly_events = Event.objects.filter(
+        date__range=[start_of_week, end_of_week],
+        status="live",
+        privacy="Discoverable",
+        admin_status="active",
+    ).order_by("?")[:3]
 
     return render(
         request,
@@ -371,7 +364,6 @@ def eventDetailsView(request, eventId, token=None):
         elif action == "unfavoriteEvent":
             user.favorite_events.remove(event)
             
-
 
     # if event.age_restriction:
     #     if user_age is None or (
@@ -680,7 +672,6 @@ def send_connect_request(request):
     return JsonResponse({"status": "error", "message": "Invalid action."}, status=400)
 
 
-
 def track_visitor(request):
     if request.method == "GET":
         # Retrieve the visitor's IP address
@@ -709,4 +700,5 @@ def get_client_ip(request):
         ip = x_forwarded_for.split(",")[0]
     else:
         ip = request.META.get("REMOTE_ADDR")
+
     return ip

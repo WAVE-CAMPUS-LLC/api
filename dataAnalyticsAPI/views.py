@@ -9,7 +9,7 @@ from django.views.decorators.csrf import csrf_exempt
 
 import json
 
-from dataAnalyticsApp.models import  GuestUser, EventInteractionControl
+from dataAnalyticsAPI.models import  GuestUser, InteractiveEventControl
 from authenticationApp.models import CustomUser
 from accountManagementApp.models import UserProfile
 from adminDashboardApp.models import LoginHistoryModel
@@ -354,32 +354,54 @@ def organizationMembership(request):
 
 
 # Host Analytics API
+@csrf_exempt
 def trackEventClicks(request):
+    print("Request Body:", request.body)
+
     if request.method == "POST":
         try:
             data = json.loads(request.body)
-            eventId = data.get("eventId")
-            guestId = data.get("guestId")
-            interaction_type = data.get("interaction_type", "Clicked")
-            duration = data.get("duration")
+            event = Event.objects.get(eventId=data["event_id"])
+            
             user = request.user if request.user.is_authenticated else None
-
-            # Retrieve or create the guest user
-            guest_user = None
-            if not user and guestId:
-                guest_user, _ = GuestUser.objects.get_or_create(guestId=guestId)
-
-            event = Event.objects.get(eventId=eventId)
-            # Log the interaction
-            EventInteractionControl.objects.create(
+            guest = None
+            if not user:
+                guest, _ = GuestUser.objects.get_or_create(guestId=request.session.session_key)
+            
+            interation = InteractiveEventControl.objects.create(
                 event=event,
                 user=user,
-                guest=guest_user,
-                interaction_type=interaction_type,
-                duration=duration if interaction_type == "Stayed" else None,
+                guest=guest,
+                interaction_type="Clicked",
             )
-
-            return JsonResponse({"status": "success", "message": "Interaction logged successfully."})
+            print(interation)
+            return JsonResponse({"message": "Event click tracked successfully"}, status=200)
         except Exception as e:
-            return JsonResponse({"status": "error", "message": str(e)}, status=400)
-    return JsonResponse({"status": "error", "message": "Invalid request method."}, status=405)
+            return JsonResponse({"error": str(e)}, status=400)
+    return JsonResponse({"error": "Invalid request method"}, status=405)
+
+@csrf_exempt
+def trackEventViews(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            event = Event.objects.get(eventId=data["event_id"])
+            
+            duration = data.get("duration", 0)
+            user = request.user if request.user.is_authenticated else None
+            guest = None
+            if not user:
+                guest, _ = GuestUser.objects.get_or_create(guestId=request.session.session_key)
+                
+            InteractiveEventControl.objects.create(
+                event=event,
+                user=user,
+                guest=guest,
+                interaction_type="Viewed",
+                duration=duration,
+            )
+            
+            return JsonResponse({"message": "Event view tracked successfully"}, status=200)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=400)
+    return JsonResponse({"error": "Invalid request method"}, status=405)

@@ -1,45 +1,61 @@
-
-document.querySelectorAll(".category-event-card").forEach((card) => {
-    card.addEventListener("click", (e) => {
-        const eventId = card.dataset.eventId;
-
-        // Capture guest ID from local storage or generate a new one
-        let guestId = localStorage.getItem("guestId");
-        if (!guestId) {
-            guestId = self.crypto.randomUUID();
-            localStorage.setItem("guestId", guestId);
-        }
-
-        const eventClickURL = document.getElementById("eventClickURL").value;
-        // Send data to the server
-        fetch(eventClickURL, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "X-CSRFToken": getCookie("csrftoken"), // Include CSRF token
-            },
-            body: JSON.stringify({
-                eventId: eventId,
-                guestId: guestId,
-                interaction_type: "Clicked",
-            }),
-        })
-            .then((response) => response.json())
-            .then((data) => console.log("Interaction logged:", data))
-            .catch((error) => console.error("Error logging interaction:", error));
-    });
-});
-
-// Utility function to get CSRF token
 function getCookie(name) {
     let cookieValue = null;
     if (document.cookie && document.cookie !== "") {
-        const cookies = document.cookie.split(";").map((c) => c.trim());
-        cookies.forEach((cookie) => {
-            if (cookie.startsWith(name + "=")) {
-                cookieValue = decodeURIComponent(cookie.split("=")[1]);
+        const cookies = document.cookie.split(";");
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            // Check if this cookie string begins with the name we want
+            if (cookie.substring(0, name.length + 1) === name + "=") {
+                cookieValue = decodeURIComponent(
+                    cookie.substring(name.length + 1)
+                );
+                break;
             }
-        });
+        }
     }
     return cookieValue;
 }
+
+function handleEventClick(event, eventId) {
+    event.preventDefault(); // Stop the link navigation
+    trackEventClick(eventId); // Call the tracking function
+    setTimeout(() => {
+        window.location.href = event.target.closest('a').href; // Navigate after tracking
+    }, 200); // Adjust delay if necessary
+}
+
+
+function trackEventClick(eventId) {
+    console.log('trackEventClick called with Event ID:', eventId);
+
+    const fetchUrl = document.getElementById('trackEventClickURL').value;
+    console.log('Tracking URL:', fetchUrl);
+
+    fetch(fetchUrl, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrfmiddlewaretoken'),
+        },
+        body: JSON.stringify({
+            event_id: eventId,
+            interaction_type: 'Clicked',
+        }),
+    })
+        .then(response => {
+            console.log('Fetch response:', response);
+            if (!response.ok) {
+                console.error('Fetch failed:', response.statusText);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Response Data:', data);
+        })
+        .catch(error => console.error('Error during fetch:', error));
+}
+
+
+
+// Add this line to ensure the function is available globally
+window.trackEventClick = trackEventClick;

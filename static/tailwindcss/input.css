@@ -75,6 +75,8 @@
 @import "../styles/eventManagementApp/host/hostPortal.css";
 @import "../styles/eventManagementApp/host/eventManagement.css";
 @import "../styles/eventManagementApp/billing/hostBilling.css";
+@import  "../styles/eventManagementApp/host/analytics/analyticsHome.css";
+@import "../styles/eventManagementApp/host/analytics/event/event.css";
 
 @import "../styles/extras/company/about.css";
 @import "../styles/extras/company/team.css";

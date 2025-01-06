@@ -125,7 +125,6 @@ def hostPortalView(request):
     )
 
 
-
 def hostGuideView(request):
     return render(request, "eventManagementApp/host/hostGuide.html")
 
@@ -317,10 +316,10 @@ def save_event_progress(request, eventId):
         event.body_photo_four = request.FILES.get("body_photo_four", None)
         event.body_photo_five = request.FILES.get("body_photo_five", None)
 
-         # **Handle Age Restriction**
+        # **Handle Age Restriction**
         age_restriction = request.POST.get("age_restriction", "").strip()
         event.age_restriction = age_restriction  # Save the age restriction
-    
+
         # Optional: Validate age restriction
         valid_restrictions = ["18+", "21+", ""]
         if age_restriction not in valid_restrictions:
@@ -861,10 +860,27 @@ def hostBillingCashout(request):
     return JsonResponse({"success": False, "error": "Invalid request"}, status=405)
 
 
-
 @login_required
 @host
 @member
 @check_suspension
 def hostAnalyticsHome(request):
-    return render(request, "eventManagementApp/host/analytics/analyticsHome.html")
+    hostLiveEvents = Event.objects.filter(host=request.user, status="live")
+    return render(
+        request,
+        "eventManagementApp/host/analytics/analyticsHome.html",
+        {"hostLiveEvents": hostLiveEvents},
+    )
+
+
+@login_required
+@host
+@member
+@check_suspension
+def hostEventAnalytics(request, eventId):
+    event = get_object_or_404(Event, eventId=eventId)
+    return render(
+        request,
+        "eventManagementApp/host/analytics/event/event.html",
+        {"event": event},
+    )
