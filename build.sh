@@ -20,5 +20,11 @@ python manage.py collectstatic --no-input
 echo "Applying Django migrations..."
 python manage.py migrate --no-input
 
+find . -name "*.pyc" -delete
+find . -name "__pycache__" -delete
+
+# Step 5: Clean up node_modules if exists
+rm -rf node_modules
+
 # Step 5: Output message for Vercel
 echo "Setup complete. Ready for deployment on Vercel."
