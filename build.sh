@@ -2,6 +2,10 @@ set -e
 
 echo "Starting Vercel deployment script..."
 
+echo "Installing Python dependencies..."
+pip install --upgrade pip
+pip install -r requirements.txt
+
 # Step 1: Install required Node.js dependencies
 echo "Installing Node.js dependencies..."
 npm install
