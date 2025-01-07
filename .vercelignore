@@ -8,6 +8,7 @@ node_modules/
 *.pyo
 __pycache__/
 venv/
+virtual/
 env/
 
 # Ignore other unnecessary files
