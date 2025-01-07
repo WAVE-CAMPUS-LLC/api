@@ -14,7 +14,7 @@ venv.bak/
 virtual/
 #Environment variables 
 .env
-
+findlarge.py
 static/tailwindcss/output.css
 
 # Install packages

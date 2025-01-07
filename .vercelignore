@@ -1,0 +1,21 @@
+# Ignore Git and Node.js files
+.git/
+.gitignore
+node_modules/
+
+# Ignore virtual environment
+*.pyc
+*.pyo
+__pycache__/
+venv/
+env/
+
+# Ignore other unnecessary files
+.DS_Store
+.vscode/
+.idea/
+
+# Ignore collected static files if not needed for deployment
+staticfiles/
+findlarge.py
+static/

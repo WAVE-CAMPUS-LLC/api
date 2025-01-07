@@ -34,7 +34,7 @@ SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['.vercel.app', 'localhost']
+ALLOWED_HOSTS = ['.vercel.app', 'localhost', '127.0.0.1']
 WSGI_APPLICATION = 'wave_v1.wsgi.app'
 
 
@@ -73,6 +73,7 @@ INSTALLED_APPS = [
     "qr_code",
     "storages",
     "channels",
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
@@ -85,7 +86,14 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "authenticationApp.middleware.RedirectAuthenticatedUsersMiddleware",
+    'corsheaders.middleware.CorsMiddleware',
 ]
+
+CORS_ALLOWED_ORIGINS = [
+    'https://wave-v1-five.vercel.app',
+    'https://waveoncampus.com',
+]
+
 
 # CSP_DEFAULT_SRC = ("'self'",)
 # CSP_SCRIPT_SRC = (
@@ -134,29 +142,6 @@ MESSAGE_TAGS = {
 
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
-
-# DATABASES = {
-#     "default": {
-#         "ENGINE": "django.db.backends.sqlite3",
-#         "NAME": BASE_DIR / "db.sqlite3",
-#     }
-# }
-
-# DATABASES = {
-#     "default": {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': env('POSTGRES_DATABASE'),
-#         'USER': env('POSTGRES_USER'),
-#         'PASSWORD': env('POSTGRES_PASSWORD'),
-#         'HOST': env('POSTGRES_HOST'),
-#         'PORT': env('POSTGRES_DATABASE_PORT', default='5432'),
-#         'OPTIONS': {
-#             'sslmode': 'require',
-#         },
-#     }
-# }
-
-
 if DATABASE_URL is None:
     raise ValueError("DATABASE_URL environment variable not set")
 
@@ -175,7 +160,7 @@ DATABASES = {
 }
 
 # Email Configurations
-DEFAULT_FROM_EMAIL = "admin@wave.app"
+DEFAULT_FROM_EMAIL = "admin@waveoncampus.com"
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = "smtp.gmail.com"
 EMAIL_PORT = 587
@@ -224,36 +209,46 @@ LOGIN_URL = "authentication:login"
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
-STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
-STATIC_URL = "/static/"
-STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
-
-# Media files (Images, Videos, GIFs) now served from Amazon S3
-# --------------------------------------------
-
 # Remove local MEDIA_ROOT since media files are now served from S3
-MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+# MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 # AWS S3 bucket configurations
-# AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
-# AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
-# AWS_STORAGE_BUCKET_NAME = os.getenv('AWS_BUCKET_NAME')
-# AWS_S3_REGION_NAME = os.getenv('AWS_REGION', default='us-east-2')
-# AWS_S3_SIGNATURE_VERSION = 's3v4'
-# AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
-# AWS_S3_OBJECT_PARAMETERS = {
-#     'CacheControl': 'max-age=86400',
-# }
-# AWS_S3_FILE_OVERWRITE = False  # Prevent overwriting files with the same name
-# AWS_DEFAULT_ACL = None         # Use the default bucket ACL
-# AWS_S3_VERIFY = True           # Verify SSL certificates
+AWS_ACCESS_KEY_ID = '9dd701367db7f26c40dffd2823924140'
+AWS_SECRET_ACCESS_KEY = '938c07b6019db06a8319acb29bcf0c6225ce7a619ce695fd250cc9836270561a'
+AWS_STORAGE_BUCKET_NAME = 'wavecampus' 
+AWS_S3_ENDPOINT_URL = 'https://e90736e158f166fed3a0071160d17fa6.r2.cloudflarestorage.com'
+AWS_S3_REGION_NAME = 'auto' 
+AWS_DEFAULT_ACL = None 
+AWS_S3_SIGNATURE_VERSION = 's3v4'
+AWS_QUERYSTRING_AUTH = False
+AWS_S3_FILE_OVERWRITE = True
+
+# Static files (CSS, JavaScript, Images)
+
+# Media files (Images, Videos, GIFs)
+
+AWS_STATIC_URL = f'https://{AWS_STORAGE_BUCKET_NAME}.{AWS_S3_ENDPOINT_URL}/'
+
 
 # Use django-storages to handle media files with S3
-# DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+
+# STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles_tmp")
+STATIC_URL = AWS_STATIC_URL + "static/"
+STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
 
 # Set the S3 URL for media
+MEDIA_URL = AWS_STATIC_URL + 'media/'
 # MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/media/'
-# MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/media/'
+
+STORAGES = {
+    "default": {
+        "BACKEND": 'storages.backends.s3boto3.S3Boto3Storage',
+    },
+    
+    "staticfiles": {
+        "BACKEND": 'storages.backends.s3boto3.S3Boto3Storage',
+    },
+}
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
