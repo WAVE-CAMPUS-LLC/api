@@ -1,5 +1,19 @@
-# Exit on error
-set -o errexit
+set -e
+
+echo "Starting Vercel deployment script..."
+
+echo "Installing Python dependencies..."
+pip install --upgrade pip
+pip install -r requirements.txt
+
+# Step 1: Install required Node.js dependencies
+echo "Installing Node.js dependencies..."
+npm install
+
+# Step 2: Build Tailwind CSS or any frontend assets
+echo "Building frontend assets..."
+npm run build
+
 
 
 # Step 3: Collect static files for Django
