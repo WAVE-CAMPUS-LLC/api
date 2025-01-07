@@ -17,6 +17,5 @@ application = get_wsgi_application()
 
 app = application
 
-from django.core.management import execute_from_command_line
-port = int(os.environ.get("PORT", 8000))
-execute_from_command_line(["manage.py", "runserver", f"0.0.0.0:{port}"])
+if 'PORT' in os.environ:
+    os.environ['DJANGO_PORT'] = os.environ['PORT']
