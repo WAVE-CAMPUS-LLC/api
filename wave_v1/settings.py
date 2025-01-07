@@ -198,8 +198,8 @@ STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
 
 # Use Cloudflare custom domain for static files
-CLOUDFLARE_STATIC_DOMAIN = os.getenv("CLOUDFLARE_STATIC_DOMAIN", "cdn.waveoncampus.com")
-STATIC_URL = f"https://{CLOUDFLARE_STATIC_DOMAIN}/static/"
+CLOUDFLARE_DOMAIN = os.getenv("CLOUDFLARE_DOMAIN", "cdn.waveoncampus.com")
+STATIC_URL = f"https://{CLOUDFLARE_DOMAIN}/static/"
 
 # AWS S3 Configurations
 AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
@@ -207,9 +207,6 @@ AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
 AWS_STORAGE_BUCKET_NAME = os.getenv("AWS_BUCKET_NAME")
 AWS_S3_REGION_NAME = os.getenv("AWS_REGION", "us-east-2")
 AWS_S3_SIGNATURE_VERSION = "s3v4"
-AWS_S3_CUSTOM_DOMAIN = os.getenv(
-    "CLOUDFLARE_MEDIA_DOMAIN", f"{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com"
-)
 
 AWS_S3_OBJECT_PARAMETERS = {
     "CacheControl": "max-age=31536000, public",  # Optimize for caching
@@ -219,7 +216,7 @@ AWS_DEFAULT_ACL = None
 AWS_S3_VERIFY = True
 
 # Use Cloudflare custom domain for media files
-MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/media/"
+MEDIA_URL = f"https://{CLOUDFLARE_DOMAIN}/media/"
 
 # Storages Configuration
 STORAGES = {
