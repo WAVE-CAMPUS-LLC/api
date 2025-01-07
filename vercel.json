@@ -3,7 +3,7 @@
 		{
 			"src": "wave_v1/wsgi.py",
 			"use": "@vercel/python",
-			"config": { "maxLambdaSize": "15mb", "runtime": "python3.12.8" }
+			"config": { "maxLambdaSize": "15mb"}
 		}
 	],
 	"routes": [
