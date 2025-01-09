@@ -15,6 +15,8 @@
 <script type="text/javascript" src="{% static "scripts/coreApp/eventDetails/shareEvent.js" %}" defer></script>
 <script type="text/javascript" src="{% static "scripts/coreApp/eventDetails/ticketCount.js" %}" defer nonce="{{ nonce }}"></script>
 <script type="text/javascript" src="{% static "scripts/coreApp/eventDetails/favoriteEvent.js" %}" defer></script>
+<script type="text/javascript" src="{% static "scripts/coreApp/eventDetails/crewTicketBuy.js" %}" defer></script>
+
 {% endblock script %}
 
 
@@ -271,7 +273,33 @@
 
                                                 <p class="font-Wanted-Variable text-Semi-Medium">{{ ticket.ticket_description }}</p>
                                             </div>
-                                            
+                                            <hr />
+                                            <div class="ticket-description-body flex flex-col gap-4">
+                                                <div class="ticket-header-info flex flex-col justify-between items-center">
+                                                    <h6 class="priceType flex justify-start text-black font-Wanted-Bold text-Large px-2 py-2">
+                                                        {% if event.crew_discount == True %}
+                                                            <p class="font-Wanted-Variable text-Semi-Medium"> This event is discounted {{ event.crew_discount_percentage }}% for crews that have {{ event.minimum_crew_size }} or more members! </p>
+                                                        {% endif %}
+                                                    </h6>
+                                                    
+                                                    {% if crews %}
+                                                        <div class="addRemoveTickets flex flex-row gap-1 items-center">
+                                                            <button class="bg-gradient-to-br bg-gradient-start bg-gradient-end py-3 px-5 rounded-2xl text-white font-Wanted-Regular" id="crewPurchaseButton" data-ticket-id="{{ ticket.ticket_id }}" >
+                                                                Purchase for your crew
+                                                            </button>
+                                                        </div>
+                                                    {% else %}
+                                                        {% if event.crew_discount == True %}
+                                                            <div class="addRemoveTickets flex flex-col gap-1 items-center font-Wanted-Variable text-Semi-Medium">
+                                                                You are not in any crew
+                                                                <a href="{% url "social:createCrew" %}" class="bg-gradient-to-br bg-gradient-start bg-gradient-end font-Wanted-Regular py-3 px-5 rounded-2xl text-white" data-ticket-id="{{ ticket.ticket_id }}" >
+                                                                    Create your Crew
+                                                                </a >
+                                                            </div>
+                                                        {% endif %}
+                                                    {% endif %}
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -447,6 +475,45 @@
                     </div>
                     {% endif %}                        
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="crewPurchaseDisplay" class="hidden bg-[rgba(0, 0, 0, 0.037)] backdrop-blur-sm fixed top-0 left-0 right-0 bottom-0 z-[1005] w-full h-full cursor-default">
+    <div class="modalContainer w-full h-full flex justify-center items-center py-5 md:py-11">
+        <div class="modalContentCard w-4/12 h-full lg:h-[75%] bg-white shadow-custom-shadow rounded-2xl p-5 pb-12 flex flex-col gap-3 overflow-y-auto">
+            <div class="modalHeader w-full flex justify-between items-center flex-col"> 
+                <div class="modalClose">
+                    <button type="button" role="button" id="crewPurchaseCloseButton">
+                        <img src="{% static "images/admin/departments/modalClose.svg" %}" alt="Close">
+                    </button>
+                </div>
+                <div class="modalHeading font-Wanted-ExtraBold text-Large md:text-2xl">
+                    <h5>Crew Purchase</h5>
+                </div>
+            </div>
+
+            <div class="w-full flex flex-col gap-6">
+                {% for crew in crews %}
+                <div>
+                    <div class="flex flex-row justify-between w-full items-center">
+                        <div class="flex justify-start items-center">
+                            <p class="font-Wanted-Medium text-Medium text-black">{{ crew.name }}</p>
+                        </div>
+                        <div>
+                            <form method="POST">
+                                {% csrf_token %}
+                                <input type="hidden" name="crewId" value="{{ crew.crewId }}">
+                                <input type="hidden" name="crewPurchaseUrl" value="{% url "eventTickets:crewPurchase" %}">
+                                <button type="submit" class="crewPurchaseButton border-3 hover:bg-green border-green bg-gradient-to-br bg-gradient-start bg-gradient-end font-Wanted-Bold text-white rounded-xl py-2 px-5 cursor-pointer" role="button">
+                                    Purchase
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}  
             </div>
         </div>
     </div>

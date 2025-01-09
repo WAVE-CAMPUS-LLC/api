@@ -16,8 +16,10 @@ import time
 from qr_code.qrcode import maker
 from qr_code.qrcode.utils import QRCodeOptions
 import stripe
-from .models import Ticket, UserPayment, StripePlatformSettings
+from .models import PaidFreeTicket, Ticket, UserPayment, StripePlatformSettings
 from eventManagementApp.models import Event, HostProfile
+from socialApp.models import Crew, CrewMember
+from django.views.decorators.http import require_POST
 
 
 def checkoutView(request):
@@ -72,6 +74,17 @@ def checkoutView(request):
     hostProfile = get_object_or_404(HostProfile, user=host)
     hostStripeAccountId = hostProfile.stripe_account_id
 
+    if not hostStripeAccountId:
+        return JsonResponse({"error": "Host has not set up their payment account yet."}, status=400)
+
+    # Verify host's Stripe account capabilities
+    try:
+        account = stripe.Account.retrieve(hostStripeAccountId)
+        if not account.charges_enabled:
+            return JsonResponse({"error": "Host's payment account is not fully set up to accept payments."}, status=400)
+    except stripe.error.StripeError as e:
+        return JsonResponse({"error": "Unable to verify host's payment account."}, status=400)
+
     # Customer information
     if request.user.is_authenticated:
         customerEmail = request.user.email
@@ -116,8 +129,8 @@ def checkoutView(request):
                 payment_method_types=["card"],
                 line_items=adjusted_line_items,
                 mode="payment",
-                success_url="http://127.0.0.1:8000/paymentSuccessful/?session_id={CHECKOUT_SESSION_ID}",
-                cancel_url="http://127.0.0.1:8000/paymentFailed/",
+                success_url=request.build_absolute_uri(reverse('eventTickets:paymentSuccessful')) + "?session_id={CHECKOUT_SESSION_ID}",
+                cancel_url=request.build_absolute_uri(reverse('eventTickets:paymentFailed')),
                 customer=customer.id,
                 payment_intent_data={
                     "application_fee_amount": int(application_fee_amount * 100),
@@ -523,3 +536,84 @@ def verifyTicket(request):
         },
         status=405,
     )
+
+
+@login_required
+@require_POST
+def crewPurchaseView(request):
+    try:
+        data = json.loads(request.body)
+        crew_id = data.get('crewId')
+        ticket_id = data.get('ticketId')
+        
+        if not crew_id or not ticket_id:
+            return JsonResponse({
+                'success': False,
+                'error': 'Missing crew ID or ticket ID'
+            }, status=400)
+        
+        # Get the crew and count members
+        crew = get_object_or_404(Crew, crewId=crew_id)
+        crew_size = CrewMember.objects.filter(crew=crew).count()
+        
+        if crew_size == 0:
+            return JsonResponse({
+                'success': False,
+                'error': 'No members found in the crew'
+            }, status=400)
+        
+        # Get the ticket and event details
+        ticket = get_object_or_404(PaidFreeTicket, ticket_id=ticket_id)
+        event = ticket.event
+        
+        # Calculate discounted price if applicable
+        ticket_price = Decimal(str(ticket.ticket_price))
+        if event.crew_discount and crew_size >= event.minimum_crew_size:
+            discount_percentage = Decimal(str(event.crew_discount_percentage))
+            ticket_price = ticket_price * (1 - discount_percentage / 100)
+        
+        # Create cart entry for the crew
+        cart = request.session.get('cart', {})
+        cart[ticket_id] = {
+            'name': ticket.ticket_name,
+            'price': str(ticket_price),
+            'quantity': crew_size,
+            'priceId': ticket.stripePriceId,
+            'productId': event.stripeProductId,
+            'eventId': str(event.eventId),
+            'eventTitle': event.title,
+            'isCrewPurchase': True,
+            'crewId': str(crew_id),
+            'crewSize': crew_size,
+            'originalPrice': str(ticket.ticket_price),
+            'discountApplied': event.crew_discount and crew_size >= event.minimum_crew_size,
+            'discountPercentage': str(event.crew_discount_percentage if event.crew_discount else 0)
+        }
+        
+        request.session['cart'] = cart
+        request.session.modified = True
+        
+        checkout_url = reverse('eventTickets:checkout')
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Added {crew_size} tickets for crew {crew.name}',
+            'redirectUrl': request.build_absolute_uri(checkout_url)
+        })
+        
+    except Crew.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'error': 'Crew not found'
+        }, status=404)
+    except PaidFreeTicket.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'error': 'Ticket not found'
+        }, status=404)
+    except Exception as e:
+        print(f"Error in crewPurchaseView: {str(e)}")  # Add logging
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=400)

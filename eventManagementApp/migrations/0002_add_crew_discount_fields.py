@@ -1,0 +1,45 @@
+from django.db import migrations, models
+from django.utils.translation import gettext as _
+
+class Migration(migrations.Migration):
+
+    dependencies = [
+        ('eventManagementApp', '0001_initial'),  # Replace with your previous migration
+    ]
+
+    operations = [
+        migrations.AddField(
+            model_name='event',
+            name='crew_discount',
+            field=models.BooleanField(
+                blank=True,
+                default=False,
+                null=True,
+                verbose_name=_('Do you want to offer discounts for crew purchases?')
+            ),
+        ),
+        migrations.AddField(
+            model_name='event',
+            name='minimum_crew_size',
+            field=models.PositiveIntegerField(
+                blank=True,
+                default=None,
+                help_text=_('Minimum number of people needed in a crew to qualify for the discount'),
+                null=True,
+                verbose_name=_('Minimum crew size required for discount')
+            ),
+        ),
+        migrations.AddField(
+            model_name='event',
+            name='crew_discount_percentage',
+            field=models.DecimalField(
+                blank=True,
+                decimal_places=2,
+                default=None,
+                help_text=_('Percentage discount for crew purchases (e.g., 10.00 for 10%)'),
+                max_digits=5,
+                null=True,
+                verbose_name=_('Crew discount percentage')
+            ),
+        ),
+    ] 

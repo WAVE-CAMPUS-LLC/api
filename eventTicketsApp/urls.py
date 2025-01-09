@@ -13,4 +13,5 @@ urlpatterns = [
     
     path("ticket/<str:mainId>/view/", views.viewTicket, name="viewTicket"),
     path("ticket/verify/", views.verifyTicket, name="verifyTicket"),
+    path('crew-purchase/', views.crewPurchaseView, name='crewPurchase'),
 ]

@@ -56,5 +56,5 @@ class EventInteractionControl(models.Model):
     )  # Removed the `default` option
 
     def __str__(self):
-        return f"{self.interaction_type} on {self.event} by {self.user or self.guest}"
+        return f"{self.interaction_type} on {self.event} by {self.user or self.guest} at {self.timestamp}"
 

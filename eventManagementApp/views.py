@@ -166,6 +166,11 @@ def eventCreationProcess(request, eventId):
             event.event_type = request.POST.get("event_type")
 
             if go_live:
+                crew_discount = request.POST.get('crew_discount')
+                if crew_discount == "on":
+                    event.crew_discount = True
+                else:
+                    event.crew_discount = False
                 event_status = "live"
                 event.status = event_status
 
@@ -345,6 +350,15 @@ def eventManagement(request, eventId):
     event_privacy = EventPrivacy.objects.get(event=event)
     rsvp_list = RSVPTicket.objects.filter(event=event)
     paid_free_tickets = PaidFreeTicket.objects.filter(event=event)
+    
+    if hostProfile.stripe_account_id:
+        response = getRequiredActions(hostProfile.stripe_account_id)
+
+        if response["status"] == "success":
+            required_actions = response["required_actions"]
+            print(f"All required actions: {required_actions}")
+        else:
+            messages.error(request, f"Error: {response['message']}")
 
     if request.method == "POST":
         action = request.POST.get("eventAction")
@@ -492,6 +506,7 @@ def eventManagement(request, eventId):
             "paidFreeForm": paidFreeForm,
             "paidFreeTickets": paid_free_tickets,
             "editEventForm": editEventForm,
+            "requiredActions": required_actions,
         },
     )
 

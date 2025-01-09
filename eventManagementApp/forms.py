@@ -115,6 +115,9 @@ class EventForm(forms.ModelForm):
             "body_photo_three",
             "body_photo_four",
             "body_photo_five",
+            "crew_discount",
+            "minimum_crew_size",
+            "crew_discount_percentage",
         ]
 
         widgets = {
@@ -207,7 +210,10 @@ class EditEventForm(forms.ModelForm):
             "body_photo_three",
             "body_photo_four",
             "body_photo_five",
-            "age_restriction",  # Added age_restriction field
+            "age_restriction",
+            "crew_discount",
+            "minimum_crew_size",
+            "crew_discount_percentage",
         ]
         
 class HostProfileForm(forms.ModelForm):

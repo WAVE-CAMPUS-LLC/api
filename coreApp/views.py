@@ -371,6 +371,16 @@ def eventDetailsView(request, eventId, token=None):
         elif action == "unfavoriteEvent":
             user.favorite_events.remove(event)
             
+        elif action == "crewPurchase":
+            crew_id = request.POST.get("crewId")
+            crew = get_object_or_404(Crew, crewId=crew_id)
+            user = get_object_or_404(UserProfile, user=request.user)
+            for member in crew.members.all():
+                print(member)
+
+            messages.success(request, f"Event shared with {crew.name}")
+            return redirect("core:eventDetails", eventId=event.eventId)
+            
 
 
     # if event.age_restriction:
