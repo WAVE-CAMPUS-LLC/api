@@ -349,6 +349,7 @@ def eventDetailsView(request, eventId, token=None):
             return redirect("core:eventDetails", eventId=event.eventId)
 
         elif action == "shareEventWithCrew":
+            # There is no socket message for sharing with crew
             crew_id = request.POST.get("shareCrewId")
             crew = get_object_or_404(Crew, crewId=crew_id)
 
