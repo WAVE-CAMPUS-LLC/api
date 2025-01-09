@@ -195,36 +195,48 @@ USE_TZ = True
 # Login Link
 LOGIN_URL = "authentication:login"
 
+
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
-
-
-# AWS S3 bucket configurations
-AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
-AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
-AWS_STORAGE_BUCKET_NAME = os.getenv('AWS_BUCKET_NAME')
-AWS_S3_REGION_NAME = os.getenv('AWS_REGION', default='us-east-2')
-AWS_S3_SIGNATURE_VERSION = 's3v4'
-AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
-AWS_S3_OBJECT_PARAMETERS = {
-    'CacheControl': 'max-age=86400',
-}
-AWS_S3_FILE_OVERWRITE = True # Prevent overwriting files with the same name
-AWS_DEFAULT_ACL = None         # Use the default bucket ACL
-AWS_S3_VERIFY = True           # Verify SSL certificates
-
-# Use django-storages to handle media files with S3
-DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-
-# Set the S3 URL for media
-MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, "media")
-
-STATIC_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
-# STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
+# Use Cloudflare custom domain for static files
+CLOUDFLARE_STATIC_DOMAIN = os.getenv("CLOUDFLARE_STATIC_DOMAIN", "cdn.waveoncampus.com")
+STATIC_URL = f"https://{CLOUDFLARE_STATIC_DOMAIN}/static/"
+
+
+# AWS S3 Configurations
+AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
+AWS_STORAGE_BUCKET_NAME = os.getenv("AWS_BUCKET_NAME")
+AWS_S3_REGION_NAME = os.getenv("AWS_REGION", "us-east-2")
+AWS_S3_SIGNATURE_VERSION = "s3v4"
+AWS_S3_CUSTOM_DOMAIN = os.getenv(
+    "CLOUDFLARE_MEDIA_DOMAIN", f"{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com"
+)
+
+AWS_S3_OBJECT_PARAMETERS = {
+    "CacheControl": "max-age=31536000, public",  # Optimize for caching
+}
+AWS_S3_FILE_OVERWRITE = False
+AWS_DEFAULT_ACL = None
+AWS_S3_VERIFY = True
+
+
+# Add this line to help with debugging
+if not all([AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_STORAGE_BUCKET_NAME]):
+    raise ValueError(
+        "AWS credentials not properly configured. Please check your environment variables: "
+        "AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_BUCKET_NAME"
+    )
+
+
+
+# Use Cloudflare custom domain for media files
+MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/media/"
+
+# Storages Configuration
 STORAGES = {
     "default": {
         "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
