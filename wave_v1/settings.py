@@ -210,15 +210,15 @@ LOGIN_URL = "authentication:login"
 
 
 # Firebase Configurations
-FIREBASE_CREDENTIALS = os.path.join(BASE_DIR, "firebase.json")
-FIREBASE_STORAGE_BUCKET = os.getenv("FIREBASE_STORAGE_BUCKET", "wave-be2d0.appspot.com")
+# FIREBASE_CREDENTIALS = os.path.join(BASE_DIR, "firebase.json")
+# FIREBASE_STORAGE_BUCKET = os.getenv("FIREBASE_STORAGE_BUCKET", "wave-be2d0.appspot.com")
 
-if os.path.exists(FIREBASE_CREDENTIALS):
-    cred = credentials.Certificate(FIREBASE_CREDENTIALS)
-    firebase_app = initialize_app(cred, {"storageBucket": FIREBASE_STORAGE_BUCKET})
-else:
-    print("Firebase credentials file not found. Please check the path.")
-    raise ValueError("Firebase credentials file not found. Please check the path.")
+# if os.path.exists(FIREBASE_CREDENTIALS):
+#     cred = credentials.Certificate(FIREBASE_CREDENTIALS)
+#     firebase_app = initialize_app(cred, {"storageBucket": FIREBASE_STORAGE_BUCKET})
+# else:
+#     print("Firebase credentials file not found. Please check the path.")
+#     raise ValueError("Firebase credentials file not found. Please check the path.")
 
 
 # Static files (CSS, JavaScript, Images)
