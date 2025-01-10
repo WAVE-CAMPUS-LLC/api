@@ -36,9 +36,9 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv("DEBUG", 'False') == 'True'
+DEBUG = os.getenv("DEBUG", "False") == "True"
 
-ALLOWED_HOSTS = ['wave-v1.onrender.com', 'waveoncampus.com']
+ALLOWED_HOSTS = ["wave-v1.onrender.com", "waveoncampus.com"]
 
 # Stripe API Key (Test)
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SK")
@@ -129,11 +129,11 @@ WSGI_APPLICATION = "wave_v1.wsgi.application"
 
 
 MESSAGE_TAGS = {
-    messages_constants.DEBUG: 'debug',
-    messages_constants.INFO: 'info',
-    messages_constants.SUCCESS: 'success',
-    messages_constants.WARNING: 'warning',
-    messages_constants.ERROR: 'error',
+    messages_constants.DEBUG: "debug",
+    messages_constants.INFO: "info",
+    messages_constants.SUCCESS: "success",
+    messages_constants.WARNING: "warning",
+    messages_constants.ERROR: "error",
 }
 
 
@@ -152,14 +152,11 @@ if DATABASE_URL is None:
 tmpPostgres = urlparse(os.getenv("DATABASE_URL"))
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config("DB_NAME", default="wave_v1"),
-        'USER': config("DB_USER", default="postgres"),
-        'PASSWORD': config("DB_PASSWORD", default="postgres"),
-        'HOST': SUPABASE_URL.replace("https://", ""),
-        'PORT': config("DB_PORT", default="5432"),
-    }
+    'default': dj_database_url.config(
+        default=DATABASE_URL,
+        conn_max_age=600,
+        ssl_require=True
+    )
 }
 
 
@@ -210,36 +207,63 @@ USE_TZ = True
 # Login Link
 LOGIN_URL = "authentication:login"
 
+
+# Firebase Configurations
+FIREBASE_CREDENTIALS = os.path.join(BASE_DIR, "firebase.json")
+FIREBASE_STORAGE_BUCKET = os.getenv("FIREBASE_STORAGE_BUCKET", "wave-be2d0.appspot.com")
+
+if os.path.exists(FIREBASE_CREDENTIALS):
+    cred = credentials.Certificate(FIREBASE_CREDENTIALS)
+    firebase_app = initialize_app(cred, {"storageBucket": FIREBASE_STORAGE_BUCKET})
+else:
+    print("Firebase credentials file not found. Please check the path.")
+    raise ValueError("Firebase credentials file not found. Please check the path.")
+
+
+DEFAULT_FILE_STORAGE = "wave_v1.firebase_storage.FirebaseStorage"
+MEDIA_URL = "https://firebasestorage.googleapis.com/v0/b/wave-be2d0.appspot.com/o/"
+
+
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
-
-
-# AWS S3 bucket configurations
-AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
-AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
-AWS_STORAGE_BUCKET_NAME = os.getenv('AWS_BUCKET_NAME')
-AWS_S3_REGION_NAME = os.getenv('AWS_REGION', default='us-east-2')
-AWS_S3_SIGNATURE_VERSION = 's3v4'
-AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
-AWS_S3_OBJECT_PARAMETERS = {
-    'CacheControl': 'max-age=86400',
-}
-AWS_S3_FILE_OVERWRITE = True # Prevent overwriting files with the same name
-AWS_DEFAULT_ACL = None         # Use the default bucket ACL
-AWS_S3_VERIFY = True           # Verify SSL certificates
-
-# Use django-storages to handle media files with S3
-DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-
-# Set the S3 URL for media
-MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, "media")
-
-STATIC_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
-# STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
+# # Use Cloudflare custom domain for static files
+# CLOUDFLARE_STATIC_DOMAIN = os.getenv("CLOUDFLARE_STATIC_DOMAIN", "cdn.waveoncampus.com")
+STATIC_URL = f"/static/"
+
+
+# # AWS S3 Configurations
+# AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
+# AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
+# AWS_STORAGE_BUCKET_NAME = os.getenv("AWS_BUCKET_NAME")
+# AWS_S3_REGION_NAME = os.getenv("AWS_REGION", "us-east-2")
+# AWS_S3_SIGNATURE_VERSION = "s3v4"
+# AWS_S3_CUSTOM_DOMAIN = os.getenv(
+#     "CLOUDFLARE_MEDIA_DOMAIN", f"{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com"
+# )
+
+# AWS_S3_OBJECT_PARAMETERS = {
+#     "CacheControl": "max-age=31536000, public",  # Optimize for caching
+# }
+# AWS_S3_FILE_OVERWRITE = False
+# AWS_DEFAULT_ACL = None
+# AWS_S3_VERIFY = True
+
+
+# # Add this line to help with debugging
+# if not all([AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_STORAGE_BUCKET_NAME]):
+#     raise ValueError(
+#         "AWS credentials not properly configured. Please check your environment variables: "
+#         "AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_BUCKET_NAME"
+#     )
+
+
+# Use Cloudflare custom domain for media files
+# MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/media/"
+
+# Storages Configuration
 STORAGES = {
     "default": {
         "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
