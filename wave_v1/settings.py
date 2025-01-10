@@ -13,9 +13,11 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 from pathlib import Path
 import os
 from urllib.parse import urlparse
+
 from django.contrib.messages import constants as messages_constants
 
-
+from supabase import create_client
+from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -42,6 +44,9 @@ ALLOWED_HOSTS = ['wave-v1.onrender.com', 'waveoncampus.com']
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SK")
 STRIPE_WEBHOOK_SECRET_TEST = os.getenv("STRIPE_WEBHOOK_SK")
 STRIPE_PUBLISHABLE_KEY = os.getenv("STRIPE_PK")
+
+
+
 
 # Application definition
 
@@ -132,6 +137,12 @@ MESSAGE_TAGS = {
 }
 
 
+# Supabase Configurations
+SUPABASE_URL = config("SUPABASE_URL")
+SUPABASE_API_KEY = config("SUPABASE_API_KEY")
+SUPABASE_STORAGE_BUCKET = config("SUPABASE_STORAGE_BUCKET", default="profiles")
+supabase = create_client(SUPABASE_URL, SUPABASE_API_KEY)
+
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 if DATABASE_URL is None:
@@ -141,12 +152,16 @@ if DATABASE_URL is None:
 tmpPostgres = urlparse(os.getenv("DATABASE_URL"))
 
 DATABASES = {
-    'default': dj_database_url.config(
-        default=DATABASE_URL,
-        conn_max_age=600,
-        ssl_require=True
-    )
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': config("DB_NAME", default="wave_v1"),
+        'USER': config("DB_USER", default="postgres"),
+        'PASSWORD': config("DB_PASSWORD", default="postgres"),
+        'HOST': SUPABASE_URL.replace("https://", ""),
+        'PORT': config("DB_PORT", default="5432"),
+    }
 }
+
 
 # Email Configurations
 DEFAULT_FROM_EMAIL = "admin@wave.app"
