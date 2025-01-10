@@ -18,6 +18,7 @@ from django.contrib.messages import constants as messages_constants
 
 from supabase import create_client
 from decouple import config
+from firebase_admin import credentials, initialize_app
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
