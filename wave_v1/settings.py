@@ -206,14 +206,11 @@ else:
     raise ValueError("Firebase credentials file not found. Please check the path.")
 
 
-DEFAULT_FILE_STORAGE = "wave_v1.firebase_storage.FirebaseStorage"
-MEDIA_URL = "https://firebasestorage.googleapis.com/v0/b/wave-be2d0.appspot.com/o/"
-
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # # Use Cloudflare custom domain for static files
 # CLOUDFLARE_STATIC_DOMAIN = os.getenv("CLOUDFLARE_STATIC_DOMAIN", "cdn.waveoncampus.com")
@@ -249,15 +246,10 @@ STATIC_URL = f"/static/"
 # Use Cloudflare custom domain for media files
 # MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/media/"
 
-# Storages Configuration
-STORAGES = {
-    "default": {
-        "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
-    },
-    "staticfiles": {
-        "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
-    },
-}
+# Firebase Storage Configuration for Media Files
+DEFAULT_FILE_STORAGE = 'wave_v1.firebase_storage.FirebaseStorage'
+MEDIA_URL = f"https://firebasestorage.googleapis.com/v0/b/{FIREBASE_STORAGE_BUCKET}/o/"
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
