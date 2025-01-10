@@ -21,6 +21,9 @@ from .utils import generate_profile_picture
 from django.contrib.auth.models import Group
 from collegeManagementApp.models import College
 from socialApp.models import CrewMember, CrewRequest, FriendRequest, Crew
+from wave_v1.supabase_storage import upload_to_supabase
+from django.core.files.storage import default_storage
+import os
 
 
 # Create your models here.
@@ -258,6 +261,25 @@ class UserProfile(models.Model):
         )
 
     def save(self, *args, event_types=None, **kwargs):
+        # Handle profile photo upload to Supabase
+        if self.profile_photo and hasattr(self.profile_photo, 'file'):
+            # Create a temporary file
+            temp_path = f"temp_{self.user.username}_profile.{self.profile_photo.name.split('.')[-1]}"
+            with open(temp_path, 'wb+') as destination:
+                for chunk in self.profile_photo.chunks():
+                    destination.write(chunk)
+            
+            try:
+                # Upload to Supabase and get URL
+                destination_path = f"profile/profilePictures/{self.user.username}/{os.path.basename(self.profile_photo.name)}"
+                public_url = upload_to_supabase('profiles', temp_path, destination_path)
+                self.profile_photo.name = public_url
+            finally:
+                # Clean up temporary file
+                if os.path.exists(temp_path):
+                    os.remove(temp_path)
+
+        # Handle event types and QR code
         if event_types is not None:
             event_type_preferences = []
             for event_type_name in event_types:
@@ -265,12 +287,11 @@ class UserProfile(models.Model):
                     name=event_type_name
                 )
                 event_type_preferences.append(event_type)
-
             self.event_types.set(event_type_preferences)
 
         if not self.profile_qr_code:
             self.generate_qr_code()
-        # Now call the parent save method, ensuring to use the correct arguments
+
         super(UserProfile, self).save(*args, **kwargs)
 
     def is_friends_with(self, other_user):

@@ -157,12 +157,15 @@ def settingsView(request):
     if request.method == "POST":
         form_type = request.POST.get("form_type")
 
-
         if form_type == "profile-picture":
             form = UpdateProfilePhotoForm(request.POST, request.FILES, instance=profile)
             if form.is_valid():
-                form.save()
-                messages.success(request, "Profile picture updated successfully!")
+                try:
+                    form.save()  # This will trigger the save method in UserProfile model
+                    messages.success(request, "Profile picture updated successfully!")
+                except Exception as e:
+                    messages.error(request, f"Error uploading profile picture: {str(e)}")
+                    return redirect("accountManagement:userSettings")
         elif form_type == "personal-info":
             form = UpdatePersonalInfo(request.POST, instance=user)
             if form.is_valid():
