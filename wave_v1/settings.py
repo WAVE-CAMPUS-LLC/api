@@ -248,7 +248,7 @@ STATIC_URL = f"/static/"
 
 # Firebase Storage Configuration for Media Files
 DEFAULT_FILE_STORAGE = 'wave_v1.firebase_storage.FirebaseStorage'
-MEDIA_URL = f"https://firebasestorage.googleapis.com/v0/b/{FIREBASE_STORAGE_BUCKET}/o/"
+MEDIA_URL = 'media/'  # This will be the prefix for your media files
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Default primary key field type

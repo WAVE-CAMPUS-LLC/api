@@ -2,7 +2,7 @@ import os
 from firebase_admin import credentials, initialize_app, storage
 from django.conf import settings
 from django.core.files.storage import Storage
-from urllib.parse import urljoin
+from urllib.parse import quote
 
 
 FIREBASE_CONFIG = os.path.join(settings.BASE_DIR, "firebase.json")
@@ -24,25 +24,47 @@ class FirebaseStorage(Storage):
         self.bucket = storage.bucket()
     
     def _save(self, name, content):
+        # Clean the file name to prevent issues
+        name = self._clean_name(name)
+        
+        # Create blob and upload the file
         blob = self.bucket.blob(name)
+        content.seek(0)  # Ensure we're at the start of the file
         blob.upload_from_file(content.file)
-        blob.make_public()
-        return blob.name
+        blob.make_public()  # Make the file publicly accessible
+        
+        return name
+    
+    def _clean_name(self, name):
+        """
+        Clean the file name to make it safe for Firebase Storage
+        """
+        return os.path.normpath(name).replace('\\', '/')
     
     def url(self, name):
+        """
+        Get the public URL for accessing the file
+        """
+        if not name:
+            return None
+            
         blob = self.bucket.blob(name)
         if not blob.exists():
-            raise FileNotFoundError(f"File not found in Firebase Storage: {name}")
-        return blob.public_url
+            return None
+            
+        # URL encode the file name to handle special characters
+        encoded_name = quote(name)
+        return f"https://firebasestorage.googleapis.com/v0/b/{settings.FIREBASE_STORAGE_BUCKET}/o/{encoded_name}?alt=media"
     
-    def delete(self, name):
-        blob = self.bucket.blob(name)
-        blob.delete()
-        
     def exists(self, name):
-        blob = self.bucket.blob(name)
+        blob = self.bucket.blob(self._clean_name(name))
         return blob.exists()
     
     def size(self, name):
-        blob = self.bucket.blob(name)
-        return blob.size
+        blob = self.bucket.blob(self._clean_name(name))
+        return blob.size if blob.exists() else 0
+    
+    def delete(self, name):
+        blob = self.bucket.blob(self._clean_name(name))
+        if blob.exists():
+            blob.delete()
