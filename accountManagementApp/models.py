@@ -36,6 +36,12 @@ class EventTypePreferences(models.Model):
         return self.name
 
 
+def profile_picture_path(instance, filename):
+    # Generate a unique path for each profile picture
+    ext = filename.split('.')[-1]
+    return f'wave/profile-pictures/{instance.user.id}/{uuid.uuid4()}.{ext}'
+
+
 class UserProfile(models.Model):
     USER_STATUS_OPTION = [
         ("Happy 😊", "Happy 😊"),
@@ -174,10 +180,10 @@ class UserProfile(models.Model):
         choices=GENDER_OPTIONS,
     )
     profile_photo = models.ImageField(
-        _("Profile picture"),
-        upload_to="profile/profilePictures/",
+        upload_to=profile_picture_path,
         null=True,
         blank=True,
+        help_text="Profile pic for the user"
     )
 
     home_state = models.CharField(

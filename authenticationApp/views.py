@@ -1,5 +1,6 @@
 import datetime
 import random
+from datetime import timedelta
 from django.utils import timezone
 from django.contrib import messages
 from django.contrib.auth.tokens import default_token_generator
@@ -108,50 +109,55 @@ def joinView(request):
 @emailUnverified
 def emailVerifyView(request):
     if request.method == "POST":
-        action = request.POST.get("action")
-        verification_code = request.POST.get("verification_code")
-        email_verification = EmailVerification.objects.filter(
-            user=request.user, is_verified=False
-        ).first()
-        user = CustomUser.objects.get(email=request.user.email)
-        if action == "verifyEmailCode":
-            if email_verification:
-                if (
-                    verification_code == email_verification.verification_code
-                    and email_verification.expiration_date > timezone.now()
-                ):
-                    email_verification.is_verified = True
-                    email_verification.save()
+        try:
+            action = request.POST.get("action")
+            verification_code = request.POST.get("verification_code")
+            print(f"Action: {action}, Code: {verification_code}")
+            
+            email_verification = EmailVerification.objects.filter(
+                user=request.user, is_verified=False
+            ).first()
+            user = CustomUser.objects.get(email=request.user.email)
+            
+            if action == "verifyEmailCode":
+                if email_verification:
+                    if (
+                        verification_code == email_verification.verification_code
+                        and email_verification.expiration_date > timezone.now()
+                    ):
+                        email_verification.is_verified = True
+                        email_verification.save()
 
-                    unverified_group = Group.objects.get(name="Unverified")
-                    user_verified_group, created = Group.objects.get_or_create(
-                        name="Verified"
-                    )
-                    user.groups.remove(unverified_group)
-                    user.groups.add(user_verified_group)
-                    user.email_verified = True
-                    user.save()
+                        # Get or create the groups
+                        unverified_group, _ = Group.objects.get_or_create(name="Unverified")
+                        user_verified_group, _ = Group.objects.get_or_create(name="Verified")
+                        
+                        # Update user groups
+                        user.groups.remove(unverified_group)
+                        user.groups.add(user_verified_group)
+                        user.email_verified = True
+                        user.save()
 
-                    messages.success(request, "Email verified successfully!")
-                    login(request, request.user)
-                    return redirect("accountManagement:onboarding")
+                        messages.success(request, "Email verified successfully!")
+                        login(request, request.user)
+                        return redirect("accountManagement:onboarding")
+                    else:
+                        messages.error(request, "Invalid verification code.")
                 else:
-                    messages.error(request, "Invalid verification code.")
-            else:
-                messages.error(request, "No email record found.")
-        elif action == "sendEmailCode":
-            if not email_verification:
-                print("No EmailVerification record found.")
-                email_verification = EmailVerification.objects.create(
-                    user=request.user,
-                    verification_code=generateVerificationCode(),
-                    expiration_date=timezone.now() + timedelta(hours=12),
-                )
-            else:
-                print("EmailVerification record found.")
-                email_verification.verification_code = generateVerificationCode()
-                email_verification.expiration_date = timezone.now() + timedelta(hours=12)
-                email_verification.save()
+                    messages.error(request, "No email record found.")
+            elif action == "sendEmailCode":
+                if not email_verification:
+                    print("No EmailVerification record found.")
+                    email_verification = EmailVerification.objects.create(
+                        user=request.user,
+                        verification_code=generateVerificationCode(),
+                        expiration_date=timezone.now() + timedelta(hours=12),
+                    )
+                else:
+                    print("EmailVerification record found.")
+                    email_verification.verification_code = generateVerificationCode()
+                    email_verification.expiration_date = timezone.now() + timedelta(hours=12)
+                    email_verification.save()
 
                 try:
                     send_mail(
@@ -165,8 +171,11 @@ def emailVerifyView(request):
                 except Exception as e:
                     messages.error(request, "Failed to send verification code. Please try again.")
                     print(f"Error sending email: {e}")
-        else:
-            messages.error(request, "No email record found.")
+            else:
+                messages.error(request, "Invalid action.")
+        except Exception as e:
+            print(f"Error in emailVerifyView: {str(e)}")
+            messages.error(request, "An error occurred. Please try again.")
     return render(request, "authenticationApp/verifyEmail.html")
 
 

@@ -1,0 +1,32 @@
+.billing-tab {
+  display: flex;
+  justify-content: center;
+}
+
+.billing-tab.tab-active {
+  border: 1px solid #007379;
+  font-family: Wanted-Variable;
+  color: white;
+  background-color: #007379;
+}
+
+
+
+.checkbox {
+  position: absolute;
+  height: 30px;
+  border-radius: 50%;
+  border: 2px solid grey;
+  width: 30px;
+  transition: 100ms ease-in;
+  cursor: pointer;
+}
+
+#tos-input {
+  margin-right: 20px;
+}
+
+input:checked+.checkbox {
+  background: #008d95;
+  border: 2px solid #008d95;
+}

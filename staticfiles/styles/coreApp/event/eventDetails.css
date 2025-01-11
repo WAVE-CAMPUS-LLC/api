@@ -1,0 +1,73 @@
+.header-image * {
+    position: relative;
+    z-index: 2;
+    /* Ensure all child elements are above the blur effect */
+}
+
+.header-image::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background: rgba(23, 23, 23, 0.356);
+    /* Light color overlay with transparency */
+    backdrop-filter: blur(5px);
+    /* Apply the blur effect */
+    -webkit-backdrop-filter: blur(5px);
+    /* For Safari */
+    border-radius: 25px;
+    /* Match the container's border radius */
+    z-index: 1;
+    /* Ensure it's on top of the background */
+}
+
+.eventDeets-tab-active {
+    border-bottom: 4px solid #008d95;
+    width: auto;
+}
+
+.jit-tab-header {
+    animation: gradientAnimation 10s ease infinite;
+    /* Animates over 10 seconds, loops infinitely */
+}
+
+@keyframes gradientAnimation {
+    0% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+.eventDetailsTab {
+    display: flex;
+    justify-content: center;
+}
+
+.eventDetailsTab.eventDeets-tab-active {
+    border: 1px solid #007379;
+    font-family: Wanted-Variable;
+    color: white;
+    background-color: #007379;
+}
+
+
+.shareTab {
+    display: flex;
+    justify-content: center;
+}
+
+.shareTab.tab-active {
+    border: 1px solid #007379;
+    font-family: Wanted-Variable;
+    color: white;
+    background-color: #007379;
+}

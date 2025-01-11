@@ -1,0 +1,33 @@
+#overlay {
+    background: #008d95;
+    -webkit-backdrop-filter: blur(120px) saturate(1.7);
+    backdrop-filter: blur(120px) saturate(1.7);
+    z-index: 1005;
+    transition: transform 1.5s ease-in-out;
+    /* Add transition */
+    transform: translateX(-100%);
+    width: 80%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    border-top-right-radius: 25px;
+    border-bottom-right-radius: 25px;
+}
+
+#overlay.show {
+    transform: translateX(0%);
+}
+
+
+#overlay-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    -webkit-backdrop-filter: blur(5px);
+    backdrop-filter: blur(5px);
+    pointer-events: auto;
+}
