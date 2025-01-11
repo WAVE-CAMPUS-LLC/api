@@ -141,7 +141,7 @@ MESSAGE_TAGS = {
 # Supabase Configurations
 SUPABASE_URL = config("SUPABASE_URL")
 SUPABASE_API_KEY = config("SUPABASE_API_KEY")
-SUPABASE_STORAGE_BUCKET = config("SUPABASE_STORAGE_BUCKET", default="profiles")
+SUPABASE_STORAGE_BUCKET = config("SUPABASE_STORAGE_BUCKET", default="wave")
 supabase = create_client(SUPABASE_URL, SUPABASE_API_KEY)
 
 # Database

@@ -271,8 +271,8 @@ class UserProfile(models.Model):
             
             try:
                 # Upload to Supabase and get URL
-                destination_path = f"profile/profilePictures/{self.user.username}/{os.path.basename(self.profile_photo.name)}"
-                public_url = upload_to_supabase('profiles', temp_path, destination_path)
+                destination_path = f"profile_pictures/{self.user.username}/{os.path.basename(self.profile_photo.name)}"
+                public_url = upload_to_supabase('wave', temp_path, destination_path)
                 self.profile_photo.name = public_url
             finally:
                 # Clean up temporary file
