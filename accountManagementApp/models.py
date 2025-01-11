@@ -263,17 +263,23 @@ class UserProfile(models.Model):
     def save(self, *args, event_types=None, **kwargs):
         # Handle profile photo upload to Supabase
         if self.profile_photo and hasattr(self.profile_photo, 'file'):
-            # Create a temporary file
-            temp_path = f"temp_{self.user.username}_profile.{self.profile_photo.name.split('.')[-1]}"
+            # Create a temporary file with a clean filename
+            file_ext = os.path.splitext(self.profile_photo.name)[1]
+            temp_path = f"temp_{self.user.username}_profile{file_ext}"
             with open(temp_path, 'wb+') as destination:
                 for chunk in self.profile_photo.chunks():
                     destination.write(chunk)
             
             try:
-                # Upload to Supabase and get URL
-                destination_path = f"profile_pictures/{self.user.username}/{os.path.basename(self.profile_photo.name)}"
+                # Generate a clean filename for Supabase
+                filename = f"{uuid.uuid4()}{file_ext}"
+                destination_path = f"profile_pictures/{self.user.username}/{filename}"
+                
+                # Upload to Supabase
                 public_url = upload_to_supabase('wave', temp_path, destination_path)
-                self.profile_photo.name = public_url
+                
+                # Store only the relative path
+                self.profile_photo.name = destination_path
             finally:
                 # Clean up temporary file
                 if os.path.exists(temp_path):
