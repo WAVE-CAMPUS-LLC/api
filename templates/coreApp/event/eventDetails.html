@@ -41,7 +41,7 @@
             <div class="event-title">
                 <h3 class="font-Wanted-ExtraBold pre-sm:font-Wanted-Black text-Medium xsm:text-Large after-xsm:text-Pre-Xl xxsm:text-1xl pre-sm:text-1xl sm:text-2xl md:text-3xl text-black">{{ event.title }}</h3>
             </div>
-            <div class="hosted-by font-Wanted-Variable text-XSmall after-xsm:text-Small pre-sm:text-Medium text-[#a6a6a6] flex flex-row gap-2 items-center">
+            <div id="hostedByTwo" class="hosted-by font-Wanted-Variable text-XSmall after-xsm:text-Small pre-sm:text-Medium text-[#a6a6a6] flex flex-row gap-2 items-center">
                 <p>
                     Hosted by {{ event.host.first_name }} {{ event.host.last_name }}
                     <a class="font-Wanted-Regular text-[#a6a6a6] underline underline-offset-2" target="_blank" href="{% url "social:publicProfile" username=event.host.username %}">
