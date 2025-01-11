@@ -183,7 +183,7 @@ class UserProfile(models.Model):
         upload_to=profile_picture_path,
         null=True,
         blank=True,
-        help_text="Profile pic for the user"
+        help_text="Profile picture for the user"
     )
 
     home_state = models.CharField(
