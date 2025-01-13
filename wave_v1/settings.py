@@ -36,10 +36,10 @@ default_storage._wrapped = SupabaseStorage()
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv("DEBUG", "False") == "True"
+DEBUG = os.getenv("DEBUG", "False")
 # DEBUG = True
 
-ALLOWED_HOSTS = ["wave-v1.onrender.com", "waveoncampus.com"]
+ALLOWED_HOSTS = ["wave-v1.onrender.com", "waveoncampus.com", "localhost", "127.0.0.1"]
 
 # Stripe API Key (Test)
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SK")
@@ -91,13 +91,11 @@ MIDDLEWARE = [
     "authenticationApp.middleware.RedirectAuthenticatedUsersMiddleware",
 ]
 
-# CSP_DEFAULT_SRC = ("'self'",)
-# CSP_SCRIPT_SRC = (
-#     "'self'",
-#     "'nonce-'",
-# )
-
-# CSRF_FAILURE_VIEW = 'wave_v1.middleware.csrf_handlers.csrf_failure'
+# CSRF Settings
+CSRF_TRUSTED_ORIGINS = [
+    "https://wave-v1.onrender.com",
+    "https://waveoncampus.com",
+]
 
 ROOT_URLCONF = "wave_v1.urls"
 SITE_URL = "https://waveoncampus.com"
@@ -205,8 +203,13 @@ STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
-
-# Supabase Storage Backend Setup
+# CORS Settings
+CORS_ALLOW_ALL_ORIGINS = DEBUG  # Allow all origins in development
+CORS_ALLOWED_ORIGINS = [
+    "https://wave-v1.onrender.com",
+    "https://waveoncampus.com",
+]
+CORS_ALLOW_CREDENTIALS = True
 
 
 # Supabase Configurations

@@ -240,8 +240,11 @@ def eventDetailsView(request, eventId, token=None):
     else:
         # Anonymous users cannot bypass age restrictions
         user_age = None
-        
-    isFavoriteEvent = user.favorite_events.filter(eventId=event.eventId).exists()
+    
+    if user.favorite_events:
+        isFavoriteEvent = user.favorite_events.filter(eventId=event.eventId).exists()
+    else:
+        isFavoriteEvent = False
 
     if request.method == "POST":
         action = request.POST.get("eventAction")
