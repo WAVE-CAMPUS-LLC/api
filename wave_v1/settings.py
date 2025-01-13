@@ -16,7 +16,6 @@ from urllib.parse import urlparse
 from django.contrib.messages import constants as messages_constants
 
 
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 from dotenv import load_dotenv
@@ -37,14 +36,12 @@ SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 # DEBUG = os.getenv("DEBUG", 'False') == 'True'
 DEBUG = True
 
-ALLOWED_HOSTS = ['wave-v1.onrender.com', 'waveoncampus.com', '127.0.0.1', 'localhost']
+ALLOWED_HOSTS = ["wave-v1.onrender.com", "waveoncampus.com", "127.0.0.1", "localhost"]
 
 # CSRF Settings
 CSRF_TRUSTED_ORIGINS = [
-    'https://wave-v1.onrender.com',
-    'https://waveoncampus.com',
-    'http://127.0.0.1:8000',
-    'http://localhost:8000'
+    "https://wave-v1.onrender.com",
+    "https://waveoncampus.com",
 ]
 
 # Stripe API Key (Test)
@@ -135,11 +132,11 @@ WSGI_APPLICATION = "wave_v1.wsgi.application"
 
 
 MESSAGE_TAGS = {
-    messages_constants.DEBUG: 'debug',
-    messages_constants.INFO: 'info',
-    messages_constants.SUCCESS: 'success',
-    messages_constants.WARNING: 'warning',
-    messages_constants.ERROR: 'error',
+    messages_constants.DEBUG: "debug",
+    messages_constants.INFO: "info",
+    messages_constants.SUCCESS: "success",
+    messages_constants.WARNING: "warning",
+    messages_constants.ERROR: "error",
 }
 
 
@@ -149,19 +146,19 @@ if DATABASE_URL is None:
     raise ValueError("DATABASE_URL environment variable not set")
 
 DATABASES = {
-    'default': {
+    "default": {
         **dj_database_url.config(
             default=DATABASE_URL,
             conn_max_age=600,
         ),
-        'OPTIONS': {
-            'sslmode': 'require',
-            'options': '-c timezone=UTC',
-            'keepalives': 1,
-            'keepalives_idle': 30,
-            'keepalives_interval': 10,
-            'keepalives_count': 5,
-        }
+        "OPTIONS": {
+            "sslmode": "require",
+            "options": "-c timezone=UTC",
+            "keepalives": 1,
+            "keepalives_idle": 30,
+            "keepalives_interval": 10,
+            "keepalives_count": 5,
+        },
     }
 }
 
@@ -218,7 +215,7 @@ LOGIN_URL = "authentication:login"
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 STATIC_URL = "/static/"
 STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 # Media files (Images, Videos, GIFs) now served from Amazon S3
 # --------------------------------------------
@@ -226,26 +223,6 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 # Remove local MEDIA_ROOT since media files are now served from S3
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
-# AWS S3 bucket configurations
-# AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
-# AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
-# AWS_STORAGE_BUCKET_NAME = os.getenv('AWS_BUCKET_NAME')
-# AWS_S3_REGION_NAME = os.getenv('AWS_REGION', default='us-east-2')
-# AWS_S3_SIGNATURE_VERSION = 's3v4'
-# AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
-# AWS_S3_OBJECT_PARAMETERS = {
-#     'CacheControl': 'max-age=86400',
-# }
-# AWS_S3_FILE_OVERWRITE = False  # Prevent overwriting files with the same name
-# AWS_DEFAULT_ACL = None         # Use the default bucket ACL
-# AWS_S3_VERIFY = True           # Verify SSL certificates
-
-# Use django-storages to handle media files with S3
-# DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-
-# Set the S3 URL for media
-# MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/media/'
-# MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/media/'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
@@ -256,17 +233,14 @@ CORS_ALLOW_ALL_ORIGINS = DEBUG  # Allow all origins in development
 CORS_ALLOWED_ORIGINS = [
     "https://wave-v1.onrender.com",
     "https://waveoncampus.com",
-    "http://127.0.0.1:8000",
-    "http://localhost:8000",
 ]
 CORS_ALLOW_CREDENTIALS = True
 
 # Supabase Storage Configuration
-SUPABASE_URL = os.getenv('SUPABASE_URL')
-SUPABASE_KEY = os.getenv('SUPABASE_KEY')  # Use anon key for client-side operations
-SUPABASE_SERVICE_KEY = os.getenv('SUPABASE_SERVICE_KEY')  # Use service key for admin operations
-SUPABASE_STORAGE_BUCKET = os.getenv('SUPABASE_STORAGE_BUCKET')
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY" )
+SUPABASE_STORAGE_BUCKET = os.getenv("SUPABASE_STORAGE_BUCKET")
 
 # Media files configuration
-MEDIA_URL = f'{SUPABASE_URL}/storage/v1/object/public/{SUPABASE_STORAGE_BUCKET}/'
-DEFAULT_FILE_STORAGE = 'storages.backends.supabase.SupabaseStorage'
+MEDIA_URL = f"{SUPABASE_URL}/storage/v1/object/public/{SUPABASE_STORAGE_BUCKET}/"
+DEFAULT_FILE_STORAGE = "storages.backends.supabase.SupabaseStorage"
