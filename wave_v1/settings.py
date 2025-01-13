@@ -146,7 +146,12 @@ tmpPostgres = urlparse(os.getenv("DATABASE_URL"))
 
 DATABASES = {
     "default": dj_database_url.config(
-        default=DATABASE_URL, conn_max_age=600, ssl_require=True
+        default=DATABASE_URL, conn_max_age=600,
+        conn_health_checks=True,
+        ssl_require=True,
+        ssl={
+            "sslmode": "require",
+        }   
     )
 }
 
