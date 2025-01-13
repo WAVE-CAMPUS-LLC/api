@@ -180,7 +180,7 @@ class UserProfile(models.Model):
         choices=GENDER_OPTIONS,
     )
     profile_photo = models.ImageField(
-        upload_to=profile_picture_path,
+        upload_to='profile/profile-pictures/',
         null=True,
         blank=True,
         help_text="Profile picture for the user"
