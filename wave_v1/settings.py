@@ -146,14 +146,19 @@ tmpPostgres = urlparse(os.getenv("DATABASE_URL"))
 
 DATABASES = {
     "default": dj_database_url.config(
-        default=DATABASE_URL, conn_max_age=600,
+        default=DATABASE_URL,
+        conn_max_age=600,
         conn_health_checks=True,
-        ssl_require=True,
-        ssl={
-            "sslmode": "require",
-        }   
+        ssl_require=True,  # Ensures SSL is required
     )
 }
+
+# Ensure SSL options are properly set in the connection settings
+if "default" in DATABASES:
+    DATABASES["default"]["OPTIONS"] = {
+        "sslmode": "require",
+    }
+
 
 
 # Email Configurations
