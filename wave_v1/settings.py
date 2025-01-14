@@ -13,8 +13,10 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 from pathlib import Path
 import os
 from urllib.parse import urlparse
+from supabase import create_client, Client
 from django.contrib.messages import constants as messages_constants
-
+from adminDashboardApp.storage import SupabaseStorage
+from django.core.files.storage import default_storage
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -25,7 +27,7 @@ import dj_database_url
 
 load_dotenv()
 DATABASE_URL = os.getenv("DATABASE_URL")
-
+default_storage._wrapped = SupabaseStorage()
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
@@ -34,23 +36,16 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-# DEBUG = os.getenv("DEBUG", 'False') == 'True'
-DEBUG = True
+DEBUG = os.getenv("DEBUG", "False")
+# DEBUG = True
 
-ALLOWED_HOSTS = ['wave-v1.onrender.com', 'waveoncampus.com', '127.0.0.1', 'localhost']
-
-# CSRF Settings
-CSRF_TRUSTED_ORIGINS = [
-    'https://wave-v1.onrender.com',
-    'https://waveoncampus.com',
-    'http://127.0.0.1:8000',
-    'http://localhost:8000'
-]
+ALLOWED_HOSTS = ["wave-v1.onrender.com", "waveoncampus.com", "localhost", "127.0.0.1"]
 
 # Stripe API Key (Test)
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SK")
 STRIPE_WEBHOOK_SECRET_TEST = os.getenv("STRIPE_WEBHOOK_SK")
 STRIPE_PUBLISHABLE_KEY = os.getenv("STRIPE_PK")
+
 
 # Application definition
 
@@ -82,13 +77,11 @@ INSTALLED_APPS = [
     "qr_code",
     "storages",
     "channels",
-    "corsheaders",
 ]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
-    "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -98,13 +91,11 @@ MIDDLEWARE = [
     "authenticationApp.middleware.RedirectAuthenticatedUsersMiddleware",
 ]
 
-# CSP_DEFAULT_SRC = ("'self'",)
-# CSP_SCRIPT_SRC = (
-#     "'self'",
-#     "'nonce-'",
-# )
-
-# CSRF_FAILURE_VIEW = 'wave_v1.middleware.csrf_handlers.csrf_failure'
+# CSRF Settings
+CSRF_TRUSTED_ORIGINS = [
+    "https://wave-v1.onrender.com",
+    "https://waveoncampus.com",
+]
 
 ROOT_URLCONF = "wave_v1.urls"
 SITE_URL = "https://waveoncampus.com"
@@ -135,11 +126,11 @@ WSGI_APPLICATION = "wave_v1.wsgi.application"
 
 
 MESSAGE_TAGS = {
-    messages_constants.DEBUG: 'debug',
-    messages_constants.INFO: 'info',
-    messages_constants.SUCCESS: 'success',
-    messages_constants.WARNING: 'warning',
-    messages_constants.ERROR: 'error',
+    messages_constants.DEBUG: "debug",
+    messages_constants.INFO: "info",
+    messages_constants.SUCCESS: "success",
+    messages_constants.WARNING: "warning",
+    messages_constants.ERROR: "error",
 }
 
 
@@ -148,18 +139,15 @@ MESSAGE_TAGS = {
 if DATABASE_URL is None:
     raise ValueError("DATABASE_URL environment variable not set")
 
+# Parse the DATABASE_URL
+tmpPostgres = urlparse(os.getenv("DATABASE_URL"))
+
 DATABASES = {
-    'default': {
-        **dj_database_url.config(
-            default=DATABASE_URL,
-            conn_max_age=600,
-        ),
-        'OPTIONS': {
-            'sslmode': 'require',
-            'options': '-c timezone=UTC',
-        }
-    }
+    "default": dj_database_url.config(
+        default=DATABASE_URL, conn_max_age=600, ssl_require=True
+    )
 }
+
 
 # Email Configurations
 DEFAULT_FROM_EMAIL = "admin@wave.app"
@@ -208,61 +196,84 @@ USE_TZ = True
 # Login Link
 LOGIN_URL = "authentication:login"
 
+
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
-
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
-STATIC_URL = "/static/"
 STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-
-# Media files (Images, Videos, GIFs) now served from Amazon S3
-# --------------------------------------------
-
-# Remove local MEDIA_ROOT since media files are now served from S3
-MEDIA_ROOT = os.path.join(BASE_DIR, "media")
-
-# AWS S3 bucket configurations
-# AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
-# AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
-# AWS_STORAGE_BUCKET_NAME = os.getenv('AWS_BUCKET_NAME')
-# AWS_S3_REGION_NAME = os.getenv('AWS_REGION', default='us-east-2')
-# AWS_S3_SIGNATURE_VERSION = 's3v4'
-# AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
-# AWS_S3_OBJECT_PARAMETERS = {
-#     'CacheControl': 'max-age=86400',
-# }
-# AWS_S3_FILE_OVERWRITE = False  # Prevent overwriting files with the same name
-# AWS_DEFAULT_ACL = None         # Use the default bucket ACL
-# AWS_S3_VERIFY = True           # Verify SSL certificates
-
-# Use django-storages to handle media files with S3
-# DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-
-# Set the S3 URL for media
-# MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/media/'
-# MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/media/'
-
-# Default primary key field type
-# https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
-DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 # CORS Settings
 CORS_ALLOW_ALL_ORIGINS = DEBUG  # Allow all origins in development
 CORS_ALLOWED_ORIGINS = [
     "https://wave-v1.onrender.com",
     "https://waveoncampus.com",
-    "http://127.0.0.1:8000",
-    "http://localhost:8000",
 ]
 CORS_ALLOW_CREDENTIALS = True
 
-# Supabase Storage Configuration
-SUPABASE_URL = os.getenv('SUPABASE_URL')
-SUPABASE_KEY = os.getenv('SUPABASE_KEY')  # Use anon key for client-side operations
-SUPABASE_SERVICE_KEY = os.getenv('SUPABASE_SERVICE_KEY')  # Use service key for admin operations
-SUPABASE_STORAGE_BUCKET = os.getenv('SUPABASE_STORAGE_BUCKET')
 
-# Media files configuration
-MEDIA_URL = f'{SUPABASE_URL}/storage/v1/object/public/{SUPABASE_STORAGE_BUCKET}/'
-DEFAULT_FILE_STORAGE = 'storages.backends.supabase.SupabaseStorage'
+# Supabase Configurations
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_API_KEY = os.getenv("SUPABASE_API_KEY")
+SUPABASE_STORAGE_BUCKET = os.getenv("SUPABASE_STORAGE_BUCKET", "wave")
+
+# Validate Supabase settings
+if not all([SUPABASE_URL, SUPABASE_API_KEY, SUPABASE_STORAGE_BUCKET]):
+    raise ValueError("Missing required Supabase configuration in environment variables")
+
+# Create Supabase client
+supabase = create_client(SUPABASE_URL, SUPABASE_API_KEY)
+
+
+# Static files and media URL configuration
+STATIC_URL = f"/static/"
+MEDIA_URL = f"{SUPABASE_URL}/storage/v1/object/public/{SUPABASE_STORAGE_BUCKET}/"
+
+# Default primary key field type
+# https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+# DEFAULT_FILE_STORAGE = "adminDashboardApp.storage.SupabaseStorage"
+
+from django.core.files.storage import default_storage
+default_storage._wrapped = SupabaseStorage()
+
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '[{levelname}] {asctime} {name} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+            'level': 'DEBUG',
+        },
+        'file': {
+            'class': 'logging.FileHandler',
+            'filename': 'debug.log',
+            'formatter': 'verbose',
+            'level': 'DEBUG',
+        },
+    },
+    'loggers': {
+        '': {  # Root logger
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG',
+        },
+        'adminDashboardApp': {  # Your app logger
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+        'django': {  # Django logger
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+    },
+}
