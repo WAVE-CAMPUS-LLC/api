@@ -58,6 +58,16 @@ class SupabaseStorage(Storage):
     def _save(self, name, content):
         logger.info(f"Starting _save method for file: {name}")
         try:
+            # Check if file exists and delete it
+            if self.exists(name):
+                logger.info(f"File {name} exists, deleting it before upload")
+                try:
+                    supabase.storage.from_(self.bucket_name).remove([name])
+                    logger.info(f"Successfully deleted existing file: {name}")
+                except Exception as delete_error:
+                    logger.warning(f"Error deleting existing file: {str(delete_error)}")
+                    # Continue with upload even if delete fails
+
             # Log content type
             logger.info(f"Content type: {type(content)}")
             logger.info(f"Content attributes: {dir(content)}")
@@ -82,7 +92,7 @@ class SupabaseStorage(Storage):
             )
 
             # Upload file to Supabase
-            logger.info("Attempting to upload to Supabase...")
+            logger.info(f"Attempting to upload to Supabase with name: {name}")
             try:
                 response = supabase.storage.from_(self.bucket_name).upload(
                     path=name,
