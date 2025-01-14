@@ -241,11 +241,12 @@ def eventDetailsView(request, eventId, token=None):
         # Anonymous users cannot bypass age restrictions
         user_age = None
     
-    if user.favorite_events:
+    isFavoriteEvent = False
+    
+    if user and hasattr(user, 'favorite_events'):
         isFavoriteEvent = user.favorite_events.filter(eventId=event.eventId).exists()
-    else:
-        isFavoriteEvent = False
-
+        
+        
     if request.method == "POST":
         action = request.POST.get("eventAction")
 
