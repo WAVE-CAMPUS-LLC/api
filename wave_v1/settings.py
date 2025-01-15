@@ -84,22 +84,20 @@ INSTALLED_APPS = [
     "qr_code",
     "storages",
     "channels",
-    "rest_framework",
-    "corsheaders",
 ]
 
 MIDDLEWARE = [
-    "wave_v1.middleware.domain_routing.DomainRoutingMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
-    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "authenticationApp.middleware.RedirectAuthenticatedUsersMiddleware",
+    "wave_v1.middleware.domain_routing.DomainRoutingMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
 ]
 
 # CSRF Settings
@@ -108,7 +106,7 @@ CSRF_TRUSTED_ORIGINS = [
     "https://waveoncampus.com",
 ]
 
-ROOT_URLCONF = "wave_v1.url_controller"
+ROOT_URLCONF = "wave_v1.urls"
 SITE_URL = "https://waveoncampus.com"
 
 TEMPLATES = [
@@ -233,7 +231,6 @@ CORS_ALLOWED_ORIGINS = [
     "https://wave-v1.onrender.com",
     "https://waveoncampus.com",
     "https://wavecampus.net",
-    "http://localhost:8000",  # For local development
 ]
 CORS_ALLOW_CREDENTIALS = True
 
@@ -303,18 +300,4 @@ LOGGING = {
             "propagate": True,
         },
     },
-}
-
-# REST Framework Settings
-REST_FRAMEWORK = {
-    "DEFAULT_PERMISSION_CLASSES": [
-        "rest_framework.permissions.IsAuthenticated",
-    ],
-    "DEFAULT_AUTHENTICATION_CLASSES": [
-        "rest_framework.authentication.SessionAuthentication",
-        "rest_framework.authentication.BasicAuthentication",
-    ],
-    "DEFAULT_RENDERER_CLASSES": [
-        "rest_framework.renderers.JSONRenderer",
-    ],
 }
