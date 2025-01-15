@@ -15,7 +15,7 @@ WAVE. — Explore a new wave of events. Tick them off your bucketlist!
     <section class="w-full h-full py-16 xs:px-5 xsm:px-7 after-xsm:px-9 sm:px-11 md:px-16 lg:px-24 xl:px-36 2xl:px-44 3xl:px-52 flex justify-center items-center flex-col xs:flex-col xsm:flex-col after-xsm:flex-col xxsm:flex-col sm:flex-col md:flex-col pre-lg:flex-row gap-20">
         <div class="flex flex-col w-full pre-lg:w-1/2">
             <div class="flex justify-center flex-col gap-5 w-full">
-                <div class="text-black w-full">
+                <div class="text-black w-full items-center pre-lg:items-start text-center pre-lg:text-left">
                     <h1 class="font-Wanted-Bold text-1xl pre-lg:text-3xl">
                         Create 
                         experiences with 
@@ -26,7 +26,7 @@ WAVE. — Explore a new wave of events. Tick them off your bucketlist!
                     <p class="font-Wanted-Variable xxsm:font-Wanted-Regular text-Base sm:text-Medium font-thin">Purchase ticket, be there, live in the moment.</p>
                 </div>
 
-                <div class="flex flex-col gap-6 w-full" onclick="redirectToPage({% url "core:explore" %})">
+                <div class="flex flex-col gap-6 w-full items-center pre-lg:items-start text-center pre-lg:text-left" onclick="redirectToPage({% url "core:explore" %})">
                     <div class="w-full 2xl:w-1/2 border-2 shadow-md text-black border-[#30303015] rounded-2xl bg-[#ffffff07] cursor-pointer flex flex-row items-center">
                         <input type="text" name="" id="" placeholder="Find an event by title..." class="w-full h-full p-4 text-Semi-Medium font-Wanted-Regular text-black border-none rounded-l-2xl outline-none bg-white">
                         <div class="flex justify-center p-2.5 pl-0.5">
@@ -51,16 +51,15 @@ WAVE. — Explore a new wave of events. Tick them off your bucketlist!
         </div>
         <div class="w-full pre-lg:w-1/2">
             <div class="flex flex-col gap-10">
-                <div class="flex flex-col gap-4">
+                <div class="flex flex-col gap-4 items-center pre-lg:items-start text-center pre-lg:text-left">
                     <h1 class="font-Wanted-Bold text-1xl pre-lg:text-3xl text-black">Join your campus!</h1>
                     <p class="font-Wanted-Variable text-black xxsm:font-Wanted-Regular text-Base sm:text-Medium font-thin">
                         Join your college campus to see all ongoing experiences!
                     </p>
                 </div>
 
-                <div class="flex flex-col xxsm:flex-row gap-6 xxsm:gap-[45px] pre-lg:gap-6 items-start xxsm:items-center justify-start xxsm:justify-center pre-lg:justify-start">
+                <div class="flex flex-col xxsm:flex-row gap-6 xxsm:gap-[45px] pre-lg:gap-6 items-center pre-lg:items-start text-center pre-lg:text-left justify-center xxsm:items-center pre-lg:justify-start">
                     <a id="partnerships" href="{% url "colleges:find" %}" class="p-4 bg-black text-white border rounded-2xl text-Semi-Medium font-Wanted-Medium hover:opacity-80">Find Campus</a>
-                    <a id="joining" href="{% url "authentication:join" %}" class="font-Wanted-Regular underline underline-offset-[11px] hover:decoration-[#008d95] text-black">Not a member? Join Us</a>
                 </div>
             </div>
         </div>
@@ -69,11 +68,11 @@ WAVE. — Explore a new wave of events. Tick them off your bucketlist!
     <!-- Section 3 -->
     <section class="w-full h-full py-16 xs:px-5 xsm:px-7 after-xsm:px-9 sm:px-11 md:px-16 lg:px-24 xl:px-36 2xl:px-44 3xl:px-52 flex justify-center items-center flex-col xs:flex-col xsm:flex-col after-xsm:flex-col xxsm:flex-col sm:flex-col md:flex-col pre-lg:flex-row gap-20 text-black">
         <div  class="w-full pre-lg:w-1/2 flex flex-col gap-3">
-            <div class="flex flex-col gap-4">
+            <div class="flex flex-col gap-4 items-center pre-lg:items-start text-center pre-lg:text-left">
                 <h1 class="font-Wanted-Bold text-1xl pre-lg:text-3xl">Discover a world of experiences</h1>
                 <p class="font-Wanted-Regular xxsm:font-Wanted-Medium text-Medium sm:text-Large font-thin">Experiences to last a lifetime!</p>
             </div>
-            <div class="flex flex-col gap-9">
+            <div class="flex flex-col  gap-9 items-center pre-lg:items-start text-center pre-lg:text-left">
                 <a href="{% url "authentication:join" %}" type="button" role="button" class="w-full after-xsm:w-1/2 pre-lg:w-3/5 lg:w-2/5 p-3 border rounded-2xl border-black text-center bg-black text-white font-Wanted-Medium text-Semi-Medium cursor-pointer">Get Started</a>
             </div>
         </div>
