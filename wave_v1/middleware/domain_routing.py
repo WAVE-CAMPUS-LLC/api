@@ -26,16 +26,9 @@ class DomainRoutingMiddleware:
             request.is_api = False
             # Block API requests from non-API domain
             if request.path.startswith('/nativeTSUReactAPI/'):
-                return HttpResponseForbidden("API access is only allowed through api.wavecampus.net")
+                return HttpResponseForbidden("API access is only allowed through wavecampus.net")
 
         response = self.get_response(request)
-        
-        # Add CORS headers for API requests
-        if request.is_api:
-            response["Access-Control-Allow-Origin"] = "*"
-            response["Access-Control-Allow-Methods"] = "GET, POST, PUT, PATCH, DELETE, OPTIONS"
-            response["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
-            
         return response
 
     def process_view(self, request, view_func, view_args, view_kwargs):
