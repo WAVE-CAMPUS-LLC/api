@@ -39,7 +39,14 @@ SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 DEBUG = os.getenv("DEBUG", "False")
 # DEBUG = True
 
-ALLOWED_HOSTS = ["wave-v1.onrender.com", "waveoncampus.com"]
+ALLOWED_HOSTS = [
+    "wave-v1.onrender.com",
+    "waveoncampus.com",
+    "localhost",
+    "127.0.0.1",
+    "wavecampus.net",
+    "www.wavecampus.net",
+]
 
 # Stripe API Key (Test)
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SK")
@@ -77,12 +84,16 @@ INSTALLED_APPS = [
     "qr_code",
     "storages",
     "channels",
+    "rest_framework",
+    "corsheaders",
 ]
 
 MIDDLEWARE = [
+    "wave_v1.middleware.domain_routing.DomainRoutingMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -97,7 +108,7 @@ CSRF_TRUSTED_ORIGINS = [
     "https://waveoncampus.com",
 ]
 
-ROOT_URLCONF = "wave_v1.urls"
+ROOT_URLCONF = "wave_v1.url_controller"
 SITE_URL = "https://waveoncampus.com"
 
 TEMPLATES = [
@@ -139,26 +150,28 @@ MESSAGE_TAGS = {
 if DATABASE_URL is None:
     raise ValueError("DATABASE_URL environment variable not set")
 
-# Parse the DATABASE_URL manually to ensure correct format
+# Parse the DATABASE_URL
+
+tmpPostgres = urlparse(os.getenv("DATABASE_URL"))
+
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'postgres',
-        'USER': 'postgres.zqwamcznyosnkrevxmhm',
-        'PASSWORD': os.getenv('DB_PASSWORD'),
-        'HOST': 'aws-0-us-east-1.pooler.supabase.com',
-        'PORT': '6543',
-        'OPTIONS': {
-            'sslmode': 'require',
-            'options': '-c timezone=UTC',
-            'keepalives': 1,
-            'keepalives_idle': 30,
-            'keepalives_interval': 10,
-            'keepalives_count': 5,
-        }
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": "wave",
+        "USER": "wave_owner",
+        "PASSWORD": "1PhnjKA8VBOY",  # Use actual password from DATABASE_URL
+        "HOST": "ep-cold-band-a5n17hct.us-east-2.aws.neon.tech",
+        "PORT": "5432",
+        "OPTIONS": {
+            "sslmode": "require",
+            "options": "-c timezone=UTC",
+            "keepalives": 1,
+            "keepalives_idle": 30,
+            "keepalives_interval": 10,
+            "keepalives_count": 5,
+        },
     }
 }
-
 
 # Email Configurations
 DEFAULT_FROM_EMAIL = "admin@wave.app"
@@ -219,6 +232,8 @@ CORS_ALLOW_ALL_ORIGINS = DEBUG  # Allow all origins in development
 CORS_ALLOWED_ORIGINS = [
     "https://wave-v1.onrender.com",
     "https://waveoncampus.com",
+    "https://wavecampus.net",
+    "http://localhost:8000",  # For local development
 ]
 CORS_ALLOW_CREDENTIALS = True
 
@@ -246,45 +261,60 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # DEFAULT_FILE_STORAGE = "adminDashboardApp.storage.SupabaseStorage"
 
 from django.core.files.storage import default_storage
+
 default_storage._wrapped = SupabaseStorage()
 
 
 LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'formatters': {
-        'verbose': {
-            'format': '[{levelname}] {asctime} {name} {message}',
-            'style': '{',
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {
+            "format": "[{levelname}] {asctime} {name} {message}",
+            "style": "{",
         },
     },
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
-            'formatter': 'verbose',
-            'level': 'DEBUG',
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "verbose",
+            "level": "DEBUG",
         },
-        'file': {
-            'class': 'logging.FileHandler',
-            'filename': 'debug.log',
-            'formatter': 'verbose',
-            'level': 'DEBUG',
-        },
-    },
-    'loggers': {
-        '': {  # Root logger
-            'handlers': ['console', 'file'],
-            'level': 'DEBUG',
-        },
-        'adminDashboardApp': {  # Your app logger
-            'handlers': ['console', 'file'],
-            'level': 'DEBUG',
-            'propagate': True,
-        },
-        'django': {  # Django logger
-            'handlers': ['console', 'file'],
-            'level': 'INFO',
-            'propagate': True,
+        "file": {
+            "class": "logging.FileHandler",
+            "filename": "debug.log",
+            "formatter": "verbose",
+            "level": "DEBUG",
         },
     },
+    "loggers": {
+        "": {  # Root logger
+            "handlers": ["console", "file"],
+            "level": "DEBUG",
+        },
+        "adminDashboardApp": {  # Your app logger
+            "handlers": ["console", "file"],
+            "level": "DEBUG",
+            "propagate": True,
+        },
+        "django": {  # Django logger
+            "handlers": ["console", "file"],
+            "level": "INFO",
+            "propagate": True,
+        },
+    },
+}
+
+# REST Framework Settings
+REST_FRAMEWORK = {
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticated",
+    ],
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.SessionAuthentication",
+        "rest_framework.authentication.BasicAuthentication",
+    ],
+    "DEFAULT_RENDERER_CLASSES": [
+        "rest_framework.renderers.JSONRenderer",
+    ],
 }
