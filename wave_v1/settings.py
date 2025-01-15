@@ -15,7 +15,7 @@ import os
 from urllib.parse import urlparse
 from supabase import create_client, Client
 from django.contrib.messages import constants as messages_constants
-from adminDashboardApp.storage import SupabaseStorage
+from wave_v1.storage import SupabaseStorage
 from django.core.files.storage import default_storage
 
 
@@ -39,7 +39,7 @@ SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 DEBUG = os.getenv("DEBUG", "False")
 # DEBUG = True
 
-ALLOWED_HOSTS = ["wave-v1.onrender.com", "waveoncampus.com", "localhost", "127.0.0.1"]
+ALLOWED_HOSTS = ["wave-v1.onrender.com", "waveoncampus.com"]
 
 # Stripe API Key (Test)
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SK")
@@ -139,13 +139,24 @@ MESSAGE_TAGS = {
 if DATABASE_URL is None:
     raise ValueError("DATABASE_URL environment variable not set")
 
-# Parse the DATABASE_URL
-tmpPostgres = urlparse(os.getenv("DATABASE_URL"))
-
+# Parse the DATABASE_URL manually to ensure correct format
 DATABASES = {
-    "default": dj_database_url.config(
-        default=DATABASE_URL, conn_max_age=600, ssl_require=True
-    )
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'postgres',
+        'USER': 'postgres.zqwamcznyosnkrevxmhm',
+        'PASSWORD': os.getenv('DB_PASSWORD'),
+        'HOST': 'aws-0-us-east-1.pooler.supabase.com',
+        'PORT': '6543',
+        'OPTIONS': {
+            'sslmode': 'require',
+            'options': '-c timezone=UTC',
+            'keepalives': 1,
+            'keepalives_idle': 30,
+            'keepalives_interval': 10,
+            'keepalives_count': 5,
+        }
+    }
 }
 
 

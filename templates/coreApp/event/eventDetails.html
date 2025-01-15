@@ -25,16 +25,6 @@
 
 
 {% block body %}
-{% if existingRSVP %}
-<div class="rsvp-card-header-warning">
-    <h3>This email has already been submitted! Try a different one.</h3>
-</div>
-{% endif %}
-{% if newRSVP %}
-<div class="rsvp-card-header-success">
-    <h3>You have reserved a place for the event. Check your email for confirmation.</h3>
-</div>
-{% endif %}
 <div id="content-container" class="flex flex-col px-[10px] overflow-hidden after-xsm:px-[20px] xxsm:px-[35px] sm:px-[40px] md:px-[40px] pre-lg:px-[50px] lg:px-[80px] xl:px-[150px] 2xl:px-[200px] 3xl:-[300px] gap-[70px]">
     <div class="flex flex-col gap-3">
         <div class="page-header w-full flex flex-col gap-3 lg:flex-row justify-between items-center">
@@ -50,35 +40,33 @@
                 </p>
             </div>
         </div>
-        {% if request.user.is_authenticated %}
-            <div class="flex items-start flex-row justify-center lg:justify-end gap-5">
-                
-                <button id="shareEventButton" type="button" class="border-none bg-none cursor-pointer" role="button">
-                    <img src="{% static "/images/coreApp/eventDetails/share-event.svg" %}" class="size-5 sm:size-8" />
+
+        <div class="flex items-start flex-row justify-center lg:justify-end gap-5">
+            <button id="shareEventButton" type="button" class="border-none bg-none cursor-pointer" role="button">
+                <img src="{% static "/images/coreApp/eventDetails/share-event.svg" %}" class="size-5 sm:size-8" />
+            </button>
+
+            <input type="hidden" id="isFavoriteEvent" value="{{ isFavoriteEvent }}">
+
+            
+            <form method="POST" class="hidden" id="favoriteEventForm">
+                {% csrf_token %}
+                <input type="hidden" name="eventAction" value="favoriteEvent">
+                <input type="hidden" name="eventId" value="{{ event.eventId }}">
+                <button type="submit" id="favoriteEventButton" class="border-none bg-none cursor-pointer" role="button">
+                    <img src="{% static "/images/coreApp/eventDetails/outline-heart.svg" %}" class="size-5 sm:size-8" />
                 </button>
+            </form>
 
-                <input type="hidden" id="isFavoriteEvent" value="{{ isFavoriteEvent }}">
-
-                
-                <form method="POST" class="hidden" id="favoriteEventForm">
-                    {% csrf_token %}
-                    <input type="hidden" name="eventAction" value="favoriteEvent">
-                    <input type="hidden" name="eventId" value="{{ event.eventId }}">
-                    <button type="submit" id="favoriteEventButton" class="border-none bg-none cursor-pointer" role="button">
-                        <img src="{% static "/images/coreApp/eventDetails/outline-heart.svg" %}" class="size-7" />
-                    </button>
-                </form>
-
-                <form method="POST" class="hidden" id="unFavoriteEventForm">
-                    {% csrf_token %}
-                    <input type="hidden" name="eventAction" value="unfavoriteEvent">
-                    <input type="hidden" name="eventId" value="{{ event.eventId }}">
-                    <button type="submit" id="unFavoriteEventButton" class="border-none bg-none cursor-pointer" role="button">
-                        <img src="{% static "/images/coreApp/eventDetails/filled-heart.svg" %}" class="size-7 " />
-                    </button>
-                </form>
-            </div>
-        {% endif %}
+            <form method="POST" class="hidden" id="unFavoriteEventForm">
+                {% csrf_token %}
+                <input type="hidden" name="eventAction" value="unfavoriteEvent">
+                <input type="hidden" name="eventId" value="{{ event.eventId }}">
+                <button type="submit" id="unFavoriteEventButton" class="border-none bg-none cursor-pointer" role="button">
+                    <img src="{% static "/images/coreApp/eventDetails/filled-heart.svg" %}" class="size-5 sm:size-8" />
+                </button>
+            </form>
+        </div>
     </div>
 
     <div id="contentContainerBodyOne" class="flex flex-col gap-12">

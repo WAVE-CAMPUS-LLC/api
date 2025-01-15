@@ -257,6 +257,7 @@ def eventDetailsView(request, eventId, token=None):
             ).first()
 
             if existing_rsvp:
+                messages.error(request, "This email has already been submitted! Try a different one.")
                 return render(
                     request,
                     "coreApp/event/eventDetails.html",
@@ -266,7 +267,6 @@ def eventDetailsView(request, eventId, token=None):
                         "eventPrivacy": eventprivacy,
                         "rsvpForm": rsvpForm,
                         "paidFreeTickets": eventPaidFreeTickets,
-                        "existingRSVP": True,
                         "friends": user_friends,
                         "crews": user_crews,
                         "isFavoriteEvent": isFavoriteEvent,
@@ -290,6 +290,7 @@ def eventDetailsView(request, eventId, token=None):
                         request, event, user, guestFirstName, guestLastName, guestEmail
                     )
 
+                    messages.success(request, "You have reserved a spot! Check your email for confirmation.")
                     return render(
                         request,
                         "coreApp/event/eventDetails.html",
@@ -299,7 +300,6 @@ def eventDetailsView(request, eventId, token=None):
                             "eventPrivacy": eventprivacy,
                             "rsvpForm": rsvpForm,
                             "paidFreeTickets": eventPaidFreeTickets,
-                            "newRSVP": True,
                             "friends": user_friends,
                             "crews": user_crews,
                             "isFavoriteEvent": isFavoriteEvent,
@@ -307,66 +307,81 @@ def eventDetailsView(request, eventId, token=None):
                     )
 
         elif action == "shareEventWithFriend":
+            if not request.user.is_authenticated:
+                messages.warning(request, "Please login to share this event.")
+                return redirect('authentication:login')
+            else:
+                friend_username = request.POST.get("shareFriendUsername")
+                friendUserAccount = get_object_or_404(CustomUser, username=friend_username)
+                friend = get_object_or_404(UserProfile, user=friendUserAccount)
 
-            friend_username = request.POST.get("shareFriendUsername")
-            friendUserAccount = get_object_or_404(CustomUser, username=friend_username)
-            friend = get_object_or_404(UserProfile, user=friendUserAccount)
+                myUserAccount = get_object_or_404(
+                    CustomUser, username=request.user.username
+                )
+                user = get_object_or_404(UserProfile, user=myUserAccount)
 
-            myUserAccount = get_object_or_404(
-                CustomUser, username=request.user.username
-            )
-            user = get_object_or_404(UserProfile, user=myUserAccount)
+                shared_event, created = SharedEvent.objects.get_or_create(sender=user, receiver=friend, event=event)
 
-            shared_event, created = SharedEvent.objects.get_or_create(sender=user, receiver=friend, event=event)
-
-            if created:
-                messages.success(request, f"Event shared with {friend}")
-                channel_layer = get_channel_layer()
-                async_to_sync(channel_layer.group_send)(
-                    f"user_{friend.user.id}",
-                    {
-                        "type": "social_update",
-                        "data": {
-                            "message": "Event shared with friend",
-                            "action": "shared_event",
-                            "shared_event": {
-                                "event": event.title,
-                                "event_id": str(event.eventId),
-                                "header_photo": event.header_photo.url,
-                                "date": event.date.strftime("%b. %d, %Y"),
-                                "sender": {
-                                    "username": shared_event.sender.user.username,
+                if created:
+                    messages.success(request, f"Event shared with {friend}")
+                    channel_layer = get_channel_layer()
+                    async_to_sync(channel_layer.group_send)(
+                        f"user_{friend.user.id}",
+                        {
+                            "type": "social_update",
+                            "data": {
+                                "message": "Event shared with friend",
+                                "action": "shared_event",
+                                "shared_event": {
+                                    "event": event.title,
+                                    "event_id": str(event.eventId),
+                                    "header_photo": event.header_photo.url,
+                                    "date": event.date.strftime("%b. %d, %Y"),
+                                    "sender": {
+                                        "username": shared_event.sender.user.username,
+                                    },
                                 },
                             },
                         },
-                    },
-                )
-            else:
-                messages.error(request, f"Event already shared with {friend}")
-            return redirect("core:eventDetails", eventId=event.eventId)
+                    )
+                else:
+                    messages.error(request, f"Event already shared with {friend}")
+                return redirect("core:eventDetails", eventId=event.eventId)
 
         elif action == "shareEventWithCrew":
-            crew_id = request.POST.get("shareCrewId")
-            crew = get_object_or_404(Crew, crewId=crew_id)
+            if not request.user.is_authenticated:
+                messages.warning(request, "Please login to share this event.")
+                return redirect('authentication:login')
+            else:
+                crew_id = request.POST.get("shareCrewId")
+                crew = get_object_or_404(Crew, crewId=crew_id)
 
-            user = get_object_or_404(UserProfile, user=request.user)
+                user = get_object_or_404(UserProfile, user=request.user)
 
-            for member in crew.members.all():
-                SharedEvent.objects.get_or_create(
-                    crew=crew,
-                    sender=user,
-                    receiver=member.user_profile,
-                    event=event,
-                )
+                for member in crew.members.all():
+                    SharedEvent.objects.get_or_create(
+                        crew=crew,
+                        sender=user,
+                        receiver=member.user_profile,
+                        event=event,
+                    )
 
-            messages.success(request, f"Event shared with {crew.name}")
-            return redirect("core:eventDetails", eventId=event.eventId)
+                messages.success(request, f"Event shared with {crew.name}")
+                return redirect("core:eventDetails", eventId=event.eventId)
         
         elif action == "favoriteEvent":
-            user.favorite_events.add(event)
+            if not request.user.is_authenticated:
+                messages.warning(request, "Please login to favorite this event.")
+                return redirect('authentication:login')
+            else:
+                user.favorite_events.add(event)
         
         elif action == "unfavoriteEvent":
-            user.favorite_events.remove(event)
+            if not request.user.is_authenticated:
+                messages.warning(request, "Please login to unfavorite this event.")
+                return redirect('authentication:login')
+            else:
+                user.favorite_events.remove(event)
             
 
     # if event.age_restriction:
