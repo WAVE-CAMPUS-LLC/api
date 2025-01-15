@@ -13,7 +13,7 @@ WAVE. — Explore a new wave of events. Tick them off your bucketlist!
 {% block body %}
 <div id="content-container" class="w-full flex flex-col tracking-wide">
     <section class="w-full h-full py-16 xs:px-5 xsm:px-7 after-xsm:px-9 sm:px-11 md:px-16 lg:px-24 xl:px-36 2xl:px-44 3xl:px-52 flex justify-center items-center flex-col xs:flex-col xsm:flex-col after-xsm:flex-col xxsm:flex-col sm:flex-col md:flex-col pre-lg:flex-row gap-20">
-        <div class="flex flex-col w-1/2">
+        <div class="flex flex-col w-full pre-lg:w-1/2">
             <div class="flex justify-center flex-col gap-5 w-full">
                 <div class="text-black w-full">
                     <h1 class="font-Wanted-Bold text-1xl pre-lg:text-3xl">
@@ -37,7 +37,7 @@ WAVE. — Explore a new wave of events. Tick them off your bucketlist!
                 </div>
             </div>
         </div>
-        <div id="cc-hime1-img" class="w-1/2 h-full">
+        <div id="cc-hime1-img" class="w-full pre-lg:w-1/2 h-full">
             <video autoplay muted loop playsinline class="rounded-3xl w-full h-full max-h-[500px] object-cover">
                 <source src="{% static 'videos/homecoming.mov' %}" type="video/mp4">
                 Your browser does not support the video tag.
@@ -46,10 +46,10 @@ WAVE. — Explore a new wave of events. Tick them off your bucketlist!
     </section>
 
     <section class="w-full h-full py-28 bg-[#f7f9fc] xs:px-5 xsm:px-7 after-xsm:px-9 sm:px-11 md:px-16 lg:px-24 xl:px-36 2xl:px-44 3xl:px-52 flex justify-center items-center flex-col-reverse xs:flex-col-reverse xsm:flex-col-reverse after-xsm:flex-col-reverse xxsm:flex-col-reverse sm:flex-col-reverse md:flex-col-reverse pre-lg:flex-row gap-20">
-        <div class="w-1/2">
+        <div class="w-full pre-lg:w-1/2">
             <img src="{% static "/images/home/campuses.png" %}" alt="Create lasting memories" class="rounded-3xl xs:max-h-[400px] md:max-h-[500px] pre-lg:max-h-[850px]">
         </div>
-        <div class="w-1/2">
+        <div class="w-full pre-lg:w-1/2">
             <div class="flex flex-col gap-10">
                 <div class="flex flex-col gap-4">
                     <h1 class="font-Wanted-Bold text-1xl pre-lg:text-3xl text-black">Join your campus!</h1>
@@ -68,7 +68,7 @@ WAVE. — Explore a new wave of events. Tick them off your bucketlist!
 
     <!-- Section 3 -->
     <section class="w-full h-full py-16 xs:px-5 xsm:px-7 after-xsm:px-9 sm:px-11 md:px-16 lg:px-24 xl:px-36 2xl:px-44 3xl:px-52 flex justify-center items-center flex-col xs:flex-col xsm:flex-col after-xsm:flex-col xxsm:flex-col sm:flex-col md:flex-col pre-lg:flex-row gap-20 text-black">
-        <div  class="w-1/2 flex flex-col gap-3">
+        <div  class="w-full pre-lg:w-1/2 flex flex-col gap-3">
             <div class="flex flex-col gap-4">
                 <h1 class="font-Wanted-Bold text-1xl pre-lg:text-3xl">Discover a world of experiences</h1>
                 <p class="font-Wanted-Regular xxsm:font-Wanted-Medium text-Medium sm:text-Large font-thin">Experiences to last a lifetime!</p>
@@ -77,7 +77,7 @@ WAVE. — Explore a new wave of events. Tick them off your bucketlist!
                 <a href="{% url "authentication:join" %}" type="button" role="button" class="w-full after-xsm:w-1/2 pre-lg:w-3/5 lg:w-2/5 p-3 border rounded-2xl border-black text-center bg-black text-white font-Wanted-Medium text-Semi-Medium cursor-pointer">Get Started</a>
             </div>
         </div>
-        <div id="cc-hime3-img" class="w-1/2">
+        <div id="cc-hime3-img" class="w-full pre-lg:w-1/2">
             <img src="{% static "/images/home/scanning.png" %}" class="rounded-3xl xs:max-h-[400px] md:max-h-[500px] pre-lg:max-h-[850px]" alt="Create lasting memories">
         </div>
     </section>
