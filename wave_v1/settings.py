@@ -89,8 +89,6 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "authenticationApp.middleware.RedirectAuthenticatedUsersMiddleware",
-    "wave_v1.middleware.domain_routing.DomainRoutingMiddleware",
-    "corsheaders.middleware.CorsMiddleware",
 ]
 
 # CSRF Settings
@@ -141,28 +139,26 @@ MESSAGE_TAGS = {
 if DATABASE_URL is None:
     raise ValueError("DATABASE_URL environment variable not set")
 
-# Parse the DATABASE_URL
-
-tmpPostgres = urlparse(os.getenv("DATABASE_URL"))
-
+# Parse the DATABASE_URL manually to ensure correct format
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": "wave",
-        "USER": "wave_owner",
-        "PASSWORD": "1PhnjKA8VBOY",  # Use actual password from DATABASE_URL
-        "HOST": "ep-cold-band-a5n17hct.us-east-2.aws.neon.tech",
-        "PORT": "5432",
-        "OPTIONS": {
-            "sslmode": "require",
-            "options": "-c timezone=UTC",
-            "keepalives": 1,
-            "keepalives_idle": 30,
-            "keepalives_interval": 10,
-            "keepalives_count": 5,
-        },
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'postgres',
+        'USER': 'postgres.zqwamcznyosnkrevxmhm',
+        'PASSWORD': os.getenv('DB_PASSWORD'),
+        'HOST': 'aws-0-us-east-1.pooler.supabase.com',
+        'PORT': '6543',
+        'OPTIONS': {
+            'sslmode': 'require',
+            'options': '-c timezone=UTC',
+            'keepalives': 1,
+            'keepalives_idle': 30,
+            'keepalives_interval': 10,
+            'keepalives_count': 5,
+        }
     }
 }
+
 
 # Email Configurations
 DEFAULT_FROM_EMAIL = "admin@wave.app"
@@ -251,46 +247,45 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # DEFAULT_FILE_STORAGE = "adminDashboardApp.storage.SupabaseStorage"
 
 from django.core.files.storage import default_storage
-
 default_storage._wrapped = SupabaseStorage()
 
 
 LOGGING = {
-    "version": 1,
-    "disable_existing_loggers": False,
-    "formatters": {
-        "verbose": {
-            "format": "[{levelname}] {asctime} {name} {message}",
-            "style": "{",
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '[{levelname}] {asctime} {name} {message}',
+            'style': '{',
         },
     },
-    "handlers": {
-        "console": {
-            "class": "logging.StreamHandler",
-            "formatter": "verbose",
-            "level": "DEBUG",
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+            'level': 'DEBUG',
         },
-        "file": {
-            "class": "logging.FileHandler",
-            "filename": "debug.log",
-            "formatter": "verbose",
-            "level": "DEBUG",
+        'file': {
+            'class': 'logging.FileHandler',
+            'filename': 'debug.log',
+            'formatter': 'verbose',
+            'level': 'DEBUG',
         },
     },
-    "loggers": {
-        "": {  # Root logger
-            "handlers": ["console", "file"],
-            "level": "DEBUG",
+    'loggers': {
+        '': {  # Root logger
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG',
         },
-        "adminDashboardApp": {  # Your app logger
-            "handlers": ["console", "file"],
-            "level": "DEBUG",
-            "propagate": True,
+        'adminDashboardApp': {  # Your app logger
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG',
+            'propagate': True,
         },
-        "django": {  # Django logger
-            "handlers": ["console", "file"],
-            "level": "INFO",
-            "propagate": True,
+        'django': {  # Django logger
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
+            'propagate': True,
         },
     },
 }
