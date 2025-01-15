@@ -39,14 +39,7 @@ SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 DEBUG = os.getenv("DEBUG", "False")
 # DEBUG = True
 
-ALLOWED_HOSTS = [
-    "wave-v1.onrender.com",
-    "waveoncampus.com",
-    "localhost",
-    "127.0.0.1",
-    "wavecampus.net",
-    "www.wavecampus.net",
-]
+ALLOWED_HOSTS = ["wave-v1.onrender.com", "waveoncampus.com", "wavecampus.net"]
 
 # Stripe API Key (Test)
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SK")
