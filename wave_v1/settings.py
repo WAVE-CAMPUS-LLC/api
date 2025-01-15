@@ -219,6 +219,7 @@ CORS_ALLOW_ALL_ORIGINS = DEBUG  # Allow all origins in development
 CORS_ALLOWED_ORIGINS = [
     "https://wave-v1.onrender.com",
     "https://waveoncampus.com",
+    "https://wavecampus.net",
 ]
 CORS_ALLOW_CREDENTIALS = True
 
