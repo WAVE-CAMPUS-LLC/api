@@ -58,42 +58,34 @@ class SupabaseStorage(Storage):
     def _save(self, name, content):
         logger.info(f"Starting _save method for file: {name}")
         try:
-            # Log content type
-            logger.info(f"Content type: {type(content)}")
-            logger.info(f"Content attributes: {dir(content)}")
+            # 1) Check if the file already exists. If so, remove it first.
+            if self.exists(name):
+                logger.info(f"File '{name}' already exists in bucket. Deleting it first.")
+                self.delete(name)
 
-            # If content is a File or UploadedFile object, read its content
+            # 2) Read file content (handle File or UploadedFile object)
+            logger.info(f"Content type: {type(content)}")
             if hasattr(content, "read"):
-                logger.info("Content has 'read' attribute, reading content...")
                 content.seek(0)
                 file_content = content.read()
             else:
-                logger.info("Content does not have 'read' attribute")
                 file_content = content
 
-            # Get the content type
+            # 3) Determine content type
             content_type, _ = mimetypes.guess_type(name)
             if not content_type:
                 content_type = "application/octet-stream"
 
             logger.info(f"Determined content type: {content_type}")
-            logger.info(
-                f"File content length: {len(file_content) if file_content else 'None'}"
-            )
 
-            # Upload file to Supabase
+            # 4) Upload file to Supabase
             logger.info("Attempting to upload to Supabase...")
-            try:
-                response = supabase.storage.from_(self.bucket_name).upload(
-                    path=name,
-                    file=file_content,
-                    file_options={"contentType": content_type},
-                )
-                logger.info(f"Upload response: {response}")
-
-            except Exception as upload_error:
-                logger.error("Supabase upload error", exc_info=True)
-                raise upload_error
+            response = supabase.storage.from_(self.bucket_name).upload(
+                path=name,
+                file=file_content,
+                file_options={"contentType": content_type},
+            )
+            logger.info(f"Upload response: {response}")
 
             logger.info(f"Successfully saved file: {name}")
             return name
@@ -111,8 +103,7 @@ class SupabaseStorage(Storage):
             # List objects in the bucket
             response = supabase.storage.from_(self.bucket_name).list()
             logger.info(f"List objects response: {response}")
-
-            # Ensure response is iterable (list of objects)
+            # Check if any object name matches
             return any(item.get("name") == name for item in response)
         except Exception as e:
             logger.error(
@@ -122,7 +113,12 @@ class SupabaseStorage(Storage):
             return False
 
     def delete(self, name):
+        logger.info(f"Deleting file {name} from bucket {self.bucket_name}...")
         response = supabase.storage.from_(self.bucket_name).remove([name])
+        logger.info(f"Delete response: {response}")
+
+        # Supabase returns {'data': {...}, 'error': None} on success
+        # If there's an error key, we should raise
         if response.get("error"):
             raise ValueError(
                 f"Failed to delete file from Supabase: {response['error']}"
