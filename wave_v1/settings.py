@@ -39,7 +39,14 @@ SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 DEBUG = os.getenv("DEBUG", "False")
 # DEBUG = True
 
-ALLOWED_HOSTS = ["wave-v1.onrender.com", "waveoncampus.com", "wavecampus.net"]
+ALLOWED_HOSTS = [
+    "wave-v1.onrender.com", 
+    "waveoncampus.com", 
+    "wavecampus.net",
+    "www.wavecampus.net",
+    "localhost",
+    "127.0.0.1"
+]
 
 # Stripe API Key (Test)
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SK")
@@ -100,6 +107,9 @@ CSRF_TRUSTED_ORIGINS = [
     "https://wave-v1.onrender.com",
     "https://waveoncampus.com",
     "https://wavecampus.net",
+    "https://www.wavecampus.net",
+    "http://wavecampus.net",
+    "http://www.wavecampus.net",
 ]
 
 ROOT_URLCONF = "wave_v1.urls"
@@ -220,11 +230,14 @@ STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 # CORS Settings
-CORS_ALLOW_ALL_ORIGINS = False  # Set to False in production
+CORS_ALLOW_ALL_ORIGINS = True  # Temporarily set to True for testing
 CORS_ALLOWED_ORIGINS = [
     "https://wave-v1.onrender.com",
     "https://waveoncampus.com",
     "https://wavecampus.net",
+    "https://www.wavecampus.net",
+    "http://wavecampus.net",
+    "http://www.wavecampus.net",
 ]
 CORS_ALLOW_CREDENTIALS = True
 
