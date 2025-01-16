@@ -7,6 +7,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+logger = logging.getLogger(__name__)
 
 class DomainRoutingMiddleware:
     """
@@ -57,6 +58,7 @@ class DomainRoutingMiddleware:
             response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
 
         return response
+    
     def process_view(self, request, view_func, view_args, view_kwargs):
         """
         Additional processing before the view is called

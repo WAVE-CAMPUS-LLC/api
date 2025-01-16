@@ -39,7 +39,14 @@ SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 DEBUG = os.getenv("DEBUG", "False")
 # DEBUG = True
 
-ALLOWED_HOSTS = ["wave-v1.onrender.com", "waveoncampus.com", "wavecampus.net"]
+ALLOWED_HOSTS = [
+    "wave-v1.onrender.com", 
+    "waveoncampus.com", 
+    "wavecampus.net",
+    "www.wavecampus.net",
+    "localhost",
+    "127.0.0.1"
+]
 
 # Stripe API Key (Test)
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SK")
@@ -77,11 +84,14 @@ INSTALLED_APPS = [
     "qr_code",
     "storages",
     "channels",
+    "rest_framework",
+    "corsheaders",
 ]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -89,15 +99,20 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "authenticationApp.middleware.RedirectAuthenticatedUsersMiddleware",
+    "wave_v1.middleware.domain_routing.DomainRoutingMiddleware",
 ]
 
 # CSRF Settings
 CSRF_TRUSTED_ORIGINS = [
     "https://wave-v1.onrender.com",
     "https://waveoncampus.com",
+    "https://wavecampus.net",
+    "https://www.wavecampus.net",
+    "http://wavecampus.net",
+    "http://www.wavecampus.net",
 ]
 
-ROOT_URLCONF = "wave_v1.urls"
+ROOT_URLCONF = "wave_v1.url_controller"
 SITE_URL = "https://waveoncampus.com"
 
 TEMPLATES = [
@@ -215,11 +230,14 @@ STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 # CORS Settings
-CORS_ALLOW_ALL_ORIGINS = DEBUG  # Allow all origins in development
+CORS_ALLOW_ALL_ORIGINS = True  # Temporarily set to True for testing
 CORS_ALLOWED_ORIGINS = [
     "https://wave-v1.onrender.com",
     "https://waveoncampus.com",
     "https://wavecampus.net",
+    "https://www.wavecampus.net",
+    "http://wavecampus.net",
+    "http://www.wavecampus.net",
 ]
 CORS_ALLOW_CREDENTIALS = True
 
@@ -288,4 +306,18 @@ LOGGING = {
             'propagate': True,
         },
     },
+}
+
+# REST Framework settings
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.AllowAny',
+    ],
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
+    ],
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',
+    ],
 }
