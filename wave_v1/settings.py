@@ -42,8 +42,6 @@ DEBUG = os.getenv("DEBUG", "False")
 ALLOWED_HOSTS = [
     "wave-v1.onrender.com", 
     "waveoncampus.com", 
-    "wavecampus.net",
-    "www.wavecampus.net",
     "localhost",
     "127.0.0.1"
 ]
@@ -99,20 +97,15 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "authenticationApp.middleware.RedirectAuthenticatedUsersMiddleware",
-    "wave_v1.middleware.domain_routing.DomainRoutingMiddleware",
 ]
 
 # CSRF Settings
 CSRF_TRUSTED_ORIGINS = [
     "https://wave-v1.onrender.com",
     "https://waveoncampus.com",
-    "https://wavecampus.net",
-    "https://www.wavecampus.net",
-    "http://wavecampus.net",
-    "http://www.wavecampus.net",
 ]
 
-ROOT_URLCONF = "wave_v1.url_controller"
+ROOT_URLCONF = "wave_v1.urls"
 SITE_URL = "https://waveoncampus.com"
 
 TEMPLATES = [
@@ -234,10 +227,6 @@ CORS_ALLOW_ALL_ORIGINS = True  # Temporarily set to True for testing
 CORS_ALLOWED_ORIGINS = [
     "https://wave-v1.onrender.com",
     "https://waveoncampus.com",
-    "https://wavecampus.net",
-    "https://www.wavecampus.net",
-    "http://wavecampus.net",
-    "http://www.wavecampus.net",
 ]
 CORS_ALLOW_CREDENTIALS = True
 

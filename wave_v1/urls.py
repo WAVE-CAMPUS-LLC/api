@@ -40,6 +40,7 @@ urlpatterns = [
     path("admin/", super_admin_restricted_site.urls),
     path("analytics/", include("dataAnalyticsApp.urls")),
     path("dataApi/", include("dataAnalyticsAPI.urls")),
+    path('nativeTSUReactAPI/', include('wave_v1.urlsapi'))
 ]
 
 handler404 = "extras.views.error_404"
