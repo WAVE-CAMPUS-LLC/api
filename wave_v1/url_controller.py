@@ -4,14 +4,14 @@ from django.http import HttpResponseBadRequest
 
 # Define functions to check if it's an API or site request
 def is_api_request(host):
-    return 'wavecampus.net' in host
+    return 'wavecampus.net' in host.lower()
 
 def is_site_request(host):
-    return 'waveoncampus.com' in host
+    return 'waveoncampus.com' in host.lower()
 
 # Dynamic URL routing function
 def dynamic_urlpatterns(request):
-    host = request.get_host()
+    host = request.get_host().lower()
 
     if is_api_request(host):
         # Load API URLs
