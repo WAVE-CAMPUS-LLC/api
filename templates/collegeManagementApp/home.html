@@ -78,7 +78,7 @@ Find your community! — WAVE. on Campus
     
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[20px]">
             {% for college in random_colleges %}
-            <div class="border-2 border-[rgba(0,0,0,0.038)] cursor-pointer rounded-[15px] shadow-[2px_3px_21px_4px_rgba(0,0,0,0.061)] p-8">
+            <a href="{% url "colleges:info" collegeId=college.id %}" class="border-2 border-[rgba(0,0,0,0.038)] cursor-pointer rounded-[15px] shadow-[2px_3px_21px_4px_rgba(0,0,0,0.061)] p-8">
                 <img src="{{ college.logo.url }}" alt="{{ college.name }}" class="w-[80px]">
                 
                 <div class="flex justify-center pt-[20px]">
@@ -86,7 +86,7 @@ Find your community! — WAVE. on Campus
                         <p class="font-Wanted-Regular text-[#008d95]">{{ college.name }}</p>
                     </div>
                 </div>
-            </div>
+            </a>
             {% endfor %}
         </div>
     </div>
