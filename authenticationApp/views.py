@@ -206,8 +206,16 @@ def loginView(request):
                     ip_address=request.META.get("REMOTE_ADDR"),
                 )
                 login_history.save()
-                next_url = request.GET.get("next", "accountManagement:userAccount")
-                return redirect(next_url)
+                
+                # Get the next URL or use default
+                next_url = request.GET.get("next")
+                if next_url and next_url.strip():  # Check if next_url exists and is not empty
+                    # Only redirect to next_url if it's a relative URL (security measure)
+                    if not next_url.startswith('http'):
+                        return redirect(next_url)
+                
+                # Default redirect if no valid next_url
+                return redirect("accountManagement:userAccount")
             else:
                 form.add_error(None, "Invalid email or password")
     else:
