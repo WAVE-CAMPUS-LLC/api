@@ -22,21 +22,21 @@ from django.conf.urls import handler404
 from authenticationApp.admin import super_admin_restricted_site
 
 urlpatterns = [
-    # API endpoints
-    path("", include("extras.apiUrls")),
-    path("auth/", include("authenticationApp.apiUrls")),
-    path("admin/", include("adminDashboardApp.apiUrls")),
-    path("account/", include("accountManagementApp.apiUrls")),
-    path("host/", include("eventManagementApp.apiUrls")),
-    path("support/", include("supportCenterApp.apiUrls")),
-    path("colleges/", include("collegeManagementApp.apiUrls")),
+    # # API endpoints
+    # path("", include("extras.apiUrls")),
+    # path("auth/", include("authenticationApp.apiUrls")),
+    # path("admin/", include("adminDashboardApp.apiUrls")),
+    # path("account/", include("accountManagementApp.apiUrls")),
+    # path("host/", include("eventManagementApp.apiUrls")),
+    # path("support/", include("supportCenterApp.apiUrls")),
+    # path("colleges/", include("collegeManagementApp.apiUrls")),
     path("core/", include("coreApp.apiUrls")),
-    path("career/", include("careerApp.apiUrls")),
-    path("news/", include("newsroomApp.apiUrls")),
-    path("social/", include("socialApp.apiUrls")),
-    path("tickets/", include("eventTicketsApp.apiUrls")),
-    path("manager/", include("campusManagerApp.apiUrls")),
-    path("blog/", include("blogApp.apiUrls")),
-    path("chat/", include("supportCenterApp.apiUrls")),
-    path("analytics/", include("dataAnalyticsApp.apiUrls")),
+    # path("career/", include("careerApp.apiUrls")),
+    # path("news/", include("newsroomApp.apiUrls")),
+    # path("social/", include("socialApp.apiUrls")),
+    # path("tickets/", include("eventTicketsApp.apiUrls")),
+    # path("manager/", include("campusManagerApp.apiUrls")),
+    # path("blog/", include("blogApp.apiUrls")),
+    # path("chat/", include("supportCenterApp.apiUrls")),
+    # path("analytics/", include("dataAnalyticsApp.apiUrls")),
 ]
