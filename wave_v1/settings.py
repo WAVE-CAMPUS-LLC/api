@@ -112,7 +112,7 @@ CSRF_TRUSTED_ORIGINS = [
     "http://www.wavecampus.net",
 ]
 
-ROOT_URLCONF = "wave_v1.urls"
+ROOT_URLCONF = "wave_v1.url_controller"
 SITE_URL = "https://waveoncampus.com"
 
 TEMPLATES = [
