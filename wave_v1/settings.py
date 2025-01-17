@@ -12,20 +12,18 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 
 from pathlib import Path
 import os
+import time
 from urllib.parse import urlparse
 from supabase import create_client, Client
 from django.contrib.messages import constants as messages_constants
 from wave_v1.storage import SupabaseStorage
 from django.core.files.storage import default_storage
 
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 from dotenv import load_dotenv
 
 load_dotenv()
-default_storage._wrapped = SupabaseStorage()
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
@@ -264,9 +262,8 @@ MEDIA_URL = f"{SUPABASE_URL}/storage/v1/object/public/{SUPABASE_STORAGE_BUCKET}/
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # DEFAULT_FILE_STORAGE = "adminDashboardApp.storage.SupabaseStorage"
 
-from django.core.files.storage import default_storage
+time.sleep(5)
 default_storage._wrapped = SupabaseStorage()
-
 
 LOGGING = {
     'version': 1,

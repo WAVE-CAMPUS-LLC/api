@@ -2,7 +2,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const username = document.getElementById("socketUsername").value;
 
   const socket = new WebSocket(
-    `ws://${window.location.host}/profile/${username}/`
+    `wss://${window.location.host}/profile/${username}/`
   );
 
   socket.onopen = function () {

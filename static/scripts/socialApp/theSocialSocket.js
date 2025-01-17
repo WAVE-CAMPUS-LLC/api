@@ -30,7 +30,7 @@ document.addEventListener("DOMContentLoaded", function () {
     sharedEventsIndicator.style.display = "none";
   });
 
-  const socket = new WebSocket(`ws://${window.location.host}/social/`);
+  const socket = new WebSocket(`wss://${window.location.host}/social/`);
 
   socket.onopen = function () {
     console.log("WebSocket connected for socialHomeView");
