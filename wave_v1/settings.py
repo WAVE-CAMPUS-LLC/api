@@ -22,11 +22,8 @@ from django.core.files.storage import default_storage
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 from dotenv import load_dotenv
-import dj_database_url
-
 
 load_dotenv()
-DATABASE_URL = os.getenv("DATABASE_URL")
 default_storage._wrapped = SupabaseStorage()
 
 # Quick-start development settings - unsuitable for production
@@ -46,6 +43,14 @@ ALLOWED_HOSTS = [
     "localhost",
     "127.0.0.1"
 ]
+
+
+url = os.getenv("SUPABASE_URL")
+key = os.getenv("SUPABASE_API_KEY")
+supabase = create_client(url, key)
+
+buckets = supabase.storage.list_buckets()
+print(buckets)
 
 if not DEBUG:  # In production
     SESSION_COOKIE_SECURE = True
@@ -152,12 +157,6 @@ MESSAGE_TAGS = {
     messages_constants.WARNING: "warning",
     messages_constants.ERROR: "error",
 }
-
-
-# Database
-# https://docs.djangoproject.com/en/5.0/ref/settings/#databases
-if DATABASE_URL is None:
-    raise ValueError("DATABASE_URL environment variable not set")
 
 # Parse the DATABASE_URL manually to ensure correct format
 DATABASES = {
