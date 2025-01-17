@@ -56,6 +56,9 @@ class SupabaseStorage(Storage):
             raise
 
     def _save(self, name, content):
+        # Normalize the path to use forward slashes
+        name = name.replace("\\", "/")
+
         logger.info(f"Starting _save method for file: {name}")
         try:
             # 1) Check if the file already exists. If so, remove it first.
@@ -95,16 +98,30 @@ class SupabaseStorage(Storage):
             raise
 
     def url(self, name):
+        # Normalize slashes before returning the public URL
+        name = name.replace("\\", "/")
         return supabase.storage.from_(self.bucket_name).get_public_url(name)
 
     def exists(self, name):
+        # Normalize the path
+        name = name.replace("\\", "/")
+
         logger.info(f"Checking if file exists in bucket {self.bucket_name}: {name}")
+
+        prefix = os.path.dirname(name)
+        filename = os.path.basename(name)
+
         try:
-            # List objects in the bucket
-            response = supabase.storage.from_(self.bucket_name).list()
+            # List only objects in that prefix
+            response = supabase.storage.from_(self.bucket_name).list(path=prefix)
             logger.info(f"List objects response: {response}")
-            # Check if any object name matches
-            return any(item.get("name") == name for item in response)
+
+            # Now check if any item in the prefix has a matching name
+            for item in response:
+                if item.get("name") == filename:
+                    return True
+            return False
+
         except Exception as e:
             logger.error(
                 f"Error checking file existence in bucket {self.bucket_name}: {str(e)}",
@@ -113,21 +130,23 @@ class SupabaseStorage(Storage):
             return False
 
     def delete(self, name):
+        # Normalize the path
+        name = name.replace("\\", "/")
+
         logger.info(f"Deleting file {name} from bucket {self.bucket_name}...")
         response = supabase.storage.from_(self.bucket_name).remove([name])
         logger.info(f"Delete response: {response}")
 
         # Supabase returns {'data': {...}, 'error': None} on success
-        # If there's an error key, we should raise
         if response.get("error"):
             raise ValueError(
                 f"Failed to delete file from Supabase: {response['error']}"
             )
 
     def _open(self, name, mode="rb"):
-        """
-        Required method for Django storage class
-        """
+        # Normalize the path
+        name = name.replace("\\", "/")
+
         logger.debug(f"Opening file {name} in mode {mode}")
         try:
             response = supabase.storage.from_(self.bucket_name).download(name)
