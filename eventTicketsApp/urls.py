@@ -6,6 +6,7 @@ app_name = "eventTickets"
 
 urlpatterns = [
     path('checkout/', views.checkoutView, name="checkout"),
+    path('checkout/crew/', views.crewCheckoutView, name="crewCheckout"),
     path('paymentSuccessful/', views.paymentSuccessful, name="paymentSuccessful"),
     path('paymentFailed/', views.paymentFailed, name="paymentFailed"),
     path('stripeWebhook/', views.stripeWebhook, name="stripeWebhook"),

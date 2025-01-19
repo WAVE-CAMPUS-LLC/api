@@ -389,18 +389,9 @@ def eventDetailsView(request, eventId, token=None):
                 return redirect('authentication:login')
             else:
                 crew_id = request.POST.get("crewId")
-                crew = get_object_or_404(Crew, crewId=crew_id)
+                ticketId = request.POST.get("ticketId")
 
-                # Calculate total price with discounts for the crew
-                total_price = 0
-                for member in crew.members.all():
-                    # Assuming each member gets a ticket, apply any discounts here
-                    total_price += calculate_discounted_price(event, member)
-
-                # Logic to create a purchase record and redirect to checkout
-                # This is a placeholder for actual purchase logic
-                messages.success(request, f"Tickets purchased for crew {crew.name}. Total: ${total_price}")
-                return redirect("core:eventDetails", eventId=event.eventId)
+                return redirect("eventTickets:crewCheckout", crew_id=crew_id, ticket_id=ticketId)
 
     # if event.age_restriction:
     #     if user_age is None or (
@@ -741,11 +732,4 @@ def get_client_ip(request):
     return ip
 
 
-# Helper function to calculate discounted price
-# This is a placeholder function, replace with actual discount logic
 
-def calculate_discounted_price(event, member):
-    # Example: Apply a 10% discount
-    original_price = event.ticket_price  # Assuming event has a ticket_price attribute
-    discount = 0.10
-    return original_price * (1 - discount)

@@ -152,6 +152,16 @@ def checkoutView(request):
     )
 
 
+def crewCheckoutView(request, crew_id, ticket_id):
+    stripe.api_key = settings.STRIPE_SECRET_KEY
+    
+    crew = get_object_or_404(Crew, crewId=crew_id)
+    ticket = get_object_or_404(PaidFreeTicket, ticket_id=ticket_id)
+    total_price = ticket.crew_discounted_price * crew.members.all().count()
+    
+    return render(request, "eventTicketsApp/checkoutSession/crewCheckout.html")
+
+
 def paymentSuccessful(request):
     stripe.api_key = settings.STRIPE_SECRET_KEY
     checkout_session_id = request.GET.get("session_id", None)

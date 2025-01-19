@@ -131,11 +131,15 @@ class PaidFreeTicket(models.Model):
     ticket_sold = models.PositiveIntegerField(
         _("Tickets Sold"), default=0, null=True, blank=True
     )
+    crew_discounted_price = models.DecimalField(
+        _("Discounted Price for Crews"), max_digits=10, decimal_places=2, null=True, blank=True
+    )
     # created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         unique_together = ("event", "ticket_name")
         default_permissions = ()
+        
 
     def __str__(self):
         return f"{self.ticket_name} for {self.event.title}"
@@ -143,9 +147,19 @@ class PaidFreeTicket(models.Model):
     def available_tickets(self):
         return self.ticket_quantity - self.ticket_sold
 
+    def generate_discount(self):
+        if self.event.crew_discount_percentage:
+            discount_amount = (self.ticket_price * self.event.crew_discount_percentage) / 100
+            self.crew_discounted_price = self.ticket_price - discount_amount
+        else:
+            self.crew_discounted_price = None
+
+            
     def save(self, *args, **kwargs):
         if self.ticket_price is None:
             raise ValueError("Ticket price must be set for paid tickets")
+        else:
+            self.generate_discount()
         super().save(*args, **kwargs)
 
 
