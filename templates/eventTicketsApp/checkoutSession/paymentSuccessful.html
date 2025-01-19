@@ -1,23 +1,28 @@
 {% extends "base/base.html" %}
 {% load static %}
+{% load date_tag %}
+{% load widget_tweaks %}
 
-{% block app_page_style %}
-<link rel="stylesheet" type="text/css" href="{% static "/styles/eventTicketsApp/checkoutSession/paymentSuccessful.css" %}" />
-{% endblock app_page_style %}
+
+{% block header %}
+{% include "partials/nav-footer/nav/main_nav.html" %}
+{% endblock header %}
+
 
 {% block body %}
-
 <div id="content-container">
     <div id="payment-successful-container">
-        <div id="payment-successful-content">
-            <div id="payment-successful-header">
-                <h1>Payment Successful</h1>
+        <div class="w-full flex flex-col gap-8 items-center justify-center">
+            <div class="flex flex-col gap-3 items-center justify-center">
+                <img src="{% static 'images/eventTicketsApp/success.svg' %}" alt="Payment Successful" class="size-52 text-[#c0c0c062]">
+                <h1 class="font-Wanted-ExtraBold text-[#16b416] text-3xl">Payment Successful</h1>
             </div>
-            <div id="payment-successful-body">
-                <p>Thank you for your purchase {{ customerUsername }}. Your tickets have been sent to your email.</p>
+            <div class="flex flex-col gap-1 font-Wanted-Variable items-center justify-center">
+                <p>Thank you for your purchase!</p>
+                <p>Your tickets have been sent to your email.</p>
             </div>
             <div id="payment-successful-footer">
-                <a class="btn btn-primary">View Tickets</a>
+                <a href="{% url "accountManagement:userAccount" %}" class="py-4 px-6 text-white bg-gradient-to-br bg-gradient-start bg-gradient-end font-Wanted-Regular text-Small rounded-2xl">View Tickets</a>
             </div>
         </div>
     </div>

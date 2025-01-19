@@ -36,7 +36,26 @@ def indexView(request):
 
 def exploreView(request):
     pageName = "explore"
+    
+    user = None
+    user_friends = None
+    user_crews = None
 
+    if request.user.is_authenticated:
+        user = get_object_or_404(UserProfile, user=request.user)
+        user_friends = user.friends.all()
+        user_crews = user.get_all_crews()
+
+    else:
+        # Anonymous users cannot bypass age restrictions
+        user_age = None
+
+    isFavoriteEvent = []
+    
+    if user and hasattr(user, 'favorite_events'):
+        favorite_events = user.favorite_events.all()
+        isFavoriteEvent = [event.eventId for event in favorite_events]
+        
     if not request.user.is_authenticated:
         age_filter = Q(age_restriction="")
     else:
@@ -130,6 +149,7 @@ def exploreView(request):
             "weekly_events": weekly_events,
             "exploreCategoryChoices": trending_category_choices,
             "invited_events_with_tokens": invited_events_with_tokens,
+            "isFavoriteEvent": isFavoriteEvent,
         },
     )
 

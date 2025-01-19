@@ -286,7 +286,7 @@
                                                                 data-ticket-event-id="{{ ticket.event.eventId }}"
                                                                 data-stripe-price-id="{{ ticket.stripePriceId }}" 
                                                                 data-stripe-product-id="{{ ticket.event.stripeProductId }}" 
-                                                                class="py-2 px-4 bg-gradient-to-br bg-gradient-start bg-gradient-end font-Wanted-Bold text-white rounded-xl cursor-pointer hover:bg-green hover:transition-all hover:duration-300 hover:ease-in-out crewCheckoutButton">
+                                                                class="disabled:bg-red-600 disabled:cursor-default py-2 px-4 bg-gradient-to-br bg-gradient-start bg-gradient-end font-Wanted-Bold text-white rounded-xl cursor-pointer hover:bg-green hover:transition-all hover:duration-300 hover:ease-in-out crewCheckoutButton">
                                                                 Add to Cart
                                                                 </button>
                                                             </form>
@@ -351,6 +351,9 @@
                                                                     {% endif %}
                                                                 </p>
                                                             {% endif %}
+                                                            <a href="">
+                                                                <img src="{% static "images/eventManagementApp/event/info.svg" %}" alt="Crew Discount Info" class="size-5" />
+                                                            </a>
                                                         </h6>
                                                         {% if ticket.crew_discounted_price %}
                                                         <h6 class="priceType flex justify-start text-black font-Wanted-Bold text-Large">
@@ -364,7 +367,7 @@
                                                     </div>
                             
                                                     <div class="addRemoveTickets flex flex-row gap-1 items-center">
-                                                        <button id="chooseCrewButton_{{ ticket.ticket_id }}" class="py-2 px-4 bg-gradient-to-br bg-gradient-start bg-gradient-end font-Wanted-Bold text-white rounded-xl cursor-pointer hover:bg-green hover:transition-all hover:duration-300 hover:ease-in-out">
+                                                        <button id="chooseCrewButton_{{ ticket.ticket_id }}" class=" py-2 px-4 bg-gradient-to-br bg-gradient-start bg-gradient-end font-Wanted-Bold text-white rounded-xl cursor-pointer hover:bg-green hover:transition-all hover:duration-300 hover:ease-in-out">
                                                             Choose
                                                         </button>
                                                     </div>

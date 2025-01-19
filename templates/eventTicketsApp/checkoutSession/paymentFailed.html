@@ -1,20 +1,25 @@
 {% extends "base/base.html" %}
 {% load static %}
+{% load date_tag %}
+{% load widget_tweaks %}
 
-{% block app_page_style %}
-<link rel="stylesheet" type="text/css" href="{% static "/styles/eventTicketsApp/checkoutSession/paymentFailed.css" %}" />
-{% endblock app_page_style %}
+
+{% block header %}
+{% include "partials/nav-footer/nav/main_nav.html" %}
+{% endblock header %}
+
 
 {% block body %}
-
 <div id="content-container">
-    <div id="payment-failed-container">
-        <div id="payment-failed-content">
-            <div id="payment-failed-header">
-                <h1>Payment Failed</h1>
+    <div id="payment-successful-container">
+        <div class="w-full flex flex-col gap-8 items-center justify-center">
+            <div class="flex flex-col gap-3 items-center justify-center">
+                <img src="{% static 'images/eventTicketsApp/fail.svg' %}" alt="Payment Successful" class="size-52 text-[#c0c0c062]">
+                <h1 class="font-Wanted-ExtraBold text-[red] text-3xl">Payment Failed</h1>
             </div>
-            <div id="payment-failed-body">
-                <p>Unfortunatley, your payment did not go through. Please try again!</p>
+            <div class="flex flex-col gap-1 font-Wanted-Variable items-center justify-center">
+                <p>Your purchase failed!</p>
+                <p>Please check your payment method.</p>
             </div>
         </div>
     </div>

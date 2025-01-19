@@ -234,6 +234,15 @@ document.addEventListener("DOMContentLoaded", function () {
     // Update display and save
     updateCartDisplay();
     saveCartToServer();
+
+    // Disable the button after adding the crew ticket to the cart
+    const button = document.querySelector(
+      `.crewCheckoutButton[data-ticket-id="${ticketId}"][data-crew-id="${crewId}"]`
+    );
+    if (button) {
+      button.disabled = true;
+      button.textContent = "Added to Cart";
+    }
   }
 
   //------------------------------------------------------------------
