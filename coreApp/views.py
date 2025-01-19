@@ -391,7 +391,7 @@ def eventDetailsView(request, eventId, token=None):
                 crew_id = request.POST.get("crewId")
                 ticketId = request.POST.get("ticketId")
 
-                return redirect("eventTickets:crewCheckout", crew_id=crew_id, ticket_id=ticketId)
+                return redirect("eventTickets:crewCheckout", crewId=crew_id, ticketId=ticketId)
 
     # if event.age_restriction:
     #     if user_age is None or (

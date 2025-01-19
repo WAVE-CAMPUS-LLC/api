@@ -249,20 +249,62 @@
                                             </div>
                                             <div id="chooseCrewBody{{ ticket.ticket_id }}" class="flex flex-col gap-5">
                                                 <div id="crewList{{ ticket.ticket_id }}" class="crewList flex flex-col gap-4">
-                                                    {% for crew in crews %}
-                                                    <div id="crewCheckout{{ crew.crew_id }}" class="crewItem flex flex-row justify-between w-full items-center">
-                                                        <p class="font-Wanted-Medium text-Medium text-black">{{ crew.name }}</p>
-                                                        <form method="POST">
-                                                            {% csrf_token %}
-                                                            <input type="hidden" name="eventAction" value="purchaseForCrew">
-                                                            <input type="hidden" name="crewId" value="{{ crew.crewId }}">
-                                                            <input type="hidden" name="ticketId" value="{{ ticket.ticket_id }}">
-                                                            <button data-crew-id="{{ crew.crewId }}" data-crew-name="{{ crew.name }}" id="selectThisCrewButton" class="py-2 px-4 bg-gradient-to-br bg-gradient-start bg-gradient-end font-Wanted-Bold text-white rounded-xl cursor-pointer hover:bg-green hover:transition-all hover:duration-300 hover:ease-in-out">
-                                                                Checkout
-                                                            </button>
-                                                        </form>
-                                                    </div>
-                                                    {% endfor %}
+                                                    {% if crews %}
+                                                        {% for crew in crews %}
+                                                            <div 
+                                                            id="crewCheckout{{ crew.crew_id }}"
+                                                            class="crewItem flex flex-row justify-between w-full items-center 
+                                                                    border-2 border-black rounded-xl p-3"
+                                                            >
+                                                            <p class="font-Wanted-Medium text-Medium text-black">
+                                                                {{ crew.name }}
+                                                                {% if crew.members.count < ticket.event.minimum_crew_size %}
+                                                                <p class="font-Wanted-Medium text-Medium text-gray-600">
+                                                                    (Crew is not big enough to qualify for discount!)
+                                                                </p>
+                                                                {% endif %}
+                                                            </p>
+                                                        
+                                                            <form method="POST">
+                                                                {% csrf_token %}
+                                                                <input type="hidden" name="eventAction" value="purchaseForCrew">
+                                                                <input type="hidden" name="crewId" value="{{ crew.crewId }}">
+                                                                <input type="hidden" name="ticketId" value="{{ ticket.ticket_id }}">
+                                                        
+                                                                <button  role="button" name="eventAction" value="Add Crew Ticket" 
+                                                                data-ticket-id="{{ ticket.ticket_id }}"
+                                                                data-ticket-name="{{ ticket.ticket_name }}"
+                                                                {% if crew.members.count < ticket.event.minimum_crew_size %}
+                                                                    data-ticket-price="{{ ticket.ticket_price }}"
+                                                                {% else %}
+                                                                    data-ticket-price="{{ ticket.crew_discounted_price }}"
+                                                                {% endif %}
+                                                                data-crew-id="{{ crew.crewId }}"
+                                                                data-crew-name="{{ crew.name }}"
+                                                                data-crew-size="{{ crew.members.count }}"
+                                                                data-ticket-event-name="{{ ticket.event.title }}"
+                                                                data-ticket-event-id="{{ ticket.event.eventId }}"
+                                                                data-stripe-price-id="{{ ticket.stripePriceId }}" 
+                                                                data-stripe-product-id="{{ ticket.event.stripeProductId }}" 
+                                                                class="py-2 px-4 bg-gradient-to-br bg-gradient-start bg-gradient-end font-Wanted-Bold text-white rounded-xl cursor-pointer hover:bg-green hover:transition-all hover:duration-300 hover:ease-in-out crewCheckoutButton">
+                                                                Add to Cart
+                                                                </button>
+                                                            </form>
+                                                            </div>
+                                                        {% endfor %}
+                                                    {% else %}
+                                                        <div class="emptyContainer h-full w-full rounded-[20px] py-[70px] flex justify-center flex-col gap-[10px] items-center bg-[rgba(146,146,146,0.096)]">
+                                                            <div>
+                                                                <img class="w-[30px] after-xsm:w-[40px] sm:w-[50px] md:w-[60px]" src="{% static "/images/coreApp/eventDetails/friends.svg" %}" />
+                                                            </div>
+                                                            <p class="font-Wanted-Variable text-[10px] after-xsm:text-[12px] sm:text-[14px] md:text-[16.5px] text-black text-center">You are not in any crews currently</p>
+                                                            <a href="{% url "social:home" %}">
+                                                                <button  class="py-2 px-4 bg-gradient-to-br bg-gradient-start bg-gradient-end font-Wanted-Bold text-white rounded-xl cursor-pointer hover:bg-green hover:transition-all hover:duration-300 hover:ease-in-out">
+                                                                    Create or join a crew
+                                                                </button>
+                                                            </a>
+                                                        </div>
+                                                    {% endif %}
                                                 </div>
                                             </div>
                                         </div>
@@ -310,9 +352,15 @@
                                                                 </p>
                                                             {% endif %}
                                                         </h6>
+                                                        {% if ticket.crew_discounted_price %}
                                                         <h6 class="priceType flex justify-start text-black font-Wanted-Bold text-Large">
                                                             ${{ ticket.crew_discounted_price }}
                                                         </h6>
+                                                        {% else %}
+                                                        <h6 class="priceType flex justify-start text-black font-Wanted-Bold text-Large">
+                                                            ${{ ticket.ticket_price }}
+                                                        </h6>
+                                                        {% endif %}
                                                     </div>
                             
                                                     <div class="addRemoveTickets flex flex-row gap-1 items-center">

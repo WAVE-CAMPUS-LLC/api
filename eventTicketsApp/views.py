@@ -7,6 +7,7 @@ from django.conf import settings
 from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
 import uuid
+from django.contrib import messages
 from io import BytesIO
 from decimal import Decimal
 from django.core.files import File
@@ -16,7 +17,9 @@ import time
 from qr_code.qrcode import maker
 from qr_code.qrcode.utils import QRCodeOptions
 import stripe
-from .models import Ticket, UserPayment, StripePlatformSettings
+
+from socialApp.models import Crew
+from .models import PaidFreeTicket, Ticket, UserPayment, StripePlatformSettings
 from eventManagementApp.models import Event, HostProfile
 
 
@@ -152,69 +155,116 @@ def checkoutView(request):
     )
 
 
-def crewCheckoutView(request, crew_id, ticket_id):
-    stripe.api_key = settings.STRIPE_SECRET_KEY
-    
-    crew = get_object_or_404(Crew, crewId=crew_id)
-    ticket = get_object_or_404(PaidFreeTicket, ticket_id=ticket_id)
-    total_price = ticket.crew_discounted_price * crew.members.all().count()
-    
-    return render(request, "eventTicketsApp/checkoutSession/crewCheckout.html")
+# def crewCheckoutView(request, ticketId, crewId):
+#     stripe.api_key = settings.STRIPE_SECRET_KEY
 
+#     crew = get_object_or_404(Crew, crewId=crewId)
+#     ticket = get_object_or_404(PaidFreeTicket, ticket_id=ticketId)
+#     total_price = ticket.crew_discounted_price * crew.members.all().count()
+    
+#     return render(
+#                     request, 
+#                     "eventTicketsApp/checkoutSession/crewCheckout.html", 
+#                         {
+#                             "crew": crew, 
+#                             "ticket": ticket, 
+#                             "total_price": total_price
+#                         }
+#                 )
 
 def paymentSuccessful(request):
     stripe.api_key = settings.STRIPE_SECRET_KEY
-    checkout_session_id = request.GET.get("session_id", None)
+    checkout_session_id = request.GET.get("session_id")
 
     if checkout_session_id:
         session = stripe.checkout.Session.retrieve(checkout_session_id)
         customer = stripe.Customer.retrieve(session.customer)
 
+        # Mark the payment as successful
         user_payment = UserPayment.objects.create(
             user=request.user if request.user.is_authenticated else None,
             stripe_checkout_id=checkout_session_id,
+            success=True
         )
-        user_payment.success = True
-        user_payment.save()
 
-        user_info = request.session.get("checkout_user_info", {})
+        # Retrieve the cart from the session
         cart = request.session.get("cart", {})
 
-        for ticket_id, ticket in cart.items():
-            eventId = ticket.get("eventId")
-            if eventId:
-                try:
-                    event = Event.objects.get(eventId=eventId)
-                    for _ in range(ticket["quantity"]):
-                        generateTicket(
-                            request=request,
-                            event=event,
-                            user=(
-                                request.user if request.user.is_authenticated else None
-                            ),
-                            guestFirstName=user_info.get("first_name"),
-                            guestLastName=user_info.get("last_name"),
-                            guestEmail=user_info.get("email"),
-                        )
-                except Event.DoesNotExist:
-                    print(f"Event with ID {eventId} not found.")
-            else:
-                print(f"Event ID not found for ticket: {ticket}")
+        # If you collected guest info during checkout:
+        user_info = request.session.get("checkout_user_info", {})
 
-        # Safely delete session keys
+        # Go through each cart item to generate tickets
+        for cart_key, ticket_info in cart.items():
+            event_id = ticket_info.get("eventId")
+            if not event_id:
+                print(f"No event ID found in cart item {cart_key}")
+                continue
+
+            try:
+                event = Event.objects.get(eventId=event_id)
+            except Event.DoesNotExist:
+                print(f"Event with ID {event_id} not found.")
+                continue
+
+            # -------------------------------------------------
+            # Check if this item is a "crew" ticket or regular
+            # -------------------------------------------------
+            if "_crew_" in cart_key or "crewId" in ticket_info:
+                # A CREW TICKET
+                crew_id = ticket_info["crewId"]
+                try:
+                    crew = Crew.objects.get(crewId=crew_id)
+                except Crew.DoesNotExist:
+                    print(f"Crew with ID {crew_id} not found.")
+                    continue
+
+                # Generate one ticket *for each member* of the crew
+                for member in crew.members.all():
+                    generateTicket(
+                        request=request,
+                        event=event,
+                        user=member if member else None,
+                        guestFirstName=member.first_name if member else None,
+                        guestLastName=member.last_name if member else None,
+                        guestEmail=member.email if member else None,
+                        crewTicket=(member != request.user),
+                    )
+                    messages.add_message(request, messages.SUCCESS, f"Generated ticket for {member.first_name} {member.last_name}")
+                    print(f"Generated ticket for {member.first_name} {member.last_name}")
+                    print(f"Generated ticket for {member.first_name} {member.last_name}")
+                    print(f"Generated ticket for {member.first_name} {member.last_name}")
+            else:
+                # A REGULAR TICKET
+                quantity = ticket_info["quantity"]
+
+                # Create N tickets (for user or guest)
+                for _ in range(quantity):
+                    generateTicket( 
+                        request=request,
+                        event=event,
+                        user=(request.user if request.user.is_authenticated else None),
+                        guestFirstName=user_info.get("first_name"),
+                        guestLastName=user_info.get("last_name"),
+                        guestEmail=user_info.get("email"),
+                    )
+
+        # Clean up session
         if "cart" in request.session:
             del request.session["cart"]
         if "checkout_user_info" in request.session:
             del request.session["checkout_user_info"]
 
-        customer_username = customer.metadata.get("username")
         return render(
             request,
             "eventTicketsApp/checkoutSession/paymentSuccessful.html",
-            {"customer": customer, "customerUsername": customer_username},
+            {
+                "customer": customer,
+                "customerUsername": customer.metadata.get("username"),
+            },
         )
 
     return JsonResponse({"error": "Session ID not provided."}, status=400)
+
 
 
 def paymentFailed(request):
@@ -269,6 +319,7 @@ def updateCartView(request):
 def viewTicket(request, mainId):
     ticket = get_object_or_404(Ticket, mainId=mainId)
     event = ticket.event
+    
     if ticket:
         return render(
             request,
@@ -280,7 +331,7 @@ def viewTicket(request, mainId):
 
 
 def generateTicket(
-    request, event, user=None, guestFirstName=None, guestLastName=None, guestEmail=None
+    request, event, user=None, guestFirstName=None, guestLastName=None, guestEmail=None, crewTicket=False
 ):
     ticket = Ticket(
         user=user if user and user.is_authenticated else None,
@@ -336,23 +387,42 @@ def generateTicket(
 
         # Prepare email
         if guestEmail or (user and user.email):
-            recipient_list = [guestEmail] if guestEmail else [user.email]
-            subject = f"Your Ticket for {event.title}"
-            qrCodeHtml = render_to_string(
-                "emailTemplates/eventTicketsApp/ticketQRCode.html",
-                {"ticketLink": ticketLink, "event": event},
-            )
-            message = f"Thank you for your purchase!\n" f"Your QR code is attached."
-            from_email = settings.DEFAULT_FROM_EMAIL
+            if crewTicket:
+                recipient_list = [guestEmail] if guestEmail else [user.email]
+                subject = f"{request.user.first_name} bought a ticket for you for {event.title}"
+                qrCodeHtml = render_to_string(
+                    "emailTemplates/eventTicketsApp/ticketQRCode.html",
+                    {"ticketLink": ticketLink, "event": event},
+                )
+                message = f"This ticket was bought by a crew member for you!\n" f"Your QR code is attached."
+                from_email = settings.DEFAULT_FROM_EMAIL
 
-            send_mail(
-                subject,
-                message,
-                from_email,
-                recipient_list,
-                fail_silently=False,
-                html_message=qrCodeHtml,
-            )
+                send_mail(
+                    subject,
+                    message,
+                    from_email,
+                    recipient_list,
+                    fail_silently=False,
+                    html_message=qrCodeHtml,
+                )
+            else:
+                recipient_list = [guestEmail] if guestEmail else [user.email]
+                subject = f"Your Ticket for {event.title}"
+                qrCodeHtml = render_to_string(
+                    "emailTemplates/eventTicketsApp/ticketQRCode.html",
+                    {"ticketLink": ticketLink, "event": event},
+                )
+                message = f"Thank you for your purchase!\n" f"Your QR code is attached."
+                from_email = settings.DEFAULT_FROM_EMAIL
+
+                send_mail(
+                    subject,
+                    message,
+                    from_email,
+                    recipient_list,
+                    fail_silently=False,
+                    html_message=qrCodeHtml,
+                )
 
     except Exception as e:
         print(f"Error generating QR code: {e}")

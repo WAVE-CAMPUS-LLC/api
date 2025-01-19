@@ -475,6 +475,8 @@ def eventManagement(request, eventId):
                 )
                 new_ticket.stripePriceId = stripePrice.id
                 new_ticket.save()
+                
+            
 
             return redirect("eventManagement:eventManagement", eventId=eventId)
 
