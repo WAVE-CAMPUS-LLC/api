@@ -20,12 +20,25 @@ from .models import Ticket, UserPayment, StripePlatformSettings
 from eventManagementApp.models import Event, HostProfile
 
 
+def initialize_stripe_settings():
+    """Initialize default Stripe platform settings if they don't exist"""
+    if not StripePlatformSettings.objects.exists():
+        StripePlatformSettings.objects.create(
+            salesTaxPercentage=Decimal('7.00'),  # 8% sales tax
+            salesFeeAmount=Decimal('0.99'),      # $2 fee per ticket
+            percentageStayingOnPlatform=Decimal('50.0')  # 2.9% platform fee
+        )
+
+
 def checkoutView(request):
     stripe.api_key = settings.STRIPE_SECRET_KEY
     cart = request.session.get("cart", {})
     event_id = None
+    
+    # Initialize Stripe settings if they don't exist
+    initialize_stripe_settings()
+    
     platform_settings = StripePlatformSettings.objects.first()
-
     if not platform_settings:
         return JsonResponse({"error": "Stripe platform settings not found"}, status=500)
 
