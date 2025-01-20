@@ -68,6 +68,7 @@
                         <hr>
                     </div>
                     <ul class="flex flex-col gap-5 list-none text-Large px-5 font-Wanted-Regular text-white">
+                        <li><a href="{% url "core:index"  %}" class="hover:underline">Home</a></li>
                         <li>
                             <a href="{% url "support:feedback" %}" class="hover:underline hover:decoration-[#008d95]"> Feedback </a>
                         </li>
@@ -82,51 +83,20 @@
                             {% endif %}
                         </li>
                     </ul>
-                    <div class=""></div>
                 </div>
-                <div class="w-full flex justify-center items-center">
-                    {% if user.is_authenticated %}
-                        {% if page == home %}
-                            {% if user|has_group:"Host" %}
-                            <a class="gradient-btn hover:gradient-btn-hover text-white" href="{% url "eventManagement:hostCreateEvent" %}">
-                                <img src="{% static "/images/eventManagementApp/host/host_ticket.svg" %}" />
-                                Host Portal
-                            </a>
-                            {% else %}
-                            <a class="gradient-btn hover:gradient-btn-hover text-white" href="{% url "eventManagement:hostGuide" %}">
-                                <img src="{% static "/images/eventManagementApp/host/hostGuide.svg" %}" />
-                                Host Guide
-                            </a>
-                            {% endif %}
-                        {% elif page == "explore" %}
-                            <a class="gradient-btn hover:gradient-btn-hover text-white" href="{% url "colleges:find" %}">
-                                <img src="{% static "/images/explore/community.svg" %}" />
-                                Join Campus!
-                            </a>
+                <div class="w-full flex flex-col gap-6 justify-center items-center">
+                    <div class="flex flex-row gap-16 justify-center font-Wanted-Regular text-white text-Large">
+                        {% if user.is_authenticated %}
+                        <a class="underline" href="{% url "accountManagement:userAccount" %}">My Account</a>
                         {% else %}
-                        <a class="gradient-btn hover:gradient-btn-hover text-white" target="_blank" href="{% url "eventManagement:hostPortal" %}">
-                            <img src="{% static "/images/eventManagementApp/host/host_ticket.svg" %}" />
-                            Host Portal
-                        </a>
+                        <a class="underline" href="{% url "authentication:join" %}">Join</a>
+                        <a class="underline" href="{% url "authentication:login" %}">Login</a>
                         {% endif %}
-                    {% else %}
-                        {% if page == "home" %}
-                            <a class="overlay-btn hover:gradient-btn-hover text-[#008d95]" href="{% url "eventManagement:hostHome" %}">
-                                <img src="{% static "/images/eventManagementApp/host/host_ticket.svg" %}" />
-                                Host Event
-                            </a>
-                        {% elif page == "explore" %}
-                            <a class="gradient-btn hover:gradient-btn-hover text-white" href="{% url "colleges:find" %}">
-                                <img src="{% static "/images/explore/community.svg" %}" />
-                                Join Campus!
-                            </a>
-                        {% else %}
-                            <a class="gradient-btn hover:gradient-btn-hover text-white" href="{% url "eventManagement:hostHome" %}">
-                                <img src="{% static "/images/eventManagementApp/host/host_ticket.svg" %}" />
-                                Host Event
-                            </a>
-                        {% endif %}
-                    {% endif %}
+                    </div>
+                    <a class="bg-white flex items-center rounded-2xl flex-row gap-2 justify-center py-4 px-6 text-green font-Wanted-Bold" href="{% url "eventManagement:hostCreateEvent" %}">
+                        <img src="{% static "/images/partials/pennant.svg" %}" class="size-8" />
+                        Join Campus
+                    </a>
                 </div>
             </div>
         </div>
