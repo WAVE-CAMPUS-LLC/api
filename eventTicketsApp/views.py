@@ -128,12 +128,17 @@ def checkoutView(request):
             )
 
             # Create Stripe checkout session
+            if settings.DEBUG:
+                domain = "http://127.0.0.1:8000"
+            else:
+                domain = "https://waveoncampus.com"
+
             checkout_session = stripe.checkout.Session.create(
                 payment_method_types=["card"],
                 line_items=adjusted_line_items,
                 mode="payment",
-                success_url="http://127.0.0.1:8000/paymentSuccessful/?session_id={CHECKOUT_SESSION_ID}",
-                cancel_url="http://127.0.0.1:8000/paymentFailed/",
+                success_url=f"{domain}/paymentSuccessful/?session_id={{CHECKOUT_SESSION_ID}}",
+                cancel_url=f"{domain}/paymentFailed/",
                 customer=customer.id,
                 payment_intent_data={
                     "application_fee_amount": int(application_fee_amount * 100),
