@@ -13,6 +13,7 @@ from decimal import Decimal
 from django.core.files import File
 import json
 import os
+from dotenv import load_dotenv
 import time
 from qr_code.qrcode import maker
 from qr_code.qrcode.utils import QRCodeOptions
@@ -126,13 +127,12 @@ def checkoutView(request):
                 * platform_settings.percentageStayingOnPlatform
                 / Decimal(100)
             )
-
-            # Create Stripe checkout session
-            if settings.DEBUG:
-                domain = "http://127.0.0.1:8000"
-            else:
-                domain = "https://waveoncampus.com"
-
+            
+            # In local development, use the website domain from the .env file
+            # In production, use the actual website domain
+            load_dotenv()
+            domain = os.getenv("WEBSITE_DOMAIN")
+            
             checkout_session = stripe.checkout.Session.create(
                 payment_method_types=["card"],
                 line_items=adjusted_line_items,
