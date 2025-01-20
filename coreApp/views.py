@@ -36,7 +36,26 @@ def indexView(request):
 
 def exploreView(request):
     pageName = "explore"
+    
+    user = None
+    user_friends = None
+    user_crews = None
 
+    if request.user.is_authenticated:
+        user = get_object_or_404(UserProfile, user=request.user)
+        user_friends = user.friends.all()
+        user_crews = user.get_all_crews()
+
+    else:
+        # Anonymous users cannot bypass age restrictions
+        user_age = None
+
+    isFavoriteEvent = []
+    
+    if user and hasattr(user, 'favorite_events'):
+        favorite_events = user.favorite_events.all()
+        isFavoriteEvent = [event.eventId for event in favorite_events]
+        
     if not request.user.is_authenticated:
         age_filter = Q(age_restriction="")
     else:
@@ -130,6 +149,7 @@ def exploreView(request):
             "weekly_events": weekly_events,
             "exploreCategoryChoices": trending_category_choices,
             "invited_events_with_tokens": invited_events_with_tokens,
+            "isFavoriteEvent": isFavoriteEvent,
         },
     )
 
@@ -383,6 +403,15 @@ def eventDetailsView(request, eventId, token=None):
             else:
                 user.favorite_events.remove(event)
             
+        elif action == "purchaseForCrew":
+            if not request.user.is_authenticated:
+                messages.warning(request, "Please login to purchase tickets for a crew.")
+                return redirect('authentication:login')
+            else:
+                crew_id = request.POST.get("crewId")
+                ticketId = request.POST.get("ticketId")
+
+                return redirect("eventTickets:crewCheckout", crewId=crew_id, ticketId=ticketId)
 
     # if event.age_restriction:
     #     if user_age is None or (
@@ -721,3 +750,6 @@ def get_client_ip(request):
         ip = request.META.get("REMOTE_ADDR")
 
     return ip
+
+
+

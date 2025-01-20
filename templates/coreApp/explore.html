@@ -92,9 +92,9 @@ Explore all possible experiences! — WAVE.
                                     {% endif %}
                                 </p>
 
-                                <button type="button">
+                                {% if event in isFavoriteEvent %}
                                     <img src="{% static "/images/coreApp/eventDetails/favorite.svg" %}" />
-                                </button>
+                                {% endif %}
                             </div>
                         </div>
                     </div>
@@ -219,8 +219,10 @@ Explore all possible experiences! — WAVE.
                                         {% endif %}
                                     </p>
 
-                                    <button type="button">
-                                        <img src="{% static "/images/coreApp/eventDetails/favorite.svg" %}" />
+                                    <button class="favoriteEvent" type="button">
+                                        {% if event in isFavoriteEvent %}
+                                            <img src="{% static "/images/coreApp/eventDetails/favorite.svg" %}" />
+                                        {% endif %}
                                     </button>
                                 </div>
                             </div>

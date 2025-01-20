@@ -165,9 +165,14 @@ def eventCreationProcess(request, eventId):
             event.event_type = request.POST.get("event_type")
 
             if go_live:
+                crew_discount = request.POST.get('crew_discount')
+                if crew_discount == "on":
+                    event.crew_discount = True
+                else:
+                    event.crew_discount = False
                 event_status = "live"
                 event.status = event_status
-
+                
                 messages.success(request, "Event is live!")
 
                 user_profile = event.host.user_profile
@@ -470,6 +475,8 @@ def eventManagement(request, eventId):
                 )
                 new_ticket.stripePriceId = stripePrice.id
                 new_ticket.save()
+                
+            
 
             return redirect("eventManagement:eventManagement", eventId=eventId)
 

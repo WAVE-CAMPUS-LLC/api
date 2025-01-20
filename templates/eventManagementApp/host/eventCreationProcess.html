@@ -189,6 +189,72 @@ Create your event — WAVE.
                 </div>
             </section>
 
+            {% comment %} Section: Crew Discount Settings {% endcomment %}
+            <section id="stage-section" data-validate="true">
+                <input required type="hidden" class="section-title" value="Stage 4 - Crew Discount Settings — WAVE." />
+                <div class="flex flex-col gap-6">
+                    <div class="section-question flex flex-col items-center justify-center font-Wanted-Medium xsm:font-Wanted-SemiBold text-Large xsm:text-Pre-Xl after-xsm:text-xl xxsm:text-1xl pre-lg:text-3xl">
+                        Crew Discount Settings
+                        <p class="font-Wanted-Variable text-Base text-[#797878]">Offer special discounts for crew purchases!</p>
+                    </div>
+
+                    <div class="section-intake flex flex-col w-full items-center justify-center">
+                        <div class="w-full xxsm:w-3/4 pre-lg:w-1/2 flex justify-center flex-col items-center gap-9">
+                            {% comment %} Crew Discount Toggle {% endcomment %}
+                            <label class="flex items-center gap-3 w-full">
+                                <input type="checkbox" 
+                                       name="{{ eventForm.crew_discount.html_name }}" 
+                                       id="{{ eventForm.crew_discount.auto_id }}"
+                                       class="form-checkbox h-5 w-5 text-[#007379] border-2 border-[#8988887f] rounded"
+                                       {% if eventForm.crew_discount.value %}checked{% endif %}>
+                                <span class="font-Wanted-Regular text-Base">{{ eventForm.crew_discount.label }}</span>
+                            </label>
+                            
+
+                            <div id="crew-discount-details" class="flex flex-col gap-6 w-full" style="display: none;">
+                                {% comment %} Minimum Crew Size {% endcomment %}
+                                <div class="flex flex-col gap-1 w-full">
+                                    <label class="font-Wanted-Variable text-Small text-[#4e4e4e]">
+                                        {{ eventForm.minimum_crew_size.label }}
+                                    </label>
+                                    <input type="number" 
+                                           id="{{ eventForm.minimum_crew_size.auto_id }}" 
+                                           name="{{ eventForm.minimum_crew_size.html_name }}"
+                                           class="w-full p-3 rounded-2xl border-2 border-[#8988887f] font-Wanted-Regular text-Large"
+                                           min="2"
+                                           value="{{ eventForm.minimum_crew_size.value|default:'' }}"
+                                           placeholder="Enter minimum crew size">
+                                    <span class="font-Wanted-Variable text-XSmall text-[#797878]">{{ eventForm.minimum_crew_size.help_text }}</span>
+                                    <div id="crew-size-error" class="text-[#FF0000] font-Wanted-Regular text-Medium hidden">
+                                        Minimum crew size must be at least 2
+                                    </div>
+                                </div>
+
+                                {% comment %} Crew Discount Percentage {% endcomment %}
+                                <div class="flex flex-col gap-1 w-full">
+                                    <label class="font-Wanted-Variable text-Small text-[#4e4e4e]">
+                                        {{ eventForm.crew_discount_percentage.label }}
+                                    </label>
+                                    <input type="number" 
+                                           id="{{ eventForm.crew_discount_percentage.auto_id }}" 
+                                           name="{{ eventForm.crew_discount_percentage.html_name }}"
+                                           class="w-full p-3 rounded-2xl border-2 border-[#8988887f] font-Wanted-Regular text-Large"
+                                           min="0"
+                                           max="100"
+                                           step="0.01"
+                                           value="{{ eventForm.crew_discount_percentage.value|default:'' }}"
+                                           placeholder="Enter discount percentage">
+                                    <span class="font-Wanted-Variable text-XSmall text-[#797878]">{{ eventForm.crew_discount_percentage.help_text }}</span>
+                                    <div id="discount-error" class="text-[#FF0000] font-Wanted-Regular text-Medium hidden">
+                                        Discount percentage must be between 0 and 100
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             {% comment %} Stage 2 {% endcomment %}
             <section id="stage-section" data-validate="false">
                 <input required type="hidden" class="section-title" value="Stage 2 - Provide event ticketing information — WAVE." />
@@ -234,7 +300,7 @@ Create your event — WAVE.
                             <label for="{{ eventForm.building_name.id_for_label }}" class="flex flex-col gap-1 w-full">
                                 <p class="font-Wanted-Variable text-Small text-[#4e4e4e]">{{ eventForm.building_name.label }}</p>
                                 <input required class="building-input w-full p-3 rounded-2xl border-2 border-[#8988887f] font-Wanted-Regular text-Large" type="{{ eventForm.building_name.field.widget.input_type }}" id="{{ eventForm.building_name.auto_id }}" name="{{ eventForm.building_name.html_name }}" />
-                                <div id="building-error" class="text-red-700 font-Wanted-Regular text-Base p-1">
+                                <div id="building-error" class="text-red-700 font-Wanted-Regular text-Base p-1 hidden">
                                     Please provide a shorter name.
                                 </div>
                             </label>
@@ -242,7 +308,7 @@ Create your event — WAVE.
                             <label for="{{ eventForm.street.id_for_label }}" class="flex flex-col gap-1 w-full">
                                 <p class="font-Wanted-Variable text-Small text-[#4e4e4e]">{{ eventForm.street.label }}</p>
                                 <input required class="street-input w-full p-3 rounded-2xl border-2 border-[#8988887f] font-Wanted-Regular text-Large" type="{{ eventForm.street.field.widget.input_type }}" id="{{ eventForm.street.auto_id }}" name="{{ eventForm.street.html_name }}" />
-                                <div id="street-error" class="text-red-700 font-Wanted-Regular text-Base p-1">
+                                <div id="street-error" class="text-red-700 font-Wanted-Regular text-Base p-1 hidden" >
                                     Please provide a shorter street address.
                                 </div>
                             </label>
@@ -250,7 +316,7 @@ Create your event — WAVE.
                             <label for="{{ eventForm.apt_suite_unit.id_for_label }}" class="flex flex-col gap-1 w-full">
                                 <p class="font-Wanted-Variable text-Small text-[#4e4e4e]">{{ eventForm.apt_suite_unit.label }}</p>
                                 <input class="apt-input w-full p-3 rounded-2xl border-2 border-[#8988887f] font-Wanted-Regular text-Large" type="{{ eventForm.apt_suite_unit.field.widget.input_type }}" id="{{ eventForm.apt_suite_unit.auto_id }}" name="{{ eventForm.apt_suite_unit.html_name }}" />
-                                <div id="apt-error" class="text-red-700 font-Wanted-Regular text-Base p-1">
+                                <div id="apt-error" class="text-red-700 font-Wanted-Regular text-Base p-1 hidden">
                                     Please provide a shorter apt/suit/unit address.
                                 </div>
                             </label>
@@ -258,7 +324,7 @@ Create your event — WAVE.
                             <label for="{{ eventForm.city.id_for_label }}" class="flex flex-col gap-1 w-full">
                                 <p class="font-Wanted-Variable text-Small text-[#4e4e4e]">{{ eventForm.city.label }}</p>
                                 <input required class="city-input w-full p-3 rounded-2xl border-2 border-[#8988887f] font-Wanted-Regular text-Large" type="{{ eventForm.city.field.widget.input_type }}" id="{{ eventForm.city.auto_id }}" name="{{ eventForm.city.html_name }}" />
-                                <div id="city-error" class="text-red-700 font-Wanted-Regular text-Base p-1">
+                                <div id="city-error" class="text-red-700 font-Wanted-Regular text-Base p-1 hidden">
                                     Please provide a shorter city/town name.
                                 </div>
                             </label>
@@ -274,7 +340,7 @@ Create your event — WAVE.
                             <label for="{{ eventForm.zip_code.id_for_label }}" class="flex flex-col gap-1 w-full">
                                 <p class="font-Wanted-Variable text-Small text-[#4e4e4e]">{{ eventForm.zip_code.label }}</p>
                                 <input required class="zip-input w-full p-3 rounded-2xl border-2 border-[#8988887f] font-Wanted-Regular text-Large" type="number" id="{{ eventForm.zip_code.auto_id }}" name="{{ eventForm.zip_code.html_name }}" maxlength="5" minlength="5" pattern="\d{5}" oninput="this.value = this.value.slice(0, 5)" />
-                                <div id="zip-error" class="text-red-700 font-Wanted-Regular text-Base p-1">
+                                <div id="zip-error" class="text-red-700 font-Wanted-Regular text-Base p-1 hidden">
                                     Zip code needs to be 5 digits.
                                 </div>
                             </label>

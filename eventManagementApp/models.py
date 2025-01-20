@@ -15,8 +15,6 @@ from collegeManagementApp.models import Organization
 from eventTicketsApp.models import InviteEventOption
 
 
-
-
 class HostApplication(models.Model):
     EVENT_TYPE_CHOICES = [
         ("conference", "Conference"),
@@ -388,7 +386,7 @@ class Event(models.Model):
     )
 
     AGE_CHOICES = (
-        ("", "No Age Restriction"), 
+        ("", "No Age Restriction"),
         ("18+", "18+"),
         ("21+", "21+"),
     )
@@ -398,6 +396,33 @@ class Event(models.Model):
         choices=AGE_CHOICES,
         blank=True,
         default="",
+    )
+
+    crew_discount = models.BooleanField(
+        _("Do you want to offer discounts for crew purchases?"),
+        null=True,
+        blank=True,
+        default=False,
+    )
+
+    minimum_crew_size = models.PositiveIntegerField(
+        _("Minimum crew size required for discount"),
+        null=True,
+        blank=True,
+        default=None,
+        help_text=_(
+            "Minimum number of people needed in a crew to qualify for the discount"
+        ),
+    )
+
+    crew_discount_percentage = models.DecimalField(
+        _("Crew discount percentage"),
+        max_digits=5,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        default=None,
+        help_text=_("Percentage discount for crew purchases (e.g., 10.00 for 10%)"),
     )
 
     created_at = models.DateTimeField(auto_now=True)

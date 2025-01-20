@@ -102,7 +102,7 @@ Profile Overview
                             <a class="text-black no-underline hover:text-green cursor-pointer">My Events</a>
                         </li>
                         <li class="profile-tab border-b border-b-custom-rgba11 p-[20px] font-Wanted-Medium cursor-pointer" href="{% url "social:home" %}">
-                            <a class="text-green no-underline hover:underline cursor-pointer">The Social</a>
+                            <a href="{% url "social:home" %}" class="text-green no-underline hover:underline cursor-pointer">The Social</a>
                         </li>
                         {% if userRequest|has_group:"Host" %}
                         <li class="profile-tab border-b border-b-custom-rgba11 p-[20px] font-Wanted-Regular cursor-pointer" target="_blank" href="{% url "eventManagement:hostHome" %}">
