@@ -72,4 +72,22 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     });
   });
+  // Show the modal (crewPurchaseInfoModal) when desired:
+  document
+    .getElementById("crewInfoButton") // or whichever "Open" button you use
+    .addEventListener("click", () => {
+      const modal = document.getElementById("crewPurchaseInfoModal");
+      // Remove "hidden" and add "flex" to show it
+      modal.classList.remove("hidden");
+      modal.classList.add("flex");
+    });
+
+  // Close the modal
+  document
+    .getElementById("closeCrewInfoModalButton")
+    .addEventListener("click", () => {
+      const modal = document.getElementById("crewPurchaseInfoModal");
+      modal.classList.add("hidden");
+      modal.classList.remove("flex");
+    });
 });
