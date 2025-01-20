@@ -13,6 +13,7 @@ from decimal import Decimal
 from django.core.files import File
 import json
 import os
+from dotenv import load_dotenv
 import time
 from qr_code.qrcode import maker
 from qr_code.qrcode.utils import QRCodeOptions
@@ -126,14 +127,18 @@ def checkoutView(request):
                 * platform_settings.percentageStayingOnPlatform
                 / Decimal(100)
             )
-
-            # Create Stripe checkout session
+            
+            # In local development, use the website domain from the .env file
+            # In production, use the actual website domain
+            load_dotenv()
+            domain = os.getenv("WEBSITE_DOMAIN")
+            
             checkout_session = stripe.checkout.Session.create(
                 payment_method_types=["card"],
                 line_items=adjusted_line_items,
                 mode="payment",
-                success_url="http://127.0.0.1:8000/paymentSuccessful/?session_id={CHECKOUT_SESSION_ID}",
-                cancel_url="http://127.0.0.1:8000/paymentFailed/",
+                success_url=f"{domain}/paymentSuccessful/?session_id={{CHECKOUT_SESSION_ID}}",
+                cancel_url=f"{domain}/paymentFailed/",
                 customer=customer.id,
                 payment_intent_data={
                     "application_fee_amount": int(application_fee_amount * 100),

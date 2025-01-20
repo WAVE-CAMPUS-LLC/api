@@ -72,4 +72,23 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     });
   });
+  // Show the modal (crewPurchaseInfoModal) when desired:
+  const crewInfoButtons = document.querySelectorAll(".crewInfoButton");
+
+  crewInfoButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      const modal = document.getElementById("crewPurchaseInfoModal");
+      modal.classList.remove("hidden");
+      modal.classList.add("flex");
+    });
+  });
+
+  // Close the modal
+  document
+    .getElementById("closeCrewInfoModalButton")
+    .addEventListener("click", () => {
+      const modal = document.getElementById("crewPurchaseInfoModal");
+      modal.classList.add("hidden");
+      modal.classList.remove("flex");
+    });
 });

@@ -1,6 +1,8 @@
+from django.conf import settings
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import ensure_csrf_cookie
+from dotenv import load_dotenv
 from .forms import SupportTicketForm, FeedbackForm
 from .models import SupportTicket, SupportTicketMessage
 from authenticationApp.models import CustomUser
@@ -177,7 +179,13 @@ def chat_with_gpt(request):
             return JsonResponse({"response": best_answer})
 
         # Step 4: If no close match is found, provide fallback response
-        ticket_link = "http://127.0.0.1:8000/support/ticket/new/"
+        
+        # In local development, use the website domain from the .env file
+        # In production, use the actual website domain
+        load_dotenv()
+        base_url = os.getenv("WEBSITE_DOMAIN")
+
+        ticket_link = f"{base_url}/support/ticket/new/"
         fallback_message = f"I don't fully understand your request. You can create a support ticket <a href='{ticket_link}' target='_blank'>here</a>, and one of our team members will respond to you shortly."
         return JsonResponse({"response": fallback_message})
 

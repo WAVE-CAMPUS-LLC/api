@@ -346,26 +346,30 @@
                                                             Crew Price 
                                                             {% if event.crew_discount %}
                                                                 <p class="font-Wanted-Variable text-Small text-gray-500">
-                                                                    {% if event.crew_discount_percentage %} 
+                                                                    {% if event.crew_discount_percentage %}
                                                                         ({{ event.crew_discount_percentage|floatformat:0 }}% Discount Applied)
                                                                     {% endif %}
                                                                 </p>
                                                             {% endif %}
-                                                            <a href="">
-                                                                <img src="{% static "images/eventManagementApp/event/info.svg" %}" alt="Crew Discount Info" class="size-5" />
+                                                            <a href="javascript:void(0);" class="crewInfoButton">
+                                                                <img src="{% static 'images/eventManagementApp/event/info.svg' %}" 
+                                                                    alt="Crew Discount Info" 
+                                                                    class="size-5" />
                                                             </a>
                                                         </h6>
+
                                                         {% if ticket.crew_discounted_price %}
-                                                        <h6 class="priceType flex justify-start text-black font-Wanted-Bold text-Large">
-                                                            ${{ ticket.crew_discounted_price }}
-                                                        </h6>
+                                                            <h6 class="priceType flex justify-start text-black font-Wanted-Bold text-Large">
+                                                                ${{ ticket.crew_discounted_price }}
+                                                            </h6>
                                                         {% else %}
-                                                        <h6 class="priceType flex justify-start text-black font-Wanted-Bold text-Large">
-                                                            ${{ ticket.ticket_price }}
-                                                        </h6>
+                                                            <h6 class="priceType flex justify-start text-black font-Wanted-Bold text-Large">
+                                                                ${{ ticket.ticket_price }}
+                                                            </h6>
                                                         {% endif %}
                                                     </div>
-                            
+
+                                                    
                                                     <div class="addRemoveTickets flex flex-row gap-1 items-center">
                                                         <button id="chooseCrewButton_{{ ticket.ticket_id }}" class=" py-2 px-4 bg-gradient-to-br bg-gradient-start bg-gradient-end font-Wanted-Bold text-white rounded-xl cursor-pointer hover:bg-green hover:transition-all hover:duration-300 hover:ease-in-out">
                                                             Choose
@@ -557,6 +561,47 @@
             </div>
         </div>
     </div>
+</div>
+
+<div
+  id="crewPurchaseInfoModal"
+  class="hidden fixed inset-0 z-[1005] w-full h-full cursor-default bg-black/30 backdrop-blur-sm"
+>
+  <div class="modalContainer relative z-10 w-full h-full flex justify-center items-center">
+    <div
+      class="modalContentCard relative w-[90%] xsm:w-[80%] sm:w-[70%] md:w-[60%] lg:w-[50%]
+        bg-white shadow-custom-shadow rounded-2xl
+           p-5 pb-12 flex flex-col gap-3 overflow-y-auto"
+    >
+      <div class="absolute top-0 right-0 p-5">
+        <button
+          type="button"
+          id="closeCrewInfoModalButton"
+          class="hover:bg-gray-100 rounded-full transition-colors duration-200" 
+        > 
+          <img
+            src="{% static 'images/admin/departments/modalClose.svg' %}"
+            alt="Close"
+            class="w-5 h-5"
+          />
+        </button>
+      </div>
+
+      <div class="modalHeader mb-4 flex items-center justify-center">
+        <h5 class="font-Wanted-ExtraBold text-Large md:text-2xl text-center">
+          Crew Purchasing
+        </h5>
+      </div>
+
+      <div class="flex-1 flex flex-col items-center justify-center px-6">
+        <p class="font-Wanted-Variable text-Medium text-black mb-4 text-gray-700 text-center">
+        The <strong>Crew Buy</strong> feature allows you to purchase tickets on 
+        behalf of your entire crew in one transaction.<br> 
+        Please note that this action will also purchase a ticket for you (the purchaser)! 
+        </p>
+      </div>
+    </div>
+  </div>
 </div>
 
 
