@@ -31,9 +31,9 @@ load_dotenv()
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-# DEBUG = os.getenv("DEBUG", "False")
-DEBUG=True
-# DEBUG_PROPAGATE_EXCEPTIONS = True
+DEBUG = os.getenv("DEBUG", "False")
+# DEBUG=True
+DEBUG_PROPAGATE_EXCEPTIONS = True
 
 ALLOWED_HOSTS = [
     "wave-v1.onrender.com", 
@@ -159,39 +159,25 @@ MESSAGE_TAGS = {
 }
 
 # Parse the DATABASE_URL manually to ensure correct format
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': 'postgres',
-#         'USER': 'postgres.zqwamcznyosnkrevxmhm',
-#         'PASSWORD': os.getenv('DB_PASSWORD'),
-#         'HOST': 'aws-0-us-east-1.pooler.supabase.com',
-#         'PORT': '6543',
-#         'OPTIONS': {
-#             'sslmode': 'require',
-#             'options': '-c timezone=UTC',
-#             'keepalives': 1,
-#             'keepalives_idle': 30,
-#             'keepalives_interval': 10,
-#             'keepalives_count': 5,
-#         }
-#     }
-# }
-# tmpPostgres = urlparse(os.getenv("DATABASE_URL"))
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'crewBuying',
-        'USER': 'wave_owner',
-        'PASSWORD': '1PhnjKA8VBOY',
-        'HOST': 'ep-cold-band-a5n17hct.us-east-2.aws.neon.tech',
-        'PORT': '5432',
+        'NAME': 'postgres',
+        'USER': 'postgres.zqwamcznyosnkrevxmhm',
+        'PASSWORD': os.getenv('DB_PASSWORD'),
+        'HOST': 'aws-0-us-east-1.pooler.supabase.com',
+        'PORT': '6543',
         'OPTIONS': {
             'sslmode': 'require',
             'options': '-c timezone=UTC',
+            'keepalives': 1,
+            'keepalives_idle': 30,
+            'keepalives_interval': 10,
+            'keepalives_count': 5,
         }
     }
 }
+
 
 # Email Configurations
 DEFAULT_FROM_EMAIL = "admin@wave.app"
@@ -248,7 +234,7 @@ STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 # CORS Settings
-CORS_ALLOW_ALL_ORIGINS = True  # Temporarily set to True for testing
+CORS_ALLOW_ALL_ORIGINS = False # Temporarily set to True for testing
 CORS_ALLOWED_ORIGINS = [
     "https://wave-v1.onrender.com",
     "https://waveoncampus.com",
@@ -280,8 +266,8 @@ MEDIA_URL = f"{SUPABASE_URL}/storage/v1/object/public/{SUPABASE_STORAGE_BUCKET}/
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # DEFAULT_FILE_STORAGE = "adminDashboardApp.storage.SupabaseStorage"
 
-# time.sleep(5)
-# default_storage._wrapped = SupabaseStorage()
+time.sleep(5)
+default_storage._wrapped = SupabaseStorage()
 
 LOGGING = {
     'version': 1,
