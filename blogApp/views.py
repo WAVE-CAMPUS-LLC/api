@@ -29,7 +29,6 @@ def blogHomeView(request):
 @login_required
 @member
 @verified
-@onboarded
 @check_suspension
 def blogCreateView(request):
     pageName = "createBlog"

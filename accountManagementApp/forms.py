@@ -44,6 +44,7 @@ class UserProfileForm(forms.ModelForm):
         ("Fashion Show", "Fashion Show"),
         ("Dance Competition", "Dance Competition"),
         ("Job Fair", "Job Fair"),
+        ("Other", "Other"),
     ]
 
     event_types = forms.MultipleChoiceField(

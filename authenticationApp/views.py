@@ -8,8 +8,9 @@ from django.core.signing import TimestampSigner, SignatureExpired, BadSignature
 from django.contrib.auth.views import PasswordResetConfirmView
 from django.urls import reverse
 from django.core.mail import send_mail
-from django.template.loader import render_to_string
+from django.template.loader import render_to_string, get_template
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.html import strip_tags
 from django.utils.encoding import force_bytes, force_str
 from django.shortcuts import render, redirect, HttpResponse
 from django.contrib.auth.decorators import login_required
@@ -60,13 +61,18 @@ def joinView(request):
                 verification_code=verification_code,
                 expiration_date=expiration_time,
             )
-
+            
+            template = get_template("emailManagement/build_production/emails/authenticationApp/verifyEmail.html")
+            emailMessage = template.render({"verification_code": verification_code})
+            
+            plainMessage = strip_tags(emailMessage)            
             send_mail(
-                subject="Your Verification Code",
-                message=f"Your verification code is {verification_code}",
-                from_email="no-reply@wavecampus.net",
+                subject="Welcome to WAVE.! Verify your email",
+                message=plainMessage,
+                from_email=None,
                 recipient_list=[user.email],
                 fail_silently=False,
+                html_message=emailMessage,
             )
 
             user = CustomUser.objects.get(email=user.email)
@@ -140,7 +146,7 @@ def emailVerifyView(request):
 
                         messages.success(request, "Email verified successfully!")
                         login(request, request.user)
-                        return redirect("accountManagement:onboarding")
+                        return redirect("accountManagement:userAccount")
                     else:
                         messages.error(request, "Invalid verification code.")
                 else:
@@ -160,12 +166,17 @@ def emailVerifyView(request):
                     email_verification.save()
 
                 try:
+                    template = get_template("emailManagement/build_production/emails/authenticationApp/verifyEmail.html")
+                    emailMessage = template.render({"verification_code": email_verification.verification_code})
+                    
+                    plainMessage = strip_tags(emailMessage)            
                     send_mail(
-                        subject="Your Verification Code",
-                        message=f"Your verification code is {email_verification.verification_code}",
-                        from_email="no-reply@wavecampus.net",
+                        subject="Welcome to WAVE.! Verify your email",
+                        message=plainMessage,
+                        from_email=None,
                         recipient_list=[user.email],
                         fail_silently=False,
+                        html_message=emailMessage,
                     )
                     messages.success(request, "Verification code sent successfully!")
                 except Exception as e:
@@ -177,17 +188,6 @@ def emailVerifyView(request):
             print(f"Error in emailVerifyView: {str(e)}")
             messages.error(request, "An error occurred. Please try again.")
     return render(request, "authenticationApp/verifyEmail.html")
-
-
-# @login_required
-# def startVerificationProcess(request):
-#     group, created = Group.objects.get_or_create(name="Unverified Email")
-#     user = request.user
-#     user.groups.add(group)
-#     user.save()
-#     messages.info(request, "Verification email sent successfully!")
-#     generateVerficationLink(request, user)
-#     return render(request, "authenticationApp/verify/verificationLinkSent.html")
 
 
 def loginView(request):

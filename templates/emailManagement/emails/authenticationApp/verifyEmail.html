@@ -1,0 +1,73 @@
+---
+bodyClass: bg-slate-50
+preheader: Welcome to WAVE.! Verify your email address.
+---
+{% load static %}
+
+<x-main>
+  <div class="bg-slate-50 sm:px-4 font-inter">
+    <table align="center" class="m-0 mx-auto">
+      <tr>
+        <td class="w-[552px] max-w-full">
+          <x-spacer height="24px" />
+
+          <table class="w-full">
+            <tr>
+              <td
+                class="py-6 px-9 sm:p-6 bg-white [border:1px_solid_theme(colors.slate.200)] rounded-lg"
+              >
+              
+                <div class="w-full flex justify-center text-center">
+                    <a href="https://waveoncampus.com" style="text-decoration: none;">
+                        <h6 class="font-black text-black text-2xl no-underline">WAV<span class="text-[#008d95]">E</span>.
+                    </a>
+                </div>
+
+                <x-spacer height="24px" />
+
+                <h1 class="m-0 mb-6 text-2xl/8 text-slate-900 font-semibold font-Wanted-ExtraBold">
+                  Welcome to the greatest experiences!
+                </h1>
+
+                <p class="m-0 mb-6 text-base/6 text-slate-600">
+                  We're excited you decided to join us! Please verify your email
+                  address using the code below:
+                </p>
+
+                <div class="w-full flex justify-center text-center font-Wanted-Medium text-2xl">
+                  {{ verification_code }}
+                </div>
+
+                <x-spacer height="24px" />
+
+                <p class="m-0 text-base/6 text-slate-600">
+                  Welcome! Enjoy the greatest experiences!
+                  <br />
+                  <span class="font-semibold">WAVE.</span>
+                </p>
+
+                <x-divider />
+
+                <p class="m-0 text-xs/5 text-slate-600 mso-break-all">
+                  Experiences for everyone! 
+                  <a href="https://waveoncampus.com">waveoncampus.com</a>
+                </p>
+              </td>
+            </tr>
+          </table>
+
+          <table class="w-full">
+            <tr>
+              <td class="py-6 px-9 sm:px-6">
+                <p class="m-0 text-xs text-slate-500">
+                  &copy; {{ new Date().getFullYear() }} WAVE Campus. All rights
+                  reserved.
+                </p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </div>
+</x-main>

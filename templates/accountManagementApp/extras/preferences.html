@@ -2,21 +2,17 @@
 {% load static %}
 {% load widget_tweaks %}
 
-
 {% block title %}
 Set your preferences — WAVE.
 {% endblock title %}
 
-
 {% block script %}
-<script type="text/javascript" src="{% static "scripts/accountManagementApp/extras/controllerSection.js" %}" defer></script>
-
 <script type="text/javascript" src="{% static "/scripts/accountManagementApp/extras/eventTypeSelectors.js" %}" defer></script>
+<script type="text/javascript" src="{% static "/scripts/accountManagementApp/extras/sectionNavigation.js" %}" defer></script>
 {% endblock script %}
 
-
 {% block checkout_body %}
-<form method="POST" id="profilePreferencesForm" data-save-url="{% url 'accountManagement:updateProfileProcess' username=user.username %}" enctype="multipart/form-data" class="p-10 flex flex-col overflow-hidden overflow-y-auto max-h-screen h-full min-h-screen items-center justify-between">
+<form method="POST" id="profilePreferencesForm" enctype="multipart/form-data" class="p-10 flex flex-col overflow-hidden overflow-y-auto max-h-screen h-full min-h-screen items-center gap-6">
     {% csrf_token %}
     <div class="w-full flex justify-center pt-[30px]">
         <div id="logo" class="font-Wanted-Black text-[40px]">
@@ -24,147 +20,82 @@ Set your preferences — WAVE.
         </div>
     </div>
         
-    <div class="preferencesCardBody">
-        <section class="section hidden">
-            <div class="section-container body-section flex flex-col gap-y-[20px] h-full bg-white w-full pt-[20px] pb-[30px] pl-[25px] md:pl-[50px] pr-[25px] md:pr-[50px] items-center">
-                <div id="heading" class=" font-Wanted-ExtraBold text-[25px] flex justify-center">
-                    <h3 class="text-black font-Wanted-Medium text-[22px] sm:text-[25px] md:text-[28px] flex justify-center">Upload a profile picture</h3>
-                </div>
-                <div class="section-question">
-                    <input type="hidden" name="action" value="profile_picture">
-                    <div class="section-input w-full flex justify-center items-center">
-                        <div class="h-[80%] w-[80%] py-12 px-12 border-2 border-[#aeaeaeab] rounded-2xl flex flex-col justify-center items-center gap-5">
-                            <img id="header-photo-preview" class="max-w-full hidden h-auto max-h-[400px] rounded-2xl" src="#" alt="Header Photo Preview">
-                            <button class="bg-gradient-to-r  from-gradient-start to-gradient-end text-white flex flex-row items-center py-3 px-10 font-Wanted-Medium xsm:font-Wanted-SemiBold text-Large xsm:text-Pre-Xl after-xsm:text-xl xxsm:text-1xl pre-lg:text-3xl rounded-2xl" type="button" onclick="document.getElementById('photo-input').click();">Upload</button>
-                            {{ updateUserProfileForm.profile_photo|add_class:"hidden"|attr:"id:photo-input" }}
+    <div class="flex flex-col gap-y-[20px] bg-white w-[90%] p-6 border border-solid border-custom-rgba rounded-[20px] shadow-custom-shadow h-full min-h-[90%] overflow-hidden">
+        <div class="flex flex-col gap-5 overflow-auto h-full">
+            <div id="sectionDisplay1" class="sectionDisplay w-full flex flex-col gap-10">
+                <div class="flex flex-col justify-center items-center gap-5 h-full bg-white w-full">
+                    <div id="heading" class="font-Wanted-ExtraBold text-[25px] flex justify-center">
+                        <h3 class="text-black font-Wanted-Medium text-Semi-Medium">Profile picture</h3>
+                    </div>
+                    <div class="section-question flex ">
+                        <input type="hidden" name="action" value="profile_picture">
+                        <div class="section-input w-full flex justify-center items-center">
+                            <div class="flex flex-col items-center gap-y-[20px]">
+                                <img id="header-photo-preview" class="max-w-full hidden h-auto max-h-[200px] rounded-full" src="#" alt="Header Photo Preview">
+                                <button class="bg-gradient-to-r  from-gradient-start to-gradient-end text-white flex flex-row items-center py-3 px-10 font-Wanted-Regular rounded-2xl" type="button" onclick="document.getElementById('photo-input').click();">Upload</button>
+                                {{ updateUserProfileForm.profile_photo|add_class:"hidden"|attr:"id:photo-input" }}
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </section>
-
-        <section class="section hidden">
-            <div class="section-container body-section flex flex-col gap-y-[20px] h-full bg-white w-full pt-[20px] pb-[30px] pl-[25px] md:pl-[50px] pr-[25px] md:pr-[50px] items-center">
-                <div id="heading" class="text-black font-Wanted-ExtraBold text-[25px] flex flex-col items-center justify-center">
-                    <h3 class="text-black font-Wanted-Medium text-[22px] sm:text-[25px] md:text-[28px] flex justify-center">Your Social's</h3>
-                    <p class="font-Wanted-Variable text-Small text-gray-400">People can will be able to reach out!</p>
+            <div id="sectionDisplay2" class="sectionDisplay w-full flex flex-col gap-10 hidden">
+                <div class="flex flex-col gap-3 items-start">
+                    <h6 class="font-Wanted-Bold text-Medium">Personal</h6>
+                    <div class="grid grid-cols-1 md:grid-cols-2 w-full justify-between gap-5">
+                        <div class="font-Wanted-Variable text-Semi-Medium flex flex-col gap-1 w-full">
+                            <p>{{ updateUserProfileForm.status.label }}</p>
+                            {% render_field updateUserProfileForm.status|add_class:"p-[10px] pl-[13px] pr-[13px] rounded-[10px] border border-solid border-custom-rgba font-Wanted-Regular text-[15px] w-full shadow-form-shadow" %}
+                        </div>
+                        <div class="font-Wanted-Variable text-Semi-Medium flex flex-col gap-1 w-full">
+                            <p>{{ updateUserProfileForm.gender.label }}</p>
+                            {% render_field updateUserProfileForm.gender|add_class:"p-[10px] pl-[13px] pr-[13px] rounded-[10px] border border-solid border-custom-rgba font-Wanted-Regular text-[15px] w-full shadow-form-shadow" %}
+                        </div>
+                        <div class="font-Wanted-Variable text-Semi-Medium flex flex-col gap-1 w-full">
+                            <p>{{ updateUserProfileForm.home_state.label }}</p>
+                            {% render_field updateUserProfileForm.home_state|add_class:"p-[10px] pl-[13px] pr-[13px] rounded-[10px] border border-solid border-custom-rgba font-Wanted-Regular text-[15px] w-full shadow-form-shadow" %}
+                        </div>
+                    </div>
                 </div>
 
-                <div class="section-question">
-                    <input type="hidden" name="action" value="socials">
-                    <div class="section-input flex flex-col items-center gap-7">
-                        <label for="college_name" class="w-full">
-                            {% render_field updateUserProfileForm.instagram|attr:"class:p-[10px] pl-[13px] pr-[13px] w-full rounded-[10px] border border-solid border-custom-rgba font-Wanted-Regular text-Medium shadow-form-shadow" placeholder="Instagram Username (e.g. waveoncamp)" %}
-                        </label>
-
-                        <label for="college_name" class="w-full">
-                            {% render_field updateUserProfileForm.tiktok|attr:"class:p-[10px] pl-[13px] pr-[13px] w-full rounded-[10px] border border-solid border-custom-rgba font-Wanted-Regular text-Medium shadow-form-shadow" placeholder="TikTok Username (e.g. waveoncamp)" %}
-                        </label>
+                <div class="flex flex-col gap-3 items-start">
+                    <h6 class="font-Wanted-Bold text-Medium">Social</h6>
+                    <div class="flex flex-col md:flex-row w-full justify-between gap-5">
+                        <div class="font-Wanted-Variable text-Semi-Medium flex flex-col gap-1 w-full">
+                            <p>{{ updateUserProfileForm.instagram.label }}</p>
+                            {% render_field updateUserProfileForm.instagram|add_class:"p-[10px] pl-[13px] pr-[13px] rounded-[10px] border border-solid border-custom-rgba font-Wanted-Regular text-[15px] w-full shadow-form-shadow" %}
+                        </div>
+                        <div class="font-Wanted-Variable text-Semi-Medium flex flex-col gap-1 w-full">
+                            <p>{{ updateUserProfileForm.tiktok.label }}</p>
+                            {% render_field updateUserProfileForm.tiktok|add_class:"p-[10px] pl-[13px] pr-[13px] rounded-[10px] border border-solid border-custom-rgba font-Wanted-Regular text-[15px] w-full shadow-form-shadow" %}
+                        </div>
                     </div>
                 </div>
             </div>
-        </section>
-
-        <section class="section hidden">
-            <div class="section-container body-section flex flex-col gap-y-[20px] h-full bg-white w-full pt-[20px] pb-[30px] pl-[25px] md:pl-[50px] pr-[25px] md:pr-[50px] items-center">
-                <div id="heading" class="text-black font-Wanted-ExtraBold text-[25px] flex justify-center">
-                    <h3 class="text-black font-Wanted-Medium text-[22px] sm:text-[25px] md:text-[28px] flex justify-center">{{ updateUserProfileForm.status.label }}</h3>
-                </div>
-                <div class="section-question">
-                    <input type="hidden" name="action" value="college_name">
-                    <div class="section-input">
-                        <label for="college_name" class="w-full">
-                            {{ updateUserProfileForm.status|add_class:"p-[10px] pl-[13px] pr-[13px] w-full rounded-[10px] border border-solid border-custom-rgba font-Wanted-Regular text-Medium shadow-form-shadow" }}
-                        </label>
+            
+            <div id="sectionDisplay3" class="sectionDisplay w-full flex flex-col gap-10 hidden">
+                <div class="flex flex-col gap-3 items-start">
+                    <h6 class="font-Wanted-Bold text-Medium">College</h6>
+                    <div class="grid grid-cols-1 md:grid-cols-2 w-full justify-between gap-5">
+                        <div class="font-Wanted-Variable text-Semi-Medium flex flex-col gap-1 w-full">
+                            <p>{{ updateUserProfileForm.college_name.label }}</p>
+                            {% render_field updateUserProfileForm.college_name|add_class:"p-[10px] pl-[13px] pr-[13px] rounded-[10px] border border-solid border-custom-rgba font-Wanted-Regular text-[15px] w-full shadow-form-shadow" %}
+                        </div>
+                        <div class="font-Wanted-Variable text-Semi-Medium flex flex-col gap-1 w-full">
+                            <p>{{ updateUserProfileForm.major.label }}</p>
+                            {% render_field updateUserProfileForm.major|add_class:"p-[10px] pl-[13px] pr-[13px] rounded-[10px] border border-solid border-custom-rgba font-Wanted-Regular text-[15px] w-full shadow-form-shadow" %}
+                        </div>
+                        <div class="font-Wanted-Variable text-Semi-Medium flex flex-col gap-1 w-full">
+                            <p>{{ updateUserProfileForm.graduation_year.label }}</p>
+                            {% render_field updateUserProfileForm.graduation_year|add_class:"p-[10px] pl-[13px] pr-[13px] rounded-[10px] border border-solid border-custom-rgba font-Wanted-Regular text-[15px] w-full shadow-form-shadow" %}
+                        </div>
                     </div>
                 </div>
             </div>
-        </section>
-
-        <section class="section hidden">
-            <div class="section-container body-section flex flex-col gap-y-[20px] h-full bg-white w-full pt-[20px] pb-[30px] pl-[25px] md:pl-[50px] pr-[25px] md:pr-[50px] items-center">
+            
+            <div id="sectionDisplay4" class="sectionDisplay w-full h-full flex flex-col gap-10 hidden overflow-y-auto">
                 <div id="heading" class="text-black font-Wanted-ExtraBold text-[25px] flex justify-center">
-                    <h3 class="text-black font-Wanted-Medium text-[22px] sm:text-[25px] md:text-[28px] flex justify-center">{{ updateUserProfileForm.gender.label }}</h3>
-                </div>
-                <div class="section-question">
-                    <input type="hidden" name="action" value="college_name">
-                    <div class="section-input">
-                        <label for="college_name" class="w-full">
-                            {{ updateUserProfileForm.gender|add_class:"p-[10px] pl-[13px] pr-[13px] w-full rounded-[10px] border border-solid border-custom-rgba font-Wanted-Regular text-Medium shadow-form-shadow" }}
-                        </label>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section class="section hidden">
-            <div class="section-container body-section flex flex-col gap-y-[20px] h-full bg-white w-full pt-[20px] pb-[30px] pl-[25px] md:pl-[50px] pr-[25px] md:pr-[50px] items-center">
-                <div id="heading" class="text-black font-Wanted-ExtraBold text-[25px] flex justify-center">
-                    <h3 class="text-black font-Wanted-Medium text-[22px] sm:text-[25px] md:text-[28px] flex justify-center">{{ updateUserProfileForm.home_state.label }}</h3>
-                </div>
-                <div class="section-question">
-                    <input type="hidden" name="action" value="college_name">
-                    <div class="section-input">
-                        <label for="home_state" class="formLabel">
-                            {{ updateUserProfileForm.home_state|add_class:"p-[10px] pl-[13px] pr-[13px] w-full rounded-[10px] border border-solid border-custom-rgba font-Wanted-Regular text-Medium shadow-form-shadow" }}
-                        </label>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section class="section hidden">
-            <div class="section-container body-section flex flex-col gap-y-[20px] h-full bg-white w-full pt-[20px] pb-[30px] pl-[25px] md:pl-[50px] pr-[25px] md:pr-[50px] items-center">
-                <div id="heading" class="text-black font-Wanted-ExtraBold text-[25px] flex justify-center">
-                    <h3 class="text-black font-Wanted-Medium text-[22px] sm:text-[25px] md:text-[28px] flex justify-center">{{ updateUserProfileForm.college_name.label }}</h3>
-                </div>
-                <div class="section-question">
-                    <input type="hidden" name="action" value="college_name">
-                    <div class="section-input">
-                        <label for="college_name" class="w-full">
-                            {{ updateUserProfileForm.college_name|add_class:"p-[10px] pl-[13px] pr-[13px] w-full rounded-[10px] border border-solid border-custom-rgba font-Wanted-Regular text-Medium shadow-form-shadow" }}
-                        </label>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section class="section hidden">
-            <div class="section-container body-section flex flex-col gap-y-[20px] h-full bg-white w-full pt-[20px] pb-[30px] pl-[25px] md:pl-[50px] pr-[25px] md:pr-[50px] items-center">
-                <div id="heading" class="text-black font-Wanted-ExtraBold text-[25px] flex justify-center">
-                    <h3 class="text-black font-Wanted-Medium text-[22px] sm:text-[25px] md:text-[28px] flex justify-center">{{ updateUserProfileForm.major.label }}</h3>
-                </div>
-                <div class="section-question">
-                    <input type="hidden" name="action" value="college_name">
-                    <div class="section-input">
-                        <label for="major" class="formLabel">
-                            {{ updateUserProfileForm.major|add_class:"p-[10px] pl-[13px] pr-[13px] w-full rounded-[10px] border border-solid border-custom-rgba font-Wanted-Regular text-Medium shadow-form-shadow" }}
-                        </label>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section class="section hidden">
-            <div class="section-container body-section flex flex-col gap-y-[20px] h-full bg-white w-full pt-[20px] pb-[30px] pl-[25px] md:pl-[50px] pr-[25px] md:pr-[50px] items-center">
-                <div id="heading" class="text-black font-Wanted-ExtraBold text-[25px] flex justify-center">
-                    <h3 class="text-black font-Wanted-Medium text-[22px] sm:text-[25px] md:text-[28px] flex justify-center">{{ updateUserProfileForm.graduation_year.label }}</h3>
-                </div>
-                <div class="section-question">
-                    <input type="hidden" name="action" value="graduation_year">
-                    <div class="section-input">
-                        <label for="grauduation_year" class="formLabel">
-                            {{ updateUserProfileForm.graduation_year|add_class:"p-[10px] pl-[13px] pr-[13px] w-full rounded-[10px] border border-solid border-custom-rgba font-Wanted-Regular text-Medium shadow-form-shadow" }}
-                        </label>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section class="section hidden">
-            <div class="section-container body-section flex flex-col gap-y-[20px] h-full bg-white w-full pt-[20px] pb-[30px] pl-[25px] md:pl-[50px] pr-[25px] md:pr-[50px] items-center">
-                <div id="heading" class="text-black font-Wanted-ExtraBold text-[25px] flex justify-center">
-                    <h3 class="text-black font-Wanted-Medium text-[22px] sm:text-[25px] md:text-[28px] flex justify-center">{{ updateUserProfileForm.event_types.label }}</h3>
+                    <h3 class="text-black font-Wanted-Medium text-Semi-Medium">{{ updateUserProfileForm.event_types.label }}</h3>
                 </div>
                 <div class="section-question">
                     <input type="hidden" name="action" value="event_types">
@@ -189,15 +120,14 @@ Set your preferences — WAVE.
                     </div>
                 </div>
             </div>
-        </section>
-        
-    </div>
+        </div>
 
-    <div class="nextPreviousRow w-full flex justify-between">
-        <button type="button" role="button" id="previousSectionButton" class="font-Wanted-Bold text-xl underline">Previous</button>
-        <div id="nextSubmitContainer" class="w-full flex justify-end">
-            <button type="button" role="button" id="nextSectionButton" class="font-Wanted-Bold text-xl bg-green text-white px-[20px] py-[10px] rounded-2xl">Next</button>
-            <button type="submit" role="button" id="submitButton" class="font-Wanted-Bold text-xl bg-green text-white px-[20px] py-[10px] rounded-2xl">Submit</button>
+        <div class="nextPreviousRow w-full flex justify-between mt-auto">
+            <div id="nextSubmitContainer" class="w-full flex justify-between">
+                <button type="button" id="previousButton" class="font-Wanted-Bold text-xl bg-gray-700 text-white px-[20px] py-[10px] rounded-2xl hidden">Previous</button>
+                <button type="button" id="nextButton" class="font-Wanted-Bold text-xl bg-green text-white px-[20px] py-[10px] rounded-2xl">Next</button>
+                <button type="submit" id="submitButton" class="font-Wanted-Bold text-xl bg-green text-white px-[20px] py-[10px] rounded-2xl hidden">Submit</button>
+            </div>
         </div>
     </div>
 </form>

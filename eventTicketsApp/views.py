@@ -392,42 +392,28 @@ def generateTicket(
 
         # Prepare email
         if guestEmail or (user and user.email):
-            if crewTicket:
-                recipient_list = [guestEmail] if guestEmail else [user.email]
-                subject = f"{request.user.first_name} bought a ticket for you for {event.title}"
-                qrCodeHtml = render_to_string(
-                    "emailTemplates/eventTicketsApp/ticketQRCode.html",
-                    {"ticketLink": ticketLink, "event": event},
-                )
-                message = f"This ticket was bought by a crew member for you!\n" f"Your QR code is attached."
-                from_email = settings.DEFAULT_FROM_EMAIL
+            subject = (
+                f"{request.user.first_name} bought a ticket for you for {event.title}"
+                if crewTicket else
+                f"Your Ticket for {event.title}"
+            )
+            message = (
+                "This ticket was bought by a crew member for you!\nYour QR code is attached."
+                if crewTicket else
+                "Thank you for your purchase!\nYour QR code is attached."
+            )
+            recipient_list = [guestEmail] if guestEmail else [user.email]
+            qrCodeHtml = render_to_string("emailManagement/build_production/emails/transactional.html")
+            from_email = settings.DEFAULT_FROM_EMAIL
 
-                send_mail(
-                    subject,
-                    message,
-                    from_email,
-                    recipient_list,
-                    fail_silently=False,
-                    html_message=qrCodeHtml,
-                )
-            else:
-                recipient_list = [guestEmail] if guestEmail else [user.email]
-                subject = f"Your Ticket for {event.title}"
-                qrCodeHtml = render_to_string(
-                    "emailTemplates/eventTicketsApp/ticketQRCode.html",
-                    {"ticketLink": ticketLink, "event": event},
-                )
-                message = f"Thank you for your purchase!\n" f"Your QR code is attached."
-                from_email = settings.DEFAULT_FROM_EMAIL
-
-                send_mail(
-                    subject,
-                    message,
-                    from_email,
-                    recipient_list,
-                    fail_silently=False,
-                    html_message=qrCodeHtml,
-                )
+            send_mail(
+                subject,
+                message,
+                from_email,
+                recipient_list,
+                fail_silently=False,
+                html_message=qrCodeHtml,
+            )
 
     except Exception as e:
         print(f"Error generating QR code: {e}")

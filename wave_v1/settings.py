@@ -38,8 +38,8 @@ DEBUG_PROPAGATE_EXCEPTIONS = True
 ALLOWED_HOSTS = [
     "wave-v1.onrender.com", 
     "waveoncampus.com", 
-    "localhost",
-    "127.0.0.1"
+    # "localhost",
+    # "127.0.0.1"
 ]
 
 
@@ -118,8 +118,8 @@ MIDDLEWARE = [
 CSRF_TRUSTED_ORIGINS = [
     "https://wave-v1.onrender.com",
     "https://waveoncampus.com",
-    "https://localhost:8000",
-    "https://127.0.0.1:8000",
+    # "https://localhost:8000",
+    # "https://127.0.0.1:8000",
 ]
 
 ROOT_URLCONF = "wave_v1.urls"
@@ -177,7 +177,20 @@ DATABASES = {
         }
     }
 }
-
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': 'crewBuying',
+#         'USER': 'wave_owner',
+#         'PASSWORD': '1PhnjKA8VBOY',
+#         'HOST': 'ep-cold-band-a5n17hct.us-east-2.aws.neon.tech',
+#         'PORT': '5432',
+#         'OPTIONS': {
+#             'sslmode': 'require',
+#             'options': '-c timezone=UTC',
+#         }
+#     }
+# }
 
 # Email Configurations
 DEFAULT_FROM_EMAIL = "admin@wave.app"
@@ -238,8 +251,8 @@ CORS_ALLOW_ALL_ORIGINS = False # Temporarily set to True for testing
 CORS_ALLOWED_ORIGINS = [
     "https://wave-v1.onrender.com",
     "https://waveoncampus.com",
-    "https://localhost:8000",
-    "https://127.0.0.1:8000",
+    # "https://localhost:8000",
+    # "https://127.0.0.1:8000",
 ]
 CORS_ALLOW_CREDENTIALS = True
 

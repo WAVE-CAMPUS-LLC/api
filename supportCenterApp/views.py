@@ -2,6 +2,7 @@ from django.conf import settings
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import ensure_csrf_cookie
+from dotenv import load_dotenv
 from .forms import SupportTicketForm, FeedbackForm
 from .models import SupportTicket, SupportTicketMessage
 from authenticationApp.models import CustomUser

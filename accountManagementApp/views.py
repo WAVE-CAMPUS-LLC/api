@@ -26,7 +26,6 @@ UserModel = get_user_model()
 @login_required(login_url="authentication:login")
 @check_suspension
 @member
-@onboarded
 @verified
 def profileView(request):
     userRequest = request.user
@@ -143,7 +142,6 @@ def userProfileProcessing(request, username):
 @login_required(login_url="authentication:login")
 @check_suspension
 @member
-@onboarded
 @verified
 def settingsView(request):
     user = request.user
