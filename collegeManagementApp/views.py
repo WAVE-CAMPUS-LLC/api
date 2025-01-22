@@ -106,7 +106,6 @@ def collegeCampusesView(request):
 @login_required
 @member
 @verified
-@onboarded
 @check_suspension
 def requestCollege(request):
     pageName = "Colleges"
@@ -134,7 +133,6 @@ def requestCollege(request):
 @login_required
 @member
 @verified
-@onboarded
 @check_suspension
 def viewCollegeInformation(request, collegeId):
     pageName = "Colleges"
@@ -220,7 +218,6 @@ def viewCollegeInformation(request, collegeId):
 @login_required
 @member
 @verified
-@onboarded
 @check_suspension
 def joinCollege(request, collegeId):
     pageName = "Colleges"
@@ -267,7 +264,6 @@ def joinCollege(request, collegeId):
 @login_required
 @member
 @verified
-@onboarded
 @check_suspension
 def verifyJoinCollege(request, collegeId):
     pageName = "Colleges"
@@ -303,7 +299,6 @@ def verifyJoinCollege(request, collegeId):
 @login_required
 @member
 @verified
-@onboarded
 @check_suspension
 def exitCollege(request, collegeId):
     user_profile = get_object_or_404(UserProfile, user=request.user)
@@ -332,7 +327,6 @@ def exitCollege(request, collegeId):
 @login_required
 @member
 @verified
-@onboarded
 @check_suspension
 def createOrg(request, collegeId):
     pageName = "Colleges"
@@ -384,7 +378,6 @@ def createOrg(request, collegeId):
 @login_required
 @member
 @verified
-@onboarded
 @check_suspension
 def viewOrganization(request, collegeId, orgId):
     pageName = "Colleges"
@@ -533,7 +526,6 @@ def viewOrganization(request, collegeId, orgId):
 @login_required
 @member
 @verified
-@onboarded
 @check_suspension
 def joinOrganization(request, collegeId, orgId):
     college = get_object_or_404(College, collegeId=collegeId)
@@ -555,7 +547,6 @@ def joinOrganization(request, collegeId, orgId):
 @login_required
 @member
 @verified
-@onboarded
 @check_suspension
 def leaveOrganization(request, collegeId, orgId):
     college = get_object_or_404(College, collegeId=collegeId)

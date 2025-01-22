@@ -329,7 +329,6 @@ def crew_invite_action(request, crew_id, action):
 @check_suspension
 @member
 @verified
-@onboarded
 def publicProfileView(request, username):
     user_profile = get_object_or_404(UserProfile, user__username=username)
 
