@@ -36,7 +36,7 @@ def indexView(request):
 
 def exploreView(request):
     pageName = "explore"
-    
+
     user = None
     user_friends = None
     user_crews = None
@@ -51,11 +51,11 @@ def exploreView(request):
         user_age = None
 
     isFavoriteEvent = []
-    
-    if user and hasattr(user, 'favorite_events'):
+
+    if user and hasattr(user, "favorite_events"):
         favorite_events = user.favorite_events.all()
         isFavoriteEvent = [event.eventId for event in favorite_events]
-        
+
     if not request.user.is_authenticated:
         age_filter = Q(age_restriction="")
     else:
@@ -260,13 +260,12 @@ def eventDetailsView(request, eventId, token=None):
     else:
         # Anonymous users cannot bypass age restrictions
         user_age = None
-    
+
     isFavoriteEvent = False
-    
-    if user and hasattr(user, 'favorite_events'):
+
+    if user and hasattr(user, "favorite_events"):
         isFavoriteEvent = user.favorite_events.filter(eventId=event.eventId).exists()
-        
-        
+
     if request.method == "POST":
         action = request.POST.get("eventAction")
 
@@ -277,7 +276,10 @@ def eventDetailsView(request, eventId, token=None):
             ).first()
 
             if existing_rsvp:
-                messages.error(request, "This email has already been submitted! Try a different one.")
+                messages.error(
+                    request,
+                    "This email has already been submitted! Try a different one.",
+                )
                 return render(
                     request,
                     "coreApp/event/eventDetails.html",
@@ -310,7 +312,10 @@ def eventDetailsView(request, eventId, token=None):
                         request, event, user, guestFirstName, guestLastName, guestEmail
                     )
 
-                    messages.success(request, "You have reserved a spot! Check your email for confirmation.")
+                    messages.success(
+                        request,
+                        "You have reserved a spot! Check your email for confirmation.",
+                    )
                     return render(
                         request,
                         "coreApp/event/eventDetails.html",
@@ -329,10 +334,12 @@ def eventDetailsView(request, eventId, token=None):
         elif action == "shareEventWithFriend":
             if not request.user.is_authenticated:
                 messages.warning(request, "Please login to share this event.")
-                return redirect('authentication:login')
+                return redirect("authentication:login")
             else:
                 friend_username = request.POST.get("shareFriendUsername")
-                friendUserAccount = get_object_or_404(CustomUser, username=friend_username)
+                friendUserAccount = get_object_or_404(
+                    CustomUser, username=friend_username
+                )
                 friend = get_object_or_404(UserProfile, user=friendUserAccount)
 
                 myUserAccount = get_object_or_404(
@@ -340,7 +347,9 @@ def eventDetailsView(request, eventId, token=None):
                 )
                 user = get_object_or_404(UserProfile, user=myUserAccount)
 
-                shared_event, created = SharedEvent.objects.get_or_create(sender=user, receiver=friend, event=event)
+                shared_event, created = SharedEvent.objects.get_or_create(
+                    sender=user, receiver=friend, event=event
+                )
 
                 if created:
                     messages.success(request, f"Event shared with {friend}")
@@ -371,7 +380,7 @@ def eventDetailsView(request, eventId, token=None):
         elif action == "shareEventWithCrew":
             if not request.user.is_authenticated:
                 messages.warning(request, "Please login to share this event.")
-                return redirect('authentication:login')
+                return redirect("authentication:login")
             else:
                 crew_id = request.POST.get("shareCrewId")
                 crew = get_object_or_404(Crew, crewId=crew_id)
@@ -388,30 +397,34 @@ def eventDetailsView(request, eventId, token=None):
 
                 messages.success(request, f"Event shared with {crew.name}")
                 return redirect("core:eventDetails", eventId=event.eventId)
-        
+
         elif action == "favoriteEvent":
             if not request.user.is_authenticated:
                 messages.warning(request, "Please login to favorite this event.")
-                return redirect('authentication:login')
+                return redirect("authentication:login")
             else:
                 user.favorite_events.add(event)
-        
+
         elif action == "unfavoriteEvent":
             if not request.user.is_authenticated:
                 messages.warning(request, "Please login to unfavorite this event.")
-                return redirect('authentication:login')
+                return redirect("authentication:login")
             else:
                 user.favorite_events.remove(event)
-            
+
         elif action == "purchaseForCrew":
             if not request.user.is_authenticated:
-                messages.warning(request, "Please login to purchase tickets for a crew.")
-                return redirect('authentication:login')
+                messages.warning(
+                    request, "Please login to purchase tickets for a crew."
+                )
+                return redirect("authentication:login")
             else:
                 crew_id = request.POST.get("crewId")
                 ticketId = request.POST.get("ticketId")
 
-                return redirect("eventTickets:crewCheckout", crewId=crew_id, ticketId=ticketId)
+                return redirect(
+                    "eventTickets:crewCheckout", crewId=crew_id, ticketId=ticketId
+                )
 
     # if event.age_restriction:
     #     if user_age is None or (
@@ -750,6 +763,3 @@ def get_client_ip(request):
         ip = request.META.get("REMOTE_ADDR")
 
     return ip
-
-
-

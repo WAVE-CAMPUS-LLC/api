@@ -59,19 +59,11 @@ Hosting Events | WAVE.
             </div>
         </div>
     </div>
-    <div class="flex justify-center">
-        {% if request.user.is_authenticated %}
-            {% if request.user|has_group:"Host" or request.user|has_group:"host" %}
-            <a href="{% url "eventManagement:hostCreateEvent" %}" class="flex items-center p-[15px] text-white font-Wanted-Bold text-[20px] rounded-[20px] gap-[10px] border border-transparent border-l-gradient-start border-r-gradient-end bg-gradient-to-r from-gradient-start to-gradient-end no-underline">
-                <img src="{% static "/images/eventManagementApp/host/host_ticket.svg" %}" />
-                Create Event
-            </a>
-            {% else %}
-            <a href="{% url "eventManagement:hostApply" %}" class="flex items-center p-[15px] text-white font-Wanted-Bold text-[20px] rounded-[20px] gap-[10px] border border-transparent border-l-gradient-start border-r-gradient-end bg-gradient-to-r from-gradient-start to-gradient-end no-underline">Apply Now!</a>
-            {% endif %}
-        {% else %}
-        <a href="{% url "eventManagement:hostApply" %}" class="flex items-center p-[15px] text-white font-Wanted-Bold text-[20px] rounded-[20px] gap-[10px] border border-transparent border-l-gradient-start border-r-gradient-end bg-gradient-to-r from-gradient-start to-gradient-end no-underline">Apply Now!</a>
-        {% endif %}
+    <div class="flex justify-center">            
+        <a href="{% url "eventManagement:eventCreationProcess" %}" class="flex items-center p-[15px] text-white font-Wanted-Bold text-[20px] rounded-[20px] gap-[10px] border border-transparent border-l-gradient-start border-r-gradient-end bg-gradient-to-r from-gradient-start to-gradient-end no-underline">
+            <img src="{% static "/images/eventManagementApp/host/host_ticket.svg" %}" />
+            Create Event
+        </a>
     </div>
     <div class="w-full flex justify-center border-t-[2px] border-t-[rgba(146, 146, 146, 0.096)] pt-[70px] bg-clip-text text-transparent text-[35px] font-Wanted-ExtraBold bg-gradient-to-r from-gradient-start to-gradient-end">
         <h1 class="text-end sm:text-[42px] md:text-[50px] pre-lg:text-[53px] lg:text-[56px] xl:text-[80px]">Create something bigger!</h1>

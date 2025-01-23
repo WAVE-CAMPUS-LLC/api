@@ -60,3 +60,9 @@ input:checked+.slider:before {
     border-bottom-right-radius: 1rem;
     border: 2px solid #0909091c;
 }
+
+.ql-editor {
+    white-space: pre-wrap !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+}
