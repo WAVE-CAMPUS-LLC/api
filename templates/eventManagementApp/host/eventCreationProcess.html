@@ -123,7 +123,20 @@ Create your event — WAVE.
                 <div class="flex flex-col gap-4 w-full items-start">
                     <h6 class="flex justify-start font-Wanted-Medium text-Large">Experience Location</h6>
                     <div class="grid grid-cols-1 pre-sm:grid-cols-2 gap-2 w-full">
-                        
+                        <div class="flex flex-col items-start">
+                            <p class="font-Wanted-SemiBold text-Base text-gray-400 flex flex-col gap-1">
+                                {{ eventForm.hide_address.label }}
+                                <span class="font-Wanted-Variable text-XSmall">You can make this address public before the event</span>
+                            </p>
+                            <label class="toggle-switch">
+                                <input 
+                                    type="checkbox" 
+                                    id="{{ eventForm.hide_address.auto_id }}" 
+                                    name="{{ eventForm.hide_address.html_name }}"
+                                    {% if eventForm.hide_address.value %}checked{% endif %}/>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
                         <!-- BUILDING NAME -->
                         <div class="flex flex-col w-full items-start justify-center">
                             <p class="font-Wanted-SemiBold text-Base text-gray-400">

@@ -98,6 +98,7 @@ class EventForm(forms.ModelForm):
             "description",
             "privacy",
             "ticketing",
+            "hide_address",
             "country",
             "building_name",
             "street",

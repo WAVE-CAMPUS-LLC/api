@@ -288,9 +288,9 @@ class Event(models.Model):
     country = models.CharField(
         _("Country"),
         max_length=100,
-        null=False,
-        blank=False,
-        default="",
+        null=True,
+        blank=True,
+        default="United States",
         choices=COUNTRY_CHOICES,
     )
 
@@ -341,7 +341,7 @@ class Event(models.Model):
         _("Instagram"), max_length=100, blank=False, null=False, default=""
     )
     
-    hide_address = models.BooleanField(_("Hide address"), default=False)
+    hide_address = models.BooleanField(_("Hide address from users?"), blank=False, null=False, default=False)
 
     header_photo = models.ImageField(
         _("Add a cover photo"),

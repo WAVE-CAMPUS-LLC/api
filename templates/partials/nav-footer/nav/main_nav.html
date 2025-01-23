@@ -26,7 +26,7 @@
         <div class="support-links">
             <ul class="flex flex-row items-center gap-5 list-none font-Wanted-Regular text-black">
                 <li>
-                    {% if user.is_authenticated %}
+                    {% if request.user.is_authenticated %}
                         {% if page == home %}
                         <a class="gradient-btn hover:gradient-btn-hover text-white" href="{% url "eventManagement:eventCreationProcess" %}">
                             <img src="{% static "/images/eventManagementApp/host/host_ticket.svg" %}" />
@@ -55,9 +55,9 @@
                                 Create
                             </a>
                         {% else %}
-                        <a class="gradient-btn hover:gradient-btn-hover text-white" href="{% url "eventManagement:eventCreationProcess" %}">
-                            <img src="{% static "/images/eventManagementApp/host/host_ticket.svg" %}" />
-                            Create
+                        <a class="gradient-btn hover:gradient-btn-hover text-white" href="{% url "colleges:find" %}">
+                            <img src="{% static "/images/explore/community.svg" %}" />
+                            Join Campus
                         </a>
                         {% endif %}
                     {% endif %}
