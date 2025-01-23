@@ -239,7 +239,7 @@ class Event(models.Model):
     )
 
     title = models.CharField(
-        _("What would you like to title the event?"),
+        _("Title the experience"),
         max_length=200,
         null=True,
         blank=True,
@@ -247,7 +247,7 @@ class Event(models.Model):
     )
 
     event_type = models.CharField(
-        _("What type of event is it?"),
+        _("Decide what type of experience this is"),
         max_length=100,
         choices=EVENT_TYPE_CHOICES,
         null=True,
@@ -256,7 +256,7 @@ class Event(models.Model):
     )
 
     date = models.DateField(
-        _("Choose date"), null=True, blank=True, default=timezone.now
+        _("Date your experience"), null=True, blank=True, default=timezone.now
     )
     start_time = models.TimeField(
         _("End time"), null=True, blank=True, default=timezone.now

@@ -28,6 +28,7 @@ class SupportTicketAdmin(admin.ModelAdmin):
             subject = f"Reply to Your Support Ticket #{obj.ticket_id}"
             message = f"Dear {obj.email},\n\nYou have received a new reply to your support ticket:\n\n{form.cleaned_data['reply']}\n\nBest regards,\nSupport Team"
             recipient_email = obj.email
+            
 
             send_mail(
                 subject,
