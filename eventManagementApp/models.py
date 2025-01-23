@@ -406,7 +406,7 @@ class Event(models.Model):
     )
 
     minimum_crew_size = models.PositiveIntegerField(
-        _("Minimum crew size required for discount"),
+        _("Minimum crew size"),
         null=True,
         blank=True,
         default=None,
@@ -416,7 +416,7 @@ class Event(models.Model):
     )
 
     crew_discount_percentage = models.DecimalField(
-        _("Crew discount percentage"),
+        _("Discounts percentage"),
         max_digits=5,
         decimal_places=2,
         null=True,

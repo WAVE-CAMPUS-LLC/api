@@ -9,9 +9,9 @@ Create your event — WAVE.
 {% endblock title %}
 
 {% block script %}
-<script type="text/javascript" src="{% static "scripts/eventManagementApp/host/eventCreationProcess.js" %}" defer></script>
+{% comment %} <script type="text/javascript" src="{% static "scripts/eventManagementApp/host/eventCreationProcess.js" %}" defer></script> {% endcomment %}
 <script type="text/javascript" src="{% static "scripts/eventManagementApp/host/photoPreview.js" %}"></script>
-<script type="text/javascript" src="{% static "scripts/eventManagementApp/host/eventTypeSelect.js" %}" defer></script>
+{% comment %} <script type="text/javascript" src="{% static "scripts/eventManagementApp/host/eventTypeSelect.js" %}" defer></script> {% endcomment %}
 <script src="{% static "scripts/quilljs/eventCreationQuill.js" %}"></script>
 <script src="{% static "scripts/eventManagementApp/host/crewDiscountToggle.js" %}" defer></script>
 {% endblock %}
@@ -30,7 +30,7 @@ Create your event — WAVE.
 
     <form method="POST" id="eventForm" class="flex flex-col gap-10" enctype="multipart/form-data" data-event-id="{{ event.eventId }}" action="{% url 'eventManagement:eventCreationProcess' event.eventId %}">
         {% csrf_token %}
-        <div class="flex flex-row gap-10">
+        <div class="flex flex-col pre-lg:flex-row gap-10">
             <div class="flex flex-col gap-8 w-full">
                 <div class="flex flex-col gap-4 w-full items-start">
                     <h6 class="flex justify-start font-Wanted-Medium text-Large">Experience Details</h6>
@@ -51,7 +51,7 @@ Create your event — WAVE.
                             </div>
                         </div>
 
-                        <div class="flex flex-row gap-2 w-full">
+                        <div class="flex flex-col pre-sm:flex-row gap-2 w-full">
                             <div class="section-intake flex flex-col w-full items-start justify-center">
                                 <p class="font-Wanted-SemiBold text-Base text-gray-400">{{ eventForm.date.label }}</p>
                                 {{ eventForm.date|attr:"class:p-[12px] pl-[13px] pr-[13px] rounded-[13px] border border-solid border-custom-rgba font-Wanted-Variable text-[15px] w-full shadow-form-shadow" }}
@@ -60,7 +60,7 @@ Create your event — WAVE.
                                 </div>
                             </div>
 
-                            <div class="flex flex-row gap-3 w-full">
+                            <div class="flex flex-col xsm:flex-row gap-3 w-full">
                                 <div class="flex flex-col gap-1 w-full">
                                     <p class="font-Wanted-SemiBold text-Base text-gray-400">{{ eventForm.start_time.label }}</p>
                                     {{ eventForm.start_time|attr:"class:p-[12px] pl-[13px] pr-[13px] rounded-[13px] border border-solid border-custom-rgba font-Wanted-Variable text-[15px] w-full shadow-form-shadow" }}
@@ -102,7 +102,7 @@ Create your event — WAVE.
 
                 <div class="flex flex-col gap-4 w-full items-start">
                     <h6 class="flex justify-start font-Wanted-Medium text-Large">Experience Location</h6>
-                    <div class="grid grid-cols-2 gap-2 w-full">
+                    <div class="grid grid-cols-1 pre-sm:grid-cols-2 gap-2 w-full">
                         <div class="flex flex-col w-full items-start justify-center">
                             <p class="font-Wanted-SemiBold text-Base text-gray-400">{{ eventForm.building_name.label }}</p>
                             {{ eventForm.building_name|attr:"class:p-[12px] pl-[13px] pr-[13px] rounded-[13px] border border-solid border-custom-rgba font-Wanted-Variable text-[15px] w-full shadow-form-shadow" }}
@@ -167,7 +167,7 @@ Create your event — WAVE.
                     </div>
                     
                     <div id="crewInfoRow" class="w-full">
-                        <div class="grid grid-cols-2 gap-2 w-full">
+                        <div class="grid grid-cols-1 after-xsm:grid-cols-2 gap-2 w-full">
                             <div class="flex flex-col w-full items-start justify-center">
                                 <p class="font-Wanted-SemiBold text-Base text-gray-400">{{ eventForm.minimum_crew_size.label }}</p>
                                 <input type="number" 
@@ -176,7 +176,7 @@ Create your event — WAVE.
                                     class="p-[12px] pl-[13px] pr-[13px] rounded-[13px] border border-solid border-custom-rgba font-Wanted-Variable text-[15px] w-full shadow-form-shadow"
                                     min="2"
                                     value="{{ eventForm.minimum_crew_size.value|default:'' }}"
-                                    placeholder="Enter minimum crew size">
+                                    >
                                 <div id="title-error" class="text-[#FF0000] font-Wanted-Regular text-Medium p-3 hidden">
                                     Error
                                 </div>
