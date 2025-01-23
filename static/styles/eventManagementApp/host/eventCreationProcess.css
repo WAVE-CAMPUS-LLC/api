@@ -66,3 +66,26 @@ input:checked+.slider:before {
     word-wrap: break-word !important;
     overflow-wrap: break-word !important;
 }
+
+
+.card-container {
+    display: flex;
+    height: 100%;
+    width: 100%;
+}
+
+.panel {
+    background: white;
+    box-sizing: border-box;
+    height: 100%;
+    width: 100%;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    border-radius: 20px;
+
+    font-family: Wanted-Variable, sans-serif;
+    font-style: normal;
+    font-size: 20px;
+}

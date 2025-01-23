@@ -208,9 +208,12 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 EMAIL_SUBJECT_PREFIX = "[WAVE.] "
 SERVER_EMAIL = EMAIL_HOST_USER
 
+
 # Resend Email Configurations
 RESEND_API_KEY = "re_UutAuVEz_34S8yutMqLPTUr5644vau6n9"
 
+#Google address searching api key
+PLACES_API_KEY = os.getenv("PLACES_API_KEY")
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
