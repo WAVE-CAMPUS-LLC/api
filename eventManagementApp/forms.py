@@ -1,6 +1,7 @@
 from django import forms
 from .models import HostApplication, Event, HostProfile
 from django.utils.translation import gettext_lazy as _
+from .models import Event
 from adminDashboardApp.models import College
 from accountManagementApp.models import UserProfile
 from collegeManagementApp.models import OrganizationMembership, Organization
@@ -64,6 +65,34 @@ class HostApplicationForm(forms.ModelForm):
 
 
 class EventForm(forms.ModelForm):
+    EVENT_TYPE_CHOICES = [
+        ("Academic", "Academic"),
+        ("Adventure", "Adventure"),
+        ("Art", "Art"),
+        ("Conference", "Conference"),
+        ("Dance", "Dance"),
+        ("Exhibition", "Exhibition"),
+        ("Fashion", "Fashion"),
+        ("Fundraiser", "Fundraiser"),
+        ("Greek", "Greek"),
+        ("Health", "Health"),
+        ("Music", "Music"),
+        ("Networking", "Networking"),
+        ("Photography", "Photography"),
+        ("Social", "Social"),
+        ("Spiritual", "Spiritual"),
+        ("Sports", "Sports"),
+        ("Technology", "Technology"),
+        ("Volunteer", "Volunteer"),
+        ("Workshop", "Workshop"),
+    ]
+    
+    event_type = forms.ChoiceField(
+        label=_("Decide what type of experience this is"),
+        choices=[("", "Select an option")] + EVENT_TYPE_CHOICES,
+        required=True,
+    )
+    
     date = forms.DateField(
         label=_("Choose date"),
         required=False,
@@ -99,8 +128,13 @@ class EventForm(forms.ModelForm):
             "privacy",
             "ticketing",
             "hide_address",
+            "country",
             "building_name",
-            "address",
+            "street",
+            "apt_suite_unit",
+            "city",
+            "state",
+            "zip_code",
             "contact_email",
             "contact_phone",
             "contact_website",
@@ -198,7 +232,11 @@ class EditEventForm(forms.ModelForm):
             "end_time",
             "description",
             "building_name",
-            "address",
+            "street",
+            "apt_suite_unit",
+            "city",
+            "state",
+            "zip_code",
             "contact_email",
             "contact_phone",
             "contact_website",

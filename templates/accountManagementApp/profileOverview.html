@@ -163,8 +163,13 @@ Profile Overview
             </div>
             <div class="main-content xl:w-[75%]">
                 <div class="profile-tab-content" id="myEvents-information">
-                    Favorite Events
-                    <div class=" border border-custom-rgba11 rounded-[10px] w-full flex flex-col pre-lg:flex-row gap-[20px] py-[20px] px-[30px] shadow-custom-shadow-6">
+                    <div class="border border-custom-rgba11 rounded-[10px] w-full flex flex-col gap-[20px] py-[20px] px-[30px] shadow-custom-shadow-6">
+                        <div class="home-header">
+                            <div id="shareControl" class="content-control flex flex-row justify-start gap-4 w-full"> 
+                                <div class="friendRequestTab tab-active cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="profileFavoriteEvents">Favorites</div>
+                                <div class="friendRequestTab cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="profilePurchasedEvents">Purchased</div>
+                            </div>
+                        </div>
                         {% if favoriteEvents %}
                         <div id="favoriteEvents" class="grid grid-cols-1 xxsm:grid-cols-2 md:grid-cols-3 3xl:grid-cols-4 gap-5">
                             {% for event in favoriteEvents %}
@@ -183,12 +188,10 @@ Profile Overview
                             {% endfor %}
                         </div>
                         {% else %}
+                        <div class="font-Wanted-Variable text-[20px] text-black">
                             You have no favorite events!
+                        </div>
                         {% endif %}
-                    </div>
-                    Previous Events
-                    <div class=" border border-custom-rgba11 rounded-[10px] w-full flex flex-col pre-lg:flex-row gap-[20px] py-[20px] px-[30px] shadow-custom-shadow-6">
-                        You have not gone to any events yet!
                     </div>
                 </div>
 

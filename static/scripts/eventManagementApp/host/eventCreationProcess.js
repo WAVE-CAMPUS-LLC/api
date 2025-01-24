@@ -13,6 +13,23 @@ $(document).ready(function () {
     );
   }
 
+  // $(document).find(".title-input").on("input", function () {
+  //   const len = $(this).val().length;
+  //   const titleError = $("#title-error");
+  //   if (len < 4) {
+  //     isValid = false;
+  //     titleError.text("Title needs to be longer.").removeClass("hidden");
+  //     $(this).css("border-color", "red");
+  //   } else if (len > 100) {
+  //     isValid = false;
+  //     titleError.text("Title needs to be shorter.").removeClass("hidden");
+  //     $(this).css("border-color", "red");
+  //   } else {
+  //     titleError.addClass("hidden");
+  //     $(this).css("border-color", "");
+  //   }
+  // });
+
   // Initial state for crew discount
   toggleCrewDiscountDetails();
 
@@ -70,7 +87,7 @@ $(document).ready(function () {
     });
 
     // Validate Title
-    $(document).find(".text-input").each(function () {
+    $(document).find(".title-input").each(function () {
       const len = $(this).val().length;
       const titleError = $("#title-error");
       if (len < 4) {
@@ -83,6 +100,20 @@ $(document).ready(function () {
         $(this).css("border-color", "red");
       } else {
         titleError.addClass("hidden");
+        $(this).css("border-color", "");
+      }
+    });
+
+    // Validate Event Type
+    $(document).find(".event-type-input").each(function () {
+      const eventType = $(this).val();
+      const eventTypeError = $("#event-type-error");;
+      if (eventType == "") {
+        isValid = false;
+        eventTypeError.removeClass("hidden");
+        $(this).css("border-color", "red");
+      } else {
+        eventTypeError.addClass("hidden");
         $(this).css("border-color", "");
       }
     });
@@ -123,7 +154,7 @@ $(document).ready(function () {
     });
 
     // Validate Start/End Time
-    $(document).find(".start-time-input").each(function () {
+    $(document).find(".start-time-input, .end-time-input").each(function () {
       const startTime = $(".start-time-input").val();
       const endTime = $(".end-time-input").val();
 

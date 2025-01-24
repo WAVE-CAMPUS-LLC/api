@@ -296,13 +296,51 @@ class Event(models.Model):
         default=False,
     )
 
-    address = models.CharField(
-        _("Address"),
-        max_length=500,
+    country = models.CharField(
+        _("Country"),
+        max_length=100,
+        null=True,
+        blank=True,
+        default="United States",
+        choices=COUNTRY_CHOICES,
+    )
+
+    building_name = models.CharField(
+        _("Building Name"), max_length=250, null=False, blank=False, default=""
+    )
+
+    display_event_on_college = models.BooleanField(
+        _("Do you want this event displayed on your campus?"),
+        null=False,
+        blank=False,
+        default=False,
+    )
+
+    street = models.CharField(
+        _("Street address"), max_length=500, null=False, blank=False, default=""
+    )
+
+    apt_suite_unit = models.CharField(
+        _("Appt, suite, unit (optional)"),
+        max_length=150,
+        blank=False,
+        null=False,
+        default="",
+    )
+
+    city = models.CharField(
+        _("City / town"), max_length=100, null=False, blank=False, default=""
+    )
+    state = models.CharField(
+        _("State"),
+        max_length=100,
         null=False,
         blank=False,
         default="",
-        help_text=_("Enter the full address including street, city, state, and ZIP."),
+        choices=STATE_CHOICES,
+    )
+    zip_code = models.CharField(
+        _("ZIP code"), max_length=6, null=False, blank=False, default=""
     )
 
     contact_email = models.EmailField(_("Email"), null=False, blank=False, default="")
