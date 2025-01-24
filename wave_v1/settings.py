@@ -31,15 +31,15 @@ load_dotenv()
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-# DEBUG = os.getenv("DEBUG", "False")
-DEBUG=True
-# DEBUG_PROPAGATE_EXCEPTIONS = True
+DEBUG = os.getenv("DEBUG", "False")
+# DEBUG=True
+DEBUG_PROPAGATE_EXCEPTIONS = True
 
 ALLOWED_HOSTS = [
     "wave-v1.onrender.com", 
     "waveoncampus.com", 
-    "localhost",
-    "127.0.0.1"
+    # "localhost",
+    # "127.0.0.1"
 ]
 
 
@@ -118,8 +118,8 @@ MIDDLEWARE = [
 CSRF_TRUSTED_ORIGINS = [
     "https://wave-v1.onrender.com",
     "https://waveoncampus.com",
-    "https://localhost:8000",
-    "https://127.0.0.1:8000",
+    # "https://localhost:8000",
+    # "https://127.0.0.1:8000",
 ]
 
 ROOT_URLCONF = "wave_v1.urls"
@@ -159,40 +159,38 @@ MESSAGE_TAGS = {
 }
 
 # Parse the DATABASE_URL manually to ensure correct format
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': 'postgres',
-#         'USER': 'postgres.zqwamcznyosnkrevxmhm',
-#         'PASSWORD': os.getenv('DB_PASSWORD'),
-#         'HOST': 'aws-0-us-east-1.pooler.supabase.com',
-#         'PORT': '6543',
-#         'OPTIONS': {
-#             'sslmode': 'require',
-#             'options': '-c timezone=UTC',
-#             'keepalives': 1,
-#             'keepalives_idle': 30,
-#             'keepalives_interval': 10,
-#             'keepalives_count': 5,
-#         }
-#     }
-# }
-
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'crewBuying',
-        'USER': 'wave_owner',
-        'PASSWORD': '1PhnjKA8VBOY',
-        'HOST': 'ep-cold-band-a5n17hct.us-east-2.aws.neon.tech',
-        'PORT': '5432',
+        'NAME': 'postgres',
+        'USER': 'postgres.zqwamcznyosnkrevxmhm',
+        'PASSWORD': os.getenv('DB_PASSWORD'),
+        'HOST': 'aws-0-us-east-1.pooler.supabase.com',
+        'PORT': '6543',
         'OPTIONS': {
             'sslmode': 'require',
             'options': '-c timezone=UTC',
+            'keepalives': 1,
+            'keepalives_idle': 30,
+            'keepalives_interval': 10,
+            'keepalives_count': 5,
         }
     }
 }
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': 'crewBuying',
+#         'USER': 'wave_owner',
+#         'PASSWORD': '1PhnjKA8VBOY',
+#         'HOST': 'ep-cold-band-a5n17hct.us-east-2.aws.neon.tech',
+#         'PORT': '5432',
+#         'OPTIONS': {
+#             'sslmode': 'require',
+#             'options': '-c timezone=UTC',
+#         }
+#     }
+# }
 
 # Email Configurations
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
@@ -212,8 +210,6 @@ SERVER_EMAIL = EMAIL_HOST_USER
 # Resend Email Configurations
 RESEND_API_KEY = "re_UutAuVEz_34S8yutMqLPTUr5644vau6n9"
 
-#Google address searching api key
-PLACES_API_KEY = os.getenv("PLACES_API_KEY")
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
@@ -257,12 +253,12 @@ STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 # CORS Settings
-CORS_ALLOW_ALL_ORIGINS = True # Temporarily set to True for testing
+CORS_ALLOW_ALL_ORIGINS = False # Temporarily set to True for testing
 CORS_ALLOWED_ORIGINS = [
     "https://wave-v1.onrender.com",
     "https://waveoncampus.com",
-    "https://localhost:8000",
-    "https://127.0.0.1:8000",
+    # "https://localhost:8000",
+    # "https://127.0.0.1:8000",
 ]
 CORS_ALLOW_CREDENTIALS = True
 
@@ -289,48 +285,48 @@ MEDIA_URL = f"{SUPABASE_URL}/storage/v1/object/public/{SUPABASE_STORAGE_BUCKET}/
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # DEFAULT_FILE_STORAGE = "adminDashboardApp.storage.SupabaseStorage"
 
-# time.sleep(5)
-# default_storage._wrapped = SupabaseStorage()
+time.sleep(5)
+default_storage._wrapped = SupabaseStorage()
 
-# LOGGING = {
-#     'version': 1,
-#     'disable_existing_loggers': False,
-#     'formatters': {
-#         'verbose': {
-#             'format': '[{levelname}] {asctime} {name} {message}',
-#             'style': '{',
-#         },
-#     },
-#     'handlers': {
-#         'console': {
-#             'class': 'logging.StreamHandler',
-#             'formatter': 'verbose',
-#             'level': 'DEBUG',
-#         },
-#         'file': {
-#             'class': 'logging.FileHandler',
-#             'filename': 'debug.log',
-#             'formatter': 'verbose',
-#             'level': 'DEBUG',
-#         },
-#     },
-#     'loggers': {
-#         '': {  # Root logger
-#             'handlers': ['console', 'file'],
-#             'level': 'DEBUG',
-#         },
-#         'adminDashboardApp': {  # Your app logger
-#             'handlers': ['console', 'file'],
-#             'level': 'DEBUG',
-#             'propagate': True,
-#         },
-#         'django': {  # Django logger
-#             'handlers': ['console', 'file'],
-#             'level': 'INFO',
-#             'propagate': True,
-#         },
-#     },
-# }
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '[{levelname}] {asctime} {name} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+            'level': 'DEBUG',
+        },
+        'file': {
+            'class': 'logging.FileHandler',
+            'filename': 'debug.log',
+            'formatter': 'verbose',
+            'level': 'DEBUG',
+        },
+    },
+    'loggers': {
+        '': {  # Root logger
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG',
+        },
+        'adminDashboardApp': {  # Your app logger
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+        'django': {  # Django logger
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+    },
+}
 
 # REST Framework settings
 REST_FRAMEWORK = {
