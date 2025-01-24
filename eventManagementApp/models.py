@@ -273,7 +273,7 @@ class Event(models.Model):
         choices=PRIVACY_CHOICES,
         null=False,
         blank=False,
-        default="Discoverable",
+        default="",
     )
 
     ticketing = models.CharField(
@@ -282,7 +282,7 @@ class Event(models.Model):
         choices=TICKET_CHOICES,
         null=False,
         blank=False,
-        default="Paid/Free",
+        default="",
     )
 
     building_name = models.CharField(
@@ -340,16 +340,7 @@ class Event(models.Model):
         choices=STATE_CHOICES,
     )
     zip_code = models.CharField(
-        _("ZIP code"), max_length=6, null=False, blank=False, default=""
-    )
-
-    contact_email = models.EmailField(_("Email"), null=False, blank=False, default="")
-    contact_phone = models.CharField(
-        _("Phone"), max_length=20, null=False, blank=False, default=""
-    )
-    contact_website = models.URLField(_("Website"), blank=False, null=False, default="")
-    contact_instagram = models.CharField(
-        _("Instagram"), max_length=100, blank=False, null=False, default=""
+        _("ZIP code"), max_length=5, null=False, blank=False, default=""
     )
     
     hide_address = models.BooleanField(_("Hide address from users?"), blank=False, null=False, default=False)
@@ -407,6 +398,7 @@ class Event(models.Model):
     age_restriction = models.CharField(
         max_length=5,
         choices=AGE_CHOICES,
+        null=True,
         blank=True,
         default="",
     )

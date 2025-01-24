@@ -1,0 +1,11 @@
+.myEvents-informationTab{
+    display: flex;
+    justify-content: center;
+}
+
+.myEvents-informationTab.tab-active {
+    border: 1px solid #007379;
+    font-family: Wanted-Variable;
+    color: white;
+    background-color: #007379;
+}

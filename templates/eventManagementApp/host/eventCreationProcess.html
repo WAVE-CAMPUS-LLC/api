@@ -25,10 +25,13 @@ Create your event — WAVE.
         <a href="{% url 'eventManagement:hostPortal' %}" 
            class="bg-[#ff0707] text-white font-Wanted-Regular text-Semi-Medium xs:text-Semi-Medium xsm:text-Semi-Medium after-xsm:text-Semi-Medium xxsm:text-Semi-Medium sm:text-Semi-Medium md:text-Semi-Medium pre-lg:text-Large p-2 pre-lg:p-3 rounded-2xl w-1/3 pre-lg:w-1/5 flex justify-center hover:bg-[#CE0000]"
         >Exit</a>
+        <h1 class="flex justify-start font-Wanted-Medium">Event Creation</h1>
         <a href="{% url 'eventManagement:hostGuide' %}" target="_blank" 
            class="bg-transparent text-black font-Wanted-Regular text-Semi-Medium xs:text-Semi-Medium xsm:text-Semi-Medium after-xsm:text-Semi-Medium xxsm:text-Semi-Medium sm:text-Semi-Medium md:text-Semi-Medium pre-lg:text-Large p-2 pre-lg:p-3 rounded-2xl w-1/3 pre-lg:w-1/5 flex justify-center border border-gray-600 hover:bg-[#007379] hover:text-white hover:border-[#007379]"
         >Guide</a>
     </div>
+
+    <div></div>
 
     <form method="POST" id="eventForm" class="flex flex-col gap-10" enctype="multipart/form-data" action="{% url 'eventManagement:eventCreationProcess' %}">
         {% csrf_token %}
@@ -69,9 +72,9 @@ Create your event — WAVE.
                                     {{ eventForm.date.label }}
                                 </p>
                                 {{ eventForm.date|attr:"class:date-input p-[12px] pl-[13px] pr-[13px] rounded-[13px] border border-solid border-custom-rgba font-Wanted-Variable text-[15px] w-full shadow-form-shadow" }}
-                                <p id="date-error" class="text-[#FF0000] font-Wanted-SemiBold text-Base hidden"></p>
+                                <p id="date-error" class="text-[#FF0000] font-Wanted-SemiBold text-Base hidden w-full"></p>
                             </div>
-
+                            
                             <!-- START & END TIME -->
                             <div class="flex flex-col xsm:flex-row gap-3 w-full">
                                 <div class="flex flex-col gap-1 w-full">
@@ -79,6 +82,7 @@ Create your event — WAVE.
                                         {{ eventForm.start_time.label }}
                                     </p>
                                     {{ eventForm.start_time|attr:"class:start-time-input p-[12px] pl-[13px] pr-[13px] rounded-[13px] border border-solid border-custom-rgba font-Wanted-Variable text-[15px] w-full shadow-form-shadow" }}
+                                    <p id="time-error" class="text-[#FF0000] font-Wanted-SemiBold text-Base hidden">Invalid Time</p>
                                 </div>
                                 <div class="flex flex-col gap-1 w-full">
                                     <p class="font-Wanted-SemiBold text-Base text-gray-400">
@@ -87,9 +91,6 @@ Create your event — WAVE.
                                     {{ eventForm.end_time|attr:"class:end-time-input p-[12px] pl-[13px] pr-[13px] rounded-[13px] border border-solid border-custom-rgba font-Wanted-Variable text-[15px] w-full shadow-form-shadow" }}
                                 </div>
                             </div>
-
-                            <!-- TIME ERROR -->
-                            <div id="time-error" class="text-[#FF0000] font-Wanted-Regular text-Medium p-3 hidden"></div>
                         </div>
 
                         <!-- DESCRIPTION (QUILL) -->
@@ -100,28 +101,30 @@ Create your event — WAVE.
                             <div class="section-intake flex flex-col gap-3 w-full items-center justify-center">
                                 {{ eventForm.description|attr:"class:p-[12px] pl-[13px] pr-[13px] rounded-[13px] border hidden border-solid border-custom-rgba font-Wanted-Variable text-[15px] w-full shadow-form-shadow" }}
                                 <div id="quill-editor" class="w-full min-h-[300px] border-2 border-[#0909091c] rounded-2xl p-5 font-Wanted-Variable text-Medium mt-2 max-w-full"></div>
-                                <div id="body-error" class="text-[#FF0000] font-Wanted-Regular text-Medium p-3 hidden"></div>
+                                <p id="body-error" class="text-[#FF0000] font-Wanted-SemiBold text-Base hidden"></p>
                             </div>
                         </div>
-
+                        
                         <!-- PRIVACY -->
                         <div class="flex flex-col w-full items-start justify-center">
                             <p class="font-Wanted-SemiBold text-Base text-gray-400">
                                 {{ eventForm.privacy.label }}
                             </p>
-                            {{ eventForm.privacy|attr:"class:p-[12px] pl-[13px] pr-[13px] rounded-[13px] border border-solid border-custom-rgba font-Wanted-Variable text-[15px] w-full shadow-form-shadow"|attr:"placeholder:What type of experience is this?" }}
+                            {{ eventForm.privacy|attr:"class:event-visibility-input p-[12px] pl-[13px] pr-[13px] rounded-[13px] border border-solid border-custom-rgba font-Wanted-Variable text-[15px] w-full shadow-form-shadow"|attr:"placeholder:What type of experience is this?" }}
+                            <p id="visibility-error" class="text-[#FF0000] font-Wanted-SemiBold text-Base hidden">Please choose an option</p>
                         </div>
-
+                        
                         <!-- TICKETING -->
                         <div class="flex flex-col w-full items-start justify-center">
                             <p class="font-Wanted-SemiBold text-Base text-gray-400">
                                 {{ eventForm.ticketing.label }}
                             </p>
-                            {{ eventForm.ticketing|attr:"class:p-[12px] pl-[13px] pr-[13px] rounded-[13px] border border-solid border-custom-rgba font-Wanted-Variable text-[15px] w-full shadow-form-shadow"|attr:"placeholder:What type of experience is this?" }}
+                            {{ eventForm.ticketing|attr:"class:ticket-type-input p-[12px] pl-[13px] pr-[13px] rounded-[13px] border border-solid border-custom-rgba font-Wanted-Variable text-[15px] w-full shadow-form-shadow"|attr:"placeholder:What type of experience is this?" }}
+                            <p id="ticket-type-error" class="text-[#FF0000] font-Wanted-SemiBold text-Base hidden">Please choose an option</p>
                         </div>
                     </div>
                 </div>
-
+                
                 <!-- EXPERIENCE LOCATION -->
                 <div class="flex flex-col gap-4 w-full items-start">
                     <h6 class="flex justify-start font-Wanted-Medium text-Large">Experience Location</h6>
@@ -133,14 +136,14 @@ Create your event — WAVE.
                             </p>
                             <label class="toggle-switch">
                                 <input 
-                                    type="checkbox" 
-                                    id="{{ eventForm.hide_address.auto_id }}" 
-                                    name="{{ eventForm.hide_address.html_name }}"
-                                    {% if eventForm.hide_address.value %}checked{% endif %}/>
+                                type="checkbox" 
+                                id="{{ eventForm.hide_address.auto_id }}" 
+                                name="{{ eventForm.hide_address.html_name }}"
+                                {% if eventForm.hide_address.value %}checked{% endif %}/>
                                 <span class="slider"></span>
                             </label>
                         </div>
-
+                        
                         <div class="grid grid-cols-1 pre-sm:grid-cols-2 gap-3 w-full">
                             <!-- BUILDING NAME -->
                             <div class="flex flex-col w-full items-start justify-center">
@@ -148,51 +151,52 @@ Create your event — WAVE.
                                     {{ eventForm.building_name.label }}
                                 </p>
                                 {{ eventForm.building_name|attr:"class:building-input p-[12px] pl-[13px] pr-[13px] rounded-[13px] border border-solid border-custom-rgba font-Wanted-Variable text-[15px] w-full shadow-form-shadow" }}
-                                <div id="building-error" class="text-[#FF0000] font-Wanted-Regular text-Medium p-3 hidden"></div>
+                                <p id="building-error" class="text-[#FF0000] font-Wanted-SemiBold text-Base hidden"></p>
                             </div>
-
+                            
                             <!-- STREET -->
                             <div class="flex flex-col w-full items-start justify-center">
                                 <p class="font-Wanted-SemiBold text-Base text-gray-400">
                                     {{ eventForm.street.label }}
                                 </p>
                                 {{ eventForm.street|attr:"class:street-input p-[12px] pl-[13px] pr-[13px] rounded-[13px] border border-solid border-custom-rgba font-Wanted-Variable text-[15px] w-full shadow-form-shadow" }}
-                                <div id="street-error" class="text-[#FF0000] font-Wanted-Regular text-Medium p-3 hidden"></div>
+                                <p id="street-error" class="text-[#FF0000] font-Wanted-SemiBold text-Base hidden"></p>
                             </div>
-
+                            
                             <!-- APT/SUITE/UNIT -->
                             <div class="flex flex-col w-full items-start justify-center">
                                 <p class="font-Wanted-SemiBold text-Base text-gray-400">
                                     {{ eventForm.apt_suite_unit.label }}
                                 </p>
                                 {{ eventForm.apt_suite_unit|attr:"class:apt-input p-[12px] pl-[13px] pr-[13px] rounded-[13px] border border-solid border-custom-rgba font-Wanted-Variable text-[15px] w-full shadow-form-shadow" }}
-                                <div id="apt-error" class="text-[#FF0000] font-Wanted-Regular text-Medium p-3 hidden"></div>
+                                <p id="apt-error" class="text-[#FF0000] font-Wanted-SemiBold text-Base hidden"></p>
                             </div>
-
+                            
                             <!-- CITY -->
                             <div class="flex flex-col w-full items-start justify-center">
                                 <p class="font-Wanted-SemiBold text-Base text-gray-400">
                                     {{ eventForm.city.label }}
                                 </p>
                                 {{ eventForm.city|attr:"class:city-input p-[12px] pl-[13px] pr-[13px] rounded-[13px] border border-solid border-custom-rgba font-Wanted-Variable text-[15px] w-full shadow-form-shadow" }}
-                                <div id="city-error" class="text-[#FF0000] font-Wanted-Regular text-Medium p-3 hidden"></div>
+                                <p id="city-error" class="text-[#FF0000] font-Wanted-SemiBold text-Base hidden"></p>
                             </div>
-
+                            
                             <!-- STATE -->
                             <div class="flex flex-col w-full items-start justify-center">
                                 <p class="font-Wanted-SemiBold text-Base text-gray-400">
                                     {{ eventForm.state.label }}
                                 </p>
-                                {{ eventForm.state|attr:"class:p-[12px] pl-[13px] pr-[13px] rounded-[13px] border border-solid border-custom-rgba font-Wanted-Variable text-[15px] w-full shadow-form-shadow" }}
+                                {{ eventForm.state|attr:"class:state-input p-[12px] pl-[13px] pr-[13px] rounded-[13px] border border-solid border-custom-rgba font-Wanted-Variable text-[15px] w-full shadow-form-shadow" }}
+                                <p id="state-error" class="text-[#FF0000] font-Wanted-SemiBold text-Base hidden">Please choose an option</p>
                             </div>
-
+                            
                             <!-- ZIP CODE -->
                             <div class="flex flex-col w-full items-start justify-center">
                                 <p class="font-Wanted-SemiBold text-Base text-gray-400">
                                     {{ eventForm.zip_code.label }}
                                 </p>
                                 {{ eventForm.zip_code|attr:"class:zip-input p-[12px] pl-[13px] pr-[13px] rounded-[13px] border border-solid border-custom-rgba font-Wanted-Variable text-[15px] w-full shadow-form-shadow" }}
-                                <div id="zip-error" class="text-[#FF0000] font-Wanted-Regular text-Medium p-3 hidden"></div>
+                                <p id="zip-error" class="text-[#FF0000] font-Wanted-SemiBold text-Base hidden"></p>
                             </div>
                         </div>
 
@@ -272,7 +276,8 @@ Create your event — WAVE.
                                     type="button"
                                     onclick="document.getElementById('photo-input').click();"
                             >Upload</button>
-                            {{ eventForm.header_photo|add_class:"hidden"|attr:"id:photo-input" }}
+                            {{ eventForm.header_photo|add_class:"photo-input hidden"|attr:"id:photo-input" }}
+                            <p id="photo-error" class="text-[#FF0000] font-Wanted-SemiBold text-Base hidden"></p>
                         </div>
                     </div>
                 </div>
@@ -280,8 +285,8 @@ Create your event — WAVE.
                 <!-- BODY PHOTOS -->
                 <div class="flex flex-col w-full gap-6 items-start justify-center">
                     <div class="flex justify-center items-start flex-col font-Wanted-Medium xsm:font-Wanted-SemiBold text-Large xsm:text-Pre-Xl after-xsm:text-xl xxsm:text-1xl pre-lg:text-3xl">
-                        <h6 class="text-black font-Wanted-Medium text-Semi-Medium">Add photos to show your unique style.</h6>
-                        <p class="font-Wanted-Variable text-Base text-[#d1c4c4]">These photos make your event a lot more attractive!</p>
+                        <h6 class="text-black font-Wanted-Medium text-Semi-Medium">Add more photos to show your unique style.</h6>
+                        <p class="font-Wanted-Variable text-Base text-[#d1c4c4]">These photos are optional but make your event a lot more attractive!</p>
                     </div>
                     <div class="flex flex-col items-center justify-center w-full">
                         <div class="h-full w-full flex flex-col items-center justify-center gap-5">
@@ -334,17 +339,18 @@ Create your event — WAVE.
         </div>
 
         <!-- SUBMIT BUTTON -->
-        <div class="w-full hidden flex justify-center" id="submitBtn">
+        <div class="w-full flex justify-center" id="submitBtn">
             <button class="go-live bg-gradient-to-r from-gradient-start to-gradient-end text-white font-Wanted-Bold flex flex-row items-center p-6 px-10 text-3.5xl rounded-2xl"
                     type="submit"
-                    onclick="document.getElementById('goLiveInput').value='1'"
+                    name="eventAction"
+                    value="submit"
             >
                 Go live!
             </button>
         </div>
-        <div class="w-full flex justify-center" id="cannotSubmit">
+        <div class=" w-full flex justify-center" id="cannotSubmit">
             <button 
-                class="bg-gray-400 text-white font-Wanted-Bold flex flex-row items-center p-6 px-10 text-3.5xl rounded-2xl cursor-not-allowed"
+                class="bg-black text-white font-Wanted-Bold flex flex-row items-center p-6 px-10 text-3.5xl rounded-2xl cursor-not-allowed"
                 type="button"
                 disabled
             >
