@@ -12,7 +12,7 @@ npm install
 
 # Step 2: Build Tailwind CSS or any frontend assets
 echo "Building frontend assets..."
-npm run build:prod
+npm run build:maizzle-prod
 
 
 
