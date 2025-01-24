@@ -95,48 +95,47 @@ Profile Overview
         </div>
         <!--User Card | End-->
 
-        <div class="cc-sub-body w-full max-w-[100vw] flex flex-col md:flex-row items-center md:items-start gap-10" id="cc-sub-body">
+        <div id="cc-sub-body" class="w-full max-w-[100vw] flex flex-col md:flex-row items-center md:items-start gap-10">
             <div id="side-nav" class="flex flex-col w-full lg:w-[25%] gap-y-[20px]">
                 <div id="settings" class="border border-custom-rgba11 shadow-custom-shadow-6 rounded-[10px] w-full shadow-custom-shadow-6">
                     <ul class="list-none rounded-[10px] w-full text-nowrap">
-                        <li class="profile-tab tab-active border-b border-b-custom-rgba11 p-[20px] font-Wanted-Regular cursor-pointer" data-tab="myEvents-information">
-                            <a class="text-black no-underline hover:text-green cursor-pointer">My Events</a>
+                        <li class="profile-tab tab-active border-b border-b-custom-rgba11 p-[20px] font-Wanted-Medium cursor-pointer" data-tab="myEvents-information">
+                            <a class="text-black no-underline hover:underline cursor-pointer">My Events</a>
                         </li>
                         <li class="profile-tab border-b border-b-custom-rgba11 p-[20px] font-Wanted-Medium cursor-pointer" href="{% url "social:home" %}">
-                            <a href="{% url "social:home" %}" class="text-green no-underline hover:underline cursor-pointer">The Social</a>
+                            <a href="{% url "social:home" %}" class="text-black no-underline hover:underline cursor-pointer">The Social</a>
                         </li>
                         {% if userRequest|has_group:"Host" %}
-                        <li class="profile-tab border-b border-b-custom-rgba11 p-[20px] font-Wanted-Regular cursor-pointer" target="_blank" href="{% url "eventManagement:hostHome" %}">
-                            <a href="{% url "eventManagement:hostPortal" %}" class="text-black no-underline hover:text-green cursor-pointer">Host Portal</a>
+                        <li class="profile-tab border-b border-b-custom-rgba11 p-[20px] font-Wanted-Medium cursor-pointer" target="_blank" href="{% url "eventManagement:hostHome" %}">
+                            <a href="{% url "eventManagement:hostPortal" %}" class="text-black no-underline hover:underline cursor-pointer">Host Portal</a>
                         </li>
                         {% endif %}
-                        
-                        <li class="profile-tab border-b border-b-custom-rgba11 p-[20px] font-Wanted-Regular cursor-pointer" data-tab="myBlog-information">
-                            <a class="text-black no-underline hover:text-green cursor-pointer">My Blog Posts</a>
+                        <li class="profile-tab border-b border-b-custom-rgba11 p-[20px] font-Wanted-Medium cursor-pointer" data-tab="myBlog-information">
+                            <a class="text-black no-underline hover:underline cursor-pointer">Blog</a>
                         </li>
-                        <li class="profile-tab border-b border-b-custom-rgba11 p-[20px] font-Wanted-Regular cursor-pointer">
-                            <a class="text-black no-underline hover:text-green cursor-pointer" href="{% url "accountManagement:userSettings" %}">My Settings</a>
+                        <li class="profile-tab border-b border-b-custom-rgba11 p-[20px] font-Wanted-Medium cursor-pointer">
+                            <a class="text-black no-underline hover:underline cursor-pointer" href="{% url "accountManagement:userSettings" %}">Settings & Preferences</a>
                         </li>
-                        <li class="profile-tab border-b border-b-custom-rgba11 p-[20px] font-Wanted-Regular cursor-pointer">
-                            <a class="text-black no-underline hover:text-green cursor-pointer" href="{% url "accountManagement:userSettings" %}">My Preferences</a>
+                        <li class="profile-tab border-b border-b-custom-rgba11 p-[20px] font-Wanted-Medium cursor-pointer" data-tab="myPurchases-information">
+                            <a class="text-black no-underline hover:underline cursor-pointer" href="#">Purchases</a>
                         </li>
-                        <li class="profile-tab border-b border-b-custom-rgba11 p-[20px] font-Wanted-Regular cursor-pointer">
-                            <a class="text-black no-underline hover:text-green cursor-pointer" href="#">Payment Methods</a>
+                        <li class="profile-tab border-b border-b-custom-rgba11 p-[20px] font-Wanted-Medium cursor-pointer" data-tab="myPaymentMethods-information">
+                            <a class="text-black no-underline hover:underline cursor-pointer" href="#">Payment Methods</a>
                         </li>
                         {% if userRequest|has_group:"Campus Manager" %}
-                        <li class="profile-tab border-b border-b-custom-rgba11 p-[20px] font-Wanted-Regular cursor-pointer">
-                            <a class="text-black no-underline hover:text-green cursor-pointer" target="_blank" href="{% url "campusManager:dashboard" %}">Campus Management</a>
+                        <li class="profile-tab border-b border-b-custom-rgba11 p-[20px] font-Wanted-Medium cursor-pointer">
+                            <a class="text-black no-underline hover:underline cursor-pointer" target="_blank" href="{% url "campusManager:dashboard" %}">Campus Management</a>
                         </li>
                         {% endif %}
                         {% if userRequest|has_group:"Admin" %}
-                        <li class="profile-tab border-b border-b-custom-rgba11 p-[20px] font-Wanted-Regular cursor-pointer">
-                            <a class="text-black no-underline hover:text-green cursor-pointer" target="_blank" href="{% url "waveAdmin:dashboard" %}">Admin Portal</a>
+                        <li class="profile-tab border-b border-b-custom-rgba11 p-[20px] font-Wanted-Medium cursor-pointer">
+                            <a class="text-black no-underline hover:underline cursor-pointer" target="_blank" href="{% url "waveAdmin:dashboard" %}">Admin Portal</a>
                         </li>
-                        <li class="profile-tab border-b border-b-custom-rgba11 p-[20px] font-Wanted-Regular cursor-pointer">
-                            <a class="text-black no-underline hover:text-green cursor-pointer" target="_blank" href="{% url "campusManager:dashboard" %}">Campus Management</a>
+                        <li class="profile-tab border-b border-b-custom-rgba11 p-[20px] font-Wanted-Medium cursor-pointer">
+                            <a class="text-black no-underline hover:underline cursor-pointer" target="_blank" href="{% url "campusManager:dashboard" %}">Campus Management</a>
                         </li>
                         {% endif %}
-                        <li class="profile-tab border-b border-b-custom-rgba11 p-[20px] font-Wanted-Regular cursor-pointer">
+                        <li class="profile-tab border-b border-b-custom-rgba11 p-[20px] font-Wanted-Medium cursor-pointer">
                             <a class="text-[red] no-underline hover:underline cursor-pointer" href="{% url "authentication:logout" %}">Sign Out</a>
                         </li>
                     </ul>
@@ -184,7 +183,7 @@ Profile Overview
                                                 <div class="category-event-name font-Wanted-SemiBold text-Base flex flex-col justify-center items-start gap-1 w-full border border-custom-rgba5 rounded-bl-2xl rounded-br-2xl shadow-custom-shadow-3 border-t-2 px-5 p-2">
                                                     <h2 id="eventTitle" class="whitespace-nowrap overflow-hidden text-ellipsis w-full text-left text-xl">{{ event.title }}</h2>
                                                     <div class="eventSubInfo flex flex-col items-start gap-[1px] w-full font-Wanted-Variable text-customGray5">
-                                                        <p id="eventHost" class="flex flex-row justify-start">Hosted by @{{ event.host }}</p>
+                                                        <p id="eventHost" class="flex flex-row justify-start">Hosted by @{{ event.host.username }}</p>
                                                         <p id="eventDate" class="w-full flex justify-end font-Wanted-Bold text-Large">{{ event.date }}</p>
                                                     </div>
                                                 </div>
@@ -213,9 +212,7 @@ Profile Overview
                     </div>
                 </div>
 
-
-                <!-- inline style to stop blogs briefly showing on page refresh -->
-                <div class="profile-tab-content hidden" id="myBlog-information">
+                <div class="profile-tab-content" id="myBlog-information">
                     <div class="blog-tab flex flex-col gap-[25px] mt-[15px]">
                         <div class="header flex justify-between items-center flex-col xxsm:flex-row">
                             <div class="headerRow w-full">
@@ -248,6 +245,14 @@ Profile Overview
                             {% endfor %}
                         </div>
                     </div>
+                </div>
+
+                <div class="profile-tab-content" id="myPurchases-information">
+                    purchases!
+                </div>
+
+                <div class="profile-tab-content" id="myPaymentMethods-information">
+                    payment methods!
                 </div>
             </div>
         </div>

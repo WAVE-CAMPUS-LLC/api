@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 @import "../styles/accountManagementApp/partials/passwordChange.css";
-@import "../styles/accountManagementApp/profileManagement.css";
+@import "../styles/accountManagementApp/profileOverview.css";
 @import "../styles/accountManagementApp/profileSettings.css";
 @import "../styles/accountManagementApp/publicProfile.css";
 
