@@ -9,7 +9,7 @@
   },
   "scripts": {
     "build": "npx tailwindcss -i static/tailwindcss/input.css -o static/tailwindcss/output.css --minify && cd templates && cd emailManagement && maizzle build production",
-    "build:prod": "npx tailwindcss -i static/tailwindcss/input.css -o static/tailwindcss/output.css --minify",
+    "build:prod": "npx tailwindcss -i static/tailwindcss/input.css -o static/tailwindcss/output.css --minify && cd templates && cd emailManagement && maizzle build production",
     "build:dev": "npx tailwindcss -i static/tailwindcss/input.css -o static/tailwindcss/output.css --watch"
   },
   "devDependencies": {
