@@ -99,13 +99,8 @@ class EventForm(forms.ModelForm):
             "privacy",
             "ticketing",
             "hide_address",
-            "country",
             "building_name",
-            "street",
-            "apt_suite_unit",
-            "city",
-            "state",
-            "zip_code",
+            "address",
             "contact_email",
             "contact_phone",
             "contact_website",
@@ -122,7 +117,14 @@ class EventForm(forms.ModelForm):
         ]
 
         widgets = {
-            "country": forms.Select(),
+            'address': forms.TextInput(attrs={
+                'placeholder': 'Enter full address',
+                'class': 'address-input'
+            }),
+            'building_name': forms.TextInput(attrs={
+                'placeholder': 'Building name (optional)',
+                'class': 'building-name-input'
+            }),
             "status": forms.HiddenInput(),
         }
 
@@ -196,11 +198,7 @@ class EditEventForm(forms.ModelForm):
             "end_time",
             "description",
             "building_name",
-            "street",
-            "apt_suite_unit",
-            "city",
-            "state",
-            "zip_code",
+            "address",
             "contact_email",
             "contact_phone",
             "contact_website",

@@ -101,6 +101,7 @@ def hostGuideView(request):
 def eventCreationProcess(request):
     event_type_choices = Event.EVENT_TYPE_CHOICES
     privacy_choices = Event.PRIVACY_CHOICES
+    placesKey = settings.PLACES_API_KEY
     
     userAccount = get_object_or_404(CustomUser, username=request.user.username)
     
@@ -219,6 +220,7 @@ def eventCreationProcess(request):
             "eventForm": eventForm,
             "eventTypeChoices": event_type_choices,
             "privacyChoices": privacy_choices,
+            "placesKey": placesKey,
         },
     )
 
