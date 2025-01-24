@@ -105,6 +105,7 @@ class Event(models.Model):
     ]
 
     EVENT_TYPE_CHOICES = [
+        ("Social", "Social"),
         ("Academic", "Academic"),
         ("Adventure", "Adventure"),
         ("Art", "Art"),
@@ -118,7 +119,6 @@ class Event(models.Model):
         ("Music", "Music"),
         ("Networking", "Networking"),
         ("Photography", "Photography"),
-        ("Social", "Social"),
         ("Spiritual", "Spiritual"),
         ("Sports", "Sports"),
         ("Technology", "Technology"),
@@ -230,8 +230,8 @@ class Event(models.Model):
         max_length=20,
         choices=STATUS_CHOICES,
         default="incomplete",
-        null=True,
-        blank=True,
+        null=False,
+        blank=False,
     )
 
     admin_status = models.CharField(
@@ -239,40 +239,40 @@ class Event(models.Model):
     )
 
     title = models.CharField(
-        _("What would you like to title the event?"),
+        _("Title the experience"),
         max_length=200,
-        null=True,
-        blank=True,
+        null=False,
+        blank=False,
         default="",
     )
 
     event_type = models.CharField(
-        _("What type of event is it?"),
+        _("Decide what type of experience this is"),
         max_length=100,
         choices=EVENT_TYPE_CHOICES,
-        null=True,
-        blank=True,
+        null=False,
+        blank=False,
         default="",
     )
 
     date = models.DateField(
-        _("Choose date"), null=True, blank=True, default=timezone.now
+        _("Date your experience"), null=False, blank=False, default=timezone.now
     )
     start_time = models.TimeField(
-        _("End time"), null=True, blank=True, default=timezone.now
+        _("End time"), null=False, blank=False, default=timezone.now
     )
     end_time = models.TimeField(
-        _("Choose time"), null=True, blank=True, default=timezone.now
+        _("Choose time"), null=False, blank=False, default=timezone.now
     )
     description = models.TextField(
-        _("Describe your event"), null=True, blank=True, default=""
+        _("Describe your event"), null=False, blank=False, default=""
     )
     privacy = models.CharField(
         _("Determine the visibility of your event."),
         max_length=23,
         choices=PRIVACY_CHOICES,
-        null=True,
-        blank=True,
+        null=False,
+        blank=False,
         default="",
     )
 
@@ -280,72 +280,76 @@ class Event(models.Model):
         _("What type of ticketing do you want?"),
         max_length=16,
         choices=TICKET_CHOICES,
-        null=True,
+        null=False,
         blank=False,
-        default="Paid/Free",
+        default="",
+    )
+
+    building_name = models.CharField(
+        _("Building Name"), max_length=250, null=False, blank=False, default=""
+    )
+
+    display_event_on_college = models.BooleanField(
+        _("Do you want this event displayed on your campus?"),
+        null=False,
+        blank=False,
+        default=False,
     )
 
     country = models.CharField(
         _("Country"),
         max_length=100,
         null=True,
-        blank=False,
-        default="",
+        blank=True,
+        default="United States",
         choices=COUNTRY_CHOICES,
     )
 
     building_name = models.CharField(
-        _("Building Name"), max_length=250, null=True, blank=True, default=""
+        _("Building Name"), max_length=250, null=False, blank=False, default=""
     )
 
     display_event_on_college = models.BooleanField(
         _("Do you want this event displayed on your campus?"),
-        null=True,
-        blank=True,
+        null=False,
+        blank=False,
         default=False,
     )
 
     street = models.CharField(
-        _("Street address"), max_length=500, null=True, blank=True, default=""
+        _("Street address"), max_length=500, null=False, blank=False, default=""
     )
 
     apt_suite_unit = models.CharField(
         _("Appt, suite, unit (optional)"),
         max_length=150,
-        blank=True,
-        null=True,
+        blank=False,
+        null=False,
         default="",
     )
 
     city = models.CharField(
-        _("City / town"), max_length=100, null=True, blank=True, default=""
+        _("City / town"), max_length=100, null=False, blank=False, default=""
     )
     state = models.CharField(
         _("State"),
         max_length=100,
-        null=True,
+        null=False,
         blank=False,
         default="",
         choices=STATE_CHOICES,
     )
     zip_code = models.CharField(
-        _("ZIP code"), max_length=6, null=True, blank=True, default=""
+        _("ZIP code"), max_length=5, null=False, blank=False, default=""
     )
-
-    contact_email = models.EmailField(_("Email"), null=True, blank=True, default="")
-    contact_phone = models.CharField(
-        _("Phone"), max_length=20, null=True, blank=True, default=""
-    )
-    contact_website = models.URLField(_("Website"), blank=True, null=True, default="")
-    contact_instagram = models.CharField(
-        _("Instagram"), max_length=100, blank=True, null=True, default=""
-    )
+    
+    hide_address = models.BooleanField(_("Hide address from users?"), blank=False, null=False, default=False)
 
     header_photo = models.ImageField(
         _("Add a cover photo"),
         upload_to="event_images/header/",
         null=True,
-        blank=True,
+        blank=False,
         max_length=500,
     )
 
@@ -394,19 +398,20 @@ class Event(models.Model):
     age_restriction = models.CharField(
         max_length=5,
         choices=AGE_CHOICES,
+        null=True,
         blank=True,
         default="",
     )
 
     crew_discount = models.BooleanField(
         _("Do you want to offer discounts for crew purchases?"),
-        null=True,
-        blank=True,
+        null=False,
+        blank=False,
         default=False,
     )
 
     minimum_crew_size = models.PositiveIntegerField(
-        _("Minimum crew size required for discount"),
+        _("Minimum crew size"),
         null=True,
         blank=True,
         default=None,
@@ -416,7 +421,7 @@ class Event(models.Model):
     )
 
     crew_discount_percentage = models.DecimalField(
-        _("Crew discount percentage"),
+        _("Discounts percentage"),
         max_digits=5,
         decimal_places=2,
         null=True,

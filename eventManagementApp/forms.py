@@ -1,6 +1,7 @@
 from django import forms
 from .models import HostApplication, Event, HostProfile
 from django.utils.translation import gettext_lazy as _
+from .models import Event
 from adminDashboardApp.models import College
 from accountManagementApp.models import UserProfile
 from collegeManagementApp.models import OrganizationMembership, Organization
@@ -64,6 +65,116 @@ class HostApplicationForm(forms.ModelForm):
 
 
 class EventForm(forms.ModelForm):
+    STATE_CHOICES = [
+        ("AL", "Alabama"),
+        ("AK", "Alaska"),
+        ("AZ", "Arizona"),
+        ("AR", "Arkansas"),
+        ("CA", "California"),
+        ("CO", "Colorado"),
+        ("CT", "Connecticut"),
+        ("DE", "Delaware"),
+        ("FL", "Florida"),
+        ("GA", "Georgia"),
+        ("HI", "Hawaii"),
+        ("ID", "Idaho"),
+        ("IL", "Illinois"),
+        ("IN", "Indiana"),
+        ("IA", "Iowa"),
+        ("KS", "Kansas"),
+        ("KY", "Kentucky"),
+        ("LA", "Louisiana"),
+        ("ME", "Maine"),
+        ("MD", "Maryland"),
+        ("MA", "Massachusetts"),
+        ("MI", "Michigan"),
+        ("MN", "Minnesota"),
+        ("MS", "Mississippi"),
+        ("MO", "Missouri"),
+        ("MT", "Montana"),
+        ("NE", "Nebraska"),
+        ("NV", "Nevada"),
+        ("NH", "New Hampshire"),
+        ("NJ", "New Jersey"),
+        ("NM", "New Mexico"),
+        ("NY", "New York"),
+        ("NC", "North Carolina"),
+        ("ND", "North Dakota"),
+        ("OH", "Ohio"),
+        ("OK", "Oklahoma"),
+        ("OR", "Oregon"),
+        ("PA", "Pennsylvania"),
+        ("RI", "Rhode Island"),
+        ("SC", "South Carolina"),
+        ("SD", "South Dakota"),
+        ("TN", "Tennessee"),
+        ("TX", "Texas"),
+        ("UT", "Utah"),
+        ("VT", "Vermont"),
+        ("VA", "Virginia"),
+        ("WA", "Washington"),
+        ("WV", "West Virginia"),
+        ("WI", "Wisconsin"),
+        ("WY", "Wyoming"),
+    ]
+    
+    EVENT_TYPE_CHOICES = [
+        ("Academic", "Academic"),
+        ("Adventure", "Adventure"),
+        ("Art", "Art"),
+        ("Conference", "Conference"),
+        ("Dance", "Dance"),
+        ("Exhibition", "Exhibition"),
+        ("Fashion", "Fashion"),
+        ("Fundraiser", "Fundraiser"),
+        ("Greek", "Greek"),
+        ("Health", "Health"),
+        ("Music", "Music"),
+        ("Networking", "Networking"),
+        ("Photography", "Photography"),
+        ("Social", "Social"),
+        ("Spiritual", "Spiritual"),
+        ("Sports", "Sports"),
+        ("Technology", "Technology"),
+        ("Volunteer", "Volunteer"),
+        ("Workshop", "Workshop"),
+    ]
+    PRIVACY_CHOICES = [
+        ("Discoverable", "Discoverable"),
+        ("Invite Only", "Invite Only"),
+        ("Private (College)", "Private (College)"),
+        ("Private (Organization)", "Private (Organization)"),
+    ]
+    TICKET_CHOICES = [
+        ("Paid/Free", "Paid/Free"),
+        ("RSVP Required", "RSVP Required"),
+        ("Invite Required", "Invite Required"),
+    ]
+    
+    event_type = forms.ChoiceField(
+        label=_("Decide what type of experience this is"),
+        choices=[("", "Select an option")] + EVENT_TYPE_CHOICES,
+        required=True,
+    )
+    
+    privacy = forms.ChoiceField(
+        label=_("Determine the visibility of your event."),
+        choices=[("", "Select an option")] + PRIVACY_CHOICES,
+        required=True,
+    )
+    
+    ticketing = forms.ChoiceField(
+        label=_("What type of ticketing do you want?"),
+        choices=[("", "Select an option")] + TICKET_CHOICES,
+        required=True,
+    )
+    
+    state = forms.ChoiceField(
+        label=_("State"),
+        choices=[("", "Select an option")] + STATE_CHOICES,
+        required=True,
+    )
+    
     date = forms.DateField(
         label=_("Choose date"),
         required=False,
@@ -89,7 +200,6 @@ class EventForm(forms.ModelForm):
         model = Event
 
         fields = [
-            "status",
             "title",
             "event_type",
             "date",
@@ -98,6 +208,7 @@ class EventForm(forms.ModelForm):
             "description",
             "privacy",
             "ticketing",
+            "hide_address",
             "country",
             "building_name",
             "street",
@@ -105,10 +216,6 @@ class EventForm(forms.ModelForm):
             "city",
             "state",
             "zip_code",
-            "contact_email",
-            "contact_phone",
-            "contact_website",
-            "contact_instagram",
             "header_photo",
             "body_photo_one",
             "body_photo_two",
@@ -121,8 +228,14 @@ class EventForm(forms.ModelForm):
         ]
 
         widgets = {
-            "country": forms.Select(),
-            "status": forms.HiddenInput(),
+            'address': forms.TextInput(attrs={
+                'placeholder': 'Enter full address',
+                'class': 'address-input'
+            }),
+            'building_name': forms.TextInput(attrs={
+                'placeholder': 'Building name (optional)',
+                'class': 'building-name-input'
+            }),
         }
 
 class EditEventForm(forms.ModelForm):
@@ -200,10 +313,6 @@ class EditEventForm(forms.ModelForm):
             "city",
             "state",
             "zip_code",
-            "contact_email",
-            "contact_phone",
-            "contact_website",
-            "contact_instagram",
             "header_photo",
             "body_photo_one",
             "body_photo_two",

@@ -23,20 +23,10 @@
                     </li>
                     <li class="createEvent flex flex-row gap-5 items-center">
                         Come, create!
-        
-                        {% if request.user.is_authenticated %}
-                            {% if request.user|has_group:"Host" or request.user|has_group:"host" %}
-                            <a href="{% url "eventManagement:hostCreateEvent" %}" class="createEventBtn gradient-btn" id="createEventBtn">
-                                <img src="{% static "/images/eventManagementApp/host/host_ticket.svg" %}" />
-                                Create Event
-                            </a>
-                            {% else %}
-                            <a class="applyNowBtn gradient-btn" href="{% url "eventManagement:hostApply" %}">Apply Now!</a>
-                            {% endif %}
-                        {% else %}
-                        <a class="applyNowBtn gradient-btn" href="{% url "eventManagement:hostApply" %}">Apply Now!</a>
-                        {% endif %}
-                        
+                        <a href="{% url "eventManagement:eventCreationProcess" %}" class="createEventBtn gradient-btn" id="createEventBtn">
+                            <img src="{% static "/images/eventManagementApp/host/host_ticket.svg" %}" />
+                            Create Event
+                        </a>
                     </li>
                 </ul>
             </div>
@@ -101,9 +91,9 @@
                         <a class="underline" href="{% url "authentication:login" %}">Login</a>
                         {% endif %}
                     </div>
-                    <a class="bg-white flex items-center rounded-2xl flex-row gap-2 justify-center py-4 px-6 text-green font-Wanted-Bold" href="{% url "eventManagement:hostCreateEvent" %}">
-                        <img src="{% static "/images/partials/pennant.svg" %}" class="size-8" />
-                        Join Campus
+                    <a href="{% url "eventManagement:eventCreationProcess" %}" class="flex items-center p-[15px] text-white font-Wanted-Bold text-[20px] rounded-[20px] gap-[10px] border border-transparent border-l-gradient-start border-r-gradient-end bg-gradient-to-r from-gradient-start to-gradient-end no-underline">
+                        <img src="{% static "/images/eventManagementApp/host/host_ticket.svg" %}" />
+                        Create Event
                     </a>
                 </div>
             </div>

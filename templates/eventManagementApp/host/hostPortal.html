@@ -23,7 +23,7 @@ Host Dashboard | WAVE.
     <div class="page-heading font-Wanted-SemiBold text-[25px] md:text-[30px] flex flex-col sm:flex-row sm:justify-between gap-[10px] w-full">
         <h2>Good to see you, {{ request.user.first_name }}!<h2>
         <div class="w-full flex justify-end">
-            <a href="{% url "eventManagement:hostCreateEvent"%}" class="createEventBtn p-[12.5px_15px] border-[1px] border-solid border-transparent text-white font-Wanted-SemiBold flex flex-row gap-[10px] text-[20px] rounded-[20px] cursor-pointer bg-gradient-to-r from-[#008d95bc] to-[#13c9d3] hover:bg-[#007379]">
+            <a href="{% url "eventManagement:eventCreationProcess"%}" class="createEventBtn p-[12.5px_15px] border-[1px] border-solid border-transparent text-white font-Wanted-SemiBold flex flex-row gap-[10px] text-[20px] rounded-[20px] cursor-pointer bg-gradient-to-r from-[#008d95bc] to-[#13c9d3] hover:bg-[#007379]">
                 <img src="{% static "/images/eventManagementApp/host/host_ticket.svg" %}" />
                 Create Event
             </a>

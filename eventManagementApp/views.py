@@ -7,6 +7,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.http import JsonResponse, HttpResponse
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import Group
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from django.core.mail import send_mail
@@ -18,8 +19,7 @@ from django.urls import reverse
 from accountManagementApp.models import UserProfile
 from collegeManagementApp.models import (
     Organization,
-    OrganizationMembership,
-    CollegeEventLink,
+    OrganizationMembership
 )
 from .forms import HostApplicationForm, EventForm, EditEventForm
 from stripeManagementApp.getRequiredActions import getRequiredActions
@@ -36,6 +36,8 @@ from stripeManagementApp.getHostTransactions import Transactions
 
 from eventTicketsApp.forms import InvitationForm, PaidFreeTicketForm
 from .models import EventType, HostApplication, Event, EventPrivacy, HostProfile
+from authenticationApp.models import CustomUser
+from .utils import set_event_privacy  # Import the helper function
 
 from eventTicketsApp.models import InviteEventOption, RSVPTicket, PaidFreeTicket, Ticket
 
@@ -45,42 +47,6 @@ def hostView(request):
     pageName = "Host Event"
     return render(
         request, "eventManagementApp/host/hostHome.html", {"pageName": pageName}
-    )
-
-
-@login_required
-@check_suspension
-def hostApplyView(request):
-    print("Request method:", request.method)  # Debugging
-    applicant = request.user
-    print("Applicant:", applicant)  # Debugging
-    applicant_profile = UserProfile.objects.get(user=applicant)
-    print("Applicant profile:", applicant_profile)  # Debugging
-
-    if request.method == "POST":
-        form = HostApplicationForm(request.POST, user=applicant)
-        print("Form data:", request.POST)  # Debugging
-
-        if form.is_valid():
-            print("Form is valid")
-            application = form.save(commit=False)
-            application.save()
-            event_types = form.cleaned_data["eventTypes"]
-            print("Event types:", event_types)  # Debugging
-            event_type_objs = [
-                EventType.objects.get_or_create(name=et)[0] for et in event_types
-            ]
-            application.eventTypes.set(event_type_objs)
-            return redirect("eventManagement:hostHome")
-        else:
-            print("Form errors:", form.errors)  # Debugging
-    else:
-        form = HostApplicationForm()
-
-    return render(
-        request,
-        "eventManagementApp/host/hostApplication.html",
-        {"form": form, "applicant": applicant_profile},
     )
 
 
@@ -125,216 +91,103 @@ def hostPortalView(request):
     )
 
 
+
 def hostGuideView(request):
     return render(request, "eventManagementApp/host/hostGuide.html")
 
 
-@login_required
-@host
-@member
-@check_suspension
-def hostCreateEvent(request):
-    return render(request, "eventManagementApp/host/createEvent.html")
-
 
 @login_required
-@host
 @member
 @check_suspension
-def hostCreateEventGenerator(request):
-    event = Event.objects.create(host=request.user)
-
-    return redirect("eventManagement:eventCreationProcess", eventId=event.eventId)
-
-
-@login_required
-@host
-@member
-@check_suspension
-def eventCreationProcess(request, eventId):
-    event = get_object_or_404(Event, eventId=eventId)
+def eventCreationProcess(request):
     event_type_choices = Event.EVENT_TYPE_CHOICES
     privacy_choices = Event.PRIVACY_CHOICES
+    placesKey = settings.PLACES_API_KEY
+    
+    userAccount = get_object_or_404(CustomUser, username=request.user.username)
+    
+    if not userAccount.groups.filter(name="Host").exists():
+        hostRole, _ = Group.objects.get_or_create(name="Host")
+        userAccount.groups.add(hostRole)
 
     if request.method == "POST":
-        eventForm = EventForm(request.POST, request.FILES, instance=event)
-        go_live = request.POST.get("goLiveInput") == "1"
+        eventForm = EventForm(request.POST, request.FILES)
+        eventAction = request.POST.get("eventAction")
+        print("Event action:", eventAction)
+        print("Event action:", eventAction)
+        print("Event action:", eventAction)
 
-        if eventForm.is_valid():
-            event = eventForm.save(commit=False)
-            event.event_type = request.POST.get("event_type")
-
-            if go_live:
-                crew_discount = request.POST.get('crew_discount')
-                if crew_discount == "on":
-                    event.crew_discount = True
-                else:
-                    event.crew_discount = False
-                event_status = "live"
-                event.status = event_status
+        if eventAction == "submit":
+            print("Form submitted")
+            print("Form submitted")
+            print("Form submitted")
+            print("Form submitted")
+            if eventForm.is_valid():
+                print("Form is valid")
+                print("Form is valid")
+                print("Form is valid")
+                print("Form is valid")
                 
+                event = eventForm.save(commit=False)
+                event.host = userAccount
+                event.crew_discount = request.POST.get('crew_discount') == "on"
+                event.status = "live"
+
+                
+                event.save()  # Save before setting privacy
+
                 messages.success(request, "Event is live!")
 
                 user_profile = event.host.user_profile
-                hostProfile = HostProfile.objects.get(user=request.user)
+                hostProfile, _ = HostProfile.objects.get_or_create(user=request.user)
                 organization_membership = OrganizationMembership.objects.filter(
                     user=event.host
                 ).first()
-
-                if event.privacy == "Discoverable":
-                    event_privacy = EventPrivacy.objects.create(
-                        event=event,
-                        display_on_explore=True,
-                        require_invitation=False,
-                        restricted_college=None,
-                        restricted_organization=None,
-                    )
-                    event_privacy.save()
-
-                elif event.privacy == "Invite Only":
-                    event_privacy = EventPrivacy.objects.create(
-                        event=event,
-                        display_on_explore=False,
-                        require_invitation=True,
-                        restricted_college=None,
-                        restricted_organization=None,
-                    )
-                    event.ticketing = "Invite Required"
-                    event_privacy.save()
-
-                elif event.privacy == "Private (College)":
-                    if not user_profile.college:
-                        messages.error(
-                            request,
-                            "You must be a part of a college to create a college event.",
-                        )
-                        return redirect(
-                            "eventManagement:eventManagement", eventId=eventId
-                        )
-                    else:
-                        event_privacy = EventPrivacy.objects.create(
-                            event=event,
-                            display_on_explore=False,
-                            require_invitation=False,
-                            restricted_college=event.host.user_profile.college,
-                            restricted_organization=None,
-                        )
-                        event.display_event_on_college = True
-                        event_privacy.save()
-                        if user_profile.college:
-                            college_event_link = CollegeEventLink.objects.get_or_create(
-                                college=user_profile.college, event=event
-                            )
-
-                elif (
-                    event.privacy == "Private (Organization)"
-                    and organization_membership
-                ):
-                    event_privacy = EventPrivacy.objects.create(
-                        event=event,
-                        display_on_explore=False,
-                        require_invitation=False,
-                        restricted_college=None,
-                        restricted_organization=organization_membership.organization,
-                    )
-                    event_privacy.save()
+                
+                # Refactored privacy setting
+                privacy_set = set_event_privacy(event, user_profile, organization_membership, request)
+                if not privacy_set:
+                    return redirect("eventManagement:eventManagement", eventId=event.eventId)
 
                 event.save()
                 product = createHostProduct(event, hostProfile.stripe_account_id)
 
-                if product is not None:
-                    productId = product.id
-                    event.stripeProductId = productId
-                    print("Product ID:", productId)
+                if product:
+                    event.stripeProductId = product.id
                     event.save()
+                    print("Product ID:", product.id)
+                    print("Product ID:", product.id)
+                    print("Product ID:", product.id)
+                    print("Product ID:", product.id)
                 else:
                     print("Product creation failed")
+                    print("Product creation failed")
+                    print("Product creation failed")
                     messages.error(request, "Product creation failed")
-                    return redirect("eventManagement:eventManagement", eventId=eventId)
+                    return redirect("eventManagement:eventManagement", eventId=event.eventId)
 
+                return redirect("eventManagement:eventManagement", eventId=event.eventId)
             else:
-                event.save()
+                print(eventForm.errors)
+                print(eventForm.errors)
+                print(eventForm.errors)
+                messages.error(request, "Invalid form submission.")
+                # Optionally, handle form errors here
 
-            return redirect("eventManagement:eventManagement", eventId=eventId)
     else:
-        eventForm = EventForm(instance=event)
+        eventForm = EventForm()
 
     return render(
         request,
         "eventManagementApp/host/eventCreationProcess.html",
         {
-            "event": event,
             "eventForm": eventForm,
             "eventTypeChoices": event_type_choices,
             "privacyChoices": privacy_choices,
+            "placesKey": placesKey,
         },
     )
-
-
-@login_required
-@host
-@member
-@check_suspension
-def save_event_progress(request, eventId):
-    if request.method == "POST":
-        # Retrieve the event object
-        event = get_object_or_404(
-            Event, eventId=eventId
-        )  # Use `id` to match your model field
-
-        # Handling all relevant fields
-        event.status = request.POST.get("status", "incomplete")
-        event.title = request.POST.get("title", "")
-        event.event_type = request.POST.get("event_type", "")
-
-        # Handling date and time fields
-        date_str = request.POST.get("date", "")
-        start_time_str = request.POST.get("start_time", "")
-        end_time_str = request.POST.get("end_time", "")
-
-        if date_str:
-            event.date = datetime.strptime(date_str, "%Y-%m-%d").date()
-
-        if start_time_str:
-            event.start_time = datetime.strptime(start_time_str, "%H:%M").time()
-
-        if end_time_str:
-            event.end_time = datetime.strptime(end_time_str, "%H:%M").time()
-
-        event.description = request.POST.get("description", "")
-        event.privacy = request.POST.get("privacy", "")
-        event.country = request.POST.get("country", "")
-        event.building_name = request.POST.get("building_name", "")
-        event.street = request.POST.get("street", "")
-        event.apt_suite_unit = request.POST.get("apt_suite_unit", "")
-        event.city = request.POST.get("city", "")
-        event.state = request.POST.get("state", "")
-        event.zip_code = request.POST.get("zip_code", "")
-        event.contact_email = request.POST.get("contact_email", "")
-        event.contact_phone = request.POST.get("contact_phone", "")
-        event.contact_website = request.POST.get("contact_website", "")
-        event.contact_instagram = request.POST.get("contact_instagram", "")
-        event.header_photo = request.FILES.get("header_photo", None)
-        event.body_photo_one = request.FILES.get("body_photo_one", None)
-        event.body_photo_two = request.FILES.get("body_photo_two", None)
-        event.body_photo_three = request.FILES.get("body_photo_three", None)
-        event.body_photo_four = request.FILES.get("body_photo_four", None)
-        event.body_photo_five = request.FILES.get("body_photo_five", None)
-
-        # **Handle Age Restriction**
-        age_restriction = request.POST.get("age_restriction", "").strip()
-        event.age_restriction = age_restriction  # Save the age restriction
-
-        # Optional: Validate age restriction
-        valid_restrictions = ["18+", "21+", ""]
-        if age_restriction not in valid_restrictions:
-            return JsonResponse({"error": "Invalid age restriction value"}, status=400)
-
-        event.save()  # Save changes to the database
-
-        return JsonResponse({"success": True})
-
-    return JsonResponse({"error": "Invalid request"}, status=400)
 
 
 @login_required

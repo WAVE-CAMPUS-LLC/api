@@ -276,7 +276,7 @@ def sendApprovedCareerApplicantEmail(request, applicantEmail):
         )
         plainMessage = strip_tags(emailMessageHtml)
         send_mail(
-            subject, plainMessage, None, [applicantEmail], html_message=emailMessageHtml
+            subject, plainMessage, settings.EMAIL_HOST_USER, [applicantEmail], html_message=emailMessageHtml
         )
         messages.success(request, "Email sent successfully.")
     except Exception as e:

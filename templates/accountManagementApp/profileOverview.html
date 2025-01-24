@@ -10,6 +10,7 @@ Profile Overview
 
 {% block script %}
 <script type="text/javascript" src="{% static "/scripts/accountManagementApp/settings/profileManagement.js" %}" defer></script>
+<script type="text/javascript" src="{% static "scripts/adminDashboardApp/applications/applications.js" %}" defer></script>
 {% endblock script %}
 
 
@@ -161,34 +162,54 @@ Profile Overview
                     </div>
                 </div>
             </div>
-            <div class="main-content xl:w-[75%]">
+
+            <div id="profileBody" class="main-content xl:w-[75%]">
                 <div class="profile-tab-content" id="myEvents-information">
-                    Favorite Events
-                    <div class=" border border-custom-rgba11 rounded-[10px] w-full flex flex-col pre-lg:flex-row gap-[20px] py-[20px] px-[30px] shadow-custom-shadow-6">
-                        {% if favoriteEvents %}
-                        <div id="favoriteEvents" class="grid grid-cols-1 xxsm:grid-cols-2 md:grid-cols-3 3xl:grid-cols-4 gap-5">
-                            {% for event in favoriteEvents %}
-                                <a target="_blank" href="{% url "core:eventDetails" eventId=event.eventId %}" class="category-event-card hover:category-image hover:scale-95 transform transition duration-300 flex flex-col justify-center items-center cursor-pointer overflow-hidden p-[10px] text-black">
-                                    <div class="category-image w-full rounded-2xl shadow-custom-shadow-3">
-                                        <img src="{{event.header_photo.url}}" alt="" class="w-full h-[200px] rounded-2xl rounded-b-none object-cover">
-                                    </div>
-                                    <div class="category-event-name font-Wanted-SemiBold text-Base flex flex-col justify-center items-start gap-1 w-full border border-custom-rgba5 rounded-bl-2xl rounded-br-2xl shadow-custom-shadow-3 border-t-2 px-5 p-2">
-                                        <h2 id="eventTitle" class="whitespace-nowrap overflow-hidden text-ellipsis w-full text-left text-xl">{{ event.title }}</h2>
-                                        <div class="eventSubInfo flex flex-col items-start gap-[1px] w-full font-Wanted-Variable text-customGray5">
-                                            <p id="eventHost" class="flex flex-row justify-start">Hosted by @{{ event.host }}</p>
-                                            <p id="eventDate" class="w-full flex justify-end font-Wanted-Bold text-Large">{{ event.date }}</p>
-                                        </div>
-                                    </div>
-                                </a>
-                            {% endfor %}
+                    <div class="border border-custom-rgba11 rounded-[10px] w-full flex flex-col gap-[20px] py-[20px] px-[30px] shadow-custom-shadow-6">
+                        <div class="home-header">
+                            <div id="shareControl" class="content-control flex flex-row justify-start gap-4 w-full"> 
+                                <div class="myEvents-informationTab tab-active cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="profileFavoriteEvents">Favorites</div>
+                                <div class="myEvents-informationTab cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="profilePurchasedEvents">Purchased</div>
+                            </div>
                         </div>
-                        {% else %}
-                            You have no favorite events!
-                        {% endif %}
-                    </div>
-                    Previous Events
-                    <div class=" border border-custom-rgba11 rounded-[10px] w-full flex flex-col pre-lg:flex-row gap-[20px] py-[20px] px-[30px] shadow-custom-shadow-6">
-                        You have not gone to any events yet!
+                        <div>
+                            <div class="myEventsInformationContainer" id="profileFavoriteEvents">
+                                {% if favoriteEvents %}
+                                    <div id="favoriteEvents" class="grid grid-cols-1 xxsm:grid-cols-2 md:grid-cols-3 3xl:grid-cols-4 gap-5">
+                                        {% for event in favoriteEvents %}
+                                            <a target="_blank" href="{% url "core:eventDetails" eventId=event.eventId %}" class="category-event-card hover:category-image hover:scale-95 transform transition duration-300 flex flex-col justify-center items-center cursor-pointer overflow-hidden p-[10px] text-black">
+                                                <div class="category-image w-full rounded-2xl shadow-custom-shadow-3">
+                                                    <img src="{{event.header_photo.url}}" alt="" class="w-full h-[200px] rounded-2xl rounded-b-none object-cover">
+                                                </div>
+                                                <div class="category-event-name font-Wanted-SemiBold text-Base flex flex-col justify-center items-start gap-1 w-full border border-custom-rgba5 rounded-bl-2xl rounded-br-2xl shadow-custom-shadow-3 border-t-2 px-5 p-2">
+                                                    <h2 id="eventTitle" class="whitespace-nowrap overflow-hidden text-ellipsis w-full text-left text-xl">{{ event.title }}</h2>
+                                                    <div class="eventSubInfo flex flex-col items-start gap-[1px] w-full font-Wanted-Variable text-customGray5">
+                                                        <p id="eventHost" class="flex flex-row justify-start">Hosted by @{{ event.host }}</p>
+                                                        <p id="eventDate" class="w-full flex justify-end font-Wanted-Bold text-Large">{{ event.date }}</p>
+                                                    </div>
+                                                </div>
+                                            </a>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                <div class="emptyContainer w-full rounded-[20px] pt-[40px] after-xsm:pt-[50px] sm:pt-[60px] md:pt-[70px] pb-[40px] after-xsm:pb-[50px] sm:pb-[60px] md:pb-[70px] flex flex-col justify-center gap-[7px] after-xsm:gap-[8px] sm:gap-[9px] md:gap-[10px] items-center bg-[rgba(146,146,146,0.096)]">
+                                    <div>
+                                        <img class="w-[30px] after-xsm:w-[40px] sm:w-[50px] md:w-[60px]" src="{% static "/images/collegeManagementApp/collegeInformation/empty-listing.svg" %}" />
+                                    </div>
+                                    <p class="font-Wanted-Variable text-[10px] after-xsm:text-[12px] sm:text-[14px] md:text-[16.5px] text-black text-center">No favorite events</p>
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="myEventsInformationContainer" id="profilePurchasedEvents">
+                                <div class="emptyContainer w-full rounded-[20px] pt-[40px] after-xsm:pt-[50px] sm:pt-[60px] md:pt-[70px] pb-[40px] after-xsm:pb-[50px] sm:pb-[60px] md:pb-[70px] flex flex-col justify-center gap-[7px] after-xsm:gap-[8px] sm:gap-[9px] md:gap-[10px] items-center bg-[rgba(146,146,146,0.096)]">
+                                    <div>
+                                        <img class="w-[30px] after-xsm:w-[40px] sm:w-[50px] md:w-[60px]" src="{% static "/images/collegeManagementApp/collegeInformation/empty-listing.svg" %}" />
+                                    </div>
+                                    <p class="font-Wanted-Variable text-[10px] after-xsm:text-[12px] sm:text-[14px] md:text-[16.5px] text-black text-center">No purchased events</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 

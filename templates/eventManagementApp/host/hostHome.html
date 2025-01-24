@@ -37,16 +37,16 @@ Hosting Events | WAVE.
         <div class="flex flex-col gap-[30px]">
             <div class="flex flex-col gap-y-9 lg:flex-row justify-between gap-x-3">
                 <div class="process-explanation">
-                    <h1 class="flex flex-col justify-center items-center font-Wanted-ExtraBold font-bold text-2xl"><span class="process-number text-customGray2">1.</span> Apply</h1>
+                    <h1 class="flex flex-col justify-center items-center font-Wanted-ExtraBold font-bold text-2xl"><span class="process-number text-customGray2">1.</span> Create</h1>
                     <p class="font-Wanted-Regular text-center text-[20px]">
-                        Submit an application to be a host.
+                        Hit the create button
                     </p>
                 </div>
                 
                 <div class="process-explanation">
-                    <h1 class="flex flex-col justify-center items-center font-Wanted-ExtraBold font-bold text-2xl"><span class="process-number text-customGray2">2.</span> Create </h1>
+                    <h1 class="flex flex-col justify-center items-center font-Wanted-ExtraBold font-bold text-2xl"><span class="process-number text-customGray2">2.</span> Be Detailed </h1>
                     <p class="font-Wanted-Regular text-center text-[20px]">
-                        Create your event. Be detailed. 
+                        Add as much information as you can 
                     </p>
                 </div>
 
@@ -59,19 +59,11 @@ Hosting Events | WAVE.
             </div>
         </div>
     </div>
-    <div class="flex justify-center">
-        {% if request.user.is_authenticated %}
-            {% if request.user|has_group:"Host" or request.user|has_group:"host" %}
-            <a href="{% url "eventManagement:hostCreateEvent" %}" class="flex items-center p-[15px] text-white font-Wanted-Bold text-[20px] rounded-[20px] gap-[10px] border border-transparent border-l-gradient-start border-r-gradient-end bg-gradient-to-r from-gradient-start to-gradient-end no-underline">
-                <img src="{% static "/images/eventManagementApp/host/host_ticket.svg" %}" />
-                Create Event
-            </a>
-            {% else %}
-            <a href="{% url "eventManagement:hostApply" %}" class="flex items-center p-[15px] text-white font-Wanted-Bold text-[20px] rounded-[20px] gap-[10px] border border-transparent border-l-gradient-start border-r-gradient-end bg-gradient-to-r from-gradient-start to-gradient-end no-underline">Apply Now!</a>
-            {% endif %}
-        {% else %}
-        <a href="{% url "eventManagement:hostApply" %}" class="flex items-center p-[15px] text-white font-Wanted-Bold text-[20px] rounded-[20px] gap-[10px] border border-transparent border-l-gradient-start border-r-gradient-end bg-gradient-to-r from-gradient-start to-gradient-end no-underline">Apply Now!</a>
-        {% endif %}
+    <div class="flex justify-center">            
+        <a href="{% url "eventManagement:eventCreationProcess" %}" class="flex items-center p-[15px] text-white font-Wanted-Bold text-[20px] rounded-[20px] gap-[10px] border border-transparent border-l-gradient-start border-r-gradient-end bg-gradient-to-r from-gradient-start to-gradient-end no-underline">
+            <img src="{% static "/images/eventManagementApp/host/host_ticket.svg" %}" />
+            Create Event
+        </a>
     </div>
     <div class="w-full flex justify-center border-t-[2px] border-t-[rgba(146, 146, 146, 0.096)] pt-[70px] bg-clip-text text-transparent text-[35px] font-Wanted-ExtraBold bg-gradient-to-r from-gradient-start to-gradient-end">
         <h1 class="text-end sm:text-[42px] md:text-[50px] pre-lg:text-[53px] lg:text-[56px] xl:text-[80px]">Create something bigger!</h1>

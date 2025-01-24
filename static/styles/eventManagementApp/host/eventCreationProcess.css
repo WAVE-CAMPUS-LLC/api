@@ -1,4 +1,91 @@
-.selected{
+.selected {
     border-color: #008d95;
     background-color: #008d9553;
+}
+
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 34px;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    border-radius: 34px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked+.slider {
+    background-color: #007379;
+}
+
+input:checked+.slider:before {
+    transform: translateX(26px);
+}
+
+.ql-toolbar {
+    border-top-left-radius: 1rem;
+    border-top-right-radius: 1rem;
+    border: 2px solid #0909091c;
+    border-bottom: none;
+}
+
+.ql-container {
+    border-bottom-left-radius: 1rem;
+    border-bottom-right-radius: 1rem;
+    border: 2px solid #0909091c;
+}
+
+.ql-editor {
+    white-space: pre-wrap !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+}
+
+
+.card-container {
+    display: flex;
+    height: 100%;
+    width: 100%;
+}
+
+.panel {
+    background: white;
+    box-sizing: border-box;
+    height: 100%;
+    width: 100%;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    border-radius: 20px;
+
+    font-family: Wanted-Variable, sans-serif;
+    font-style: normal;
+    font-size: 20px;
 }

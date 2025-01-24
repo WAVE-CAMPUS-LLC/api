@@ -34,10 +34,6 @@ class EventAdmin(admin.ModelAdmin):
         "city",
         "state",
         "zip_code",
-        "contact_email",
-        "contact_phone",
-        "contact_website",
-        "contact_instagram",
         "header_photo",
     )
 

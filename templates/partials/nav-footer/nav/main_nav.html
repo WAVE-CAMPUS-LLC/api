@@ -26,46 +26,39 @@
         <div class="support-links">
             <ul class="flex flex-row items-center gap-5 list-none font-Wanted-Regular text-black">
                 <li>
-                    {% if user.is_authenticated %}
+                    {% if request.user.is_authenticated %}
                         {% if page == home %}
-                            {% if user|has_group:"Host" %}
-                            <a class="gradient-btn hover:gradient-btn-hover text-white" href="{% url "eventManagement:hostCreateEvent" %}">
-                                <img src="{% static "/images/eventManagementApp/host/host_ticket.svg" %}" />
-                                Host Portal
-                            </a>
-                            {% else %}
-                            <a class="gradient-btn hover:gradient-btn-hover text-white" href="{% url "eventManagement:hostGuide" %}">
-                                <img src="{% static "/images/eventManagementApp/host/hostGuide.svg" %}" />
-                                Host Guide
-                            </a>
-                            {% endif %}
+                        <a class="gradient-btn hover:gradient-btn-hover text-white" href="{% url "eventManagement:eventCreationProcess" %}">
+                            <img src="{% static "/images/eventManagementApp/host/host_ticket.svg" %}" />
+                            Create
+                        </a>
                         {% elif page == "explore" %}
-                            <a class="gradient-btn hover:gradient-btn-hover text-white" href="{% url "colleges:find" %}">
-                                <img src="{% static "/images/explore/community.svg" %}" />
-                                Join Campus!
+                            <a class="gradient-btn hover:gradient-btn-hover text-white" href="{% url "eventManagement:eventCreationProcess" %}">
+                                <img src="{% static "/images/eventManagementApp/host/host_ticket.svg" %}" />
+                                Create
                             </a>
                         {% else %}
-                        <a class="gradient-btn hover:gradient-btn-hover text-white" target="_blank" href="{% url "eventManagement:hostPortal" %}">
-                            <img src="{% static "/images/eventManagementApp/host/host_ticket.svg" %}" />
-                            Host Portal
+                        <a class="gradient-btn hover:gradient-btn-hover text-white" href="{% url "colleges:find" %}">
+                            <img src="{% static "/images/explore/community.svg" %}" />
+                            Join Campus!
                         </a>
                         {% endif %}
                     {% else %}
-                        {% if page == "home" %}
-                            <a class="gradient-btn hover:gradient-btn-hover text-white" href="{% url "eventManagement:hostHome" %}">
-                                <img src="{% static "/images/eventManagementApp/host/host_ticket.svg" %}" />
-                                Host Event
-                            </a>
+                        {% if page == home %}
+                        <a class="gradient-btn hover:gradient-btn-hover text-white" href="{% url "colleges:find" %}">
+                            <img src="{% static "/images/explore/community.svg" %}" />
+                            Join Campus
+                        </a>
                         {% elif page == "explore" %}
-                            <a class="gradient-btn hover:gradient-btn-hover text-white" href="{% url "colleges:find" %}">
-                                <img src="{% static "/images/explore/community.svg" %}" />
-                                Join Campus!
+                            <a class="gradient-btn hover:gradient-btn-hover text-white" href="{% url "eventManagement:eventCreationProcess" %}">
+                                <img src="{% static "/images/eventManagementApp/host/host_ticket.svg" %}" />
+                                Create
                             </a>
                         {% else %}
-                            <a class="gradient-btn hover:gradient-btn-hover text-white" href="{% url "eventManagement:hostHome" %}">
-                                <img src="{% static "/images/eventManagementApp/host/host_ticket.svg" %}" />
-                                Host Event
-                            </a>
+                        <a class="gradient-btn hover:gradient-btn-hover text-white" href="{% url "colleges:find" %}">
+                            <img src="{% static "/images/explore/community.svg" %}" />
+                            Join Campus
+                        </a>
                         {% endif %}
                     {% endif %}
                 </li>
@@ -243,7 +236,7 @@
                         <a class="underline" href="{% url "authentication:login" %}">Login</a>
                         {% endif %}
                     </div>
-                    <a class="bg-white flex items-center rounded-2xl flex-row gap-2 justify-center py-4 px-6 text-green font-Wanted-Bold" href="{% url "eventManagement:hostCreateEvent" %}">
+                    <a class="bg-white flex items-center rounded-2xl flex-row gap-2 justify-center py-4 px-6 text-green font-Wanted-Bold" href="{% url "colleges:find" %}">
                         <img src="{% static "/images/partials/pennant.svg" %}" class="size-8" />
                         Join Campus
                     </a>

@@ -25,6 +25,7 @@ from .models import CustomUser, EmailVerification
 from adminDashboardApp.models import College, LoginHistoryModel
 from campusManagerApp.models import CampusManagerInvite
 from django.contrib.auth.models import Group
+from django.conf import settings
 
 from wave_v1.decorators import (
     check_suspension,
@@ -69,7 +70,7 @@ def joinView(request):
             send_mail(
                 subject="Welcome to WAVE.! Verify your email",
                 message=plainMessage,
-                from_email=None,
+                from_email=settings.EMAIL_HOST_USER,
                 recipient_list=[user.email],
                 fail_silently=False,
                 html_message=emailMessage,
