@@ -15,5 +15,8 @@
   "devDependencies": {
     "@maizzle/framework": "^5.0.0",
     "tailwindcss-preset-email": "^1.4.0"
+  },
+  "engines": {
+    "node": "18.x"
   }
 }
