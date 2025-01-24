@@ -252,7 +252,7 @@ class Event(models.Model):
         choices=EVENT_TYPE_CHOICES,
         null=False,
         blank=False,
-        default="Social",
+        default="",
     )
 
     date = models.DateField(

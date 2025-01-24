@@ -99,20 +99,26 @@ $(document).ready(function () {
       // set current date to "yesterday" to avoid partial day confusion
       currentDate.setHours(-24, 0, 0, 0);
 
-      if (len === 0) {
-        $("#date-error").addClass("hidden");
+      if (len == 0) {
+        $("#date-error")
+          .text("Please enter a date.")
+          .removeClass("hidden");
+        $(this).css("border-color", "red");
       } else if (selectedDate.getTime() < currentDate.getTime()) {
         isValid = false;
         $("#date-error")
           .text("Date cannot be in the past.")
           .removeClass("hidden");
+        $(this).css("border-color", "red");
       } else if (selectedDate.getTime() > futureLimitDate.getTime()) {
         isValid = false;
         $("#date-error")
           .text("Date cannot be more than a year into the future.")
           .removeClass("hidden");
+        $(this).css("border-color", "red");
       } else {
         $("#date-error").addClass("hidden");
+        $(this).css("border-color", "");
       }
     });
 

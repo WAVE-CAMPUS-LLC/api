@@ -66,7 +66,7 @@ Create your event — WAVE.
                                     {{ eventForm.date.label }}
                                 </p>
                                 {{ eventForm.date|attr:"class:date-input p-[12px] pl-[13px] pr-[13px] rounded-[13px] border border-solid border-custom-rgba font-Wanted-Variable text-[15px] w-full shadow-form-shadow" }}
-                                <div id="date-error" class="text-[#FF0000] font-Wanted-Regular text-Medium p-3 hidden"></div>
+                                <p id="date-error" class="text-[#FF0000] font-Wanted-SemiBold text-Base hidden"></p>
                             </div>
 
                             <!-- START & END TIME -->
@@ -122,8 +122,8 @@ Create your event — WAVE.
                 <!-- EXPERIENCE LOCATION -->
                 <div class="flex flex-col gap-4 w-full items-start">
                     <h6 class="flex justify-start font-Wanted-Medium text-Large">Experience Location</h6>
-                    <div class="grid grid-cols-1 pre-sm:grid-cols-2 gap-2 w-full">
-                        <div class="flex flex-col items-start">
+                    <div class="flex flex-col gap-2 w-full">
+                        <div class="flex flex-row w-full justify-between items-center">
                             <p class="font-Wanted-SemiBold text-Base text-gray-400 flex flex-col gap-1">
                                 {{ eventForm.hide_address.label }}
                                 <span class="font-Wanted-Variable text-XSmall">You can make this address public before the event</span>
@@ -137,58 +137,63 @@ Create your event — WAVE.
                                 <span class="slider"></span>
                             </label>
                         </div>
-                        <!-- BUILDING NAME -->
-                        <div class="flex flex-col w-full items-start justify-center">
-                            <p class="font-Wanted-SemiBold text-Base text-gray-400">
-                                {{ eventForm.building_name.label }}
-                            </p>
-                            {{ eventForm.building_name|attr:"class:building-input p-[12px] pl-[13px] pr-[13px] rounded-[13px] border border-solid border-custom-rgba font-Wanted-Variable text-[15px] w-full shadow-form-shadow" }}
-                            <div id="building-error" class="text-[#FF0000] font-Wanted-Regular text-Medium p-3 hidden"></div>
+
+                        <div class="grid grid-cols-1 pre-sm:grid-cols-2 gap-3 w-full">
+                            <!-- BUILDING NAME -->
+                            <div class="flex flex-col w-full items-start justify-center">
+                                <p class="font-Wanted-SemiBold text-Base text-gray-400">
+                                    {{ eventForm.building_name.label }}
+                                </p>
+                                {{ eventForm.building_name|attr:"class:building-input p-[12px] pl-[13px] pr-[13px] rounded-[13px] border border-solid border-custom-rgba font-Wanted-Variable text-[15px] w-full shadow-form-shadow" }}
+                                <div id="building-error" class="text-[#FF0000] font-Wanted-Regular text-Medium p-3 hidden"></div>
+                            </div>
+
+                            <!-- STREET -->
+                            <div class="flex flex-col w-full items-start justify-center">
+                                <p class="font-Wanted-SemiBold text-Base text-gray-400">
+                                    {{ eventForm.street.label }}
+                                </p>
+                                {{ eventForm.street|attr:"class:street-input p-[12px] pl-[13px] pr-[13px] rounded-[13px] border border-solid border-custom-rgba font-Wanted-Variable text-[15px] w-full shadow-form-shadow" }}
+                                <div id="street-error" class="text-[#FF0000] font-Wanted-Regular text-Medium p-3 hidden"></div>
+                            </div>
+
+                            <!-- APT/SUITE/UNIT -->
+                            <div class="flex flex-col w-full items-start justify-center">
+                                <p class="font-Wanted-SemiBold text-Base text-gray-400">
+                                    {{ eventForm.apt_suite_unit.label }}
+                                </p>
+                                {{ eventForm.apt_suite_unit|attr:"class:apt-input p-[12px] pl-[13px] pr-[13px] rounded-[13px] border border-solid border-custom-rgba font-Wanted-Variable text-[15px] w-full shadow-form-shadow" }}
+                                <div id="apt-error" class="text-[#FF0000] font-Wanted-Regular text-Medium p-3 hidden"></div>
+                            </div>
+
+                            <!-- CITY -->
+                            <div class="flex flex-col w-full items-start justify-center">
+                                <p class="font-Wanted-SemiBold text-Base text-gray-400">
+                                    {{ eventForm.city.label }}
+                                </p>
+                                {{ eventForm.city|attr:"class:city-input p-[12px] pl-[13px] pr-[13px] rounded-[13px] border border-solid border-custom-rgba font-Wanted-Variable text-[15px] w-full shadow-form-shadow" }}
+                                <div id="city-error" class="text-[#FF0000] font-Wanted-Regular text-Medium p-3 hidden"></div>
+                            </div>
+
+                            <!-- STATE -->
+                            <div class="flex flex-col w-full items-start justify-center">
+                                <p class="font-Wanted-SemiBold text-Base text-gray-400">
+                                    {{ eventForm.state.label }}
+                                </p>
+                                {{ eventForm.state|attr:"class:p-[12px] pl-[13px] pr-[13px] rounded-[13px] border border-solid border-custom-rgba font-Wanted-Variable text-[15px] w-full shadow-form-shadow" }}
+                            </div>
+
+                            <!-- ZIP CODE -->
+                            <div class="flex flex-col w-full items-start justify-center">
+                                <p class="font-Wanted-SemiBold text-Base text-gray-400">
+                                    {{ eventForm.zip_code.label }}
+                                </p>
+                                {{ eventForm.zip_code|attr:"class:zip-input p-[12px] pl-[13px] pr-[13px] rounded-[13px] border border-solid border-custom-rgba font-Wanted-Variable text-[15px] w-full shadow-form-shadow" }}
+                                <div id="zip-error" class="text-[#FF0000] font-Wanted-Regular text-Medium p-3 hidden"></div>
+                            </div>
                         </div>
 
-                        <!-- STREET -->
-                        <div class="flex flex-col w-full items-start justify-center">
-                            <p class="font-Wanted-SemiBold text-Base text-gray-400">
-                                {{ eventForm.street.label }}
-                            </p>
-                            {{ eventForm.street|attr:"class:street-input p-[12px] pl-[13px] pr-[13px] rounded-[13px] border border-solid border-custom-rgba font-Wanted-Variable text-[15px] w-full shadow-form-shadow" }}
-                            <div id="street-error" class="text-[#FF0000] font-Wanted-Regular text-Medium p-3 hidden"></div>
-                        </div>
-
-                        <!-- APT/SUITE/UNIT -->
-                        <div class="flex flex-col w-full items-start justify-center">
-                            <p class="font-Wanted-SemiBold text-Base text-gray-400">
-                                {{ eventForm.apt_suite_unit.label }}
-                            </p>
-                            {{ eventForm.apt_suite_unit|attr:"class:apt-input p-[12px] pl-[13px] pr-[13px] rounded-[13px] border border-solid border-custom-rgba font-Wanted-Variable text-[15px] w-full shadow-form-shadow" }}
-                            <div id="apt-error" class="text-[#FF0000] font-Wanted-Regular text-Medium p-3 hidden"></div>
-                        </div>
-
-                        <!-- CITY -->
-                        <div class="flex flex-col w-full items-start justify-center">
-                            <p class="font-Wanted-SemiBold text-Base text-gray-400">
-                                {{ eventForm.city.label }}
-                            </p>
-                            {{ eventForm.city|attr:"class:city-input p-[12px] pl-[13px] pr-[13px] rounded-[13px] border border-solid border-custom-rgba font-Wanted-Variable text-[15px] w-full shadow-form-shadow" }}
-                            <div id="city-error" class="text-[#FF0000] font-Wanted-Regular text-Medium p-3 hidden"></div>
-                        </div>
-
-                        <!-- STATE -->
-                        <div class="flex flex-col w-full items-start justify-center">
-                            <p class="font-Wanted-SemiBold text-Base text-gray-400">
-                                {{ eventForm.state.label }}
-                            </p>
-                            {{ eventForm.state|attr:"class:p-[12px] pl-[13px] pr-[13px] rounded-[13px] border border-solid border-custom-rgba font-Wanted-Variable text-[15px] w-full shadow-form-shadow" }}
-                        </div>
-
-                        <!-- ZIP CODE -->
-                        <div class="flex flex-col w-full items-start justify-center">
-                            <p class="font-Wanted-SemiBold text-Base text-gray-400">
-                                {{ eventForm.zip_code.label }}
-                            </p>
-                            {{ eventForm.zip_code|attr:"class:zip-input p-[12px] pl-[13px] pr-[13px] rounded-[13px] border border-solid border-custom-rgba font-Wanted-Variable text-[15px] w-full shadow-form-shadow" }}
-                            <div id="zip-error" class="text-[#FF0000] font-Wanted-Regular text-Medium p-3 hidden"></div>
-                        </div>
+                        <div class=""></div>
                     </div>
                 </div>
 
