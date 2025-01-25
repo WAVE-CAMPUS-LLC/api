@@ -31,9 +31,9 @@ load_dotenv()
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-# DEBUG = os.getenv("DEBUG", "False")
-DEBUG=True
-# DEBUG_PROPAGATE_EXCEPTIONS = True
+DEBUG = os.getenv("DEBUG", "False")
+# DEBUG=True
+DEBUG_PROPAGATE_EXCEPTIONS = True
 
 ALLOWED_HOSTS = ["wave-v1.onrender.com", "waveoncampus.com", "localhost", "127.0.0.1"]
 
@@ -154,40 +154,40 @@ MESSAGE_TAGS = {
 }
 
 # Parse the DATABASE_URL manually to ensure correct format
-# DATABASES = {
-#     "default": {
-#         "ENGINE": "django.db.backends.postgresql",
-#         "NAME": "postgres",
-#         "USER": "postgres.zqwamcznyosnkrevxmhm",
-#         "PASSWORD": os.getenv("DB_PASSWORD"),
-#         "HOST": "aws-0-us-east-1.pooler.supabase.com",
-#         "PORT": "6543",
-#         "OPTIONS": {
-#             "sslmode": "require",
-#             "options": "-c timezone=UTC",
-#             "keepalives": 1,
-#             "keepalives_idle": 30,
-#             "keepalives_interval": 10,
-#             "keepalives_count": 5,
-#         },
-#     }
-# }
-
-
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'crewBuying',
-        'USER': 'wave_owner',
-        'PASSWORD': '1PhnjKA8VBOY',
-        'HOST': 'ep-cold-band-a5n17hct.us-east-2.aws.neon.tech',
-        'PORT': '5432',
-        'OPTIONS': {
-            'sslmode': 'require',
-            'options': '-c timezone=UTC',
-        }
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": "postgres",
+        "USER": "postgres.zqwamcznyosnkrevxmhm",
+        "PASSWORD": os.getenv("DB_PASSWORD"),
+        "HOST": "aws-0-us-east-1.pooler.supabase.com",
+        "PORT": "6543",
+        "OPTIONS": {
+            "sslmode": "require",
+            "options": "-c timezone=UTC",
+            "keepalives": 1,
+            "keepalives_idle": 30,
+            "keepalives_interval": 10,
+            "keepalives_count": 5,
+        },
     }
 }
+
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': 'crewBuying',
+#         'USER': 'wave_owner',
+#         'PASSWORD': '1PhnjKA8VBOY',
+#         'HOST': 'ep-cold-band-a5n17hct.us-east-2.aws.neon.tech',
+#         'PORT': '5432',
+#         'OPTIONS': {
+#             'sslmode': 'require',
+#             'options': '-c timezone=UTC',
+#         }
+#     }
+# }
 
 # Email Configurations
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
