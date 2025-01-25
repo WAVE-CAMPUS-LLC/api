@@ -12,4 +12,6 @@ urlpatterns = [
     path("logout/", views.logoutView, name="logout"),
     path("forgot/", views.forgotPasswordView, name="forgot"),
     path("password/reset/<uidb64>/oakbrothers/<token>/set/", views.setNewPassword, name="passwordReset"),
+    path('forgot-password/', views.forgot_password, name='forgot_password'),
+    path('reset-password/<str:token>/', views.reset_password, name='reset_password'),
 ]

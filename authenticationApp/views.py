@@ -30,6 +30,8 @@ from wave_v1.decorators import (
     emailUnverified
 )
 
+from django.utils.crypto import get_random_string
+
 
 # Create your views here.
 def generateVerificationCode():
@@ -325,3 +327,59 @@ def setNewPassword(request, uidb64, token):
     else:
         # Handle invalid or expired link
         return render(request, "extras/invalid/invalid.html")
+
+
+def forgot_password(request):
+    if request.method == 'POST':
+        email = request.POST.get('email')
+        try:
+            user = CustomUser.objects.get(email=email)
+            # Generate token
+            token = get_random_string(64)
+            # Save token and expiry
+            user.reset_password_token = token
+            user.reset_password_expires = timezone.now() + timedelta(hours=1)
+            user.save()
+            
+            # Send email
+            reset_link = f"{request.scheme}://{request.get_host()}/auth/reset-password/{token}/"
+            send_mail(
+                'Reset Your Password',
+                f'Click the following link to reset your password: {reset_link}',
+                'from@example.com',
+                [email],
+                fail_silently=False,
+            )
+            messages.success(request, 'Password reset link has been sent to your email.')
+            return redirect('authentication:login')
+        except CustomUser.DoesNotExist:
+            messages.error(request, 'No user found with this email address.')
+    
+    return render(request, 'authenticationApp/forgot_password.html')
+
+def reset_password(request, token):
+    try:
+        user = CustomUser.objects.get(
+            reset_password_token=token,
+            reset_password_expires__gt=timezone.now()
+        )
+        
+        if request.method == 'POST':
+            password1 = request.POST.get('password1')
+            password2 = request.POST.get('password2')
+            
+            if password1 != password2:
+                messages.error(request, 'Passwords do not match.')
+            else:
+                user.set_password(password1)
+                user.reset_password_token = None
+                user.reset_password_expires = None
+                user.save()
+                messages.success(request, 'Password has been reset successfully.')
+                return redirect('authentication:login')
+                
+        return render(request, 'authenticationApp/reset_password.html')
+        
+    except CustomUser.DoesNotExist:
+        messages.error(request, 'Invalid or expired reset link.')
+        return redirect('authentication:forgot_password')
