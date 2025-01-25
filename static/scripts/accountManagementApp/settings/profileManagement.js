@@ -48,7 +48,7 @@ document.addEventListener('DOMContentLoaded', function () {
       });
 
       if (tabContents.length > 0) {
-          tabContents[0].style.display = 'block';
+          tabContents[0].classList.remove("hidden");
       }
 
       // Set the first tab as active by default in each body section

@@ -93,34 +93,33 @@ Profile Overview
                 </div>
             </div>
         </div>
-        <!--User Card | End-->
 
         <div id="cc-sub-body" class="w-full max-w-[100vw] flex flex-col md:flex-row items-center md:items-start gap-10">
             <div id="side-nav" class="flex flex-col w-full lg:w-[25%] gap-y-[20px]">
                 <div id="settings" class="border border-custom-rgba11 shadow-custom-shadow-6 rounded-[10px] w-full shadow-custom-shadow-6">
                     <ul class="list-none rounded-[10px] w-full text-nowrap">
                         <li class="profile-tab tab-active border-b border-b-custom-rgba11 p-[20px] font-Wanted-Medium cursor-pointer" data-tab="myEvents-information">
-                            <a class="text-black no-underline hover:underline cursor-pointer">My Events</a>
+                            <p class="text-black no-underline hover:underline cursor-pointer">My Events</p>
                         </li>
                         <li class="profile-tab border-b border-b-custom-rgba11 p-[20px] font-Wanted-Medium cursor-pointer" href="{% url "social:home" %}">
                             <a href="{% url "social:home" %}" class="text-black no-underline hover:underline cursor-pointer">The Social</a>
                         </li>
                         {% if userRequest|has_group:"Host" %}
-                        <li class="profile-tab border-b border-b-custom-rgba11 p-[20px] font-Wanted-Medium cursor-pointer" target="_blank" href="{% url "eventManagement:hostHome" %}">
-                            <a href="{% url "eventManagement:hostPortal" %}" class="text-black no-underline hover:underline cursor-pointer">Host Portal</a>
-                        </li>
+                            <li class="profile-tab border-b border-b-custom-rgba11 p-[20px] font-Wanted-Medium cursor-pointer" target="_blank" href="{% url "eventManagement:hostHome" %}">
+                                <a href="{% url "eventManagement:hostPortal" %}" class="text-black no-underline hover:underline cursor-pointer">Host Portal</a>
+                            </li>
                         {% endif %}
                         <li class="profile-tab border-b border-b-custom-rgba11 p-[20px] font-Wanted-Medium cursor-pointer" data-tab="myBlog-information">
-                            <a class="text-black no-underline hover:underline cursor-pointer">Blog</a>
+                            <p class="text-black no-underline hover:underline cursor-pointer">Blog</p>
                         </li>
                         <li class="profile-tab border-b border-b-custom-rgba11 p-[20px] font-Wanted-Medium cursor-pointer">
                             <a class="text-black no-underline hover:underline cursor-pointer" href="{% url "accountManagement:userSettings" %}">Settings & Preferences</a>
                         </li>
                         <li class="profile-tab border-b border-b-custom-rgba11 p-[20px] font-Wanted-Medium cursor-pointer" data-tab="myPurchases-information">
-                            <a class="text-black no-underline hover:underline cursor-pointer" href="#">Purchases</a>
+                            <p class="text-black no-underline hover:underline cursor-pointer">Purchases</p>
                         </li>
                         <li class="profile-tab border-b border-b-custom-rgba11 p-[20px] font-Wanted-Medium cursor-pointer" data-tab="myPaymentMethods-information">
-                            <a class="text-black no-underline hover:underline cursor-pointer" href="#">Payment Methods</a>
+                            <p class="text-black no-underline hover:underline cursor-pointer">Payment Methods</p>
                         </li>
                         {% if userRequest|has_group:"Campus Manager" %}
                         <li class="profile-tab border-b border-b-custom-rgba11 p-[20px] font-Wanted-Medium cursor-pointer">
@@ -191,12 +190,12 @@ Profile Overview
                                         {% endfor %}
                                     </div>
                                 {% else %}
-                                <div class="emptyContainer w-full rounded-[20px] pt-[40px] after-xsm:pt-[50px] sm:pt-[60px] md:pt-[70px] pb-[40px] after-xsm:pb-[50px] sm:pb-[60px] md:pb-[70px] flex flex-col justify-center gap-[7px] after-xsm:gap-[8px] sm:gap-[9px] md:gap-[10px] items-center bg-[rgba(146,146,146,0.096)]">
-                                    <div>
-                                        <img class="w-[30px] after-xsm:w-[40px] sm:w-[50px] md:w-[60px]" src="{% static "/images/collegeManagementApp/collegeInformation/empty-listing.svg" %}" />
+                                    <div class="emptyContainer w-full rounded-[20px] pt-[40px] after-xsm:pt-[50px] sm:pt-[60px] md:pt-[70px] pb-[40px] after-xsm:pb-[50px] sm:pb-[60px] md:pb-[70px] flex flex-col justify-center gap-[7px] after-xsm:gap-[8px] sm:gap-[9px] md:gap-[10px] items-center bg-[rgba(146,146,146,0.096)]">
+                                        <div>
+                                            <img class="w-[30px] after-xsm:w-[40px] sm:w-[50px] md:w-[60px]" src="{% static "/images/collegeManagementApp/collegeInformation/empty-listing.svg" %}" />
+                                        </div>
+                                        <p class="font-Wanted-Variable text-[10px] after-xsm:text-[12px] sm:text-[14px] md:text-[16.5px] text-black text-center">No favorite events</p>
                                     </div>
-                                    <p class="font-Wanted-Variable text-[10px] after-xsm:text-[12px] sm:text-[14px] md:text-[16.5px] text-black text-center">No favorite events</p>
-                                </div>
                                 {% endif %}
                             </div>
 
@@ -213,46 +212,86 @@ Profile Overview
                 </div>
 
                 <div class="profile-tab-content" id="myBlog-information">
-                    <div class="blog-tab flex flex-col gap-[25px] mt-[15px]">
-                        <div class="header flex justify-between items-center flex-col xxsm:flex-row">
-                            <div class="headerRow w-full">
-                                <h3 class="heading w-full flex justify-between items-center text-[24px] xxsm:text-[27px] font-Wanted-Bold font-bold">My Blog Posts</h3>
-                            </div>
-                            
-                            <div class="createBlog">
-                                <a target="_blank" href="{% url "blog:createBlog" %}" class="p-[10px] xsm:p-[15px] xxsm:p-[20px] text-nowrap border border-transparent border-r-gradient-start border-l-gradient-end text-white font-Wanted-SemiBold no-underline flex items-center justify-center gap-[10px] mt-[20px] xxsm:mt-0 w-full text-[22px] xxsm:text-[24px] rounded-[10px] xsm:rounded-[15px] xxsm:rounded-[20px] bg-gradient-to-r from-gradient-start to-gradient-end cursor-pointer">Create Blog</a>
+                    <div class="border border-custom-rgba11 rounded-[10px] w-full flex flex-col gap-[20px] py-[20px] px-[30px] shadow-custom-shadow-6">
+                        <div class="home-header">
+                            <div id="shareControl" class="content-control flex flex-row justify-between gap-4 w-full"> 
+                                <div class="myEvents-informationTab tab-active cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="profileFavoriteEvents">My posts</div>
+                                <a target="_blank" href="{% url "blog:createBlog" %}" class="p-2 rounded-xl text-white bg-gradient-to-r font-Wanted-Variable from-gradient-start to-gradient-end cursor-pointer">Create Blog</a>
                             </div>
                         </div>
+                    
 
                         <div class="blogContainer flex flex-col gap-[30px] no-underline text-black hover:text-green">
-                            {% for blog in blogItems %}
-                            <a href="{% url "blog:blogView" blogId=blog.blogId %}" class="blogCard">
-                                <div class="blogHeader border border-custom-rgba8 rounded-[20px] shadow-custom-shadow-2 max-w-full max-h-[350px]">
-                                    <img src="{{ blog.imageOne.url }}" class="w-full h-full max-h-[350px] max-w-full rounded-[20px] object-cover" />
+                            {% if blogItems %}
+                            <div class="grid grid-cols-1 xxsm:grid-cols-2 md:grid-cols-3 3xl:grid-cols-4 gap-5">
+                                {% for blog in blogItems %}
+                                <a href="{% url "blog:blogView" blogId=blog.blogId %}" class="blogCard">
+                                    <div class="blogHeader border border-custom-rgba8 rounded-[20px] shadow-custom-shadow-2 max-w-full max-h-[350px]">
+                                        <img src="{{ blog.imageOne.url }}" class="w-full h-[200px] max-w-full rounded-[20px] object-cover" />
+                                    </div>
+                                    <div class="blogBody flex flex-col gap-[15px]">
+                                        <div class="blogType flex justify-start w-full">
+                                            <h6 class="text-green font-Wanted-Black text-[18px] font-black">{{ blog.blogType }}</h6>
+                                        </div>
+                                        <div class="blogTitle flex justify-start w-full">
+                                            <h4 class="font-bold font-Wanted-Regular text-[20px] after-xsm:text-[23px] xxsm:text-[25px] text-nowrap overflow-hidden text-ellipsis w-full text-left">{{ blog.title }}</h4>
+                                        </div>
+                                        <div class="blogDate flex justify-end w-full">
+                                            <p class="font-Wanted-Variable text-[15px] text-black">By {{ blog.created_by.first_name }} {{ blog.created_by.last_name }}</p>
+                                        </div>
+                                    </div>
+                                </a> 
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                            <div class="emptyContainer w-full rounded-[20px] pt-[40px] after-xsm:pt-[50px] sm:pt-[60px] md:pt-[70px] pb-[40px] after-xsm:pb-[50px] sm:pb-[60px] md:pb-[70px] flex flex-col justify-center gap-[7px] after-xsm:gap-[8px] sm:gap-[9px] md:gap-[10px] items-center bg-[rgba(146,146,146,0.096)]">
+                                <div>
+                                    <img class="w-[30px] after-xsm:w-[40px] sm:w-[50px] md:w-[60px]" src="{% static "/images/collegeManagementApp/collegeInformation/empty-listing.svg" %}" />
                                 </div>
-                                <div class="blogBody flex flex-col gap-[15px]">
-                                    <div class="blogType flex justify-start w-full">
-                                        <h6 class="text-green font-Wanted-Black text-[18px] font-black">{{ blog.blogType }}</h6>
-                                    </div>
-                                    <div class="blogTitle flex justify-start w-full">
-                                        <h4 class="font-bold font-Wanted-Regular text-[20px] after-xsm:text-[23px] xxsm:text-[25px] text-nowrap overflow-hidden text-ellipsis w-full text-left">{{ blog.title }}</h4>
-                                    </div>
-                                    <div class="blogDate flex justify-end w-full">
-                                        <p class="font-Wanted-Variable text-[15px] text-black">By {{ blog.created_by.first_name }} {{ blog.created_by.last_name }}</p>
-                                    </div>
-                                </div>
-                            </a> 
-                            {% endfor %}
+                                <p class="font-Wanted-Variable text-[10px] after-xsm:text-[12px] sm:text-[14px] md:text-[16.5px] text-black text-center">You haven't created a blog post</p>
+                            </div>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
 
                 <div class="profile-tab-content" id="myPurchases-information">
-                    purchases!
+                    <div class="border border-custom-rgba11 rounded-[10px] w-full flex flex-col gap-[20px] py-[20px] px-[30px] shadow-custom-shadow-6">
+                        <div class="home-header">
+                            <div id="shareControl" class="content-control flex flex-row justify-between gap-4 w-full"> 
+                                <div class="myEvents-informationTab tab-active cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="myPurchases">My Purchases</div>
+                            </div>
+                        </div>
+
+                        <div class="myPurchasesContainer" id="myPurchases">
+                            <div class="emptyContainer w-full rounded-[20px] pt-[40px] after-xsm:pt-[50px] sm:pt-[60px] md:pt-[70px] pb-[40px] after-xsm:pb-[50px] sm:pb-[60px] md:pb-[70px] flex flex-col justify-center gap-[7px] after-xsm:gap-[8px] sm:gap-[9px] md:gap-[10px] items-center bg-[rgba(146,146,146,0.096)]">
+                                <div>
+                                    <img class="w-[30px] after-xsm:w-[40px] sm:w-[50px] md:w-[60px]" src="{% static "/images/collegeManagementApp/collegeInformation/empty-listing.svg" %}" />
+                                </div>
+                                <p class="font-Wanted-Variable text-[10px] after-xsm:text-[12px] sm:text-[14px] md:text-[16.5px] text-black text-center">No purchased events</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="profile-tab-content" id="myPaymentMethods-information">
-                    payment methods!
+                    <div class="border border-custom-rgba11 rounded-[10px] w-full flex flex-col gap-[20px] py-[20px] px-[30px] shadow-custom-shadow-6">
+                        <div class="home-header">
+                            <div id="shareControl" class="content-control flex flex-row justify-between gap-4 w-full"> 
+                                <div class="myEvents-informationTab tab-active cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="myPaymentMethods">My Purchases</div>
+                                <button type="button" role="button" class="p-2 bg-gradient-to-tr font-Wanted-Variable text-white bg-gradient-start bg-gradient-end rounded-xl">Add New</button>
+                            </div>
+                        </div>
+
+                        <div class="myPurchasesContainer" id="myPaymentMethods">
+                            <div class="emptyContainer w-full rounded-[20px] pt-[40px] after-xsm:pt-[50px] sm:pt-[60px] md:pt-[70px] pb-[40px] after-xsm:pb-[50px] sm:pb-[60px] md:pb-[70px] flex flex-col justify-center gap-[7px] after-xsm:gap-[8px] sm:gap-[9px] md:gap-[10px] items-center bg-[rgba(146,146,146,0.096)]">
+                                <div>
+                                    <img class="w-[30px] after-xsm:w-[40px] sm:w-[50px] md:w-[60px]" src="{% static "/images/collegeManagementApp/collegeInformation/empty-listing.svg" %}" />
+                                </div>
+                                <p class="font-Wanted-Variable text-[10px] after-xsm:text-[12px] sm:text-[14px] md:text-[16.5px] text-black text-center">No payment methods added.</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
