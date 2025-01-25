@@ -1,23 +1,20 @@
 {
-  "dependencies": {
-    "@stripe/react-stripe-js": "^3.1.1",
-    "@stripe/stripe-js": "^5.3.0",
-    "chart.js": "^4.4.7",
-    "html5-qrcode": "^2.3.8",
-    "quill": "^2.0.2",
-    "tailwindcss": "^3.4.15"
-  },
-  "scripts": {
-    "build": "npx tailwindcss -i static/tailwindcss/input.css -o static/tailwindcss/output.css --minify && cd templates/emailManagement && maizzle build production",
-    "build:prod": "npx tailwindcss -i static/tailwindcss/input.css -o static/tailwindcss/output.css --minify && cd templates/emailManagement && maizzle build production",
-    "build:dev": "npx tailwindcss -i static/tailwindcss/input.css -o static/tailwindcss/output.css --watch",
-    "start": "echo 'Starting Django application...'"
-  },
-  "devDependencies": {
-    "@maizzle/framework": "^5.0.0",
-    "tailwindcss-preset-email": "^1.4.0"
-  },
-  "engines": {
-    "node": "22.x"
-  }
+	"dependencies": {
+		"@stripe/react-stripe-js": "^3.1.1",
+		"@stripe/stripe-js": "^5.3.0",
+		"chart.js": "^4.4.7",
+		"html5-qrcode": "^2.3.8",
+		"quill": "^2.0.2",
+		"tailwindcss": "^3.4.15"
+	},
+	"scripts": {
+		"build": "npx tailwindcss -i static/tailwindcss/input.css -o static/tailwindcss/output.css --minify && cd templates/emailManagement && maizzle build production",
+		"build:prod": "npx tailwindcss -i static/tailwindcss/input.css -o static/tailwindcss/output.css --minify && cd templates/emailManagement && maizzle build production",
+		"build:dev": "npx tailwindcss -i static/tailwindcss/input.css -o static/tailwindcss/output.css --watch",
+		"start": "echo 'Starting Django application...'"
+	},
+	"devDependencies": {
+		"@maizzle/framework": "^5.0.0",
+		"tailwindcss-preset-email": "^1.4.0"
+	}
 }

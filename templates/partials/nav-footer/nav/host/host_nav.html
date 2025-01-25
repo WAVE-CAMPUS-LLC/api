@@ -5,14 +5,25 @@
 <script type="text/javascript" src="{% static "/scripts/partials/navigation/navbar.js" %}" defer></script>
 
 
-<div id="navigation-container" class="hidden pre-lg:inline max-w-full w-full top-0 right-0 left-0 flex-none">
-    <div id="navigation-bar" class="w-full flex flex-row items-center justify-between pre-lg:px-8 lg:px-14 xl:px-24 2xl:px-28 py-5">
-        <nav class="w-full flex justify-between">
-            <div id="logo-menu">
-                <div id="logo">
-                    <a href="{% url "core:index" %}">WAV<span>E</span>.</a>
+<div id="navigation-container" class="max-w-full w-full top-0 right-0 left-0 flex-none">
+    <div class="flex flex-col gap-3 items-center w-full">
+        <div id="navigation-bar" class="w-full flex gap-3 flex-col items-center justify-between px-4 pre-lg:px-8 lg:px-14 xl:px-24 2xl:px-28 py-5">
+            <div class="flex flex-row justify-between items-center w-full mx-auto px-4">
+                <div id="logo-menu">
+                    <div id="logo">
+                        <a href="{% url "core:index" %}">WAV<span>E</span>.</a>
+                    </div>
                 </div>
+
+                <li class="createEvent flex flex-row gap-5 items-center">
+                    <a href="{% url "eventManagement:eventCreationProcess" %}" class="createEventBtn gradient-btn" id="createEventBtn">
+                        <img src="{% static "/images/eventManagementApp/host/host_ticket.svg" %}" />
+                        Create Event
+                    </a>
+                </li>
             </div>
+
+                
             <div id="menu-options">
                 <ul class="flex gap-4 list-none items-center text-black font-Wanted-Variable text-Semi-Medium">
                     <li class="navlink">
@@ -21,81 +32,8 @@
                     <li class="navlink">
                         <a class="hover:underline hover:decoration-green" href="{% url "eventManagement:hostGuide" %}">Host Guide </a>
                     </li>
-                    <li class="createEvent flex flex-row gap-5 items-center">
-                        Come, create!
-                        <a href="{% url "eventManagement:eventCreationProcess" %}" class="createEventBtn gradient-btn" id="createEventBtn">
-                            <img src="{% static "/images/eventManagementApp/host/host_ticket.svg" %}" />
-                            Create Event
-                        </a>
-                    </li>
+                    
                 </ul>
-            </div>
-        </nav>
-    </div>
-</div>
-
-<div class="top-0 pre-lg:hidden w-full">
-    <nav class="mt-5 right-0 left-0 w-full">
-        <div clss="flex flex-row justify-between w-full">
-            <div id="nav-container" class="w-full h-full mx-auto px-4 pr-1 sm:px-8 flex items-center justify-between">
-                <div id="brand-logo" class=" h-full flex items-center justify-center">
-                    <div id="logo">
-                        <a href="{% url "core:index"  %}">WAV<span>E</span>.</a>
-                    </div>
-                </div>
-                <div id="nav-bar_menu-container" class="h-full flex items-center justify-center pt-1">
-                    <button title="menuButton" id="menuButton" class="h-full flex items-center justify-center hamburger hamburger--elastic w-full px-7" type="button">
-                        <span class="hamburger-box">
-                            <span class="hamburger-inner"></span>
-                        </span>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </nav>
-
-    <div id="overlay"
-        class="fixed top-0 left-0 right-0 bottom-0 z-[1005] w-full overflow-y-scroll overflow-x-hidden">
-        <div class="container px-4 py-3 w-full h-full">
-            <div id="ov-menu"
-                class="max-h-screen h-full w-full flex justify-between flex-col mt-6 pb-10 top-10 xsm:top-20 sm:top-20 md:top-20">
-                <div class="flex flex-col h-full gap-12">
-                    <div class="flex flex-col gap-7">
-                        <div class="w-full flex justify-end">
-                            <div id="overlay-logo" class="font-Wanted-Black text-2xl text-black">
-                                <a href="{% url "core:index"  %}">WAV<span class="text-white">E</span>.</a>
-                            </div>
-                        </div>
-                        <hr>
-                    </div>
-                    <ul class="flex flex-col gap-5 list-none text-Large px-5 font-Wanted-Regular text-white">
-                        <li><a href="{% url "core:index"  %}" class="hover:underline">Home</a></li>
-                        <li><a href="{% url "core:explore"  %}" class="hover:underline">Explore</a></li>
-                        <li><a href="{% url "colleges:home"  %}" class="hover:underline">Colleges</a></li>
-                        <li><a href="{% url "social:home"  %}" class="hover:underline">The Social</a></li>
-                        <li><a href="{% url "support:home"  %}" class="hover:underline">Support</a></li>
-                        <li class="navlink">
-                            <a href="{% url "support:feedback" %}"> Faq's </a>
-                        </li>
-                        <li class="navlink">
-                            <a class="hover:underline hover:decoration-green" href="{% url "eventManagement:hostGuide" %}">Host Guide </a>
-                        </li>
-                    </ul>
-                </div>
-                <div class="w-full flex flex-col gap-6 justify-center items-center">
-                    <div class="flex flex-row gap-16 justify-center font-Wanted-Regular text-white text-Large">
-                        {% if user.is_authenticated %}
-                        <a class="underline" href="{% url "accountManagement:userAccount" %}">My Account</a>
-                        {% else %}
-                        <a class="underline" href="{% url "authentication:join" %}">Join</a>
-                        <a class="underline" href="{% url "authentication:login" %}">Login</a>
-                        {% endif %}
-                    </div>
-                    <a href="{% url "eventManagement:eventCreationProcess" %}" class="flex items-center p-[15px] text-white font-Wanted-Bold text-[20px] rounded-[20px] gap-[10px] border border-transparent border-l-gradient-start border-r-gradient-end bg-gradient-to-r from-gradient-start to-gradient-end no-underline">
-                        <img src="{% static "/images/eventManagementApp/host/host_ticket.svg" %}" />
-                        Create Event
-                    </a>
-                </div>
             </div>
         </div>
     </div>
