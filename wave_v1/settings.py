@@ -23,7 +23,9 @@ from django.core.files.storage import default_storage
 BASE_DIR = Path(__file__).resolve().parent.parent
 from dotenv import load_dotenv
 
+# Load environment variables
 load_dotenv()
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
@@ -31,15 +33,14 @@ load_dotenv()
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv("DEBUG", "False")
+DEBUG = True
 # DEBUG=True
 DEBUG_PROPAGATE_EXCEPTIONS = True
 
 ALLOWED_HOSTS = [
-    "wave-v1.onrender.com", 
-    "waveoncampus.com", 
     "localhost",
-    "127.0.0.1"
+    "127.0.0.1",
+    "*"  # Temporarily for development
 ]
 
 
@@ -228,9 +229,11 @@ LOGIN_URL = "authentication:login"
 
 
 # Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.0/howto/static-files/
-STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
-STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'),
+]
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 # CORS Settings
