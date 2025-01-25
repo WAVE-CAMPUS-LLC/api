@@ -63,6 +63,9 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     is_onboarded = models.BooleanField(default=False)
     is_suspended = models.BooleanField(default=False)
 
+    reset_password_token = models.CharField(max_length=100, null=True, blank=True)
+    reset_password_expires = models.DateTimeField(null=True, blank=True)
+
     
     def suspend(self):
         suspend_group, created = Group.objects.get_or_create(name="Suspend")
