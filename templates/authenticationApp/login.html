@@ -70,7 +70,9 @@ Welcome back! — WAVE.
             </div>
             <div id="forgot" class="w-full flex justify-end">
                 <h6 class="font-Wanted-Variable text-[18px] sm:text-[20px] md:text-[23px] text-black no-underline">
-                    <a href="{% url "authentication:forgot" %}" class="font-Wanted-Variable text-[14px] text-black no-underline hover:text-[rgb(86,85,85)]">Forgot password?</a>
+                    <a href="{% url 'authentication:forgot_password' %}" class="font-Wanted-Variable text-[14px] text-black no-underline hover:text-[#008d95]">
+                        Forgot password?
+                    </a>
                 </h6>
             </div>
             <div id="controlledElements" class="w-full flex flex-col justify-center gap-[15px]">
