@@ -140,10 +140,6 @@ def checkoutView(request):
                 success_url=f"{domain}/paymentSuccessful/?session_id={{CHECKOUT_SESSION_ID}}",
                 cancel_url=f"{domain}/paymentFailed/",
                 customer=customer.id,
-                payment_intent_data={
-                    "application_fee_amount": int(application_fee_amount * 100),
-                    "transfer_data": {"destination": hostStripeAccountId},
-                },
             )
 
             return JsonResponse({"url": checkout_session.url})
@@ -158,24 +154,6 @@ def checkoutView(request):
         "eventTicketsApp/checkoutSession/checkout.html",
         {"cart": cart, "total_amount": total_amount},
     )
-
-
-# def crewCheckoutView(request, ticketId, crewId):
-#     stripe.api_key = settings.STRIPE_SECRET_KEY
-
-#     crew = get_object_or_404(Crew, crewId=crewId)
-#     ticket = get_object_or_404(PaidFreeTicket, ticket_id=ticketId)
-#     total_price = ticket.crew_discounted_price * crew.members.all().count()
-    
-#     return render(
-#                     request, 
-#                     "eventTicketsApp/checkoutSession/crewCheckout.html", 
-#                         {
-#                             "crew": crew, 
-#                             "ticket": ticket, 
-#                             "total_price": total_price
-#                         }
-#                 )
 
 def paymentSuccessful(request):
     stripe.api_key = settings.STRIPE_SECRET_KEY
