@@ -26,6 +26,9 @@
 
 
 {% block body %}
+<!-- Always render these, even if they are blank or might not be used -->
+<input type="hidden" id="save-url" value="{% url 'eventTickets:updateCart' %}" />
+<input type="hidden" id="checkout-url" value="{% url 'eventTickets:checkout' %}" />
 <div id="content-container" class="flex flex-col px-[10px] overflow-hidden after-xsm:px-[20px] xxsm:px-[35px] sm:px-[40px] md:px-[40px] pre-lg:px-[50px] lg:px-[80px] xl:px-[150px] 2xl:px-[200px] 3xl:-[300px] gap-[70px]">
     <div class="flex flex-col gap-3">
         <div class="page-header w-full flex flex-col gap-3 lg:flex-row justify-between items-center">
@@ -229,9 +232,7 @@
                                 <h3>Purchase your ticket</h3>
                             </div>
 
-                            <div id="jit-tab-container" class="flex flex-col gap-5">
-                                <input type="hidden" id="save-url" value="{% url 'eventTickets:updateCart' %}" />
-                            
+                            <div id="jit-tab-container" class="flex flex-col gap-5">                            
                                 {% for ticket in paidFreeTickets %}
                                 <!-- Modal for each ticket -->
                                 <div id="chooseCrewPopup{{ ticket.ticket_id }}" class="hidden bg-[rgba(0, 0, 0, 0.037)] backdrop-blur-sm fixed top-0 left-0 right-0 bottom-0 z-[1005] w-full h-full cursor-default">
@@ -455,8 +456,6 @@
 
                             <div class="checkoutRow w-full flex justify-center" id="checkoutRow">
                                 <div class="checkoutRowContainer flex justify-center">
-                                    <input type="hidden" id="checkout-url" value="{% url 'eventTickets:checkout' %}">
-
                                     <button id="checkoutButton" data-save-url="{% url 'eventTickets:updateCart' %}" class="checkoutButton gradient-btn w-full font-Wanted-SemiBold text-Large" role="button" name="eventAction" value="Checkout">
                                         Checkout -
                                         <span id="checkoutTotal">$0.00</span>

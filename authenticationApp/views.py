@@ -23,6 +23,7 @@ from .forms import (
 from django.contrib.auth import login, logout, authenticate
 from .models import CustomUser, EmailVerification
 from adminDashboardApp.models import College, LoginHistoryModel
+from stripeManagementApp.customerSetup import CustomerAccount
 from campusManagerApp.models import CampusManagerInvite
 from django.contrib.auth.models import Group
 from django.conf import settings
@@ -100,7 +101,15 @@ def joinView(request):
                     f"You have successfully joined {college.name} as a manager!",
                 )
                 return redirect("campusManager:dashboard")
-
+            if not user.customer_id:
+                customer = CustomerAccount.createCustomerAccount(request, user.email, user.first_name, user.last_name)
+                if customer:
+                    user.customer_id = customer["id"]
+                    user.save()
+                else:
+                    messages.error(request, "Failed to create customer account. Please try again.")
+                    return redirect("authentication:join")
+            
             messages.info(request, "A verification code has been sent to your email.")
             login(request, user)
             next_url = request.GET.get("next", "authentication:verifyEmail")

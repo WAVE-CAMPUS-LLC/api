@@ -129,30 +129,43 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function returnCheckout() {
     const checkoutUrl = document.getElementById("checkout-url").value;
+    
+    // Example: If user is not logged in, collect their first/last/email from the DOM
+    const firstName = document.getElementById("guest_first_name")?.value || "";
+    const lastName = document.getElementById("guest_last_name")?.value || "";
+    const email = document.getElementById("guest_email")?.value || "";
+
+    // Build JSON payload
+    const data = {
+      cart: cart,  // if you want to send cart, though you're storing it in session
+      first_name: firstName,
+      last_name: lastName,
+      email: email,
+    };
+
     fetch(checkoutUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "X-CSRFToken": getCookie("csrftoken"),
       },
-      body: JSON.stringify(cart),
+      body: JSON.stringify(data),
     })
-      .then((response) => {
+      .then(response => {
         if (!response.ok) {
-          // Log response if it's not ok
           console.error("Error response:", response);
-          return response.json(); // Still attempt to parse JSON
+          return response.json(); // parse JSON error
         }
         return response.json();
       })
-      .then((data) => {
+      .then(data => {
         if (data.url) {
           window.location.href = data.url;
         } else {
-          console.error("Error fetching checkout URL:", data);
+          console.error("No checkout URL in JSON response:", data);
         }
       })
-      .catch((error) => console.error("Error fetching checkout URL:", error));
+      .catch(error => console.error("Error:", error));
   }
 
   const checkoutButton = document.getElementById("checkoutButton");

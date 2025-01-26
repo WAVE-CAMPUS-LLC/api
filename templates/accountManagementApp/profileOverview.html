@@ -10,7 +10,9 @@ Profile Overview
 
 {% block script %}
 <script type="text/javascript" src="{% static "/scripts/accountManagementApp/settings/profileManagement.js" %}" defer></script>
+<script type="text/javascript" src="{% static "scripts/accountManagementApp/profileOverview/addPaymentMethod.js" %}" defer></script>
 <script type="text/javascript" src="{% static "scripts/adminDashboardApp/applications/applications.js" %}" defer></script>
+<script type="module" src="{% static "scripts/base/stripe.js" %}" defer></script>
 {% endblock script %}
 
 
@@ -41,6 +43,7 @@ Profile Overview
     </div>
     
     <div id="content-container" class="flex flex-col gap-20">
+
         <div class="cc-user-card w-full rounded-[15px] gap-[10px] grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 xxsm:px-[50px] sm:px-[110px] md:px-0">
             <div id="heading" class="flex flex-col justify-center border border-custom-rgba11 rounded-[15px] py-[20px] px-[40px] shadow-custom-shadow-6">
                 <div class="fNamePfp flex flex-col xxsm:flex-row items-center xxsm:items-start gap-[20px]">
@@ -278,18 +281,40 @@ Profile Overview
                     <div class="border border-custom-rgba11 rounded-[10px] w-full flex flex-col gap-[20px] py-[20px] px-[30px] shadow-custom-shadow-6">
                         <div class="home-header">
                             <div id="shareControl" class="content-control flex flex-row justify-between gap-4 w-full"> 
-                                <div class="myEvents-informationTab tab-active cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="myPaymentMethods">My Purchases</div>
-                                <button type="button" role="button" class="p-2 bg-gradient-to-tr font-Wanted-Variable text-white bg-gradient-start bg-gradient-end rounded-xl">Add New</button>
+                                <div class="myEvents-informationTab tab-active cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="myPaymentMethods">Payment Methods</div>
+                                <button type="button" id="addPaymentMethodToProfile" role="button" class="p-2 bg-gradient-to-tr font-Wanted-Variable text-white bg-gradient-start bg-gradient-end rounded-xl">Add New</button>
                             </div>
                         </div>
 
                         <div class="myPurchasesContainer" id="myPaymentMethods">
+                            {% if payments %}
+                                {% for method in payments %}
+                                    <div class="flex flex-row justify-between items-center w-full border-b border-custom-rgba11 p-2">
+                                        <div id="cardData" class="flex flex-col gap-1">
+                                            <h6 class="font-Wanted-Bold text-Base capitalize">{{ method.card_brand }} ending in {{ method.last4 }}</h6>
+                                            <p class="font-Wanted-Variable text-sm capitalize">Expires {{ method.exp_month }} {{ method.exp_year }}</p>
+                                            {% if method.is_default %}
+                                                <p class="font-Wanted-Variable text-sm text-green-600">Default</p>
+                                            {% endif %}
+                                        </div>
+                                        <form id="paymentButtons" class="flex flex-col gap-1">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="paymentMethodId" value="{{ method.id }}" />
+                                            <button type="submit" name="action" value="deletePaymentMethod" id="deletePaymentMethod" class="p-2 bg-red-600 text-white rounded-xl">Delete</button>
+                                            {% if not method.is_default %}
+                                                <button type="submit" name="action" value="setDefaultPaymentMethod" id="setDefaultPaymentMethod" class="p-2 bg-gray-400 text-white rounded-xl">Set Default</button>
+                                            {% endif %}
+                                        </form>
+                                    </div>
+                                {% endfor %}
+                            {% else %}
                             <div class="emptyContainer w-full rounded-[20px] pt-[40px] after-xsm:pt-[50px] sm:pt-[60px] md:pt-[70px] pb-[40px] after-xsm:pb-[50px] sm:pb-[60px] md:pb-[70px] flex flex-col justify-center gap-[7px] after-xsm:gap-[8px] sm:gap-[9px] md:gap-[10px] items-center bg-[rgba(146,146,146,0.096)]">
                                 <div>
                                     <img class="w-[30px] after-xsm:w-[40px] sm:w-[50px] md:w-[60px]" src="{% static "/images/collegeManagementApp/collegeInformation/empty-listing.svg" %}" />
                                 </div>
                                 <p class="font-Wanted-Variable text-[10px] after-xsm:text-[12px] sm:text-[14px] md:text-[16.5px] text-black text-center">No payment methods added.</p>
                             </div>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
@@ -298,5 +323,44 @@ Profile Overview
     </div>
 </div>
 
+<div id="addPaymentMethodModal" class="hidden bg-[rgba(0, 0, 0, 0.037)] backdrop-blur-sm fixed top-0 left-0 right-0 bottom-0 z-[1005] w-full h-full cursor-default">
+    <div class="w-full h-full flex justify-center items-center">
+        <div class="w-11/12 xxsm:w-9/12 pre-sm:w-10/12 sm:w-10/12 md:w-10/12 pre-lg:w-10/12 lg:w-10/12 xl:w-3/5 h-auto min-h-[80%] lg:min-h-fit max-h-[90%] bg-white shadow-custom-shadow rounded-2xl p-5 pb-12 flex flex-col gap-3 overflow-y-auto">
+            <div class="w-full flex flex-col items-center justify-center">
+                <div id="contentCard-header" class="w-full flex justify-start font-Wanted-Bold text-Pre-Xl">
+                    <h3>Add payment method</h3>
+                </div>
+                <div id="contentCard-close" class="w-full flex justify-end">
+                    <button role="button" type="button" id="closeAddPaymentMethodModal" class="border-none bg-none cursor-pointer">
+                        <img src="{% static "images/career/jobAppClose.svg" %}" alt="Minimize Card">
+                    </button>
+                </div>
+            </div>
+
+            <div class="">
+                <div class="flex flex-col gap-2">
+                    <form method="POST" id="addCardModalForm" class="flex flex-col gap-3">
+                        {% csrf_token %}
+                        <input type="hidden" id="stripeKey" value="{{ stripeKey }}">
+                        <input type="hidden" id="addCardUrl" value="{% url 'accountManagement:addCard' %}">
+
+                        <div class="flex flex-col gap-2">
+                            <label for="cardName" class="font-Wanted-Medium text-[15px]">Name</label>
+                            <input type="text" name="cardName" id="cardName" class="font-Wanted-Variable text-[13px] border border-gray-300 rounded-lg p-2" required placeholder="Name on Card">
+                        </div>
+                        <div class="flex flex-col gap-2" id="card-element">
+                            
+                        </div>
+                        
+
+                        <div class="w-full flex justify-end">
+                            <button type="submit" class="bg-green py-3 px-6 rounded-2xl text-white cursor-pointer">Confirm</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 {% endblock body %}

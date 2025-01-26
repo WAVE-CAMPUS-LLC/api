@@ -25,45 +25,45 @@ function getCookie(name) {
 }
 
 const form = document.getElementById("addCardModalForm");
+const cardUrl = document.getElementById("addCardUrl").value;
 form.addEventListener("submit", async (event) => {
     event.preventDefault();
 
-    const { token, error } = await stripe.createToken(cardElement, {
-        name: document.getElementById("cardName").value,
-        currency: "usd",
-    });
+    const { token, error } = await stripe.createToken(cardElement);
 
     if (error) {
-        console.error(error);
+        console.error("Error creating token: ", error.message);
+        alert("Error creating token: " + error.message);
+        return;
+    }
+
+    const response = await fetch(cardUrl, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            'X-CSRFToken': getCookie('csrftoken'),
+        },
+        body: JSON.stringify({ token: token.id }),
+    });
+
+    const data = await response.json();
+    const clientSecret = data.clientSecret;
+
+    if (!clientSecret) {
+        console.error("Missing clientSecret");
+        return;
+    }
+
+    const { setupIntent, error: confirmError } = await stripe.confirmCardSetup(clientSecret, {
+        payment_method: { card: cardElement, },
+    });
+
+    if (confirmError) {
+        console.error("Error adding payment method: ", confirmError.message);
+        alert("Error adding payment method: " + confirmError.message);
         return;
     } else {
-        const cardUrl = document.getElementById("addCardUrl").value;
-        fetch(cardUrl, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                'X-CSRFToken': getCookie('csrftoken'),
-            },
-            body: JSON.stringify({
-                token: token.id,
-            }),
-        })
-        .then((response) => {
-            if (!response.ok) {
-                throw new Error("Failed to add card");
-            }
-            return response.json();
-        })
-        .then((data) => {
-            if (data.success) {
-                alert("Card added successfully");
-            } else {
-                alert("Failed to add card: " + data.message);
-            }
-        })
-        .catch((error) => {
-            console.error("Error:", error);
-        });
+        alert("Payment method added successfully!");
     }
 
 });

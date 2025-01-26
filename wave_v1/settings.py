@@ -42,7 +42,7 @@ url = os.getenv("SUPABASE_URL")
 key = os.getenv("SUPABASE_API_KEY")
 supabase = create_client(url, key)
 
-buckets = supabase.storage.list_buckets()
+# buckets = supabase.storage.list_buckets()
 # print(buckets)
 
 if not DEBUG:  # In production
@@ -340,3 +340,12 @@ REST_FRAMEWORK = {
         "rest_framework.renderers.JSONRenderer",
     ],
 }
+
+CSP_DEFAULT_SRC = ("*",)
+CSP_SCRIPT_SRC = ("'self'", "'unsafe-inline'", "'unsafe-eval'", "*")
+CSP_STYLE_SRC = ("'self'", "'unsafe-inline'", "*")
+CSP_FONT_SRC = ("*",)
+CSP_IMG_SRC = ("*", "data:")
+CSP_FRAME_SRC = ("*",)
+
+# This basically allows everything and is not recommended in production.

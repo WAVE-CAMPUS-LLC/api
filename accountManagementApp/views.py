@@ -1,19 +1,26 @@
+from datetime import datetime
+import time
+import json
+import stripe
+
 from http.client import HTTPResponse
 from django.http import Http404, HttpResponseBadRequest, JsonResponse
 from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import get_user_model
+from django.conf import settings
 from django.contrib import messages
 from .forms import (
     UserProfileForm,
     UpdateContactInfo,
     UpdatePersonalInfo,
     EditUserProfileForm,
-    UpdateProfilePhotoForm
+    UpdateProfilePhotoForm,
 )
 from django.contrib.auth.models import Group
 from .models import UserProfile, EventTypePreferences
 from authenticationApp.models import CustomUser
+from stripeManagementApp.customerSetup import CustomerAccount
 
 # Decorators to check user roles and permissions
 from wave_v1.decorators import check_suspension, member, verified, onboarded
@@ -32,7 +39,38 @@ def profileView(request):
     blogItems = Blog.objects.filter(created_by=userRequest)
     userProfile = UserProfile.objects.get(user=userRequest)
     favorite_events = userProfile.favorite_events.all()
-    
+    stripeKey = settings.STRIPE_PUBLISHABLE_KEY
+
+    payment_methods = CustomerAccount.listPaymentMethods(userRequest.customer_id)
+    for method in payment_methods:
+        method["exp_month"] = datetime.strptime(
+            str(method["exp_month"]), "%m"
+        ).strftime("%B")
+
+    # if request.method == "POST":
+    #     action = request.POST.get("action")
+
+    #     if action == "deletePaymentMethod":
+    #         payment_method_id = request.POST.get("paymentMethodId")
+    #         if payment_method_id:
+    #             CustomerAccount.deletePaymentMethod(userRequest.customer_id, payment_method_id)
+    #         else:
+    #             messages.error(request, "Invalid payment method ID.")
+    #     elif action == "setDefaultPaymentMethod":
+    #         payment_method_id = request.POST.get("paymentMethodId")
+    #         if payment_method_id:
+    #             success = CustomerAccount.setDefaultPaymentMethod(
+    #                 userRequest.customer_id, payment_method_id
+    #             )
+    #             if success:
+    #                 messages.success(
+    #                     request, "Default payment method set successfully."
+    #                 )
+    #             else:
+    #                 messages.error(request, "Failed to set default payment method.")
+    #         else:
+    #             messages.error(request, "Invalid payment method ID.")
+    #     return redirect("accountManagement:userAccount")
 
     return render(
         request,
@@ -42,8 +80,40 @@ def profileView(request):
             "userRequest": userRequest,
             "userProfile": userProfile,
             "favoriteEvents": favorite_events,
+            "stripeKey": stripeKey,
+            "payments": payment_methods,
         },
     )
+
+
+def addCard(request):
+    try:
+        user = request.user
+        userAccount = CustomUser.objects.get(username=user.username)
+        customer_id = userAccount.customer_id
+
+        data = json.loads(request.body)
+        token = data.get("token")
+
+        if not token:
+            return JsonResponse({"error": "No token provided"}, status=400)
+
+        # Attach the payment method to the customer
+        payment_method = stripe.PaymentMethod.create(
+            type="card",
+            card={"token": token},
+        )
+        stripe.PaymentMethod.attach(payment_method.id, customer=customer_id)
+
+        # Optionally set the new payment method as the default
+        stripe.Customer.modify(
+            customer_id,
+            invoice_settings={"default_payment_method": payment_method.id},
+        )
+
+        return JsonResponse({"success": "Payment method added successfully."})
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
 
 
 @login_required(login_url="authentication:login")
@@ -150,11 +220,9 @@ def settingsView(request):
     contact_form = UpdateContactInfo(instance=user)
     editProfileForm = EditUserProfileForm(instance=profile)
     editProfilePictureForm = UpdateProfilePhotoForm(instance=profile)
-    
 
     if request.method == "POST":
         form_type = request.POST.get("form_type")
-
 
         if form_type == "profile-picture":
             form = UpdateProfilePhotoForm(request.POST, request.FILES, instance=profile)
@@ -176,7 +244,7 @@ def settingsView(request):
             if form.is_valid():
                 form.save()
                 messages.success(request, "Contact information updated successfully!")
-                
+
         elif form_type == "profile-info":
             editProfileForm = EditUserProfileForm(request.POST, instance=profile)
 
