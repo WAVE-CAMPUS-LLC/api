@@ -7,12 +7,13 @@ from django.contrib.auth.models import Group
 import uuid
 import threading
 from django.dispatch import receiver
-from django.db.models.signals import pre_save, post_save
+from django.db.models.signals import pre_save, post_save, post_delete
 from django.utils.translation import gettext_lazy as _
 
 from accountManagementApp.models import UserProfile
 from eventManagementApp.models import SharedEvent
 from socialApp.models import CrewMember
+from stripeManagementApp.customerSetup import CustomerAccount
 
 
 from .managers import CustomUserManager
@@ -45,9 +46,14 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         unique=True,
         help_text=(_("Username")),
     )
-    
-    birthday = models.DateField(_("Birthday"), null=False, blank=False, default=datetime.date.today)
-    age = models.IntegerField( null=True, blank=True,)
+
+    birthday = models.DateField(
+        _("Birthday"), null=False, blank=False, default=datetime.date.today
+    )
+    age = models.IntegerField(
+        null=True,
+        blank=True,
+    )
 
     date_joined = models.DateField(auto_now_add=True)
 
@@ -55,15 +61,18 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     is_staff = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
     is_superadmin = models.BooleanField(default=False)
-    
-    # The generation of a random user id for every user that signs up. 
-    user_id = models.UUIDField(_("User ID"), default=uuid.uuid4, editable=False, unique=True)
-    
+
+    # The generation of a random user id for every user that signs up.
+    user_id = models.UUIDField(
+        _("User ID"), default=uuid.uuid4, editable=False, unique=True
+    )
+
     email_verified = models.BooleanField(default=False)
     is_onboarded = models.BooleanField(default=False)
     is_suspended = models.BooleanField(default=False)
 
-    
+    customer_id = models.CharField(max_length=255, null=True, blank=True)
+
     def suspend(self):
         suspend_group, created = Group.objects.get_or_create(name="Suspend")
         member_group = Group.objects.get(name="Member")
@@ -71,21 +80,21 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         self.groups.add(suspend_group)
         self.is_suspended = True
         self.save()
-        
+
     def remove_suspension_OR_ban(self):
         if self.is_suspended:
             suspend_group = Group.objects.get(name="Suspend")
             member_group = Group.objects.get(name="Member")
-            
+
             if self.is_suspended:
                 self.groups.remove(suspend_group)
                 self.is_suspended = False
-                
+
             self.groups.add(member_group)
             self.save()
-    
+
     def get_shared_events(self):
-        return SharedEvent.objects.filter(receiver=self.user)  
+        return SharedEvent.objects.filter(receiver=self.user)
 
     objects = CustomUserManager()
 
@@ -95,36 +104,54 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         "last_name",
         "username",
     ]
-    
 
     class Meta:
         default_permissions = ()
-        
-        
+
         verbose_name = "Member Account"
         verbose_name_plural = "Member Accounts"
-    
-    
+
     def save(self, *args, **kwargs):
+        if not self.customer_id:
+            from stripeManagementApp.customerSetup import CustomerAccount
+
+            existing_customer = CustomerAccount.searchCustomerAccount(self.email)
+            if existing_customer:
+                self.customer_id = existing_customer.id
+            else:
+                new_customer = CustomerAccount.createCustomerAccount(
+                    None, self.email, self.first_name, self.last_name
+                )
+                self.customer_id = new_customer.id
         if self.birthday:
             today = date.today()
-            self.age = today.year - self.birthday.year - ((today.month, today.day) < (self.birthday.month, self.birthday.day))
-        
+            self.age = (
+                today.year
+                - self.birthday.year
+                - ((today.month, today.day) < (self.birthday.month, self.birthday.day))
+            )
+
         super(CustomUser, self).save(*args, **kwargs)
+
+    def delete_stripe_customer(self):
+        if self.customer_id:
+            CustomerAccount.deleteCustomerAccount(self.customer_id)
 
     def __str__(self):
         return self.email
+
 
 @receiver(pre_save, sender=CustomUser)
 def generate_user_id(sender, instance, **kwargs):
     if not instance.user_id:
         instance.user_id = uuid.uuid4()
-        
+
 
 @receiver(post_save, sender=CustomUser)
 def create_user_profile(sender, instance, created, **kwargs):
     if created:
         UserProfile.objects.create(user=instance)
+
 
 @receiver(post_save, sender=CustomUser)
 def add_super_admin_group(sender, instance, created, **kwargs):
@@ -138,12 +165,16 @@ def add_super_admin_group(sender, instance, created, **kwargs):
         instance.groups.add(admin_group)
 
 
+@receiver(post_delete, sender=CustomUser)
+def delete_stripe_customer(sender, instance, **kwargs):
+    instance.delete_stripe_customer()
+
+
 class EmailVerification(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     verification_code = models.CharField(max_length=7)
     is_verified = models.BooleanField(default=False)
     expiration_date = models.DateTimeField()
-    
-    
+
     def __str__(self):
         return self.verification_code

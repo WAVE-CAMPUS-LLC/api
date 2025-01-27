@@ -21,11 +21,6 @@ urlpatterns = [
         name="eventManagement",
     ),
     path(
-        "billing/",
-        views.hostBilling,
-        name="hostBilling",
-    ),
-    path(
         "billing/withdraw/",
         views.hostBillingCashout,
         name="hostBillingCashout",
