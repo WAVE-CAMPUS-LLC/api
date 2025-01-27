@@ -47,30 +47,35 @@ def profileView(request):
             str(method["exp_month"]), "%m"
         ).strftime("%B")
 
-    # if request.method == "POST":
-    #     action = request.POST.get("action")
+    if request.method == "POST":
+        action = request.POST.get("action")
 
-    #     if action == "deletePaymentMethod":
-    #         payment_method_id = request.POST.get("paymentMethodId")
-    #         if payment_method_id:
-    #             CustomerAccount.deletePaymentMethod(userRequest.customer_id, payment_method_id)
-    #         else:
-    #             messages.error(request, "Invalid payment method ID.")
-    #     elif action == "setDefaultPaymentMethod":
-    #         payment_method_id = request.POST.get("paymentMethodId")
-    #         if payment_method_id:
-    #             success = CustomerAccount.setDefaultPaymentMethod(
-    #                 userRequest.customer_id, payment_method_id
-    #             )
-    #             if success:
-    #                 messages.success(
-    #                     request, "Default payment method set successfully."
-    #                 )
-    #             else:
-    #                 messages.error(request, "Failed to set default payment method.")
-    #         else:
-    #             messages.error(request, "Invalid payment method ID.")
-    #     return redirect("accountManagement:userAccount")
+        try:
+            if action == "deletePaymentMethod":
+                payment_method_id = request.POST.get("paymentMethodId")
+                if payment_method_id:
+                    CustomerAccount.removePaymentMethod(request, payment_method_id)
+                    messages.success(request, "Payment method deleted successfully.")
+                else:
+                    messages.error(request, "Invalid payment method ID.")
+            elif action == "setDefaultPaymentMethod":
+                payment_method_id = request.POST.get("paymentMethodId")
+                if payment_method_id:
+                    success = CustomerAccount.setDefaultPaymentMethod(
+                        userRequest.customer_id, payment_method_id
+                    )
+                    if success:
+                        messages.success(
+                            request, "Default payment method set successfully."
+                        )
+                    else:
+                        messages.error(request, "Failed to set default payment method.")
+                else:
+                    messages.error(request, "Invalid payment method ID.")
+        except Exception as e:
+            messages.error(request, f"An error occurred: {str(e)}")
+        finally:
+            return redirect("accountManagement:userAccount")
 
     return render(
         request,
@@ -96,13 +101,21 @@ def addCard(request):
         token = data.get("token")
 
         if not token:
-            return JsonResponse({"error": "No token provided"}, status=400)
+            messages.error(request, "No token provided")
+            return JsonResponse({"success": False})
 
-        # Attach the payment method to the customer
+        # Retrieve the payment method details using the token
         payment_method = stripe.PaymentMethod.create(
             type="card",
             card={"token": token},
         )
+
+        # Check if the card already exists
+        if CustomerAccount.cardExists(customer_id, payment_method.card.fingerprint):
+            messages.error(request, "This card already exists.")
+            return JsonResponse({"success": False})
+
+        # Attach the payment method to the customer
         stripe.PaymentMethod.attach(payment_method.id, customer=customer_id)
 
         # Optionally set the new payment method as the default
@@ -111,9 +124,13 @@ def addCard(request):
             invoice_settings={"default_payment_method": payment_method.id},
         )
 
-        return JsonResponse({"success": "Payment method added successfully."})
+        messages.success(request, "Payment method added successfully.")
+        return JsonResponse({"success": True})
+    except stripe.error.StripeError as e:
+        messages.error(request, f"Stripe error: {e.user_message}")
     except Exception as e:
-        return JsonResponse({"error": str(e)}, status=500)
+        messages.error(request, f"An error occurred: {str(e)}")
+    return JsonResponse({"success": False})
 
 
 @login_required(login_url="authentication:login")

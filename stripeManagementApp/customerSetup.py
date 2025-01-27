@@ -57,6 +57,9 @@ class CustomerAccount:
 
     def listPaymentMethods(customer_id):
         try:
+            customer = stripe.Customer.retrieve(customer_id)
+            default_payment_method = customer.invoice_settings.default_payment_method
+
             payment_methods = stripe.PaymentMethod.list(
                 customer=customer_id,
                 type="card",
@@ -68,7 +71,8 @@ class CustomerAccount:
                     "card_brand": payment_method.card.brand,
                     "last4": payment_method.card.last4,
                     "exp_month": payment_method.card.exp_month,
-                    "exp_year": payment_method.card.exp_year
+                    "exp_year": payment_method.card.exp_year,
+                    "is_default": payment_method.id == default_payment_method
                 })
 
             return payment_methods_list
@@ -85,6 +89,48 @@ class CustomerAccount:
                 customer=customer_id,
                 automatic_payment_methods={"enabled": True},
             )
-            return intent
+            return redirect("accountManagement:userAccount")
         except stripe.error.StripeError as e:
-            return JsonResponse({"error": e.user_message}, status=400)
+            messages.error(request, f"Error: {e.user_message}")
+            return redirect("accountManagement:userAccount")
+
+    def removePaymentMethod(request, payment_method_id):
+        try:
+            payment_method = stripe.PaymentMethod.detach(payment_method_id)
+            return redirect("accountManagement:userAccount")
+        except stripe.error.StripeError as e:
+            messages.error(request, {"error": e.user_message})
+            return redirect("accountManagement:userAccount")
+
+    def setDefaultPaymentMethod(customer_id, payment_method_id):
+        try:
+            stripe.Customer.modify(
+                customer_id,
+                invoice_settings={
+                    'default_payment_method': payment_method_id,
+                },
+            )
+            return True
+        except stripe.error.StripeError as e:
+            print(f"Stripe error: {e.user_message}")
+            return False
+        except Exception as e:
+            print(f"Error: {str(e)}")
+            return False
+
+    def cardExists(customer_id, fingerprint):
+        try:
+            payment_methods = stripe.PaymentMethod.list(
+                customer=customer_id,
+                type="card",
+            )
+            for payment_method in payment_methods.auto_paging_iter():
+                if payment_method.card.fingerprint == fingerprint:
+                    return True
+            return False
+        except stripe.error.StripeError as e:
+            print(f"Stripe error: {e.user_message}")
+            return False
+        except Exception as e:
+            print(f"Error: {str(e)}")
+            return False

@@ -33,7 +33,6 @@ form.addEventListener("submit", async (event) => {
 
     if (error) {
         console.error("Error creating token: ", error.message);
-        alert("Error creating token: " + error.message);
         return;
     }
 
@@ -41,29 +40,17 @@ form.addEventListener("submit", async (event) => {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
-            'X-CSRFToken': getCookie('csrftoken'),
+            "X-CSRFToken": getCookie("csrftoken"),
         },
         body: JSON.stringify({ token: token.id }),
     });
 
     const data = await response.json();
-    const clientSecret = data.clientSecret;
 
-    if (!clientSecret) {
-        console.error("Missing clientSecret");
-        return;
-    }
-
-    const { setupIntent, error: confirmError } = await stripe.confirmCardSetup(clientSecret, {
-        payment_method: { card: cardElement, },
-    });
-
-    if (confirmError) {
-        console.error("Error adding payment method: ", confirmError.message);
-        alert("Error adding payment method: " + confirmError.message);
-        return;
+    if (data.success) {
+        location.reload(); // Refresh the page to show the updated messages
     } else {
-        alert("Payment method added successfully!");
+        console.error("Failed to add card. Check server messages.");
+        location.reload(); // Refresh to display error messages from the backend
     }
-
 });

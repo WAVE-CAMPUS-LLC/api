@@ -291,13 +291,15 @@ Profile Overview
                                 {% for method in payments %}
                                     <div class="flex flex-row justify-between items-center w-full border-b border-custom-rgba11 p-2">
                                         <div id="cardData" class="flex flex-col gap-1">
-                                            <h6 class="font-Wanted-Bold text-Base capitalize">{{ method.card_brand }} ending in {{ method.last4 }}</h6>
+                                            <h6 class="font-Wanted-Bold text-Base capitalize flex flex-row gap-1">
+                                                {{ method.card_brand }} ending in {{ method.last4 }}
+                                                {% if method.is_default %}
+                                                    <p class="font-Wanted-Variable text-Tiny cursor-pointer text-green-600 border border-[#00921b] bg-[#00921b] text-white rounded-lg items-center p-1">Default</p>
+                                                {% endif %}
+                                            </h6>
                                             <p class="font-Wanted-Variable text-sm capitalize">Expires {{ method.exp_month }} {{ method.exp_year }}</p>
-                                            {% if method.is_default %}
-                                                <p class="font-Wanted-Variable text-sm text-green-600">Default</p>
-                                            {% endif %}
                                         </div>
-                                        <form id="paymentButtons" class="flex flex-col gap-1">
+                                        <form id="paymentButtons" method="POST" class="flex flex-col gap-1">
                                             {% csrf_token %}
                                             <input type="hidden" name="paymentMethodId" value="{{ method.id }}" />
                                             <button type="submit" name="action" value="deletePaymentMethod" id="deletePaymentMethod" class="p-2 bg-red-600 text-white rounded-xl">Delete</button>
@@ -349,9 +351,8 @@ Profile Overview
                             <input type="text" name="cardName" id="cardName" class="font-Wanted-Variable text-[13px] border border-gray-300 rounded-lg p-2" required placeholder="Name on Card">
                         </div>
                         <div class="flex flex-col gap-2" id="card-element">
-                            
+                            <!-- Stripe card element will be inserted here -->
                         </div>
-                        
 
                         <div class="w-full flex justify-end">
                             <button type="submit" class="bg-green py-3 px-6 rounded-2xl text-white cursor-pointer">Confirm</button>
