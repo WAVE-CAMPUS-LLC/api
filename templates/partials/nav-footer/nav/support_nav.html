@@ -7,24 +7,24 @@
 
 
 
-<div id="navigation-container" class="hidden pre-lg:inline max-w-full w-full top-0 right-0 left-0 flex-none">
-    <nav class="flex justify-between w-full pre-lg:px-8 lg:px-14 xl:px-24 2xl:px-28 py-5">
-        <div id="logo-menu">
+<div id="navigation-container" class="max-w-full w-full top-0 right-0 left-0 flex-none">
+    <nav class="flex justify-between flex-col pre-lg:flex-row w-full px-4 pre-lg:px-8 lg:px-14 xl:px-24 2xl:px-28 py-5 border-b border-gray-100 shadow-sm pb-6">
+        <div id="logo-menu" class="flex justify-center pre-sm:justify-start">
             <div id="logo" class="font-Wanted-ExtraBlack text-2xl">
                 <a href="{% url "core:index" %}" class="text-black">WAV<span class="text-[#008d95]">E</span>.</a>
             </div>
         </div>
-        <div id="menu-options" class="flex items-center">
+        <div id="menu-options" class="flex items-center justify-center">
             <ul class="flex flex-row gap-9 list-none font-Wanted-Variable">
                 <li>
                     <a href="{% url "support:feedback" %}" class="hover:underline hover:decoration-[#008d95]"> Feedback </a>
                 </li>
                 <li>
-                    <a href="{% url "support:newTicket" %}" class="hover:underline hover:decoration-[#008d95]"> Open a ticket </a>
+                    <a href="{% url "support:newTicket" %}" class="hover:underline hover:decoration-[#008d95]"> Open <span >a</span> ticket </a>
                 </li>
                 <li>
                     {% if user.is_authenticated %}
-                    <a href="{% url "support:supportPortal" %}" class="hover:underline hover:decoration-[#008d95]">Support Portal</a>
+                    <a href="{% url "support:supportPortal" %}" class="hover:underline hover:decoration-[#008d95]"><span class="hidden after-xsm:inline">Support</span> Portal</a>
                     {% else %}
                     <a href="{% url "authentication:login" %}" class="hover:underline hover:decoration-[#008d95]">Sign in</a>
                     {% endif %}
@@ -32,73 +32,4 @@
             </ul>
         </div>
     </nav>
-</div>
-
-
-<div class="top-0 pre-lg:hidden">
-    <nav class="mt-5 right-0 left-0 w-full">
-        <div id="nav-container" class="w-full h-full mx-auto px-4 pr-1 sm:px-8 flex items-center justify-between">
-            <div id="brand-logo" class=" h-full flex items-center justify-center">
-                <div id="logo">
-                    <a href="{% url "core:index"  %}">WAV<span>E</span>.</a>
-                </div>
-            </div>
-            <div id="nav-bar_menu-container" class="h-full flex items-center justify-center pt-1">
-                <button title="menuButton" id="menuButton" class="h-full flex items-center justify-center hamburger hamburger--elastic w-full px-7" type="button">
-                    <span class="hamburger-box">
-                        <span class="hamburger-inner"></span>
-                    </span>
-                </button>
-            </div>
-        </div>
-    </nav>
-
-    <div id="overlay"
-        class="fixed top-0 left-0 right-0 bottom-0 z-[1005] w-full overflow-y-scroll overflow-x-hidden">
-        <div class="container px-4 py-3 w-full h-full">
-            <div id="ov-menu"
-                class="max-h-screen h-full w-full flex justify-between flex-col mt-6 pb-10 top-10 xsm:top-20 sm:top-20 md:top-20">
-                <div class="flex flex-col h-full gap-12">
-                    <div class="flex flex-col gap-7">
-                        <div class="w-full flex justify-end">
-                            <div id="overlay-logo" class="font-Wanted-Black text-2xl text-black">
-                                <a href="{% url "core:index"  %}">WAV<span class="text-white">E</span>.</a>
-                            </div>
-                        </div>
-                        <hr>
-                    </div>
-                    <ul class="flex flex-col gap-5 list-none text-Large px-5 font-Wanted-Regular text-white">
-                        <li><a href="{% url "core:index"  %}" class="hover:underline">Home</a></li>
-                        <li>
-                            <a href="{% url "support:feedback" %}" class="hover:underline hover:decoration-[#008d95]"> Feedback </a>
-                        </li>
-                        <li>
-                            <a href="{% url "support:newTicket" %}" class="hover:underline hover:decoration-[#008d95]"> Open a ticket </a>
-                        </li>
-                        <li>
-                            {% if user.is_authenticated %}
-                            <a href="{% url "support:supportPortal" %}" class="hover:underline hover:decoration-[#008d95]">Support Portal</a>
-                            {% else %}
-                            <a href="{% url "authentication:login" %}" class="hover:underline hover:decoration-[#008d95]">Sign in</a>
-                            {% endif %}
-                        </li>
-                    </ul>
-                </div>
-                <div class="w-full flex flex-col gap-6 justify-center items-center">
-                    <div class="flex flex-row gap-16 justify-center font-Wanted-Regular text-white text-Large">
-                        {% if user.is_authenticated %}
-                        <a class="underline" href="{% url "accountManagement:userAccount" %}">My Account</a>
-                        {% else %}
-                        <a class="underline" href="{% url "authentication:join" %}">Join</a>
-                        <a class="underline" href="{% url "authentication:login" %}">Login</a>
-                        {% endif %}
-                    </div>
-                    <a class="bg-white flex items-center rounded-2xl flex-row gap-2 justify-center py-4 px-6 text-green font-Wanted-Bold" href="{% url "eventManagement:hostCreateEvent" %}">
-                        <img src="{% static "/images/partials/pennant.svg" %}" class="size-8" />
-                        Join Campus
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
 </div>

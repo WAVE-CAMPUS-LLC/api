@@ -18,121 +18,119 @@ Privacy Policy — Wave.
 {% endblock header %}
 
 {% block body %}
-<div id="content-container" class="flex flex-col gap-[70px] px-4 sm:px-6 md:px-[40px] pre-lg:px-[40px] lg:px-[100px] 2xl:px-48 3xl:px-96">
-    <div id="page-heading">
-        <h2>
-            Privacy Policy @ <span id="body-logo">WAVE<span class="spot">.</span></span>
+<div id="content-container" class="flex flex-col gap-[40px] px-[20px] sm:px-[40px] md:px-[100px] lg:px-[150px]">
+    <div id="page-heading" class="flex flex-col gap-[20px]">
+        <h2 class="text-[40px] sm:text-[50px] font-Wanted-SemiBold">
+            Privacy Policy @ <span id="body-logo" class="font-Wanted-Black">WAVE<span class="spot text-[#008d95]">.</span></span>
         </h2>
-        <p>
+        <p class="text-[16px] sm:text-[20px] font-Wanted-Regular">
             Last Updated: <span>12th April 2024</span>
         </p>
     </div>
 
+    <div id="introductionPolicy" class="flex flex-col gap-[10px]">
+        <h5 class="policy-container-heading font-Wanted-Bold text-[24px] sm:text-[28px] md:text-[30px]">Good to have you!</h5>
+        <p class="font-Wanted-Regular text-[18px] sm:text-[20px] leading-[25px]">
+            <span id="body-logo" class="font-Wanted-Black">WAVE<span class="spot text-[#008d95]">.</span></span> ("<span id="body-logo" class="font-Wanted-Black">WAVE<span
+                class="spot text-[#008d95]">.</span></span>", "we", "our", or "us") is committed to protecting the
+            privacy and security of
+            your personal information. This Privacy Policy explains how we collect, use, disclose, and
+            protect your information when you use the <span id="body-logo" class="font-Wanted-Black">WAVE<span
+                class="spot text-[#008d95]">.</span></span> mobile application and any related services
+            (collectively, the "Services"). By accessing or using the Services, you agree to be bound by
+            this Privacy Policy. If you do not agree to this Privacy Policy, you may not access or use the
+            Services.
+        </p>
+    </div>
+
+    <hr class="my-[6px]">
+
     <div id="condition-numbers">
-        <ol>
+        <ol class="pl-[25px] font-Wanted-Variable text-[30px]">
             <li>
-                <a href="#introductionPolicy">
-                    Good to have you!
-                </a>
-            </li>
-            <li>
-                <a href="#informationCollected">
+                <a href="#informationCollected" class="text-[#008d95] no-underline hover:underline hover:underline-offset-[5px]">
                     Information We Collect
                 </a>
             </li>
             <li>
-                <a href="#informationUsed">
+                <a href="#informationUsed" class="text-[#008d95] no-underline hover:underline hover:underline-offset-[5px]">
                     Use of Information
                 </a>
             </li>
             <li>
-                <a href="#informationDisclosed">
+                <a href="#informationDisclosed" class="text-[#008d95] no-underline hover:underline hover:underline-offset-[5px]">
                     Disclosure of Information
                 </a>
             </li>
             <li>
-                <a href="#dataRetention">
+                <a href="#dataRetention" class="text-[#008d95] no-underline hover:underline hover:underline-offset-[5px]">
                     Data Retention
                 </a>
             </li>
             <li>
-                <a href="#dataSecurity">
+                <a href="#dataSecurity" class="text-[#008d95] no-underline hover:underline hover:underline-offset-[5px]">
                     Security
                 </a>
             </li>
             <li>
-                <a href="#privacyKids">
+                <a href="#privacyKids" class="text-[#008d95] no-underline hover:underline hover:underline-offset-[5px]">
                     Children's Privacy
                 </a>
             </li>
             <li>
-                <a href="#youDecide">
+                <a href="#youDecide" class="text-[#008d95] no-underline hover:underline hover:underline-offset-[5px]">
                     Your Choices
                 </a>
             </li>
             <li>
-                <a href="#disclaimerTerms">
+                <a href="#disclaimerTerms" class="text-[#008d95] no-underline hover:underline hover:underline-offset-[5px]">
                     Changes to this Privacy Policy
                 </a>
             </li>
             <li>
-                <a href="#contactUsPolicy">
+                <a href="#contactUsPolicy" class="text-[#008d95] no-underline hover:underline hover:underline-offset-[5px]">
                     Getting in touch
                 </a>
             </li>
         </ol>
     </div>
 
-    <div id="policy-container">
-        <div id="introductionPolicy">
-            <h5 class="policy-container-heading">Good to have you!</h5>
-            <p>
-                <span id="body-logo">WAVE<span class="spot">.</span></span> ("<span id="body-logo">WAVE<span
-                        class="spot">.</span></span>", "we", "our", or "us") is committed to protecting the
-                privacy and security of
-                your personal information. This Privacy Policy explains how we collect, use, disclose, and
-                protect your information when you use the <span id="body-logo">WAVE<span
-                        class="spot">.</span></span> mobile application and any related services
-                (collectively, the "Services"). By accessing or using the Services, you agree to be bound by
-                this Privacy Policy. If you do not agree to this Privacy Policy, you may not access or use the
-                Services.
-            </p>
-        </div>
-        <div id="informationCollected">
-            <h5 class="policy-container-heading">Information We Collect</h5>
-            <ul>
-                <li>
+    <div id="policy-container" class="flex flex-col gap-[25px]">
+        <div id="informationCollected" class="flex flex-col gap-[10px]">
+            <h5 class="policy-container-heading font-Wanted-Bold text-[24px] sm:text-[28px] md:text-[30px]">Information We Collect</h5>
+            <ul class="font-Wanted-Variable leading-[25px]">
+                <li class="text-[14px] sm:text-[16px] md:text-[18px]">
                     Information You Provide
-                    <ol type="i">
-                        <li>
+                    <ol type="i" class="leading-[25px] pl-[20px] md:pl-[25px] lg:pl-[30px]">
+                        <li class="text-[12px] sm:text-[14px] md:text-[16px] pt-[6px] md:pt-[10px]">
                             Account Information: When you register for an account, we may collect information
                             such as your name, email address, date of birth, and password.
                         </li>
-                        <li>
+                        <li class="text-[12px] sm:text-[14px] md:text-[16px]">
                             Ticket Purchases: When you purchase tickets through the Services, we may collect
                             information such as your payment information, billing address, and ticket
                             preferences.
                         </li>
-                        <li>
+                        <li class="text-[12px] sm:text-[14px] md:text-[16px] pb-[6px] md:pb-[10px]">
                             Communications: We may collect information when you communicate with us or event
                             organizers through the Services, such as your messages, feedback, or customer
                             support inquiries.
                         </li>
                     </ol>
                 </li>
-                <li>
+                <li class="text-[14px] sm:text-[16px] md:text-[18px]">
                     Information We Collect Automatically
-                    <ol type="i">
-                        <li>
+                    <ol type="i" class="leading-[25px] pl-[20px] md:pl-[25px] lg:pl-[30px]">
+                        <li class="text-[12px] sm:text-[14px] md:text-[16px] pt-[6px] md:pt-[10px]">
                             Usage Data: We may collect information about how you access and use the Services,
                             including your interactions with event listings, ticket purchases, and promotions.
                         </li>
-                        <li>
+                        <li class="text-[12px] sm:text-[14px] md:text-[16px]">
                             Device Information: We may collect information about your device, such as your
                             device type, operating system, browser type, IP address, and mobile network
                             information.
                         </li>
-                        <li>
+                        <li class="text-[12px] sm:text-[14px] md:text-[16px]">
                             Location Information: With your consent, we may collect information about your
                             location using GPS, Wi-Fi, or other technologies to provide location-based services,
                             such as event recommendations and venue directions.
@@ -141,28 +139,27 @@ Privacy Policy — Wave.
                 </li>
             </ul>
         </div>
-        <div id="informationUsed">
-            <h5 class="policy-container-heading">Use of Information</h5>
-            <p>
+        <div id="informationUsed" class="flex flex-col gap-[10px]">
+            <h5 class="policy-container-heading font-Wanted-Bold text-[24px] sm:text-[28px] md:text-[30px]">Use of Information</h5>
+            <p class="font-Wanted-Variable text-[14px] sm:text-[16px] md:text-[18px] leading-[25px]">
                 We may use the information we collect for various purposes, including to:
-            <ul>
-                <li>
+            <ul class="font-Wanted-Variable leading-[25px] pl-[20px] md:pl-[25px] lg:pl-[30px]">
+                <li class="text-[12px] sm:text-[14px] md:text-[16px]">
                     Provide and maintain the Services, including processing ticket purchases and delivering
                     tickets to you;
                 </li>
-                <li>
+                <li class="text-[12px] sm:text-[14px] md:text-[16px]">
                     Customize and personalize your experience, including recommending events and promotions that
                     may be of interest to you;
                 </li>
-                <li>
+                <li class="text-[12px] sm:text-[14px] md:text-[16px]">
                     Communicate with you about events, promotions, and updates related to the Services;
                 </li>
-                <li>
+                <li class="text-[12px] sm:text-[14px] md:text-[16px]">
                     Analyze usage trends and improve the Services, including optimizing event listings and
                     ticketing processes;
                 </li>
-                <li>
-
+                <li class="text-[12px] sm:text-[14px] md:text-[16px]">
                     Protect the security and integrity of the Services, including detecting and preventing fraud
                     or unauthorized access.
                 </li>
@@ -170,80 +167,80 @@ Privacy Policy — Wave.
             </p>
 
         </div>
-        <div id="informationDisclosed">
-            <h5 class="policy-container-heading">Disclosure of Information</h5>
-            <p>
+        <div id="informationDisclosed" class="flex flex-col gap-[10px]">
+            <h5 class="policy-container-heading font-Wanted-Bold text-[24px] sm:text-[28px] md:text-[30px]">Disclosure of Information</h5>
+            <p class="font-Wanted-Variable text-[14px] sm:text-[16px] md:text-[18px] leading-[25px]">
                 We may disclose your information to third parties for various purposes, including to:
-            <ul>
-                <li>
+            <ul class="font-Wanted-Variable leading-[25px] pl-[20px] md:pl-[25px] lg:pl-[30px]">
+                <li class="text-[12px] sm:text-[14px] md:text-[16px]">
                     Event Organizers: We may share your information with event organizers to facilitate ticket
                     purchases, event check-in, and communication related to events you attend.
                 </li>
-                <li>
+                <li class="text-[12px] sm:text-[14px] md:text-[16px]">
                     Service Providers: We may share your information with third-party service providers who help
                     us operate, maintain, and improve the Services, such as payment processors and marketing
                     partners.
                 </li>
-                <li>
+                <li class="text-[12px] sm:text-[14px] md:text-[16px]">
                     Legal Compliance: We may disclose your information in response to a subpoena, court order,
                     or other legal request, or to comply with applicable laws or regulations.
                 </li>
             </ul>
             </p>
         </div>
-        <div id="dataRetention">
-            <h5 class="policy-container-heading">Data Retention</h5>
-            <p>
+        <div id="dataRetention" class="flex flex-col gap-[10px]">
+            <h5 class="policy-container-heading font-Wanted-Bold text-[24px] sm:text-[28px] md:text-[30px]">Data Retention</h5>
+            <p class="font-Wanted-Variable text-[14px] sm:text-[16px] md:text-[18px] leading-[25px]">
                 We will retain your information for as long as necessary to fulfill the purposes outlined in
                 this Privacy Policy, unless a longer retention period is required or permitted by law.
             </p>
         </div>
-        <div id="dataSecurity">
-            <h5 class="policy-container-heading">Security</h5>
-            <p>
+        <div id="dataSecurity" class="flex flex-col gap-[10px]">
+            <h5 class="policy-container-heading font-Wanted-Bold text-[24px] sm:text-[28px] md:text-[30px]">Security</h5>
+            <p class="font-Wanted-Variable text-[14px] sm:text-[16px] md:text-[18px] leading-[25px]">
                 We take reasonable measures to protect the security and integrity of your information, but no
                 method of transmission over the Internet or electronic storage is 100% secure. Therefore, we
                 cannot guarantee the absolute security of your information.
             </p>
         </div>
-        <div id="privacyKids">
-            <h5 class="policy-container-heading">Children's Privacy</h5>
-            <p>
+        <div id="privacyKids" class="flex flex-col gap-[10px]">
+            <h5 class="policy-container-heading font-Wanted-Bold text-[24px] sm:text-[28px] md:text-[30px]">Children's Privacy</h5>
+            <p class="font-Wanted-Variable text-[14px] sm:text-[16px] md:text-[18px] leading-[25px]">
                 The Services are not directed to children under the age of 14, and we do not knowingly collect
                 personal information from children under the age of 14. If you are a parent or guardian and
                 believe that your child has provided us with personal information, please contact us at [insert
                 contact email] so that we can delete the child's information.
             </p>
         </div>
-        <div id="youDecide">
-            <h5 class="policy-container-heading">Your Choices</h5>
-            <p>
+        <div id="youDecide" class="flex flex-col gap-[10px]">
+            <h5 class="policy-container-heading font-Wanted-Bold text-[24px] sm:text-[28px] md:text-[30px]">Your Choices</h5>
+            <p class="font-Wanted-Variable text-[14px] sm:text-[16px] md:text-[18px] leading-[25px]">
                 You may update or delete your account information at any time by accessing your account
                 settings. You may also opt out of receiving promotional communications from us by following the
                 instructions provided in such communications.
             </p>
         </div>
-        <div id="disclaimerTerms">
-            <h5 class="policy-container-heading">Changes to this Privacy Policy</h5>
-            <p>
+        <div id="disclaimerTerms" class="flex flex-col gap-[10px]">
+            <h5 class="policy-container-heading font-Wanted-Bold text-[24px] sm:text-[28px] md:text-[30px]">Changes to this Privacy Policy</h5>
+            <p class="font-Wanted-Variable text-[14px] sm:text-[16px] md:text-[18px] leading-[25px]">
                 We reserve the right to modify or update this Privacy Policy at any time without prior notice.
                 We will notify you of any changes by posting the new Privacy Policy on this page. Your continued
                 use of the Services after any such changes constitutes your acceptance of the revised Privacy
                 Policy.
             </p>
         </div>
-        <div id="contactUsPolicy">
-            <h5 class="policy-container-heading">Contact Us</h5>
-            <p>
+        <div id="contactUsPolicy" class="flex flex-col gap-[10px]">
+            <h5 class="policy-container-heading font-Wanted-Bold text-[24px] sm:text-[28px] md:text-[30px]">Contact Us</h5>
+            <p class="font-Wanted-Variable text-[14px] sm:text-[16px] md:text-[18px] leading-[25px]">
                 If you have any questions or concerns about this Privacy Policy, please contact us.
             </p>
         </div>
         <hr>
-        <div>
-            <p>
+        <div class="flex flex-col gap-[10px]">
+            <p class="font-Wanted-Variable text-[14px] sm:text-[16px] md:text-[18px] leading-[25px]">
                 This Privacy Policy should provide clear and comprehensive information about how you collect,
                 use, and protect your users' personal information specifically tailored for an event ticketing
-                app like <span id="body-logo">WAVE<span class="spot">.</span></span> As always, it's important
+                app like <span id="body-logo" class="font-Wanted-Black">WAVE<span class="spot text-[#008d95]">.</span></span> As always, it's important
                 to ensure compliance with applicable privacy laws and
                 regulations and consult with a legal professional if needed.
             </p>

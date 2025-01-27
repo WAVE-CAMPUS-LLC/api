@@ -28,60 +28,53 @@ def initialize_stripe_settings():
     """Initialize default Stripe platform settings if they don't exist"""
     if not StripePlatformSettings.objects.exists():
         StripePlatformSettings.objects.create(
-            salesTaxPercentage=Decimal('7.00'),  # 8% sales tax
-            salesFeeAmount=Decimal('0.99'),      # $2 fee per ticket
-            percentageStayingOnPlatform=Decimal('50.0')  # 2.9% platform fee
+            salesTaxPercentage=Decimal("7.00"),  # 8% sales tax
+            salesFeeAmount=Decimal("0.99"),  # $2 fee per ticket
+            percentageStayingOnPlatform=Decimal("50.0"),  # 2.9% platform fee
         )
 
-import json
-from django.http import JsonResponse
-from django.shortcuts import get_object_or_404, render
-from django.conf import settings
-from decimal import Decimal
-import stripe
 
 def checkoutView(request):
     stripe.api_key = settings.STRIPE_SECRET_KEY
-
-    # Get the cart from the session
     cart = request.session.get("cart", {})
-    if not cart:
-        return JsonResponse({"error": "Your cart is empty."}, status=400)
+    event_id = None
 
-    # Initialize your Stripe platform settings
+    # Initialize Stripe settings if they don't exist
     initialize_stripe_settings()
+
     platform_settings = StripePlatformSettings.objects.first()
     if not platform_settings:
         return JsonResponse({"error": "Stripe platform settings not found"}, status=500)
 
     sales_tax_percentage = platform_settings.salesTaxPercentage
     sales_fee_amount = platform_settings.salesFeeAmount
-    percentage_staying_on_platform = platform_settings.percentageStayingOnPlatform
 
+    # Calculate totals and ensure single-event assumption
     total_amount = Decimal(0.0)
     host_total = Decimal(0.0)
     adjusted_line_items = []
     event_id = None
 
-    # Calculate totals and build line_items for Stripe
     for _, ticket in cart.items():
         ticket_price = Decimal(ticket["price"])
         ticket_quantity = int(ticket["quantity"])
-        event_id = ticket["eventId"]  # We assume all items are for one event
+        event_id = ticket["eventId"]  # Assumes all tickets are for the same event
 
-        # Price + tax + fee
+        # Calculate sales tax and final ticket price
         sales_tax = ticket_price * (sales_tax_percentage / Decimal(100))
         final_ticket_price = ticket_price + sales_tax + sales_fee_amount
 
-        total_amount += (final_ticket_price * ticket_quantity)
-        host_total += (ticket_price * ticket_quantity)
+        # Update totals
+        total_amount += final_ticket_price * ticket_quantity
+        host_total += ticket_price * ticket_quantity
 
+        # Add item to Stripe line items
         adjusted_line_items.append(
             {
                 "price_data": {
                     "currency": "usd",
                     "product_data": {"name": "Event Ticket"},
-                    "unit_amount": int(final_ticket_price * 100),
+                    "unit_amount": int(final_ticket_price * 100),  # Stripe uses cents
                 },
                 "quantity": ticket_quantity,
             }
@@ -90,70 +83,56 @@ def checkoutView(request):
     if not event_id:
         return JsonResponse({"error": "Event ID not found in cart."}, status=400)
 
+    # Retrieve event and host details
     event = get_object_or_404(Event, eventId=event_id)
-    host_profile = get_object_or_404(HostProfile, user=event.host)
-    host_stripe_account_id = host_profile.stripe_account_id
+    host = event.host
+    hostProfile = get_object_or_404(HostProfile, user=host)
+    hostStripeAccountId = hostProfile.stripe_account_id
+
+    # Customer information
+    if request.user.is_authenticated:
+        customerEmail = request.user.email
+        customer_metadata = {
+            "Customer Name": f"{request.user.first_name} {request.user.last_name}",
+            "Customer Email": customerEmail,
+        }
+    else:
+        guest_info = {
+            "first_name": request.POST.get("first_name"),
+            "last_name": request.POST.get("last_name"),
+            "email": request.POST.get("email"),
+        }
+
+        if not all(guest_info.values()):
+            return JsonResponse(
+                {"error": "Complete guest information is required."}, status=400
+            )
+
+        customerEmail = guest_info["email"]
+        customer_metadata = {
+            "Customer Name": f"{guest_info['first_name']} {guest_info['last_name']}",
+            "Customer Email": customerEmail,
+        }
 
     if request.method == "POST":
-        # ------------------------------
-        # 1) Parse Guest Info or Use Authenticated Info
-        # ------------------------------
-        if request.user.is_authenticated:
-            # Authenticated user
-            customer_email = request.user.email
-            customer_metadata = {
-                "Customer Name": f"{request.user.first_name} {request.user.last_name}",
-                "Customer Email": request.user.email,
-            }
-        else:
-            # Guest user => read JSON or form data
-            if request.content_type == "application/json":
-                # Parse JSON
-                try:
-                    data = json.loads(request.body)
-                except json.JSONDecodeError:
-                    return JsonResponse({"error": "Invalid JSON data."}, status=400)
-                
-                first_name = data.get("first_name")
-                last_name = data.get("last_name")
-                email = data.get("email")
-            else:
-                # Fallback if you're sometimes posting via traditional HTML form
-                first_name = request.POST.get("first_name")
-                last_name = request.POST.get("last_name")
-                email = request.POST.get("email")
-
-            # Validate guest info
-            if not all([first_name, last_name, email]):
-                return JsonResponse({"error": "Complete guest information is required."}, status=400)
-
-            customer_email = email
-            customer_metadata = {
-                "Customer Name": f"{first_name} {last_name}",
-                "Customer Email": email,
-            }
-
-        # ------------------------------
-        # 2) Create Stripe Customer
-        # ------------------------------
         try:
+            # Create a Stripe customer
             customer = stripe.Customer.create(
-                email=customer_email,
-                metadata=customer_metadata
+                email=customerEmail, metadata=customer_metadata
             )
 
             # Calculate application fee
-            application_fee_amount = host_total * percentage_staying_on_platform / Decimal(100)
+            application_fee_amount = (
+                host_total
+                * platform_settings.percentageStayingOnPlatform
+                / Decimal(100)
+            )
 
-            # Your success and cancel URLs
+            # In local development, use the website domain from the .env file
+            # In production, use the actual website domain
             load_dotenv()
-            # domain = os.getenv("WEBSITE_DOMAIN")  # e.g. "http://127.0.0.1:8000"
-            domain = "http://127.0.0.1:8000"
+            domain = os.getenv("WEBSITE_DOMAIN")
 
-
-            # ------------------------------
-            # 3) Create the Stripe Checkout Session
-            # ------------------------------
             checkout_session = stripe.checkout.Session.create(
                 payment_method_types=["card"],
                 line_items=adjusted_line_items,
@@ -161,11 +140,6 @@ def checkoutView(request):
                 success_url=f"{domain}/paymentSuccessful/?session_id={{CHECKOUT_SESSION_ID}}",
                 cancel_url=f"{domain}/paymentFailed/",
                 customer=customer.id,
-                payment_intent_data={
-                    "on_behalf_of": host_stripe_account_id,
-                    "application_fee_amount": int(application_fee_amount * 100),
-                    "transfer_data": {"destination": host_stripe_account_id},
-                },
             )
 
             return JsonResponse({"url": checkout_session.url})
@@ -173,15 +147,13 @@ def checkoutView(request):
         except stripe.error.StripeError as e:
             return JsonResponse({"error": str(e)}, status=400)
         except Exception as e:
-            return JsonResponse({"error": f"An unexpected error occurred: {str(e)}"}, status=500)
+            return JsonResponse({"error": "An unexpected error occurred."}, status=500)
 
-    # If not POST, render your checkout page
     return render(
         request,
         "eventTicketsApp/checkoutSession/checkout.html",
         {"cart": cart, "total_amount": total_amount},
     )
-
 
 
 def paymentSuccessful(request):
@@ -196,7 +168,7 @@ def paymentSuccessful(request):
         user_payment = UserPayment.objects.create(
             user=request.user if request.user.is_authenticated else None,
             stripe_checkout_id=checkout_session_id,
-            success=True
+            success=True,
         )
 
         # Retrieve the cart from the session
@@ -241,17 +213,27 @@ def paymentSuccessful(request):
                         guestEmail=member.email if member else None,
                         crewTicket=(member != request.user),
                     )
-                    messages.add_message(request, messages.SUCCESS, f"Generated ticket for {member.first_name} {member.last_name}")
-                    print(f"Generated ticket for {member.first_name} {member.last_name}")
-                    print(f"Generated ticket for {member.first_name} {member.last_name}")
-                    print(f"Generated ticket for {member.first_name} {member.last_name}")
+                    messages.add_message(
+                        request,
+                        messages.SUCCESS,
+                        f"Generated ticket for {member.first_name} {member.last_name}",
+                    )
+                    print(
+                        f"Generated ticket for {member.first_name} {member.last_name}"
+                    )
+                    print(
+                        f"Generated ticket for {member.first_name} {member.last_name}"
+                    )
+                    print(
+                        f"Generated ticket for {member.first_name} {member.last_name}"
+                    )
             else:
                 # A REGULAR TICKET
                 quantity = ticket_info["quantity"]
 
                 # Create N tickets (for user or guest)
                 for _ in range(quantity):
-                    generateTicket( 
+                    generateTicket(
                         request=request,
                         event=event,
                         user=(request.user if request.user.is_authenticated else None),
@@ -276,7 +258,6 @@ def paymentSuccessful(request):
         )
 
     return JsonResponse({"error": "Session ID not provided."}, status=400)
-
 
 
 def paymentFailed(request):
@@ -331,7 +312,7 @@ def updateCartView(request):
 def viewTicket(request, mainId):
     ticket = get_object_or_404(Ticket, mainId=mainId)
     event = ticket.event
-    
+
     if ticket:
         return render(
             request,
@@ -343,7 +324,13 @@ def viewTicket(request, mainId):
 
 
 def generateTicket(
-    request, event, user=None, guestFirstName=None, guestLastName=None, guestEmail=None, crewTicket=False
+    request,
+    event,
+    user=None,
+    guestFirstName=None,
+    guestLastName=None,
+    guestEmail=None,
+    crewTicket=False,
 ):
     ticket = Ticket(
         user=user if user and user.is_authenticated else None,
@@ -401,16 +388,18 @@ def generateTicket(
         if guestEmail or (user and user.email):
             subject = (
                 f"{request.user.first_name} bought a ticket for you for {event.title}"
-                if crewTicket else
-                f"Your Ticket for {event.title}"
+                if crewTicket
+                else f"Your Ticket for {event.title}"
             )
             message = (
                 "This ticket was bought by a crew member for you!\nYour QR code is attached."
-                if crewTicket else
-                "Thank you for your purchase!\nYour QR code is attached."
+                if crewTicket
+                else "Thank you for your purchase!\nYour QR code is attached."
             )
             recipient_list = [guestEmail] if guestEmail else [user.email]
-            qrCodeHtml = render_to_string("emailManagement/build_production/emails/transactional.html")
+            qrCodeHtml = render_to_string(
+                "emailManagement/build_production/emails/transactional.html"
+            )
             from_email = settings.DEFAULT_FROM_EMAIL
 
             send_mail(

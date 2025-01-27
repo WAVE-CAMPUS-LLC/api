@@ -4,15 +4,15 @@
 
 
 
-<div id="navigation-container" class="hidden pre-lg:inline max-w-full w-full top-0 right-0 left-0 flex-none">
-    <nav class="w-full flex flex-row items-center justify-between pre-lg:px-8 lg:px-14 xl:px-24 2xl:px-28 py-5">
-        <div id="logo-menu">
+<div id="navigation-container" class="max-w-full w-full top-0 right-0 left-0 flex-none">
+    <nav class="w-full flex flex-col pre-lg:flex-row items-center justify-between pre-lg:px-8 lg:px-14 xl:px-24 2xl:px-28 py-5 border-b border-gray-100 shadow-sm pb-6">
+        <div id="logo-menu" class="flex justify-start">
             <div id="logo">
                 <a href="{% url "core:index" %}">WAV<span>E</span>.</a>
             </div>
         </div>
-        <div id="menu-options" class="flex items-center">
-            <ul class="flex gap-4 list-none text-black font-Wanted-Variable text-Semi-Medium">
+        <div id="menu-options" class="flex items-center justify-center">
+            <ul class="flex flex-row gap-4 list-none text-black font-Wanted-Variable text-Semi-Medium">
                 <li>
                     <a href="{% url "eventManagement:hostPortal" %}" class="hover:underline hover:decoration-green">Dashboard</a>
                 </li>
@@ -31,59 +31,4 @@
             </ul>
         </div>
     </nav>
-</div>
-
-
-<div class="top-0 pre-lg:hidden">
-    <nav class="mt-5 right-0 left-0 w-full">
-        <div class="flex flex-col gap-2">
-            <div id="nav-container" class="w-full h-full mx-auto px-4 pr-1 sm:px-8 flex items-center justify-between">
-                <div id="brand-logo" class=" h-full flex items-center justify-center">
-                    <div id="logo">
-                        <a href="{% url "core:index"  %}">WAV<span>E</span>.</a>
-                    </div>
-                </div>
-                <div id="nav-bar_menu-container" class="h-full flex items-center justify-center pt-1">
-                    <button title="menuButton" id="menuButton" class="h-full flex items-center justify-center hamburger hamburger--elastic w-full px-7" type="button">
-                        <span class="hamburger-box">
-                            <span class="hamburger-inner"></span>
-                        </span>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </nav>
-
-    <div id="overlay"
-        class="fixed top-0 left-0 right-0 bottom-0 z-[1005] w-full overflow-y-scroll overflow-x-hidden">
-        <div class="container px-4 py-3 w-full h-full">
-            <div id="ov-menu"
-                class="max-h-screen h-full w-full flex justify-between flex-col mt-6 pb-10 top-10 xsm:top-20 sm:top-20 md:top-20">
-                <div class="flex flex-col h-full gap-12">
-                    <div class="flex flex-col gap-7">
-                        <div class="w-full flex justify-end">
-                            <div id="overlay-logo" class="font-Wanted-Black text-2xl text-black">
-                                <a href="{% url "core:index"  %}">WAV<span class="text-white">E</span>.</a>
-                            </div>
-                        </div>
-                        <hr>
-                    </div>
-                    <ul class="flex flex-col gap-5 list-none text-Large px-5 font-Wanted-Regular text-white">
-                        <li>
-                            <a href="{% url "eventManagement:hostPortal" %}" class="hover:underline">Dashboard</a>
-                        </li>
-            
-                        <li>
-                            <a href="" class="hover:underline">Listings</a>
-                        </li>
-            
-                        <li>
-                            <a href="" class="hover:underline">Insights</a>
-                        </li>
-                    </ul>
-                    <div class=""></div>
-                </div>
-            </div>
-        </div>
-    </div>
 </div>
