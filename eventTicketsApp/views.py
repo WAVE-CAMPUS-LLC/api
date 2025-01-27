@@ -36,119 +36,48 @@ def initialize_stripe_settings():
 
 
 def checkoutView(request):
+    # 1) Gather your cart info, compute total, etc.
     stripe.api_key = settings.STRIPE_SECRET_KEY
+    
     cart = request.session.get("cart", {})
-    event_id = None
+    total_amount = some_computed_decimal_total  # e.g., 22.39
+    
+    # Convert to integer cents
+    amount_in_cents = int(total_amount * 100)
 
-    # Initialize Stripe settings if they don't exist
-    initialize_stripe_settings()
-
-    platform_settings = StripePlatformSettings.objects.first()
-    if not platform_settings:
-        return JsonResponse({"error": "Stripe platform settings not found"}, status=500)
-
-    sales_tax_percentage = platform_settings.salesTaxPercentage
-    sales_fee_amount = platform_settings.salesFeeAmount
-
-    # Calculate totals and ensure single-event assumption
-    total_amount = Decimal(0.0)
-    host_total = Decimal(0.0)
-    adjusted_line_items = []
-
-    for _, ticket in cart.items():
-        ticket_price = Decimal(ticket["price"])
-        ticket_quantity = int(ticket["quantity"])
-        event_id = ticket["eventId"]
-
-        sales_tax = ticket_price * (sales_tax_percentage / Decimal(100))
-        final_ticket_price = ticket_price + sales_tax + sales_fee_amount
-
-        total_amount += final_ticket_price * ticket_quantity
-        host_total += ticket_price * ticket_quantity
-
-        adjusted_line_items.append(
-            {
-                "price_data": {
-                    "currency": "usd",
-                    "product_data": {"name": "Event Ticket"},
-                    "unit_amount": int(final_ticket_price * 100),
-                },
-                "quantity": ticket_quantity,
-            }
-        )
-
-    if not event_id:
-        return JsonResponse({"error": "Event ID not found in cart."}, status=400)
-
-    event = get_object_or_404(Event, eventId=event_id)
-    host = event.host
-    hostProfile = get_object_or_404(HostProfile, user=host)
+    # 2) Create or retrieve the user’s default PaymentMethod
+    default_payment_method_id = None
+    default_payment_method_data = None
 
     if request.user.is_authenticated:
-        customerEmail = request.user.email
-        customer_metadata = {
-            "Customer Name": f"{request.user.first_name} {request.user.last_name}",
-            "Customer Email": customerEmail,
-        }
-
-        # Retrieve Stripe customer and payment methods
-        customer_id = request.user.customer_id  # Assuming stored in user model
-        payment_methods = CustomerAccount.listPaymentMethods(customer_id)
-        default_payment_method = next(
-            (pm for pm in payment_methods if pm["is_default"]), None
-        )
+        customer_id = request.user.customer_id
+        if customer_id:
+            customer = stripe.Customer.retrieve(customer_id)
+            default_payment_method_id = customer.invoice_settings.default_payment_method
+            if default_payment_method_id:
+                default_payment_method_data = stripe.PaymentMethod.retrieve(default_payment_method_id)
     else:
-        customerEmail = request.POST.get("email")
-        customer_metadata = {"Customer Email": customerEmail}
-        default_payment_method = None  # Guest users won't have saved payment methods
+        customer_id = None
 
-    if request.method == "POST":
-        try:
-            if request.user.is_authenticated:
-                customer = stripe.Customer.retrieve(customer_id)
-            else:
-                customer = stripe.Customer.create(
-                    email=customerEmail, metadata=customer_metadata
-                )
-
-            application_fee_amount = (
-                host_total
-                * platform_settings.percentageStayingOnPlatform
-                / Decimal(100)
-            )
-
-            load_dotenv()
-            domain = os.getenv("WEBSITE_DOMAIN")
-
-            # Include the default payment method if available
-            checkout_session = stripe.checkout.Session.create(
-                payment_method_types=["card"],
-                line_items=adjusted_line_items,
-                mode="payment",
-                success_url=f"{domain}/paymentSuccessful/?session_id={{CHECKOUT_SESSION_ID}}",
-                cancel_url=f"{domain}/paymentFailed/",
-                customer=customer.id,
-                payment_method=(
-                    default_payment_method["id"] if default_payment_method else None
-                ),
-            )
-
-            return JsonResponse({"url": checkout_session.url})
-
-        except stripe.error.StripeError as e:
-            return JsonResponse({"error": str(e)}, status=400)
-        except Exception as e:
-            return JsonResponse({"error": "An unexpected error occurred."}, status=500)
-
-    return render(
-        request,
-        "eventTicketsApp/checkoutSession/checkout.html",
-        {
-            "cart": cart,
-            "total_amount": total_amount,
-            "default_payment_method": default_payment_method,
-        },
+    # 3) Create a PaymentIntent (for example, in 'manual' confirmation mode)
+    #    or confirm automatically. Typically you set 'automatic_payment_methods' or
+    #    'payment_method_types=["card"]'.
+    payment_intent = stripe.PaymentIntent.create(
+        amount=amount_in_cents,
+        currency="usd",
+        customer=customer_id,  
+        # If you want to allow them to pay with a brand new card as well:
+        automatic_payment_methods={"enabled": True}, 
+        # or payment_method_types=["card"], 
     )
+
+    # 4) Pass the client_secret & default card info to your template
+    context = {
+        "client_secret": payment_intent.client_secret,
+        "total_amount": total_amount,
+        "default_payment_method": default_payment_method_data,  # brand, last4, etc.
+    }
+    return render(request, "your_custom_checkout.html", context)
 
 
 def paymentSuccessful(request):

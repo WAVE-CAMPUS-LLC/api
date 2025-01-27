@@ -104,12 +104,16 @@ class CustomerAccount:
 
     def setDefaultPaymentMethod(customer_id, payment_method_id):
         try:
+            stripe.PaymentMethod.attach(
+                payment_method_id,
+                customer=customer_id
+            )
+
             stripe.Customer.modify(
                 customer_id,
-                invoice_settings={
-                    'default_payment_method': payment_method_id,
-                },
+                invoice_settings={'default_payment_method': payment_method_id}
             )
+
             return True
         except stripe.error.StripeError as e:
             print(f"Stripe error: {e.user_message}")
@@ -134,3 +138,21 @@ class CustomerAccount:
         except Exception as e:
             print(f"Error: {str(e)}")
             return False
+        
+    def setupPaymentIntent(request, customer_id, amount, currency):
+        try:
+            intent = stripe.PaymentIntent.create(
+                amount=amount,
+                currency=currency,
+                customer=customer_id,
+                payment_method_types=["card"],
+                automatic_payment_methods={"enabled": True},
+                setup_future_usage="off_session",
+            )
+            return intent
+        except stripe.error.StripeError as e:
+            messages.error(request, f"Error: {e.user_message}")
+            return None
+        except Exception as e:
+            print(f"Error: {str(e)}")
+            return None
