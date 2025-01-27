@@ -18,6 +18,7 @@ import time
 from qr_code.qrcode import maker
 from qr_code.qrcode.utils import QRCodeOptions
 import stripe
+from stripeManagementApp.customerSetup import CustomerAccount
 
 from socialApp.models import Crew
 from .models import PaidFreeTicket, Ticket, UserPayment, StripePlatformSettings
@@ -53,28 +54,24 @@ def checkoutView(request):
     total_amount = Decimal(0.0)
     host_total = Decimal(0.0)
     adjusted_line_items = []
-    event_id = None
 
     for _, ticket in cart.items():
         ticket_price = Decimal(ticket["price"])
         ticket_quantity = int(ticket["quantity"])
-        event_id = ticket["eventId"]  # Assumes all tickets are for the same event
+        event_id = ticket["eventId"]
 
-        # Calculate sales tax and final ticket price
         sales_tax = ticket_price * (sales_tax_percentage / Decimal(100))
         final_ticket_price = ticket_price + sales_tax + sales_fee_amount
 
-        # Update totals
         total_amount += final_ticket_price * ticket_quantity
         host_total += ticket_price * ticket_quantity
 
-        # Add item to Stripe line items
         adjusted_line_items.append(
             {
                 "price_data": {
                     "currency": "usd",
                     "product_data": {"name": "Event Ticket"},
-                    "unit_amount": int(final_ticket_price * 100),  # Stripe uses cents
+                    "unit_amount": int(final_ticket_price * 100),
                 },
                 "quantity": ticket_quantity,
             }
@@ -83,56 +80,47 @@ def checkoutView(request):
     if not event_id:
         return JsonResponse({"error": "Event ID not found in cart."}, status=400)
 
-    # Retrieve event and host details
     event = get_object_or_404(Event, eventId=event_id)
     host = event.host
     hostProfile = get_object_or_404(HostProfile, user=host)
-    hostStripeAccountId = hostProfile.stripe_account_id
 
-    # Customer information
     if request.user.is_authenticated:
         customerEmail = request.user.email
         customer_metadata = {
             "Customer Name": f"{request.user.first_name} {request.user.last_name}",
             "Customer Email": customerEmail,
         }
+
+        # Retrieve Stripe customer and payment methods
+        customer_id = request.user.customer_id  # Assuming stored in user model
+        payment_methods = CustomerAccount.listPaymentMethods(customer_id)
+        default_payment_method = next(
+            (pm for pm in payment_methods if pm["is_default"]), None
+        )
     else:
-        guest_info = {
-            "first_name": request.POST.get("first_name"),
-            "last_name": request.POST.get("last_name"),
-            "email": request.POST.get("email"),
-        }
-
-        if not all(guest_info.values()):
-            return JsonResponse(
-                {"error": "Complete guest information is required."}, status=400
-            )
-
-        customerEmail = guest_info["email"]
-        customer_metadata = {
-            "Customer Name": f"{guest_info['first_name']} {guest_info['last_name']}",
-            "Customer Email": customerEmail,
-        }
+        customerEmail = request.POST.get("email")
+        customer_metadata = {"Customer Email": customerEmail}
+        default_payment_method = None  # Guest users won't have saved payment methods
 
     if request.method == "POST":
         try:
-            # Create a Stripe customer
-            customer = stripe.Customer.create(
-                email=customerEmail, metadata=customer_metadata
-            )
+            if request.user.is_authenticated:
+                customer = stripe.Customer.retrieve(customer_id)
+            else:
+                customer = stripe.Customer.create(
+                    email=customerEmail, metadata=customer_metadata
+                )
 
-            # Calculate application fee
             application_fee_amount = (
                 host_total
                 * platform_settings.percentageStayingOnPlatform
                 / Decimal(100)
             )
 
-            # In local development, use the website domain from the .env file
-            # In production, use the actual website domain
             load_dotenv()
             domain = os.getenv("WEBSITE_DOMAIN")
 
+            # Include the default payment method if available
             checkout_session = stripe.checkout.Session.create(
                 payment_method_types=["card"],
                 line_items=adjusted_line_items,
@@ -140,6 +128,9 @@ def checkoutView(request):
                 success_url=f"{domain}/paymentSuccessful/?session_id={{CHECKOUT_SESSION_ID}}",
                 cancel_url=f"{domain}/paymentFailed/",
                 customer=customer.id,
+                payment_method=(
+                    default_payment_method["id"] if default_payment_method else None
+                ),
             )
 
             return JsonResponse({"url": checkout_session.url})
@@ -152,7 +143,11 @@ def checkoutView(request):
     return render(
         request,
         "eventTicketsApp/checkoutSession/checkout.html",
-        {"cart": cart, "total_amount": total_amount},
+        {
+            "cart": cart,
+            "total_amount": total_amount,
+            "default_payment_method": default_payment_method,
+        },
     )
 
 
