@@ -167,7 +167,6 @@ class PaidFreeTicket(models.Model):
 class UserPayment(models.Model):
     user = models.ForeignKey("authenticationApp.CustomUser", on_delete=models.CASCADE)
     success = models.BooleanField(default=False)
-    stripe_checkout_id = models.CharField(max_length=500)
     
     class Meta:
         default_permissions = ()

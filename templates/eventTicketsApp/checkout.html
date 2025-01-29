@@ -57,7 +57,7 @@ WAVE — Join Us!
                     </div>
                 </div>
 
-                <form class="col-span-2 w-full" method="post" action="{% url "eventTickets:checkout" %}">
+                <form class="col-span-2 w-full" id="checkoutForm">
                     {% csrf_token %}
                     <input type="hidden" id="cartData" name="cartData" value='{{ cart|jsonify|safe }}'>
                     <input type="hidden" id="stripeKey" name="stripeKey" value="{{ stripePublicKey }}">
@@ -66,8 +66,8 @@ WAVE — Join Us!
                     {% else %}
                     <input type="hidden" id="initializeStripeElements" name="initializeStripeElements" value="False">
                     {% endif %}
-                    <input type="hidden" id="processPaymentUrl" name="processPaymentUrl" value="{% url "eventTickets:createPaymentIntent" %}">
-                    <input type="hidden" id="successPaymentUrl" name="successPaymentUrl" value="{% url "eventTickets:paymentSuccessful" %}">
+                    <input type="hidden" id="processPaymentUrl" name="processPaymentUrl" value="http://127.0.0.1:8000{% url "eventTickets:createPaymentIntent" %}">
+                    <input type="hidden" id="successPaymentUrl" name="successPaymentUrl" value="http://127.0.0.1:8000{% url "eventTickets:paymentSuccessful" %}">
                     <div class="checkout-information w-full p-[40px] pt-[20px] h-full flex flex-col gap-[20px]">
                         <div class="ci-body-information-row-one flex flex-col gap-[5px]">
                             <h3 class="font-Wanted-Bold text-[17px] text-black">1. Personal Information</h3>
