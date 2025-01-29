@@ -238,6 +238,7 @@ def eventDetailsView(request, eventId, token=None):
     user = None
     user_friends = None
     user_crews = None
+    guest_list = event.guest_list.all()
 
     if request.user.is_authenticated:
         user = get_object_or_404(UserProfile, user=request.user)
@@ -292,6 +293,7 @@ def eventDetailsView(request, eventId, token=None):
                         "friends": user_friends,
                         "crews": user_crews,
                         "isFavoriteEvent": isFavoriteEvent,
+                        "guestList": guest_list,
                     },
                 )
 
@@ -307,8 +309,11 @@ def eventDetailsView(request, eventId, token=None):
                     guestEmail = rsvp_ticket.email
 
                     user = request.user if request.user.is_authenticated else None
+                    
+                    if user:
+                        event.guest_list.add(user)
 
-                    generateTicket(
+                    (
                         request, event, user, guestFirstName, guestLastName, guestEmail
                     )
 
@@ -328,6 +333,7 @@ def eventDetailsView(request, eventId, token=None):
                             "friends": user_friends,
                             "crews": user_crews,
                             "isFavoriteEvent": isFavoriteEvent,
+                            "guestList": guest_list,
                         },
                     )
 
@@ -456,6 +462,7 @@ def eventDetailsView(request, eventId, token=None):
                     "friends": user_friends,
                     "crews": user_crews,
                     "isFavoriteEvent": isFavoriteEvent,
+                    "guestList": guest_list,
                 },
             )
         else:
@@ -478,6 +485,7 @@ def eventDetailsView(request, eventId, token=None):
                     "friends": user_friends,
                     "crews": user_crews,
                     "isFavoriteEvent": isFavoriteEvent,
+                    "guestList": guest_list,
                 },
             )
         else:
@@ -508,6 +516,7 @@ def eventDetailsView(request, eventId, token=None):
                     "friends": user_friends,
                     "crews": user_crews,
                     "isFavoriteEvent": isFavoriteEvent,
+                    "guestList": guest_list,
                 },
             )
         else:
@@ -533,6 +542,7 @@ def eventDetailsView(request, eventId, token=None):
                 "friends": user_friends,
                 "crews": user_crews,
                 "isFavoriteEvent": isFavoriteEvent,
+                "guestList": guest_list,
             },
         )
 

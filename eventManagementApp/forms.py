@@ -225,6 +225,7 @@ class EventForm(forms.ModelForm):
             "crew_discount",
             "minimum_crew_size",
             "crew_discount_percentage",
+            "show_guest_list",
         ]
 
         widgets = {

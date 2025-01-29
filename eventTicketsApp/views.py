@@ -434,7 +434,7 @@ def generateTicket(
                 fail_silently=False,
                 html_message=qrCodeHtml,
             )
-
+            
     except Exception as e:
         print(f"Error generating QR code: {e}")
     return ticket

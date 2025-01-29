@@ -122,6 +122,7 @@ def eventCreationProcess(request):
                 event = eventForm.save(commit=False)
                 event.host = userAccount
                 event.crew_discount = request.POST.get('crew_discount') == "on"
+                event.show_guest_list = request.POST.get('show_guest_list') == "on"
                 event.status = "live"
 
                 

@@ -256,6 +256,22 @@ Create your event — WAVE.
                         </div>
                     </div>
                 </div>
+                <div class="flex flex-col gap-4 w-full items-start">
+                    <div class="w-full flex flex-row justify-between">
+                        <h6 class="flex justify-start font-Wanted-Medium text-Large">Show Guest List</h6>
+                        <input class="hidden" id="toggleButtonIDList" name="{{ eventForm.show_guest_list.html_name }}" value="{{ eventForm.show_guest_list.auto_id }}">
+                        <label class="toggle-switch">
+                            <input 
+                                type="checkbox" 
+                                name="{{ eventForm.show_guest_list.html_name }}" 
+                                id="{{ eventForm.show_guest_list.auto_id }}"
+                                {% if eventForm.show_guest_list.value %}checked{% endif %}
+                            >
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <p class="text-gray-500 font-Wanted-SemiBold text-Base">This controls the visibility of the guest list, or everyone who is coming to this event.</p>
+                </div>
             </div>
             
             <!-- RIGHT COLUMN -->

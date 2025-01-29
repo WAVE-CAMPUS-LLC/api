@@ -156,14 +156,39 @@
                             </div>
                             {% endif %}
 
+                            {% if event.show_guest_list %}
                             <div class="hostInformation py-5 border-t border-customGray5 flex flex-col gap-7">
                                 <h3 class="flex justify-start text-Pre-Xl font-Wanted-SemiBold">Attendee list</h3>
                                 <div id="guestList" class="flex flex-row gap-7">
-                                    <a href="" class="flex flex-col items-center justify-center">
-                                        <img class="h-20 w-20 rounded-full" src="{% static "images/account/E.L3.png" %}" alt="Attendees" class="size-5" />
-                                    </a>
+                                    {% if guestList %}
+                                        {% for guest in guestList %}
+                                            <a class="flex flex-col items-center justify-center gap-1" href="{% url 'social:publicProfile' username=guest.username %}">
+                                                {% if guest.user_profile and guest.user_profile.profile_photo %}
+                                                    <img class="h-20 w-20 rounded-full"
+                                                        src="{{ guest.user_profile.profile_photo.url }}"
+                                                        alt="Attendee: {{ guest.username }}" />
+                                                {% else %}
+                                                    <img class="h-20 w-20 rounded-full"
+                                                        src="{% static 'images/account/E.L3.png' %}"
+                                                        alt="Attendee: {{ guest.username }}" />
+                                                {% endif %}
+
+                                                <p class="font-Wanted-Medium text-black text-sm">
+                                                    {{ guest.first_name }} {{ guest.last_name }}
+                                                </p>
+                                            </a>
+                                        {% endfor %}
+                                    {% else %}
+                                        <div class="emptyContainer h-full w-full rounded-[20px] py-[70px] flex justify-center flex-col gap-[10px] items-center bg-[rgba(146,146,146,0.096)]">
+                                            <div>
+                                                <img class="w-[30px] after-xsm:w-[40px] sm:w-[50px] md:w-[60px]" src="{% static "/images/coreApp/eventDetails/friends.svg" %}" />
+                                            </div>
+                                            <p class="font-Wanted-Variable text-[10px] after-xsm:text-[12px] sm:text-[14px] md:text-[16.5px] text-black text-center">No attendees yet</p>
+                                        </div>
+                                    {% endif %}
                                 </div>
                             </div>
+                            {% endif %}
                         </div>
                     </div>
 
