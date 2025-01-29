@@ -118,7 +118,10 @@ CSRF_TRUSTED_ORIGINS = [
 ]
 
 ROOT_URLCONF = "wave_v1.urls"
-SITE_URL = "https://waveoncampus.com"
+if DEBUG:
+    SITE_URL = "http://127.0.0.1:8000"
+else:
+    SITE_URL = "https://waveoncampus.com"
 
 TEMPLATES = [
     {

@@ -41,15 +41,21 @@ stripe.api_key = settings.STRIPE_SECRET_KEY
 
 
 def checkoutView(request):
+    url = settings.SITE_URL
+    successPaymentLink = f"{url}{reverse('eventTickets:paymentSuccessful')}"
+    createPaymentIntentLink = f"{url}{reverse('eventTickets:createPaymentIntent')}"
     context = {
         "stripeKey": settings.STRIPE_SECRET_KEY,
         "stripePublicKey": settings.STRIPE_PUBLISHABLE_KEY,
+        "successPaymentUrl": successPaymentLink,
+        "createPaymentIntentUrl": createPaymentIntentLink,
     }
 
     # Get cart from session
     cart = request.session.get("cart", {})
     print("Cart data in view:", cart)  # Debug print
-
+    
+    
     if request.method == "POST":
         try:
             data = json.loads(request.body)

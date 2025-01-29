@@ -3,6 +3,8 @@ document.addEventListener("DOMContentLoaded", async function () {
   const stripe = Stripe(stripeKey);
   const processPaymentURL = document.getElementById("processPaymentUrl").value;
   const successPaymentURL = document.getElementById("successPaymentUrl").value;
+  console.log(processPaymentURL);
+  console.log(successPaymentURL);
 
   let elements;
   let paymentElement;
@@ -169,7 +171,7 @@ document.addEventListener("DOMContentLoaded", async function () {
             },
             body: JSON.stringify({
               useStoredPaymentMethod: true,
-              cart: JSON.parse(localStorage.getItem("cart") || "{}"),
+              cart: getCartData(),
             }),
           });
 
