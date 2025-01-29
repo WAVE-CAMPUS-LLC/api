@@ -6,6 +6,8 @@ from django.contrib.auth.decorators import login_required
 from django.conf import settings
 from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
+from django.views.decorators.csrf import csrf_protect
 import uuid
 from django.contrib import messages
 from io import BytesIO
@@ -35,51 +37,149 @@ def initialize_stripe_settings():
         )
 
 
+stripe.api_key = settings.STRIPE_SECRET_KEY
+
+
 def checkoutView(request):
-    # 1) Gather your cart info, compute total, etc.
-    stripe.api_key = settings.STRIPE_SECRET_KEY
-    
-    cart = request.session.get("cart", {})
-    total_amount = some_computed_decimal_total  # e.g., 22.39
-    
-    # Convert to integer cents
-    amount_in_cents = int(total_amount * 100)
-
-    # 2) Create or retrieve the user’s default PaymentMethod
-    default_payment_method_id = None
-    default_payment_method_data = None
-
-    if request.user.is_authenticated:
-        customer_id = request.user.customer_id
-        if customer_id:
-            customer = stripe.Customer.retrieve(customer_id)
-            default_payment_method_id = customer.invoice_settings.default_payment_method
-            if default_payment_method_id:
-                default_payment_method_data = stripe.PaymentMethod.retrieve(default_payment_method_id)
-    else:
-        customer_id = None
-
-    # 3) Create a PaymentIntent (for example, in 'manual' confirmation mode)
-    #    or confirm automatically. Typically you set 'automatic_payment_methods' or
-    #    'payment_method_types=["card"]'.
-    payment_intent = stripe.PaymentIntent.create(
-        amount=amount_in_cents,
-        currency="usd",
-        customer=customer_id,  
-        # If you want to allow them to pay with a brand new card as well:
-        automatic_payment_methods={"enabled": True}, 
-        # or payment_method_types=["card"], 
-    )
-
-    # 4) Pass the client_secret & default card info to your template
     context = {
-        "client_secret": payment_intent.client_secret,
-        "total_amount": total_amount,
-        "default_payment_method": default_payment_method_data,  # brand, last4, etc.
+        "stripeKey": settings.STRIPE_SECRET_KEY,
+        "stripePublicKey": settings.STRIPE_PUBLISHABLE_KEY,
     }
-    return render(request, "your_custom_checkout.html", context)
+
+    # Get cart from session
+    cart = request.session.get("cart", {})
+    print("Cart data in view:", cart)  # Debug print
+
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            cart = data.get("cart", {})
+            
+            stripeCustomer = stripe.Customer.retrieve(request.user.customer_id)
+
+            defaultPaymentMethod = None
+
+            if stripeCustomer.invoice_settings.default_payment_method:
+                defaultPaymentMethod = stripe.PaymentMethod.retrieve(
+                    stripeCustomer.invoice_settings.default_payment_method
+                )
+
+            total_amount = sum(
+                float(ticket.get("price", 0)) * int(ticket.get("quantity", 0))
+                for ticket in cart.values()
+            )
+
+            # Update context with POST-specific data
+            context.update(
+                {
+                    "cart": cart,
+                    "defaultPaymentMethod": defaultPaymentMethod,
+                    "stripeCustomer": stripeCustomer,
+                    "totalAmount": "{:.2f}".format(total_amount),
+                }
+            )
+
+            return JsonResponse(
+                {"url": reverse("eventTickets:checkout"), "context": context}
+            )
+
+        except Exception as e:
+            return JsonResponse({"error": f"An error occurred: {e}"}, status=400)
+
+    # For GET requests, we might want to get cart data from the session
+    cart = request.session.get("cart", {})
+    if request.user.is_authenticated:
+        try:
+            stripeCustomer = stripe.Customer.retrieve(request.user.customer_id)
+            defaultPaymentMethod = None
+
+            if stripeCustomer.invoice_settings.default_payment_method:
+                defaultPaymentMethod = stripe.PaymentMethod.retrieve(
+                    stripeCustomer.invoice_settings.default_payment_method
+                )
+
+            total_amount = sum(
+                float(ticket.get("price", 0)) * int(ticket.get("quantity", 0))
+                for ticket in cart.values()
+            )
+
+            context.update(
+                {
+                    "cart": cart,
+                    "defaultPaymentMethod": defaultPaymentMethod,
+                    "stripeCustomer": stripeCustomer,
+                    "totalAmount": "{:.2f}".format(total_amount),
+                    "customerEmail": request.user.email,
+                    "customerFirstName": request.user.first_name,
+                    "customerLastName": request.user.last_name,
+                }
+            )
+        except Exception as e:
+            total_amount = sum(
+                float(ticket.get("price", 0)) * int(ticket.get("quantity", 0))
+                for ticket in cart.values()
+            )
+
+            context.update(
+                {
+                    "cart": cart,
+                    "error": f"Error retrieving payment information: {str(e)}",
+                    "totalAmount": "{:.2f}".format(total_amount),
+                }
+            )
+            
+    context.update({
+        "cart": cart,
+        # ...other context items...
+    })
+            
+    return render(request, "eventTicketsApp/checkout.html", context)
 
 
+@csrf_protect
+@require_http_methods(["POST"])
+def createPaymentIntent(request):
+    try:
+        # Parse the JSON body
+        data = json.loads(request.body)
+        cart = data.get('cart', {})
+        
+        # Validate cart data
+        if not cart:
+            return JsonResponse({'error': 'Cart is empty'}, status=400)
+            
+        # Calculate total amount from cart
+        total_amount = sum(
+            float(item.get('price', 0)) * int(item.get('quantity', 0))
+            for item in cart.values()
+        )
+        
+        # Convert to cents for Stripe
+        amount_in_cents = int(total_amount * 100)
+        
+        if amount_in_cents <= 0:
+            return JsonResponse({'error': 'Invalid amount'}, status=400)
+
+        # Create the payment intent
+        payment_intent = stripe.PaymentIntent.create(
+            amount=amount_in_cents,
+            currency='usd',
+            customer=request.user.customer_id if request.user.is_authenticated else None,
+            metadata={'cart': json.dumps(cart)},
+            setup_future_usage='off_session' if request.user.is_authenticated else None
+        )
+
+        return JsonResponse({
+            'clientSecret': payment_intent.client_secret
+        })
+
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
+    except Exception as e:
+        print(f"Payment Intent Error: {str(e)}")  # Log the error
+        return JsonResponse({'error': str(e)}, status=400)
+    
+    
 def paymentSuccessful(request):
     stripe.api_key = settings.STRIPE_SECRET_KEY
     checkout_session_id = request.GET.get("session_id")

@@ -1,83 +1,146 @@
 {% extends "base/base.html" %}
 {% load static %}
+{% load cart_tags %}
 
 {% block title %}
 WAVE — Join Us!
 {% endblock title %}
 
 
+{% block header %}
+{% include "partials/nav-footer/nav/main_nav.html" %}
+{% endblock header %}
+
+
 {% block script %}
-<script type="text/javascript" src="" defer></script>
+<script type="text/javascript" src="{% static "scripts/eventTicketsApp/checkout/checkoutProcess.js" %}" defer></script>
 {% endblock script %}
 
 
-{% block checkout_body %}
+{% block body %}
 <div class="checkout-container flex flex-col gap-[20px] items-center justify-center overflow-hidden h-full p-[30px]">
     <div class="w-full h-full flex justify-center">
         <div class="w-[80%] h-full flex flex-col gap-[10px] py-4 items-center justify-center border-[1px] border-solid border-[#e0e0e082] rounded-[20px] shadow-custom-shadow-3">
-            <div class="checkout-information w-full p-[40px] pt-[20px] h-full flex flex-col gap-[20px]">
-                <div class="ci-header flex flex-row gap-[1px] justify-between">
-                    <div id="logo" class="font-Wanted-Black text-[30px]">
-                        <a href="{% url 'core:index' %}" class="text-[#000000]">
-                            WAV<span class="text-[#008d95]">E</span>.
-                        </a>
+            <div class="grid grid-cols-3 w-full">
+                <div class="col-span-1">
+                    <div class="checkout-card w-full h-full flex flex-col gap-[20px] p-[40px] pt-[20px]">
+                        <div class="ci-header flex flex-row justify-between items-center">
+                            <div id="heading" class="font-Wanted-Bold text-[22px] text-black">
+                                <h1>Your Cart</h1>
+                            </div>
+                        </div>
+
+                        <div class="checkout-items w-full p-[20px] h-full flex flex-col justify-between gap-[20px]">
+                            <div class="tickets-display w-full">
+                                {% for ticket_id, ticket in cart.items %}
+                                <div class="checkout-item w-full">
+                                    <div class="w-full flex flex-col items-start">
+                                        <div class="ticket-name-quantity flex flex-row justify-between w-full gap-[5px]">
+                                            <p class="font-Wanted-Bold text-[15px] text-black">{{ ticket.name }}</p>
+                                            <p class="font-Wanted-Variable text-[15px] text-black">x{{ ticket.quantity }}</p>
+                                        </div>
+                                        <div class="ticket-price flex justify-end w-full gap-[5px]">
+                                            <p class="font-Wanted-Variable text-[15px] text-black">${{ ticket.price }} each</p>
+                                        </div>
+                                    </div>
+                                    <hr class="w-full border-[1px] border-solid border-[#e0e0e082]">
+                                </div>
+                                {% endfor %}
+                            </div>
+                            <div class="checkout-total w-full px-0 py-[20px] border-t">
+                                <div class="total-row flex flex-row justify-between items-center">
+                                    <p class="font-Wanted-Bold text-[15px] text-black">Total</p>
+                                    <p class="font-Wanted-Bold text-[15px] text-black">${{ totalAmount }}</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <div class="ci-body-information-row-one flex flex-col gap-[5px]">
-                    <h3 class="font-Wanted-Bold text-[17px] text-black">1. Personal Information</h3>
-                    <div class="ci-body-information flex flex-col gap-[20px]">
-                        <div class="ci-body-row flex flex-col md:flex-row gap-[20px] items-center justify-center">
-                            <label class="flex flex-col gap-[5px] w-full">
-                                <p class="font-Wanted-Variable text-[13px] text-[#00000085]">First Name</p>
-                                <input type="text" name="first_name" id="first_name" class="w-full p-[15px] rounded-[12px] border-[1px] border-solid border-[rgba(0,0,0,0.153)] font-Wanted-Variable text-[15px]" required>
-                            </label>
-                            <label class="flex flex-col gap-[5px] w-full">
-                                <p class="font-Wanted-Variable text-[13px] text-[#00000085]">Last Name</p>
-                                <input type="text" name="last_name" id="last_name" class="w-full p-[15px] rounded-[12px] border-[1px] border-solid border-[rgba(0,0,0,0.153)] font-Wanted-Variable text-[15px]" required>
-                            </label>
+                <form class="col-span-2 w-full" method="post" action="{% url "eventTickets:checkout" %}">
+                    {% csrf_token %}
+                    <input type="hidden" id="cartData" name="cartData" value='{{ cart|jsonify|safe }}'>
+                    <input type="hidden" id="stripeKey" name="stripeKey" value="{{ stripePublicKey }}">
+                    {% if defaultPaymentMethod %}
+                    <input type="hidden" id="initializeStripeElements" name="initializeStripeElements" value="True">
+                    {% else %}
+                    <input type="hidden" id="initializeStripeElements" name="initializeStripeElements" value="False">
+                    {% endif %}
+                    <input type="hidden" id="processPaymentUrl" name="processPaymentUrl" value="{% url "eventTickets:createPaymentIntent" %}">
+                    <input type="hidden" id="successPaymentUrl" name="successPaymentUrl" value="{% url "eventTickets:paymentSuccessful" %}">
+                    <div class="checkout-information w-full p-[40px] pt-[20px] h-full flex flex-col gap-[20px]">
+                        <div class="ci-body-information-row-one flex flex-col gap-[5px]">
+                            <h3 class="font-Wanted-Bold text-[17px] text-black">1. Personal Information</h3>
+                            <div class="ci-body-information flex flex-col gap-[20px]">
+                                <div class="ci-body-row flex flex-col md:flex-row gap-[20px] items-center justify-center">
+                                    <label class="flex flex-col gap-[5px] w-full">
+                                        <p class="font-Wanted-Variable text-[13px] text-[#00000085]">First Name</p>
+                                        {% if request.user.is_authenticated %}
+                                        <input type="text" name="first_name" id="first_name" class="w-full p-[15px] rounded-[12px] border-[1px] border-solid border-[rgba(0,0,0,0.153)] font-Wanted-Variable text-[15px] read-only:cursor-pointer" value="{{ customerFirstName }}" readonly required>
+                                        {% else %}
+                                        <input type="text" name="first_name" id="first_name" class="w-full p-[15px] rounded-[12px] border-[1px] border-solid border-[rgba(0,0,0,0.153)] font-Wanted-Variable text-[15px]" required>
+                                        {% endif %}
+                                    </label>
+                                    <label class="flex flex-col gap-[5px] w-full">
+                                        <p class="font-Wanted-Variable text-[13px] text-[#00000085]">Last Name</p>
+                                        {% if request.user.is_authenticated %}
+                                        <input type="text" name="last_name" id="last_name" class="w-full p-[15px] rounded-[12px] border-[1px] border-solid border-[rgba(0,0,0,0.153)] font-Wanted-Variable text-[15px] read-only:cursor-pointer" value="{{ customerLastName }}" readonly required>
+                                        {% else %}
+                                        <input type="text" name="last_name" id="last_name" class="w-full p-[15px] rounded-[12px] border-[1px] border-solid border-[rgba(0,0,0,0.153)] font-Wanted-Variable text-[15px]" required>
+                                        {% endif %}
+                                    </label>
+                                </div>
+                                <div class="ci-body-row flex flex-row gap-[20px] items-center justify-center">
+                                    <label class="flex flex-col gap-[5px] w-full">
+                                        <p class="font-Wanted-Variable text-[13px] text-[#00000085]">Email</p>
+                                        {%if request.user.is_authenticated %}
+                                        <input type="email" name="email" id="email" class="w-full p-[15px] rounded-[12px] border-[1px] border-solid border-[rgba(0,0,0,0.153)] font-Wanted-Variable text-[15px] read-only:cursor-pointer" value="{{ customerEmail }}" readonly required>
+                                        {% else %}
+                                        <input type="email" name="email" id="email" class="w-full p-[15px] rounded-[12px] border-[1px] border-solid border-[rgba(0,0,0,0.153)] font-Wanted-Variable text-[15px]" required>
+                                        {% endif %}
+                                    </label>
+                                </div>
+                            </div>
                         </div>
-                        <div class="ci-body-row flex flex-row gap-[20px] items-center justify-center">
-                            <label class="flex flex-col gap-[5px] w-full">
-                                <p class="font-Wanted-Variable text-[13px] text-[#00000085]">Email</p>
-                                <input type="email" name="email" id="email" class="w-full p-[15px] rounded-[12px] border-[1px] border-solid border-[rgba(0,0,0,0.153)] font-Wanted-Variable text-[15px]" required>
-                            </label>
+                        
+                        <div class="ci-body-information-row-one flex flex-col gap-[5px]">
+                            <h3 class="font-Wanted-Bold text-[17px] text-black">2. Payment Information</h3>
+                            {% if defaultPaymentMethod %}
+                            <div class="saved-payment-method mb-4">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <input type="radio" name="payment-choice" id="saved-card" checked>
+                                    <label for="saved-card" class="font-Wanted-Variable text-[15px]">
+                                        Use saved card (**** **** **** {{ defaultPaymentMethod.card.last4 }})
+                                    </label>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <input type="radio" name="payment-choice" id="new-card">
+                                    <label for="new-card" class="font-Wanted-Variable text-[15px]">
+                                        Use a new card
+                                    </label>
+                                </div>
+                            </div>
+                            <div id="payment-element" class="hidden">
+                                <!-- Stripe Elements will be mounted here -->
+                            </div>
+                            {% else %}
+                            <div id="payment-element">
+                                <!-- Stripe Elements will be mounted here -->
+                            </div>
+                            {% endif %}
+                            <div id="payment-error" class="text-red-500 text-sm mt-2 hidden"></div>
                         </div>
-                    </div>
-                </div>
+
+                        <div class="w-full flex justify-center">
+                            <button class="pay-button p-[15px] flex flex-row g justify-center gap-[10px] items-center text-white uppercase cursor-pointer w-full font-Wanted-Bold text-[22px] rounded-[20px] bg-gradient-to-tr bg-gradient-start bg-gradient-end" id="payButton" type="submit" role="button">Pay Now</button>
+                        </div>
+                    </div>                    
+                </form>
                 
-                <div class="ci-body-information-row-one flex flex-col gap-[5px]">
-                    <h3 class="font-Wanted-Bold text-[17px] text-black">2. Payment Information</h3>
-                    <div class="ci-body-information flex flex-col gap-[20px]">
-                        <div class="ci-body-row flex flex-row gap-[20px] items-center justify-center">
-                            <label class="flex flex-col gap-[5px] w-full">
-                                <p class="font-Wanted-Variable text-[13px] text-[#00000085]">Card Number</p>
-                                <input type="text" name="first_name" id="first_name" class="w-full p-[15px] rounded-[12px] border-[1px] border-solid border-[rgba(0,0,0,0.153)] font-Wanted-Variable text-[15px]" required>
-                            </label>
-                        </div>
-                        <div class="ci-body-row flex flex-col xxsm:flex-row gap-[20px] items-center justify-center">
-                            <label class="flex flex-col gap-[5px] w-full">
-                                <p class="font-Wanted-Variable text-[13px] text-[#00000085]">Expiry Date</p>
-                                <input type="text" name="email" id="email" class="w-full p-[15px] rounded-[12px] border-[1px] border-solid border-[rgba(0,0,0,0.153)] font-Wanted-Variable text-[15px]" required>
-                            </label>
-                            <label class="flex flex-col gap-[5px] w-full">
-                                <p class="font-Wanted-Variable text-[13px] text-[#00000085]">CVV</p>
-                                <input type="text" name="email" id="email" class="w-full p-[15px] rounded-[12px] border-[1px] border-solid border-[rgba(0,0,0,0.153)] font-Wanted-Variable text-[15px]" required>
-                            </label>
-                        </div>
-                    </div>
-                </div>
             </div>
-
-            <form method="post" action="{% url "eventTickets:checkout" %}">
-                {% csrf_token %}
-                <div class="w-full flex justify-center px-3">
-                    <button class="pay-button p-[15px] flex flex-row g justify-center gap-[10px] items-center text-white border-[1px] border-solid border-transparent uppercase cursor-pointer w-full font-Wanted-Bold text-[22px] rounded-[20px] gradient-btn" id="payButton" type="submit" role="button">Pay Now</button>
-                </div>
-            </form>
         </div>
     </div>
 </div>
 
 
-{% endblock checkout_body %}
+{% endblock body %}

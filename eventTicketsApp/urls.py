@@ -11,7 +11,7 @@ urlpatterns = [
     path('paymentFailed/', views.paymentFailed, name="paymentFailed"),
     path('stripeWebhook/', views.stripeWebhook, name="stripeWebhook"),
     path("cart/update/", views.updateCartView, name="updateCart"),
-    
+    path("create-payment-intent/", views.createPaymentIntent, name="createPaymentIntent"),
     path("ticket/<str:mainId>/view/", views.viewTicket, name="viewTicket"),
     path("ticket/verify/", views.verifyTicket, name="verifyTicket"),
 ]

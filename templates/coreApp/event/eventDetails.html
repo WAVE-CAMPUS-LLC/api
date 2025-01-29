@@ -228,165 +228,165 @@
                                 
                             </div>
                             {% elif event.ticketing == "Paid/Free" and paidFreeTickets %}
-                            <div class="font-Wanted-Bold text-Medium xsm:text-Large after-xsm:text-Pre-Xl xxsm:text-1xl pre-sm:text-1xl sm:text-2xl md:text-3xl text-black">
-                                <h3>Purchase your ticket</h3>
-                            </div>
+                                <div class="font-Wanted-Bold text-Medium xsm:text-Large after-xsm:text-Pre-Xl xxsm:text-1xl pre-sm:text-1xl sm:text-2xl md:text-3xl text-black">
+                                    <h3>Purchase your ticket</h3>
+                                </div>
 
-                            <div id="jit-tab-container" class="flex flex-col gap-5">                            
-                                {% for ticket in paidFreeTickets %}
-                                <!-- Modal for each ticket -->
-                                <div id="chooseCrewPopup{{ ticket.ticket_id }}" class="hidden bg-[rgba(0, 0, 0, 0.037)] backdrop-blur-sm fixed top-0 left-0 right-0 bottom-0 z-[1005] w-full h-full cursor-default">
-                                    <div class="modalContainer w-full h-full flex justify-center items-center py-5 md:py-11">
-                                        <div class="modalContentCard w-[90%] xsm:w-[80%] sm:w-[70%] md:w-[60%] lg:w-[50%] h-full lg:h-[75%] bg-white shadow-custom-shadow rounded-2xl p-5 pb-12 flex flex-col gap-3 overflow-y-auto">
-                                            <div class="modalHeader w-full flex justify-between items-center flex-col"> 
-                                                <div class="modalClose">
-                                                    <button type="button" role="button" id="closeChooseCrewPopup{{ ticket.ticket_id }}">
-                                                        <img src="{% static "images/admin/departments/modalClose.svg" %}" alt="Close">
-                                                    </button>
+                                <div id="jit-tab-container" class="flex flex-col gap-5">                            
+                                    {% for ticket in paidFreeTickets %}
+                                    <!-- Modal for each ticket -->
+                                    <div id="chooseCrewPopup{{ ticket.ticket_id }}" class="hidden bg-[rgba(0, 0, 0, 0.037)] backdrop-blur-sm fixed top-0 left-0 right-0 bottom-0 z-[1005] w-full h-full cursor-default">
+                                        <div class="modalContainer w-full h-full flex justify-center items-center py-5 md:py-11">
+                                            <div class="modalContentCard w-[90%] xsm:w-[80%] sm:w-[70%] md:w-[60%] lg:w-[50%] h-full lg:h-[75%] bg-white shadow-custom-shadow rounded-2xl p-5 pb-12 flex flex-col gap-3 overflow-y-auto">
+                                                <div class="modalHeader w-full flex justify-between items-center flex-col"> 
+                                                    <div class="modalClose">
+                                                        <button type="button" role="button" id="closeChooseCrewPopup{{ ticket.ticket_id }}">
+                                                            <img src="{% static "images/admin/departments/modalClose.svg" %}" alt="Close">
+                                                        </button>
+                                                    </div>
+                                                    <div class="modalHeading font-Wanted-ExtraBold text-Large md:text-2xl">
+                                                        <h5>Choose Crew for {{ ticket.ticket_name }}</h5>
+                                                    </div>
                                                 </div>
-                                                <div class="modalHeading font-Wanted-ExtraBold text-Large md:text-2xl">
-                                                    <h5>Choose Crew for {{ ticket.ticket_name }}</h5>
-                                                </div>
-                                            </div>
-                                            <div id="chooseCrewBody{{ ticket.ticket_id }}" class="flex flex-col gap-5">
-                                                <div id="crewList{{ ticket.ticket_id }}" class="crewList flex flex-col gap-4">
-                                                    {% if crews %}
-                                                        {% for crew in crews %}
-                                                            <div 
-                                                            id="crewCheckout{{ crew.crew_id }}"
-                                                            class="crewItem flex flex-row justify-between w-full items-center 
-                                                                    border-2 border-black rounded-xl p-3"
-                                                            >
-                                                            <p class="font-Wanted-Medium text-Medium text-black">
-                                                                {{ crew.name }}
-                                                                {% if crew.members.count < ticket.event.minimum_crew_size %}
-                                                                <p class="font-Wanted-Medium text-Medium text-gray-600">
-                                                                    (Crew is not big enough to qualify for discount!)
+                                                <div id="chooseCrewBody{{ ticket.ticket_id }}" class="flex flex-col gap-5">
+                                                    <div id="crewList{{ ticket.ticket_id }}" class="crewList flex flex-col gap-4">
+                                                        {% if crews %}
+                                                            {% for crew in crews %}
+                                                                <div 
+                                                                id="crewCheckout{{ crew.crew_id }}"
+                                                                class="crewItem flex flex-row justify-between w-full items-center 
+                                                                        border-2 border-black rounded-xl p-3"
+                                                                >
+                                                                <p class="font-Wanted-Medium text-Medium text-black">
+                                                                    {{ crew.name }}
+                                                                    {% if crew.members.count < ticket.event.minimum_crew_size %}
+                                                                    <p class="font-Wanted-Medium text-Medium text-gray-600">
+                                                                        (Crew is not big enough to qualify for discount!)
+                                                                    </p>
+                                                                    {% endif %}
                                                                 </p>
-                                                                {% endif %}
-                                                            </p>
-                                                        
-                                                            <form method="POST">
-                                                                {% csrf_token %}
-                                                                <input type="hidden" name="eventAction" value="purchaseForCrew">
-                                                                <input type="hidden" name="crewId" value="{{ crew.crewId }}">
-                                                                <input type="hidden" name="ticketId" value="{{ ticket.ticket_id }}">
-                                                        
-                                                                <button  role="button" name="eventAction" value="Add Crew Ticket" 
-                                                                data-ticket-id="{{ ticket.ticket_id }}"
-                                                                data-ticket-name="{{ ticket.ticket_name }}"
-                                                                {% if crew.members.count < ticket.event.minimum_crew_size %}
-                                                                    data-ticket-price="{{ ticket.ticket_price }}"
-                                                                {% else %}
-                                                                    data-ticket-price="{{ ticket.crew_discounted_price }}"
-                                                                {% endif %}
-                                                                data-crew-id="{{ crew.crewId }}"
-                                                                data-crew-name="{{ crew.name }}"
-                                                                data-crew-size="{{ crew.members.count }}"
-                                                                data-ticket-event-name="{{ ticket.event.title }}"
-                                                                data-ticket-event-id="{{ ticket.event.eventId }}"
-                                                                data-stripe-price-id="{{ ticket.stripePriceId }}" 
-                                                                data-stripe-product-id="{{ ticket.event.stripeProductId }}" 
-                                                                class="disabled:bg-red-600 disabled:cursor-default py-2 px-4 bg-gradient-to-br bg-gradient-start bg-gradient-end font-Wanted-Bold text-white rounded-xl cursor-pointer hover:bg-green hover:transition-all hover:duration-300 hover:ease-in-out crewCheckoutButton">
-                                                                Add to Cart
-                                                                </button>
-                                                            </form>
+                                                            
+                                                                <form method="POST">
+                                                                    {% csrf_token %}
+                                                                    <input type="hidden" name="eventAction" value="purchaseForCrew">
+                                                                    <input type="hidden" name="crewId" value="{{ crew.crewId }}">
+                                                                    <input type="hidden" name="ticketId" value="{{ ticket.ticket_id }}">
+                                                            
+                                                                    <button  role="button" name="eventAction" value="Add Crew Ticket" 
+                                                                    data-ticket-id="{{ ticket.ticket_id }}"
+                                                                    data-ticket-name="{{ ticket.ticket_name }}"
+                                                                    {% if crew.members.count < ticket.event.minimum_crew_size %}
+                                                                        data-ticket-price="{{ ticket.ticket_price }}"
+                                                                    {% else %}
+                                                                        data-ticket-price="{{ ticket.crew_discounted_price }}"
+                                                                    {% endif %}
+                                                                    data-crew-id="{{ crew.crewId }}"
+                                                                    data-crew-name="{{ crew.name }}"
+                                                                    data-crew-size="{{ crew.members.count }}"
+                                                                    data-ticket-event-name="{{ ticket.event.title }}"
+                                                                    data-ticket-event-id="{{ ticket.event.eventId }}"
+                                                                    data-stripe-price-id="{{ ticket.stripePriceId }}" 
+                                                                    data-stripe-product-id="{{ ticket.event.stripeProductId }}" 
+                                                                    class="disabled:bg-red-600 disabled:cursor-default py-2 px-4 bg-gradient-to-br bg-gradient-start bg-gradient-end font-Wanted-Bold text-white rounded-xl cursor-pointer hover:bg-green hover:transition-all hover:duration-300 hover:ease-in-out crewCheckoutButton">
+                                                                    Add to Cart
+                                                                    </button>
+                                                                </form>
+                                                                </div>
+                                                            {% endfor %}
+                                                        {% else %}
+                                                            <div class="emptyContainer h-full w-full rounded-[20px] py-[70px] flex justify-center flex-col gap-[10px] items-center bg-[rgba(146,146,146,0.096)]">
+                                                                <div>
+                                                                    <img class="w-[30px] after-xsm:w-[40px] sm:w-[50px] md:w-[60px]" src="{% static "/images/coreApp/eventDetails/friends.svg" %}" />
+                                                                </div>
+                                                                <p class="font-Wanted-Variable text-[10px] after-xsm:text-[12px] sm:text-[14px] md:text-[16.5px] text-black text-center">You are not in any crews currently</p>
+                                                                <a href="{% url "social:home" %}">
+                                                                    <button  class="py-2 px-4 bg-gradient-to-br bg-gradient-start bg-gradient-end font-Wanted-Bold text-white rounded-xl cursor-pointer hover:bg-green hover:transition-all hover:duration-300 hover:ease-in-out">
+                                                                        Create or join a crew
+                                                                    </button>
+                                                                </a>
                                                             </div>
-                                                        {% endfor %}
-                                                    {% else %}
-                                                        <div class="emptyContainer h-full w-full rounded-[20px] py-[70px] flex justify-center flex-col gap-[10px] items-center bg-[rgba(146,146,146,0.096)]">
-                                                            <div>
-                                                                <img class="w-[30px] after-xsm:w-[40px] sm:w-[50px] md:w-[60px]" src="{% static "/images/coreApp/eventDetails/friends.svg" %}" />
-                                                            </div>
-                                                            <p class="font-Wanted-Variable text-[10px] after-xsm:text-[12px] sm:text-[14px] md:text-[16.5px] text-black text-center">You are not in any crews currently</p>
-                                                            <a href="{% url "social:home" %}">
-                                                                <button  class="py-2 px-4 bg-gradient-to-br bg-gradient-start bg-gradient-end font-Wanted-Bold text-white rounded-xl cursor-pointer hover:bg-green hover:transition-all hover:duration-300 hover:ease-in-out">
-                                                                    Create or join a crew
-                                                                </button>
-                                                            </a>
-                                                        </div>
-                                                    {% endif %}
+                                                        {% endif %}
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                            
-                                <!-- Ticket Info Section -->
-                                <div class="jit-role-tab w-full sm:w-4/5">
-                                    <div role="button" class="jit-tab-header flex items-center justify-between font-Wanted-Bold text-xl py-4 px-5 rounded-3xl border border-transparent text-white font-Wanted-SemiBold flex-col sm:flex-row justify-center gap-2 text-Pre-Xl rounded-2xl bg-gradient-to-r from-gradient-start to-gradient-end cursor-pointer">
-                                        <h3>{{ ticket.ticket_name }}</h3>
-                                        <p class="font-Wanted-Variable text-XSmall after-xsm:text-Small pre-sm:text-Medium">Tap to see more</p>
-                                    </div>
-                            
-                                    <div class="jit-tab-body defaulted border-4 border-[#008d95] rounded-b-2xl mx-5 p-5 hidden">
-                                        <div class="jtb-container flex flex-col gap-9">
-                                            <div class="ticket-description-body flex flex-col gap-4">
-                                                <div class="ticket-header-info flex flex-row justify-between items-center">
-                                                    <div class="flex flex-col gap-1">
-                                                        <h6 class="font-Wanted-Variable text-Base text-green">Your Price</h6>
-                                                        <h6 class="priceType flex justify-start text-black font-Wanted-Bold text-Large">
-                                                            ${{ ticket.ticket_price }}
-                                                        </h6>
-                                                    </div>
-                            
-                                                    <div class="addRemoveTickets flex flex-row gap-1 items-center">
-                                                        <button class="removeTicket border-none bg-none cursor-pointer" id="removeTicketButton" data-ticket-id="{{ ticket.ticket_id }}" data-ticket-name="{{ ticket.ticket_name }}" data-ticket-event-name="{{ ticket.event.title }}" data-ticket-price="{{ ticket.ticket_price }}" role="button" name="eventAction" value="Remove Ticket" data-stripe-price-id="{{ ticket.stripePriceId }}" data-stripe-product-id="{{ ticket.event.stripeProductId }}" data-ticket-event-id="{{ ticket.event.eventId }}">
-                                                            <img src="{% static "images/eventManagementApp/event/removeTicket.svg" %}" alt="-1 Ticket" />
-                                                        </button>
-                                                        <span class="currentTicketAmount w-12 h-7 font-Wanted-Variable flex justify-center items-center" id="currentTicketAmount" data-ticket-id="{{ ticket.ticket_id }}">0</span>
-                                                        <button class="addTicket border-none bg-none cursor-pointer" id="addTicketButton" name="eventAction" data-ticket-id="{{ ticket.ticket_id }}" data-ticket-name="{{ ticket.ticket_name }}" data-ticket-price="{{ ticket.ticket_price }}" value="Add Ticket" data-stripe-price-id="{{ ticket.stripePriceId }}" data-stripe-product-id="{{ ticket.event.stripeProductId }}" data-ticket-event-id="{{ ticket.event.eventId }}" data-ticket-event-name="{{ ticket.event.title }}">
-                                                            <img src="{% static "images/eventManagementApp/event/addTicket.svg" %}" alt="+1 Ticket" />
-                                                        </button>
-                                                    </div>
-                                                </div>
-                            
-                                                <div class="ticket-header-info flex flex-row justify-between items-center">
-                                                    <div class="flex flex-col gap-1">
-                                                        <h6 class="font-Wanted-Variable text-Base text-green flex flex-row gap-1 items-center">
-                                                            Crew Price 
-                                                            {% if event.crew_discount %}
-                                                                <p class="font-Wanted-Variable text-Small text-gray-500">
-                                                                    {% if event.crew_discount_percentage %}
-                                                                        ({{ event.crew_discount_percentage|floatformat:0 }}% Discount Applied)
-                                                                    {% endif %}
-                                                                </p>
-                                                            {% endif %}
-                                                            <a href="javascript:void(0);" class="crewInfoButton">
-                                                                <img src="{% static 'images/eventManagementApp/event/info.svg' %}" 
-                                                                    alt="Crew Discount Info" 
-                                                                    class="size-5" />
-                                                            </a>
-                                                        </h6>
-
-                                                        {% if ticket.crew_discounted_price %}
-                                                            <h6 class="priceType flex justify-start text-black font-Wanted-Bold text-Large">
-                                                                ${{ ticket.crew_discounted_price }}
-                                                            </h6>
-                                                        {% else %}
+                                
+                                    <!-- Ticket Info Section -->
+                                    <div class="jit-role-tab w-full sm:w-4/5">
+                                        <div role="button" class="jit-tab-header flex items-center justify-between font-Wanted-Bold text-xl py-4 px-5 rounded-3xl border border-transparent text-white font-Wanted-SemiBold flex-col sm:flex-row justify-center gap-2 text-Pre-Xl rounded-2xl bg-gradient-to-r from-gradient-start to-gradient-end cursor-pointer">
+                                            <h3>{{ ticket.ticket_name }}</h3>
+                                            <p class="font-Wanted-Variable text-XSmall after-xsm:text-Small pre-sm:text-Medium">Tap to see more</p>
+                                        </div>
+                                
+                                        <div class="jit-tab-body defaulted border-4 border-[#008d95] rounded-b-2xl mx-5 p-5 hidden">
+                                            <div class="jtb-container flex flex-col gap-9">
+                                                <div class="ticket-description-body flex flex-col gap-4">
+                                                    <div class="ticket-header-info flex flex-row justify-between items-center">
+                                                        <div class="flex flex-col gap-1">
+                                                            <h6 class="font-Wanted-Variable text-Base text-green">Your Price</h6>
                                                             <h6 class="priceType flex justify-start text-black font-Wanted-Bold text-Large">
                                                                 ${{ ticket.ticket_price }}
                                                             </h6>
-                                                        {% endif %}
+                                                        </div>
+                                
+                                                        <div class="addRemoveTickets flex flex-row gap-1 items-center">
+                                                            <button class="removeTicket border-none bg-none cursor-pointer" id="removeTicketButton" data-ticket-id="{{ ticket.ticket_id }}" data-ticket-name="{{ ticket.ticket_name }}" data-ticket-event-name="{{ ticket.event.title }}" data-ticket-price="{{ ticket.ticket_price }}" role="button" name="eventAction" value="Remove Ticket" data-stripe-price-id="{{ ticket.stripePriceId }}" data-stripe-product-id="{{ ticket.event.stripeProductId }}" data-ticket-event-id="{{ ticket.event.eventId }}">
+                                                                <img src="{% static "images/eventManagementApp/event/removeTicket.svg" %}" alt="-1 Ticket" />
+                                                            </button>
+                                                            <span class="currentTicketAmount w-12 h-7 font-Wanted-Variable flex justify-center items-center" id="currentTicketAmount" data-ticket-id="{{ ticket.ticket_id }}">0</span>
+                                                            <button class="addTicket border-none bg-none cursor-pointer" id="addTicketButton" name="eventAction" data-ticket-id="{{ ticket.ticket_id }}" data-ticket-name="{{ ticket.ticket_name }}" data-ticket-price="{{ ticket.ticket_price }}" value="Add Ticket" data-stripe-price-id="{{ ticket.stripePriceId }}" data-stripe-product-id="{{ ticket.event.stripeProductId }}" data-ticket-event-id="{{ ticket.event.eventId }}" data-ticket-event-name="{{ ticket.event.title }}">
+                                                                <img src="{% static "images/eventManagementApp/event/addTicket.svg" %}" alt="+1 Ticket" />
+                                                            </button>
+                                                        </div>
                                                     </div>
+                                
+                                                    <div class="ticket-header-info flex flex-row justify-between items-center">
+                                                        <div class="flex flex-col gap-1">
+                                                            <h6 class="font-Wanted-Variable text-Base text-green flex flex-row gap-1 items-center">
+                                                                Crew Price 
+                                                                {% if event.crew_discount %}
+                                                                    <p class="font-Wanted-Variable text-Small text-gray-500">
+                                                                        {% if event.crew_discount_percentage %}
+                                                                            ({{ event.crew_discount_percentage|floatformat:0 }}% Discount Applied)
+                                                                        {% endif %}
+                                                                    </p>
+                                                                {% endif %}
+                                                                <a href="javascript:void(0);" class="crewInfoButton">
+                                                                    <img src="{% static 'images/eventManagementApp/event/info.svg' %}" 
+                                                                        alt="Crew Discount Info" 
+                                                                        class="size-5" />
+                                                                </a>
+                                                            </h6>
 
-                                                    
-                                                    <div class="addRemoveTickets flex flex-row gap-1 items-center">
-                                                        <button id="chooseCrewButton_{{ ticket.ticket_id }}" class=" py-2 px-4 bg-gradient-to-br bg-gradient-start bg-gradient-end font-Wanted-Bold text-white rounded-xl cursor-pointer hover:bg-green hover:transition-all hover:duration-300 hover:ease-in-out">
-                                                            Choose
-                                                        </button>
+                                                            {% if ticket.crew_discounted_price %}
+                                                                <h6 class="priceType flex justify-start text-black font-Wanted-Bold text-Large">
+                                                                    ${{ ticket.crew_discounted_price }}
+                                                                </h6>
+                                                            {% else %}
+                                                                <h6 class="priceType flex justify-start text-black font-Wanted-Bold text-Large">
+                                                                    ${{ ticket.ticket_price }}
+                                                                </h6>
+                                                            {% endif %}
+                                                        </div>
+
+                                                        
+                                                        <div class="addRemoveTickets flex flex-row gap-1 items-center">
+                                                            <button id="chooseCrewButton_{{ ticket.ticket_id }}" class=" py-2 px-4 bg-gradient-to-br bg-gradient-start bg-gradient-end font-Wanted-Bold text-white rounded-xl cursor-pointer hover:bg-green hover:transition-all hover:duration-300 hover:ease-in-out">
+                                                                Choose
+                                                            </button>
+                                                        </div>
                                                     </div>
                                                 </div>
+                                
+                                                <hr class="w-full border-customGray5" />
+                                
+                                                <p class="font-Wanted-Variable text-Semi-Medium">{{ ticket.ticket_description }}</p>
                                             </div>
-                            
-                                            <hr class="w-full border-customGray5" />
-                            
-                                            <p class="font-Wanted-Variable text-Semi-Medium">{{ ticket.ticket_description }}</p>
                                         </div>
                                     </div>
+                                    {% endfor %}
                                 </div>
-                                {% endfor %}
-                            </div>
                             {% endif %}
                         </div>
                     </div>
