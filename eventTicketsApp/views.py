@@ -63,11 +63,13 @@ def checkoutView(request):
             cart = data.get("cart", {})
             print("Cart data from POST request:", cart)  # Debug print
             
-            stripeCustomer = stripe.Customer.retrieve(request.user.customer_id)
+            stripeCustomer = None
+            if request.user.is_authenticated:
+                stripeCustomer = stripe.Customer.retrieve(request.user.customer_id)
             print("Stripe customer:", stripeCustomer)  # Debug print
             defaultPaymentMethod = None
 
-            if stripeCustomer.invoice_settings.default_payment_method:
+            if stripeCustomer and stripeCustomer.invoice_settings.default_payment_method:
                 defaultPaymentMethod = stripe.PaymentMethod.retrieve(
                     stripeCustomer.invoice_settings.default_payment_method
                 )
@@ -82,7 +84,6 @@ def checkoutView(request):
                 {
                     "cart": cart,
                     "defaultPaymentMethod": defaultPaymentMethod,
-                    "stripeCustomer": stripeCustomer,
                     "totalAmount": "{:.2f}".format(total_amount),
                 }
             )
@@ -96,46 +97,47 @@ def checkoutView(request):
 
     # For GET requests, we might want to get cart data from the session
     cart = request.session.get("cart", {})
-    if request.user.is_authenticated:
-        try:
+    try:
+        defaultPaymentMethod = None
+        stripeCustomer = None
+        if request.user.is_authenticated:
             stripeCustomer = stripe.Customer.retrieve(request.user.customer_id)
-            defaultPaymentMethod = None
 
-            if stripeCustomer.invoice_settings.default_payment_method:
+            if stripeCustomer and stripeCustomer.invoice_settings.default_payment_method:
                 defaultPaymentMethod = stripe.PaymentMethod.retrieve(
                     stripeCustomer.invoice_settings.default_payment_method
                 )
 
-            total_amount = sum(
-                float(ticket.get("price", 0)) * int(ticket.get("quantity", 0))
-                for ticket in cart.values()
-            )
+        total_amount = sum(
+            float(ticket.get("price", 0)) * int(ticket.get("quantity", 0))
+            for ticket in cart.values()
+        )
 
-            context.update(
-                {
-                    "cart": cart,
-                    "defaultPaymentMethod": defaultPaymentMethod,
-                    "stripeCustomer": stripeCustomer,
-                    "totalAmount": "{:.2f}".format(total_amount),
-                    "customerEmail": request.user.email,
-                    "customerFirstName": request.user.first_name,
-                    "customerLastName": request.user.last_name,
-                }
-            )
-        except Exception as e:
-            total_amount = sum(
-                float(ticket.get("price", 0)) * int(ticket.get("quantity", 0))
-                for ticket in cart.values()
-            )
-
-            context.update(
-                {
-                    "cart": cart,
-                    "error": f"Error retrieving payment information: {str(e)}",
-                    "totalAmount": "{:.2f}".format(total_amount),
-                }
-            )
+        context.update(
+            {
+                "cart": cart,
+                "defaultPaymentMethod": defaultPaymentMethod,
+                "totalAmount": "{:.2f}".format(total_amount),
+                "customerEmail": request.user.email,
+                "customerFirstName": request.user.first_name,
+                "customerLastName": request.user.last_name,
+            }
+        )
             
+    except Exception as e:
+        total_amount = sum(
+            float(ticket.get("price", 0)) * int(ticket.get("quantity", 0))
+            for ticket in cart.values()
+        )
+
+        context.update(
+            {
+                "cart": cart,
+                "error": f"Error retrieving payment information: {str(e)}",
+                "totalAmount": "{:.2f}".format(total_amount),
+            }
+        )        
+        
     context.update({
         "cart": cart,
         # ...other context items...
