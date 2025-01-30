@@ -56,6 +56,12 @@ def checkoutView(request):
     print("Cart data in view:", cart)  # Debug print
     
     
+    settings_obj = get_object_or_404(StripePlatformSettings, pk=1)
+    sales_tax_percentage = settings_obj.salesTaxPercentage
+    sales_fee_amount = settings_obj.salesFeeAmount
+    
+    
+    
     if request.method == "POST":
         try:
             data = json.loads(request.body)
@@ -74,12 +80,22 @@ def checkoutView(request):
                     stripeCustomer.invoice_settings.default_payment_method
                 )
             print("Default payment method:", defaultPaymentMethod)  # Debug print
-            total_amount = sum(
-                float(ticket.get("price", 0)) * int(ticket.get("quantity", 0))
+            
+            
+            
+            sub_total_amount = sum(
+                Decimal(ticket.get("price", 0)) * int(ticket.get("quantity", 0))
                 for ticket in cart.values()
             )
-            print("Total amount:", total_amount)  # Debug print
+            print("Total amount:", sub_total_amount)  # Debug print
+            total_tickets = sum(int(ticket.get("quantity", 0)) for ticket in cart.values())
+            print("Total tickets:", total_tickets)  # Debug print
             # Update context with POST-specific data
+            sales_tax = (sub_total_amount * sales_tax_percentage) / Decimal("100.00")
+            total_fees = sales_fee_amount * total_tickets
+            
+            total_amount = sub_total_amount + sales_tax + total_fees
+            print("Total amount after fees:", total_amount)  # Debug print
             context.update(
                 {
                     "cart": cart,
@@ -108,10 +124,18 @@ def checkoutView(request):
                     stripeCustomer.invoice_settings.default_payment_method
                 )
 
-        total_amount = sum(
-            float(ticket.get("price", 0)) * int(ticket.get("quantity", 0))
+        sub_total_amount = sum(
+            Decimal(ticket.get("price", 0)) * int(ticket.get("quantity", 0))
             for ticket in cart.values()
         )
+        print("Total amount:", sub_total_amount)  # Debug print
+        total_tickets = sum(int(ticket.get("quantity", 0)) for ticket in cart.values())
+        print("Total tickets:", total_tickets)  # Debug print
+        # Update context with POST-specific data
+        sales_tax = (sub_total_amount * sales_tax_percentage) / Decimal("100.00")
+        total_fees = sales_fee_amount * total_tickets
+        
+        total_amount = sub_total_amount + sales_tax + total_fees
 
         context.update(
             {
@@ -125,10 +149,18 @@ def checkoutView(request):
         )
             
     except Exception as e:
-        total_amount = sum(
-            float(ticket.get("price", 0)) * int(ticket.get("quantity", 0))
+        sub_total_amount = sum(
+            Decimal(ticket.get("price", 0)) * int(ticket.get("quantity", 0))
             for ticket in cart.values()
         )
+        print("Total amount:", sub_total_amount)  # Debug print
+        total_tickets = sum(int(ticket.get("quantity", 0)) for ticket in cart.values())
+        print("Total tickets:", total_tickets)  # Debug print
+        # Update context with POST-specific data
+        sales_tax = (sub_total_amount * sales_tax_percentage) / Decimal("100.00")
+        total_fees = sales_fee_amount * total_tickets
+        
+        total_amount = sub_total_amount + sales_tax + total_fees
 
         context.update(
             {
@@ -168,12 +200,25 @@ def createPaymentIntent(request):
         if amount_in_cents <= 0:
             return JsonResponse({'error': 'Invalid amount'}, status=400)
 
-        # Create the payment intent
+        # Generate a unique cart identifier
+        cart_id = str(uuid.uuid4())
+        
+        # Store the full cart data in the session
+        request.session[f'cart_data_{cart_id}'] = cart
+        
+        # Create metadata with only essential information
+        metadata = {
+            'cart_id': cart_id,
+            'total_amount': str(total_amount),
+            'items_count': str(len(cart))
+        }
+
+        # Create the payment intent with simplified metadata
         payment_intent = stripe.PaymentIntent.create(
             amount=amount_in_cents,
             currency='usd',
             customer=request.user.customer_id if request.user.is_authenticated else None,
-            metadata={'cart': json.dumps(cart)},
+            metadata=metadata,
             setup_future_usage='off_session' if request.user.is_authenticated else None
         )
 
