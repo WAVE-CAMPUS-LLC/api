@@ -1,4 +1,9 @@
+let csrfToken;
+
 document.addEventListener("DOMContentLoaded", async function () {
+    csrfToken = document
+    .querySelector('meta[name="csrf-token"]')
+    .getAttribute("content");
   const stripeKey = document.getElementById("stripeKey").value;
   const stripe = Stripe(stripeKey);
   const processPaymentURL = document.getElementById("processPaymentUrl").value;
@@ -60,8 +65,7 @@ document.addEventListener("DOMContentLoaded", async function () {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]")
-            .value,
+          "X-CSRFToken":  csrfToken,
         },
         body: JSON.stringify({ cart }),
       });
@@ -165,9 +169,7 @@ document.addEventListener("DOMContentLoaded", async function () {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              "X-CSRFToken": document.querySelector(
-                "[name=csrfmiddlewaretoken]"
-              ).value,
+              "X-CSRFToken": csrfToken,
             },
             body: JSON.stringify({
               useStoredPaymentMethod: true,

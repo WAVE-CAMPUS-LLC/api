@@ -146,8 +146,6 @@ def checkoutView(request):
     return render(request, "eventTicketsApp/checkout.html", context)
 
 
-@csrf_protect
-@require_http_methods(["POST"])
 def createPaymentIntent(request):
     try:
         # Parse the JSON body
@@ -397,7 +395,8 @@ def generateTicket(
             )
             recipient_list = [guestEmail] if guestEmail else [user.email]
             qrCodeHtml = render_to_string(
-                "emailManagement/build_production/emails/transactional.html"
+                "emailManagement/build_production/emails/eventTicketsApp/ticketEmail.html",
+                {"ticketLink": ticketLink},
             )
             from_email = settings.DEFAULT_FROM_EMAIL
 

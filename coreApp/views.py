@@ -79,7 +79,7 @@ def exploreView(request):
     # Load initial 6 events
     initial_events = Event.objects.filter(
         status="live", privacy="Discoverable", admin_status="active"
-    )[:7]
+    )[:9]
     trending_events = Event.objects.filter(
         status="live", privacy="Discoverable"
     ).order_by("date")[:3]
@@ -313,7 +313,7 @@ def eventDetailsView(request, eventId, token=None):
                     if user:
                         event.guest_list.add(user)
 
-                    (
+                    generateTicket(
                         request, event, user, guestFirstName, guestLastName, guestEmail
                     )
 

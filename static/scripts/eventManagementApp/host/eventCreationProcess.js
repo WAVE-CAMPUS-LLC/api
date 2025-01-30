@@ -4,7 +4,14 @@ $(document).ready(function () {
   var $crewDiscountDetails = $("#crewInfoRow");
   var $form = $("#eventForm");
   var $submitBtn = $("#submitBtn");
-  var $cannotSubmit = $("#cannotSubmit");
+  var $cannotSubmit = $("#cannotSubmit"); // Correct selector with $
+
+  // Hide submit button initially and show 'cannotSubmit'
+  $submitBtn.hide();
+  $cannotSubmit.show(); // Corrected from 'cannotSubmit.show();'
+
+  // Object to track touched fields
+  var touchedFields = {};
 
   // Function to show or hide error messages and set border color
   function toggleError(selector, show, message) {
@@ -46,7 +53,7 @@ $(document).ready(function () {
         var currentDate = new Date();
         var futureLimitDate = new Date(currentDate);
         futureLimitDate.setFullYear(currentDate.getFullYear() + 1);
-        currentDate.setHours(-24, 0, 0, 0);
+        currentDate.setHours(0, 0, 0, 0); // Set to start of the day
 
         if (selectedDate < currentDate) {
           return "Date cannot be in the past";
@@ -168,8 +175,12 @@ $(document).ready(function () {
       }
     }
 
-    toggleError(rules.errorSelector, isError, errorMessage);
-    setBorder($field, isError);
+    // Only toggle errors if the field has been touched
+    var fieldId = $field.attr("id");
+    if (touchedFields[fieldId]) {
+      toggleError(rules.errorSelector, isError, errorMessage);
+      setBorder($field, isError);
+    }
 
     return !isError;
   }
@@ -180,11 +191,21 @@ $(document).ready(function () {
     var endTime = $(".end-time-input").val();
     var isValid = true;
 
-    if (!startTime || !endTime) {
-      toggleError("#time-error", true, "Invalid Time");
-      $(".start-time-input, .end-time-input").css("border-color", "red");
-      isValid = false;
+    // Only validate if both time fields have been touched
+    var isStartTouched = touchedFields["start-time-input"];
+    var isEndTouched = touchedFields["end-time-input"];
+
+    if (isStartTouched || isEndTouched) {
+      if (!startTime || !endTime) {
+        toggleError("#time-error", true, "Invalid Time");
+        $(".start-time-input, .end-time-input").css("border-color", "red");
+        isValid = false;
+      } else {
+        toggleError("#time-error", false, "");
+        $(".start-time-input, .end-time-input").css("border-color", "");
+      }
     } else {
+      // Do not show errors if neither field has been touched
       toggleError("#time-error", false, "");
       $(".start-time-input, .end-time-input").css("border-color", "");
     }
@@ -192,13 +213,12 @@ $(document).ready(function () {
     return isValid;
   }
 
-  // Function to validate all fields
-  function validateFields() {
+  // Function to validate all fields (used on form submission)
+  function validateAllFields() {
     var isValid = true;
 
     // Validate each field based on validationRules
     $.each(validationRules, function (selector, rules) {
-      // console.log("Validating selector:", selector, "Rules:", rules); // Debugging log
       $(selector).each(function () {
         var $field = $(this);
         var fieldValid = validateField($field, rules);
@@ -288,6 +308,194 @@ $(document).ready(function () {
       $submitBtn.hide();
       $cannotSubmit.show();
     }
+
+    return isValid;
+  }
+
+  // Function to validate individual field based on event
+  function validateSingleField(event) {
+    var $field = $(this);
+
+    // Mark the field as touched
+    var fieldId = $field.attr("id");
+    touchedFields[fieldId] = true;
+
+    var fieldValid = true;
+
+    // Find the matching validation rules
+    $.each(validationRules, function (selector, rules) {
+      if ($field.is(selector)) {
+        fieldValid = validateField($field, rules);
+        return false; // Exit the loop once the matching selector is found
+      }
+    });
+
+    // Handle cross-field validations if necessary
+    if ($field.hasClass("start-time-input") || $field.hasClass("end-time-input")) {
+      validateTimeFields();
+    }
+
+    // If the crew discount fields are being changed, validate them
+    if (
+      $field.is("#crew-size-input") ||
+      $field.is("#crew-percentage-input") ||
+      $field.is("#id_crew_discount")
+    ) {
+      if ($crewDiscountCheckbox.is(":checked")) {
+        // Validate crew size
+        var minCrewSize = $("#crew-size-input").val();
+        if (!minCrewSize || minCrewSize < 2 || minCrewSize > 100) {
+          toggleError("#crew-size-error", true, "Invalid Crew Size");
+          $("#crew-size-input").css("border-color", "red");
+        } else {
+          toggleError("#crew-size-error", false);
+          $("#crew-size-input").css("border-color", "");
+        }
+
+        // Validate discount percentage
+        var discountPercentage = $("#crew-percentage-input").val();
+        if (
+          !discountPercentage ||
+          discountPercentage <= 0 ||
+          discountPercentage > 100
+        ) {
+          toggleError("#discount-error", true, "Invalid Discount Percentage");
+          $("#crew-percentage-input").css("border-color", "red");
+        } else {
+          toggleError("#discount-error", false);
+          $("#crew-percentage-input").css("border-color", "");
+        }
+      } else {
+        // Reset crew discount errors if not checked
+        toggleError("#crew-size-error", false);
+        toggleError("#discount-error", false);
+        $("#crew-size-input, #crew-percentage-input").css("border-color", "");
+      }
+    }
+
+    // Validate Quill description if necessary
+    if ($field.hasClass("ql-container") || $field.attr("id") === "quill-editor") {
+      if (typeof quill !== "undefined" && quill instanceof Quill) {
+        var contentLength = quill.getText().trim().length;
+        if (contentLength === 0) {
+          toggleError("#body-error", true, "Please enter a description");
+          $(".ql-container").css("border-color", "red");
+        } else if (contentLength > 5000) {
+          toggleError("#body-error", true, "Description needs to be shorter");
+          $(".ql-container").css("border-color", "red");
+        } else {
+          toggleError("#body-error", false);
+          $(".ql-container").css("border-color", "");
+        }
+      }
+    }
+
+    // Validate Header Photo if necessary
+    if ($field.is("#photo-input")) {
+      var headerPhoto = $("#photo-input")[0].files.length > 0;
+      if (!headerPhoto) {
+        toggleError("#photo-error", true, "Please upload a header photo");
+        $("#photo-input").css("border-color", "red");
+      } else {
+        toggleError("#photo-error", false);
+        $("#photo-input").css("border-color", "");
+      }
+    }
+
+    // Toggle submit buttons based on overall form validity
+    toggleSubmitButtons();
+
+    return fieldValid;
+  }
+
+  // Function to toggle submit buttons based on overall form validity
+  function toggleSubmitButtons() {
+    var isValid = true;
+
+    // Check all validation rules without showing errors
+    $.each(validationRules, function (selector, rules) {
+      $(selector).each(function () {
+        var $field = $(this);
+        var value = $field.val().trim();
+        var fieldValid = true;
+
+        if (rules.required && !value) {
+          fieldValid = false;
+        }
+
+        if (fieldValid && rules.maxLength && value.length > rules.maxLength) {
+          fieldValid = false;
+        }
+
+        if (fieldValid && rules.minLength && value.length < rules.minLength) {
+          fieldValid = false;
+        }
+
+        if (fieldValid && typeof rules.validate === "function") {
+          var customError = rules.validate(value);
+          if (customError) {
+            fieldValid = false;
+          }
+        }
+
+        if (!fieldValid) {
+          isValid = false;
+          return false; // Exit the loop early if any field is invalid
+        }
+      });
+
+      if (!isValid) {
+        return false; // Exit the outer loop early
+      }
+    });
+
+    // Check time fields
+    var startTime = $(".start-time-input").val();
+    var endTime = $(".end-time-input").val();
+    if (!startTime || !endTime) {
+      isValid = false;
+    }
+
+    // Check Quill description
+    if (typeof quill !== "undefined" && quill instanceof Quill) {
+      var contentLength = quill.getText().trim().length;
+      if (contentLength === 0 || contentLength > 5000) {
+        isValid = false;
+      }
+    }
+
+    // Check crew discount fields if checked
+    if ($crewDiscountCheckbox.is(":checked")) {
+      var minCrewSize = $("#crew-size-input").val();
+      var discountPercentage = $("#crew-percentage-input").val();
+
+      if (!minCrewSize || minCrewSize < 2 || minCrewSize > 100) {
+        isValid = false;
+      }
+
+      if (
+        !discountPercentage ||
+        discountPercentage <= 0 ||
+        discountPercentage > 100
+      ) {
+        isValid = false;
+      }
+    }
+
+    // Check Header Photo
+    var headerPhoto = $("#photo-input")[0].files.length > 0;
+    if (!headerPhoto) {
+      isValid = false;
+    }
+
+    // Toggle submit buttons
+    if (isValid) {
+      $submitBtn.show();
+      $cannotSubmit.hide();
+    } else {
+      $submitBtn.hide();
+      $cannotSubmit.show();
+    }
   }
 
   // Function to toggle crew discount details
@@ -299,7 +507,7 @@ $(document).ready(function () {
   toggleCrewDiscountDetails();
   $crewDiscountCheckbox.on("change", function () {
     toggleCrewDiscountDetails();
-    validateFields();
+    toggleSubmitButtons(); // Update submit button based on crew discount
   });
 
   // Debounce function to limit the rate of function calls
@@ -315,19 +523,51 @@ $(document).ready(function () {
     };
   }
 
-  // Bind input and change events with debouncing
+  // Bind input, change, and blur events to track touched fields and validate
   $form
     .find("input, textarea, select")
-    .on("input change", debounce(validateFields, 100));
+    .on("input change", debounce(validateSingleField, 300)) // Validate on input/change with debounce
+    .on("blur", function () { // Use 'blur' instead of 'focus' to mark as touched after interaction
+      var $field = $(this);
+      var fieldId = $field.attr("id");
+      touchedFields[fieldId] = true;
+      validateSingleField.call(this); // Validate field on blur
+    });
 
   // Specific event bindings
-  $("#photo-input").on("change", validateFields);
+  $("#photo-input").on("change", validateSingleField);
 
   // Initialize Quill editor (assuming it's initialized elsewhere)
   if (typeof quill !== "undefined" && quill instanceof Quill) {
-    quill.on("text-change", validateFields);
+    quill.on("text-change", function () {
+      // Mark as touched when user changes the Quill editor
+      touchedFields["quill-editor"] = true;
+      // Validate Quill editor
+      var contentLength = quill.getText().trim().length;
+      if (contentLength === 0) {
+        toggleError("#body-error", true, "Please enter a description");
+        $(".ql-container").css("border-color", "red");
+      } else if (contentLength > 5000) {
+        toggleError("#body-error", true, "Description needs to be shorter");
+        $(".ql-container").css("border-color", "red");
+      } else {
+        toggleError("#body-error", false);
+        $(".ql-container").css("border-color", "");
+      }
+
+      // Update submit buttons
+      toggleSubmitButtons();
+    });
   }
 
-  // Initial validation
-  validateFields();
+  // Form submission handler
+  $form.on("submit", function (e) {
+    // Validate all fields before submission
+    var isFormValid = validateAllFields();
+
+    if (!isFormValid) {
+      e.preventDefault(); // Prevent form submission if invalid
+      alert("Please correct the errors in the form before submitting.");
+    }
+  });
 });

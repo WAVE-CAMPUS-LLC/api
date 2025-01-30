@@ -18,14 +18,16 @@ WAVE — Join Us!
 
 
 {% block body %}
+<meta name="csrf-token" content="{{ csrf_token }}">
+<input id="csrf-token" type="hidden" name="csrf-token" value="{{ csrf_token }}">
 <div class="checkout-container flex flex-col gap-[20px] items-center justify-center overflow-hidden h-full p-[30px]">
     <div class="w-full h-full flex justify-center">
         <div class="w-[80%] h-full flex flex-col gap-[10px] py-4 items-center justify-center border-[1px] border-solid border-[#e0e0e082] rounded-[20px] shadow-custom-shadow-3">
-            <div class="grid grid-cols-3 w-full">
+            <div class="grid grid-cols-1 lg:grid-cols-3 w-full">
                 <div class="col-span-1">
-                    <div class="checkout-card w-full h-full flex flex-col gap-[20px] p-[40px] pt-[20px]">
+                    <div class="checkout-card w-full h-full flex flex-col gap-[20px] p-[10px] lg:p-[40px] pt-[20px]">
                         <div class="ci-header flex flex-row justify-between items-center">
-                            <div id="heading" class="font-Wanted-Bold text-[22px] text-black">
+                            <div id="heading" class="w-full font-Wanted-Bold text-[22px] text-black flex justify-center lg:justify-start">
                                 <h1>Your Cart</h1>
                             </div>
                         </div>
@@ -33,6 +35,7 @@ WAVE — Join Us!
                         <div class="checkout-items w-full p-[20px] h-full flex flex-col justify-between gap-[20px]">
                             <div class="tickets-display w-full">
                                 {% for ticket_id, ticket in cart.items %}
+                                {% if not forloop.last %}
                                 <div class="checkout-item w-full">
                                     <div class="w-full flex flex-col items-start">
                                         <div class="ticket-name-quantity flex flex-row justify-between w-full gap-[5px]">
@@ -45,6 +48,20 @@ WAVE — Join Us!
                                     </div>
                                     <hr class="w-full border-[1px] border-solid border-[#e0e0e082]">
                                 </div>
+                                {% else %}
+                                <div class="checkout-item w-full">
+                                    <div class="w-full flex flex-col items-start">
+                                        <div class="ticket-name-quantity flex flex-row justify-between w-full gap-[5px]">
+                                            <p class="font-Wanted-Bold text-[15px] text-black">{{ ticket.name }}</p>
+                                            <p class="font-Wanted-Variable text-[15px] text-black">x{{ ticket.quantity }}</p>
+                                        </div>
+                                        <div class="ticket-price flex justify-end w-full gap-[5px]">
+                                            <p class="font-Wanted-Variable text-[15px] text-black">${{ ticket.price }} each</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                
                                 {% endfor %}
                             </div>
                             <div class="checkout-total w-full px-0 py-[20px] border-t">
@@ -68,7 +85,8 @@ WAVE — Join Us!
                     {% endif %}
                     <input type="hidden" id="processPaymentUrl" name="processPaymentUrl" value="{{ createPaymentIntentUrl }}">
                     <input type="hidden" id="successPaymentUrl" name="successPaymentUrl" value="{{ successPaymentUrl }}">
-                    <div class="checkout-information w-full p-[40px] pt-[20px] h-full flex flex-col gap-[20px]">
+                    <input type="hidden" id="csrftoken" name="csrftoken" value="{{ csrftoken }}">
+                    <div class="checkout-information w-full p-[10px] lg:p-[40px] pt-[20px] h-full flex flex-col gap-[20px]">
                         <div class="ci-body-information-row-one flex flex-col gap-[5px]">
                             <h3 class="font-Wanted-Bold text-[17px] text-black">1. Personal Information</h3>
                             <div class="ci-body-information flex flex-col gap-[20px]">
