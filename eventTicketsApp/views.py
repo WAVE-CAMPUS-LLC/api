@@ -54,46 +54,47 @@ def checkoutView(request):
     # Get cart from session
     cart = request.session.get("cart", {})
     print("Cart data in view:", cart)  # Debug print
-    
-    
+
     settings_obj = get_object_or_404(StripePlatformSettings, pk=1)
     sales_tax_percentage = settings_obj.salesTaxPercentage
     sales_fee_amount = settings_obj.salesFeeAmount
-    
-    
-    
+
     if request.method == "POST":
         try:
             data = json.loads(request.body)
             print("Data from POST request:", data)  # Debug print
             cart = data.get("cart", {})
             print("Cart data from POST request:", cart)  # Debug print
-            
+
             stripeCustomer = None
             if request.user.is_authenticated:
                 stripeCustomer = stripe.Customer.retrieve(request.user.customer_id)
             print("Stripe customer:", stripeCustomer)  # Debug print
             defaultPaymentMethod = None
 
-            if stripeCustomer and stripeCustomer.invoice_settings.default_payment_method:
+            if (
+                stripeCustomer
+                and stripeCustomer.invoice_settings.default_payment_method
+            ):
                 defaultPaymentMethod = stripe.PaymentMethod.retrieve(
                     stripeCustomer.invoice_settings.default_payment_method
                 )
             print("Default payment method:", defaultPaymentMethod)  # Debug print
-            
-            
-            
+
             sub_total_amount = sum(
                 Decimal(ticket.get("price", 0)) * int(ticket.get("quantity", 0))
                 for ticket in cart.values()
             )
             print("Total amount:", sub_total_amount)  # Debug print
-            total_tickets = sum(int(ticket.get("quantity", 0)) for ticket in cart.values())
+            total_tickets = sum(
+                int(ticket.get("quantity", 0)) for ticket in cart.values()
+            )
             print("Total tickets:", total_tickets)  # Debug print
             # Update context with POST-specific data
             sales_tax = (sub_total_amount * sales_tax_percentage) / Decimal("100.00")
             total_fees = sales_fee_amount * total_tickets
-            
+            service_fee = sales_tax + total_fees
+
             total_amount = sub_total_amount + sales_tax + total_fees
             print("Total amount after fees:", total_amount)  # Debug print
             context.update(
@@ -101,6 +102,7 @@ def checkoutView(request):
                     "cart": cart,
                     "defaultPaymentMethod": defaultPaymentMethod,
                     "totalAmount": "{:.2f}".format(total_amount),
+                    "serviceFee": "{:.2f}".format(service_fee),
                 }
             )
             print("Context after POST request:", context)  # Debug print
@@ -119,7 +121,10 @@ def checkoutView(request):
         if request.user.is_authenticated:
             stripeCustomer = stripe.Customer.retrieve(request.user.customer_id)
 
-            if stripeCustomer and stripeCustomer.invoice_settings.default_payment_method:
+            if (
+                stripeCustomer
+                and stripeCustomer.invoice_settings.default_payment_method
+            ):
                 defaultPaymentMethod = stripe.PaymentMethod.retrieve(
                     stripeCustomer.invoice_settings.default_payment_method
                 )
@@ -134,7 +139,8 @@ def checkoutView(request):
         # Update context with POST-specific data
         sales_tax = (sub_total_amount * sales_tax_percentage) / Decimal("100.00")
         total_fees = sales_fee_amount * total_tickets
-        
+        service_fee = sales_tax + total_fees
+
         total_amount = sub_total_amount + sales_tax + total_fees
 
         context.update(
@@ -145,9 +151,10 @@ def checkoutView(request):
                 "customerEmail": request.user.email,
                 "customerFirstName": request.user.first_name,
                 "customerLastName": request.user.last_name,
+                "serviceFee": "{:.2f}".format(service_fee),
             }
         )
-            
+
     except Exception as e:
         sub_total_amount = sum(
             Decimal(ticket.get("price", 0)) * int(ticket.get("quantity", 0))
@@ -159,7 +166,9 @@ def checkoutView(request):
         # Update context with POST-specific data
         sales_tax = (sub_total_amount * sales_tax_percentage) / Decimal("100.00")
         total_fees = sales_fee_amount * total_tickets
-        
+
+        service_fee = sales_tax + total_fees
+
         total_amount = sub_total_amount + sales_tax + total_fees
 
         context.update(
@@ -167,14 +176,17 @@ def checkoutView(request):
                 "cart": cart,
                 "error": f"Error retrieving payment information: {str(e)}",
                 "totalAmount": "{:.2f}".format(total_amount),
+                "serviceFee": "{:.2f}".format(service_fee),
             }
-        )        
-        
-    context.update({
-        "cart": cart,
-        # ...other context items...
-    })
-            
+        )
+
+    context.update(
+        {
+            "cart": cart,
+            # ...other context items...
+        }
+    )
+
     return render(request, "eventTicketsApp/checkout.html", context)
 
 
@@ -182,57 +194,57 @@ def createPaymentIntent(request):
     try:
         # Parse the JSON body
         data = json.loads(request.body)
-        cart = data.get('cart', {})
-        
+        cart = data.get("cart", {})
+
         # Validate cart data
         if not cart:
-            return JsonResponse({'error': 'Cart is empty'}, status=400)
-            
+            return JsonResponse({"error": "Cart is empty"}, status=400)
+
         # Calculate total amount from cart
         total_amount = sum(
-            float(item.get('price', 0)) * int(item.get('quantity', 0))
+            float(item.get("price", 0)) * int(item.get("quantity", 0))
             for item in cart.values()
         )
-        
+
         # Convert to cents for Stripe
         amount_in_cents = int(total_amount * 100)
-        
+
         if amount_in_cents <= 0:
-            return JsonResponse({'error': 'Invalid amount'}, status=400)
+            return JsonResponse({"error": "Invalid amount"}, status=400)
 
         # Generate a unique cart identifier
         cart_id = str(uuid.uuid4())
-        
+
         # Store the full cart data in the session
-        request.session[f'cart_data_{cart_id}'] = cart
-        
+        request.session[f"cart_data_{cart_id}"] = cart
+
         # Create metadata with only essential information
         metadata = {
-            'cart_id': cart_id,
-            'total_amount': str(total_amount),
-            'items_count': str(len(cart))
+            "cart_id": cart_id,
+            "total_amount": str(total_amount),
+            "items_count": str(len(cart)),
         }
 
         # Create the payment intent with simplified metadata
         payment_intent = stripe.PaymentIntent.create(
             amount=amount_in_cents,
-            currency='usd',
-            customer=request.user.customer_id if request.user.is_authenticated else None,
+            currency="usd",
+            customer=(
+                request.user.customer_id if request.user.is_authenticated else None
+            ),
             metadata=metadata,
-            setup_future_usage='off_session' if request.user.is_authenticated else None
+            setup_future_usage="off_session" if request.user.is_authenticated else None,
         )
 
-        return JsonResponse({
-            'clientSecret': payment_intent.client_secret
-        })
+        return JsonResponse({"clientSecret": payment_intent.client_secret})
 
     except json.JSONDecodeError:
-        return JsonResponse({'error': 'Invalid JSON'}, status=400)
+        return JsonResponse({"error": "Invalid JSON"}, status=400)
     except Exception as e:
         print(f"Payment Intent Error: {str(e)}")  # Log the error
-        return JsonResponse({'error': str(e)}, status=400)
-    
-    
+        return JsonResponse({"error": str(e)}, status=400)
+
+
 def paymentSuccessful(request):
     # Retrieve the cart from the session
     cart = request.session.get("cart", {})
@@ -298,11 +310,7 @@ def paymentSuccessful(request):
         del request.session["checkout_user_info"]
 
     # Render your success page
-    return render(
-        request,
-        "eventTicketsApp/checkoutSession/paymentSuccessful.html",
-        {}
-    )
+    return render(request, "eventTicketsApp/checkoutSession/paymentSuccessful.html", {})
 
 
 def paymentFailed(request):
@@ -335,8 +343,20 @@ def stripeWebhook(request):
         session_id = session.get("id", None)
         time.sleep(15)
         line_items = stripe.checkout.Session.list_line_items(session_id, limit=1)
-    return HttpResponse(status=200)
-
+        return HttpResponse(status=200)
+    
+    elif event["type"] == "financial_connections.account.created":
+        financial_account = event["data"]["object"]
+        customer_id = financial_account["account_holder"]["customer"]
+        
+        payment_methods = stripe.PaymentMethod.list(customer=customer_id, type="us_bank_account")
+        
+        if payment_methods.data:
+            bank_account = payment_methods.data[0]
+            print(f"Bank account: {bank_account}")
+        return JsonResponse({"status": "success"}, status=200)
+    
+    
 
 def updateCartView(request):
     # Used in ajax Event Ticket updating.
@@ -453,7 +473,7 @@ def generateTicket(
                 fail_silently=False,
                 html_message=qrCodeHtml,
             )
-            
+
     except Exception as e:
         print(f"Error generating QR code: {e}")
     return ticket

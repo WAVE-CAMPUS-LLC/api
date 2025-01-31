@@ -21,7 +21,7 @@ from django.contrib.auth.models import Group
 from .models import UserProfile, EventTypePreferences
 from authenticationApp.models import CustomUser
 from stripeManagementApp.customerSetup import CustomerAccount
-
+from eventTicketsApp.models import Ticket
 # Decorators to check user roles and permissions
 from wave_v1.decorators import check_suspension, member, verified, onboarded
 from blogApp.models import Blog
@@ -36,6 +36,7 @@ UserModel = get_user_model()
 @verified
 def profileView(request):
     userRequest = request.user
+    purchased_tickets = Ticket.objects.filter(user=request.user).select_related('event')
     blogItems = Blog.objects.filter(created_by=userRequest)
     userProfile = UserProfile.objects.get(user=userRequest)
     favorite_events = userProfile.favorite_events.all()
@@ -72,6 +73,13 @@ def profileView(request):
                         messages.error(request, "Failed to set default payment method.")
                 else:
                     messages.error(request, "Invalid payment method ID.")
+                    
+            elif action == "addPayoutMethodToProfile":
+                bank = CustomerAccount.setupBankAccount(request, userRequest.customer_id)
+                if bank:
+                    messages.success(request, "Bank account added successfully.")
+                else:
+                    messages.error(request, "Failed to add bank account.")
         except Exception as e:
             messages.error(request, f"An error occurred: {str(e)}")
         finally:
@@ -87,6 +95,7 @@ def profileView(request):
             "favoriteEvents": favorite_events,
             "stripeKey": stripeKey,
             "payments": payment_methods,
+            "purchasedTickets": purchased_tickets,
         },
     )
 

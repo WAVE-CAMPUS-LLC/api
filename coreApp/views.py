@@ -26,6 +26,7 @@ from accountManagementApp.models import UserProfile
 from .forms import RSVPForm
 from collegeManagementApp.models import OrganizationMembership
 from eventTicketsApp.views import generateTicket
+from eventTicketsApp.models import Ticket
 
 
 # Create your views here.
@@ -170,7 +171,7 @@ def categoriesView(request):
 
 
 def load_more_events(request):
-    offset = int(request.GET.get("offset", 7))
+    offset = int(request.GET.get("offset", 9))
     limit = 3
 
     if not request.user.is_authenticated:

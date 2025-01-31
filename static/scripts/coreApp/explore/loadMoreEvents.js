@@ -1,4 +1,4 @@
-let offset = 7;
+let offset = 9;
 
 function loadMoreEvents() {
     fetch(`/load-more/?offset=${offset}`)
