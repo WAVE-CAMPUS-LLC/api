@@ -11,7 +11,8 @@
 		"build": "npx tailwindcss -i static/tailwindcss/input.css -o static/tailwindcss/output.css --minify && cd templates/emailManagement && maizzle build production",
 		"build:prod": "npx tailwindcss -i static/tailwindcss/input.css -o static/tailwindcss/output.css --minify && cd templates/emailManagement && maizzle build production",
 		"build:dev": "npx tailwindcss -i static/tailwindcss/input.css -o static/tailwindcss/output.css --watch",
-		"start": "echo 'Starting Django application...'"
+		"start": "echo 'Starting Django application...'",
+		"stripe": "stripe listen --forward-to http://127.0.0.1:8000/stripeWebhook/"
 	},
 	"devDependencies": {
 		"@maizzle/framework": "^5.0.0",

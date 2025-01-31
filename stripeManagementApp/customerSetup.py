@@ -161,7 +161,7 @@ class CustomerAccount:
 class ConnectAccount:
     def createConnectAccount(request, user):
         try:
-            account =stripe.Account.create(
+            account = stripe.Account.create(
                 type="express",
                 country="US",
                 email=user.email,

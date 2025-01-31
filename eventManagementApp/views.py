@@ -223,7 +223,7 @@ def createPaidEvent(request):
 
     return render(
         request,
-        "eventManagementApp/host/create/createInviteEvent.html",
+        "eventManagementApp/host/create/createPaidEvent.html",
         {
             "eventForm": eventForm,
             "eventTypeChoices": event_type_choices,
