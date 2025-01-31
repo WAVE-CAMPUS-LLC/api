@@ -72,7 +72,10 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     is_suspended = models.BooleanField(default=False)
 
     customer_id = models.CharField(max_length=255, null=True, blank=True)
-
+    connectAccountCreated = models.BooleanField(default=False)
+    connectAccountID = models.CharField(max_length=255, null=True, blank=True)
+    connectAccountOnboarded = models.BooleanField(default=False)
+    
     def suspend(self):
         suspend_group, created = Group.objects.get_or_create(name="Suspend")
         member_group = Group.objects.get(name="Member")

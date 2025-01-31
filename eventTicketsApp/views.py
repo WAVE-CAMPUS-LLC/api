@@ -25,6 +25,7 @@ from stripeManagementApp.customerSetup import CustomerAccount
 from socialApp.models import Crew
 from .models import PaidFreeTicket, Ticket, UserPayment, StripePlatformSettings
 from eventManagementApp.models import Event, HostProfile
+from authenticationApp.models import CustomUser
 
 
 def initialize_stripe_settings():
@@ -41,6 +42,7 @@ stripe.api_key = settings.STRIPE_SECRET_KEY
 
 def paymentRedirect(request):
     return render(request, "eventTicketsApp/checkoutSession/paymentRedirect.html")
+
 
 def checkoutView(request):
     url = settings.SITE_URL
@@ -361,6 +363,19 @@ def stripeWebhook(request):
             bank_account = payment_methods.data[0]
             print(f"Bank account: {bank_account}")
         return JsonResponse({"status": "success"}, status=200)
+    
+    elif event["type"] == "account.updated":
+        account = event["data"]["object"]
+        user = CustomUser.objects.filter(connectAccountID=account["id"]).first()
+        if user:
+            if account["payouts_enabled"]:
+                user.connectAccountOnboarded = True
+                user.save()
+                print(f"User {user.id} onboarding completed.")
+            else:
+                print(f"Account {account['id']} not yet fully onboarded.")
+        
+    return JsonResponse({"status": "success"}, status=200)
     
     
 

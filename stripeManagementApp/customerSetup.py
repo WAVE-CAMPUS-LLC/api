@@ -156,3 +156,48 @@ class CustomerAccount:
         except Exception as e:
             print(f"Error: {str(e)}")
             return None
+        
+    
+class ConnectAccount:
+    def createConnectAccount(request, user):
+        try:
+            account =stripe.Account.create(
+                type="express",
+                country="US",
+                email=user.email,
+                capabilities={
+                    "card_payments": {
+                        "requested": True,
+                    },
+                    "transfers": {
+                        "requested": True,
+                    },
+                }
+            
+            )
+            
+            return account
+        except stripe.error.StripeError as e:
+            print(f"Stripe error: {e.user_message}")
+            return JsonResponse({"error": e.user_message})
+        except Exception as e:
+            print(f"Error: {str(e)}")
+            return JsonResponse({"error": str(e)})
+        
+    def getStripeOnboardingLink(request, user, domain, finalLink):
+        try:
+            account_links = stripe.AccountLink.create(
+                account=user.connectAccountID,
+                refresh_url=f'{domain}/refresh/{user.connectAccountID}',
+                return_url=f"{finalLink}",
+                type="account_onboarding",
+            )
+            
+            return account_links.url
+        except stripe.error.StripeError as e:
+            print(f"Stripe error: {e.user_message}")
+            return JsonResponse({"error": e.user_message})
+        except Exception as e:
+            print(f"Error: {str(e)}")
+            return JsonResponse({"error": str(e)})
+

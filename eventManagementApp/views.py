@@ -14,6 +14,7 @@ from django.core.mail import send_mail
 import stripe.error
 from wave_v1.decorators import check_suspension, host, member, verified, onboarded
 from django.urls import reverse
+from django.views.decorators.csrf import csrf_exempt
 
 
 from accountManagementApp.models import UserProfile
@@ -40,6 +41,7 @@ from authenticationApp.models import CustomUser
 from .utils import set_event_privacy  # Import the helper function
 
 from eventTicketsApp.models import InviteEventOption, RSVPTicket, PaidFreeTicket, Ticket
+from stripeManagementApp.customerSetup import ConnectAccount
 
 
 # Create your views here.
@@ -96,35 +98,88 @@ def hostGuideView(request):
     return render(request, "eventManagementApp/host/hostGuide.html")
 
 
+@login_required
+@member
+@verified
+@onboarded
+@check_suspension
+def eventCreationSelect(request):
+    siteDomain = settings.SITE_URL
+    userAccount = get_object_or_404(CustomUser, username=request.user.username)
+       
+    
+    connectAccountExists = userAccount.connectAccountCreated
+    connectOnboarded = userAccount.connectAccountOnboarded
+    
+    if connectAccountExists == True and connectOnboarded == True:
+        completedConnectAccount = True
+    else:
+        completedConnectAccount = False
+    
+    if not userAccount.connectAccountID:
+        stripeConnectAccount = ConnectAccount.createConnectAccount(request, userAccount)
+        if stripeConnectAccount:
+            userAccount.connectAccountID = stripeConnectAccount.id
+            userAccount.connectAccountCreated = True
+            userAccount.save()
+            completedConnectAccount = True
+    
+    
+    siteDomain = settings.SITE_URL
+    
+    link = request.build_absolute_uri(reverse("eventManagement:createPaidEvent"))
+    
+    
+    stripeLinkAccount = ConnectAccount.getStripeOnboardingLink(request, userAccount, siteDomain, link)
+    
+    print("Stripe Link Account:", stripeLinkAccount)
+
+    
+    
+    if not userAccount.groups.filter(name="Host").exists():
+        hostRole, _ = Group.objects.get_or_create(name="Host")
+        userAccount.groups.add(hostRole)
+        
+    if request.method == "POST":
+        eventAction = request.POST.get("eventAction")
+        
+        if eventAction == "paid":
+            if not completedConnectAccount:
+                messages.error(request, "Please complete your Stripe account setup.")
+                return redirect(stripeLinkAccount)
+            return redirect("eventManagement:createPaidEvent")
+        elif eventAction == "rsvp":
+            return redirect("eventManagement:createRsvpEvent")
+        elif eventAction == "invite":
+            return redirect("eventManagement:createInviteEvent")
+        
+    return render(request, "eventManagementApp/host/eventCreationSelect.html")
+
 
 @login_required
 @member
 @onboarded
 @check_suspension
-def eventCreationProcess(request):
+def createPaidEvent(request):
     event_type_choices = Event.EVENT_TYPE_CHOICES
     privacy_choices = Event.PRIVACY_CHOICES
     placesKey = settings.PLACES_API_KEY
     
     userAccount = get_object_or_404(CustomUser, username=request.user.username)
     
-    if not userAccount.groups.filter(name="Host").exists():
-        hostRole, _ = Group.objects.get_or_create(name="Host")
-        userAccount.groups.add(hostRole)
-
     if request.method == "POST":
         eventForm = EventForm(request.POST, request.FILES)
         eventAction = request.POST.get("eventAction")
         
-
         if eventAction == "submit":
-            if eventForm.is_valid():                
+            if eventForm.is_valid():      
                 event = eventForm.save(commit=False)
                 event.host = userAccount
+                event.ticketing = "Invite Required"
                 event.crew_discount = request.POST.get('crew_discount') == "on"
                 event.show_guest_list = request.POST.get('show_guest_list') == "on"
+                
                 event.status = "live"
-
                 
                 event.save()
 
@@ -147,10 +202,6 @@ def eventCreationProcess(request):
                 if product:
                     event.stripeProductId = product.id
                     event.save()
-                    print("Product ID:", product.id)
-                    print("Product ID:", product.id)
-                    print("Product ID:", product.id)
-                    print("Product ID:", product.id)
                 else:
                     print("Product creation failed")
                     print("Product creation failed")
@@ -159,6 +210,7 @@ def eventCreationProcess(request):
                     return redirect("eventManagement:eventManagement", eventId=event.eventId)
 
                 return redirect("eventManagement:eventManagement", eventId=event.eventId)
+            
             else:
                 print(eventForm.errors)
                 print(eventForm.errors)
@@ -171,7 +223,7 @@ def eventCreationProcess(request):
 
     return render(
         request,
-        "eventManagementApp/host/eventCreationProcess.html",
+        "eventManagementApp/host/create/createInviteEvent.html",
         {
             "eventForm": eventForm,
             "eventTypeChoices": event_type_choices,
@@ -181,6 +233,181 @@ def eventCreationProcess(request):
     )
 
 
+@login_required
+@member
+@onboarded
+@check_suspension
+def createInviteEvent(request):
+    event_type_choices = Event.EVENT_TYPE_CHOICES
+    privacy_choices = Event.PRIVACY_CHOICES
+    placesKey = settings.PLACES_API_KEY
+    
+    userAccount = get_object_or_404(CustomUser, username=request.user.username)
+    
+    if request.method == "POST":
+        eventForm = EventForm(request.POST, request.FILES)
+        eventAction = request.POST.get("eventAction")
+        
+        if eventAction == "submit":
+            if eventForm.is_valid():      
+                event = eventForm.save(commit=False)
+                event.host = userAccount
+                event.ticketing = "Invite Required"
+                event.crew_discount = request.POST.get('crew_discount') == "on"
+                event.show_guest_list = request.POST.get('show_guest_list') == "on"
+                
+                event.status = "live"
+                
+                event.save()
+
+                messages.success(request, "Event is live!")
+
+                user_profile = event.host.user_profile
+                hostProfile, _ = HostProfile.objects.get_or_create(user=request.user)
+                organization_membership = OrganizationMembership.objects.filter(
+                    user=event.host
+                ).first()
+                
+                # Refactored privacy setting
+                privacy_set = set_event_privacy(event, user_profile, organization_membership, request)
+                if not privacy_set:
+                    return redirect("eventManagement:eventManagement", eventId=event.eventId)
+
+                event.save()
+                product = createHostProduct(event, hostProfile.stripe_account_id)
+
+                if product:
+                    event.stripeProductId = product.id
+                    event.save()
+                else:
+                    print("Product creation failed")
+                    print("Product creation failed")
+                    print("Product creation failed")
+                    messages.error(request, "Product creation failed")
+                    return redirect("eventManagement:eventManagement", eventId=event.eventId)
+
+                return redirect("eventManagement:eventManagement", eventId=event.eventId)
+            
+            else:
+                print(eventForm.errors)
+                print(eventForm.errors)
+                print(eventForm.errors)
+                messages.error(request, "Invalid form submission.")
+                # Optionally, handle form errors here
+
+    else:
+        eventForm = EventForm()
+
+    return render(
+        request,
+        "eventManagementApp/host/create/createInviteEvent.html",
+        {
+            "eventForm": eventForm,
+            "eventTypeChoices": event_type_choices,
+            "privacyChoices": privacy_choices,
+            "placesKey": placesKey,
+        },
+    )
+
+@login_required
+@member
+@onboarded
+@check_suspension
+def createRsvpEvent(request):
+    event_type_choices = Event.EVENT_TYPE_CHOICES
+    privacy_choices = Event.PRIVACY_CHOICES
+    placesKey = settings.PLACES_API_KEY
+    
+    userAccount = get_object_or_404(CustomUser, username=request.user.username)
+    
+    if request.method == "POST":
+        eventForm = EventForm(request.POST, request.FILES)
+        eventAction = request.POST.get("eventAction")
+        
+        if eventAction == "submit":
+            if eventForm.is_valid():      
+                event = eventForm.save(commit=False)
+                event.host = userAccount
+                event.ticketing = "RSVP Required"
+                event.crew_discount = request.POST.get('crew_discount') == "on"
+                event.show_guest_list = request.POST.get('show_guest_list') == "on"
+                
+                event.status = "live"
+                
+                event.save()
+
+                messages.success(request, "Event is live!")
+
+                user_profile = event.host.user_profile
+                hostProfile, _ = HostProfile.objects.get_or_create(user=request.user)
+                organization_membership = OrganizationMembership.objects.filter(
+                    user=event.host
+                ).first()
+                
+                # Refactored privacy setting
+                privacy_set = set_event_privacy(event, user_profile, organization_membership, request)
+                if not privacy_set:
+                    return redirect("eventManagement:eventManagement", eventId=event.eventId)
+
+                event.save()
+                product = createHostProduct(event, hostProfile.stripe_account_id)
+
+                if product:
+                    event.stripeProductId = product.id
+                    event.save()
+                else:
+                    print("Product creation failed")
+                    print("Product creation failed")
+                    print("Product creation failed")
+                    messages.error(request, "Product creation failed")
+                    return redirect("eventManagement:eventManagement", eventId=event.eventId)
+
+                return redirect("eventManagement:eventManagement", eventId=event.eventId)
+            
+            else:
+                print(eventForm.errors)
+                print(eventForm.errors)
+                print(eventForm.errors)
+                messages.error(request, "Invalid form submission.")
+                # Optionally, handle form errors here
+
+    else:
+        eventForm = EventForm()
+
+    return render(
+        request,
+        "eventManagementApp/host/create/createRsvpEvent.html",
+        {
+            "eventForm": eventForm,
+            "eventTypeChoices": event_type_choices,
+            "privacyChoices": privacy_choices,
+            "placesKey": placesKey,
+        },
+    )
+
+
+@csrf_exempt
+def stripe_webhook(request):
+    payload = request.body
+    sig_header = request.META.get("HTTP_STRIPE_SIGNATURE")
+    stripe.api_key = settings.STRIPE_SECRET_KEY
+    endpoint_secret = settings.STRIPE_WEBHOOK_SECRET_TES
+
+    try:
+        event = stripe.Webhook.construct_event(payload, sig_header, endpoint_secret)
+    except ValueError:
+        return JsonResponse({"error": "Invalid payload"}, status=400)
+    except stripe.error.SignatureVerificationError:
+        return JsonResponse({"error": "Invalid signature"}, status=400)
+
+    if event["type"] == "account.updated":
+        account = event["data"]["object"]
+        user = CustomUser.objects.filter(connectAccountID=account["id"]).first()
+        if user and account["details_submitted"]:
+            user.connectAccountOnboarded = True
+            user.save()
+
+    return JsonResponse({"status": "success"}, status=200)
 @login_required
 @host
 @member
@@ -377,6 +604,7 @@ def get_client_ip(request):
     else:
         ip = request.META.get("REMOTE_ADDR")
     return ip
+
 
 
 @login_required

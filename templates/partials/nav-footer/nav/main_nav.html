@@ -20,12 +20,12 @@
                         <li class="hidden pre-lg:flex">
                             {% if request.user.is_authenticated %}
                                 {% if page == home %}
-                                <a class="gradient-btn hover:gradient-btn-hover text-white" href="{% url "eventManagement:eventCreationProcess" %}">
+                                <a class="gradient-btn hover:gradient-btn-hover text-white" href="{% url "eventManagement:eventCreationSelect" %}">
                                     <img src="{% static "/images/eventManagementApp/host/host_ticket.svg" %}" />
                                     Create
                                 </a>
                                 {% elif page == "explore" %}
-                                    <a class="gradient-btn hover:gradient-btn-hover text-white" href="{% url "eventManagement:eventCreationProcess" %}">
+                                    <a class="gradient-btn hover:gradient-btn-hover text-white" href="{% url "eventManagement:eventCreationSelect" %}">
                                         <img src="{% static "/images/eventManagementApp/host/host_ticket.svg" %}" />
                                         Create
                                     </a>
@@ -42,7 +42,7 @@
                                     Join Campus
                                 </a>
                                 {% elif page == "explore" %}
-                                    <a class="gradient-btn hover:gradient-btn-hover text-white" href="{% url "eventManagement:eventCreationProcess" %}">
+                                    <a class="gradient-btn hover:gradient-btn-hover text-white" href="{% url "eventManagement:eventCreationSelect" %}">
                                         <img src="{% static "/images/eventManagementApp/host/host_ticket.svg" %}" />
                                         Create
                                     </a>

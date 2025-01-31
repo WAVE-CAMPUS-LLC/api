@@ -89,13 +89,6 @@ $(document).ready(function () {
         required: "Please choose an option",
       },
     },
-    ".ticket-type-input": {
-      required: true,
-      errorSelector: "#ticket-type-error",
-      errorMessages: {
-        required: "Please choose an option",
-      },
-    },
     ".building-input": {
       required: false,
       maxLength: 100,

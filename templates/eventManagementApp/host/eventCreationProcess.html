@@ -19,6 +19,19 @@ Create your event — WAVE.
 {% endblock header %}
 
 {% block body %}
+{% if not completeConnectAccount %}
+<div class="bg-[rgba(0, 0, 0, 0.037)] backdrop-blur-sm fixed top-0 left-0 right-0 bottom-0 z-[1005] w-full h-full cursor-default">
+    <div class="modalContainer w-full h-full flex justify-center items-center py-5 md:py-11">
+        <div class="modalContentCard w-4/12 h-full lg:h-[75%] bg-white shadow-custom-shadow rounded-2xl p-5 pb-12 flex flex-col gap-3 overflow-y-auto">
+            <form id="connectModalBody" class="flex flex-col gap-5 justify-center items-center w-full">
+                {% csrf_token %}
+                <p class="font-Wanted-Variable text-black text-Large">Complete your financial onboarding to start earning!</p>
+                <button type="submit" name="eventAction" value="completeConnectAccount" class="py-4 px-6 bg-green text-white font-Wanted-Bold text-xl rounded-2xl">Complete Onboarding</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
 <div id="body-content" class="flex flex-col px-[15px] after-xsm:px-[20px] xxsm:px-[35px] sm:px-[40px] md:px-[40px] pre-lg:px-[50px] lg:px-[80px] gap-[70px]">
     <div class="flex flex-row justify-between">
         <a href="{% url 'eventManagement:hostPortal' %}" 
@@ -32,7 +45,9 @@ Create your event — WAVE.
 
     <div></div>
 
-    <form method="POST" id="eventForm" class="flex flex-col gap-10" enctype="multipart/form-data" action="{% url 'eventManagement:eventCreationProcess' %}">
+    <input type="hidden" id="connectAccountComplete" value="{{ completeConnectAccount}}" name="connectAccountComplete" />
+
+    <form method="POST" id="eventForm" class="flex flex-col gap-10" enctype="multipart/form-data" action="{% url 'eventManagement:eventCreationSelect' %}">
         {% csrf_token %}
         <div class="grid grid-cols-1 pre-lg:grid-cols-2 gap-10">
             <!-- LEFT COLUMN -->
@@ -256,6 +271,8 @@ Create your event — WAVE.
                         </div>
                     </div>
                 </div>
+
+                <!-- GUEST LIST -->
                 <div class="flex flex-col gap-4 w-full items-start">
                     <div class="w-full flex flex-row justify-between">
                         <h6 class="flex justify-start font-Wanted-Medium text-Large">Show Guest List</h6>
@@ -352,6 +369,10 @@ Create your event — WAVE.
                 </div>
             </div>
         </div>
+
+        <!-- MODAL -->
+        
+        
 
         <!-- SUBMIT BUTTON -->
         <div class="w-full flex justify-center" id="submitBtn">
