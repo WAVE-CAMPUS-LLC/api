@@ -3,8 +3,13 @@ document.addEventListener("DOMContentLoaded", async function () {
   const stripe = Stripe(stripeKey);
   const processPaymentURL = document.getElementById("processPaymentUrl").value;
   const successPaymentURL = document.getElementById("successPaymentUrl").value;
+  const failedPaymentURL = document.getElementById("failedPaymentURL").value;
+  const paymentRedirectUrl =
+    document.getElementById("paymentRedirectUrl").value;
   console.log(processPaymentURL);
   console.log(successPaymentURL);
+  console.log(failedPaymentURL);
+  console.log(paymentRedirectUrl);
 
   let elements;
   let paymentElement;
@@ -192,29 +197,40 @@ document.addEventListener("DOMContentLoaded", async function () {
           const result = await response.json();
           if (result.error) {
             throw new Error(result.error);
+          } else {
+            window.location.href = successPaymentURL;
           }
-          window.location.href = successPaymentURL;
         } else {
-          // Use new payment method
-          const { error } = await stripe.confirmPayment({
+          const name = `${document.getElementById("first_name")?.value || ""} ${
+            document.getElementById("last_name")?.value || ""
+          }`.trim();
+          const email = document.getElementById("email")?.value;
+          const result = await stripe.confirmPayment({
             elements,
             confirmParams: {
-              return_url: successPaymentURL,
+              return_url: paymentRedirectUrl,
               payment_method_data: {
                 billing_details: {
-                  name: `${
-                    document.getElementById("first_name")?.value || ""
-                  } ${
-                    document.getElementById("last_name")?.value || ""
-                  }`.trim(),
-                  email: document.getElementById("email")?.value,
+                  name: name,
+                  email: email,
                 },
               },
             },
+            redirect: "if_required",
           });
 
+          const { error, paymentIntent } = result;
+
+          console.log("Payment result:", { error, paymentIntent });
+
           if (error) {
-            throw error;
+            console.error("Payment failed:", error.message);
+            window.location.href = failedPaymentURL;
+          } else if (paymentIntent && paymentIntent.status === "succeeded") {
+            window.location.href = successPaymentURL;
+          } else {
+            console.error("Unexpected payment status:", paymentIntent?.status);
+            window.location.href = failedPaymentURL;
           }
         }
       } catch (error) {

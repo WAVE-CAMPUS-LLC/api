@@ -97,6 +97,8 @@ WAVE — Join Us!
                     {% endif %}
                     <input type="hidden" id="processPaymentUrl" name="processPaymentUrl" value="{{ createPaymentIntentUrl }}">
                     <input type="hidden" id="successPaymentUrl" name="successPaymentUrl" value="{{ successPaymentUrl }}">
+                    <input type="hidden" id="failedPaymentURL" name="failedPaymentURL" value="{{ failedPaymentURL }}">
+                    <input type="hidden" id="paymentRedirectUrl" name="paymentRedirectUrl" value="{{ paymentRedirectUrl }}">
                     <input type="hidden" id="csrftoken" name="csrftoken" value="{{ csrftoken }}">
                     <div class="checkout-information w-full p-[10px] lg:p-[40px] pt-[20px] h-full flex flex-col gap-[20px]">
                         <div class="ci-body-information-row-one flex flex-col gap-[5px]">
