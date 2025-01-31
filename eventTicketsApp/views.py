@@ -39,16 +39,22 @@ def initialize_stripe_settings():
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
+def paymentRedirect(request):
+    return render(request, "eventTicketsApp/checkoutSession/paymentRedirect.html")
 
 def checkoutView(request):
     url = settings.SITE_URL
     successPaymentLink = f"{url}{reverse('eventTickets:paymentSuccessful')}"
+    failedPaymentLink = f"{url}{reverse('eventTickets:paymentFailed')}"
     createPaymentIntentLink = f"{url}{reverse('eventTickets:createPaymentIntent')}"
+    paymentRedirectLink = f"{url}{reverse('eventTickets:paymentRedirect')}"
     context = {
         "stripeKey": settings.STRIPE_SECRET_KEY,
         "stripePublicKey": settings.STRIPE_PUBLISHABLE_KEY,
         "successPaymentUrl": successPaymentLink,
+        "failedPaymentURL": failedPaymentLink,
         "createPaymentIntentUrl": createPaymentIntentLink,
+        "paymentRedirectUrl": paymentRedirectLink,
     }
 
     # Get cart from session
