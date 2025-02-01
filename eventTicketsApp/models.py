@@ -93,7 +93,7 @@ class RSVPTicket(models.Model):
     first_name = models.CharField(_("First Name"), max_length=50)
     last_name = models.CharField(_("Last Name"), max_length=50)
     display_on_guestlist = models.BooleanField(
-        _("Do you want to be displayed on the guest list?"), default=False
+        _("Be displayed on guest list?"), default=False
     )
     created_at = models.DateTimeField(auto_now_add=True)
     ticket_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)

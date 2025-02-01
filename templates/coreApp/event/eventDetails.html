@@ -233,11 +233,16 @@
                                                 </div>
 
                                                 {% if request.user.is_authenticated %}
-                                                <div class="display-group">
-                                                    <p>{{ rsvpForm.display_on_guestlist.label }}</p>
-                                                    <label for="{{ rsvpForm.display_on_guestlist.id_for_label }}" class="custom-toggle">
-                                                        {{ rsvpForm.display_on_guestlist|add_class:"w-4 h-4 rounded-2xl border" }}
-                                                        <span class="custom-slider custom-round"></span>
+                                                <div class="display-group flex flex-row justify-between items-center">
+                                                    <p class="font-Wanted-Variable text-Base text-black">{{ rsvpForm.display_on_guestlist.label }}</p>
+                                                    
+                                                    <label class="toggle-switch" for="{{ rsvpForm.display_on_guestlist.id_for_label }}">
+                                                        <input 
+                                                        type="checkbox" 
+                                                        id="{{ rsvpForm.display_on_guestlist.auto_id }}" 
+                                                        name="{{ rsvpForm.display_on_guestlist.html_name }}"
+                                                        {% if rsvpForm.display_on_guestlist.value %}checked{% endif %}/>
+                                                        <span class="slider"></span>
                                                     </label>
                                                 </div>
                                                 {% endif %}

@@ -5,7 +5,7 @@ from . import views
 app_name = "eventManagement"
 
 urlpatterns = [
-    path("", views.hostView, name="hostHome"),
+    path("host/", views.hostView, name="hostHome"),
     path("portal/", views.hostPortalView, name="hostPortal"),
     path("guide/", views.hostGuideView, name="hostGuide"),
     # path("create/", views.hostCreateEvent, name="hostCreateEvent"),
@@ -15,8 +15,10 @@ urlpatterns = [
         views.createRsvpEvent,
         name="createRsvpEvent",
     ),
-    path("create/invite", views.createInviteEvent, name="createInviteEvent"),
-    path("create/paid", views.createPaidEvent, name="createPaidEvent"),
+    path("create/invite/", views.createInviteEvent, name="createInviteEvent"),
+    path("create/paid/", views.createPaidEvent, name="createPaidEvent"),
+    path("tickets/<uuid:eventId>/", views.createPaidEventTicket, name="paidTicketing"),
+    path("invite/<uuid:eventId>/", views.createInviteEvent, name="inviteTicketing"),
     path(
         "event/<uuid:eventId>/manage/",
         views.eventManagement,
