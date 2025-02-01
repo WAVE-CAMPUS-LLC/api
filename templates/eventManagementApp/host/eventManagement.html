@@ -345,17 +345,23 @@ Manage {{ event.title }} | WAVE.
                             <form id="inviteForm" class="inviteForm flex flex-col gap-10" method="post">
                                 {% csrf_token %}
                                 <div class="inviteFormField flex flex-col gap-2">
-                                    {{ invitationForm.invite_emails.label_tag|add_class:"font-Wanted-Variable text-Semi-Medium text-gray-200" }}
+                                    <label class="font-Wanted-Variable text-Semi-Medium text-gray-200" for="{{ invitationForm.invite_emails.id_for_label }}">
+                                        {{ invitationForm.invite_emails.label }}
+                                    </label>
                                     {{ invitationForm.invite_emails|add_class:"w-full px-4 p-3 rounded-xl border border-custom-rgba5 font-Wanted-Variable text-Medium" }}
                                 </div>
 
                                 <div class="inviteFormField flex flex-col gap-2">
-                                    {{ invitationForm.invite_subject.label_tag|add_class:"font-Wanted-Variable text-Semi-Medium text-gray-200" }}
+                                    <label class="font-Wanted-Variable text-Semi-Medium text-gray-200" for="{{ invitationForm.invite_subject.id_for_label }}">
+                                        {{ invitationForm.invite_subject.label }}
+                                    </label>
                                     {{ invitationForm.invite_subject|add_class:"w-full px-4 p-3 rounded-xl border border-custom-rgba5 font-Wanted-Variable text-Medium" }}
                                 </div>
 
                                 <div class="inviteFormField flex flex-col gap-2">
-                                    {{ invitationForm.invite_message.label_tag|add_class:"font-Wanted-Variable text-Semi-Medium text-gray-200" }}
+                                    <label class="font-Wanted-Variable text-Semi-Medium text-gray-200" for="{{ invitationForm.invite_message.id_for_label }}">
+                                        {{ invitationForm.invite_message.label }}
+                                    </label>
                                     {{ invitationForm.invite_message|add_class:"w-full px-4 p-3 rounded-xl border border-custom-rgba5 font-Wanted-Variable text-Medium min-h-[300px]" }}
                                 </div>
 

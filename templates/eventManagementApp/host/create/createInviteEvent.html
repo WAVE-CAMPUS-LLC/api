@@ -34,7 +34,7 @@ Create your event — WAVE.
 
     <input type="hidden" id="connectAccountComplete" value="{{ completeConnectAccount}}" name="connectAccountComplete" />
 
-    <form method="POST" id="eventForm" class="flex flex-col gap-10" enctype="multipart/form-data" action="{% url 'eventManagement:eventCreationSelect' %}">
+    <form method="POST" id="eventForm" class="flex flex-col gap-10" enctype="multipart/form-data">
         {% csrf_token %}
         <div class="grid grid-cols-1 pre-lg:grid-cols-2 gap-10">
             <!-- LEFT COLUMN -->
