@@ -25,6 +25,11 @@ urlpatterns = [
         name="eventManagement",
     ),
     path(
+        "event/<uuid:eventId>/edit/",
+        views.editEvent,
+        name="editEvent",
+    ),
+    path(
         "billing/withdraw/",
         views.hostBillingCashout,
         name="hostBillingCashout",

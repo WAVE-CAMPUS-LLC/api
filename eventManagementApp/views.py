@@ -168,7 +168,7 @@ def createPaidEvent(request):
             if eventForm.is_valid():
                 event = eventForm.save(commit=False)
                 event.host = userAccount
-                event.ticketing = "Invite Required"
+                event.ticketing = "Paid/Free"
                 event.crew_discount = request.POST.get("crew_discount") == "on"
                 event.show_guest_list = request.POST.get("show_guest_list") == "on"
 
@@ -411,34 +411,47 @@ def createPaidEventTicket(request, eventId):
     hostProfile = HostProfile.objects.get(user=event.host)
     paidFreeForm = PaidFreeTicketForm(request.POST)
     paid_free_tickets = PaidFreeTicket.objects.filter(event=event)
+    
+    eventAction = request.POST.get("eventAction")
+    ticket_id = request.POST.get("ticketId")
+
 
     if request.method == "POST":
-        if paidFreeForm.is_valid():
-            new_ticket = paidFreeForm.save(commit=False)
-            new_ticket.event = event
-            new_ticket.save()
-            eventStripeId = event.stripeProductId
-            print("Event Stripe ID:", eventStripeId)
-            stripePrice = createProductPriceType(
-                eventStripeId,
-                new_ticket.ticket_price,
-                hostProfile.stripe_account_id,
-                new_ticket.ticket_quantity,
-            )
-            new_ticket.stripePriceId = stripePrice.id
-            new_ticket.save()
+        if eventAction == "createPaidFreeTicket":
+            if paidFreeForm.is_valid():
+                new_ticket = paidFreeForm.save(commit=False)
+                new_ticket.event = event
+                new_ticket.save()
+                eventStripeId = event.stripeProductId
+                print("Event Stripe ID:", eventStripeId)
+                stripePrice = createProductPriceType(
+                    eventStripeId,
+                    new_ticket.ticket_price,
+                    hostProfile.stripe_account_id,
+                    new_ticket.ticket_quantity,
+                )
+                new_ticket.stripePriceId = stripePrice.id
+                new_ticket.save()
 
+                return redirect("eventManagement:paidTicketing", eventId=event.eventId)
+            else:
+                messages.error(request, "Invalid form submission.")
+                return redirect(
+                    "eventManagement:createPaidEventTicket", eventId=event.eventId
+                )
+        elif eventAction == "finish":
+            return redirect("eventManagement:eventManagement", eventId=event.eventId)
+        elif eventAction == "deleteTicket":
+            ticket = get_object_or_404(PaidFreeTicket, ticket_id=ticket_id)
+            ticket.delete()
             return redirect("eventManagement:createPaidEventTicket", eventId=event.eventId)
-        else:
-            messages.error(request, "Invalid form submission.")
-            return redirect(
-                "eventManagement:createPaidEventTicket", eventId=event.eventId
-            )
+        elif eventAction == "editTicket":
+            return redirect("eventManagement:eventManagement", eventId=event.eventId)
             
     return render(
         request,
         "eventManagementApp/ticketing/createPaidEventTicket.html",
-        {"paidFreeForm": paidFreeForm, "paidFreeTickets": paid_free_tickets},
+        {"paidFreeForm": paidFreeForm, "paidFreeTickets": paid_free_tickets, "event": event},
     )
 
 
@@ -510,6 +523,7 @@ def eventManagement(request, eventId):
 
     if request.method == "POST":
         action = request.POST.get("eventAction")
+        ticket_id = request.POST.get("ticketId")
 
         if action == "deleteEvent":
             event.delete()
@@ -522,6 +536,20 @@ def eventManagement(request, eventId):
             rsvp.delete()
             ticket.delete()
             return redirect("eventManagement:eventManagement", eventId=eventId)
+        
+        elif action == "deleteTicket":
+            ticket = get_object_or_404(PaidFreeTicket, ticket_id=ticket_id)
+            ticket.delete()
+            return redirect("eventManagement:eventManagement", eventId=eventId)
+        
+        elif action == "saveTicketEdit":
+            ticket = get_object_or_404(PaidFreeTicket, ticket_id=ticket_id)
+            paidFreeForm = PaidFreeTicketForm(request.POST, instance=ticket)
+            if paidFreeForm.is_valid():
+                ticket = paidFreeForm.save(commit=False)
+                ticket.save()
+            return redirect("eventManagement:eventManagement", eventId=eventId)
+            
 
         elif "displayOnCollege" in request.POST:
             event_to_update = get_object_or_404(
@@ -573,49 +601,8 @@ def eventManagement(request, eventId):
                     )
             return redirect("eventManagement:eventManagement", eventId=eventId)
 
-        elif action == "saveChanges":
-            editEventForm = EditEventForm(request.POST, request.FILES, instance=event)
-            if editEventForm.is_valid():
-                # Handle removing body photos if checked
-                if "remove_body_photo_one" in request.POST:
-                    event.body_photo_one.delete(save=False)
-                    event.body_photo_one = None
-                if "remove_body_photo_two" in request.POST:
-                    event.body_photo_two.delete(save=False)
-                    event.body_photo_two = None
-                if "remove_body_photo_three" in request.POST:
-                    event.body_photo_three.delete(save=False)
-                    event.body_photo_three = None
-                if "remove_body_photo_four" in request.POST:
-                    event.body_photo_four.delete(save=False)
-                    event.body_photo_four = None
-                if "remove_body_photo_five" in request.POST:
-                    event.body_photo_five.delete(save=False)
-                    event.body_photo_five = None
-
-                edits = editEventForm.save(commit=False)
-
-                if "headerPhoto" in request.FILES:
-                    edits.header_photo = request.FILES["headerPhoto"]
-                if "bodyPhotoOne" in request.FILES:
-                    edits.body_photo_one = request.FILES["bodyPhotoOne"]
-                if "bodyPhotoTwo" in request.FILES:
-                    edits.body_photo_two = request.FILES["bodyPhotoTwo"]
-                if "bodyPhotoThree" in request.FILES:
-                    edits.body_photo_three = request.FILES["bodyPhotoThree"]
-                if "bodyPhotoFour" in request.FILES:
-                    edits.body_photo_four = request.FILES["bodyPhotoFour"]
-                if "bodyPhotoFive" in request.FILES:
-                    edits.body_photo_five = request.FILES["bodyPhotoFive"]
-
-                # >>>>>> HERE IS THE KEY LINE: <<<<<<
-                # Capture the new 'age_restriction' from POST and save it:
-                edits.age_restriction = request.POST.get("age_restriction", "")
-
-                edits.save()
-            else:
-                print(editEventForm.errors)
-            return redirect("eventManagement:eventManagement", eventId=eventId)
+        elif action == "editEvent":
+            return redirect("eventManagement:editEvent", eventId=eventId)
 
         elif action == "createPaidFreeTicket":
             paidFreeForm = PaidFreeTicketForm(request.POST)
@@ -652,6 +639,37 @@ def eventManagement(request, eventId):
             "invitationForm": invitationForm,
             "rsvpList": rsvp_list,
             "paidFreeForm": paidFreeForm,
+            "paidFreeTickets": paid_free_tickets,
+            "editEventForm": editEventForm,
+        },
+    )
+    
+def editEvent(request, eventId):
+    event = get_object_or_404(Event, eventId=eventId)
+    user_profile = UserProfile.objects.get(user=request.user)
+    hostProfile = HostProfile.objects.get(user=event.host)
+    is_in_college = user_profile.college is not None
+    event_privacy = EventPrivacy.objects.get(event=event)
+    rsvp_list = RSVPTicket.objects.filter(event=event)
+    paid_free_tickets = PaidFreeTicket.objects.filter(event=event)
+
+    if request.method == "POST":
+        editEventForm = EditEventForm(request.POST, instance=event)
+        if editEventForm.is_valid():
+            editEventForm.save()
+            return redirect("eventManagement:eventManagement", eventId=eventId)
+    else:
+        editEventForm = EditEventForm(instance=event)
+
+    return render(
+        request,
+        "eventManagementApp/host/editEvent.html",
+        {
+            "event": event,
+            "isInCollege": is_in_college,
+            "userProfile": user_profile,
+            "eventPrivacy": event_privacy,
+            "rsvpList": rsvp_list,
             "paidFreeTickets": paid_free_tickets,
             "editEventForm": editEventForm,
         },

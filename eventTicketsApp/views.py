@@ -213,6 +213,9 @@ def createPaymentIntent(request):
             float(item.get("price", 0)) * int(item.get("quantity", 0))
             for item in cart.values()
         )
+        ticket = next(iter(cart.values()))
+        event = Event.objects.get(eventId=ticket.get("eventId"))
+        host = CustomUser.objects.get(id=event.host.id)
 
         # Convert to cents for Stripe
         amount_in_cents = int(total_amount * 100)
@@ -232,16 +235,24 @@ def createPaymentIntent(request):
             "total_amount": str(total_amount),
             "items_count": str(len(cart)),
         }
-
+        
+        # This is the fee amount that will comes to us, 7% of the total amount + 99 cents
+        fee_amount = int(amount_in_cents * 0.07) + 99
+        final_price = amount_in_cents + fee_amount
+        
         # Create the payment intent with simplified metadata
         payment_intent = stripe.PaymentIntent.create(
-            amount=amount_in_cents,
+            amount=final_price,
             currency="usd",
             customer=(
                 request.user.customer_id if request.user.is_authenticated else None
             ),
             metadata=metadata,
             setup_future_usage="off_session" if request.user.is_authenticated else None,
+            transfer_data={
+                "destination": host.connectAccountID,
+            },
+            application_fee_amount=fee_amount,
         )
 
         return JsonResponse({"clientSecret": payment_intent.client_secret})
