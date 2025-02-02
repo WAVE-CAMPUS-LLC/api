@@ -132,12 +132,17 @@
                                     <div class="event-types flex flex-row gap-3">
                                         <a href="{% url "core:category" name=event.event_type %}" class="p-1 border bg-[#008d95] rounded-2xl px-4 text-white font-Wanted-Regular">{{ event.event_type }}</a>
                                     </div>
-    
+                                    
                                     <p class="flex flex-row gap-1 items-center text-Pre-Xl text-black font-Wanted-Medium">
                                         <img src="{% static "images/coreApp/eventDetails/location.svg" %}" alt="Location" class="size-5" />
-                                        {{ event.building_name}} 
-                                        <span class="text-black text-1xl">•</span>
-                                        <a target="_blank" href="https://www.google.com/maps?q={{ event.street|urlencode }},+{{ event.city|urlencode }},+{{ event.state|urlencode }},+{{ event.zip_code|urlencode }},+{{ event.country|urlencode }}" class="text-[#008d95] text-Semi-Medium font-Wanted-Variable">Locate</a>
+                                        {% if event.hide_address %}
+                                            Address hidden by host
+                                        {% else %}
+                                            {{ event.building_name}} 
+                                            <span class="text-black text-1xl">•</span>
+                                            <a target="_blank" href="https://www.google.com/maps?q={{ event.street|urlencode }},+{{ event.city|urlencode }},+{{ event.state|urlencode }},+{{ event.zip_code|urlencode }},+{{ event.country|urlencode }}" class="text-[#008d95] text-Semi-Medium font-Wanted-Variable">Locate</a>
+                                        {% endif %}
+                                        
                                     </p>
                                 </div>
                             </div>

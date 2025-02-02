@@ -10,6 +10,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth import get_user_model
 from django.conf import settings
 from django.contrib import messages
+from django.urls import reverse
 from .forms import (
     UserProfileForm,
     UpdateContactInfo,
@@ -20,7 +21,8 @@ from .forms import (
 from django.contrib.auth.models import Group
 from .models import UserProfile, EventTypePreferences
 from authenticationApp.models import CustomUser
-from stripeManagementApp.customerSetup import CustomerAccount
+from stripeManagementApp.customerSetup import CustomerAccount, ConnectAccount
+from stripeManagementApp.getEarnings import GetEarnings
 from eventTicketsApp.models import Ticket
 # Decorators to check user roles and permissions
 from wave_v1.decorators import check_suspension, member, verified, onboarded
@@ -41,18 +43,32 @@ def profileView(request):
     userProfile = UserProfile.objects.get(user=userRequest)
     favorite_events = userProfile.favorite_events.all()
     stripeKey = settings.STRIPE_PUBLISHABLE_KEY
+    
+    accountBalance = GetEarnings.getStripeAccountBalance(userRequest.connectAccountID)
+    totalEarnings = GetEarnings.getTotalEarnings(userRequest.connectAccountID)
 
     payment_methods = CustomerAccount.listPaymentMethods(userRequest.customer_id)
     for method in payment_methods:
         method["exp_month"] = datetime.strptime(
             str(method["exp_month"]), "%m"
         ).strftime("%B")
+        
+    siteDomain = settings.SITE_URL
+
+    link = request.build_absolute_uri(reverse("accountManagement:userAccount"))
+
 
     if request.method == "POST":
         action = request.POST.get("action")
 
         try:
-            if action == "deletePaymentMethod":
+            if action == "openStripeDashboard":
+                dashboard = ConnectAccount.getStripeAccountLogin(request, userRequest, siteDomain, link)
+                if dashboard:
+                    return redirect(dashboard.url)
+                else:
+                    messages.error(request, "Failed to open Financial dashboard.")
+            elif action == "deletePaymentMethod":
                 payment_method_id = request.POST.get("paymentMethodId")
                 if payment_method_id:
                     CustomerAccount.removePaymentMethod(request, payment_method_id)
@@ -96,6 +112,8 @@ def profileView(request):
             "stripeKey": stripeKey,
             "payments": payment_methods,
             "purchasedTickets": purchased_tickets,
+            "accountBalance": accountBalance,
+            "totalEarnings": totalEarnings,
         },
     )
 

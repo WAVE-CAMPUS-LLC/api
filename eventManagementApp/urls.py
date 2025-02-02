@@ -6,8 +6,8 @@ app_name = "eventManagement"
 
 urlpatterns = [
     path("host/", views.hostView, name="hostHome"),
-    path("portal/", views.hostPortalView, name="hostPortal"),
-    path("guide/", views.hostGuideView, name="hostGuide"),
+    path("host/portal/", views.hostPortalView, name="hostPortal"),
+    path("host/guide/", views.hostGuideView, name="hostGuide"),
     # path("create/", views.hostCreateEvent, name="hostCreateEvent"),
     path("event/create/select/", views.eventCreationSelect, name="eventCreationSelect"),
     path(
@@ -30,11 +30,11 @@ urlpatterns = [
         name="editEvent",
     ),
     path(
-        "billing/withdraw/",
+        "host/billing/withdraw/",
         views.hostBillingCashout,
         name="hostBillingCashout",
     ),
-    path("analytics/", views.hostAnalyticsHome, name="hostAnalytics"),
+    path("host/analytics/", views.hostAnalyticsHome, name="hostAnalytics"),
     path(
         "analytics/event/<uuid:eventId>/",
         views.hostEventAnalytics,
