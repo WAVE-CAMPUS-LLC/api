@@ -203,6 +203,7 @@ def createPaymentIntent(request):
         # Parse the JSON body
         data = json.loads(request.body)
         cart = data.get("cart", {})
+        use_stored = data.get("useStoredPaymentMethod", False)
 
         # Validate cart data
         if not cart:
@@ -219,41 +220,56 @@ def createPaymentIntent(request):
 
         # Convert to cents for Stripe
         amount_in_cents = int(total_amount * 100)
-
         if amount_in_cents <= 0:
             return JsonResponse({"error": "Invalid amount"}, status=400)
 
-        # Generate a unique cart identifier
+        # Generate a unique cart identifier and store the cart in the session (if needed)
         cart_id = str(uuid.uuid4())
-
-        # Store the full cart data in the session
         request.session[f"cart_data_{cart_id}"] = cart
 
-        # Create metadata with only essential information
         metadata = {
             "cart_id": cart_id,
             "total_amount": str(total_amount),
             "items_count": str(len(cart)),
         }
         
-        # This is the fee amount that will comes to us, 7% of the total amount + 99 cents
         fee_amount = int(amount_in_cents * 0.07) + 99
         final_price = amount_in_cents + fee_amount
-        
-        # Create the payment intent with simplified metadata
-        payment_intent = stripe.PaymentIntent.create(
-            amount=final_price,
-            currency="usd",
-            customer=(
-                request.user.customer_id if request.user.is_authenticated else None
-            ),
-            metadata=metadata,
-            setup_future_usage="off_session" if request.user.is_authenticated else None,
-            transfer_data={
-                "destination": host.connectAccountID,
-            },
-            application_fee_amount=fee_amount,
-        )
+
+        if use_stored:
+            # Retrieve the saved payment method for the authenticated user
+            stripeCustomer = stripe.Customer.retrieve(request.user.customer_id)
+            default_pm = stripeCustomer.invoice_settings.default_payment_method
+            if not default_pm:
+                return JsonResponse({"error": "No saved payment method found."}, status=400)
+
+            # Create and confirm the PaymentIntent using the saved payment method
+            payment_intent = stripe.PaymentIntent.create(
+                amount=final_price,
+                currency="usd",
+                customer=request.user.customer_id,
+                payment_method=default_pm,  # use saved payment method
+                confirm=True,               # automatically confirm the PaymentIntent
+                off_session=True,          
+                metadata=metadata,
+                transfer_data={
+                    "destination": host.connectAccountID,
+                },
+                application_fee_amount=fee_amount,
+            )
+        else:
+            # For new card flow, create the PaymentIntent without confirmation
+            payment_intent = stripe.PaymentIntent.create(
+                amount=final_price,
+                currency="usd",
+                customer=(request.user.customer_id if request.user.is_authenticated else None),
+                metadata=metadata,
+                setup_future_usage="off_session" if request.user.is_authenticated else None,
+                transfer_data={
+                    "destination": host.connectAccountID,
+                },
+                application_fee_amount=fee_amount,
+            )
 
         return JsonResponse({"clientSecret": payment_intent.client_secret})
 
@@ -262,6 +278,7 @@ def createPaymentIntent(request):
     except Exception as e:
         print(f"Payment Intent Error: {str(e)}")  # Log the error
         return JsonResponse({"error": str(e)}, status=400)
+
 
 
 def paymentSuccessful(request):
