@@ -57,18 +57,16 @@ def profileView(request):
 
     link = request.build_absolute_uri(reverse("accountManagement:userAccount"))
 
-
+    if userRequest.connectAccountID:
+        dashboardLink = ConnectAccount.getStripeAccountLogin(request, userRequest, siteDomain, link)
+    else:
+        dashboardLink = None
+            
     if request.method == "POST":
         action = request.POST.get("action")
 
         try:
-            if action == "openStripeDashboard":
-                dashboard = ConnectAccount.getStripeAccountLogin(request, userRequest, siteDomain, link)
-                if dashboard:
-                    return redirect(dashboard.url)
-                else:
-                    messages.error(request, "Failed to open Financial dashboard.")
-            elif action == "deletePaymentMethod":
+            if action == "deletePaymentMethod":
                 payment_method_id = request.POST.get("paymentMethodId")
                 if payment_method_id:
                     CustomerAccount.removePaymentMethod(request, payment_method_id)
@@ -96,6 +94,18 @@ def profileView(request):
                     messages.success(request, "Bank account added successfully.")
                 else:
                     messages.error(request, "Failed to add bank account.")
+        
+            elif action == "requestInstantPayout":
+                available_balance = accountBalance["available"]
+                if available_balance < 1:  # If balance is too low for a payout
+                    messages.error(request, "Insufficient balance for a payout.")
+                    return redirect("accountManagement:userAccount")
+
+                payout = GetEarnings.requestPayout(userRequest.connectAccountID, int(available_balance * 100))
+                if payout:
+                    messages.success(request, "Payout requested successfully.")
+                else:
+                    messages.error(request, "Failed to process payout.")
         except Exception as e:
             messages.error(request, f"An error occurred: {str(e)}")
         finally:
@@ -114,6 +124,7 @@ def profileView(request):
             "purchasedTickets": purchased_tickets,
             "accountBalance": accountBalance,
             "totalEarnings": totalEarnings,
+            "dashboardLink": dashboardLink
         },
     )
 

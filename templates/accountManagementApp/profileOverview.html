@@ -348,14 +348,14 @@ Profile Overview
                     </div>
                 </div>
 
-                {% if userRequest|has_group:"Host" or userRequest|has_group:"host" %}
+                {% if userRequest|has_group:"Host" or userRequest|has_group:"host" and dashboardLink %}
                 <div class="profile-tab-content" id="myPayoutMethods-information">
                     <div class="border border-custom-rgba11 rounded-[10px] w-full flex flex-col gap-[20px] py-[20px] px-[30px] shadow-custom-shadow-6">
                         <form method="post" class="home-header">
                             {% csrf_token %}
                             <div id="shareControl" class="content-control flex flex-row justify-between gap-4 w-full"> 
                                 <div class="myEvents-informationTab tab-active cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="myPayoutMethods">My Payouts</div>
-                                <button type="submit" name="action" value="openStripeDashboard" class="flex justify-center items-center bg-green text-white p-2 rounded-xl font-Wanted-Variable text-Semi-Medium border hover:bg-gradient-to-t hover:bg-gradient-start hover:bg-gradient-end">Payout Settings</button>
+                                <a target="_blank" href="{{ dashboardLink }}" class="flex justify-center items-center bg-green text-white p-2 rounded-xl font-Wanted-Variable text-Semi-Medium border hover:bg-gradient-to-t hover:bg-gradient-start hover:bg-gradient-end">Payout Settings</a>
                             </div>
                         </form>
 
@@ -368,15 +368,18 @@ Profile Overview
                                     </div>
                                 </div>
     
-                                <div class="flex w-full flex-row justify-between items-center">
+                                <div class="flex w-full flex-col justify-between items-start gap-4">
                                     <div class="flex flex-col items-start gap-4">
                                         <h6 class="font-Wanted-Bold text-Base">Balance</h6>
                                         <p class="font-Wanted-Variable text-Base">Available: ${{ accountBalance.available|floatformat:2 }}</p>
                                     </div>
-                                    <div class="w-fit">
-                                        <button class="flex justify-center items-center bg-[#44d119] text-white w-full py-3 px-5 rounded-xl font-Wanted-Variable text-Semi-Medium border hover:border-[#44d119] hover:bg-white hover:text-[#44d119]">Payout</button>
-                                    </div>
                                 </div>
+
+                                <form method="post"  class="w-full flex items-center flex-row gap-4">
+                                    {% csrf_token %}
+                                    <p class="flex justify-start font-Wanted-Variable text-Small text-gray-600">Want an instant payout?</p>
+                                    <button type="submit" name="action" value="requestInstantPayout" class="flex justify-center items-center bg-[#44d119] text-white py-2 px-5 rounded-full font-Wanted-Variable text-Small border hover:border-[#44d119] hover:bg-white hover:text-[#44d119]">Payout</button>
+                                </form>
                             </div>
                         </div>
                     </div>
