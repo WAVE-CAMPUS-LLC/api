@@ -24,7 +24,7 @@ from authenticationApp.admin import super_admin_restricted_site
 urlpatterns = [
     # # API endpoints
     # path("", include("extras.apiUrls")),
-    # path("auth/", include("authenticationApp.apiUrls")),
+    path("auth/", include("authenticationApp.apiUrls")),
     # path("admin/", include("adminDashboardApp.apiUrls")),
     # path("account/", include("accountManagementApp.apiUrls")),
     # path("host/", include("eventManagementApp.apiUrls")),
