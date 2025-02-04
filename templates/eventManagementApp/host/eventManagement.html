@@ -12,7 +12,6 @@ Manage {{ event.title }} | WAVE.
     // Initialize the age restriction value
     window.currentAgeRestriction = "{{ event.age_restriction|default_if_none:''|escapejs }}";
 </script>
-    <script type="text/javascript" src="{% static "scripts/eventManagementApp/host/eventManage/editEvent.js" %}" defer></script>
     <script type="text/javascript" src="{% static "scripts/eventManagementApp/host/eventManage/tabControl.js" %}" defer></script>
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     <script type="text/javascript" src="{% static "scripts/eventTicketsApp/eventManagementScanner/scanner.js" %}" defer></script>
@@ -59,8 +58,7 @@ Manage {{ event.title }} | WAVE.
         <div id="portal-body-content">
             <!-- OVERVIEW TAB -->
             <div class="pbc-element-content" id="event-information">
-                <form method="POST"  class="tab-information-body flex flex-col gap-10" enctype="multipart/form-data">
-                    {% csrf_token %}
+                <div class="tab-information-body flex flex-col gap-10" >
                     <div class="font-Wanted-Variable text-Base text-[#000000c3]">
                         <p>
                             This tab provides an overview of all the key information 
@@ -73,13 +71,14 @@ Manage {{ event.title }} | WAVE.
                     </div>
                     <div class="flex justify-end">
                         <div class="flex flex-row">
-                            <button id="editEventBtn" type="button" class="editEventButton p-[6px] sm:p-[8px] md:p-[15px] border border-transparent border-r-gradient-start border-l-gradient-end text-white font-Wanted-SemiBold no-underline flex items-center gap-[10px] text-Semi-Medium md:text-Large rounded-[10px] xxsm:rounded-[10px] sm:rounded-[15px] md:rounded-[20px] bg-gradient-to-r from-gradient-start to-gradient-end">
-                                <img src="{% static 'images/eventManagementApp/host/edit.svg' %}"  class="w-[25px] h-[25px]" />
-                                Edit Event
-                            </button>
-                            <button id="cancelEdit" type="button" class="cancelEdit hidden p-[6px] sm:p-[8px] md:p-[15px] border border-transparent border-r-gradient-start border-l-gradient-end text-white font-Wanted-SemiBold no-underline items-center gap-[10px] text-Semi-Medium md:text-Large rounded-[10px] xxsm:rounded-[10px] sm:rounded-[15px] md:rounded-[20px] bg-gradient-to-r from-gradient-start to-gradient-end">
-                                Cancel Edit
-                            </button>
+                            <form method="POST">
+                                {% csrf_token %}
+                                <input type="hidden" name="event_id" value="{{ event.eventId }}">
+                                <button type="submit" name="eventAction" value="editEvent" class="editEventButton p-[6px] sm:p-[8px] md:p-[15px] border border-transparent border-r-gradient-start border-l-gradient-end text-white font-Wanted-SemiBold no-underline flex items-center gap-[10px] text-Semi-Medium md:text-Large rounded-[10px] xxsm:rounded-[10px] sm:rounded-[15px] md:rounded-[20px] bg-gradient-to-r from-gradient-start to-gradient-end">
+                                    <img src="{% static 'images/eventManagementApp/host/edit.svg' %}" class="w-[25px] h-[25px]" />
+                                    Edit Event
+                                </button>
+                            </form>
                         </div>
                     </div>
                     
@@ -94,36 +93,28 @@ Manage {{ event.title }} | WAVE.
                         <div class="w-full inline-block pre-sm:hidden">
                             <img id="trending-img" class="w-full h-[300px] xxsm:h-full max-h-[400px] rounded-3xl" src="{{event.header_photo.url}}" />
                         </div>
-                        <input 
-                        type="file" 
-                        name="headerPhoto"
-                        class="hidden editEventHeaderPhoto font-Wanted-Variable p-[12px] xxsm:p-[15px] rounded-[20px] border border-custom-rgba after-xsm:text-[20px] w-[90%] sm:w-2/3 lg:w-1/2 shadow-form-shadow" 
-                        accept="image/*"/>
                     </div>
 
                     <!-- Title -->
                     <div class="flex flex-col gap-1 flex flex-col gap-1">
                         <h3 class="font-Wanted-ExtraBold text-Medium">Title</h3>
                         <p id="eventTitle" class="font-Wanted-Variable text-Pre-Xl">{{ event.title }}</p>
-                        {{ editEventForm.title|add_class:"hidden editEventTitle font-Wanted-Variable p-[12px] xxsm:p-[15px] rounded-[20px] border border-custom-rgba after-xsm:text-[20px] w-[90%] shadow-form-shadow" }}
                     </div>
 
                     <!-- Event Type -->
                     <div class="flex flex-col gap-1">
                         <h3 class="font-Wanted-ExtraBold text-Medium">Type of Event</h3>
                         <p id="eventType" class="font-Wanted-Variable text-Pre-Xl">{{ event.event_type }}</p>
-                        {{ editEventForm.event_type|add_class:"hidden editEventType font-Wanted-Variable p-[12px] xxsm:p-[15px] rounded-[20px] border border-custom-rgba after-xsm:text-[20px] w-[90%] shadow-form-shadow" }}
                     </div>
 
                     <!-- Event Date -->
                     <div class="flex flex-col gap-1">
                         <h3 class="font-Wanted-ExtraBold text-Medium">Event Date</h3>
                         <p id="eventDate" class="font-Wanted-Variable text-Pre-Xl">{{ event.date }}</p>
-                        {{ editEventForm.date|add_class:"hidden editEventDate font-Wanted-Variable p-[12px] xxsm:p-[15px] rounded-[20px] border border-custom-rgba after-xsm:text-[20px] w-[90%] shadow-form-shadow"}}
                     </div>
 
                     <!-- AGE RESTRICTION (MOVED HERE) -->
-                    <div class="flex flex-col gap-3 mt-5" id="ageRestrictionWrapper">
+                    {% comment %} <div class="flex flex-col gap-3 mt-5" id="ageRestrictionWrapper">
                         <h3 class="font-Wanted-ExtraBold text-Medium">Age Restriction</h3>
                         <!-- View mode: read-only text for the user’s current setting (e.g. “18+” or “No age restriction”). -->
                         <p id="ageRestrictionView" class="font-Wanted-Variable text-Pre-Xl">
@@ -134,7 +125,7 @@ Manage {{ event.title }} | WAVE.
                         <div class="hidden editEventAgeRestriction">
                              {{ editEventForm.age_restriction }}
                         </div>
-                    </div>
+                    </div>  {% endcomment %}
                     <!-- END AGE RESTRICTION -->
 
                     <!-- Start & End Times -->
@@ -142,12 +133,10 @@ Manage {{ event.title }} | WAVE.
                         <div class="flex flex-col gap-1">
                             <h3 class="font-Wanted-ExtraBold text-Medium">Start Time</h3>
                             <p id="eventStartTime" class="font-Wanted-Variable text-Pre-Xl">{{ event.start_time }}</p>
-                            {{ editEventForm.start_time|add_class:"hidden editEventStartTime font-Wanted-Variable p-[12px] xxsm:p-[15px] rounded-[20px] border border-custom-rgba after-xsm:text-[20px] w-[90%] shadow-form-shadow" }}
                         </div>
                         <div class="flex flex-col gap-1">
                             <h3 class="font-Wanted-ExtraBold text-Medium">End Time</h3>
                             <p id="eventEndTime" class="font-Wanted-Variable text-Pre-Xl">{{ event.end_time }}</p>
-                            {{ editEventForm.end_time|add_class:"hidden editEventEndTime font-Wanted-Variable p-[12px] xxsm:p-[15px] rounded-[20px] border border-custom-rgba after-xsm:text-[20px] w-[90%] shadow-form-shadow"}}
                         </div>
                     </div>
 
@@ -155,7 +144,6 @@ Manage {{ event.title }} | WAVE.
                     <div class="flex flex-col gap-1 quill-content">
                         <h3 class="font-Wanted-ExtraBold text-Medium">Description</h3>
                         <p id="eventDescription" class="font-Wanted-Variable text-Pre-Xl">{{ event.description|safe }}</p>
-                        {{ editEventForm.description|add_class:"hidden editEventDescription font-Wanted-Variable p-[12px] xxsm:p-[15px] rounded-[20px] border border-custom-rgba after-xsm:text-[20px] w-[90%] min-h-[300px] max-h-[350px] h-[300px] shadow-form-shadow" }}
                     </div>
 
                     <!-- Location -->
@@ -172,12 +160,6 @@ Manage {{ event.title }} | WAVE.
                             {{ event.state }}, 
                             {{ event.zip_code }}
                         </p>
-                        {{ editEventForm.building_name|add_class:"hidden editEventBuildingName font-Wanted-Variable p-[12px] xxsm:p-[15px] rounded-[20px] border border-custom-rgba after-xsm:text-[20px] w-[90%] shadow-form-shadow" }}
-                        {{ editEventForm.street|add_class:"hidden editEventStreet font-Wanted-Variable p-[12px] xxsm:p-[15px] rounded-[20px] border border-custom-rgba after-xsm:text-[20px] w-[90%] shadow-form-shadow" }}
-                        {{ editEventForm.apt_suite_unit|add_class:"hidden editEventAptSuit font-Wanted-Variable p-[12px] xxsm:p-[15px] rounded-[20px] border border-custom-rgba after-xsm:text-[20px] w-[90%] shadow-form-shadow" }}
-                        {{ editEventForm.city|add_class:"hidden editEventCity font-Wanted-Variable p-[12px] xxsm:p-[15px] rounded-[20px] border border-custom-rgba after-xsm:text-[20px] w-[90%] shadow-form-shadow" }}
-                        {{ editEventForm.state|add_class:"hidden editEventState font-Wanted-Variable p-[12px] xxsm:p-[15px] rounded-[20px] border border-custom-rgba after-xsm:text-[20px] w-[90%] shadow-form-shadow" }} 
-                        {{ editEventForm.zip_code|add_class:"hidden editEventZipCode font-Wanted-Variable p-[12px] xxsm:p-[15px] rounded-[20px] border border-custom-rgba after-xsm:text-[20px] w-[90%] shadow-form-shadow" }}
                     </div>
                     
                     <!-- Body Images -->
@@ -189,102 +171,21 @@ Manage {{ event.title }} | WAVE.
                             {% if event.body_photo_one %}
                                 <img id="eventBodyImageOne" src="{{ event.body_photo_one.url }}" class="w-full h-full rounded-3xl" />
                             {% endif %}
-                            <div class="hidden editEventBodyImageOne">
-                                <h3 class="font-Wanted-ExtraBold text-Medium">Body Image 1</h3>
-                                {% if event.body_photo_one %}
-                                    <img src="{{ event.body_photo_one.url }}" class="w-full h-full rounded-3xl" />
-                                    <label>
-                                        <input type="checkbox" name="remove_body_photo_one" class="mr-2">
-                                        Remove
-                                    </label>
-                                {% endif %}
-                                <input 
-                                type="file" 
-                                name="bodyPhotoOne"
-                                class="font-Wanted-Variable p-[12px] xxsm:p-[15px] rounded-[20px] border border-custom-rgba after-xsm:text-[20px] w-[90%] sm:w-2/3 lg:w-1/2 shadow-form-shadow" 
-                                accept="image/*"/>
-                            </div>
                             {% if event.body_photo_two %}
                                 <img id="eventBodyImageTwo" src="{{ event.body_photo_two.url }}" class="w-full h-full rounded-3xl" />
                             {% endif %}
-                            <div class="hidden editEventBodyImageTwo">
-                                <h3 class="font-Wanted-ExtraBold text-Medium">Body Image 2</h3>
-                                {% if event.body_photo_two %}
-                                    <img src="{{ event.body_photo_two.url }}" class="w-full h-full rounded-3xl" />
-                                    <label>
-                                        <input type="checkbox" name="remove_body_photo_two" class="mr-2">
-                                        Remove
-                                    </label>
-                                {% endif %}
-                                <input
-                                type="file"
-                                name="bodyPhotoTwo"
-                                class="font-Wanted-Variable p-[12px] xxsm:p-[15px] rounded-[20px] border border-custom-rgba after-xsm:text-[20px] w-[90%] sm:w-2/3 lg:w-1/2 shadow-form-shadow"
-                                accept="image/*"/>
-                            </div>
                             {% if event.body_photo_three %}
                                 <img id="eventBodyImageThree" src="{{ event.body_photo_three.url }}" class="w-full h-full rounded-3xl" />
                             {% endif %}
-                            <div class="hidden editEventBodyImageThree">
-                                <h3 class="font-Wanted-ExtraBold text-Medium">Body Image 3</h3>
-                                {% if event.body_photo_three %}
-                                    <img src="{{ event.body_photo_three.url }}" class="w-full h-full rounded-3xl" />
-                                    <label>
-                                        <input type="checkbox" name="remove_body_photo_three" class="mr-2">
-                                        Remove
-                                    </label>
-                                {% endif %}
-                                <input
-                                type="file"
-                                name="bodyPhotoThree"
-                                class="font-Wanted-Variable p-[12px] xxsm:p-[15px] rounded-[20px] border border-custom-rgba after-xsm:text-[20px] w-[90%] sm:w-2/3 lg:w-1/2 shadow-form-shadow"
-                                accept="image/*"/>
-                            </div>
                             {% if event.body_photo_four %}
                                 <img id="eventBodyImageFour" src="{{ event.body_photo_four.url }}" class="w-full h-full rounded-3xl" />
                             {% endif %}
-                            <div class="hidden editEventBodyImageFour">
-                                <h3 class="font-Wanted-ExtraBold text-Medium">Body Image 4</h3>
-                                {% if event.body_photo_four %}
-                                    <img src="{{ event.body_photo_four.url }}" class="w-full h-full rounded-3xl" />
-                                    <label>
-                                        <input type="checkbox" name="remove_body_photo_four" class="mr-2">
-                                        Remove
-                                    </label>
-                                {% endif %}
-                                <input
-                                type="file"
-                                name="bodyPhotoFour"
-                                class="font-Wanted-Variable p-[12px] xxsm:p-[15px] rounded-[20px] border border-custom-rgba after-xsm:text-[20px] w-[90%] sm:w-2/3 lg:w-1/2 shadow-form-shadow"
-                                accept="image/*"/>
-                            </div>
                             {% if event.body_photo_five %}
                                 <img id="eventBodyImageFive" src="{{ event.body_photo_five.url }}" class="w-full h-full rounded-3xl" />
                             {% endif %}
-                            <div class="hidden editEventBodyImageFive">
-                                <h3 class="font-Wanted-ExtraBold text-Medium">Body Image 5</h3>
-                                {% if event.body_photo_five %}
-                                    <img id="eventBodyImageFive" src="{{ event.body_photo_five.url }}" class="w-full h-full rounded-3xl" />
-                                    <label>
-                                        <input type="checkbox" name="remove_body_photo_five" class="mr-2">
-                                        Remove
-                                    </label>
-                                {% endif %}
-                                <input
-                                type="file"
-                                name="bodyPhotoFive"
-                                class="font-Wanted-Variable p-[12px] xxsm:p-[15px] rounded-[20px] border border-custom-rgba after-xsm:text-[20px] w-[90%] sm:w-2/3 lg:w-1/2 shadow-form-shadow"
-                                accept="image/*"/>
-                            </div>
                         </div>
                     </div>
-
-                    <div id="submitBtn" class="hidden flex-row gap-[20px]">
-                        <button name="eventAction" value="saveChanges" type="submit" role="button" class="joinCollegeButton p-[6px] sm:p-[8px] md:p-[15px] border border-transparent border-r-gradient-start border-l-gradient-end text-white font-Wanted-SemiBold no-underline flex items-center gap-[10px] text-Semi-Medium md:text-Large rounded-[10px] xxsm:rounded-[10px] sm:rounded-[15px] md:rounded-[20px] bg-gradient-to-r from-gradient-start to-gradient-end">
-                            Save Changes
-                        </button>
-                    </div>
-                </form>
+                </div>
             </div>
             <!-- END OVERVIEW TAB -->
 
@@ -336,34 +237,40 @@ Manage {{ event.title }} | WAVE.
                     </div>
                     <div class="tab-information-body">
                         {% if event.ticketing == "Invite Required" %}
-                        <div class="inviteSystem flex flex-col gap-10">
-                            <div class="systemHeader flex flex-col gap-1 items-start">
-                                <h3 class="font-Wanted-Bold text-2xl">Invite your favourite people to the event!</h3>
-                                <p class="font-Wanted-Variable text-Semi-Medium text-[#5f5f5fca]">Enter their emails separated by a comma, type up your invitation message, then hit send!</p>
+                            <div class="inviteSystem flex flex-col gap-10">
+                                <div class="systemHeader flex flex-col gap-1 items-start">
+                                    <h3 class="font-Wanted-Bold text-2xl">Invite your favourite people to the event!</h3>
+                                    <p class="font-Wanted-Variable text-Semi-Medium text-[#5f5f5fca]">Enter their emails separated by a comma, type up your invitation message, then hit send!</p>
+                                </div>
+
+                                <form id="inviteForm" class="inviteForm flex flex-col gap-10" method="post">
+                                    {% csrf_token %}
+                                    <div class="inviteFormField flex flex-col gap-2">
+                                        <label class="font-Wanted-Variable text-Semi-Medium text-gray-200" for="{{ invitationForm.invite_emails.id_for_label }}">
+                                            {{ invitationForm.invite_emails.label }}
+                                        </label>
+                                        {{ invitationForm.invite_emails|add_class:"w-full px-4 p-3 rounded-xl border border-custom-rgba5 font-Wanted-Variable text-Medium" }}
+                                    </div>
+
+                                    <div class="inviteFormField flex flex-col gap-2">
+                                        <label class="font-Wanted-Variable text-Semi-Medium text-gray-200" for="{{ invitationForm.invite_subject.id_for_label }}">
+                                            {{ invitationForm.invite_subject.label }}
+                                        </label>
+                                        {{ invitationForm.invite_subject|add_class:"w-full px-4 p-3 rounded-xl border border-custom-rgba5 font-Wanted-Variable text-Medium" }}
+                                    </div>
+
+                                    <div class="inviteFormField flex flex-col gap-2">
+                                        <label class="font-Wanted-Variable text-Semi-Medium text-gray-200" for="{{ invitationForm.invite_message.id_for_label }}">
+                                            {{ invitationForm.invite_message.label }}
+                                        </label>
+                                        {{ invitationForm.invite_message|add_class:"w-full px-4 p-3 rounded-xl border border-custom-rgba5 font-Wanted-Variable text-Medium min-h-[300px]" }}
+                                    </div>
+
+                                    <div class="sendButton w-full flex justify-center">
+                                        <button type="submit" class="sendInvitesButton gradient-btn font-Wanted-Bold text-xl" role="button" name="eventAction" value="sendInvites">Send Invites</button>
+                                    </div>
+                                </form>
                             </div>
-
-                            <form id="inviteForm" class="inviteForm flex flex-col gap-10" method="post">
-                                {% csrf_token %}
-                                <div class="inviteFormField flex flex-col gap-2">
-                                    {{ invitationForm.invite_emails.label_tag|add_class:"font-Wanted-Variable text-Semi-Medium text-gray-200" }}
-                                    {{ invitationForm.invite_emails|add_class:"w-full px-4 p-3 rounded-xl border border-custom-rgba5 font-Wanted-Variable text-Medium" }}
-                                </div>
-
-                                <div class="inviteFormField flex flex-col gap-2">
-                                    {{ invitationForm.invite_subject.label_tag|add_class:"font-Wanted-Variable text-Semi-Medium text-gray-200" }}
-                                    {{ invitationForm.invite_subject|add_class:"w-full px-4 p-3 rounded-xl border border-custom-rgba5 font-Wanted-Variable text-Medium" }}
-                                </div>
-
-                                <div class="inviteFormField flex flex-col gap-2">
-                                    {{ invitationForm.invite_message.label_tag|add_class:"font-Wanted-Variable text-Semi-Medium text-gray-200" }}
-                                    {{ invitationForm.invite_message|add_class:"w-full px-4 p-3 rounded-xl border border-custom-rgba5 font-Wanted-Variable text-Medium min-h-[300px]" }}
-                                </div>
-
-                                <div class="sendButton w-full flex justify-center">
-                                    <button type="submit" class="sendInvitesButton gradient-btn font-Wanted-Bold text-xl" role="button" name="eventAction" value="sendInvites">Send Invites</button>
-                                </div>
-                            </form>
-                        </div>
                         {% elif event.ticketing == "RSVP Required" %}
                         <div class="flex flex-col gap-1">
                             <div class="rsvpHeading w-full flex justify-center font-Wanted-ExtraBold text-xl">
@@ -422,7 +329,7 @@ Manage {{ event.title }} | WAVE.
                                         {% endif %}
                                     </h4>
                                 </div>
-                                <div class="createTicketButtonRow w-full flex justify-center">
+                                <div class="createTicketButtonRow w-full flex justify-center sm:justify-end">
                                     <button type="button" class="createTicketButton gradient-btn" id="createTicketButtonFirst" role="button">
                                         <img src="{% static "/images/eventManagementApp/host/host_ticket.svg" %}" />
                                         Create Ticket
@@ -432,10 +339,97 @@ Manage {{ event.title }} | WAVE.
                             
                             <div class="ticketingBody">
                                 {% if paidFreeTickets %}
-                                <div class="createdTicketsContainer">
+                                <div class="grid grid-cols-1 xxsm:grid-cols-2 md:grid-cols-3 3xl:grid-cols-4 gap-5">
                                     {% for ticket in paidFreeTickets %}
-                                    <div class="ticketCards">
-                                        {{ ticket.ticket_name }}
+                                    <div class="bg-gradient-to-b bg-gradient-start bg-gradient-end p-6 rounded-2xl flex flex-col text-white gap-3 font-Wanted-Black text-xl">
+                                        <div class="flex flex-col">
+                                            <h6>{{ ticket.ticket_name }}</h6>
+                                        </div>
+                                        <div class="w-full flex justify-end">
+                                            <p class="w-full flex justify-end font-Wanted-Variable text-Large">${{ ticket.ticket_price }}</p>
+                                        </div>
+                                        <form method="post" class="w-full flex justify-between">
+                                            {% csrf_token %}
+                                            <button class="w-6 h-6 bg-white rounded-full p-2" type="submit" title="Delete Ticket" role="button" name="eventAction" value="deleteTicket" data-ticketid="{{ ticket.ticket_id }}">
+                                                <img src="{% static "/images/eventManagementApp/ticketing/bin.svg" %}" class="size-6" />
+                                            </button>
+                                            <input type="hidden" name="ticketId" value="{{ ticket.ticket_id }}" />
+                                            <button class="w-6 h-6 bg-white rounded-full p-2" type="button" title="Edit Ticket" role="button" id="editTicketButton-{{ ticket.ticket_id }}" data-ticketid="{{ ticket.ticket_id }}">
+                                                <img src="{% static "/images/eventManagementApp/host/edit.svg" %}" class="size-6" />
+                                            </button>
+                                        </form>
+                                    </div>
+
+                                    <div id="ticketEditModal-{{ ticket.ticket_id }}" data-ticketid="{{ ticket.ticket_id }}" class="hidden bg-[rgba(0, 0, 0, 0.037)] backdrop-blur-sm fixed top-0 left-0 right-0 bottom-0 z-[1005] w-full h-full cursor-default">
+                                        <div class="w-full h-full flex justify-center items-center py-10">
+                                            <div class="w-11/12 xxsm:w-9/12 pre-sm:w-10/12 sm:w-10/12 md:w-10/12 pre-lg:w-10/12 lg:w-10/12 xl:w-3/5 h-auto min-h-[80%] max-h-[90%] bg-white shadow-custom-shadow rounded-2xl p-5 pb-12 flex flex-col gap-3 overflow-y-auto">
+                                                <div class="w-full flex justify-between">
+                                                    <div class="w-full flex justify-start flex-col font-Wanted-Bold text-Pre-Xl">
+                                                        <h3>Edit ticket</h3>
+                                                    </div>
+                                    
+                                                    <div class="closeTicketCreationButtonRow w-full flex justify-end">
+                                                        <button type="button" role="button" id="closeEditTicketModalButton-{{ ticket.ticket_id }}" data-ticketid="{{ ticket.ticket_id }}" class="closeticketCreationModalButton border-none bg-none cursor-pointer">
+                                                            <img src="{% static '/images/admin/roles/modalClose.svg' %}" alt="Close create ticket tab">
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                    
+                                                <form class="flex flex-col gap-5" method="post">
+                                                    {% csrf_token %}
+                                                    <div class="creationRow flex flex-col pre-sm:flex-row gap-4 w-full">
+                                                        <label for="{{ paidFreeForm.ticket_name.id_for_label }}" class="w-full">
+                                                            <p class="font-Wanted-Variable text-Semi-Medium text-gray-200">{{ paidFreeForm.ticket_name.label }}</p>
+                                                            <input
+                                                                name="{{ paidFreeForm.ticket_name.html_name }}"
+                                                                id="{{ paidFreeForm.ticket_name.auto_id }}"
+                                                                type="{{ paidFreeForm.ticket_name.field.widget.input_type }}"
+                                                                value="{{ ticket.ticket_name }}"
+                                                                class="w-full border-2 border-[#0909091c] rounded-2xl p-3 font-Wanted-Variable text-Medium"
+                                                            />
+                                                        </label>
+                                                    </div>
+                                    
+                                                    <div class="creationRow flex flex-col pre-sm:flex-row gap-4 w-full">
+                                                        <label for="{{ paidFreeForm.ticket_price.id_for_label }}" class="w-full">
+                                                            <p class="font-Wanted-Variable text-Semi-Medium text-gray-200">{{ paidFreeForm.ticket_price.label }}</p>
+                                                            <input
+                                                                name="{{ paidFreeForm.ticket_price.html_name }}"
+                                                                id="{{ paidFreeForm.ticket_price.auto_id }}"
+                                                                type="{{ paidFreeForm.ticket_price.field.widget.input_type }}"
+                                                                value="{{ ticket.ticket_price }}"
+                                                                class="w-full border-2 border-[#0909091c] rounded-2xl p-3 font-Wanted-Variable text-Medium"
+                                                            />
+                                                        </label>
+                                                        <label for="{{ paidFreeForm.ticket_quantity.id_for_label }}" class="w-full">
+                                                            <p class="font-Wanted-Variable text-Semi-Medium text-gray-200">{{ paidFreeForm.ticket_quantity.label }}</p>
+                                                            <input
+                                                                name="{{ paidFreeForm.ticket_quantity.html_name }}"
+                                                                id="{{ paidFreeForm.ticket_quantity.auto_id }}"
+                                                                type="{{ paidFreeForm.ticket_quantity.field.widget.input_type }}"
+                                                                value="{{ ticket.ticket_quantity }}"
+                                                                class="w-full border-2 border-[#0909091c] rounded-2xl p-3 font-Wanted-Variable text-Medium"
+                                                            />
+                                                        </label>
+                                                    </div>
+                                    
+                                                    <div class="creationRow w-full">
+                                                        <label for="{{ paidFreeForm.ticket_description.id_for_label }}" class="w-full">
+                                                            <p class="font-Wanted-Variable text-Semi-Medium text-gray-200">{{ paidFreeForm.ticket_description.label }}</p>
+                                                            <textarea
+                                                                name="{{ paidFreeForm.ticket_description.html_name }}"
+                                                                id="{{ paidFreeForm.ticket_description.auto_id }}"
+                                                                class="w-full border-2 border-[#0909091c] rounded-2xl p-3 font-Wanted-Variable text-Medium min-h-[300px]"
+                                                            >{{ ticket.ticket_description }}</textarea>
+                                                        </label>
+                                                    </div>
+                                    
+                                                    <div class="creationSubmitRow w-full flex justify-center">
+                                                        <button type="submit" class="createPaidTicketButton gradient-btn w-full" role="button" name="eventAction" value="createPaidFreeTicket">Create Ticket</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
                                     </div>
                                     {% endfor %}
                                 </div>
@@ -550,4 +544,7 @@ Manage {{ event.title }} | WAVE.
         </div>
     </div>
 </div>
+
+
+
 {% endblock body %}

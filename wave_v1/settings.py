@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 from pathlib import Path
 import os
 import time
+import requests
 from urllib.parse import urlparse
 from supabase import create_client, Client
 from django.contrib.messages import constants as messages_constants
@@ -31,8 +32,8 @@ load_dotenv()
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv("DEBUG", "False")
 # DEBUG=True
+DEBUG = os.getenv("DEBUG", "False") == "True"
 DEBUG_PROPAGATE_EXCEPTIONS = True
 
 ALLOWED_HOSTS = ["wave-v1.onrender.com", "waveoncampus.com", "localhost", "127.0.0.1"]
@@ -43,7 +44,7 @@ key = os.getenv("SUPABASE_API_KEY")
 supabase = create_client(url, key)
 
 buckets = supabase.storage.list_buckets()
-# print(buckets)
+print(buckets)
 
 if not DEBUG:  # In production
     SESSION_COOKIE_SECURE = True
@@ -61,6 +62,8 @@ STRIPE_SECRET_KEY = os.getenv("STRIPE_SK")
 STRIPE_WEBHOOK_SECRET_TEST = os.getenv("STRIPE_WEBHOOK_SK")
 STRIPE_PUBLISHABLE_KEY = os.getenv("STRIPE_PK")
 
+# College List API Key
+COLLEGE_LIST_API_KEY = os.getenv("COLLEGE_LIST_API_KEY")
 
 # Application definition
 
@@ -113,12 +116,13 @@ MIDDLEWARE = [
 CSRF_TRUSTED_ORIGINS = [
     "https://wave-v1.onrender.com",
     "https://waveoncampus.com",
-    "https://localhost:8000",
-    "https://127.0.0.1:8000",
 ]
 
 ROOT_URLCONF = "wave_v1.urls"
-SITE_URL = "https://waveoncampus.com"
+if DEBUG:
+    SITE_URL = "http://127.0.0.1:8000"
+else:
+    SITE_URL = "https://waveoncampus.com"
 
 TEMPLATES = [
     {
@@ -252,12 +256,10 @@ STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 # CORS Settings
-CORS_ALLOW_ALL_ORIGINS = False # Temporarily set to True for testing
+CORS_ALLOW_ALL_ORIGINS = True # Temporarily set to True for testing
 CORS_ALLOWED_ORIGINS = [
     "https://wave-v1.onrender.com",
     "https://waveoncampus.com",
-    "https://localhost:8000",
-    "https://127.0.0.1:8000",
 ]
 CORS_ALLOW_CREDENTIALS = True
 
@@ -287,45 +289,45 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 time.sleep(5)
 default_storage._wrapped = SupabaseStorage()
 
-LOGGING = {
-    "version": 1,
-    "disable_existing_loggers": False,
-    "formatters": {
-        "verbose": {
-            "format": "[{levelname}] {asctime} {name} {message}",
-            "style": "{",
-        },
-    },
-    "handlers": {
-        "console": {
-            "class": "logging.StreamHandler",
-            "formatter": "verbose",
-            "level": "DEBUG",
-        },
-        "file": {
-            "class": "logging.FileHandler",
-            "filename": "debug.log",
-            "formatter": "verbose",
-            "level": "DEBUG",
-        },
-    },
-    "loggers": {
-        "": {  # Root logger
-            "handlers": ["console", "file"],
-            "level": "DEBUG",
-        },
-        "adminDashboardApp": {  # Your app logger
-            "handlers": ["console", "file"],
-            "level": "DEBUG",
-            "propagate": True,
-        },
-        "django": {  # Django logger
-            "handlers": ["console", "file"],
-            "level": "INFO",
-            "propagate": True,
-        },
-    },
-}
+# LOGGING = {
+#     "version": 1,
+#     "disable_existing_loggers": False,
+#     "formatters": {
+#         "verbose": {
+#             "format": "[{levelname}] {asctime} {name} {message}",
+#             "style": "{",
+#         },
+#     },
+#     "handlers": {
+#         "console": {
+#             "class": "logging.StreamHandler",
+#             "formatter": "verbose",
+#             "level": "DEBUG",
+#         },
+#         "file": {
+#             "class": "logging.FileHandler",
+#             "filename": "debug.log",
+#             "formatter": "verbose",
+#             "level": "DEBUG",
+#         },
+#     },
+#     "loggers": {
+#         "": {  # Root logger
+#             "handlers": ["console", "file"],
+#             "level": "DEBUG",
+#         },
+#         "adminDashboardApp": {  # Your app logger
+#             "handlers": ["console", "file"],
+#             "level": "DEBUG",
+#             "propagate": True,
+#         },
+#         "django": {  # Django logger
+#             "handlers": ["console", "file"],
+#             "level": "INFO",
+#             "propagate": True,
+#         },
+#     },
+# }
 
 # REST Framework settings
 REST_FRAMEWORK = {
@@ -340,3 +342,12 @@ REST_FRAMEWORK = {
         "rest_framework.renderers.JSONRenderer",
     ],
 }
+
+CSP_DEFAULT_SRC = ("*",)
+CSP_SCRIPT_SRC = ("'self'", "'unsafe-inline'", "'unsafe-eval'", "*")
+CSP_STYLE_SRC = ("'self'", "'unsafe-inline'", "*")
+CSP_FONT_SRC = ("*",)
+CSP_IMG_SRC = ("*", "data:")
+CSP_FRAME_SRC = ("*",)
+
+# This basically allows everything and is not recommended in production.

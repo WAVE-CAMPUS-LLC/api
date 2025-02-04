@@ -65,6 +65,9 @@ class HostApplicationForm(forms.ModelForm):
 
 
 class EventForm(forms.ModelForm):
+    crew_discount = forms.BooleanField(required=False)
+    show_guest_list = forms.BooleanField(required=False)
+    
     STATE_CHOICES = [
         ("AL", "Alabama"),
         ("AK", "Alaska"),
@@ -145,11 +148,6 @@ class EventForm(forms.ModelForm):
         ("Private (College)", "Private (College)"),
         ("Private (Organization)", "Private (Organization)"),
     ]
-    TICKET_CHOICES = [
-        ("Paid/Free", "Paid/Free"),
-        ("RSVP Required", "RSVP Required"),
-        ("Invite Required", "Invite Required"),
-    ]
     
     event_type = forms.ChoiceField(
         label=_("Decide what type of experience this is"),
@@ -163,11 +161,6 @@ class EventForm(forms.ModelForm):
         required=True,
     )
     
-    ticketing = forms.ChoiceField(
-        label=_("What type of ticketing do you want?"),
-        choices=[("", "Select an option")] + TICKET_CHOICES,
-        required=True,
-    )
     
     state = forms.ChoiceField(
         label=_("State"),
@@ -207,7 +200,6 @@ class EventForm(forms.ModelForm):
             "end_time",
             "description",
             "privacy",
-            "ticketing",
             "hide_address",
             "country",
             "building_name",
@@ -225,6 +217,7 @@ class EventForm(forms.ModelForm):
             "crew_discount",
             "minimum_crew_size",
             "crew_discount_percentage",
+            "show_guest_list",
         ]
 
         widgets = {

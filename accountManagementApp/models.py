@@ -1,6 +1,9 @@
 import uuid
 import re
 import qrcode
+import requests
+import os
+import json
 from io import BytesIO
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from PIL import Image
@@ -41,8 +44,36 @@ def profile_picture_path(instance, filename):
     ext = filename.split('.')[-1]
     return f'wave/profile-pictures/{instance.user.id}/{uuid.uuid4()}.{ext}'
 
+def get_college_choices():
+    """
+    Loads a JSON file containing a list of college dictionaries and returns a list of
+    tuples in the form (college_name, college_name). This can be used as choices for a model field.
+    """
+    # Determine the path to the JSON file.
+    json_file_path = 'C:\git\wave_v1\wave_v1\world_universities_and_domains.json'
+    
+    try:
+        with open(json_file_path, 'r', encoding='utf-8') as f:
+            colleges = json.load(f)
+    except (IOError, json.JSONDecodeError) as e:
+        print(f"Error reading JSON file: {e}")
+        # If the file can’t be read or the JSON is invalid, return an empty list.
+        return []
+
+    # Create a tuple (value, label) for each college entry.
+    college_choices = [
+        (college['name'], college['name'])
+        for college in colleges
+        if college.get('alpha_two_code') == 'US'
+    ]
+    college_choices.sort(key=lambda choice: choice[0].lower())
+    college_choices = college_choices[1:]
+    college_choices.append(("Other", "Other"))
+    return college_choices
+
 
 class UserProfile(models.Model):
+    COLLEGE_OPTIONS = get_college_choices()
     USER_STATUS_OPTION = [
         ("Happy 😊", "Happy 😊"),
         ("Excited 🎉", "Excited 🎉"),
@@ -191,8 +222,13 @@ class UserProfile(models.Model):
     )
 
     college_name = models.CharField(
-        _("Enter your college name"), max_length=150, blank=True
+        max_length=255,
+        choices=COLLEGE_OPTIONS,
+        blank=True,
+        null=True,
+        help_text="Select your college from the list."
     )
+    
     current_year = timezone.now().year
     graduation_year = models.PositiveIntegerField(
         _("Enter your graduation year"),
