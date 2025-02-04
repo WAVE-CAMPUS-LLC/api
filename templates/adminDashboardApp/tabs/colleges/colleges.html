@@ -121,6 +121,7 @@ Colleges — WAVE.
                                     </button>
                                 </div>
 
+                                <input type="hidden" id="apiKey" value="{{ apiKey }}">
                                 <div class="createCollegeCardBody">
                                     <form method="POST" action="{% url "waveAdmin:colleges" %}" enctype="multipart/form-data" class="flex flex-col gap-8">
                                         {% csrf_token %}

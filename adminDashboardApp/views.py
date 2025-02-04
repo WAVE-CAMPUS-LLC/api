@@ -1006,7 +1006,7 @@ def adminCollegeOrgsView(request):
     return render(
         request,
         "adminDashboardApp/tabs/colleges/organizations.html",
-        {"organizations": organizations},
+        {"organizations": organizations, "apiKey": settings.COLLEGE_LIST_API_KEY},
     )
 
 

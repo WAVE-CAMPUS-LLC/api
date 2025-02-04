@@ -109,7 +109,6 @@ def collegeCampusesView(request):
 @check_suspension
 def requestCollege(request):
     pageName = "Colleges"
-    apiKey = settings.COLLEGE_LIST_API_KEY
 
     if request.method == "POST":
         collegeRequestForm = CollegeRequestForm(request.POST)
@@ -127,7 +126,7 @@ def requestCollege(request):
     return render(
         request,
         "collegeManagementApp/requestCollege.html",
-        {"pageName": pageName, "collegeRequestForm": collegeRequestForm, "apiKey": apiKey},
+        {"pageName": pageName, "collegeRequestForm": collegeRequestForm, "apiKey": settings.COLLEGE_LIST_API_KEY},
     )
 
 
@@ -258,7 +257,7 @@ def joinCollege(request, collegeId):
     return render(
         request,
         "collegeManagementApp/joinCollege.html",
-        {"joinForm": joinForm, "college": college, "pageName": pageName},
+        {"joinForm": joinForm, "college": college, "pageName": pageName, "apiKey": settings.COLLEGE_LIST_API_KEY},
     )
 
 
@@ -293,7 +292,7 @@ def verifyJoinCollege(request, collegeId):
     return render(
         request,
         "collegeManagementApp/verifyJoinCollege.html",
-        {"verifyForm": verifyForm, "college": college, "pageName": pageName},
+        {"verifyForm": verifyForm, "college": college, "pageName": pageName, "apiKey": settings.COLLEGE_LIST_API_KEY},
     )
 
 
@@ -337,7 +336,7 @@ def createOrg(request, collegeId):
         return render(
             request,
             "collegeManagementApp/extras/notAMemberOfCollege.html",
-            {"college": college, "pageName": pageName},
+            {"college": college, "pageName": pageName, "apiKey": settings.COLLEGE_LIST_API_KEY},
         )
 
     user_profile = UserProfile.objects.filter(user=request.user).first()
@@ -346,7 +345,7 @@ def createOrg(request, collegeId):
         return render(
             request,
             "collegeManagementApp/extras/notAMemberOfCollege.html",
-            {"college": college, "pageName": pageName},
+            {"college": college, "pageName": pageName, "apiKey": settings.COLLEGE_LIST_API_KEY},
         )
 
     if not Membership.objects.filter(user=request.user, college=college).exists():
@@ -388,7 +387,7 @@ def viewOrganization(request, collegeId, orgId):
         return render(
             request,
             "collegeManagementApp/extras/notAMemberOfCollege.html",
-            {"college": college, "pageName": pageName},
+            {"college": college, "pageName": pageName, "apiKey": settings.COLLEGE_LIST_API_KEY},
         )
 
     user_profile = UserProfile.objects.filter(user=request.user).first()
@@ -397,7 +396,7 @@ def viewOrganization(request, collegeId, orgId):
         return render(
             request,
             "collegeManagementApp/extras/notAMemberOfCollege.html",
-            {"college": college, "pageName": pageName},
+            {"college": college, "pageName": pageName, "apiKey": settings.COLLEGE_LIST_API_KEY},
         )
 
     if not Membership.objects.filter(user=request.user, college=college).exists():
