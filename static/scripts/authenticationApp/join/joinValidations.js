@@ -43,7 +43,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function validateLastName() {
         var lastNameInputValue = lastNameInput.value.trim();
-        var lastNameRegex = /^[A-Za-z]+$/;
+        var lastNameRegex = /^[A-Za-z]+(?:[ '-][A-Za-z]+)*$/;
 
         if (lastNameInputValue === "") {
             document.getElementById("lastNameLiveValidationError").textContent = "Required";
