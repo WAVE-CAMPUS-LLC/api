@@ -1,318 +1,261 @@
 $(document).ready(function () {
-  // Initialize crew discount details
-  const crewDiscountCheckbox = $("#id_crew_discount");
-  const crewDiscountDetails = $("#crewInfoRow");
+  // Cache selectors for better performance
+  var $crewDiscountCheckbox = $("#id_crew_discount");
+  var $crewDiscountDetails = $("#crewInfoRow");
+  var $form = $("#eventForm");
+  var $submitBtn = $("#submitBtn");
+  var $cannotSubmit = $("#cannotSubmit"); // Correct selector with $
 
-  function toggleCrewDiscountDetails() {
-    crewDiscountDetails.css(
-      "display",
-      crewDiscountCheckbox.is(":checked") ? "block" : "none"
-    );
+  // Hide submit button initially and show 'cannotSubmit'
+  $submitBtn.hide();
+  $cannotSubmit.show(); // Corrected from 'cannotSubmit.show();'
+
+  // Object to track touched fields
+  var touchedFields = {};
+
+  // Function to show or hide error messages and set border color
+  function toggleError(selector, show, message) {
+    var $error = $(selector);
+    if (show) {
+      $error.text(message).removeClass("hidden");
+    } else {
+      $error.addClass("hidden");
+    }
   }
 
-  // Initial state for crew discount
-  toggleCrewDiscountDetails();
+  // Function to set border color based on validation
+  function setBorder(element, isError) {
+    $(element).css("border-color", isError ? "red" : "");
+  }
 
-  // Add event listener for crew discount changes
-  crewDiscountCheckbox.on("change", toggleCrewDiscountDetails);
-  crewDiscountCheckbox.on("change", validateFields);
+  // Validation rules mapped by input class
+  var validationRules = {
+    ".title-input": {
+      required: true,
+      maxLength: 100,
+      errorSelector: "#title-error",
+      errorMessages: {
+        required: "Please enter a title",
+        maxLength: "Title needs to be shorter",
+      },
+    },
+    ".event-type-input": {
+      required: true,
+      errorSelector: "#event-type-error",
+      errorMessages: {
+        required: "Please choose an option",
+      },
+    },
+    ".date-input": {
+      required: true,
+      validate: function (value) {
+        var selectedDate = new Date(value);
+        var currentDate = new Date();
+        var futureLimitDate = new Date(currentDate);
+        futureLimitDate.setFullYear(currentDate.getFullYear() + 1);
+        currentDate.setHours(0, 0, 0, 0); // Set to start of the day
 
-  // Bind input events to trigger validation
-  $(".building-input, .street-input, .apt-input, .city-input, .zip-input").on(
-    "input",
-    function () {
-      validateFields();
-    }
-  );
-
-  // Debounce reference (optional)
-  let debounceTimer;
-  $("input, textarea, select").on("input change", function () {
-    clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(() => validateFields(), 100);
-  });
-
-  validateFields();
-
-  $("#photo-input").on("change", function () {
-    validateFields();
-  });
-
-  // Quill editor change => validate
-  quill.on("text-change", function () {
-    validateFields();
-  });
-
-  function getCookie(name) {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== "") {
-      const cookies = document.cookie.split(";");
-      for (let i = 0; i < cookies.length; i++) {
-        const cookie = cookies[i].trim();
-        // Check if this cookie string begins with the name we want
-        if (cookie.substring(0, name.length + 1) === name + "=") {
-          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-          break;
+        if (selectedDate < currentDate) {
+          return "Date cannot be in the past";
         }
+        if (selectedDate > futureLimitDate) {
+          return "Date cannot be more than a year into the future";
+        }
+        return "";
+      },
+      errorSelector: "#date-error",
+      errorMessages: {
+        required: "Please enter a date",
+      },
+    },
+    ".start-time-input": {
+      required: true,
+      errorSelector: "#time-error",
+      errorMessages: {
+        required: "Please enter start time",
+      },
+    },
+    ".end-time-input": {
+      required: true,
+      errorSelector: "#time-error",
+      errorMessages: {
+        required: "Please enter end time",
+      },
+    },
+    ".event-visibility-input": {
+      required: true,
+      errorSelector: "#visibility-error",
+      errorMessages: {
+        required: "Please choose an option",
+      },
+    },
+    ".building-input": {
+      required: false,
+      maxLength: 100,
+      errorSelector: "#building-error",
+      errorMessages: {
+        maxLength: "Building name needs to be shorter",
+      },
+    },
+    ".street-input": {
+      required: true,
+      maxLength: 100,
+      errorSelector: "#street-error",
+      errorMessages: {
+        required: "Please enter a street",
+        maxLength: "Street needs to be shorter",
+      },
+    },
+    ".apt-input": {
+      required: false,
+      maxLength: 50,
+      errorSelector: "#apt-error",
+      errorMessages: {
+        maxLength: "Apt needs to be shorter",
+      },
+    },
+    ".city-input": {
+      required: true,
+      errorSelector: "#city-error",
+      errorMessages: {
+        required: "Please enter a city/town",
+      },
+    },
+    ".state-input": {
+      required: true,
+      errorSelector: "#state-error",
+      errorMessages: {
+        required: "Please choose an option",
+      },
+    },
+    ".zip-input": {
+      required: true,
+      minLength: 5,
+      errorSelector: "#zip-error",
+      errorMessages: {
+        required: "Please enter a ZIP code",
+        minLength: "ZIP code needs to be longer",
+      },
+    },
+  };
+
+  // Function to validate individual field
+  function validateField($field, rules) {
+    var value = $field.val().trim();
+    var isError = false;
+    var errorMessage = "";
+
+    if (rules.required && !value) {
+      isError = true;
+      errorMessage = rules.errorMessages.required;
+    }
+
+    if (!isError && rules.maxLength && value.length > rules.maxLength) {
+      isError = true;
+      errorMessage = rules.errorMessages.maxLength;
+    }
+
+    if (!isError && rules.minLength && value.length < rules.minLength) {
+      isError = true;
+      errorMessage = rules.errorMessages.minLength;
+    }
+
+    if (!isError && typeof rules.validate === "function") {
+      var customError = rules.validate(value);
+      if (customError) {
+        isError = true;
+        errorMessage = customError;
       }
     }
-    return cookieValue;
-  }
 
-  function validateFields() {
-    let isValid = true;
-
-    // Check required fields for empty
-    $(document)
-      .find("input, textarea, select")
-      .each(function () {
-        if ($(this).prop("required") && !$(this).val()) {
-          isValid = false;
-        }
-      });
-
-    // Validate Title
-    $(document)
-      .find(".title-input")
-      .each(function () {
-        const len = $(this).val().length;
-        const titleError = $("#title-error");
-        if (len == 0) {
-          isValid = false;
-          titleError.text("Please enter a title").removeClass("hidden");
-          $(this).css("border-color", "red");
-        } else if (len > 100) {
-          isValid = false;
-          titleError.text("Title needs to be shorter").removeClass("hidden");
-          $(this).css("border-color", "red");
-        } else {
-          titleError.addClass("hidden");
-          $(this).css("border-color", "");
-        }
-      });
-
-    // Validate Event Type
-    $(document)
-      .find(".event-type-input")
-      .each(function () {
-        const eventType = $(this).val();
-        const eventTypeError = $("#event-type-error");
-        if (eventType == "") {
-          isValid = false;
-          eventTypeError.removeClass("hidden");
-          $(this).css("border-color", "red");
-        } else {
-          eventTypeError.addClass("hidden");
-          $(this).css("border-color", "");
-        }
-      });
-
-    // Validate Date
-    $(document)
-      .find(".date-input")
-      .each(function () {
-        const len = $(this).val().length;
-        const selectedDate = new Date($(this).val());
-        const currentDate = new Date();
-        const futureLimitDate = new Date(currentDate);
-
-        // set future limit to 1 year from now
-        futureLimitDate.setFullYear(currentDate.getFullYear() + 1);
-        // set current date to "yesterday" to avoid partial day confusion
-        currentDate.setHours(-24, 0, 0, 0);
-
-        if (len == 0) {
-          $("#date-error").text("Please enter a date").removeClass("hidden");
-          $(this).css("border-color", "red");
-        } else if (selectedDate.getTime() < currentDate.getTime()) {
-          isValid = false;
-          $("#date-error")
-            .text("Date cannot be in the past")
-            .removeClass("hidden");
-          $(this).css("border-color", "red");
-        } else if (selectedDate.getTime() > futureLimitDate.getTime()) {
-          isValid = false;
-          $("#date-error")
-            .text("Date cannot be more than a year into the future")
-            .removeClass("hidden");
-          $(this).css("border-color", "red");
-        } else {
-          $("#date-error").addClass("hidden");
-          $(this).css("border-color", "");
-        }
-      });
-
-    // Validate Start/End Time
-    $(document)
-      .find(".start-time-input, .end-time-input")
-      .each(function () {
-        const startTime = $(".start-time-input").val();
-        const endTime = $(".end-time-input").val();
-
-        if (!startTime || !endTime) {
-          isValid = false;
-          $("#time-error").show();
-          $(this).css("border-color", "red");
-        } else {
-          $("#time-error").hide();
-          $(this).css("border-color", "");
-        }
-      });
-
-    // Validate Quill (Description)
-    const contentLength = quill.getText().trim().length;
-    if (contentLength == 0) {
-      isValid = false;
-      $("#body-error").text("Please enter a description").show();
-      // make the quill editor border red
-      $(".ql-container").css("border-color", "red");
-    } else if (contentLength > 5000) {
-      isValid = false;
-      $("#body-error").text("Description needs to be shorter").show();
-      $(".ql-container").css("border-color", "red");
-    } else {
-      $("#body-error").hide();
-      $(".ql-container").css("border-color", "");
+    // Only toggle errors if the field has been touched
+    var fieldId = $field.attr("id");
+    if (touchedFields[fieldId]) {
+      toggleError(rules.errorSelector, isError, errorMessage);
+      setBorder($field, isError);
     }
 
-    // Validate Event Visibility
-    $(document)
-      .find(".event-visibility-input")
-      .each(function () {
-        const visibility = $(this).val();
-        if (visibility == "") {
-          isValid = false;
-          $("#visibility-error").show();
-          $(this).css("border-color", "red");
-        } else {
-          $("#visibility-error").hide();
-          $(this).css("border-color", "");
-        }
-      });
+    return !isError;
+  }
 
-    // Validate Event Ticket Type
-    $(document)
-      .find(".ticket-type-input")
-      .each(function () {
-        const ticketType = $(this).val();
-        if (ticketType == "") {
-          isValid = false;
-          $("#ticket-type-error").show();
-          $(this).css("border-color", "red");
-        } else {
-          $("#ticket-type-error").hide();
-          $(this).css("border-color", "");
-        }
-      });
+  // Function to validate time fields together
+  function validateTimeFields() {
+    var startTime = $(".start-time-input").val();
+    var endTime = $(".end-time-input").val();
+    var isValid = true;
 
-    // Validate Building Name
-    $(document)
-      .find(".building-input")
-      .each(function () {
-        const len = $(this).val().length;
-        if (len > 100) {
-          isValid = false;
-          $("#building-error").text("Building name needs to be shorter").show();
-          $(this).css("border-color", "red");
-        } else {
-          $("#building-error").hide();
-          $(this).css("border-color", "");
-        }
-      });
+    // Only validate if both time fields have been touched
+    var isStartTouched = touchedFields["start-time-input"];
+    var isEndTouched = touchedFields["end-time-input"];
 
-    // Validate Street
-    $(document)
-      .find(".street-input")
-      .each(function () {
-        const len = $(this).val().length;
-        if (len === 0) {
-          isValid = false;
-          $("#street-error").text("Please enter a street").show();
-          $(this).css("border-color", "red");
-        } else if (len > 100) {
-          isValid = false;
-          $("#street-error").text("Street needs to be shorter").show();
-          $(this).css("border-color", "red");
-        } else {
-          $("#street-error").hide();
-          $(this).css("border-color", "");
-        }
-      });
-
-    // Validate Apt
-    $(document)
-      .find(".apt-input")
-      .each(function () {
-        const len = $(this).val().length;
-        if (len > 50) {
-          isValid = false;
-          $("#apt-error").text("Apt needs to be shorter").show();
-          $(this).css("border-color", "red");
-        } else {
-          $("#apt-error").hide();
-          $(this).css("border-color", "");
-        }
-      });
-
-    // Validate City
-    $(document)
-      .find(".city-input")
-      .each(function () {
-        const len = $(this).val().length;
-        if (len == 0) {
-          isValid = false;
-          $("#city-error").text("Please enter a city/town").show();
-          $(this).css("border-color", "red");
-        } else {
-          $("#city-error").hide();
-          $(this).css("border-color", "");
-        }
-      });
-
-    // Validate State
-    $(document)
-      .find(".state-input")
-      .each(function () {
-        const state = $(this).val();
-        if (state == "") {
-          isValid = false;
-          $("#state-error").show();
-          $(this).css("border-color", "red");
-        } else {
-          $("#state-error").hide();
-          $(this).css("border-color", "");
-        }
-      });
-
-    // Validate ZIP
-    $(document)
-      .find(".zip-input")
-      .each(function () {
-        const len = $(this).val().length;
-        if (len === 0) {
-          $("#zip-error").text("Please enter a ZIP code").show();
-          $(this).css("border-color", "red");
-        } else if (len < 5) {
-          isValid = false;
-          $("#zip-error").text("ZIP code needs to be longer").show();
-          $(this).css("border-color", "red");
-        } else {
-          $("#zip-error").hide();
-          $(this).css("border-color", "");
-        }
-      });
-
-    // Validate crew discount fields if discount is checked
-    if (crewDiscountCheckbox.is(":checked")) {
-      const minCrewSize = $("#crew-size-input").val();
-      const discountPercentage = $("#crew-percentage-input").val();
-
-      if (!minCrewSize || minCrewSize > 100 || minCrewSize < 2) {
+    if (isStartTouched || isEndTouched) {
+      if (!startTime || !endTime) {
+        toggleError("#time-error", true, "Invalid Time");
+        $(".start-time-input, .end-time-input").css("border-color", "red");
         isValid = false;
-        $("#crew-size-error").removeClass("hidden");
+      } else {
+        toggleError("#time-error", false, "");
+        $(".start-time-input, .end-time-input").css("border-color", "");
+      }
+    } else {
+      // Do not show errors if neither field has been touched
+      toggleError("#time-error", false, "");
+      $(".start-time-input, .end-time-input").css("border-color", "");
+    }
+
+    return isValid;
+  }
+
+  // Function to validate all fields (used on form submission)
+  function validateAllFields() {
+    var isValid = true;
+
+    // Validate each field based on validationRules
+    $.each(validationRules, function (selector, rules) {
+      $(selector).each(function () {
+        var $field = $(this);
+        var fieldValid = validateField($field, rules);
+        if (!fieldValid) {
+          isValid = false;
+        }
+      });
+    });
+
+    // Special handling for time fields
+    var timeValid = validateTimeFields();
+    if (!timeValid) {
+      isValid = false;
+    }
+
+    // Validate Quill description
+    if (typeof quill !== "undefined" && quill instanceof Quill) {
+      var contentLength = quill.getText().trim().length;
+      if (contentLength === 0) {
+        isValid = false;
+        toggleError("#body-error", true, "Please enter a description");
+        $(".ql-container").css("border-color", "red");
+      } else if (contentLength > 5000) {
+        isValid = false;
+        toggleError("#body-error", true, "Description needs to be shorter");
+        $(".ql-container").css("border-color", "red");
+      } else {
+        toggleError("#body-error", false, "");
+        $(".ql-container").css("border-color", "");
+      }
+    }
+
+    // Additional validation for crew discount if checked
+    if ($crewDiscountCheckbox.is(":checked")) {
+      var minCrewSize = $("#crew-size-input").val();
+      var discountPercentage = $("#crew-percentage-input").val();
+      var crewValid = true;
+
+      if (!minCrewSize || minCrewSize < 2 || minCrewSize > 100) {
+        crewValid = false;
+        toggleError("#crew-size-error", true, "Invalid Crew Size");
         $("#crew-size-input").css("border-color", "red");
       } else {
-        $("#crew-size-error").addClass("hidden");
+        toggleError("#crew-size-error", false);
         $("#crew-size-input").css("border-color", "");
       }
 
@@ -321,41 +264,303 @@ $(document).ready(function () {
         discountPercentage <= 0 ||
         discountPercentage > 100
       ) {
-        isValid = false;
-        $("#discount-error").removeClass("hidden");
+        crewValid = false;
+        toggleError("#discount-error", true, "Invalid Discount Percentage");
         $("#crew-percentage-input").css("border-color", "red");
       } else {
-        $("#discount-error").addClass("hidden");
+        toggleError("#discount-error", false);
         $("#crew-percentage-input").css("border-color", "");
       }
+
+      if (!crewValid) {
+        isValid = false;
+      }
     } else {
-      // If crew discount is not checked, fields are valid by default
-      $("#crew-size-error").addClass("hidden");
-      $("#discount-error").addClass("hidden");
-      $("#crew-size-input").css("border-color", "");
-      $("#crew-percentage-input").css("border-color", "");
+      // Reset crew discount errors if not checked
+      toggleError("#crew-size-error", false);
+      toggleError("#discount-error", false);
+      $("#crew-size-input, #crew-percentage-input").css("border-color", "");
     }
+
     // Validate Header Photo
-    $(document)
-      .find("#photo-input")
-      .each(function () {
-        const headerPhotoInput = document.getElementById("photo-input");
-        if (!headerPhotoInput.files.length) {
-          isValid = false;
-          $("#photo-error").text("Please upload a header photo").show();
-          $(this).css("border-color", "red");
+    var headerPhoto = $("#photo-input")[0].files.length > 0;
+    if (!headerPhoto) {
+      isValid = false;
+      toggleError("#photo-error", true, "Please upload a header photo");
+      $("#photo-input").css("border-color", "red");
+    } else {
+      toggleError("#photo-error", false);
+      $("#photo-input").css("border-color", "");
+    }
+
+    // Toggle submit buttons
+    if (isValid) {
+      $submitBtn.show();
+      $cannotSubmit.hide();
+    } else {
+      $submitBtn.hide();
+      $cannotSubmit.show();
+    }
+
+    return isValid;
+  }
+
+  // Function to validate individual field based on event
+  function validateSingleField(event) {
+    var $field = $(this);
+
+    // Mark the field as touched
+    var fieldId = $field.attr("id");
+    touchedFields[fieldId] = true;
+
+    var fieldValid = true;
+
+    // Find the matching validation rules
+    $.each(validationRules, function (selector, rules) {
+      if ($field.is(selector)) {
+        fieldValid = validateField($field, rules);
+        return false; // Exit the loop once the matching selector is found
+      }
+    });
+
+    // Handle cross-field validations if necessary
+    if ($field.hasClass("start-time-input") || $field.hasClass("end-time-input")) {
+      validateTimeFields();
+    }
+
+    // If the crew discount fields are being changed, validate them
+    if (
+      $field.is("#crew-size-input") ||
+      $field.is("#crew-percentage-input") ||
+      $field.is("#id_crew_discount")
+    ) {
+      if ($crewDiscountCheckbox.is(":checked")) {
+        // Validate crew size
+        var minCrewSize = $("#crew-size-input").val();
+        if (!minCrewSize || minCrewSize < 2 || minCrewSize > 100) {
+          toggleError("#crew-size-error", true, "Invalid Crew Size");
+          $("#crew-size-input").css("border-color", "red");
         } else {
-          $("#photo-error").hide();
-          $(this).css("border-color", "");
+          toggleError("#crew-size-error", false);
+          $("#crew-size-input").css("border-color", "");
+        }
+
+        // Validate discount percentage
+        var discountPercentage = $("#crew-percentage-input").val();
+        if (
+          !discountPercentage ||
+          discountPercentage <= 0 ||
+          discountPercentage > 100
+        ) {
+          toggleError("#discount-error", true, "Invalid Discount Percentage");
+          $("#crew-percentage-input").css("border-color", "red");
+        } else {
+          toggleError("#discount-error", false);
+          $("#crew-percentage-input").css("border-color", "");
+        }
+      } else {
+        // Reset crew discount errors if not checked
+        toggleError("#crew-size-error", false);
+        toggleError("#discount-error", false);
+        $("#crew-size-input, #crew-percentage-input").css("border-color", "");
+      }
+    }
+
+    // Validate Quill description if necessary
+    if ($field.hasClass("ql-container") || $field.attr("id") === "quill-editor") {
+      if (typeof quill !== "undefined" && quill instanceof Quill) {
+        var contentLength = quill.getText().trim().length;
+        if (contentLength === 0) {
+          toggleError("#body-error", true, "Please enter a description");
+          $(".ql-container").css("border-color", "red");
+        } else if (contentLength > 5000) {
+          toggleError("#body-error", true, "Description needs to be shorter");
+          $(".ql-container").css("border-color", "red");
+        } else {
+          toggleError("#body-error", false);
+          $(".ql-container").css("border-color", "");
+        }
+      }
+    }
+
+    // Validate Header Photo if necessary
+    if ($field.is("#photo-input")) {
+      var headerPhoto = $("#photo-input")[0].files.length > 0;
+      if (!headerPhoto) {
+        toggleError("#photo-error", true, "Please upload a header photo");
+        $("#photo-input").css("border-color", "red");
+      } else {
+        toggleError("#photo-error", false);
+        $("#photo-input").css("border-color", "");
+      }
+    }
+
+    // Toggle submit buttons based on overall form validity
+    toggleSubmitButtons();
+
+    return fieldValid;
+  }
+
+  // Function to toggle submit buttons based on overall form validity
+  function toggleSubmitButtons() {
+    var isValid = true;
+
+    // Check all validation rules without showing errors
+    $.each(validationRules, function (selector, rules) {
+      $(selector).each(function () {
+        var $field = $(this);
+        var value = $field.val().trim();
+        var fieldValid = true;
+
+        if (rules.required && !value) {
+          fieldValid = false;
+        }
+
+        if (fieldValid && rules.maxLength && value.length > rules.maxLength) {
+          fieldValid = false;
+        }
+
+        if (fieldValid && rules.minLength && value.length < rules.minLength) {
+          fieldValid = false;
+        }
+
+        if (fieldValid && typeof rules.validate === "function") {
+          var customError = rules.validate(value);
+          if (customError) {
+            fieldValid = false;
+          }
+        }
+
+        if (!fieldValid) {
+          isValid = false;
+          return false; // Exit the loop early if any field is invalid
         }
       });
 
+      if (!isValid) {
+        return false; // Exit the outer loop early
+      }
+    });
+
+    // Check time fields
+    var startTime = $(".start-time-input").val();
+    var endTime = $(".end-time-input").val();
+    if (!startTime || !endTime) {
+      isValid = false;
+    }
+
+    // Check Quill description
+    if (typeof quill !== "undefined" && quill instanceof Quill) {
+      var contentLength = quill.getText().trim().length;
+      if (contentLength === 0 || contentLength > 5000) {
+        isValid = false;
+      }
+    }
+
+    // Check crew discount fields if checked
+    if ($crewDiscountCheckbox.is(":checked")) {
+      var minCrewSize = $("#crew-size-input").val();
+      var discountPercentage = $("#crew-percentage-input").val();
+
+      if (!minCrewSize || minCrewSize < 2 || minCrewSize > 100) {
+        isValid = false;
+      }
+
+      if (
+        !discountPercentage ||
+        discountPercentage <= 0 ||
+        discountPercentage > 100
+      ) {
+        isValid = false;
+      }
+    }
+
+    // Check Header Photo
+    var headerPhoto = $("#photo-input")[0].files.length > 0;
+    if (!headerPhoto) {
+      isValid = false;
+    }
+
+    // Toggle submit buttons
     if (isValid) {
-      $("#submitBtn").show();
-      $("#cannotSubmit").hide();
+      $submitBtn.show();
+      $cannotSubmit.hide();
     } else {
-      $("#submitBtn").hide();
-      $("#cannotSubmit").show();
+      $submitBtn.hide();
+      $cannotSubmit.show();
     }
   }
+
+  // Function to toggle crew discount details
+  function toggleCrewDiscountDetails() {
+    $crewDiscountDetails.toggle($crewDiscountCheckbox.is(":checked"));
+  }
+
+  // Initialize crew discount display and bind events
+  toggleCrewDiscountDetails();
+  $crewDiscountCheckbox.on("change", function () {
+    toggleCrewDiscountDetails();
+    toggleSubmitButtons(); // Update submit button based on crew discount
+  });
+
+  // Debounce function to limit the rate of function calls
+  function debounce(func, delay) {
+    var timer;
+    return function () {
+      var context = this;
+      var args = arguments;
+      clearTimeout(timer);
+      timer = setTimeout(function () {
+        func.apply(context, args);
+      }, delay);
+    };
+  }
+
+  // Bind input, change, and blur events to track touched fields and validate
+  $form
+    .find("input, textarea, select")
+    .on("input change", debounce(validateSingleField, 300)) // Validate on input/change with debounce
+    .on("blur", function () { // Use 'blur' instead of 'focus' to mark as touched after interaction
+      var $field = $(this);
+      var fieldId = $field.attr("id");
+      touchedFields[fieldId] = true;
+      validateSingleField.call(this); // Validate field on blur
+    });
+
+  // Specific event bindings
+  $("#photo-input").on("change", validateSingleField);
+
+  // Initialize Quill editor (assuming it's initialized elsewhere)
+  if (typeof quill !== "undefined" && quill instanceof Quill) {
+    quill.on("text-change", function () {
+      // Mark as touched when user changes the Quill editor
+      touchedFields["quill-editor"] = true;
+      // Validate Quill editor
+      var contentLength = quill.getText().trim().length;
+      if (contentLength === 0) {
+        toggleError("#body-error", true, "Please enter a description");
+        $(".ql-container").css("border-color", "red");
+      } else if (contentLength > 5000) {
+        toggleError("#body-error", true, "Description needs to be shorter");
+        $(".ql-container").css("border-color", "red");
+      } else {
+        toggleError("#body-error", false);
+        $(".ql-container").css("border-color", "");
+      }
+
+      // Update submit buttons
+      toggleSubmitButtons();
+    });
+  }
+
+  // Form submission handler
+  $form.on("submit", function (e) {
+    // Validate all fields before submission
+    var isFormValid = validateAllFields();
+
+    if (!isFormValid) {
+      e.preventDefault(); // Prevent form submission if invalid
+      alert("Please correct the errors in the form before submitting.");
+    }
+  });
 });

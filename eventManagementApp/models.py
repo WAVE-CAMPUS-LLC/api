@@ -429,6 +429,20 @@ class Event(models.Model):
         default=None,
         help_text=_("Percentage discount for crew purchases (e.g., 10.00 for 10%)"),
     )
+    
+    guest_list = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        related_name="guest_list",
+        blank=True,
+        null=True,
+    )
+    
+    show_guest_list = models.BooleanField(
+        _("Show guest list to attendees?"),
+        null=True,
+        blank=True,
+        default=True,
+    )
 
     created_at = models.DateTimeField(auto_now=True)
     updated_at = models.DateTimeField(auto_now=True)

@@ -8,5 +8,6 @@ urlpatterns = [
     path("profile/onboarding/", views.profilePreferences, name="onboarding"),
     path("profile=update/<str:username>/updatingprocess/", views.userProfileProcessing, name="updateProfileProcess"),
     path("settings/", views.settingsView, name="userSettings"),
+    path("settings/update/addCard/", views.addCard, name="addCard"),
     path('change-password/', views.ChangePasswordView.as_view(), name="changePassword"),
 ]

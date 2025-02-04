@@ -5,7 +5,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const submitButton = document.getElementById('submitButton');
     let currentSectionIndex = 0;
 
-    const apiKey = 'wszYa4B7WePEWRcvuWAw27RmTZ2ZCr6eYgzUIKyy'; //Davis Tameh personal api key
+    const apiKey = document.getElementById('apiKey').value;
+    console.log('API Key:', apiKey);
 
     function showSection(index) {
         sections.forEach((section, i) => {

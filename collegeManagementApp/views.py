@@ -109,6 +109,7 @@ def collegeCampusesView(request):
 @check_suspension
 def requestCollege(request):
     pageName = "Colleges"
+    apiKey = settings.COLLEGE_LIST_API_KEY
 
     if request.method == "POST":
         collegeRequestForm = CollegeRequestForm(request.POST)
@@ -126,7 +127,7 @@ def requestCollege(request):
     return render(
         request,
         "collegeManagementApp/requestCollege.html",
-        {"pageName": pageName, "collegeRequestForm": collegeRequestForm},
+        {"pageName": pageName, "collegeRequestForm": collegeRequestForm, "apiKey": apiKey},
     )
 
 

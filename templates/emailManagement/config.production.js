@@ -17,9 +17,14 @@ export default {
     },
   },
   css: {
-    inline: true,
+    inline: {
+      styleToAttribute: {
+        'background-color': 'bgcolor',
+      }
+    },
     purge: true,
     shorthand: true,
+
   },
   prettify: true,
 }

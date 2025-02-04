@@ -25,45 +25,32 @@ function getCookie(name) {
 }
 
 const form = document.getElementById("addCardModalForm");
+const cardUrl = document.getElementById("addCardUrl").value;
 form.addEventListener("submit", async (event) => {
     event.preventDefault();
 
-    const { token, error } = await stripe.createToken(cardElement, {
-        name: document.getElementById("cardName").value,
-        currency: "usd",
-    });
+    const { token, error } = await stripe.createToken(cardElement);
 
     if (error) {
-        console.error(error);
+        console.error("Error creating token: ", error.message);
         return;
-    } else {
-        const cardUrl = document.getElementById("addCardUrl").value;
-        fetch(cardUrl, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                'X-CSRFToken': getCookie('csrftoken'),
-            },
-            body: JSON.stringify({
-                token: token.id,
-            }),
-        })
-        .then((response) => {
-            if (!response.ok) {
-                throw new Error("Failed to add card");
-            }
-            return response.json();
-        })
-        .then((data) => {
-            if (data.success) {
-                alert("Card added successfully");
-            } else {
-                alert("Failed to add card: " + data.message);
-            }
-        })
-        .catch((error) => {
-            console.error("Error:", error);
-        });
     }
 
+    const response = await fetch(cardUrl, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": getCookie("csrftoken"),
+        },
+        body: JSON.stringify({ token: token.id }),
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+        location.reload(); // Refresh the page to show the updated messages
+    } else {
+        console.error("Failed to add card. Check server messages.");
+        location.reload(); // Refresh to display error messages from the backend
+    }
 });

@@ -10,7 +10,9 @@ Profile Overview
 
 {% block script %}
 <script type="text/javascript" src="{% static "/scripts/accountManagementApp/settings/profileManagement.js" %}" defer></script>
+<script type="text/javascript" src="{% static "scripts/accountManagementApp/profileOverview/addPaymentMethod.js" %}" defer></script>
 <script type="text/javascript" src="{% static "scripts/adminDashboardApp/applications/applications.js" %}" defer></script>
+<script type="module" src="{% static "scripts/base/stripe.js" %}" defer></script>
 {% endblock script %}
 
 
@@ -41,6 +43,7 @@ Profile Overview
     </div>
     
     <div id="content-container" class="flex flex-col gap-20">
+
         <div class="cc-user-card w-full rounded-[15px] gap-[10px] grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 xxsm:px-[50px] sm:px-[110px] md:px-0">
             <div id="heading" class="flex flex-col justify-center border border-custom-rgba11 rounded-[15px] py-[20px] px-[40px] shadow-custom-shadow-6">
                 <div class="fNamePfp flex flex-col xxsm:flex-row items-center xxsm:items-start gap-[20px]">
@@ -93,50 +96,55 @@ Profile Overview
                 </div>
             </div>
         </div>
-        <!--User Card | End-->
 
-        <div class="cc-sub-body w-full max-w-[100vw] flex flex-col md:flex-row items-center md:items-start gap-10" id="cc-sub-body">
+        <div id="cc-sub-body" class="w-full max-w-[100vw] flex flex-col md:flex-row items-center md:items-start gap-10">
             <div id="side-nav" class="flex flex-col w-full lg:w-[25%] gap-y-[20px]">
                 <div id="settings" class="border border-custom-rgba11 shadow-custom-shadow-6 rounded-[10px] w-full shadow-custom-shadow-6">
                     <ul class="list-none rounded-[10px] w-full text-nowrap">
-                        <li class="profile-tab tab-active border-b border-b-custom-rgba11 p-[20px] font-Wanted-Regular cursor-pointer" data-tab="myEvents-information">
-                            <a class="text-black no-underline hover:text-green cursor-pointer">My Events</a>
+                        <li class="profile-tab tab-active border-b border-b-custom-rgba11 p-[20px] font-Wanted-Medium cursor-pointer" data-tab="myEvents-information">
+                            <p class="text-black no-underline hover:underline cursor-pointer">My Events</p>
                         </li>
                         <li class="profile-tab border-b border-b-custom-rgba11 p-[20px] font-Wanted-Medium cursor-pointer" href="{% url "social:home" %}">
-                            <a href="{% url "social:home" %}" class="text-green no-underline hover:underline cursor-pointer">The Social</a>
+                            <a href="{% url "social:home" %}" class="text-black no-underline hover:underline cursor-pointer">The Social</a>
                         </li>
                         {% if userRequest|has_group:"Host" %}
-                        <li class="profile-tab border-b border-b-custom-rgba11 p-[20px] font-Wanted-Regular cursor-pointer" target="_blank" href="{% url "eventManagement:hostHome" %}">
-                            <a href="{% url "eventManagement:hostPortal" %}" class="text-black no-underline hover:text-green cursor-pointer">Host Portal</a>
-                        </li>
+                            <li class="profile-tab border-b border-b-custom-rgba11 p-[20px] font-Wanted-Medium cursor-pointer" target="_blank" href="{% url "eventManagement:hostHome" %}">
+                                <a href="{% url "eventManagement:hostPortal" %}" class="text-black no-underline hover:underline cursor-pointer">Host Portal</a>
+                            </li>
                         {% endif %}
-                        
-                        <li class="profile-tab border-b border-b-custom-rgba11 p-[20px] font-Wanted-Regular cursor-pointer" data-tab="myBlog-information">
-                            <a class="text-black no-underline hover:text-green cursor-pointer">My Blog Posts</a>
+                        <li class="profile-tab border-b border-b-custom-rgba11 p-[20px] font-Wanted-Medium cursor-pointer" data-tab="myBlog-information">
+                            <p class="text-black no-underline hover:underline cursor-pointer">Blog</p>
                         </li>
-                        <li class="profile-tab border-b border-b-custom-rgba11 p-[20px] font-Wanted-Regular cursor-pointer">
-                            <a class="text-black no-underline hover:text-green cursor-pointer" href="{% url "accountManagement:userSettings" %}">My Settings</a>
+                        <li class="profile-tab border-b border-b-custom-rgba11 p-[20px] font-Wanted-Medium cursor-pointer">
+                            <a class="text-black no-underline hover:underline cursor-pointer" href="{% url "accountManagement:userSettings" %}">Settings & Preferences</a>
                         </li>
-                        <li class="profile-tab border-b border-b-custom-rgba11 p-[20px] font-Wanted-Regular cursor-pointer">
-                            <a class="text-black no-underline hover:text-green cursor-pointer" href="{% url "accountManagement:userSettings" %}">My Preferences</a>
+                        <li class="profile-tab border-b border-b-custom-rgba11 p-[20px] font-Wanted-Medium cursor-pointer" data-tab="myPurchases-information">
+                            <p class="text-black no-underline hover:underline cursor-pointer">Transactions</p>
                         </li>
-                        <li class="profile-tab border-b border-b-custom-rgba11 p-[20px] font-Wanted-Regular cursor-pointer">
-                            <a class="text-black no-underline hover:text-green cursor-pointer" href="#">Payment Methods</a>
+                        <li class="profile-tab border-b border-b-custom-rgba11 p-[20px] font-Wanted-Medium cursor-pointer" data-tab="myPaymentMethods-information">
+                            <p class="text-black no-underline hover:underline cursor-pointer">Payment Methods</p>
                         </li>
+                        {% if userRequest|has_group:"Host" or userRequest|has_group:"host" %}
+                            {% if accountBalance or totalEarnings %}
+                                <li class="profile-tab border-b border-b-custom-rgba11 p-[20px] font-Wanted-Medium cursor-pointer" data-tab="myPayoutMethods-information">
+                                    <p class="text-black no-underline hover:underline cursor-pointer">Payouts</p>
+                                </li>
+                            {% endif %}
+                        {% endif %}
                         {% if userRequest|has_group:"Campus Manager" %}
-                        <li class="profile-tab border-b border-b-custom-rgba11 p-[20px] font-Wanted-Regular cursor-pointer">
-                            <a class="text-black no-underline hover:text-green cursor-pointer" target="_blank" href="{% url "campusManager:dashboard" %}">Campus Management</a>
+                        <li class="profile-tab border-b border-b-custom-rgba11 p-[20px] font-Wanted-Medium cursor-pointer">
+                            <a class="text-black no-underline hover:underline cursor-pointer" target="_blank" href="{% url "campusManager:dashboard" %}">Campus Management</a>
                         </li>
                         {% endif %}
                         {% if userRequest|has_group:"Admin" %}
-                        <li class="profile-tab border-b border-b-custom-rgba11 p-[20px] font-Wanted-Regular cursor-pointer">
-                            <a class="text-black no-underline hover:text-green cursor-pointer" target="_blank" href="{% url "waveAdmin:dashboard" %}">Admin Portal</a>
+                        <li class="profile-tab border-b border-b-custom-rgba11 p-[20px] font-Wanted-Medium cursor-pointer">
+                            <a class="text-black no-underline hover:underline cursor-pointer" target="_blank" href="{% url "waveAdmin:dashboard" %}">Admin Portal</a>
                         </li>
-                        <li class="profile-tab border-b border-b-custom-rgba11 p-[20px] font-Wanted-Regular cursor-pointer">
-                            <a class="text-black no-underline hover:text-green cursor-pointer" target="_blank" href="{% url "campusManager:dashboard" %}">Campus Management</a>
+                        <li class="profile-tab border-b border-b-custom-rgba11 p-[20px] font-Wanted-Medium cursor-pointer">
+                            <a class="text-black no-underline hover:underline cursor-pointer" target="_blank" href="{% url "campusManager:dashboard" %}">Campus Management</a>
                         </li>
                         {% endif %}
-                        <li class="profile-tab border-b border-b-custom-rgba11 p-[20px] font-Wanted-Regular cursor-pointer">
+                        <li class="profile-tab border-b border-b-custom-rgba11 p-[20px] font-Wanted-Medium cursor-pointer">
                             <a class="text-[red] no-underline hover:underline cursor-pointer" href="{% url "authentication:logout" %}">Sign Out</a>
                         </li>
                     </ul>
@@ -184,7 +192,7 @@ Profile Overview
                                                 <div class="category-event-name font-Wanted-SemiBold text-Base flex flex-col justify-center items-start gap-1 w-full border border-custom-rgba5 rounded-bl-2xl rounded-br-2xl shadow-custom-shadow-3 border-t-2 px-5 p-2">
                                                     <h2 id="eventTitle" class="whitespace-nowrap overflow-hidden text-ellipsis w-full text-left text-xl">{{ event.title }}</h2>
                                                     <div class="eventSubInfo flex flex-col items-start gap-[1px] w-full font-Wanted-Variable text-customGray5">
-                                                        <p id="eventHost" class="flex flex-row justify-start">Hosted by @{{ event.host }}</p>
+                                                        <p id="eventHost" class="flex flex-row justify-start">Hosted by @{{ event.host.username }}</p>
                                                         <p id="eventDate" class="w-full flex justify-end font-Wanted-Bold text-Large">{{ event.date }}</p>
                                                     </div>
                                                 </div>
@@ -192,67 +200,290 @@ Profile Overview
                                         {% endfor %}
                                     </div>
                                 {% else %}
-                                <div class="emptyContainer w-full rounded-[20px] pt-[40px] after-xsm:pt-[50px] sm:pt-[60px] md:pt-[70px] pb-[40px] after-xsm:pb-[50px] sm:pb-[60px] md:pb-[70px] flex flex-col justify-center gap-[7px] after-xsm:gap-[8px] sm:gap-[9px] md:gap-[10px] items-center bg-[rgba(146,146,146,0.096)]">
-                                    <div>
-                                        <img class="w-[30px] after-xsm:w-[40px] sm:w-[50px] md:w-[60px]" src="{% static "/images/collegeManagementApp/collegeInformation/empty-listing.svg" %}" />
+                                    <div class="emptyContainer w-full rounded-[20px] pt-[40px] after-xsm:pt-[50px] sm:pt-[60px] md:pt-[70px] pb-[40px] after-xsm:pb-[50px] sm:pb-[60px] md:pb-[70px] flex flex-col justify-center gap-[7px] after-xsm:gap-[8px] sm:gap-[9px] md:gap-[10px] items-center bg-[rgba(146,146,146,0.096)]">
+                                        <div>
+                                            <img class="w-[30px] after-xsm:w-[40px] sm:w-[50px] md:w-[60px]" src="{% static "/images/collegeManagementApp/collegeInformation/empty-listing.svg" %}" />
+                                        </div>
+                                        <p class="font-Wanted-Variable text-[10px] after-xsm:text-[12px] sm:text-[14px] md:text-[16.5px] text-black text-center">No favorite events</p>
                                     </div>
-                                    <p class="font-Wanted-Variable text-[10px] after-xsm:text-[12px] sm:text-[14px] md:text-[16.5px] text-black text-center">No favorite events</p>
-                                </div>
                                 {% endif %}
                             </div>
 
                             <div class="myEventsInformationContainer" id="profilePurchasedEvents">
-                                <div class="emptyContainer w-full rounded-[20px] pt-[40px] after-xsm:pt-[50px] sm:pt-[60px] md:pt-[70px] pb-[40px] after-xsm:pb-[50px] sm:pb-[60px] md:pb-[70px] flex flex-col justify-center gap-[7px] after-xsm:gap-[8px] sm:gap-[9px] md:gap-[10px] items-center bg-[rgba(146,146,146,0.096)]">
-                                    <div>
-                                        <img class="w-[30px] after-xsm:w-[40px] sm:w-[50px] md:w-[60px]" src="{% static "/images/collegeManagementApp/collegeInformation/empty-listing.svg" %}" />
+                                {% if purchasedEvents %}
+                                    <div id="purchasedEvents" class="grid grid-cols-1 xxsm:grid-cols-2 md:grid-cols-3 3xl:grid-cols-4 gap-5">
+                                        {% for ticket in purchasedEvents %}
+                                            {% if ticket.event and ticket.event.eventId %}
+                                            <a target="_blank" href="{% url 'core:eventDetails' eventId=ticket.event.eventId %}" class="category-event-card hover:category-image hover:scale-95 transform transition duration-300 flex flex-col justify-center items-center cursor-pointer overflow-hidden p-[10px] text-black">
+                                                <div class="category-image w-full rounded-2xl shadow-custom-shadow-3">
+                                                    <img src="{{ ticket.event.header_photo.url}}" alt="" class="w-full h-[200px] rounded-2xl rounded-b-none object-cover">
+                                                </div>
+                                                <div class="category-event-name font-Wanted-SemiBold text-Base flex flex-col justify-center items-start gap-1 w-full border border-custom-rgba5 rounded-bl-2xl rounded-br-2xl shadow-custom-shadow-3 border-t-2 px-5 p-2">
+                                                    <h2 id="eventTitle" class="whitespace-nowrap overflow-hidden text-ellipsis w-full text-left text-xl">{{ ticket.event.title }}</h2>
+                                                    <div class="eventSubInfo flex flex-col items-start gap-[1px] w-full font-Wanted-Variable text-customGray5">
+                                                        <p id="eventHost" class="flex flex-row justify-start">Hosted by @{{ ticket.event.host.username }}</p>
+                                                        <p id="eventDate" class="w-full flex justify-end font-Wanted-Bold text-Large">{{ ticket.event.date }}</p>
+                                                    </div>
+                                                </div>
+                                            </a>
+                                            {% else %}
+                                            <div>
+                                                <p>No event found for this ticket</p>
+                                            </div>
+                                            {% endif %}
+                                        {% endfor %}
                                     </div>
-                                    <p class="font-Wanted-Variable text-[10px] after-xsm:text-[12px] sm:text-[14px] md:text-[16.5px] text-black text-center">No purchased events</p>
-                                </div>
+                                {% else %}
+                                    <div class="emptyContainer">
+                                        <!-- No purchased events fallback -->
+                                        <p>No purchased events</p>
+                                    </div>
+                                {% endif %}
                             </div>
                         </div>
                     </div>
                 </div>
 
-
-                <!-- inline style to stop blogs briefly showing on page refresh -->
-                <div class="profile-tab-content hidden" id="myBlog-information">
-                    <div class="blog-tab flex flex-col gap-[25px] mt-[15px]">
-                        <div class="header flex justify-between items-center flex-col xxsm:flex-row">
-                            <div class="headerRow w-full">
-                                <h3 class="heading w-full flex justify-between items-center text-[24px] xxsm:text-[27px] font-Wanted-Bold font-bold">My Blog Posts</h3>
-                            </div>
-                            
-                            <div class="createBlog">
-                                <a target="_blank" href="{% url "blog:createBlog" %}" class="p-[10px] xsm:p-[15px] xxsm:p-[20px] text-nowrap border border-transparent border-r-gradient-start border-l-gradient-end text-white font-Wanted-SemiBold no-underline flex items-center justify-center gap-[10px] mt-[20px] xxsm:mt-0 w-full text-[22px] xxsm:text-[24px] rounded-[10px] xsm:rounded-[15px] xxsm:rounded-[20px] bg-gradient-to-r from-gradient-start to-gradient-end cursor-pointer">Create Blog</a>
+                <div class="profile-tab-content" id="myBlog-information">
+                    <div class="border border-custom-rgba11 rounded-[10px] w-full flex flex-col gap-[20px] py-[20px] px-[30px] shadow-custom-shadow-6">
+                        <div class="home-header">
+                            <div id="shareControl" class="content-control flex flex-row justify-between gap-4 w-full"> 
+                                <div class="myEvents-informationTab tab-active cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="profileFavoriteEvents">My posts</div>
+                                <a target="_blank" href="{% url "blog:createBlog" %}" class="p-2 rounded-xl text-white bg-gradient-to-r font-Wanted-Variable from-gradient-start to-gradient-end cursor-pointer">Create Blog</a>
                             </div>
                         </div>
+                    
 
                         <div class="blogContainer flex flex-col gap-[30px] no-underline text-black hover:text-green">
-                            {% for blog in blogItems %}
-                            <a href="{% url "blog:blogView" blogId=blog.blogId %}" class="blogCard">
-                                <div class="blogHeader border border-custom-rgba8 rounded-[20px] shadow-custom-shadow-2 max-w-full max-h-[350px]">
-                                    <img src="{{ blog.imageOne.url }}" class="w-full h-full max-h-[350px] max-w-full rounded-[20px] object-cover" />
+                            {% if blogItems %}
+                            <div class="grid grid-cols-1 xxsm:grid-cols-2 md:grid-cols-3 3xl:grid-cols-4 gap-5">
+                                {% for blog in blogItems %}
+                                <a href="{% url "blog:blogView" blogId=blog.blogId %}" class="blogCard">
+                                    <div class="blogHeader border border-custom-rgba8 rounded-[20px] shadow-custom-shadow-2 max-w-full max-h-[350px]">
+                                        <img src="{{ blog.imageOne.url }}" class="w-full h-[200px] max-w-full rounded-[20px] object-cover" />
+                                    </div>
+                                    <div class="blogBody flex flex-col gap-[15px]">
+                                        <div class="blogType flex justify-start w-full">
+                                            <h6 class="text-green font-Wanted-Black text-[18px] font-black">{{ blog.blogType }}</h6>
+                                        </div>
+                                        <div class="blogTitle flex justify-start w-full">
+                                            <h4 class="font-bold font-Wanted-Regular text-[20px] after-xsm:text-[23px] xxsm:text-[25px] text-nowrap overflow-hidden text-ellipsis w-full text-left">{{ blog.title }}</h4>
+                                        </div>
+                                        <div class="blogDate flex justify-end w-full">
+                                            <p class="font-Wanted-Variable text-[15px] text-black">By {{ blog.created_by.first_name }} {{ blog.created_by.last_name }}</p>
+                                        </div>
+                                    </div>
+                                </a> 
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                            <div class="emptyContainer w-full rounded-[20px] pt-[40px] after-xsm:pt-[50px] sm:pt-[60px] md:pt-[70px] pb-[40px] after-xsm:pb-[50px] sm:pb-[60px] md:pb-[70px] flex flex-col justify-center gap-[7px] after-xsm:gap-[8px] sm:gap-[9px] md:gap-[10px] items-center bg-[rgba(146,146,146,0.096)]">
+                                <div>
+                                    <img class="w-[30px] after-xsm:w-[40px] sm:w-[50px] md:w-[60px]" src="{% static "/images/collegeManagementApp/collegeInformation/empty-listing.svg" %}" />
                                 </div>
-                                <div class="blogBody flex flex-col gap-[15px]">
-                                    <div class="blogType flex justify-start w-full">
-                                        <h6 class="text-green font-Wanted-Black text-[18px] font-black">{{ blog.blogType }}</h6>
-                                    </div>
-                                    <div class="blogTitle flex justify-start w-full">
-                                        <h4 class="font-bold font-Wanted-Regular text-[20px] after-xsm:text-[23px] xxsm:text-[25px] text-nowrap overflow-hidden text-ellipsis w-full text-left">{{ blog.title }}</h4>
-                                    </div>
-                                    <div class="blogDate flex justify-end w-full">
-                                        <p class="font-Wanted-Variable text-[15px] text-black">By {{ blog.created_by.first_name }} {{ blog.created_by.last_name }}</p>
-                                    </div>
-                                </div>
-                            </a> 
-                            {% endfor %}
+                                <p class="font-Wanted-Variable text-[10px] after-xsm:text-[12px] sm:text-[14px] md:text-[16.5px] text-black text-center">You haven't created a blog post</p>
+                            </div>
+                            {% endif %}
                         </div>
                     </div>
+                </div>
+
+                <div class="profile-tab-content" id="myPurchases-information">
+                    <div class="border border-custom-rgba11 rounded-[10px] w-full flex flex-col gap-[20px] py-[20px] px-[30px] shadow-custom-shadow-6">
+                        <div class="home-header">
+                            <div id="shareControl" class="content-control flex flex-row justify-between gap-4 w-full"> 
+                                <div class="myEvents-informationTab tab-active cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="myPurchases">Transactions</div>
+                            </div>
+                        </div>
+
+                        <div class="myPurchasesContainer" id="myPurchases">
+                            {% if transactions %}
+                                <div class="grid grid-cols-1 xxsm:grid-cols-2 md:grid-cols-3 3xl:grid-cols-4 gap-5">
+                                    {% for transaction in transactions %}
+                                        <div class="bg-gradient-to-b bg-gradient-start bg-gradient-end py-3 px-5 rounded-2xl flex flex-col text-white gap-3 font-Wanted-Regular text-Semi-Medium">
+                                            <div class="w-full flex justify-end">
+                                                <p class="w-full flex justify-end font-Wanted-Variable text-Large">${{ transaction.amount|floatformat:2 }}</p>
+                                            </div>
+                                            {% if transaction.invoice_url %}
+                                            <a class="underline text-Small" target="_blank" href="{{ transaction.invoice_url }}">View Receipt</a>
+                                            {% endif %}
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                            <div class="emptyContainer w-full rounded-[20px] pt-[40px] after-xsm:pt-[50px] sm:pt-[60px] md:pt-[70px] pb-[40px] after-xsm:pb-[50px] sm:pb-[60px] md:pb-[70px] flex flex-col justify-center gap-[7px] after-xsm:gap-[8px] sm:gap-[9px] md:gap-[10px] items-center bg-[rgba(146,146,146,0.096)]">
+                                <div>
+                                    <img class="w-[30px] after-xsm:w-[40px] sm:w-[50px] md:w-[60px]" src="{% static "/images/collegeManagementApp/collegeInformation/empty-listing.svg" %}" />
+                                </div>
+                                <p class="font-Wanted-Variable text-[10px] after-xsm:text-[12px] sm:text-[14px] md:text-[16.5px] text-black text-center">You have not made any transactions!</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="profile-tab-content" id="myPaymentMethods-information">
+                    <div class="border border-custom-rgba11 rounded-[10px] w-full flex flex-col gap-[20px] py-[20px] px-[30px] shadow-custom-shadow-6">
+                        <div class="home-header">
+                            <div id="shareControl" class="content-control flex flex-row justify-between gap-4 w-full"> 
+                                <div class="myEvents-informationTab tab-active cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="myPaymentMethods">Payment Methods</div>
+                                <button type="button" id="addPaymentMethodToProfile" role="button" class="p-2 bg-gradient-to-tr font-Wanted-Variable text-white bg-gradient-start bg-gradient-end rounded-xl">Add New</button>
+                            </div>
+                        </div>
+
+                        <div class="myPurchasesContainer" id="myPaymentMethods">
+                            {% if payments %}
+                                {% for method in payments %}
+                                    <div class="flex flex-row justify-between items-center w-full border-b border-custom-rgba11 p-2">
+                                        <div id="cardData" class="flex flex-col gap-1">
+                                            <h6 class="font-Wanted-Bold text-Base capitalize flex flex-row gap-1">
+                                                {{ method.card_brand }} ending in {{ method.last4 }}
+                                                {% if method.is_default %}
+                                                    <p class="font-Wanted-Variable text-Tiny cursor-pointer text-green-600 border border-[#00921b] bg-[#00921b] text-white rounded-lg items-center p-1">Default</p>
+                                                {% endif %}
+                                            </h6>
+                                            <p class="font-Wanted-Variable text-sm capitalize">Expires {{ method.exp_month }} {{ method.exp_year }}</p>
+                                        </div>
+                                        <form id="paymentButtons" method="POST" class="flex flex-col gap-1">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="paymentMethodId" value="{{ method.id }}" />
+                                            <button type="submit" name="action" value="deletePaymentMethod" id="deletePaymentMethod" class="p-2 bg-red-600 text-white rounded-xl">Delete</button>
+                                            {% if not method.is_default %}
+                                                <button type="submit" name="action" value="setDefaultPaymentMethod" id="setDefaultPaymentMethod" class="p-2 bg-gray-400 text-white rounded-xl">Set Default</button>
+                                            {% endif %}
+                                        </form>
+                                    </div>
+                                {% endfor %}
+                            {% else %}
+                            <div class="emptyContainer w-full rounded-[20px] pt-[40px] after-xsm:pt-[50px] sm:pt-[60px] md:pt-[70px] pb-[40px] after-xsm:pb-[50px] sm:pb-[60px] md:pb-[70px] flex flex-col justify-center gap-[7px] after-xsm:gap-[8px] sm:gap-[9px] md:gap-[10px] items-center bg-[rgba(146,146,146,0.096)]">
+                                <div>
+                                    <img class="w-[30px] after-xsm:w-[40px] sm:w-[50px] md:w-[60px]" src="{% static "/images/collegeManagementApp/collegeInformation/empty-listing.svg" %}" />
+                                </div>
+                                <p class="font-Wanted-Variable text-[10px] after-xsm:text-[12px] sm:text-[14px] md:text-[16.5px] text-black text-center">No payment methods added.</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                {% if userRequest|has_group:"Host" or userRequest|has_group:"host" and dashboardLink %}
+                <div class="profile-tab-content" id="myPayoutMethods-information">
+                    <div class="border border-custom-rgba11 rounded-[10px] w-full flex flex-col gap-[20px] py-[20px] px-[30px] shadow-custom-shadow-6">
+                        <form method="post" class="home-header">
+                            {% csrf_token %}
+                            <div id="shareControl" class="content-control flex flex-row justify-between gap-4 w-full"> 
+                                <div class="myEvents-informationTab tab-active cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="myPayoutMethods">My Payouts</div>
+                                <a target="_blank" href="{{ dashboardLink }}" class="flex justify-center items-center bg-green text-white p-2 rounded-xl font-Wanted-Variable text-Semi-Medium border hover:bg-gradient-to-t hover:bg-gradient-start hover:bg-gradient-end">Payout Settings</a>
+                            </div>
+                        </form>
+
+                        <div class="myPurchasesContainer" id="myPayoutMethods">
+                            <div class="flex flex-col gap-5">
+                                <div class="flex w-full flex-row justify-between items-center">
+                                    <div class="flex flex-col items-start gap-4">
+                                        <h6 class="font-Wanted-Bold text-Base">Earnings</h6>
+                                        <p class="font-Wanted-Variable text-Base">${{ totalEarnings|floatformat:2 }}</p>
+                                    </div>
+                                </div>
+    
+                                <div class="flex w-full flex-col justify-between items-start gap-4">
+                                    <div class="flex flex-col items-start gap-4">
+                                        <h6 class="font-Wanted-Bold text-Base">Balance</h6>
+                                        <p class="font-Wanted-Variable text-Base">Available: ${{ accountBalance.available|floatformat:2 }}</p>
+                                    </div>
+                                </div>
+
+                                <form method="post"  class="w-full flex items-center flex-row gap-4">
+                                    {% csrf_token %}
+                                    <p class="flex justify-start font-Wanted-Variable text-Small text-gray-600">Want an instant payout?</p>
+                                    <button type="submit" name="action" value="requestInstantPayout" class="flex justify-center items-center bg-[#44d119] text-white py-2 px-5 rounded-full font-Wanted-Variable text-Small border hover:border-[#44d119] hover:bg-white hover:text-[#44d119]">Payout</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="addPaymentMethodModal" class="hidden bg-[rgba(0, 0, 0, 0.037)] backdrop-blur-sm fixed top-0 left-0 right-0 bottom-0 z-[1005] w-full h-full cursor-default">
+    <div class="w-full h-full flex justify-center items-center">
+        <div class="w-11/12 xxsm:w-9/12 pre-sm:w-10/12 sm:w-10/12 md:w-10/12 pre-lg:w-10/12 lg:w-10/12 xl:w-3/5 h-auto min-h-[80%] lg:min-h-fit max-h-[90%] bg-white shadow-custom-shadow rounded-2xl p-5 pb-12 flex flex-col gap-3 overflow-y-auto">
+            <div class="w-full flex flex-col items-center justify-center">
+                <div id="contentCard-header" class="w-full flex justify-start font-Wanted-Bold text-Pre-Xl">
+                    <h3>Add payment method</h3>
+                </div>
+                <div id="contentCard-close" class="w-full flex justify-end">
+                    <button role="button" type="button" id="closeAddPaymentMethodModal" class="border-none bg-none cursor-pointer">
+                        <img src="{% static "images/career/jobAppClose.svg" %}" alt="Minimize Card">
+                    </button>
+                </div>
+            </div>
+
+            <div class="">
+                <div class="flex flex-col gap-2">
+                    <form method="POST" id="addCardModalForm" class="flex flex-col gap-3">
+                        {% csrf_token %}
+                        <input type="hidden" id="stripeKey" value="{{ stripeKey }}">
+                        <input type="hidden" id="addCardUrl" value="{% url 'accountManagement:addCard' %}">
+
+                        <div class="flex flex-col gap-2">
+                            <label for="cardName" class="font-Wanted-Medium text-[15px]">Name</label>
+                            <input type="text" name="cardName" id="cardName" class="font-Wanted-Variable text-[13px] border border-gray-300 rounded-lg p-2" required placeholder="Name on Card">
+                        </div>
+                        <div class="flex flex-col gap-2" id="card-element">
+                            <!-- Stripe card element will be inserted here -->
+                        </div>
+
+                        <div class="w-full flex justify-end">
+                            <button type="submit" class="bg-green py-3 px-6 rounded-2xl text-white cursor-pointer">Confirm</button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
+<div id="addPayoutMethodModal" class="hidden bg-[rgba(0, 0, 0, 0.037)] backdrop-blur-sm fixed top-0 left-0 right-0 bottom-0 z-[1005] w-full h-full cursor-default">
+    <div class="w-full h-full flex justify-center items-center">
+        <div class="w-11/12 xxsm:w-9/12 pre-sm:w-10/12 sm:w-10/12 md:w-10/12 pre-lg:w-10/12 lg:w-10/12 xl:w-3/5 h-auto min-h-[80%] lg:min-h-fit max-h-[90%] bg-white shadow-custom-shadow rounded-2xl p-5 pb-12 flex flex-col gap-3 overflow-y-auto">
+            <div class="w-full flex flex-col items-center justify-center">
+                <div id="contentCard-header" class="w-full flex justify-start font-Wanted-Bold text-Pre-Xl">
+                    <h3>Add payment method</h3>
+                </div>
+                <div id="contentCard-close" class="w-full flex justify-end">
+                    <button role="button" type="button" id="closeAddPayoutMethodModal" class="border-none bg-none cursor-pointer">
+                        <img src="{% static "images/career/jobAppClose.svg" %}" alt="Minimize Card">
+                    </button>
+                </div>
+            </div>
+
+            <div class="">
+                <div class="flex flex-col gap-2">
+                    <form method="POST" id="addCardModalForm" class="flex flex-col gap-3">
+                        {% csrf_token %}
+                        <input type="hidden" id="stripeKey" value="{{ stripeKey }}">
+                        <input type="hidden" id="addCardUrl" value="{% url 'accountManagement:addCard' %}">
+
+                        <div class="flex flex-col gap-2">
+                            <label for="cardName" class="font-Wanted-Medium text-[15px]">Name</label>
+                            <input type="text" name="cardName" id="cardName" class="font-Wanted-Variable text-[13px] border border-gray-300 rounded-lg p-2" required placeholder="Name on Card">
+                        </div>
+                        <div class="flex flex-col gap-2" id="card-element">
+                            <!-- Stripe card element will be inserted here -->
+                        </div>
+
+                        <div class="w-full flex justify-end">
+                            <button type="submit" class="bg-green py-3 px-6 rounded-2xl text-white cursor-pointer">Confirm</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 {% endblock body %}

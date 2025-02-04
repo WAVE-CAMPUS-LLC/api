@@ -39,4 +39,27 @@ class GetEarnings:
             print(f"Stripe error: {e}")
             return 0
         
+    def requestPayout(stripeAccountId, amount):
+        try:
+            balance = stripe.Balance.retrieve(stripe_account=stripeAccountId)
+            instant_available = balance["instant_available"][0]["amount"] if balance["instant_available"] else 0
+
+            if amount > instant_available:
+                print(f"Error: Requested payout amount ({amount}) exceeds instant available balance ({instant_available}).")
+                return None
+
+            payout = stripe.Payout.create(
+                amount=amount,
+                currency="usd",
+                stripe_account=stripeAccountId,
+                method="instant",
+            )
+            return payout
+        except stripe.error.StripeError as e:
+            print(f"Stripe error: {e}")
+            return None
+        except Exception as e:
+            print(f"Error: {str(e)}")
+            return None
+        
     

@@ -14,13 +14,11 @@ from django.core.mail import send_mail
 import stripe.error
 from wave_v1.decorators import check_suspension, host, member, verified, onboarded
 from django.urls import reverse
+from django.views.decorators.csrf import csrf_exempt
 
 
 from accountManagementApp.models import UserProfile
-from collegeManagementApp.models import (
-    Organization,
-    OrganizationMembership
-)
+from collegeManagementApp.models import Organization, OrganizationMembership
 from .forms import HostApplicationForm, EventForm, EditEventForm
 from stripeManagementApp.getRequiredActions import getRequiredActions
 from stripeManagementApp.updateConnectWithStripeDetails import (
@@ -40,6 +38,7 @@ from authenticationApp.models import CustomUser
 from .utils import set_event_privacy  # Import the helper function
 
 from eventTicketsApp.models import InviteEventOption, RSVPTicket, PaidFreeTicket, Ticket
+from stripeManagementApp.customerSetup import ConnectAccount
 
 
 # Create your views here.
@@ -91,51 +90,91 @@ def hostPortalView(request):
     )
 
 
-
 def hostGuideView(request):
     return render(request, "eventManagementApp/host/hostGuide.html")
 
 
-
 @login_required
 @member
+@verified
+@onboarded
 @check_suspension
-def eventCreationProcess(request):
-    event_type_choices = Event.EVENT_TYPE_CHOICES
-    privacy_choices = Event.PRIVACY_CHOICES
-    placesKey = settings.PLACES_API_KEY
-    
+def eventCreationSelect(request):
+    siteDomain = settings.SITE_URL
     userAccount = get_object_or_404(CustomUser, username=request.user.username)
-    
+
+    connectAccountExists = userAccount.connectAccountCreated
+    connectOnboarded = userAccount.connectAccountOnboarded
+
+    if connectAccountExists == True and connectOnboarded == True:
+        completedConnectAccount = True
+    else:
+        completedConnectAccount = False
+
+    if not userAccount.connectAccountID:
+        stripeConnectAccount = ConnectAccount.createConnectAccount(request, userAccount)
+        if stripeConnectAccount:
+            userAccount.connectAccountID = stripeConnectAccount.id
+            userAccount.connectAccountCreated = True
+            userAccount.save()
+            completedConnectAccount = True
+
+    siteDomain = settings.SITE_URL
+
+    link = request.build_absolute_uri(reverse("eventManagement:createPaidEvent"))
+
+    stripeLinkAccount = ConnectAccount.getStripeOnboardingLink(
+        request, userAccount, siteDomain, link
+    )
+
+    print("Stripe Link Account:", stripeLinkAccount)
+
     if not userAccount.groups.filter(name="Host").exists():
         hostRole, _ = Group.objects.get_or_create(name="Host")
         userAccount.groups.add(hostRole)
 
     if request.method == "POST":
+        eventAction = request.POST.get("eventAction")
+
+        if eventAction == "paid":
+            if not completedConnectAccount:
+                messages.error(request, "Please complete your Stripe account setup.")
+                return redirect(stripeLinkAccount)
+            return redirect("eventManagement:createPaidEvent")
+        elif eventAction == "rsvp":
+            return redirect("eventManagement:createRsvpEvent")
+        elif eventAction == "invite":
+            return redirect("eventManagement:createInviteEvent")
+
+    return render(request, "eventManagementApp/host/eventCreationSelect.html")
+
+
+@login_required
+@member
+@onboarded
+@check_suspension
+def createPaidEvent(request):
+    event_type_choices = Event.EVENT_TYPE_CHOICES
+    privacy_choices = Event.PRIVACY_CHOICES
+    placesKey = settings.PLACES_API_KEY
+
+    userAccount = get_object_or_404(CustomUser, username=request.user.username)
+
+    if request.method == "POST":
         eventForm = EventForm(request.POST, request.FILES)
         eventAction = request.POST.get("eventAction")
-        print("Event action:", eventAction)
-        print("Event action:", eventAction)
-        print("Event action:", eventAction)
 
         if eventAction == "submit":
-            print("Form submitted")
-            print("Form submitted")
-            print("Form submitted")
-            print("Form submitted")
             if eventForm.is_valid():
-                print("Form is valid")
-                print("Form is valid")
-                print("Form is valid")
-                print("Form is valid")
-                
                 event = eventForm.save(commit=False)
                 event.host = userAccount
-                event.crew_discount = request.POST.get('crew_discount') == "on"
+                event.ticketing = "Paid/Free"
+                event.crew_discount = request.POST.get("crew_discount") == "on"
+                event.show_guest_list = request.POST.get("show_guest_list") == "on"
+
                 event.status = "live"
 
-                
-                event.save()  # Save before setting privacy
+                event.save()
 
                 messages.success(request, "Event is live!")
 
@@ -144,11 +183,15 @@ def eventCreationProcess(request):
                 organization_membership = OrganizationMembership.objects.filter(
                     user=event.host
                 ).first()
-                
+
                 # Refactored privacy setting
-                privacy_set = set_event_privacy(event, user_profile, organization_membership, request)
+                privacy_set = set_event_privacy(
+                    event, user_profile, organization_membership, request
+                )
                 if not privacy_set:
-                    return redirect("eventManagement:eventManagement", eventId=event.eventId)
+                    return redirect(
+                        "eventManagement:eventManagement", eventId=event.eventId
+                    )
 
                 event.save()
                 product = createHostProduct(event, hostProfile.stripe_account_id)
@@ -156,18 +199,17 @@ def eventCreationProcess(request):
                 if product:
                     event.stripeProductId = product.id
                     event.save()
-                    print("Product ID:", product.id)
-                    print("Product ID:", product.id)
-                    print("Product ID:", product.id)
-                    print("Product ID:", product.id)
                 else:
                     print("Product creation failed")
                     print("Product creation failed")
                     print("Product creation failed")
                     messages.error(request, "Product creation failed")
-                    return redirect("eventManagement:eventManagement", eventId=event.eventId)
+                    return redirect(
+                        "eventManagement:eventManagement", eventId=event.eventId
+                    )
 
-                return redirect("eventManagement:eventManagement", eventId=event.eventId)
+                return redirect("eventManagement:paidTicketing", eventId=event.eventId)
+
             else:
                 print(eventForm.errors)
                 print(eventForm.errors)
@@ -180,13 +222,289 @@ def eventCreationProcess(request):
 
     return render(
         request,
-        "eventManagementApp/host/eventCreationProcess.html",
+        "eventManagementApp/host/create/createPaidEvent.html",
         {
             "eventForm": eventForm,
             "eventTypeChoices": event_type_choices,
             "privacyChoices": privacy_choices,
             "placesKey": placesKey,
         },
+    )
+
+
+@login_required
+@member
+@onboarded
+@check_suspension
+def createInviteEvent(request):
+    event_type_choices = Event.EVENT_TYPE_CHOICES
+    privacy_choices = Event.PRIVACY_CHOICES
+    placesKey = settings.PLACES_API_KEY
+
+    userAccount = get_object_or_404(CustomUser, username=request.user.username)
+
+    if request.method == "POST":
+        eventForm = EventForm(request.POST, request.FILES)
+        eventAction = request.POST.get("eventAction")
+
+        if eventAction == "submit":
+            if eventForm.is_valid():
+                event = eventForm.save(commit=False)
+                event.host = userAccount
+                event.ticketing = "Invite Required"
+                event.crew_discount = request.POST.get("crew_discount") == "on"
+                event.show_guest_list = request.POST.get("show_guest_list") == "on"
+
+                event.status = "live"
+
+                event.save()
+
+                messages.success(request, "Event is live!")
+
+                user_profile = event.host.user_profile
+                hostProfile, _ = HostProfile.objects.get_or_create(user=request.user)
+                organization_membership = OrganizationMembership.objects.filter(
+                    user=event.host
+                ).first()
+
+                # Refactored privacy setting
+                privacy_set = set_event_privacy(
+                    event, user_profile, organization_membership, request
+                )
+                if not privacy_set:
+                    return redirect(
+                        "eventManagement:eventManagement", eventId=event.eventId
+                    )
+
+                event.save()
+                product = createHostProduct(event, hostProfile.stripe_account_id)
+
+                if product:
+                    event.stripeProductId = product.id
+                    event.save()
+                else:
+                    print("Product creation failed")
+                    print("Product creation failed")
+                    print("Product creation failed")
+                    messages.error(request, "Product creation failed")
+                    return redirect(
+                        "eventManagement:inviteTicketing", eventId=event.eventId
+                    )
+
+                return redirect(
+                    "eventManagement:inviteTicketing", eventId=event.eventId
+                )
+
+            else:
+                print(eventForm.errors)
+                print(eventForm.errors)
+                print(eventForm.errors)
+                messages.error(request, "Invalid form submission.")
+                # Optionally, handle form errors here
+
+    else:
+        eventForm = EventForm()
+
+    return render(
+        request,
+        "eventManagementApp/host/create/createInviteEvent.html",
+        {
+            "eventForm": eventForm,
+            "eventTypeChoices": event_type_choices,
+            "privacyChoices": privacy_choices,
+            "placesKey": placesKey,
+        },
+    )
+
+
+@login_required
+@member
+@onboarded
+@check_suspension
+def createRsvpEvent(request):
+    event_type_choices = Event.EVENT_TYPE_CHOICES
+    privacy_choices = Event.PRIVACY_CHOICES
+    placesKey = settings.PLACES_API_KEY
+
+    userAccount = get_object_or_404(CustomUser, username=request.user.username)
+
+    if request.method == "POST":
+        eventForm = EventForm(request.POST, request.FILES)
+        eventAction = request.POST.get("eventAction")
+
+        if eventAction == "submit":
+            if eventForm.is_valid():
+                event = eventForm.save(commit=False)
+                event.host = userAccount
+                event.ticketing = "RSVP Required"
+                event.crew_discount = request.POST.get("crew_discount") == "on"
+                event.show_guest_list = request.POST.get("show_guest_list") == "on"
+
+                event.status = "live"
+
+                event.save()
+
+                messages.success(request, "Event is live!")
+
+                user_profile = event.host.user_profile
+                hostProfile, _ = HostProfile.objects.get_or_create(user=request.user)
+                organization_membership = OrganizationMembership.objects.filter(
+                    user=event.host
+                ).first()
+
+                # Refactored privacy setting
+                privacy_set = set_event_privacy(
+                    event, user_profile, organization_membership, request
+                )
+                if not privacy_set:
+                    return redirect(
+                        "eventManagement:eventManagement", eventId=event.eventId
+                    )
+
+                event.save()
+                product = createHostProduct(event, hostProfile.stripe_account_id)
+
+                if product:
+                    event.stripeProductId = product.id
+                    event.save()
+                else:
+                    print("Product creation failed")
+                    print("Product creation failed")
+                    print("Product creation failed")
+                    messages.error(request, "Product creation failed")
+                    return redirect(
+                        "eventManagement:eventManagement", eventId=event.eventId
+                    )
+
+                return redirect(
+                    "eventManagement:eventManagement", eventId=event.eventId
+                )
+
+            else:
+                print(eventForm.errors)
+                print(eventForm.errors)
+                print(eventForm.errors)
+                messages.error(request, "Invalid form submission.")
+                # Optionally, handle form errors here
+
+    else:
+        eventForm = EventForm()
+
+    return render(
+        request,
+        "eventManagementApp/host/create/createRsvpEvent.html",
+        {
+            "eventForm": eventForm,
+            "eventTypeChoices": event_type_choices,
+            "privacyChoices": privacy_choices,
+            "placesKey": placesKey,
+        },
+    )
+
+
+@login_required
+@member
+@onboarded
+@check_suspension
+def createPaidEventTicket(request, eventId):
+    event = get_object_or_404(Event, eventId=eventId)
+    hostProfile = HostProfile.objects.get(user=event.host)
+    paidFreeForm = PaidFreeTicketForm(request.POST)
+    paid_free_tickets = PaidFreeTicket.objects.filter(event=event)
+    
+    eventAction = request.POST.get("eventAction")
+    ticket_id = request.POST.get("ticketId")
+
+
+    if request.method == "POST":
+        if eventAction == "createPaidFreeTicket":
+            if paidFreeForm.is_valid():
+                new_ticket = paidFreeForm.save(commit=False)
+                new_ticket.event = event
+                new_ticket.save()
+                eventStripeId = event.stripeProductId
+                print("Event Stripe ID:", eventStripeId)
+                stripePrice = createProductPriceType(
+                    eventStripeId,
+                    new_ticket.ticket_price,
+                    hostProfile.stripe_account_id,
+                    new_ticket.ticket_quantity,
+                )
+                new_ticket.stripePriceId = stripePrice.id
+                new_ticket.save()
+
+                return redirect("eventManagement:paidTicketing", eventId=event.eventId)
+            else:
+                messages.error(request, "Invalid form submission.")
+                return redirect(
+                    "eventManagement:createPaidEventTicket", eventId=event.eventId
+                )
+        elif eventAction == "finish":
+            return redirect("eventManagement:eventManagement", eventId=event.eventId)
+        elif eventAction == "deleteTicket":
+            ticket = get_object_or_404(PaidFreeTicket, ticket_id=ticket_id)
+            ticket.delete()
+            return redirect("eventManagement:createPaidEventTicket", eventId=event.eventId)
+        elif eventAction == "editTicket":
+            return redirect("eventManagement:eventManagement", eventId=event.eventId)
+            
+    return render(
+        request,
+        "eventManagementApp/ticketing/createPaidEventTicket.html",
+        {"paidFreeForm": paidFreeForm, "paidFreeTickets": paid_free_tickets, "event": event},
+    )
+
+
+@login_required
+@member
+@onboarded
+@check_suspension
+def createInviteEventTicket(request, event):
+    eventId = event.eventId
+    invitationForm = InvitationForm(request.POST)
+    user_profile = UserProfile.objects.get(user=request.user)
+    hostProfile = HostProfile.objects.get(user=event.host)
+
+    if request.method == "POST":
+        if invitationForm.is_valid():
+            emails = invitationForm.cleaned_data["invite_emails"]
+            subject = invitationForm.cleaned_data["invite_subject"]
+            message = invitationForm.cleaned_data["invite_message"]
+            emailList = [email.strip() for email in emails.split(",")]
+
+            for email in emailList:
+                invitation = InviteEventOption.objects.create(event=event, email=email)
+                user_profile.invited_events.add(event)
+                user_profile.invitations.add(invitation)
+
+                invitation.save()
+
+                invitation_link = request.build_absolute_uri(
+                    reverse(
+                        "core:eventDetails_withToken",
+                        kwargs={
+                            "eventId": str(eventId),
+                            "token": invitation.token,
+                        },
+                    )
+                )
+                emailMessageHtml = render_to_string(
+                    "emailTemplates/eventManagementApp/host/inviteAttendees.html",
+                    {"body": message, "invitationLink": invitation_link},
+                )
+                send_mail(
+                    subject=subject,
+                    message=message,
+                    from_email=None,
+                    fail_silently=False,
+                    recipient_list=[email],
+                    html_message=emailMessageHtml,
+                )
+        return redirect("eventManagement:eventManagement", eventId=eventId)
+    return render(
+        request,
+        "eventManagementApp/ticketing/createInviteEventTicket.html",
+        {"invitationForm": invitationForm},
     )
 
 
@@ -205,6 +523,7 @@ def eventManagement(request, eventId):
 
     if request.method == "POST":
         action = request.POST.get("eventAction")
+        ticket_id = request.POST.get("ticketId")
 
         if action == "deleteEvent":
             event.delete()
@@ -217,6 +536,20 @@ def eventManagement(request, eventId):
             rsvp.delete()
             ticket.delete()
             return redirect("eventManagement:eventManagement", eventId=eventId)
+        
+        elif action == "deleteTicket":
+            ticket = get_object_or_404(PaidFreeTicket, ticket_id=ticket_id)
+            ticket.delete()
+            return redirect("eventManagement:eventManagement", eventId=eventId)
+        
+        elif action == "saveTicketEdit":
+            ticket = get_object_or_404(PaidFreeTicket, ticket_id=ticket_id)
+            paidFreeForm = PaidFreeTicketForm(request.POST, instance=ticket)
+            if paidFreeForm.is_valid():
+                ticket = paidFreeForm.save(commit=False)
+                ticket.save()
+            return redirect("eventManagement:eventManagement", eventId=eventId)
+            
 
         elif "displayOnCollege" in request.POST:
             event_to_update = get_object_or_404(
@@ -268,49 +601,8 @@ def eventManagement(request, eventId):
                     )
             return redirect("eventManagement:eventManagement", eventId=eventId)
 
-        elif action == "saveChanges":
-            editEventForm = EditEventForm(request.POST, request.FILES, instance=event)
-            if editEventForm.is_valid():
-                # Handle removing body photos if checked
-                if "remove_body_photo_one" in request.POST:
-                    event.body_photo_one.delete(save=False)
-                    event.body_photo_one = None
-                if "remove_body_photo_two" in request.POST:
-                    event.body_photo_two.delete(save=False)
-                    event.body_photo_two = None
-                if "remove_body_photo_three" in request.POST:
-                    event.body_photo_three.delete(save=False)
-                    event.body_photo_three = None
-                if "remove_body_photo_four" in request.POST:
-                    event.body_photo_four.delete(save=False)
-                    event.body_photo_four = None
-                if "remove_body_photo_five" in request.POST:
-                    event.body_photo_five.delete(save=False)
-                    event.body_photo_five = None
-
-                edits = editEventForm.save(commit=False)
-
-                if "headerPhoto" in request.FILES:
-                    edits.header_photo = request.FILES["headerPhoto"]
-                if "bodyPhotoOne" in request.FILES:
-                    edits.body_photo_one = request.FILES["bodyPhotoOne"]
-                if "bodyPhotoTwo" in request.FILES:
-                    edits.body_photo_two = request.FILES["bodyPhotoTwo"]
-                if "bodyPhotoThree" in request.FILES:
-                    edits.body_photo_three = request.FILES["bodyPhotoThree"]
-                if "bodyPhotoFour" in request.FILES:
-                    edits.body_photo_four = request.FILES["bodyPhotoFour"]
-                if "bodyPhotoFive" in request.FILES:
-                    edits.body_photo_five = request.FILES["bodyPhotoFive"]
-
-                # >>>>>> HERE IS THE KEY LINE: <<<<<<
-                # Capture the new 'age_restriction' from POST and save it:
-                edits.age_restriction = request.POST.get("age_restriction", "")
-
-                edits.save()
-            else:
-                print(editEventForm.errors)
-            return redirect("eventManagement:eventManagement", eventId=eventId)
+        elif action == "editEvent":
+            return redirect("eventManagement:editEvent", eventId=eventId)
 
         elif action == "createPaidFreeTicket":
             paidFreeForm = PaidFreeTicketForm(request.POST)
@@ -328,8 +620,6 @@ def eventManagement(request, eventId):
                 )
                 new_ticket.stripePriceId = stripePrice.id
                 new_ticket.save()
-                
-            
 
             return redirect("eventManagement:eventManagement", eventId=eventId)
 
@@ -353,302 +643,35 @@ def eventManagement(request, eventId):
             "editEventForm": editEventForm,
         },
     )
-
-
-@login_required
-@host
-@member
-@check_suspension
-def hostBilling(request):
-    hostProfile = HostProfile.objects.get(user=request.user)
-
-    required_actions = []
-    stripeKey = settings.STRIPE_PUBLISHABLE_KEY
-
-    # Getting the required actions for the connected stripe account so that the stripe account is fully activated
-    if hostProfile.stripe_account_id:
-        stripeAccountBalance = GetEarnings.getStripeAccountBalance(
-            hostProfile.stripe_account_id
-        )
-
-        totalEarnings = GetEarnings.getTotalEarnings(hostProfile.stripe_account_id)
-
-        response = getRequiredActions(hostProfile.stripe_account_id)
-
-        if response["status"] == "success":
-            required_actions = response["required_actions"]
-            print(f"All required actions: {required_actions}")
-        else:
-            messages.error(request, f"Error: {response['message']}")
+    
+def editEvent(request, eventId):
+    event = get_object_or_404(Event, eventId=eventId)
+    user_profile = UserProfile.objects.get(user=request.user)
+    hostProfile = HostProfile.objects.get(user=event.host)
+    is_in_college = user_profile.college is not None
+    event_privacy = EventPrivacy.objects.get(event=event)
+    rsvp_list = RSVPTicket.objects.filter(event=event)
+    paid_free_tickets = PaidFreeTicket.objects.filter(event=event)
 
     if request.method == "POST":
-        action = request.POST.get("billingAction")
-
-        if action == "removeBankAccount":
-            hostStripeAccountId = hostProfile.stripe_account_id
-
-            if not hostStripeAccountId:
-                messages.error(request, "Stripe account not found.")
-                return redirect("eventManagement:hostPortal")
-
-            external_account_id = request.POST.get("externalBankAccountID")
-            print(f"External account ID: {external_account_id}")
-
-            if not external_account_id:
-                messages.error(request, "Invalid request.")
-                return redirect("eventManagement:hostBilling")
-
-            ExternalAccounts.removePayoutMethod(
-                request, hostStripeAccountId, external_account_id
-            )
-
-            messages.success(request, "Bank account removed successfully.")
-            return redirect("eventManagement:hostBilling")
-
-        elif action == "removeCardMethod":
-            hostStripeAccountId = hostProfile.stripe_account_id
-
-            if not hostStripeAccountId:
-                messages.error(request, "Stripe account not found.")
-                return redirect("eventManagement:hostPortal")
-
-            external_account_id = request.POST.get("externalCardAccountID")
-            print(f"External account ID: {external_account_id}")
-
-            if not external_account_id:
-                messages.error(request, "Invalid request.")
-                return redirect("eventManagement:hostBilling")
-
-            ExternalAccounts.removePayoutMethod(
-                request, hostStripeAccountId, external_account_id
-            )
-
-            messages.success(request, "Bank account removed successfully.")
-            return redirect("eventManagement:hostBilling")
-
-        elif action == "addBankAccountNew":
-            hostStripeAccountId = hostProfile.stripe_account_id
-
-            if not hostStripeAccountId:
-                messages.error(request, "Stripe account not found.")
-                return redirect("eventManagement:hostPortal")
-
-            account_holder_name = request.POST.get("accountHolderName")
-            bank_account_number = request.POST.get("accountNumber")
-            routing_number = request.POST.get("accountRoutingNumber")
-
-            if not account_holder_name or not bank_account_number or not routing_number:
-                messages.error(request, "Please fill in all required fields.")
-                return redirect("eventManagement:hostBilling")
-
-            value = ExternalAccounts.createBankAccount(
-                request,
-                hostStripeAccountId,
-                account_holder_name,
-                bank_account_number,
-                routing_number,
-            )
-
-        elif action == "setBankDefaultPaymentMethod":
-            hostStripeAccountId = hostProfile.stripe_account_id
-
-            if not hostStripeAccountId:
-                messages.error(request, "Stripe account not found.")
-                return redirect("eventManagement:hostPortal")
-
-            external_account_id = request.POST.get("setBankDefaultAccountID")
-
-            if not external_account_id:
-                messages.error(request, "Invalid request.")
-                return redirect("eventManagement:hostBilling")
-
-            changed = ExternalAccounts.setDefaultPaymentMethod(
-                request, hostStripeAccountId, external_account_id
-            )
-
-            if changed:
-                print("Default payment method set successfully.")
-                messages.success(request, "Default payment method set successfully.")
-
-        elif action == "setCardDefaultPaymentMethod":
-            hostStripeAccountId = hostProfile.stripe_account_id
-
-            if not hostStripeAccountId:
-                messages.error(request, "Stripe account not found.")
-                return redirect("eventManagement:hostPortal")
-
-            external_account_id = request.POST.get("setCardDefaultAccountID")
-
-            if not external_account_id:
-                messages.error(request, "Invalid request.")
-                return redirect("eventManagement:hostBilling")
-
-            changed = ExternalAccounts.setDefaultPaymentMethod(
-                request, hostStripeAccountId, external_account_id
-            )
-
-            if changed:
-                print("Default payment method set successfully.")
-                messages.success(request, "Default payment method set successfully.")
-
-        elif action == "completeRequiredActions":
-            print(request.POST)
-            update_data = {}
-            if (
-                "business_profile" in required_actions
-                or "business_profile.url" in required_actions
-                or "business_profile.name" in required_actions
-                or "business_profile.support_phone" in required_actions
-                or "business_profile.support_email" in required_actions
-                or "business_profile.support_url" in required_actions
-                or "business_profile.support_address" in required_actions
-                or "business_profile.product_description" in required_actions
-            ):
-                update_data["business_profile.url"] = request.POST.get(
-                    "businessProfileURL"
-                )
-                update_data["business_profile.business_name"] = request.POST.get(
-                    "businessName"
-                )
-                update_data["business_profile.support_email"] = request.POST.get(
-                    "supportEmail"
-                )
-                update_data["business_profile.support_phone"] = request.POST.get(
-                    "supportPhone"
-                )
-                update_data["business_profile.support_url"] = request.POST.get(
-                    "businessProfileURL"
-                )
-                update_data["business_profile.product_description"] = request.POST.get(
-                    "businessProductDescription"
-                )
-                update_data["business_profile.support_address"] = {
-                    "line1": request.POST.get("street"),
-                    "city": request.POST.get("city"),
-                    "state": request.POST.get("state"),
-                    "postal_code": request.POST.get("postalCode"),
-                    "country": request.POST.get("country"),
-                }
-
-            if "external_account" in required_actions:
-                update_data["bank_details"] = {
-                    "account_holder_name": request.POST.get("accountHolderName"),
-                    "account_number": request.POST.get("accountNumber"),
-                    "routing_number": request.POST.get("accountRoutingNumber"),
-                }
-
-            if (
-                "individual.first_name" in required_actions
-                or "individual.last_name" in required_actions
-            ):
-                update_data["individual.first_name"] = request.POST.get("firstName")
-                update_data["individual.last_name"] = request.POST.get("lastName")
-
-            if (
-                "individual.dob.day" in required_actions
-                or "individual.dob.month" in required_actions
-                or "individual.dob.year" in required_actions
-            ):
-                update_data["individual.dob.day"] = request.POST.get("dobDay")
-                update_data["individual.dob.month"] = request.POST.get("dobMonth")
-                update_data["individual.dob.year"] = request.POST.get("dobYear")
-
-            if (
-                "individual.ssn_last_4" in required_actions
-                or "ssn_last_4" in required_actions
-            ):
-                update_data["ssn_last_4"] = request.POST.get("ssn")
-
-            if "individual" in required_actions:
-                update_data["address"] = {
-                    "line1": request.POST.get("street"),
-                    "city": request.POST.get("city"),
-                    "state": request.POST.get("state"),
-                    "postal_code": request.POST.get("postalCode"),
-                    "country": request.POST.get("country"),
-                }
-
-            if (
-                "tos_acceptance" in required_actions
-                or "tos_acceptance.ip" in required_actions
-            ):
-                update_data["tos_acceptance"] = {
-                    "date": int(time.time()),
-                    "ip": get_client_ip(request),
-                    "user_agent": request.META.get("HTTP_USER_AGENT"),
-                    "service_agreement": "full",
-                }
-
-            print(update_data)
-            # Send updates to Stripe
-            response = updateConnectWithStripeDetails(hostProfile, update_data)
-            if response["status"] == "success":
-                messages.success(request, "Required actions completed successfully.")
-            else:
-                print(f"Error: {response['message']}")
-                messages.error(request, f"Error: {response['message']}")
-
-            return redirect("eventManagement:hostBilling")
-
-        elif action == "refundTransaction":
-            hostStripeAccountId = hostProfile.stripe_account_id
-
-            if not hostStripeAccountId:
-                messages.error(request, "Stripe account not found.")
-                return redirect("eventManagement:hostPortal")
-
-            refund_transaction_id = request.POST.get("refundTransactionID")
-            print(f"Refund transaction ID: {refund_transaction_id}")
-            if not refund_transaction_id:
-                print("Invalid transaction ID provided.")
-                messages.error(request, "Invalid transaction ID provided.")
-                return redirect("eventManagement:hostBilling")
-
-            if hostStripeAccountId and refund_transaction_id:
-                Transactions.processRefund(
-                    request, hostStripeAccountId, refund_transaction_id
-                )
-
-    connectedAccount = hostProfile.stripe_account_id
-    external_accounts = {"bank_accounts": [], "cards": []}
-
-    if connectedAccount:
-        try:
-            external_accounts = stripe.Account.list_external_accounts(
-                connectedAccount,
-            )
-
-            external_accounts["bank_accounts"] = [
-                account
-                for account in external_accounts.data
-                if account.object == "bank_account"
-            ]
-            external_accounts["cards"] = [
-                account
-                for account in external_accounts.data
-                if account.object == "card"
-            ]
-            # print(external_accounts)
-        except stripe.error.StripeError as e:
-            messages.error(request, f"Error: {e.user_message}")
-            return redirect("eventManagement:hostPortal")
-
-    transactions = Transactions.getHostTransactions(request, connectedAccount)
-
-    payouts = Transactions.getHostPayouts(request, connectedAccount) or {}
+        editEventForm = EditEventForm(request.POST, instance=event)
+        if editEventForm.is_valid():
+            editEventForm.save()
+            return redirect("eventManagement:eventManagement", eventId=eventId)
+    else:
+        editEventForm = EditEventForm(instance=event)
 
     return render(
         request,
-        "eventManagementApp/billing/hostBilling.html",
+        "eventManagementApp/host/editEvent.html",
         {
-            "hostProfile": hostProfile,
-            "requiredActions": required_actions,
-            "stripeAccountBalance": stripeAccountBalance,
-            "totalEarnings": totalEarnings,
-            "externalAccounts": external_accounts,
-            "stripeKey": stripeKey,
-            "transactions": transactions,
-            "payouts": payouts,
+            "event": event,
+            "isInCollege": is_in_college,
+            "userProfile": user_profile,
+            "eventPrivacy": event_privacy,
+            "rsvpList": rsvp_list,
+            "paidFreeTickets": paid_free_tickets,
+            "editEventForm": editEventForm,
         },
     )
 

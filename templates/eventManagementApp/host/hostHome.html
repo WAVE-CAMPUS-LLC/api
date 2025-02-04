@@ -35,7 +35,7 @@ Hosting Events | WAVE.
     </div>
     <div class="w-full">
         <div class="flex flex-col gap-[30px]">
-            <div class="flex flex-col gap-y-9 lg:flex-row justify-between gap-x-3">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-9">
                 <div class="process-explanation">
                     <h1 class="flex flex-col justify-center items-center font-Wanted-ExtraBold font-bold text-2xl"><span class="process-number text-customGray2">1.</span> Create</h1>
                     <p class="font-Wanted-Regular text-center text-[20px]">
@@ -60,7 +60,7 @@ Hosting Events | WAVE.
         </div>
     </div>
     <div class="flex justify-center">            
-        <a href="{% url "eventManagement:eventCreationProcess" %}" class="flex items-center p-[15px] text-white font-Wanted-Bold text-[20px] rounded-[20px] gap-[10px] border border-transparent border-l-gradient-start border-r-gradient-end bg-gradient-to-r from-gradient-start to-gradient-end no-underline">
+        <a href="{% url "eventManagement:eventCreationSelect" %}" class="flex items-center p-[15px] text-white font-Wanted-Bold text-[20px] rounded-[20px] gap-[10px] border border-transparent border-l-gradient-start border-r-gradient-end bg-gradient-to-r from-gradient-start to-gradient-end no-underline">
             <img src="{% static "/images/eventManagementApp/host/host_ticket.svg" %}" />
             Create Event
         </a>

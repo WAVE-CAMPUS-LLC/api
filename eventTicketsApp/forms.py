@@ -39,16 +39,16 @@ class InvitationForm(forms.Form):
         initial="You have been invited to an event! Please check the details in the attachment.",
     )
 
-
 class PaidFreeTicketForm(forms.ModelForm):
     class Meta:
         model = PaidFreeTicket
-        fields = [
-            "ticket_name",
-            "ticket_price",
-            "ticket_description",
-            "ticket_quantity",
-        ]
+        fields = ['ticket_name', 'ticket_price', 'ticket_description', 'ticket_quantity']
+        widgets = {
+            'ticket_name': forms.TextInput(attrs={'placeholder': 'Ex. General Admission'}),
+            'ticket_price': forms.NumberInput(attrs={'placeholder': 'Ex. 9.99'}),
+            'ticket_description': forms.Textarea(attrs={'placeholder': 'Describe ticket perks and benefits'}),
+            'ticket_quantity': forms.NumberInput(attrs={'placeholder': 'Enter number of available tickets'}),
+        }
 
 
 class StripePlatformSettingsForm(forms.ModelForm):

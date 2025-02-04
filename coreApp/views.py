@@ -26,6 +26,7 @@ from accountManagementApp.models import UserProfile
 from .forms import RSVPForm
 from collegeManagementApp.models import OrganizationMembership
 from eventTicketsApp.views import generateTicket
+from eventTicketsApp.models import Ticket
 
 
 # Create your views here.
@@ -79,7 +80,7 @@ def exploreView(request):
     # Load initial 6 events
     initial_events = Event.objects.filter(
         status="live", privacy="Discoverable", admin_status="active"
-    )[:7]
+    )[:9]
     trending_events = Event.objects.filter(
         status="live", privacy="Discoverable"
     ).order_by("date")[:3]
@@ -170,7 +171,7 @@ def categoriesView(request):
 
 
 def load_more_events(request):
-    offset = int(request.GET.get("offset", 7))
+    offset = int(request.GET.get("offset", 9))
     limit = 3
 
     if not request.user.is_authenticated:
@@ -238,6 +239,7 @@ def eventDetailsView(request, eventId, token=None):
     user = None
     user_friends = None
     user_crews = None
+    guest_list = event.guest_list.all()
 
     if request.user.is_authenticated:
         user = get_object_or_404(UserProfile, user=request.user)
@@ -292,6 +294,7 @@ def eventDetailsView(request, eventId, token=None):
                         "friends": user_friends,
                         "crews": user_crews,
                         "isFavoriteEvent": isFavoriteEvent,
+                        "guestList": guest_list,
                     },
                 )
 
@@ -307,6 +310,9 @@ def eventDetailsView(request, eventId, token=None):
                     guestEmail = rsvp_ticket.email
 
                     user = request.user if request.user.is_authenticated else None
+                    
+                    if user:
+                        event.guest_list.add(user)
 
                     generateTicket(
                         request, event, user, guestFirstName, guestLastName, guestEmail
@@ -328,6 +334,7 @@ def eventDetailsView(request, eventId, token=None):
                             "friends": user_friends,
                             "crews": user_crews,
                             "isFavoriteEvent": isFavoriteEvent,
+                            "guestList": guest_list,
                         },
                     )
 
@@ -456,6 +463,7 @@ def eventDetailsView(request, eventId, token=None):
                     "friends": user_friends,
                     "crews": user_crews,
                     "isFavoriteEvent": isFavoriteEvent,
+                    "guestList": guest_list,
                 },
             )
         else:
@@ -478,6 +486,7 @@ def eventDetailsView(request, eventId, token=None):
                     "friends": user_friends,
                     "crews": user_crews,
                     "isFavoriteEvent": isFavoriteEvent,
+                    "guestList": guest_list,
                 },
             )
         else:
@@ -508,6 +517,7 @@ def eventDetailsView(request, eventId, token=None):
                     "friends": user_friends,
                     "crews": user_crews,
                     "isFavoriteEvent": isFavoriteEvent,
+                    "guestList": guest_list,
                 },
             )
         else:
@@ -533,6 +543,7 @@ def eventDetailsView(request, eventId, token=None):
                 "friends": user_friends,
                 "crews": user_crews,
                 "isFavoriteEvent": isFavoriteEvent,
+                "guestList": guest_list,
             },
         )
 
