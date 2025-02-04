@@ -16,7 +16,7 @@ class CustomUserJoinForm(UserCreationForm):
     password1 = forms.CharField(label="Password", widget=forms.PasswordInput)
     password2 = forms.CharField(label="Confirm Password", widget=forms.PasswordInput)
     current_year = datetime.now().year
-    birthday = forms.DateField(widget=forms.SelectDateWidget(years=range(1960, current_year + 1)))    
+    birthday = forms.DateField(widget=forms.SelectDateWidget(years=range(1980, current_year + 1)))    
 
     class Meta:
         model = CustomUser
