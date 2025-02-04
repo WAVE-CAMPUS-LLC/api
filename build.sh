@@ -14,21 +14,14 @@ npm install
 echo "Building frontend assets..."
 npm run build:prod
 
-
-
 # Step 3: Collect static files for Django
 echo "Collecting Django static files..."
 python manage.py collectstatic --no-input
 
-
-# Modify this line as needed for your package manager (pip, poetry, etc.)
-pip install -r requirements.txt
-
-# Convert static asset files
-python manage.py collectstatic --no-input
-
-# Apply any outstanding database migrations
+# Step 4: Apply database migrations
+echo "Applying database migrations..."
 python manage.py migrate
 
-# Step 5: Output message for Vercel
-echo "Setup complete. Ready for deployment on Vercel."
+# Step 5: Start the application server
+echo "Starting the application server..."
+gunicorn wave_v1.wsgi:application
