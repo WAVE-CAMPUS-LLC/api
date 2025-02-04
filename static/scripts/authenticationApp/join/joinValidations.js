@@ -73,6 +73,10 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById("emailLiveValidationError").textContent = "- Invalid email";
             document.getElementById("emailLiveValidationValid").textContent = "";
             return false;
+        } else if (/\.edu\s*$/i.test(emailInputValue)) {
+            document.getElementById("emailLiveValidationError").textContent = "- .edu emails not allowed";
+            document.getElementById("emailLiveValidationValid").textContent = "";
+            return false;
         } else {
             document.getElementById("emailLiveValidationError").textContent = "";
             document.getElementById("emailLiveValidationValid").textContent = "- Perfect!";
