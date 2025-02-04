@@ -31,8 +31,8 @@ load_dotenv()
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-# DEBUG = os.getenv("DEBUG", "False")
 DEBUG=True
+# DEBUG = os.getenv("DEBUG", "False") == "True"
 # DEBUG_PROPAGATE_EXCEPTIONS = True
 
 ALLOWED_HOSTS = ["wave-v1.onrender.com", "waveoncampus.com", "localhost", "127.0.0.1"]
@@ -60,6 +60,9 @@ if not DEBUG:  # In production
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SK")
 STRIPE_WEBHOOK_SECRET_TEST = os.getenv("STRIPE_WEBHOOK_SK")
 STRIPE_PUBLISHABLE_KEY = os.getenv("STRIPE_PK")
+
+# College List API Key
+COLLEGE_LIST_API_KEY = os.getenv("COLLEGE_LIST_API_KEY")
 
 
 # Application definition

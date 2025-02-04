@@ -124,10 +124,13 @@ Profile Overview
                         <li class="profile-tab border-b border-b-custom-rgba11 p-[20px] font-Wanted-Medium cursor-pointer" data-tab="myPaymentMethods-information">
                             <p class="text-black no-underline hover:underline cursor-pointer">Payment Methods</p>
                         </li>
-                        {% if userRequest|has_group:"Host" or userRequest|has_group:"host" %}{% endif %}
-                        <li class="profile-tab border-b border-b-custom-rgba11 p-[20px] font-Wanted-Medium cursor-pointer" data-tab="myPayoutMethods-information">
-                            <p class="text-black no-underline hover:underline cursor-pointer">Payouts</p>
-                        </li>
+                        {% if userRequest|has_group:"Host" or userRequest|has_group:"host" %}
+                            {% if accountBalance or totalEarnings %}
+                                <li class="profile-tab border-b border-b-custom-rgba11 p-[20px] font-Wanted-Medium cursor-pointer" data-tab="myPayoutMethods-information">
+                                    <p class="text-black no-underline hover:underline cursor-pointer">Payouts</p>
+                                </li>
+                            {% endif %}
+                        {% endif %}
                         {% if userRequest|has_group:"Campus Manager" %}
                         <li class="profile-tab border-b border-b-custom-rgba11 p-[20px] font-Wanted-Medium cursor-pointer">
                             <a class="text-black no-underline hover:underline cursor-pointer" target="_blank" href="{% url "campusManager:dashboard" %}">Campus Management</a>
