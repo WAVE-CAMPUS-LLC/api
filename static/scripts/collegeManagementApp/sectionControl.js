@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', function () {
     let currentSectionIndex = 0;
 
     const apiKey = document.getElementById('apiKey').value;
+    console.log('API Key:', apiKey);
 
     function showSection(index) {
         sections.forEach((section, i) => {

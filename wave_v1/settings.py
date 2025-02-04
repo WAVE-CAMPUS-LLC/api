@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 from pathlib import Path
 import os
 import time
+import requests
 from urllib.parse import urlparse
 from supabase import create_client, Client
 from django.contrib.messages import constants as messages_constants
@@ -63,7 +64,6 @@ STRIPE_PUBLISHABLE_KEY = os.getenv("STRIPE_PK")
 
 # College List API Key
 COLLEGE_LIST_API_KEY = os.getenv("COLLEGE_LIST_API_KEY")
-
 
 # Application definition
 
