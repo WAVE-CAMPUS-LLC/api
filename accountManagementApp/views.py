@@ -24,7 +24,6 @@ from authenticationApp.models import CustomUser
 from stripeManagementApp.customerSetup import CustomerAccount, ConnectAccount
 from stripeManagementApp.getEarnings import GetEarnings
 from eventTicketsApp.models import Ticket
-# Decorators to check user roles and permissions
 from wave_v1.decorators import check_suspension, member, verified, onboarded
 from blogApp.models import Blog
 
@@ -50,10 +49,13 @@ def profileView(request):
     totalEarnings = GetEarnings.getTotalEarnings(userRequest.connectAccountID)
 
     payment_methods = CustomerAccount.listPaymentMethods(userRequest.customer_id)
-    for method in payment_methods:
-        method["exp_month"] = datetime.strptime(
-            str(method["exp_month"]), "%m"
-        ).strftime("%B")
+    if payment_methods:
+        for method in payment_methods:
+            method["exp_month"] = datetime.strptime(
+                str(method["exp_month"]), "%m"
+            ).strftime("%B")
+    else:
+        payment_methods = None
         
     siteDomain = settings.SITE_URL
 

@@ -12,7 +12,7 @@ Resend Verification — WAVE.
 
 
 {% block auth_body %}
-<body id="joinCardContainer" class="flex justify-center items-center pt-36 pb-2 flex-col gap-5 w-screen h-screen overflow-y-auto" onload="redirectAfterDelay('http://localhost:8000{% url 'accountManagement:userAccount' %}')">
+<body id="joinCardContainer" class="flex justify-center items-center pt-36 pb-2 flex-col gap-5 w-screen h-screen overflow-y-auto" onload="redirectAfterDelay('http://waveoncampus.com{% url 'accountManagement:userAccount' %}')">
     <header id="navHeader" class="w-full flex justify-center pt-7">
         <div id="logo" class="font-Wanted-ExtraBlack text-3.5xl">
             <a href="{% url "core:index" %}">WAV<span class="text-[#008d95]">E</span>.</a>
