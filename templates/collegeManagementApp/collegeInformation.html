@@ -165,7 +165,7 @@
                                     {% for member in collegeMembers %}
                                         <div class="collegeMemberCard border-solid border-custom-rgba6 rounded-[20px] py-[20px] px-[40px] flex flex-col gap-[30px] shadow-custom-shadow-4 no-underline text-black cursor-auto">
                                             <div class="memberPfp flex justify-center">
-                                                <img src="{{ user_profile.profile_photo.url }}" class="w-[120px] h-[120px] rounded-[100%]"/>
+                                                <img src="{{ member.profile_photo.url }}" class="w-[120px] h-[120px] rounded-[100%]"/>
                                             </div>
                                             <div class="memberBody flex flex-col justify-center items-center text-center gap-[10px]">
                                                 <h5 class="font-Wanted-Regular text-[22px] font-bold">{{member.user.first_name}} {{member.user.last_name}}</h5>
