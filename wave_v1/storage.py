@@ -61,12 +61,7 @@ class SupabaseStorage(Storage):
 
         logger.info(f"Starting _save method for file: {name}")
         try:
-            # 1) Check if the file already exists. If so, remove it first.
-            if self.exists(name):
-                logger.info(f"File '{name}' already exists in bucket. Deleting it first.")
-                self.delete(name)
-
-            # 2) Read file content (handle File or UploadedFile object)
+            # Read file content (handle File or UploadedFile object)
             logger.info(f"Content type: {type(content)}")
             if hasattr(content, "read"):
                 content.seek(0)
@@ -74,19 +69,20 @@ class SupabaseStorage(Storage):
             else:
                 file_content = content
 
-            # 3) Determine content type
+            # Determine content type
             content_type, _ = mimetypes.guess_type(name)
             if not content_type:
                 content_type = "application/octet-stream"
 
             logger.info(f"Determined content type: {content_type}")
 
-            # 4) Upload file to Supabase
+            # Upload file to Supabase
             logger.info("Attempting to upload to Supabase...")
             response = supabase.storage.from_(self.bucket_name).upload(
                 path=name,
                 file=file_content,
-                file_options={"contentType": content_type},
+                file_options={"contentType": content_type,
+                              "upsert": "true"},
             )
             logger.info(f"Upload response: {response}")
 
