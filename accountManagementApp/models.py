@@ -17,7 +17,7 @@ from django.utils.translation import gettext_lazy as _
 from django.conf import settings
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils import timezone
-
+from pathlib import Path
 from eventManagementApp.models import Event, SharedEvent
 from eventTicketsApp.models import InviteEventOption
 from .utils import generate_profile_picture
@@ -27,6 +27,8 @@ from socialApp.models import CrewMember, CrewRequest, FriendRequest, Crew
 
 
 # Create your models here.
+
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 class EventTypePreferences(models.Model):
@@ -50,7 +52,8 @@ def get_college_choices():
     tuples in the form (college_name, college_name). This can be used as choices for a model field.
     """
     # Determine the path to the JSON file.
-    json_file_path = 'C:\git\wave_v1\wave_v1\world_universities_and_domains.json'
+    json_file_path = f'{os.path.join(BASE_DIR, "wave_v1")}/world_universities_and_domains.json'
+
     
     try:
         with open(json_file_path, 'r', encoding='utf-8') as f:
