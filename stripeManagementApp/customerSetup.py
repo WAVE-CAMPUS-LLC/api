@@ -149,6 +149,16 @@ class CustomerAccount:
                 automatic_payment_methods={"enabled": True},
                 setup_future_usage="off_session",
             )
+            if not intent.invoice:
+                try:
+                    invoice = stripe.Invoice.create(
+                        customer=customer_id,
+                        auto_advance=True,
+                        payment_intent=intent.id,
+                    )
+                except stripe.error.StripeError as e:
+                    messages.error(request, f"Error: {e.user_message}")
+                    return None
             return intent
         except stripe.error.StripeError as e:
             messages.error(request, f"Error: {e.user_message}")
@@ -157,6 +167,41 @@ class CustomerAccount:
             print(f"Error: {str(e)}")
             return None
         
+    def getCustomerTransactions(request, customer_id):
+        try:
+            charges = []
+            payment_intents = stripe.PaymentIntent.list(customer=customer_id, limit=10)
+            
+            for payment in payment_intents.data:
+                amount = payment.amount / 100  # Convert cents to dollars
+                
+                # Check if the PaymentIntent has an invoice
+                invoice_url = None
+                if payment.invoice:
+                    # Retrieve the invoice object
+                    invoice = stripe.Invoice.retrieve(payment.invoice)
+                    invoice_url = invoice.hosted_invoice_url
+                
+                # If no invoice, consider providing an alternative link, like a Stripe Dashboard link
+                if not invoice_url:
+                    invoice_url = f"https://dashboard.stripe.com/payments/{payment.id}"
+                
+                charges.append({
+                    "id": payment.id,
+                    "invoice_url": invoice_url,
+                    "amount": amount,
+                    "currency": payment.currency,
+                    "status": payment.status,
+                    "created": payment.created,
+                })
+            
+            return charges
+        except stripe.error.StripeError as e:
+            messages.error(request, f"Error: {e.user_message}")
+            return None
+        except Exception as e:
+            messages.error(request, f"Error: {str(e)}")
+            return None
     
 class ConnectAccount:
     def createConnectAccount(request, user):

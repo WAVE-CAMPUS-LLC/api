@@ -44,6 +44,8 @@ def profileView(request):
     favorite_events = userProfile.favorite_events.all()
     stripeKey = settings.STRIPE_PUBLISHABLE_KEY
     
+    transactions = CustomerAccount.getCustomerTransactions(request, userRequest.customer_id)
+    
     accountBalance = GetEarnings.getStripeAccountBalance(userRequest.connectAccountID)
     totalEarnings = GetEarnings.getTotalEarnings(userRequest.connectAccountID)
 
@@ -124,7 +126,8 @@ def profileView(request):
             "purchasedTickets": purchased_tickets,
             "accountBalance": accountBalance,
             "totalEarnings": totalEarnings,
-            "dashboardLink": dashboardLink
+            "dashboardLink": dashboardLink,
+            "transactions": transactions,
         },
     )
 
