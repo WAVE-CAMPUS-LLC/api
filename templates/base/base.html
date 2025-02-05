@@ -49,30 +49,26 @@
         <meta property="og:site_name" content="WAVE.">
         <meta name="robots" content="explore, social, colleges">
         <meta name="keywords" content="events, campus, experiences, WAVE., wave, college, university, meet, strangers, people">
-        {% comment %} <script>
-            document.addEventListener("DOMContentLoaded", function () {
-                // Find all forms on the page
-                const forms = document.querySelectorAll("form");
-                console.log(forms);
-                
-                forms.forEach(form => {
-                    form.addEventListener("submit", function (event) {
-                    const submitButtons = form.querySelectorAll("button[type='submit'], input[type='submit']");
-                    submitButtons.forEach(button => {
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+              document.querySelectorAll('form').forEach(function(form) {
+                form.addEventListener('submit', function(e) {
+                  if (form.dataset.submitted === "true") {
+                    e.preventDefault();
+                    return;
+                  }
+                  form.dataset.submitted = "true";
+                  
+                  // Allow the form submission to capture the button’s value, then disable buttons.
+                  setTimeout(function() {
+                    form.querySelectorAll('button, input[type="submit"]').forEach(function(button) {
                       button.disabled = true;
-                      console.log("Forms are disabled!!");
                     });
-                    ajaxSubmit(form).catch(() => {
-                        submitButtons.forEach(button => {
-                            button.disabled = false;
-                            console.log("Forms are back enabled!!");
-                        });
-                    });
-                  });
+                  }, 0);
                 });
-                console.log("Forms enabled");
               });
-          </script> {% endcomment %}
+            });
+        </script>            
     </head>
 
     {% block checkout_body %}
