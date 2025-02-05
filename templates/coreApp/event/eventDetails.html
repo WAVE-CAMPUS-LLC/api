@@ -26,6 +26,7 @@
 <meta name="keywords" content="events, campus, experiences, WAVE., wave, college, university, meet, strangers, people">
 {% endblock metatags %}
 
+
 {% block script %}
 <script type="text/javascript" src="{% static "scripts/coreApp/event/eventDetailsTabs.js" %}"></script>
 <script type="text/javascript" src="{% static "scripts/coreApp/event/eventDetailsTicketsTab.js" %}" defer></script>
@@ -49,12 +50,12 @@
 <input type="hidden" id="checkout-url" value="{% url 'eventTickets:checkout' %}" />
 <div id="content-container" class="flex flex-col px-[10px] overflow-hidden after-xsm:px-[20px] xxsm:px-[35px] sm:px-[40px] md:px-[40px] pre-lg:px-[50px] lg:px-[80px] xl:px-[150px] 2xl:px-[200px] 3xl:-[300px] gap-[70px]">
     <div class="flex flex-col gap-3">
-        <div class="page-header w-full flex flex-col gap-3 lg:flex-row justify-between items-center">
-            <div class="event-title">
+        <div class="page-header w-full flex flex-col gap-3">
+            <div class="w-full flex justify-start">
                 <h3 class="font-Wanted-ExtraBold pre-sm:font-Wanted-Black text-Medium xsm:text-Large after-xsm:text-Pre-Xl xxsm:text-1xl pre-sm:text-1xl sm:text-2xl md:text-3xl text-black">{{ event.title }}</h3>
             </div>
-            <div id="hostedByTwo" class="hosted-by font-Wanted-Variable text-XSmall after-xsm:text-Small pre-sm:text-Medium text-[#a6a6a6] flex flex-row gap-2 items-center">
-                <p>
+            <div id="hostedByTwo" class="hosted-by font-Wanted-Variable text-XSmall after-xsm:text-Small pre-sm:text-Medium text-[#a6a6a6] flex-row gap-2 items-center w-full flex justify-end">
+                <p class="w-full">
                     Hosted by {{ event.host.first_name }} {{ event.host.last_name }}
                     <a class="font-Wanted-Regular text-[#a6a6a6] underline underline-offset-2" target="_blank" href="{% url "social:publicProfile" username=event.host.username %}">
                     @ {{ event.host.username }}
