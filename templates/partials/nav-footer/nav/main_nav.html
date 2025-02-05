@@ -8,7 +8,7 @@
 <div id="navigation-container" class="max-w-full w-full top-0 right-0 left-0 flex-none">
     <div class="flex flex-col gap-3 items-center w-full border-b border-gray-100 shadow-sm pb-6">
         <div id="navigation-bar" class="w-full flex flex-row items-center justify-between px-4 pre-lg:px-8 lg:px-14 xl:px-24 2xl:px-28 py-5">
-            <div class="flex flex-row justify-between w-full mx-auto px-4">
+            <div class="flex flex-row justify-between w-full mx-auto px-4 items-center">
                 <div class="flex gap-8">
                     <div id="logo">
                         <a href="{% url "core:index"  %}">WAV<span>E</span>.</a>
@@ -17,7 +17,7 @@
             
                 <div class="support-links flex items-center">
                     <ul class="flex flex-row items-center gap-5 list-none font-Wanted-Regular text-black">
-                        <li class="hidden pre-lg:flex">
+                        <li class="">
                             {% if request.user.is_authenticated %}
                                 {% if page == home %}
                                 <a class="gradient-btn hover:gradient-btn-hover text-white" href="{% url "eventManagement:eventCreationSelect" %}">
@@ -57,7 +57,7 @@
                         <li class="hidden pre-lg:flex">
                             <span>|</span>
                         </li>
-                        <li id="auth" class="flex flex-row justify-center items-center gap-7">
+                        <li id="auth" class="flex-row justify-center items-center gap-7 hidden pre-lg:flex">
                             {% if user.is_authenticated %}
                             <a class="hover:underline text-black hover:decoration-[#008d95] hover:decoration-solid hover:decoration-2 hover:underline-offset-2" href="{% url "accountManagement:userAccount"  %}">My Account</a>
                             {% else %}
@@ -73,10 +73,11 @@
         <div id="menu" class="flex justify-center items-center w-full">
             <ul class="flex gap-4 list-none text-black font-Wanted-Variable text-Semi-Medium">
                 <li><a href="{% url "core:explore"  %}" class="hover:underline">Explore</a></li>
-                <li><a href="{% url "eventManagement:hostHome"  %}" class="hover:underline">Hosting</a></li>
+                <li class="hidden pre-lg:flex"><a href="{% url "eventManagement:hostHome"  %}" class="hover:underline">Hosting</a></li>
                 <li><a href="{% url "colleges:home"  %}" class="hover:underline">Colleges</a></li>
                 <li><a href="{% url "social:home"  %}" class="hover:underline"><span class="hidden xsm:inline">The</span> Social</a></li>
-                <li class="hidden after-xsm:inline"><a href="{% url "support:home"  %}" class="hover:underline">Support</a></li>
+                <li class="hidden pre-lg:inline"><a href="{% url "support:home"  %}" class="hover:underline">Support</a></li>
+                <li class="pre-lg:hidden"><a href="{% url "accountManagement:userAccount"  %}" class="hover:underline">My Account</a></li>
             </ul>
         </div>
 
