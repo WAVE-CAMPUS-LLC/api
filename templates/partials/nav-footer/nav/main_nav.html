@@ -77,7 +77,13 @@
                 <li><a href="{% url "colleges:home"  %}" class="hover:underline">Colleges</a></li>
                 <li><a href="{% url "social:home"  %}" class="hover:underline"><span class="hidden xsm:inline">The</span> Social</a></li>
                 <li class="hidden pre-lg:inline"><a href="{% url "support:home"  %}" class="hover:underline">Support</a></li>
-                <li class="pre-lg:hidden"><a href="{% url "accountManagement:userAccount"  %}" class="hover:underline">My Account</a></li>
+                <li class="pre-lg:hidden">
+                    {% if user.is_authenticated %}
+                    <a class="hover:underline text-black hover:decoration-[#008d95] hover:decoration-solid hover:decoration-2 hover:underline-offset-2" href="{% url "accountManagement:userAccount"  %}">My Account</a>
+                    {% else %}
+                    <a class="hover:underline hover:decoration-[#008d95] hover:decoration-solid hover:decoration-2 hover:underline-offset-2" href="{% url "authentication:join"  %}">Join</a>
+                    {% endif %}
+                </li>
             </ul>
         </div>
 

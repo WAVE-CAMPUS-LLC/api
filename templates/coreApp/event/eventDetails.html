@@ -7,6 +7,24 @@
 {{ event.title }} ({{ event.date }}) hosted by @{{ event.host.username }}
 {% endblock title %}
 
+{% block metatags %}
+<meta name="description" content="{{ event.description|safe }}">
+<meta property="og:title" content="{{ event.title}}">
+<meta property="og:description" content="{{ event.description|safe }}">
+<meta property="og:image" content="{{ event.header_photo.url }}">
+<meta property="twitter:card" content="summary_large_image">
+<meta property="twitter:site" content="@waveoncamp">
+<meta property="twitter:title" content="{{ event.title }} ({{ event.date }}) hosted by @{{ event.host.username }}">
+<meta property="twitter:description" content="{{ event.description|safe }}">
+<meta property="twitter:image" content="{{ event.header_photo.url }}">          
+<meta name="theme-color" content="#008d95">
+<link rel="canonical" href="https://waveoncampus.com/event/{{ event.eventId }}">
+<meta property="og:type" content="website">
+<meta property="og:url" href="https://waveoncampus.com/event/{{ event.eventId }}">
+<meta property="og:site_name" content="WAVE.">
+<meta name="robots" content="explore, social, colleges">
+<meta name="keywords" content="events, campus, experiences, WAVE., wave, college, university, meet, strangers, people">
+{% endblock metatags %}
 
 {% block script %}
 <script type="text/javascript" src="{% static "scripts/coreApp/event/eventDetailsTabs.js" %}"></script>

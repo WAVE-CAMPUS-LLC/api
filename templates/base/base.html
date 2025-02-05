@@ -33,6 +33,7 @@
         <script type="text/javascript" src="{% static "scripts/dataAnalyticsAPI/hostAnalytics/eventClick.js" %}" defer></script>
         <script type="text/javascript" src="{% static "/scripts/partials/navigation/searchEvents.js" %}" defer></script>
 
+        {% block metatags %}
         <meta name="description" content="Go to events on campus, meet strangers, create experiences! Feel the WAVE.!">
         <meta property="og:title" content="WAVE. — A whole new wave of experiences on your campus!">
         <meta property="og:description" content="Go to events on campus, meet strangers, create experiences! Feel the WAVE.!">
@@ -49,6 +50,8 @@
         <meta property="og:site_name" content="WAVE.">
         <meta name="robots" content="explore, social, colleges">
         <meta name="keywords" content="events, campus, experiences, WAVE., wave, college, university, meet, strangers, people">
+        {% endblock metatags %}
+        
         <script>
             document.addEventListener('DOMContentLoaded', function() {
               document.querySelectorAll('form').forEach(function(form) {
