@@ -397,21 +397,21 @@ def stripeWebhook(request):
     #         print(f"Bank account: {bank_account}")
     #     return JsonResponse({"status": "success"}, status=200)
     
-    if event["type"] == "account.updated":
-        account = event["data"]["object"]
-        full_account = stripe.Account.retrieve(account["id"])
-        user = CustomUser.objects.filter(connectAccountID=account["id"]).first()
-        if user:
-            if full_account["payouts_enabled"]:
-                if not user.connectAccountOnboarded:
-                    user.connectAccountOnboarded = True
-                    user.save()
-                    print(f"User {user.id} onboarding completed.")
-            else:
-                print(f"Account {account['id']} does not have payouts enabled.")
+    # if event["type"] == "account.updated":
+    #     account = event["data"]["object"]
+    #     full_account = stripe.Account.retrieve(account["id"])
+    #     user = CustomUser.objects.filter(connectAccountID=account["id"]).first()
+    #     if user:
+    #         if full_account["payouts_enabled"]:
+    #             if not user.connectAccountOnboarded:
+    #                 user.connectAccountOnboarded = True
+    #                 user.save()
+    #                 print(f"User {user.id} onboarding completed.")
+    #         else:
+    #             print(f"Account {account['id']} does not have payouts enabled.")
                 
-    else:
-        print(f"Unhandled event type: {event['type']}")
+    # else:
+    #     print(f"Unhandled event type: {event['type']}")
 
         
     return JsonResponse({"status": "success"}, status=200)

@@ -49,7 +49,7 @@
         <meta property="og:site_name" content="WAVE.">
         <meta name="robots" content="explore, social, colleges">
         <meta name="keywords" content="events, campus, experiences, WAVE., wave, college, university, meet, strangers, people">
-        <script>
+        {% comment %} <script>
             document.addEventListener("DOMContentLoaded", function () {
                 // Find all forms on the page
                 const forms = document.querySelectorAll("form");
@@ -72,7 +72,7 @@
                 });
                 console.log("Forms enabled");
               });
-          </script>
+          </script> {% endcomment %}
     </head>
 
     {% block checkout_body %}

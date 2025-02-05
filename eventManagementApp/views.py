@@ -103,13 +103,7 @@ def eventCreationSelect(request):
     siteDomain = settings.SITE_URL
     userAccount = get_object_or_404(CustomUser, username=request.user.username)
 
-    connectAccountExists = userAccount.connectAccountCreated
-    connectOnboarded = userAccount.connectAccountOnboarded
-
-    if connectAccountExists == True and connectOnboarded == True:
-        completedConnectAccount = True
-    else:
-        completedConnectAccount = False
+    completedConnectAccount = False
 
     if not userAccount.connectAccountID:
         stripeConnectAccount = ConnectAccount.createConnectAccount(request, userAccount)
@@ -118,10 +112,14 @@ def eventCreationSelect(request):
             userAccount.connectAccountCreated = True
             userAccount.save()
             completedConnectAccount = True
+    else:
+        stripeConnectAccount = stripe.Account.retrieve(userAccount.connectAccountID)
+        if stripeConnectAccount.get("payouts_enabled"):
+            completedConnectAccount = True
 
     siteDomain = settings.SITE_URL
 
-    link = request.build_absolute_uri(reverse("eventManagement:createPaidEvent"))
+    link = request.build_absolute_uri(reverse("eventManagement:eventCreationSelect"))
 
     stripeLinkAccount = ConnectAccount.getStripeOnboardingLink(
         request, userAccount, siteDomain, link
@@ -140,7 +138,7 @@ def eventCreationSelect(request):
             if not completedConnectAccount:
                 messages.error(request, "Please complete your Stripe account setup.")
                 return redirect(stripeLinkAccount)
-            return redirect("eventManagement:createPaidEvent")
+            return redirect("eventManagement:createPaidEvent")                
         elif eventAction == "rsvp":
             return redirect("eventManagement:createRsvpEvent")
         elif eventAction == "invite":
