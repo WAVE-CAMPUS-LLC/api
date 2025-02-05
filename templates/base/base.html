@@ -37,9 +37,6 @@
         <meta property="og:title" content="WAVE. — A whole new wave of experiences on your campus!">
         <meta property="og:description" content="Go to events on campus, meet strangers, create experiences! Feel the WAVE.!">
         <meta property="og:image" content="https://zqwamcznyosnkrevxmhm.supabase.co/storage/v1/object/public/wave/donottouch/now.jpg">
-        {% comment %} <meta property="al:ios:url" content="$OG_IOS_DEEP_LINK">
-        <meta property="al:android:url" content="$OG_ANDROID_DEEP_LINK">
-        <meta name="apple-itunes-app" content="$OG_IOS_APP_STORE_ID"> {% endcomment %}
         <meta property="twitter:card" content="summary_large_image">
         <meta property="twitter:site" content="@waveoncamp">
         <meta property="twitter:title" content="WAVE. — A whole new wave of experiences on your campus!">
@@ -52,6 +49,30 @@
         <meta property="og:site_name" content="WAVE.">
         <meta name="robots" content="explore, social, colleges">
         <meta name="keywords" content="events, campus, experiences, WAVE., wave, college, university, meet, strangers, people">
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                // Find all forms on the page
+                const forms = document.querySelectorAll("form");
+                console.log(forms);
+                
+                forms.forEach(form => {
+                    form.addEventListener("submit", function (event) {
+                    const submitButtons = form.querySelectorAll("button[type='submit'], input[type='submit']");
+                    submitButtons.forEach(button => {
+                      button.disabled = true;
+                      console.log("Forms are disabled!!");
+                    });
+                    ajaxSubmit(form).catch(() => {
+                        submitButtons.forEach(button => {
+                            button.disabled = false;
+                            console.log("Forms are back enabled!!");
+                        });
+                    });
+                  });
+                });
+                console.log("Forms enabled");
+              });
+          </script>
     </head>
 
     {% block checkout_body %}
