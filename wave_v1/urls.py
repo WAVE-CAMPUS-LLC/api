@@ -43,8 +43,10 @@ urlpatterns = [
     path('nativeTSUReactAPI/', include('wave_v1.urlsapi'))
 ]
 
-handler404 = "extras.views.error_404"
-
 # Using s3 for media storage
 if settings.DEBUG:
    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+handler404 = "extras.views.error_404"
+handler403 = "extras.views.error_403"  # Added 403 handler
+handler500 = "extras.views.error_500"  # Added 500 handler

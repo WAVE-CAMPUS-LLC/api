@@ -42,3 +42,9 @@ def activeMembersView(request):
 
 def error_404(request, exception):
     return render(request, 'extras/invalid/invalid.html', status=404)
+
+def error_403(request, exception):
+    return render(request, "extras/invalid/403.html", status=403)
+
+def error_500(request):
+    return render(request, "extras/invalid/500.html", status=500)

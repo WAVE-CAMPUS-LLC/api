@@ -1,0 +1,42 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}
+Error | WAVE.
+{% endblock title %}
+
+{% block app_page_style %}
+<link rel="stylesheet" type="text/css" href="{% static "/styles/extras/invalid/invalid.css" %}" />
+{% endblock app_page_style %}
+
+{% block header %}
+{% include "partials/nav-footer/nav/main_nav.html" %}
+{% endblock header %}
+
+{% block body %}
+<main>
+    <div id="body-content" class="pl-[150px] pr-[150px] h-full w-full flex items-center justify-center">
+        <div id="bcContainer" class="h-full w-full flex flex-col gap-[15px]">
+            <h2 class="font-Wanted-ExtraBlack text-[50px] uppercase text-[#008d95]">
+                Server Error
+            </h2>
+            <p class="font-Wanted-Regular text-[20px] text-black">
+                Please allow the page to refresh. 
+            </p>
+            <div id="bcLinks" class="font-Wanted-SemiBold text-[25px] text-black mt-[20px]">
+                <a href="{% url "core:explore" %}" class="text-[#008d95] no-underline hover:underline">Explore</a>
+                <span>•</span>
+                <a href="{% url "support:home" %}" class="text-[#008d95] no-underline hover:underline">Support</a>
+            </div>
+        </div>
+    </div>
+    <script type="text/javascript">
+        setTimeout(function() {
+            window.location.reload();
+        }, 5000);
+    </script>
+</main>
+{% endblock body %}
+
+{% block footer %}
+{% endblock footer %}

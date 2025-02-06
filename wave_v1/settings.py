@@ -30,7 +30,6 @@ load_dotenv()
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-print(secrets.token_urlsafe(64))
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", secrets.token_urlsafe(64))
 
 # SECURITY WARNING: don't run with debug turned on in production!
@@ -106,6 +105,7 @@ MIDDLEWARE = [
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.BrokenLinkEmailsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -260,7 +260,7 @@ STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 # CORS Settings
-CORS_ALLOW_ALL_ORIGINS = True # Temporarily set to True for testing
+CORS_ALLOW_ALL_ORIGINS = True  # Temporarily set to True for testing
 CORS_ALLOWED_ORIGINS = [
     "https://wave-v1.onrender.com",
     "https://waveoncampus.com",
@@ -295,6 +295,17 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 time.sleep(5)
 default_storage._wrapped = SupabaseStorage()
 
+# Add admin contacts for error reporting
+ADMINS = [
+    ("Enosh Lartey", "larteyenosh@gmail.com"),
+    ("Enosh Lartey", "enoshonwavecampus@gmail.com"),
+    ("Michael Abate", "michaelonwavecampus@gmail.com"),
+    ("Michael Abate", "michaelabate819@gmail.com"),
+    ("Edmund Afunyah", "edmundosafo818@gmail.com"),
+    ("Edmund Afunyah", "edmundonwavecampus@gmail.com")
+]
+MANAGERS = ADMINS
+
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
@@ -316,19 +327,24 @@ LOGGING = {
             "formatter": "verbose",
             "level": "DEBUG",
         },
+        "mail_admins": {
+            "class": "django.utils.log.AdminEmailHandler",
+            "level": "ERROR",
+            "formatter": "verbose",
+        },
     },
     "loggers": {
         "": {  # Root logger
-            "handlers": ["console", "file"],
+            "handlers": ["console", "file", "mail_admins"],
             "level": "DEBUG",
         },
         "adminDashboardApp": {  # Your app logger
-            "handlers": ["console", "file"],
+            "handlers": ["console", "file", "mail_admins"],
             "level": "DEBUG",
             "propagate": True,
         },
         "django": {  # Django logger
-            "handlers": ["console", "file"],
+            "handlers": ["console", "file", "mail_admins"],
             "level": "INFO",
             "propagate": True,
         },
