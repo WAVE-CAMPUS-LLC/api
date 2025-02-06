@@ -59,6 +59,8 @@ def profileView(request):
         dashboardLink = ConnectAccount.getStripeAccountLogin(request, userRequest)
     else:
         dashboardLink = None
+        
+    canSeePayouts = dashboardLink and userRequest.groups.filter(name='Host').exists()
             
     if request.method == "POST":
         action = request.POST.get("action")
@@ -124,6 +126,7 @@ def profileView(request):
             "totalEarnings": totalEarnings,
             "dashboardLink": dashboardLink,
             "transactions": transactions,
+            "canSeePayouts": canSeePayouts,
         },
     )
 
