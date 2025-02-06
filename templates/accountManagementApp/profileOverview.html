@@ -120,7 +120,7 @@ Profile Overview
                         <li class="profile-tab border-b border-b-custom-rgba11 p-[20px] font-Wanted-Medium cursor-pointer" data-tab="myPaymentMethods-information">
                             <p class="text-black no-underline hover:underline cursor-pointer">Payment Methods</p>
                         </li>
-                        {% if userRequest|has_group:"Host" or userRequest|has_group:"host" %}
+                        {% if canSeePayouts %}
                             {% if accountBalance or totalEarnings %}
                                 <li class="profile-tab border-b border-b-custom-rgba11 p-[20px] font-Wanted-Medium cursor-pointer" data-tab="myPayoutMethods-information">
                                     <p class="text-black no-underline hover:underline cursor-pointer">Payouts</p>
@@ -362,7 +362,7 @@ Profile Overview
                     </div>
                 </div>
 
-                {% if canSeePayouts%}
+                {% if canSeePayouts %}
                 <div class="profile-tab-content" id="myPayoutMethods-information">
                     <div class="border border-custom-rgba11 rounded-[10px] w-full flex flex-col gap-[20px] py-[20px] px-[30px] shadow-custom-shadow-6">
                         <form method="post" class="home-header">
