@@ -18,7 +18,7 @@ from .forms import (
     JoinCollegeForm,
     OrganizationForm,
     VerifyCollegeJoinForm,
-    EditOrganizationForm
+    EditOrganizationForm,
 )
 from .models import (
     CollegeRequest,
@@ -126,7 +126,11 @@ def requestCollege(request):
     return render(
         request,
         "collegeManagementApp/requestCollege.html",
-        {"pageName": pageName, "collegeRequestForm": collegeRequestForm, "apiKey": settings.COLLEGE_LIST_API_KEY},
+        {
+            "pageName": pageName,
+            "collegeRequestForm": collegeRequestForm,
+            "apiKey": settings.COLLEGE_LIST_API_KEY,
+        },
     )
 
 
@@ -142,10 +146,8 @@ def viewCollegeInformation(request, collegeId):
     user_profile = UserProfile.objects.filter(user=request.user).first()
     is_member = Membership.objects.filter(user=request.user, college=college).exists()
 
-
     members = UserProfile.objects.filter(college=college)
     organizations = Organization.objects.filter(college=college, status="Accepted")
-
 
     if not request.user.is_authenticated:
         # Restrict events with age restrictions for anonymous users
@@ -172,36 +174,52 @@ def viewCollegeInformation(request, collegeId):
                 age_filter |= Q(age_restriction="21+")
             if user_age >= 18:
                 age_filter |= Q(age_restriction="18+")
-    
 
-    events = Event.objects.filter(
-        display_event_on_college=True, host__user_profile__college=college
-    ).filter(age_filter).order_by("-date")
+    events = (
+        Event.objects.filter(
+            display_event_on_college=True, host__user_profile__college=college
+        )
+        .filter(age_filter)
+        .order_by("-date")
+    )
 
-    events_restricted_to_college = Event.objects.filter(
-        privacy="Private (College)",
-        privacy_details__restricted_college=college,
-        status="live",
-    ).filter(age_filter).order_by("-date")
+    events_restricted_to_college = (
+        Event.objects.filter(
+            privacy="Private (College)",
+            privacy_details__restricted_college=college,
+            status="live",
+        )
+        .filter(age_filter)
+        .order_by("-date")
+    )
 
-    display_events_on_college = Event.objects.filter(
-        display_event_on_college=True,
-        host__user_profile__college=college,
-        status="live",
-    ).filter(age_filter).order_by("-date")
+    display_events_on_college = (
+        Event.objects.filter(
+            display_event_on_college=True,
+            host__user_profile__college=college,
+            status="live",
+        )
+        .filter(age_filter)
+        .order_by("-date")
+    )
 
     events = (events_restricted_to_college | display_events_on_college).distinct()
-    
-    
+
     today = now().date()
     start_of_week = today - timedelta(days=today.weekday())
     end_of_week = start_of_week + timedelta(days=6)
 
-    weekly_events = Event.objects.filter(
-        date__range=[start_of_week, end_of_week], status="live", privacy="Discoverable", admin_status="active"
-    ).filter(age_filter).order_by("?")[:3]
-    
-    
+    weekly_events = (
+        Event.objects.filter(
+            date__range=[start_of_week, end_of_week],
+            status="live",
+            privacy="Discoverable",
+            admin_status="active",
+        )
+        .filter(age_filter)
+        .order_by("?")[:3]
+    )
+
     return render(
         request,
         "collegeManagementApp/collegeInformation.html",
@@ -260,7 +278,12 @@ def joinCollege(request, collegeId):
     return render(
         request,
         "collegeManagementApp/joinCollege.html",
-        {"joinForm": joinForm, "college": college, "pageName": pageName, "apiKey": settings.COLLEGE_LIST_API_KEY},
+        {
+            "joinForm": joinForm,
+            "college": college,
+            "pageName": pageName,
+            "apiKey": settings.COLLEGE_LIST_API_KEY,
+        },
     )
 
 
@@ -295,7 +318,12 @@ def verifyJoinCollege(request, collegeId):
     return render(
         request,
         "collegeManagementApp/verifyJoinCollege.html",
-        {"verifyForm": verifyForm, "college": college, "pageName": pageName, "apiKey": settings.COLLEGE_LIST_API_KEY},
+        {
+            "verifyForm": verifyForm,
+            "college": college,
+            "pageName": pageName,
+            "apiKey": settings.COLLEGE_LIST_API_KEY,
+        },
     )
 
 
@@ -307,16 +335,16 @@ def exitCollege(request, collegeId):
     user_profile = get_object_or_404(UserProfile, user=request.user)
     college = get_object_or_404(College, collegeId=collegeId)
 
-    print(f"User Profile: {user_profile}")
-    print(f"User's College: {user_profile.college}")
-    print(f"College ID in URL: {collegeId}")
-
-    if not Membership.objects.filter(user=request.user, college=college).exists():
-        messages.error(request, "You aren't a member.")
+    try:
+        collegeMembership = Membership.objects.get(user=request.user, college=college)
+    except Membership.DoesNotExist:
+        messages.error(request, "You aren't a member of this college.")
         return redirect("colleges:find")
+
 
     if user_profile.college and str(user_profile.college.collegeId) == str(collegeId):
         user_profile.college = None
+        collegeMembership.delete()
         user_profile.save()
         messages.success(request, "You have successfully left the college.")
         print("College removed from user's profile.")
@@ -339,7 +367,11 @@ def createOrg(request, collegeId):
         return render(
             request,
             "collegeManagementApp/extras/notAMemberOfCollege.html",
-            {"college": college, "pageName": pageName, "apiKey": settings.COLLEGE_LIST_API_KEY},
+            {
+                "college": college,
+                "pageName": pageName,
+                "apiKey": settings.COLLEGE_LIST_API_KEY,
+            },
         )
 
     user_profile = UserProfile.objects.filter(user=request.user).first()
@@ -348,7 +380,11 @@ def createOrg(request, collegeId):
         return render(
             request,
             "collegeManagementApp/extras/notAMemberOfCollege.html",
-            {"college": college, "pageName": pageName, "apiKey": settings.COLLEGE_LIST_API_KEY},
+            {
+                "college": college,
+                "pageName": pageName,
+                "apiKey": settings.COLLEGE_LIST_API_KEY,
+            },
         )
 
     if not Membership.objects.filter(user=request.user, college=college).exists():
@@ -366,7 +402,9 @@ def createOrg(request, collegeId):
             organization.created_by = request.user
             organization.status = "Pending"
             organization.save()
-            OrganizationMembership.objects.create(user=request.user, organization=organization)
+            OrganizationMembership.objects.create(
+                user=request.user, organization=organization
+            )
 
             return redirect("colleges:find")
     else:
@@ -390,7 +428,11 @@ def viewOrganization(request, collegeId, orgId):
         return render(
             request,
             "collegeManagementApp/extras/notAMemberOfCollege.html",
-            {"college": college, "pageName": pageName, "apiKey": settings.COLLEGE_LIST_API_KEY},
+            {
+                "college": college,
+                "pageName": pageName,
+                "apiKey": settings.COLLEGE_LIST_API_KEY,
+            },
         )
 
     user_profile = UserProfile.objects.filter(user=request.user).first()
@@ -399,7 +441,11 @@ def viewOrganization(request, collegeId, orgId):
         return render(
             request,
             "collegeManagementApp/extras/notAMemberOfCollege.html",
-            {"college": college, "pageName": pageName, "apiKey": settings.COLLEGE_LIST_API_KEY},
+            {
+                "college": college,
+                "pageName": pageName,
+                "apiKey": settings.COLLEGE_LIST_API_KEY,
+            },
         )
 
     if not Membership.objects.filter(user=request.user, college=college).exists():
@@ -421,7 +467,6 @@ def viewOrganization(request, collegeId, orgId):
     members = OrganizationMembership.objects.filter(
         organization=organization
     ).select_related("user")
-
 
     if not request.user.is_authenticated:
         # Restrict events with age restrictions for anonymous users
@@ -450,11 +495,15 @@ def viewOrganization(request, collegeId, orgId):
                 age_filter |= Q(age_restriction="18+")
 
     # Get events restricted to this organization
-    restricted_events = Event.objects.filter(
-        privacy="Private (Organization)", 
-        privacy_details__restricted_organization=organization
-    ).filter(age_filter).order_by("-date")
-    
+    restricted_events = (
+        Event.objects.filter(
+            privacy="Private (Organization)",
+            privacy_details__restricted_organization=organization,
+        )
+        .filter(age_filter)
+        .order_by("-date")
+    )
+
     org_privacy = organization.privacy
     org_owner = organization.created_by
 
@@ -467,46 +516,62 @@ def viewOrganization(request, collegeId, orgId):
                 OrganizationMembership.objects.filter(
                     user=member.user, organization=organization
                 ).delete()
-                messages.success(request, f"{member.user.username} has been removed from the organization.")
-            
+                messages.success(
+                    request,
+                    f"{member.user.username} has been removed from the organization.",
+                )
+
             elif not member:
                 messages.error(request, "User not found.")
-                
+
             else:
                 messages.error(request, "An error occurred.", extra_tags="danger")
-            
+
             return redirect("colleges:viewOrg", collegeId=collegeId, orgId=orgId)
         if action == "deleteOrg":
-            all_memberships = OrganizationMembership.objects.filter(organization=organization)
+            all_memberships = OrganizationMembership.objects.filter(
+                organization=organization
+            )
             all_memberships.delete()
-            
-            events = Event.objects.filter(privacy="Private (Organization)", privacy_details__restricted_organization=organization)
+
+            events = Event.objects.filter(
+                privacy="Private (Organization)",
+                privacy_details__restricted_organization=organization,
+            )
             events.delete()
-            
-            event_privacy = EventPrivacy.objects.filter(restricted_organization=organization)
+
+            event_privacy = EventPrivacy.objects.filter(
+                restricted_organization=organization
+            )
             event_privacy.delete()
-            
+
             organization.delete()
             messages.success(request, f"{organization.name} has been deleted.")
             return redirect("colleges:find")
         if action == "saveChanges":
-            orgForm = EditOrganizationForm(request.POST, request.FILES, instance=organization)
-            
+            orgForm = EditOrganizationForm(
+                request.POST, request.FILES, instance=organization
+            )
+
             if orgForm.is_valid():
                 org = orgForm.save(commit=False)
 
-                if 'logo' in request.FILES:
-                    org.logo = request.FILES['logo']
-    
+                if "logo" in request.FILES:
+                    org.logo = request.FILES["logo"]
+
                 org.save()
 
                 messages.success(request, "Changes saved successfully.")
                 return redirect("colleges:viewOrg", collegeId=collegeId, orgId=orgId)
-            
+
     form = EditOrganizationForm(instance=organization)
-    
+
     if org_privacy == "Private" and not is_member:
-        return render(request, "collegeManagementApp/extras/privateOrg.html", {"pageName": pageName, "college": college, "organization": organization})
+        return render(
+            request,
+            "collegeManagementApp/extras/privateOrg.html",
+            {"pageName": pageName, "college": college, "organization": organization},
+        )
     else:
         return render(
             request,
@@ -521,7 +586,7 @@ def viewOrganization(request, collegeId, orgId):
                 "events": restricted_events,
                 "isOwner": is_owner,
                 "orgOwner": org_owner,
-                "form" : form
+                "form": form,
             },
         )
 
