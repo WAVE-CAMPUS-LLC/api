@@ -246,11 +246,16 @@ class ConnectAccount:
             print(f"Error: {str(e)}")
             return JsonResponse({"error": str(e)})
 
-    def getStripeAccountLogin(request, user, domain, finalLink):
+    def getStripeAccountLogin(request, user):
         try:
+            account = stripe.Account.retrieve(user.connectAccountID)
+
+            if not account.details_submitted:
+                return None
+
             account_link = stripe.Account.create_login_link(user.connectAccountID)
-            
             return account_link.url
+
         except stripe.error.StripeError as e:
             messages.error(request, f"Stripe error: {e.user_message}")
             return JsonResponse({"error": e.user_message})

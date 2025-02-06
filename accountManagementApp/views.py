@@ -54,13 +54,9 @@ def profileView(request):
             ).strftime("%B")
     else:
         payment_methods = None
-        
-    siteDomain = settings.SITE_URL
-
-    link = request.build_absolute_uri(reverse("accountManagement:userAccount"))
 
     if userRequest.connectAccountID:
-        dashboardLink = ConnectAccount.getStripeAccountLogin(request, userRequest, siteDomain, link)
+        dashboardLink = ConnectAccount.getStripeAccountLogin(request, userRequest)
     else:
         dashboardLink = None
             
