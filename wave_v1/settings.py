@@ -32,9 +32,9 @@ load_dotenv()
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-# DEBUG=True
-DEBUG = os.getenv("DEBUG", "False") == "True"
-DEBUG_PROPAGATE_EXCEPTIONS = True
+DEBUG=True
+# DEBUG = os.getenv("DEBUG", "False") == "True"
+# DEBUG_PROPAGATE_EXCEPTIONS = True
 
 ALLOWED_HOSTS = ["wave-v1.onrender.com", "waveoncampus.com", "localhost", "127.0.0.1"]
 
@@ -43,8 +43,8 @@ url = os.getenv("SUPABASE_URL")
 key = os.getenv("SUPABASE_API_KEY")
 supabase = create_client(url, key)
 
-buckets = supabase.storage.list_buckets()
-print(buckets)
+# buckets = supabase.storage.list_buckets()
+# print(buckets)
 
 if not DEBUG:  # In production
     SESSION_COOKIE_SECURE = True
@@ -116,6 +116,8 @@ MIDDLEWARE = [
 CSRF_TRUSTED_ORIGINS = [
     "https://wave-v1.onrender.com",
     "https://waveoncampus.com",
+    "http://127.0.0.1:8000",
+    "http://localhost:8000",
 ]
 
 ROOT_URLCONF = "wave_v1.urls"
@@ -157,41 +159,41 @@ MESSAGE_TAGS = {
     messages_constants.ERROR: "error",
 }
 
-# Parse the DATABASE_URL manually to ensure correct format
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": "postgres",
-        "USER": "postgres.zqwamcznyosnkrevxmhm",
-        "PASSWORD": os.getenv("DB_PASSWORD"),
-        "HOST": "aws-0-us-east-1.pooler.supabase.com",
-        "PORT": "6543",
-        "OPTIONS": {
-            "sslmode": "require",
-            "options": "-c timezone=UTC",
-            "keepalives": 1,
-            "keepalives_idle": 30,
-            "keepalives_interval": 10,
-            "keepalives_count": 5,
-        },
-    }
-}
-
-
+# Production Database
 # DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': 'crewBuying',
-#         'USER': 'wave_owner',
-#         'PASSWORD': '1PhnjKA8VBOY',
-#         'HOST': 'ep-cold-band-a5n17hct.us-east-2.aws.neon.tech',
-#         'PORT': '5432',
-#         'OPTIONS': {
-#             'sslmode': 'require',
-#             'options': '-c timezone=UTC',
-#         }
+#     "default": {
+#         "ENGINE": "django.db.backends.postgresql",
+#         "NAME": "postgres",
+#         "USER": "postgres.zqwamcznyosnkrevxmhm",
+#         "PASSWORD": os.getenv("DB_PASSWORD"),
+#         "HOST": "aws-0-us-east-1.pooler.supabase.com",
+#         "PORT": "6543",
+#         "OPTIONS": {
+#             "sslmode": "require",
+#             "options": "-c timezone=UTC",
+#             "keepalives": 1,
+#             "keepalives_idle": 30,
+#             "keepalives_interval": 10,
+#             "keepalives_count": 5,
+#         },
 #     }
 # }
+
+# Development Database
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'crewBuying',
+        'USER': 'wave_owner',
+        'PASSWORD': '1PhnjKA8VBOY',
+        'HOST': 'ep-cold-band-a5n17hct.us-east-2.aws.neon.tech',
+        'PORT': '5432',
+        'OPTIONS': {
+            'sslmode': 'require',
+            'options': '-c timezone=UTC',
+        }
+    }
+}
 
 # Email Configurations
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
@@ -260,6 +262,8 @@ CORS_ALLOW_ALL_ORIGINS = True # Temporarily set to True for testing
 CORS_ALLOWED_ORIGINS = [
     "https://wave-v1.onrender.com",
     "https://waveoncampus.com",
+    "http://127.0.0.1:8000",
+    "http://localhost:8000",
 ]
 CORS_ALLOW_CREDENTIALS = True
 
@@ -286,8 +290,8 @@ MEDIA_URL = f"{SUPABASE_URL}/storage/v1/object/public/{SUPABASE_STORAGE_BUCKET}/
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # DEFAULT_FILE_STORAGE = "adminDashboardApp.storage.SupabaseStorage"
 
-time.sleep(5)
-default_storage._wrapped = SupabaseStorage()
+# time.sleep(5)
+# default_storage._wrapped = SupabaseStorage()
 
 # LOGGING = {
 #     "version": 1,

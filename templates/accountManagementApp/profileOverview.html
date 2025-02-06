@@ -30,10 +30,6 @@ Profile Overview
         <div id="missing-info" class="w-full flex flex-col xxsm:flex-row items-start justify-start xsm:items-center gap-[10px]">
             <p class="font-Wanted-Variable text-[15px] text-black">Click to complete:</p>
             <div class="missing-subDiv flex flex-row gap-[10px]">
-                {% if userRequest.is_onboarded == False %}
-                <a href="{% url "accountManagement:onboarding" %}" class="missing preferences border border-transparent bg-[#ff0000] p-[5px] px-[10px] font-Wanted-Variable text-[13px] no-underline rounded-[15px] text-[white] hover:underline">Complete Profile</a>
-                {% endif %}
-
                 {% if userRequest.email_verified == False %}
                 <a href="{% url "authentication:generateVerification" %}" class="missing profile border border-transparent bg-[#ff0000] p-[5px] px-[10px] font-Wanted-Variable text-[13px] no-underline rounded-[15px] text-[white] hover:underline">Verify Account</a>
                 {% endif %}
@@ -116,7 +112,7 @@ Profile Overview
                             <p class="text-black no-underline hover:underline cursor-pointer">Blog</p>
                         </li>
                         <li class="profile-tab border-b border-b-custom-rgba11 p-[20px] font-Wanted-Medium cursor-pointer">
-                            <a class="text-black no-underline hover:underline cursor-pointer" href="{% url "accountManagement:userSettings" %}">Settings & Preferences</a>
+                            <a class="text-black no-underline hover:underline cursor-pointer" href="{% url "accountManagement:userSettings" %}">Settings</a>
                         </li>
                         <li class="profile-tab border-b border-b-custom-rgba11 p-[20px] font-Wanted-Medium cursor-pointer" data-tab="myPurchases-information">
                             <p class="text-black no-underline hover:underline cursor-pointer">Transactions</p>

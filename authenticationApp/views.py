@@ -28,10 +28,7 @@ from campusManagerApp.models import CampusManagerInvite
 from django.contrib.auth.models import Group
 from django.conf import settings
 
-from wave_v1.decorators import (
-    check_suspension,
-    emailUnverified
-)
+from wave_v1.decorators import check_suspension, emailUnverified
 
 
 # Create your views here.
@@ -51,10 +48,10 @@ def joinView(request):
 
             group, created = Group.objects.get_or_create(name="Member")
             unverified_group, created = Group.objects.get_or_create(name="Unverified")
-            unboarded_group, created = Group.objects.get_or_create(name="Unboarded")
+            member, created = Group.objects.get_or_create(name="Member")
             user.groups.add(group)
             user.groups.add(unverified_group)
-            user.groups.add(unboarded_group)
+            user.groups.add(member)
 
             verification_code = generateVerificationCode()
             expiration_time = timezone.now() + timedelta(hours=12)
@@ -63,11 +60,13 @@ def joinView(request):
                 verification_code=verification_code,
                 expiration_date=expiration_time,
             )
-            
-            template = get_template("emailManagement/build_production/emails/authenticationApp/verifyEmail.html")
+
+            template = get_template(
+                "emailManagement/build_production/emails/authenticationApp/verifyEmail.html"
+            )
             emailMessage = template.render({"verification_code": verification_code})
-            
-            plainMessage = strip_tags(emailMessage)            
+
+            plainMessage = strip_tags(emailMessage)
             send_mail(
                 subject="Welcome to WAVE.! Verify your email",
                 message=plainMessage,
@@ -102,14 +101,18 @@ def joinView(request):
                 )
                 return redirect("campusManager:dashboard")
             if not user.customer_id:
-                customer = CustomerAccount.createCustomerAccount(request, user.email, user.first_name, user.last_name)
+                customer = CustomerAccount.createCustomerAccount(
+                    request, user.email, user.first_name, user.last_name
+                )
                 if customer:
                     user.customer_id = customer["id"]
                     user.save()
                 else:
-                    messages.error(request, "Failed to create customer account. Please try again.")
+                    messages.error(
+                        request, "Failed to create customer account. Please try again."
+                    )
                     return redirect("authentication:join")
-            
+
             messages.info(request, "A verification code has been sent to your email.")
             login(request, user)
             next_url = request.GET.get("next", "authentication:verifyEmail")
@@ -129,12 +132,12 @@ def emailVerifyView(request):
             action = request.POST.get("action")
             verification_code = request.POST.get("verification_code")
             print(f"Action: {action}, Code: {verification_code}")
-            
+
             email_verification = EmailVerification.objects.filter(
                 user=request.user, is_verified=False
             ).first()
             user = CustomUser.objects.get(email=request.user.email)
-            
+
             if action == "verifyEmailCode":
                 if email_verification:
                     if (
@@ -145,9 +148,13 @@ def emailVerifyView(request):
                         email_verification.save()
 
                         # Get or create the groups
-                        unverified_group, _ = Group.objects.get_or_create(name="Unverified")
-                        user_verified_group, _ = Group.objects.get_or_create(name="Verified")
-                        
+                        unverified_group, _ = Group.objects.get_or_create(
+                            name="Unverified"
+                        )
+                        user_verified_group, _ = Group.objects.get_or_create(
+                            name="Verified"
+                        )
+
                         # Update user groups
                         user.groups.remove(unverified_group)
                         user.groups.add(user_verified_group)
@@ -172,14 +179,20 @@ def emailVerifyView(request):
                 else:
                     print("EmailVerification record found.")
                     email_verification.verification_code = generateVerificationCode()
-                    email_verification.expiration_date = timezone.now() + timedelta(hours=12)
+                    email_verification.expiration_date = timezone.now() + timedelta(
+                        hours=12
+                    )
                     email_verification.save()
 
                 try:
-                    template = get_template("emailManagement/build_production/emails/authenticationApp/verifyEmail.html")
-                    emailMessage = template.render({"verification_code": email_verification.verification_code})
-                    
-                    plainMessage = strip_tags(emailMessage)            
+                    template = get_template(
+                        "emailManagement/build_production/emails/authenticationApp/verifyEmail.html"
+                    )
+                    emailMessage = template.render(
+                        {"verification_code": email_verification.verification_code}
+                    )
+
+                    plainMessage = strip_tags(emailMessage)
                     send_mail(
                         subject="Welcome to WAVE.! Verify your email",
                         message=plainMessage,
@@ -190,7 +203,9 @@ def emailVerifyView(request):
                     )
                     messages.success(request, "Verification code sent successfully!")
                 except Exception as e:
-                    messages.error(request, "Failed to send verification code. Please try again.")
+                    messages.error(
+                        request, "Failed to send verification code. Please try again."
+                    )
                     print(f"Error sending email: {e}")
             else:
                 messages.error(request, "Invalid action.")
@@ -204,32 +219,41 @@ def loginView(request):
     if request.method == "POST":
         form = UserAuthenticationForm(data=request.POST)
         if form.is_valid():
-            email = form.cleaned_data["email"]
+            identifier = form.cleaned_data["identifier"]
             password = form.cleaned_data["password"]
-            user = authenticate(request, email=email, password=password)
 
-            if user is not None:
-                login(request, user)
-                login_history = LoginHistoryModel.objects.create(
-                    user=user,
-                    email=user.email,
-                    ip_address=request.META.get("REMOTE_ADDR"),
-                )
-                login_history.save()
-                
-                # Get the next URL or use default
-                next_url = request.GET.get("next")
-                if next_url and next_url.strip():  # Check if next_url exists and is not empty
-                    # Only redirect to next_url if it's a relative URL (security measure)
-                    if not next_url.startswith('http'):
+            # Check if the identifier is an email or username
+            user = (
+                CustomUser.objects.filter(email=identifier).first()
+                or CustomUser.objects.filter(username=identifier).first()
+            )
+
+            if user:
+                user = authenticate(
+                    request, email=user.email, password=password
+                )  # Authenticate using email
+                if user:
+                    login(request, user)
+                    LoginHistoryModel.objects.create(
+                        user=user,
+                        email=user.email,
+                        ip_address=request.META.get("REMOTE_ADDR"),
+                    )
+
+                    next_url = request.GET.get("next")
+                    if (
+                        next_url
+                        and next_url.strip()
+                        and not next_url.startswith("http")
+                    ):
                         return redirect(next_url)
-                
-                # Default redirect if no valid next_url
-                return redirect("accountManagement:userAccount")
-            else:
-                form.add_error(None, "Invalid email or password")
+
+                    return redirect("accountManagement:userAccount")
+
+            form.add_error(None, "Invalid email/username or password")
     else:
         form = UserAuthenticationForm()
+
     return render(request, "authenticationApp/login.html", {"form": form})
 
 

@@ -12,10 +12,8 @@ from django.conf import settings
 from django.contrib import messages
 from django.urls import reverse
 from .forms import (
-    UserProfileForm,
     UpdateContactInfo,
     UpdatePersonalInfo,
-    EditUserProfileForm,
     UpdateProfilePhotoForm,
 )
 from django.contrib.auth.models import Group
@@ -176,48 +174,6 @@ def addCard(request):
     return JsonResponse({"success": False})
 
 
-@login_required(login_url="authentication:login")
-@check_suspension
-@member
-@verified
-def profilePreferences(request):
-    user = request.user
-    profile = UserProfile.objects.get(user=user)
-    userModel = CustomUser.objects.get(username=user.username)
-    profile_form = UserProfileForm(instance=profile)
-
-    if request.method == "POST":
-        form = UserProfileForm(request.POST, request.FILES, instance=profile)
-
-        if form.is_valid():
-            # Access cleaned_data after form validation
-            user.user_preferences_completed = True
-            event_types = request.POST.getlist("event_types")  # Get list from POST
-            profile.save(event_types=event_types)
-
-            form.save()
-            messages.success(request, "Profile preferences updated successfully!")
-            userModel.is_onboarded = True
-            member_group, _ = Group.objects.get_or_create(name="Member")
-            unverified_group, _ = Group.objects.get_or_create(name="Unverified")
-            verified_group, _ = Group.objects.get_or_create(name="Verified")
-            unboarded_group, _ = Group.objects.get_or_create(name="Unboarded")
-            onboarded_group, _ = Group.objects.get_or_create(name="Onboarded")
-
-            userModel.groups.add(member_group)
-            userModel.groups.add(verified_group)
-            userModel.groups.add(onboarded_group)
-            userModel.groups.remove(unverified_group)
-            userModel.groups.remove(unboarded_group)
-            userModel.save()
-
-            return redirect("accountManagement:userAccount")
-
-    return render(
-        request,
-        "accountManagementApp/extras/preferences.html",
-        {"updateUserProfileForm": profile_form, "user": user, "profile": profile},
-    )
 
 
 @login_required(login_url="authentication:login")
@@ -278,7 +234,6 @@ def settingsView(request):
     personal_form = UpdatePersonalInfo(instance=user)
     profile = UserProfile.objects.get(user=user)
     contact_form = UpdateContactInfo(instance=user)
-    editProfileForm = EditUserProfileForm(instance=profile)
     editProfilePictureForm = UpdateProfilePhotoForm(instance=profile)
 
     if request.method == "POST":
@@ -305,15 +260,6 @@ def settingsView(request):
                 form.save()
                 messages.success(request, "Contact information updated successfully!")
 
-        elif form_type == "profile-info":
-            editProfileForm = EditUserProfileForm(request.POST, instance=profile)
-
-            if editProfileForm.is_valid():
-                editProfileForm.save()
-                messages.success(request, "Profile information updated successfully!")
-            else:
-                messages.error(request, f"Invalid form {editProfileForm.errors}")
-                return redirect("accountManagement:userSettings")
         else:
             messages.error(request, "Invalid form.")
             return redirect("accountManagement:userSettings")
@@ -329,7 +275,6 @@ def settingsView(request):
             "contact_form": contact_form,
             "user": user,
             "profile": profile,
-            "editProfileForm": editProfileForm,
         },
     )
 

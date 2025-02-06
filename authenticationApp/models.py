@@ -68,7 +68,6 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     )
 
     email_verified = models.BooleanField(default=False)
-    is_onboarded = models.BooleanField(default=False)
     is_suspended = models.BooleanField(default=False)
 
     customer_id = models.CharField(max_length=255, null=True, blank=True)

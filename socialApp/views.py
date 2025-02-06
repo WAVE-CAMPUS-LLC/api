@@ -31,12 +31,11 @@ UserModel = get_user_model()
 @check_suspension
 @member
 @verified
-@onboarded
 def socialHomeView(request):
     user = get_object_or_404(UserProfile, user=request.user)
     siteUrl = settings.SITE_URL
     link = reverse("social:publicProfile", kwargs={"username": user.user.username})
-    
+
     profileLink = f"{siteUrl}{link}"
 
     myCrews = Crew.objects.filter(created_by=request.user)
@@ -76,7 +75,7 @@ def socialHomeView(request):
     shared_with_me = SharedEvent.objects.filter(receiver=user).select_related(
         "event", "sender", "crew"
     )
-    
+
     if user.user.groups.filter(name="Host").exists():
         isHost = True
     else:
@@ -100,7 +99,9 @@ def socialHomeView(request):
     pending_crew_requests = CrewRequest.objects.filter(
         receiver=request.user, status="pending"
     )
-    sent_crew_requests = CrewRequest.objects.filter(sender=request.user, status="pending")
+    sent_crew_requests = CrewRequest.objects.filter(
+        sender=request.user, status="pending"
+    )
 
     def get_pending_crew_request_random_members(crew_request):
         crew = crew_request.crew  # Access the related Crew object from the CrewRequest
@@ -222,17 +223,17 @@ def socialHomeView(request):
                 },
             )
             return redirect("social:home")
-        
+
         elif action == "generateProfileQRCode":
             profile = UserProfile.objects.get(user=request.user)
             profile.generate_qr_code()
             profile.save()
             messages.success(request, "QR code generated successfully!")
             return redirect("social:home")
-        
+
         else:
             crew_invite_action(request, request.POST.get("crew_id"), action)
-            
+
     return render(
         request,
         "socialApp/socialHome.html",
@@ -250,14 +251,14 @@ def socialHomeView(request):
             "isActiveUser": isActiveUser,
             "my_shared_events": my_shared_events,
             "shared_with_me": shared_with_me,
-            'profileLink': profileLink
+            "profileLink": profileLink,
         },
     )
 
 
 def copyLinkSuccessView(request):
     messages.success(request, "Profile link copied to clipboard!")
-    
+
     return JsonResponse({"message": "Profile link copied to clipboard!"})
 
 
@@ -338,7 +339,7 @@ def publicProfileView(request, username):
         isHost = False
 
     if (
-        user_profile.user.groups.filter(name="Onboarded").exists()
+        user_profile.user.groups.filter(name="Member").exists()
         and user_profile.user.groups.filter(name="Verified").exists()
     ):
         isActiveUser = True
@@ -493,7 +494,6 @@ def send_friend_request(sender, receiver_username):
 @check_suspension
 @member
 @verified
-@onboarded
 def createCrewView(request):
     if request.method == "POST":
         crewForm = createCrewForm(request.POST)
@@ -521,7 +521,6 @@ def createCrewView(request):
 @check_suspension
 @member
 @verified
-@onboarded
 def crewView(request, crewId):
     time = datetime.now().timestamp()
     user = get_object_or_404(UserProfile, user=request.user)
@@ -676,7 +675,6 @@ def send_crew_request(sender, receiver_username, crew_id):
 @check_suspension
 @member
 @verified
-@onboarded
 def leave_crew(request, crewId):
     crew = get_object_or_404(Crew, crewId=crewId)
     crew_member = CrewMember.objects.get(crew=crew, user=request.user)
@@ -696,7 +694,6 @@ def leave_crew(request, crewId):
 @check_suspension
 @member
 @verified
-@onboarded
 def delete_crew(request, crewId):
     crew = get_object_or_404(Crew, crewId=crewId)
 
@@ -711,7 +708,6 @@ def delete_crew(request, crewId):
 @check_suspension
 @member
 @verified
-@onboarded
 def kick_member(request, crewId, member_username):
     crew = get_object_or_404(Crew, crewId=crewId)
     member = get_object_or_404(UserProfile, user__username=member_username)
@@ -746,6 +742,7 @@ def kick_member(request, crewId, member_username):
     #     else:
     #         no_results_html = render_to_string('socialApp/extras/no-result.html')
     #         return JsonResponse({'results_html': [], 'no_results': True, 'no_results_html': no_results_html})
+
 
 def send_social_socket_message(shared_event, receiver, message, action):
     try:

@@ -97,7 +97,7 @@ def hostGuideView(request):
 @login_required
 @member
 @verified
-@onboarded
+@verified
 @check_suspension
 def eventCreationSelect(request):
     siteDomain = settings.SITE_URL
@@ -149,7 +149,7 @@ def eventCreationSelect(request):
 
 @login_required
 @member
-@onboarded
+@verified
 @check_suspension
 def createPaidEvent(request):
     event_type_choices = Event.EVENT_TYPE_CHOICES
@@ -232,7 +232,7 @@ def createPaidEvent(request):
 
 @login_required
 @member
-@onboarded
+@verified
 @check_suspension
 def createInviteEvent(request):
     event_type_choices = Event.EVENT_TYPE_CHOICES
@@ -317,7 +317,7 @@ def createInviteEvent(request):
 
 @login_required
 @member
-@onboarded
+@verified
 @check_suspension
 def createRsvpEvent(request):
     event_type_choices = Event.EVENT_TYPE_CHOICES
@@ -402,7 +402,7 @@ def createRsvpEvent(request):
 
 @login_required
 @member
-@onboarded
+@verified
 @check_suspension
 def createPaidEventTicket(request, eventId):
     event = get_object_or_404(Event, eventId=eventId)
@@ -455,7 +455,7 @@ def createPaidEventTicket(request, eventId):
 
 @login_required
 @member
-@onboarded
+@verified
 @check_suspension
 def createInviteEventTicket(request, event):
     eventId = event.eventId

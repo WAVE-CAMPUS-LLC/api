@@ -140,6 +140,8 @@ def viewCollegeInformation(request, collegeId):
     college = get_object_or_404(College, collegeId=collegeId)
 
     user_profile = UserProfile.objects.filter(user=request.user).first()
+    is_member = Membership.objects.filter(user=request.user, college=college).exists()
+
 
     members = UserProfile.objects.filter(college=college)
     organizations = Organization.objects.filter(college=college, status="Accepted")
@@ -211,6 +213,7 @@ def viewCollegeInformation(request, collegeId):
             "organizations": organizations,
             "events": events,
             "weekly_events": weekly_events,
+            "is_member": is_member,
         },
     )
 

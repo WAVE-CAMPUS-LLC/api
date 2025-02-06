@@ -92,35 +92,29 @@ class CustomUserChangeForm(UserChangeForm):
         )
 
 
-class UserAuthenticationForm(AuthenticationForm):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields.pop("username", None)
-
-    email = forms.EmailField(label="Email")
+class UserAuthenticationForm(forms.Form):
+    identifier = forms.CharField(label="Email or Username")
     password = forms.CharField(label="Password", widget=forms.PasswordInput)
 
-    # Checking to see if account exists at all using email address.
-    def clean_email(self):
-        email = self.cleaned_data.get("email")
-        if not CustomUser.objects.filter(email=email).exists():
-            raise forms.ValidationError("Account does not exist.")
-        return email
-
-    # Now checking and comparing the email address to the password stored in the system.
     def clean(self):
         cleaned_data = super().clean()
-        email = cleaned_data.get("email")
+        identifier = cleaned_data.get("identifier")
         password = cleaned_data.get("password")
 
-        # If the email and password are inputed in, compare the input password and password stored in the database.
-        if email and password:
-            user = CustomUser.objects.filter(email=email).first()
-            if user and not user.check_password(password):
-                self.add_error("password", forms.ValidationError("Incorrect password."))
+        if identifier and password:
+            # Try authenticating by email
+            user = CustomUser.objects.filter(email=identifier).first()
+            if not user:
+                # Try authenticating by username
+                user = CustomUser.objects.filter(username=identifier).first()
+            
+            if not user:
+                self.add_error("identifier", forms.ValidationError("Invalid credentials"))
+            elif not user.check_password(password):
+                self.add_error("password", forms.ValidationError("Incorrect password"))
 
+        
         return cleaned_data
-
 
 # Extend from Django's default password reset form and use it to build customized form.
 class EmailPasswordResetForm(PasswordResetForm):

@@ -5,7 +5,6 @@ app_name = "accountManagement"
 
 urlpatterns = [
     path("profile/", views.profileView, name="userAccount"),
-    path("profile/onboarding/", views.profilePreferences, name="onboarding"),
     path("profile=update/<str:username>/updatingprocess/", views.userProfileProcessing, name="updateProfileProcess"),
     path("settings/", views.settingsView, name="userSettings"),
     path("settings/update/addCard/", views.addCard, name="addCard"),

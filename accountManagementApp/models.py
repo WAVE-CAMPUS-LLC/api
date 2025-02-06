@@ -77,120 +77,7 @@ def get_college_choices():
 
 class UserProfile(models.Model):
     COLLEGE_OPTIONS = get_college_choices()
-    USER_STATUS_OPTION = [
-        ("Happy 😊", "Happy 😊"),
-        ("Excited 🎉", "Excited 🎉"),
-        ("Grateful 🙏", "Grateful 🙏"),
-        ("Motivated 💪", "Motivated 💪"),
-        ("Blessed ✨", "Blessed ✨"),
-        ("Inspired 🌈", "Inspired 🌈"),
-        ("Just here 🤙", "Just here 🤙"),
-        ("Living 🌿", "Living 🌿"),
-        ("Relaxing ☕", "Relaxing ☕"),
-        ("Chillin' 😎", "Chillin' 😎"),
-        ("Unbothered 🌊", "Unbothered 🌊"),
-        ("Taking it easy 🌼", "Taking it easy 🌼"),
-        ("Focused 🧠", "Focused 🧠"),
-        ("Grinding 🚀", "Grinding 🚀"),
-        ("Busy 💼", "Busy 💼"),
-        ("Hustling 🏃‍♂️", "Hustling 🏃‍♂️"),
-        ("Creating 🎨", "Creating 🎨"),
-        ("In my zone 🎯", "In my zone 🎯"),
-        ("Meh 😐", "Meh 😐"),
-        ("Just okay 🤷‍♂️", "Just okay 🤷‍♂️"),
-        ("Could be better 😕", "Could be better 😕"),
-        ("Waiting... ⏳", "Waiting... ⏳"),
-        ("Confused 🤔", "Confused 🤔"),
-        ("Tired 😴", "Tired 😴"),
-        ("Stressed 😓", "Stressed 😓"),
-        ("Overwhelmed 🌪️", "Overwhelmed 🌪️"),
-        ("Feeling low 😔", "Feeling low 😔"),
-        ("Need a break 🛑", "Need a break 🛑"),
-        ("Not today 🙅‍♂️", "Not today 🙅‍♂️"),
-        ("Exploring 🗺️", "Exploring 🗺️"),
-        ("On the move 🚶‍♂️", "On the move 🚶‍♂️"),
-        ("Seeking new things 🔍", "Seeking new things 🔍"),
-        ("Wanderlust 🌍", "Wanderlust 🌍"),
-        ("Chasing dreams ✈️", "Chasing dreams ✈️"),
-        ("Hanging out 🍻", "Hanging out 🍻"),
-        ("Party time 🎉", "Party time 🎉"),
-        ("Game on 🎮", "Game on 🎮"),
-        ("Vibing with friends 👫", "Vibing with friends 👫"),
-        ("Making memories 📸", "Making memories 📸"),
-        ("Grateful 🧘‍♂️", "Grateful 🧘‍♂️"),
-        ("Deep in thought 🤔", "Deep in thought 🤔"),
-        ("Reflecting 🪞", "Reflecting 🪞"),
-        ("Taking it all in 🌱", "Taking it all in 🌱"),
-        ("Growing 🌱", "Growing 🌱"),
-        ("It's complicated 🤯", "It's complicated 🤯"),
-        ("Undefined 🤷‍♂️", "Undefined 🤷‍♂️"),
-        ("TBD (To Be Determined) 🕵️", "TBD (To Be Determined) 🕵️"),
-        ("Can't explain 🌀", "Can't explain 🌀"),
-    ]
-    GENDER_OPTIONS = [
-        ("Male", "Male"),
-        ("Female", "Female"),
-        ("Other", "Other"),
-        ("Prefer not to say", "Prefer not to say"),
-    ]
-    STATE_CHOICES = [
-        ("AL", "Alabama"),
-        ("AK", "Alaska"),
-        ("AZ", "Arizona"),
-        ("AR", "Arkansas"),
-        ("CA", "California"),
-        ("CO", "Colorado"),
-        ("CT", "Connecticut"),
-        ("DE", "Delaware"),
-        ("FL", "Florida"),
-        ("GA", "Georgia"),
-        ("HI", "Hawaii"),
-        ("ID", "Idaho"),
-        ("IL", "Illinois"),
-        ("IN", "Indiana"),
-        ("IA", "Iowa"),
-        ("KS", "Kansas"),
-        ("KY", "Kentucky"),
-        ("LA", "Louisiana"),
-        ("ME", "Maine"),
-        ("MD", "Maryland"),
-        ("MA", "Massachusetts"),
-        ("MI", "Michigan"),
-        ("MN", "Minnesota"),
-        ("MS", "Mississippi"),
-        ("MO", "Missouri"),
-        ("MT", "Montana"),
-        ("NE", "Nebraska"),
-        ("NV", "Nevada"),
-        ("NH", "New Hampshire"),
-        ("NJ", "New Jersey"),
-        ("NM", "New Mexico"),
-        ("NY", "New York"),
-        ("NC", "North Carolina"),
-        ("ND", "North Dakota"),
-        ("OH", "Ohio"),
-        ("OK", "Oklahoma"),
-        ("OR", "Oregon"),
-        ("PA", "Pennsylvania"),
-        ("RI", "Rhode Island"),
-        ("SC", "South Carolina"),
-        ("SD", "South Dakota"),
-        ("TN", "Tennessee"),
-        ("TX", "Texas"),
-        ("UT", "Utah"),
-        ("VT", "Vermont"),
-        ("VA", "Virginia"),
-        ("WA", "Washington"),
-        ("WV", "West Virginia"),
-        ("WI", "Wisconsin"),
-        ("WY", "Wyoming"),
-    ]
-    EVENT_SIZE_CHOICES = [
-        ("Intimate (1-30 people)", "Intimate (1-30 people)"),
-        ("Medium (50-100 people)", "Medium (50-100 people)"),
-        ("Large (100+ people)", "Large (100+ people)"),
-    ]
-
+    
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -204,15 +91,7 @@ class UserProfile(models.Model):
     friends = models.ManyToManyField("self", symmetrical=True, blank=True)
     is_campus_manager = models.BooleanField(default=False)
 
-    status = models.TextField(
-        _("How do you feel right now?"), blank=True, choices=USER_STATUS_OPTION
-    )
-    gender = models.CharField(
-        _("What gender do you indentify as?"),
-        max_length=17,
-        blank=True,
-        choices=GENDER_OPTIONS,
-    )
+    
     profile_photo = models.ImageField(
         upload_to='profile/profile-pictures/',
         null=True,
@@ -220,39 +99,7 @@ class UserProfile(models.Model):
         help_text="Profile picture for the user"
     )
 
-    home_state = models.CharField(
-        "What's your home state?", max_length=2, choices=STATE_CHOICES, default=""
-    )
-
-    college_name = models.CharField(
-        max_length=255,
-        choices=COLLEGE_OPTIONS,
-        blank=True,
-        null=True,
-        help_text="Select your college from the list."
-    )
     
-    current_year = timezone.now().year
-    graduation_year = models.PositiveIntegerField(
-        _("Enter your graduation year"),
-        validators=[
-            MinValueValidator(current_year),
-            MaxValueValidator(current_year + 10),
-        ],
-        null=True,
-        blank=True,
-    )
-    major = models.CharField(_("What's your major?"), max_length=150, blank=True)
-
-    # Event Preferences
-    event_types = models.ManyToManyField(
-        EventTypePreferences, related_name="user_preferences", blank=True
-    )
-
-    # Social Media Profiles
-    instagram = models.CharField(max_length=100, blank=True, default="")
-    tiktok = models.CharField(max_length=100, blank=True, default="")
-
     was_host = models.BooleanField(default=False)
 
     # Invited Events
@@ -303,16 +150,6 @@ class UserProfile(models.Model):
         )
 
     def save(self, *args, event_types=None, **kwargs):
-        if event_types is not None:
-            event_type_preferences = []
-            for event_type_name in event_types:
-                event_type, created = EventTypePreferences.objects.get_or_create(
-                    name=event_type_name
-                )
-                event_type_preferences.append(event_type)
-
-            self.event_types.set(event_type_preferences)
-
         if not self.profile_qr_code:
             self.generate_qr_code()
         # Now call the parent save method, ensuring to use the correct arguments
