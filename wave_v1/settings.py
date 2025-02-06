@@ -19,6 +19,7 @@ from supabase import create_client, Client
 from django.contrib.messages import constants as messages_constants
 from wave_v1.storage import SupabaseStorage
 from django.core.files.storage import default_storage
+import secrets  # Add this import if not already present
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -29,7 +30,8 @@ load_dotenv()
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
+print(secrets.token_urlsafe(64))
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", secrets.token_urlsafe(64))
 
 # SECURITY WARNING: don't run with debug turned on in production!
 # DEBUG=True
