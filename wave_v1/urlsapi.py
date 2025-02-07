@@ -29,7 +29,7 @@ urlpatterns = [
     # path("account/", include("accountManagementApp.apiUrls")),
     # path("host/", include("eventManagementApp.apiUrls")),
     # path("support/", include("supportCenterApp.apiUrls")),
-    # path("colleges/", include("collegeManagementApp.apiUrls")),
+    path("colleges/", include("collegeManagementApp.apiUrls")),
     path("core/", include("coreApp.apiUrls")),
     # path("career/", include("careerApp.apiUrls")),
     # path("news/", include("newsroomApp.apiUrls")),
