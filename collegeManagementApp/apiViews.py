@@ -36,7 +36,6 @@ def collegeCampusesView(request):
             "logo": college.logo.url if college.logo else None,
             "email_domain": college.email_domain,
             "motto": college.motto,
-            "managers": college.managers.values("username", "first_name", "last_name"),
             "contact_website": college.contact_website,
             "member_count": UserProfile.objects.filter(college=college).count(),
             "organization_count": Organization.objects.filter(college=college).count(),
@@ -52,3 +51,4 @@ def collegeCampusesView(request):
     }
 
     return JsonResponse(response_data, safe=False)
+
