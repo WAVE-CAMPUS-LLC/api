@@ -4,15 +4,15 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Function to toggle visibility
     function toggleCrewInfoRow() {
-        if (toggleSwitch.checked) {
-            crewInfoRow.style.display = "grid"; // Display the row
+        if (toggleSwitch?.checked) {
+            crewInfoRow?.style.display = "grid"; // Display the row
         } else {
-            crewInfoRow.style.display = "none"; // Hide the row
+            crewInfoRow?.style.display = "none"; // Hide the row
         }
     }
 
     // Attach event listener to the checkbox
-    toggleSwitch.addEventListener("change", toggleCrewInfoRow);
+    toggleSwitch?.addEventListener("change", toggleCrewInfoRow);
 
     // Set the initial state on page load
     toggleCrewInfoRow();

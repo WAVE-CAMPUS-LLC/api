@@ -105,18 +105,6 @@ def eventCreationSelect(request):
 
     completedConnectAccount = False
 
-    if not userAccount.connectAccountID:
-        stripeConnectAccount = ConnectAccount.createConnectAccount(request, userAccount)
-        if stripeConnectAccount:
-            userAccount.connectAccountID = stripeConnectAccount.id
-            userAccount.connectAccountCreated = True
-            userAccount.save()
-            completedConnectAccount = True
-    else:
-        stripeConnectAccount = stripe.Account.retrieve(userAccount.connectAccountID)
-        if stripeConnectAccount.get("payouts_enabled"):
-            completedConnectAccount = True
-
     siteDomain = settings.SITE_URL
 
     link = request.build_absolute_uri(reverse("eventManagement:eventCreationSelect"))
@@ -135,6 +123,20 @@ def eventCreationSelect(request):
         eventAction = request.POST.get("eventAction")
 
         if eventAction == "paid":
+            
+            if not userAccount.connectAccountID:
+                stripeConnectAccount = ConnectAccount.createConnectAccount(request, userAccount)
+                if stripeConnectAccount:
+                    userAccount.connectAccountID = stripeConnectAccount.id
+                    userAccount.connectAccountCreated = True
+                    userAccount.save()
+                    completedConnectAccount = True
+            else:
+                stripeConnectAccount = stripe.Account.retrieve(userAccount.connectAccountID)
+                if stripeConnectAccount.get("payouts_enabled"):
+                    completedConnectAccount = True
+            time.sleep(2)
+
             if not completedConnectAccount:
                 messages.error(request, "Please complete your Stripe account setup.")
                 return redirect(stripeLinkAccount)

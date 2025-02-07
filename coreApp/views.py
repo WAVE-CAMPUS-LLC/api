@@ -227,6 +227,22 @@ def load_more_events(request):
 
     return JsonResponse({"events": events_data, "has_more": has_more})
 
+def toggleFavorite(request, eventId):
+    user =  get_object_or_404(UserProfile, user=request.user) if request.user.is_authenticated else None
+    event = get_object_or_404(Event, eventId=eventId)
+    action = request.POST.get('eventAction')
+    
+    if user:
+        if action == "favoriteEvent":
+            user.favorite_events.add(event)
+            return JsonResponse({"status": "successfulFavorite", "message": "Event added to favorites."})
+        else:
+            user.favorite_events.remove(event)
+            return JsonResponse({"status": "successfulUnfavorite", "message": "Event removed from favorites."})
+    else:
+        messages.warning(request, "Please login to favorite events.")
+        return redirect("authentication:login")
+
 
 def eventDetailsView(request, eventId, token=None):
     pageName = "eventDetails"
@@ -404,20 +420,6 @@ def eventDetailsView(request, eventId, token=None):
 
                 messages.success(request, f"Event shared with {crew.name}")
                 return redirect("core:eventDetails", eventId=event.eventId)
-
-        elif action == "favoriteEvent":
-            if not request.user.is_authenticated:
-                messages.warning(request, "Please login to favorite this event.")
-                return redirect("authentication:login")
-            else:
-                user.favorite_events.add(event)
-
-        elif action == "unfavoriteEvent":
-            if not request.user.is_authenticated:
-                messages.warning(request, "Please login to unfavorite this event.")
-                return redirect("authentication:login")
-            else:
-                user.favorite_events.remove(event)
 
         elif action == "purchaseForCrew":
             if not request.user.is_authenticated:
