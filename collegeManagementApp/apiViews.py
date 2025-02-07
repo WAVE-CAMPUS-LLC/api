@@ -28,7 +28,16 @@ def collegeCampusesView(request):
         {
             "id": college.collegeId,
             "name": college.name,
-            "location": college.location,
+            "address": college.address,
+            "city": college.city,
+            "state": college.state,
+            "zip_code": college.zip_code,
+            "country": college.country,
+            "logo": college.logo.url if college.logo else None,
+            "email_domain": college.email_domain,
+            "motto": college.motto,
+            "managers": college.managers.values("user__username", "user__first_name", "user__last_name"),
+            "contact_website": college.contact_website,
             "member_count": UserProfile.objects.filter(college=college).count(),
             "organization_count": Organization.objects.filter(college=college).count(),
         }
