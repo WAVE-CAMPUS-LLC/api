@@ -26,7 +26,7 @@ def collegeCampusesView(request):
     # Fetch member and organization counts efficiently
     college_data = [
         {
-            "id": college.id,
+            "id": college.collegeId,
             "name": college.name,
             "location": college.location,
             "member_count": UserProfile.objects.filter(college=college).count(),
