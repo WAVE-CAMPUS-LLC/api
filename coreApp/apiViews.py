@@ -12,6 +12,7 @@ from eventManagementApp.models import Event, SharedEvent
 from accountManagementApp.models import UserProfile
 from eventTicketsApp.models import RSVPTicket, PaidFreeTicket
 from .forms import RSVPForm
+from authenticationApp.models import CustomUser
 from .serializers import EventSerializer
 from eventTicketsApp.serializers import RSVPTicketSerializer
 from eventTicketsApp.models import RSVPTicket, PaidFreeTicket
@@ -223,15 +224,14 @@ def event_details(request, eventId):
     - Ticket purchasing for crews
     """
     
+    # Fetch the event and related objects
     event = get_object_or_404(Event, eventId=eventId)
     eventprivacy = EventPrivacy.objects.get(event=event)
     eventPaidFreeTickets = PaidFreeTicket.objects.filter(event=event)
     
     # Check for RSVP requirement and guest list
-    rsvpForm = None
-    if event.ticketing == "RSVP Required":
-        rsvpForm = RSVPForm()
-
+    rsvpFormRequired = event.ticketing == "RSVP Required"  # Just a boolean flag indicating if RSVP is required
+    
     guest_list = event.guest_list.all()
     user = None
     user_friends = None
@@ -255,6 +255,7 @@ def event_details(request, eventId):
     else:
         user_age = None  # Anonymous users don't have age available
 
+    # Check if the event is a favorite event for the current user
     isFavoriteEvent = False
     if user and hasattr(user, "favorite_events"):
         isFavoriteEvent = user.favorite_events.filter(eventId=event.eventId).exists()
@@ -334,7 +335,7 @@ def event_details(request, eventId):
                 status=status.HTTP_200_OK
             )
 
-    # Return event details as JSON
+    # Prepare response data
     response_data = {
         "event": EventSerializer(event).data,
         "eventPrivacy": {
@@ -342,7 +343,7 @@ def event_details(request, eventId):
             "restricted_college": eventprivacy.restricted_college,
             "restricted_organization": eventprivacy.restricted_organization,
         },
-        "rsvpForm": rsvpForm,  # Add if needed
+        "rsvpFormRequired": rsvpFormRequired,  # Boolean indicating if RSVP form is required
         "paidFreeTickets": eventPaidFreeTickets.values(),
         "friends": [user_friend.username for user_friend in user_friends] if user_friends else [],
         "crews": [user_crew.name for user_crew in user_crews] if user_crews else [],
@@ -351,8 +352,6 @@ def event_details(request, eventId):
     }
 
     return Response(response_data)
-
-
 
 def handle_rsvp(request, eventId):
     event = get_object_or_404(Event, eventId=eventId)
