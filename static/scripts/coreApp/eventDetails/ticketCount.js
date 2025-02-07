@@ -128,45 +128,30 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function returnCheckout() {
-    const checkoutUrl = document.getElementById("checkout-url").value;
-    
-    // Example: If user is not logged in, collect their first/last/email from the DOM
-    const firstName = document.getElementById("guest_first_name")?.value || "";
-    const lastName = document.getElementById("guest_last_name")?.value || "";
-    const email = document.getElementById("guest_email")?.value || "";
-
-    // Build JSON payload
-    const data = {
-      cart: cart,  // if you want to send cart, though you're storing it in session
-      first_name: firstName,
-      last_name: lastName,
-      email: email,
-    };
-
-    fetch(checkoutUrl, {
+    // Replace with the URL mapped to your create_checkout_session view.
+    const checkoutSessionUrl = document.getElementById("hostedCheckout").value;
+        
+    fetch(checkoutSessionUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "X-CSRFToken": getCookie("csrftoken"),
       },
-      body: JSON.stringify(data),
+      // Optionally send additional data if needed:
+      body: JSON.stringify({ /* you can include extra details if required */ }),
     })
-      .then(response => {
-        if (!response.ok) {
-          console.error("Error response:", response);
-          return response.json(); // parse JSON error
-        }
-        return response.json();
-      })
+      .then(response => response.json())
       .then(data => {
-        if (data.url) {
-          window.location.href = data.url;
+        if (data.sessionUrl) {
+          // Redirect the user to Stripe's hosted checkout page.
+          window.location.href = data.sessionUrl;
         } else {
-          console.error("No checkout URL in JSON response:", data);
+          console.error("Error creating checkout session:", data.error);
         }
       })
       .catch(error => console.error("Error:", error));
   }
+  
 
   const checkoutButton = document.getElementById("checkoutButton");
   checkoutButton.addEventListener("click", returnCheckout);

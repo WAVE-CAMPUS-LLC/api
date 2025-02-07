@@ -197,6 +197,78 @@ def checkoutView(request):
 
     return render(request, "eventTicketsApp/checkout.html", context)
 
+def hostedCheckout(request):
+    cart = request.session.get("cart", {})
+    if not cart:
+        return JsonResponse({"error": "Cart is empty"}, status=400)
+    
+    # Calculate the total amount for tickets in dollars and convert to cents
+    total_amount = sum(
+        float(item.get("price", 0)) * int(item.get("quantity", 0))
+        for item in cart.values()
+    )
+    amount_in_cents = int(total_amount * 100)
+    if amount_in_cents <= 0:
+        return JsonResponse({"error": "Invalid amount"}, status=400)
+
+    # Save the cart in the session if needed
+    cart_id = str(uuid.uuid4())
+    request.session[f"cart_data_{cart_id}"] = cart
+    
+    # Calculate your service fee (for example, 7% of the ticket total plus 99 cents)
+    fee_amount = int(amount_in_cents * 0.07) + 99
+
+    # Build Stripe line items for each ticket
+    line_items = []
+    for ticket in cart.values():
+        line_items.append({
+            "price_data": {
+                "currency": "usd",
+                "product_data": {
+                    "name": ticket["name"],
+                },
+                "unit_amount": int(Decimal(ticket["price"]) * 100),
+            },
+            "quantity": ticket["quantity"],
+        })
+    
+    # Append a separate line item for the service fee so the user sees it
+    line_items.append({
+        "price_data": {
+            "currency": "usd",
+            "product_data": {
+                "name": "Service Fee",
+            },
+            "unit_amount": fee_amount,
+        },
+        "quantity": 1,
+    })
+
+    # Retrieve an event from one of the cart items and get its host's connected account ID
+    ticket = next(iter(cart.values()))
+    event = Event.objects.get(eventId=ticket.get("eventId"))
+    host = CustomUser.objects.get(id=event.host.id)  # Assumes the host has a field "connectAccountID"
+
+    try:
+        checkout_session = stripe.checkout.Session.create(
+            payment_method_types=["card"],
+            line_items=line_items,
+            mode="payment",
+            payment_intent_data={
+                # This tells Stripe to deduct your service fee from the total
+                "application_fee_amount": fee_amount,
+                # The remaining funds are transferred to the host’s connected account
+                "transfer_data": {
+                    "destination": host.connectAccountID,
+                },
+            },
+            success_url=request.build_absolute_uri(reverse("eventTickets:paymentSuccessful")),
+            cancel_url=request.build_absolute_uri(reverse("eventTickets:paymentFailed")),
+        )
+        return JsonResponse({"sessionUrl": checkout_session.url})
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=400)
+
 
 def createPaymentIntent(request):
     try:

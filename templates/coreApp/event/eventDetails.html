@@ -51,8 +51,13 @@
 <div id="content-container" class="flex flex-col px-[10px] overflow-hidden after-xsm:px-[20px] xxsm:px-[35px] sm:px-[40px] md:px-[40px] pre-lg:px-[50px] lg:px-[80px] xl:px-[150px] 2xl:px-[200px] 3xl:-[300px] gap-[70px]">
     <div class="flex flex-col gap-3">
         <div class="page-header w-full flex flex-col gap-3">
-            <div class="w-full flex justify-start">
+            <div class="w-full flex justify-between items-center">
                 <h3 class="font-Wanted-ExtraBold pre-sm:font-Wanted-Black text-Medium xsm:text-Large after-xsm:text-Pre-Xl xxsm:text-1xl pre-sm:text-1xl sm:text-2xl md:text-3xl text-black">{{ event.title }}</h3>
+                <div id="notificationArea" class="bg-[#008d95] text-white font-Wanted-Bold px-6 py-3 rounded-lg shadow-lg z-50 hidden"></div>
+                <div id="spacer1"></div>
+                <div id="spacer2"></div>
+                <div id="spacer3"></div>
+                <div id="spacer4"></div>
             </div>
             <div id="hostedByTwo" class="hosted-by font-Wanted-Variable text-XSmall after-xsm:text-Small pre-sm:text-Medium text-[#a6a6a6] flex-row gap-2 items-center w-full flex justify-end">
                 <p class="w-full">
@@ -64,18 +69,17 @@
             </div>
         </div>
 
+        
         <div class="flex items-start flex-row justify-center lg:justify-end gap-5">
             <button id="shareEventButton" type="button" class="border-none bg-none cursor-pointer" role="button">
                 <img src="{% static "/images/coreApp/eventDetails/share-event.svg" %}" class="size-5 sm:size-8" />
             </button>
 
             <input type="hidden" id="isFavoriteEvent" value="{{ isFavoriteEvent }}">
-
-            
+            <input type="hidden" id="favoriteEventId" name="eventId" value="{{ event.eventId }}">
             <form method="POST" class="hidden" id="favoriteEventForm">
                 {% csrf_token %}
                 <input type="hidden" name="eventAction" value="favoriteEvent">
-                <input type="hidden" name="eventId" value="{{ event.eventId }}">
                 <button type="submit" id="favoriteEventButton" class="border-none bg-none cursor-pointer" role="button">
                     <img src="{% static "/images/coreApp/eventDetails/outline-heart.svg" %}" class="size-5 sm:size-8" />
                 </button>
@@ -84,7 +88,6 @@
             <form method="POST" class="hidden" id="unFavoriteEventForm">
                 {% csrf_token %}
                 <input type="hidden" name="eventAction" value="unfavoriteEvent">
-                <input type="hidden" name="eventId" value="{{ event.eventId }}">
                 <button type="submit" id="unFavoriteEventButton" class="border-none bg-none cursor-pointer" role="button">
                     <img src="{% static "/images/coreApp/eventDetails/filled-heart.svg" %}" class="size-5 sm:size-8" />
                 </button>
@@ -508,6 +511,7 @@
                                 </div>
                             </div>
 
+                            <input type="hidden" id="hostedCheckout" value="{% url 'eventTickets:hostedCheckout' %}">
                             <div class="checkoutRow w-full flex justify-center" id="checkoutRow">
                                 <div class="checkoutRowContainer flex justify-center">
                                     <button id="checkoutButton" data-save-url="{% url 'eventTickets:updateCart' %}" class="checkoutButton gradient-btn w-full font-Wanted-SemiBold text-Large" role="button" name="eventAction" value="Checkout">
