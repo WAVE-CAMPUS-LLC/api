@@ -4,11 +4,17 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.db.models import Count, Q
 from django.utils.timezone import now
 from datetime import timedelta, date
+from django.shortcuts import get_object_or_404
+
 import random
 
-from eventManagementApp.models import Event
+from eventManagementApp.models import Event, SharedEvent
 from accountManagementApp.models import UserProfile
 from eventTicketsApp.models import RSVPTicket, PaidFreeTicket
+from .serializers import EventSerializer
+from eventTicketsApp.serializers import RSVPTicketSerializer
+from eventTicketsApp.models import RSVPTicket, PaidFreeTicket
+from eventManagementApp.models import EventPrivacy
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
@@ -202,3 +208,192 @@ def load_more_events(request):
         'events': events_data,
         'has_more': has_more
     })
+
+
+@api_view(['GET', 'POST'])
+@permission_classes([AllowAny])
+def event_details(request, eventId, token=None):
+    """
+    API endpoint for getting event details, including:
+    - Event info
+    - RSVP management
+    - Event sharing
+    - Favorite/unfavorite actions
+    - Ticket purchasing for crews
+    """
+    
+    event = get_object_or_404(Event, eventId=eventId)
+    eventprivacy = EventPrivacy.objects.get(event=event)
+    eventPaidFreeTickets = PaidFreeTicket.objects.filter(event=event)
+    
+    # Check for RSVP requirement and guest list
+    rsvpForm = None
+    if event.ticketing == "RSVP Required":
+        rsvpForm = RSVPForm()
+
+    guest_list = event.guest_list.all()
+    user = None
+    user_friends = None
+    user_crews = None
+
+    if request.user.is_authenticated:
+        user = get_object_or_404(UserProfile, user=request.user)
+        user_friends = user.friends.all()
+        user_crews = user.get_all_crews()
+
+        # Calculate user's age if not already stored
+        user_age = request.user.age
+        if user_age is None and request.user.birthday:
+            today = date.today()
+            user_age = (today.year - request.user.birthday.year) - (
+                (today.month, today.day)
+                < (request.user.birthday.month, request.user.birthday.day)
+            )
+            request.user.age = user_age
+            request.user.save()
+    else:
+        user_age = None  # Anonymous users don't have age available
+
+    isFavoriteEvent = False
+    if user and hasattr(user, "favorite_events"):
+        isFavoriteEvent = user.favorite_events.filter(eventId=event.eventId).exists()
+
+    # Handle POST actions (RSVP, share, favorite/unfavorite, purchase)
+    if request.method == "POST":
+        action = request.data.get("eventAction")
+
+        if action == "RSVP":
+            user_email = request.data.get("email")
+            existing_rsvp = RSVPTicket.objects.filter(event=event, email=user_email).first()
+
+            if existing_rsvp:
+                return Response(
+                    {"message": "This email has already been submitted! Try a different one."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            else:
+                rsvp_ticket = RSVPTicketSerializer(data=request.data)
+                if rsvp_ticket.is_valid():
+                    rsvp_ticket.save()
+                    return Response(
+                        {"message": "You have reserved a spot! Check your email for confirmation."},
+                        status=status.HTTP_201_CREATED
+                    )
+
+        elif action == "shareEventWithFriend":
+            if not request.user.is_authenticated:
+                return Response({"message": "Please login to share this event."}, status=status.HTTP_400_BAD_REQUEST)
+            
+            friend_username = request.data.get("shareFriendUsername")
+            friendUserAccount = get_object_or_404(CustomUser, username=friend_username)
+            friend = get_object_or_404(UserProfile, user=friendUserAccount)
+
+            shared_event, created = SharedEvent.objects.get_or_create(sender=user, receiver=friend, event=event)
+
+            if created:
+                return Response({"message": f"Event shared with {friend}"}, status=status.HTTP_200_OK)
+            else:
+                return Response({"message": f"Event already shared with {friend}"}, status=status.HTTP_400_BAD_REQUEST)
+
+        elif action == "shareEventWithCrew":
+            if not request.user.is_authenticated:
+                return Response({"message": "Please login to share this event."}, status=status.HTTP_400_BAD_REQUEST)
+
+            crew_id = request.data.get("shareCrewId")
+            crew = get_object_or_404(Crew, crewId=crew_id)
+
+            for member in crew.members.all():
+                SharedEvent.objects.get_or_create(crew=crew, sender=user, receiver=member.user_profile, event=event)
+
+            return Response({"message": f"Event shared with {crew.name}"}, status=status.HTTP_200_OK)
+
+        elif action == "favoriteEvent":
+            if not request.user.is_authenticated:
+                return Response({"message": "Please login to favorite this event."}, status=status.HTTP_400_BAD_REQUEST)
+
+            user.favorite_events.add(event)
+            return Response({"message": "Event added to your favorites."}, status=status.HTTP_200_OK)
+
+        elif action == "unfavoriteEvent":
+            if not request.user.is_authenticated:
+                return Response({"message": "Please login to unfavorite this event."}, status=status.HTTP_400_BAD_REQUEST)
+
+            user.favorite_events.remove(event)
+            return Response({"message": "Event removed from your favorites."}, status=status.HTTP_200_OK)
+
+        elif action == "purchaseForCrew":
+            if not request.user.is_authenticated:
+                return Response({"message": "Please login to purchase tickets for a crew."}, status=status.HTTP_400_BAD_REQUEST)
+            
+            crew_id = request.data.get("crewId")
+            ticketId = request.data.get("ticketId")
+
+            return Response(
+                {"message": "Redirecting to crew checkout."}, 
+                status=status.HTTP_200_OK
+            )
+
+    # Return event details as JSON
+    response_data = {
+        "event": EventSerializer(event).data,
+        "eventPrivacy": {
+            "require_invitation": eventprivacy.require_invitation,
+            "restricted_college": eventprivacy.restricted_college,
+            "restricted_organization": eventprivacy.restricted_organization,
+        },
+        "rsvpForm": rsvpForm,  # Add if needed
+        "paidFreeTickets": eventPaidFreeTickets.values(),
+        "friends": [user_friend.username for user_friend in user_friends] if user_friends else [],
+        "crews": [user_crew.name for user_crew in user_crews] if user_crews else [],
+        "isFavoriteEvent": isFavoriteEvent,
+        "guestList": [guest.username for guest in guest_list] if guest_list else [],
+    }
+
+    return Response(response_data)
+
+
+
+def handle_rsvp(request, eventId):
+    event = get_object_or_404(Event, eventId=eventId)
+
+    # Extract user information and validate RSVP
+    email = request.data.get('email')
+    existing_rsvp = RSVPTicket.objects.filter(event=event, email=email).first()
+
+    if existing_rsvp:
+        return Response({"error": "This email has already been submitted! Try a different one."}, status=400)
+
+    rsvp_ticket = RSVPTicket.objects.create(event=event, email=email)
+    return Response({"message": "You have reserved a spot! Check your email for confirmation."}, status=201)
+
+
+def share_event_with_friend(request, eventId):
+    event = get_object_or_404(Event, eventId=eventId)
+
+    if not request.user.is_authenticated:
+        return Response({"error": "Please login to share this event."}, status=401)
+
+    friend_username = request.data.get('friendUsername')
+    friend_user = get_object_or_404(UserProfile, user__username=friend_username)
+
+    shared_event, created = SharedEvent.objects.get_or_create(sender=request.user.profile, receiver=friend_user, event=event)
+
+    if created:
+        return Response({"message": f"Event shared with {friend_user.user.username}"}, status=201)
+    else:
+        return Response({"message": "Event already shared."}, status=200)
+
+
+def favorite_event(request, eventId):
+    event = get_object_or_404(Event, eventId=eventId)
+    user_profile = get_object_or_404(UserProfile, user=request.user)
+
+    user_profile.favorite_events.add(event)
+    return Response({"message": "Event added to your favorites."}, status=200)
+
+def unfavorite_event(request, eventId):
+    event = get_object_or_404(Event, eventId=eventId)
+    user_profile = get_object_or_404(UserProfile, user=request.user)
+
+    user_profile.favorite_events.remove(event)
+    return Response({"message": "Event removed from your favorites."}, status=200)
