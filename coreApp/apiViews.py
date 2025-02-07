@@ -11,6 +11,7 @@ import random
 from eventManagementApp.models import Event, SharedEvent
 from accountManagementApp.models import UserProfile
 from eventTicketsApp.models import RSVPTicket, PaidFreeTicket
+from .forms import RSVPForm
 from .serializers import EventSerializer
 from eventTicketsApp.serializers import RSVPTicketSerializer
 from eventTicketsApp.models import RSVPTicket, PaidFreeTicket
@@ -212,7 +213,7 @@ def load_more_events(request):
 
 @api_view(['GET', 'POST'])
 @permission_classes([AllowAny])
-def event_details(request, eventId, token=None):
+def event_details(request, eventId):
     """
     API endpoint for getting event details, including:
     - Event info
