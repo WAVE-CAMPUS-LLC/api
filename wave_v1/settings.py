@@ -33,19 +33,75 @@ load_dotenv()
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", secrets.token_urlsafe(64))
 
 # SECURITY WARNING: don't run with debug turned on in production!
-# DEBUG=True
-DEBUG = os.getenv("DEBUG", "False") == "True"
-DEBUG_PROPAGATE_EXCEPTIONS = True
-
-ALLOWED_HOSTS = ["wave-v1.onrender.com", "waveoncampus.com", "localhost", "127.0.0.1"]
+ENVIORNMENT = os.getenv("ENVIORNMENT", "production")
+if ENVIORNMENT == "development":
+    ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
+    CSRF_TRUSTED_ORIGINS = ["http://127.0.0.1:8000"]
+    DEBUG = True
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'crewBuying',
+            'USER': 'wave_owner',
+            'PASSWORD': '1PhnjKA8VBOY',
+            'HOST': 'ep-cold-band-a5n17hct.us-east-2.aws.neon.tech',
+            'PORT': '5432',
+            'OPTIONS': {
+                'sslmode': 'require',
+                'options': '-c timezone=UTC',
+            }
+        }
+    }
+    # CORS Settings
+    CORS_ALLOW_ALL_ORIGINS = True # Temporarily set to True for testing
+    CORS_ALLOW_CREDENTIALS = True
+    CORS_ALLOWED_ORIGINS = ["http://127.0.0.1:8000"]
+    CSP_DEFAULT_SRC = ("*",)
+    CSP_SCRIPT_SRC = ("'self'", "'unsafe-inline'", "'unsafe-eval'", "*")
+    CSP_STYLE_SRC = ("'self'", "'unsafe-inline'", "*")
+    CSP_FONT_SRC = ("*",)
+    CSP_IMG_SRC = ("*", "data:")
+    CSP_FRAME_SRC = ("*",)
+    print("Development Environment")
+else:
+    ALLOWED_HOSTS = ["wave-v1.onrender.com", "waveoncampus.com"]
+    CSRF_TRUSTED_ORIGINS = ["https://wave-v1.onrender.com", "https://waveoncampus.com"]
+    DEBUG = False
+    DEBUG_PROPAGATE_EXCEPTIONS = True
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": "postgres",
+            "USER": "postgres.zqwamcznyosnkrevxmhm",
+            "PASSWORD": os.getenv("DB_PASSWORD"),
+            "HOST": "aws-0-us-east-1.pooler.supabase.com",
+            "PORT": "6543",
+            "OPTIONS": {
+                "sslmode": "require",
+                "options": "-c timezone=UTC",
+                "keepalives": 1,
+                "keepalives_idle": 30,
+                "keepalives_interval": 10,
+                "keepalives_count": 5,
+            },
+        }
+    }
+    # CORS Settings
+    CORS_ALLOW_ALL_ORIGINS = False
+    CORS_ALLOW_CREDENTIALS = False
+    CORS_ALLOWED_ORIGINS = ["https://wave-v1.onrender.com", "https://waveoncampus.com"]
+    CSP_DEFAULT_SRC = ("'self'", "https://waveoncampus.com")
+    CSP_SCRIPT_SRC = ("'self'", "https://waveoncampus.com")
+    CSP_STYLE_SRC = ("'self'", "https://waveoncampus.com")
+    CSP_FONT_SRC = ("'self'", "https://waveoncampus.com")
+    CSP_IMG_SRC = ("'self'", "https://waveoncampus.com")
+    CSP_FRAME_SRC = ("'self'",)
+    print("Production Environment")
 
 
 url = os.getenv("SUPABASE_URL")
 key = os.getenv("SUPABASE_API_KEY")
 supabase = create_client(url, key)
-
-# buckets = supabase.storage.list_buckets()
-# print(buckets)
 
 if not DEBUG:  # In production
     SESSION_COOKIE_SECURE = True
@@ -114,14 +170,6 @@ MIDDLEWARE = [
     "authenticationApp.middleware.RedirectAuthenticatedUsersMiddleware",
 ]
 
-# CSRF Settings
-CSRF_TRUSTED_ORIGINS = [
-    "https://wave-v1.onrender.com",
-    "https://waveoncampus.com",
-    # "http://127.0.0.1:8000",
-    # "http://localhost:8000",
-]
-
 ROOT_URLCONF = "wave_v1.urls"
 if DEBUG:
     SITE_URL = "http://127.0.0.1:8000"
@@ -160,42 +208,6 @@ MESSAGE_TAGS = {
     messages_constants.WARNING: "warning",
     messages_constants.ERROR: "error",
 }
-
-# Production Database
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": "postgres",
-        "USER": "postgres.zqwamcznyosnkrevxmhm",
-        "PASSWORD": os.getenv("DB_PASSWORD"),
-        "HOST": "aws-0-us-east-1.pooler.supabase.com",
-        "PORT": "6543",
-        "OPTIONS": {
-            "sslmode": "require",
-            "options": "-c timezone=UTC",
-            "keepalives": 1,
-            "keepalives_idle": 30,
-            "keepalives_interval": 10,
-            "keepalives_count": 5,
-        },
-    }
-}
-
-# Development Database
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': 'crewBuying',
-#         'USER': 'wave_owner',
-#         'PASSWORD': '1PhnjKA8VBOY',
-#         'HOST': 'ep-cold-band-a5n17hct.us-east-2.aws.neon.tech',
-#         'PORT': '5432',
-#         'OPTIONS': {
-#             'sslmode': 'require',
-#             'options': '-c timezone=UTC',
-#         }
-#     }
-# }
 
 # Email Configurations
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
@@ -259,16 +271,6 @@ STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
-# CORS Settings
-CORS_ALLOW_ALL_ORIGINS = True  # Temporarily set to True for testing
-CORS_ALLOWED_ORIGINS = [
-    "https://wave-v1.onrender.com",
-    "https://waveoncampus.com",
-    # "http://127.0.0.1:8000",
-    # "http://localhost:8000",
-]
-CORS_ALLOW_CREDENTIALS = True
-
 
 # Supabase Configurations
 SUPABASE_URL = os.getenv("SUPABASE_URL")
@@ -292,64 +294,48 @@ MEDIA_URL = f"{SUPABASE_URL}/storage/v1/object/public/{SUPABASE_STORAGE_BUCKET}/
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # DEFAULT_FILE_STORAGE = "adminDashboardApp.storage.SupabaseStorage"
 
-time.sleep(5)
-default_storage._wrapped = SupabaseStorage()
+# time.sleep(5)
+# default_storage._wrapped = SupabaseStorage()
 
-# Add admin contacts for error reporting
-ADMINS = [
-    ("Enosh Lartey", "larteyenosh@gmail.com"),
-    ("Enosh Lartey", "enoshonwavecampus@gmail.com"),
-    ("Michael Abate", "michaelonwavecampus@gmail.com"),
-    ("Michael Abate", "michaelabate819@gmail.com"),
-    ("Edmund Afunyah", "edmundosafo818@gmail.com"),
-    ("Edmund Afunyah", "edmundonwavecampus@gmail.com")
-]
-MANAGERS = ADMINS
-
-LOGGING = {
-    "version": 1,
-    "disable_existing_loggers": False,
-    "formatters": {
-        "verbose": {
-            "format": "[{levelname}] {asctime} {name} {message}",
-            "style": "{",
-        },
-    },
-    "handlers": {
-        "console": {
-            "class": "logging.StreamHandler",
-            "formatter": "verbose",
-            "level": "DEBUG",
-        },
-        "file": {
-            "class": "logging.FileHandler",
-            "filename": "debug.log",
-            "formatter": "verbose",
-            "level": "DEBUG",
-        },
-        "mail_admins": {
-            "class": "django.utils.log.AdminEmailHandler",
-            "level": "ERROR",
-            "formatter": "verbose",
-        },
-    },
-    "loggers": {
-        "": {  # Root logger
-            "handlers": ["console", "file", "mail_admins"],
-            "level": "DEBUG",
-        },
-        "adminDashboardApp": {  # Your app logger
-            "handlers": ["console", "file", "mail_admins"],
-            "level": "DEBUG",
-            "propagate": True,
-        },
-        "django": {  # Django logger
-            "handlers": ["console", "file", "mail_admins"],
-            "level": "INFO",
-            "propagate": True,
-        },
-    },
-}
+# LOGGING = {
+#     "version": 1,
+#     "disable_existing_loggers": False,
+#     "formatters": {
+#         "verbose": {
+#             "format": "[{levelname}] {asctime} {name} {message}",
+#             "style": "{",
+#         },
+#     },
+#     "handlers": {
+#         "console": {
+#             "class": "logging.StreamHandler",
+#             "formatter": "verbose",
+#             "level": "DEBUG",
+#         },
+#         "file": {
+#             "class": "logging.FileHandler",
+#             "filename": "debug.log",
+#             "formatter": "verbose",
+#             "level": "DEBUG",
+#         },
+#     },
+#     "loggers": {
+#         "": {  # Root logger
+#             "handlers": ["console", "file"],
+#             "level": "DEBUG",
+#         },
+#         "adminDashboardApp": {  # Your app logger
+#             "handlers": ["console", "file"],
+#             "level": "DEBUG",
+#             "propagate": True,
+#         },
+#         "django": {  # Django logger
+#             "handlers": ["console", "file"],
+#             "level": "INFO",
+#             "propagate": True,
+#         },
+#     },
+# }
 
 # REST Framework settings
 REST_FRAMEWORK = {
@@ -364,12 +350,3 @@ REST_FRAMEWORK = {
         "rest_framework.renderers.JSONRenderer",
     ],
 }
-
-CSP_DEFAULT_SRC = ("*",)
-CSP_SCRIPT_SRC = ("'self'", "'unsafe-inline'", "'unsafe-eval'", "*")
-CSP_STYLE_SRC = ("'self'", "'unsafe-inline'", "*")
-CSP_FONT_SRC = ("*",)
-CSP_IMG_SRC = ("*", "data:")
-CSP_FRAME_SRC = ("*",)
-
-# This basically allows everything and is not recommended in production.

@@ -161,7 +161,7 @@ def createPaidEvent(request):
     userAccount = get_object_or_404(CustomUser, username=request.user.username)
 
     if request.method == "POST":
-        eventForm = EventForm(request.POST, request.FILES)
+        eventForm = EventForm(request.POST, request.FILES, user=request.user)
         eventAction = request.POST.get("eventAction")
 
         if eventAction == "submit":
@@ -218,7 +218,7 @@ def createPaidEvent(request):
                 # Optionally, handle form errors here
 
     else:
-        eventForm = EventForm()
+        eventForm = EventForm(user=request.user)
 
     return render(
         request,
@@ -244,7 +244,7 @@ def createInviteEvent(request):
     userAccount = get_object_or_404(CustomUser, username=request.user.username)
 
     if request.method == "POST":
-        eventForm = EventForm(request.POST, request.FILES)
+        eventForm = EventForm(request.POST, request.FILES, user=request.user)
         eventAction = request.POST.get("eventAction")
 
         if eventAction == "submit":
@@ -303,7 +303,7 @@ def createInviteEvent(request):
                 # Optionally, handle form errors here
 
     else:
-        eventForm = EventForm()
+        eventForm = EventForm(user=request.user)
 
     return render(
         request,
@@ -329,7 +329,7 @@ def createRsvpEvent(request):
     userAccount = get_object_or_404(CustomUser, username=request.user.username)
 
     if request.method == "POST":
-        eventForm = EventForm(request.POST, request.FILES)
+        eventForm = EventForm(request.POST, request.FILES, user=request.user)
         eventAction = request.POST.get("eventAction")
 
         if eventAction == "submit":
@@ -388,7 +388,7 @@ def createRsvpEvent(request):
                 # Optionally, handle form errors here
 
     else:
-        eventForm = EventForm()
+        eventForm = EventForm(user=request.user)
 
     return render(
         request,
@@ -626,7 +626,7 @@ def eventManagement(request, eventId):
     else:
         invitationForm = InvitationForm()
         paidFreeForm = PaidFreeTicketForm()
-        editEventForm = EditEventForm(instance=event)
+        editEventForm = EditEventForm(instance=event, user=request.user)
 
     return render(
         request,
@@ -654,12 +654,12 @@ def editEvent(request, eventId):
     paid_free_tickets = PaidFreeTicket.objects.filter(event=event)
 
     if request.method == "POST":
-        editEventForm = EditEventForm(request.POST, instance=event)
+        editEventForm = EditEventForm(request.POST, instance=event, user=request.user)
         if editEventForm.is_valid():
             editEventForm.save()
             return redirect("eventManagement:eventManagement", eventId=eventId)
     else:
-        editEventForm = EditEventForm(instance=event)
+        editEventForm = EditEventForm(instance=event, user=request.user)
 
     return render(
         request,

@@ -231,7 +231,8 @@ class EventForm(forms.ModelForm):
             }),
         }
         
-    def __init__(self, *args, user=None, **kwargs):
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop("user", None)
         super().__init__(*args, **kwargs)
         if not user.user_profile.college:
             self.fields['privacy'].choices = [

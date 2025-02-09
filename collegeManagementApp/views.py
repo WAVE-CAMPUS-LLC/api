@@ -270,6 +270,7 @@ def joinCollege(request, collegeId):
                 print(f"Verification email sent to {email}")
             except Exception as e:
                 print(f"Error sending email: {e}")
+                return redirect("colleges:join", collegeId=collegeId)
 
             return redirect("colleges:verify", collegeId=collegeId)
     else:
