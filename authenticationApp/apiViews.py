@@ -15,10 +15,10 @@ def login(request):
     if serializer.is_valid():
         email = serializer.validated_data["email"]
         password = serializer.validated_data["password"]
-        user = authenticate(request, email=email, password=password)
+        user = authenticate(request=request._request, email=email, password=password)
 
         if user:
-            login(request, user)  # Maintains session authentication (if enabled)
+            login(request._request, user)  # Maintains session authentication (if enabled)
             LoginHistoryModel.objects.create(
                 user=user,
                 email=user.email,
