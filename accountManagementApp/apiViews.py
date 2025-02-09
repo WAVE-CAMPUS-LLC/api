@@ -76,7 +76,7 @@ def profile_api(request):
 
     response_data = {
         "blogItems": [{"id": b.id, "title": b.title} for b in blog_items],
-        "userProfile": {"username": user.username, "email": user.email, "first_name": user.first_name, "last_name": user.last_name},
+        "userProfile": {"username": user.username, "email": user.email, "first_name": user.first_name, "last_name": user.last_name, "profilePic": user_profile.profile_pic.url},
         "favoriteEvents": [{"id": e.id, "title": e.title} for e in favorite_events],
         "payments": payment_methods if payment_methods else None,
         "purchasedTickets": [{"event": t.event.title, "date": t.event.date} for t in purchased_tickets],
