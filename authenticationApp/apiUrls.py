@@ -5,5 +5,5 @@ app_name="authentication_api"
 
 
 urlpatterns = [
-    path("login/", apiViews.login, name="login"),
+    path("api_login/", apiViews.login_api_view, name="login"),
 ]

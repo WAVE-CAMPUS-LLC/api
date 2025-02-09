@@ -39,21 +39,21 @@ if ENVIORNMENT == "development":
     CSRF_TRUSTED_ORIGINS = ["http://127.0.0.1:8000"]
     DEBUG = True
     DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': 'crewBuying',
-            'USER': 'wave_owner',
-            'PASSWORD': '1PhnjKA8VBOY',
-            'HOST': 'ep-cold-band-a5n17hct.us-east-2.aws.neon.tech',
-            'PORT': '5432',
-            'OPTIONS': {
-                'sslmode': 'require',
-                'options': '-c timezone=UTC',
-            }
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": "crewBuying",
+            "USER": "wave_owner",
+            "PASSWORD": "1PhnjKA8VBOY",
+            "HOST": "ep-cold-band-a5n17hct.us-east-2.aws.neon.tech",
+            "PORT": "5432",
+            "OPTIONS": {
+                "sslmode": "require",
+                "options": "-c timezone=UTC",
+            },
         }
     }
     # CORS Settings
-    CORS_ALLOW_ALL_ORIGINS = True # Temporarily set to True for testing
+    CORS_ALLOW_ALL_ORIGINS = True  # Temporarily set to True for testing
     CORS_ALLOW_CREDENTIALS = True
     CORS_ALLOWED_ORIGINS = ["http://127.0.0.1:8000"]
     CSP_DEFAULT_SRC = ("*",)
@@ -345,6 +345,7 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework.authentication.SessionAuthentication",
         "rest_framework.authentication.BasicAuthentication",
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
     ],
     "DEFAULT_RENDERER_CLASSES": [
         "rest_framework.renderers.JSONRenderer",
