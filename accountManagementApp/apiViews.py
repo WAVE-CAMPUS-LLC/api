@@ -25,7 +25,6 @@ def profile_api(request):
     blog_items = Blog.objects.filter(created_by=user)
     user_profile = get_object_or_404(UserProfile, user=user)
     favorite_events = user_profile.favorite_events.all()
-    stripe_key = settings.STRIPE_PUBLISHABLE_KEY
     
     transactions = CustomerAccount.getCustomerTransactions(request, user.customer_id)
     account_balance = GetEarnings.getStripeAccountBalance(user.connectAccountID)
@@ -79,7 +78,6 @@ def profile_api(request):
         "blogItems": [{"id": b.id, "title": b.title} for b in blog_items],
         "userProfile": {"username": user.username, "email": user.email},
         "favoriteEvents": [{"id": e.id, "title": e.title} for e in favorite_events],
-        "stripeKey": stripe_key,
         "payments": payment_methods if payment_methods else None,
         "purchasedTickets": [{"event": t.event.title, "date": t.event.date} for t in purchased_tickets],
         "accountBalance": account_balance,
