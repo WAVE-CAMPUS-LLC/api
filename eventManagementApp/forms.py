@@ -230,6 +230,22 @@ class EventForm(forms.ModelForm):
                 'class': 'building-name-input'
             }),
         }
+        
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if not user.user_profile.college:
+            self.fields['privacy'].choices = [
+                choice for choice in self.fields['privacy'].choices 
+                if choice[0] not in ['Private (College)', 'Private (Organization)']
+            ]
+            
+        if not user.org_memberships.exists():
+            self.fields['privacy'].choices = [
+                choice for choice in self.fields['privacy'].choices 
+                if choice[0] != 'Private (Organization)'
+            ]
+            
+        
 
 class EditEventForm(forms.ModelForm):
     AGE_RESTRICTION_CHOICES = [
