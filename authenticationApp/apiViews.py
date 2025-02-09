@@ -11,7 +11,7 @@ from authenticationApp.serializers import LoginSerializer
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
-def login_view(request):  # Rename function to avoid conflict with Django's login function
+def login(request):  # Rename function to avoid conflict with Django's login function
     serializer = LoginSerializer(data=request.data)
     if serializer.is_valid():
         email = serializer.validated_data["email"]
