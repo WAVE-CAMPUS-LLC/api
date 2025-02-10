@@ -60,3 +60,8 @@ def login_api_view(request):
             })
 
     return Response({"error": "Invalid email/username or password"}, status=400)
+
+
+@ensure_csrf_cookie
+def get_csrf_token(request):
+    return JsonResponse({'detail': 'CSRF cookie set'})
