@@ -102,19 +102,38 @@ def hostGuideView(request):
 def eventCreationSelect(request):
     siteDomain = settings.SITE_URL
     userAccount = get_object_or_404(CustomUser, username=request.user.username)
-
     completedConnectAccount = False
 
     siteDomain = settings.SITE_URL
-
     link = request.build_absolute_uri(reverse("eventManagement:eventCreationSelect"))
 
-    stripeLinkAccount = ConnectAccount.getStripeOnboardingLink(
-        request, userAccount, siteDomain, link
-    )
+    # Step 1: If no connectAccountID, search Stripe for an account by email
+    if not userAccount.connectAccountID:
+        stripe_accounts = stripe.Account.list(email=userAccount.email, limit=1)
+
+        if stripe_accounts.data:
+            existing_account = stripe_accounts.data[0]
+            stripe.Account.delete(existing_account["id"])  # Delete old account
+
+        # Step 2: Create a new Stripe Connect account
+        stripeConnectAccount = ConnectAccount.createConnectAccount(request, userAccount)
+        if stripeConnectAccount:
+            userAccount.connectAccountID = stripeConnectAccount.id
+            userAccount.connectAccountCreated = True
+            userAccount.save()
+            completedConnectAccount = True
+
+    # Step 3: Now that we have a Connect account ID, generate the onboarding link
+    if userAccount.connectAccountID:
+        stripeLinkAccount = ConnectAccount.getStripeOnboardingLink(
+            request, userAccount.connectAccountID, siteDomain, link
+        )
+    else:
+        stripeLinkAccount = None
 
     print("Stripe Link Account:", stripeLinkAccount)
 
+    # Assign "Host" role if not already assigned
     if not userAccount.groups.filter(name="Host").exists():
         hostRole, _ = Group.objects.get_or_create(name="Host")
         userAccount.groups.add(hostRole)
@@ -123,24 +142,16 @@ def eventCreationSelect(request):
         eventAction = request.POST.get("eventAction")
 
         if eventAction == "paid":
-            
-            if not userAccount.connectAccountID:
-                stripeConnectAccount = ConnectAccount.createConnectAccount(request, userAccount)
-                if stripeConnectAccount:
-                    userAccount.connectAccountID = stripeConnectAccount.id
-                    userAccount.connectAccountCreated = True
-                    userAccount.save()
-                    completedConnectAccount = True
-            else:
-                stripeConnectAccount = stripe.Account.retrieve(userAccount.connectAccountID)
-                if stripeConnectAccount.get("payouts_enabled"):
-                    completedConnectAccount = True
+            stripeConnectAccount = stripe.Account.retrieve(userAccount.connectAccountID)
+            if stripeConnectAccount.get("payouts_enabled"):
+                completedConnectAccount = True
+
             time.sleep(2)
 
             if not completedConnectAccount:
                 messages.error(request, "Please complete your Stripe account setup.")
                 return redirect(stripeLinkAccount)
-            return redirect("eventManagement:createPaidEvent")                
+            return redirect("eventManagement:createPaidEvent")
         elif eventAction == "rsvp":
             return redirect("eventManagement:createRsvpEvent")
         elif eventAction == "invite":
@@ -411,10 +422,9 @@ def createPaidEventTicket(request, eventId):
     hostProfile = HostProfile.objects.get(user=event.host)
     paidFreeForm = PaidFreeTicketForm(request.POST)
     paid_free_tickets = PaidFreeTicket.objects.filter(event=event)
-    
+
     eventAction = request.POST.get("eventAction")
     ticket_id = request.POST.get("ticketId")
-
 
     if request.method == "POST":
         if eventAction == "createPaidFreeTicket":
@@ -444,14 +454,20 @@ def createPaidEventTicket(request, eventId):
         elif eventAction == "deleteTicket":
             ticket = get_object_or_404(PaidFreeTicket, ticket_id=ticket_id)
             ticket.delete()
-            return redirect("eventManagement:createPaidEventTicket", eventId=event.eventId)
+            return redirect(
+                "eventManagement:createPaidEventTicket", eventId=event.eventId
+            )
         elif eventAction == "editTicket":
             return redirect("eventManagement:eventManagement", eventId=event.eventId)
-            
+
     return render(
         request,
         "eventManagementApp/ticketing/createPaidEventTicket.html",
-        {"paidFreeForm": paidFreeForm, "paidFreeTickets": paid_free_tickets, "event": event},
+        {
+            "paidFreeForm": paidFreeForm,
+            "paidFreeTickets": paid_free_tickets,
+            "event": event,
+        },
     )
 
 
@@ -536,12 +552,12 @@ def eventManagement(request, eventId):
             rsvp.delete()
             ticket.delete()
             return redirect("eventManagement:eventManagement", eventId=eventId)
-        
+
         elif action == "deleteTicket":
             ticket = get_object_or_404(PaidFreeTicket, ticket_id=ticket_id)
             ticket.delete()
             return redirect("eventManagement:eventManagement", eventId=eventId)
-        
+
         elif action == "saveTicketEdit":
             ticket = get_object_or_404(PaidFreeTicket, ticket_id=ticket_id)
             paidFreeForm = PaidFreeTicketForm(request.POST, instance=ticket)
@@ -549,7 +565,6 @@ def eventManagement(request, eventId):
                 ticket = paidFreeForm.save(commit=False)
                 ticket.save()
             return redirect("eventManagement:eventManagement", eventId=eventId)
-            
 
         elif "displayOnCollege" in request.POST:
             event_to_update = get_object_or_404(
@@ -643,7 +658,8 @@ def eventManagement(request, eventId):
             "editEventForm": editEventForm,
         },
     )
-    
+
+
 def editEvent(request, eventId):
     event = get_object_or_404(Event, eventId=eventId)
     user_profile = UserProfile.objects.get(user=request.user)

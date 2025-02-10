@@ -229,11 +229,11 @@ class ConnectAccount:
             print(f"Error: {str(e)}")
             return JsonResponse({"error": str(e)})
         
-    def getStripeOnboardingLink(request, user, domain, finalLink):
+    def getStripeOnboardingLink(request, accountId, domain, finalLink):
         try:
             account_links = stripe.AccountLink.create(
-                account=user.connectAccountID,
-                refresh_url=f'{domain}/refresh/{user.connectAccountID}',
+                account=accountId,
+                refresh_url=f'{domain}/refresh/{accountId}',
                 return_url=f"{finalLink}",
                 type="account_onboarding",
             )
