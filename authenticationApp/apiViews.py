@@ -15,53 +15,66 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
 from django.http import JsonResponse
 
-@method_decorator(ensure_csrf_cookie, name='dispatch')
-@api_view(["POST"])
-@permission_classes([AllowAny])
-def login_api_view(request):
-    """
-    API View for user login with email/username and password.
-    Returns JWT tokens upon successful authentication.
-    """
-    identifier = request.data.get("identifier")
-    password = request.data.get("password")
+# apiViews.py
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.permissions import AllowAny
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 
-    if not identifier or not password:
-        return Response({"error": "Email/Username and password are required."}, status=400)
 
-    # Find user by email or username
-    user = (
-        CustomUser.objects.filter(email=identifier).first()
-        or CustomUser.objects.filter(username=identifier).first()
-    )
+@method_decorator(csrf_exempt, name="dispatch")
+class LoginAPIView(APIView):
+    permission_classes = [AllowAny]
 
-    if user:
-        user = authenticate(request, email=user.email, password=password)  # Authenticate with email
+    def post(self, request):
+        """
+        API View for user login with email/username and password.
+        Returns JWT tokens upon successful authentication.
+        """
+        identifier = request.data.get("identifier")
+        password = request.data.get("password")
 
-        if user:
-            # Generate JWT tokens
-            refresh = RefreshToken.for_user(user)
-            
-            # Log login activity
-            LoginHistoryModel.objects.create(
-                user=user,
-                email=user.email,
-                ip_address=request.META.get("REMOTE_ADDR"),
+        if not identifier or not password:
+            return Response(
+                {"error": "Email/Username and password are required."}, status=400
             )
 
-            return Response({
-                "access": str(refresh.access_token),
-                "refresh": str(refresh),
-                "user": {
-                    "id": user.id,
-                    "username": user.username,
-                    "email": user.email,
-                },
-            })
+        # Find user by email or username
+        user = (
+            CustomUser.objects.filter(email=identifier).first()
+            or CustomUser.objects.filter(username=identifier).first()
+        )
 
-    return Response({"error": "Invalid email/username or password"}, status=400)
+        if user:
+            user = authenticate(request, email=user.email, password=password)
+
+            if user:
+                # Generate JWT tokens
+                refresh = RefreshToken.for_user(user)
+
+                # Log login activity
+                LoginHistoryModel.objects.create(
+                    user=user,
+                    email=user.email,
+                    ip_address=request.META.get("REMOTE_ADDR"),
+                )
+
+                return Response(
+                    {
+                        "access": str(refresh.access_token),
+                        "refresh": str(refresh),
+                        "user": {
+                            "id": user.id,
+                            "username": user.username,
+                            "email": user.email,
+                        },
+                    }
+                )
+
+        return Response({"error": "Invalid email/username or password"}, status=400)
 
 
 @ensure_csrf_cookie
 def get_csrf_token(request):
-    return JsonResponse({'detail': 'CSRF cookie set'})
+    return JsonResponse({"detail": "CSRF cookie set"})
