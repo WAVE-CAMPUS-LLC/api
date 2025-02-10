@@ -8,15 +8,14 @@ from adminDashboardApp.models import LoginHistoryModel
 from authenticationApp.models import CustomUser
 from authenticationApp.forms import UserAuthenticationForm
 from authenticationApp.serializers import LoginSerializer
-
+from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
+from django.utils.decorators import method_decorator
 
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
 from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from django.utils.decorators import method_decorator
 
-@csrf_exempt
+@method_decorator(ensure_csrf_cookie, name='dispatch')
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def login_api_view(request):
