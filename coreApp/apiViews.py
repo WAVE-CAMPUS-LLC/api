@@ -53,7 +53,7 @@ def explore_events(request):
     # Load initial events
     initial_events = Event.objects.filter(
         status="live", privacy="Discoverable", admin_status="active"
-    )[:7]
+    )
 
     # Get trending events
     trending_events = Event.objects.filter(
@@ -83,40 +83,24 @@ def explore_events(request):
         except UserProfile.DoesNotExist:
             pass
 
-    # Get trending categories
-    trending_categories = (
-        Event.objects.filter(
-            status="live", privacy="Discoverable", admin_status="active"
-        )
-        .values("event_type")
-        .annotate(event_count=Count("event_type"))
-        .order_by("-event_count")[:4]
-    )
-
-    trending_category_choices = []
-    for category in trending_categories:
-        event_type = category["event_type"]
-        display_name = dict(Event.EXPLORE_TYPE_CHOICES).get(event_type, event_type)
-        trending_category_choices.append({
-            'type': event_type,
-            'display_name': display_name,
-            'count': category['event_count']
+    # Replace the trending categories section with all categories
+    all_categories = []
+    for category_type, category_name in Event.EXPLORE_TYPE_CHOICES:
+        count = Event.objects.filter(
+            status="live",
+            privacy="Discoverable",
+            admin_status="active",
+            event_type=category_type
+        ).count()
+        
+        all_categories.append({
+            'type': category_type,
+            'display_name': category_name,
+            'count': count
         })
 
-    # Fill remaining categories if needed
-    if len(trending_category_choices) < 4:
-        remaining_choices = list(
-            set(Event.EXPLORE_TYPE_CHOICES) - set((c['type'], c['display_name']) for c in trending_category_choices)
-        )
-        additional_choices = random.sample(
-            remaining_choices, 4 - len(trending_category_choices)
-        )
-        for choice_type, choice_name in additional_choices:
-            trending_category_choices.append({
-                'type': choice_type,
-                'display_name': choice_name,
-                'count': 0
-            })
+    # Sort categories by count in descending order
+    all_categories.sort(key=lambda x: x['count'], reverse=True)
 
     # Get weekly events
     today = now().date()
@@ -154,7 +138,7 @@ def explore_events(request):
             'header_photo': event.header_photo.url if event.header_photo else None,
             'host': event.host.username if event.host else None,
         } for event in weekly_events],
-        'trending_categories': trending_category_choices,
+        'trending_categories': all_categories,  # Changed this line
         'invited_events': invited_events_data
     }
 
