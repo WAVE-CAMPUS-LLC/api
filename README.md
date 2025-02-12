@@ -61,7 +61,8 @@ source venv\bin\activate
 pip install -r requirements.txt
 ```
 
-### Create a .env file in the project root and add the required environment variables (Obtain the correct environment variable values from a team member)
+### Create a .env file in the project root and add the required environment variables
+### (Obtain the correct environment variable values from a team member)
 
 ```python
 # Example of what it should look like
