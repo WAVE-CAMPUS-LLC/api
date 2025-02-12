@@ -103,10 +103,7 @@ def collegeCampusesView(request):
     )
 
 
-@login_required
-@member
-@verified
-@check_suspension
+
 def requestCollege(request):
     pageName = "Colleges"
 
