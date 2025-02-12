@@ -27,7 +27,7 @@ urlpatterns = [
     path("auth/", include("authenticationApp.apiUrls")),
     # path("admin/", include("adminDashboardApp.apiUrls")),
     path("account/", include("accountManagementApp.apiUrls")),
-    # path("host/", include("eventManagementApp.apiUrls")),
+    path("host/", include("eventManagementApp.apiUrls")),
     # path("support/", include("supportCenterApp.apiUrls")),
     path("colleges/", include("collegeManagementApp.apiUrls")),
     path("core/", include("coreApp.apiUrls")),
