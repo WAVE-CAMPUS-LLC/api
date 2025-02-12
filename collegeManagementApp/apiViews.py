@@ -7,7 +7,8 @@ from django.shortcuts import get_object_or_404
 from django.template.loader import render_to_string
 from django.http import JsonResponse
 from django.db.models import Count
-from .models import College, Organization
+from .models import  Organization
+from adminDashboardApp.models import College
 from accountManagementApp.models import UserProfile
 
 

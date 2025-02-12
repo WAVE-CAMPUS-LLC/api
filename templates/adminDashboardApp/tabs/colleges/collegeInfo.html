@@ -111,6 +111,16 @@ College Management — WAVE.
                                 {{ editCollegeForm.logo|add_class:"editInput hidden w-full appearance-none h-full p-4 py-3 font-Wanted-Variable text-Semi-Medium text-black border rounded-xl focus:ring-0 focus:none placeholder:text-[#00000076] placeholder:font-Wanted-Regular" }}
                             </div>
                         </div>
+
+                        <div class="w-full flex flex-row justify-between items-center">
+                            <div class="flex flex-col gap-2">
+                                <h6 class="font-Wanted-Bold text-Large">Campus Image</h6>
+                                <p class="displayInfo font-Wanted-Variable text-Small text-black">
+                                    <img class="campus-logo size-28 rounded-2xl" src="{{ college.campus_image.url }}">
+                                </p>
+                                {{ editCollegeForm.campus_image|add_class:"editInput hidden w-full appearance-none h-full p-4 py-3 font-Wanted-Variable text-Semi-Medium text-black border rounded-xl focus:ring-0 focus:none placeholder:text-[#00000076] placeholder:font-Wanted-Regular" }}
+                            </div>
+                        </div>
                 
                         <div class="w-full flex flex-row justify-between items-center">
                             <div class="flex flex-col gap-2">

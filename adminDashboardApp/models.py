@@ -301,7 +301,7 @@ class College(models.Model):
     state = models.CharField("State", max_length=2, choices=STATE_CHOICES, default="")
     zip_code = models.CharField("ZIP Code", max_length=5)
     country = models.CharField("Country", max_length=5, choices=COUNTRY_CHOICES)
-
+    campus_image = models.ImageField("Upload a campus image", upload_to="campus_images/", null=True, blank=True, default="")
     logo = models.ImageField(
         "Upload the college logo", upload_to="college_logos/", blank=True, null=False
     )
