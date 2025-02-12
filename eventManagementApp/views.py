@@ -107,15 +107,15 @@ def eventCreationSelect(request):
     siteDomain = settings.SITE_URL
     link = request.build_absolute_uri(reverse("eventManagement:eventCreationSelect"))
 
-    # Step 1: If no connectAccountID, search Stripe for an account by email
+    # Path 1: If no connectAccountID, search Stripe for an account by email
     if not userAccount.connectAccountID:
-        stripe_accounts = stripe.Account.list(email=userAccount.email, limit=1)
+        stripe_accounts = stripe.Customer.search(query=f"email:{userAccount.email}limit:1")
 
         if stripe_accounts.data:
             existing_account = stripe_accounts.data[0]
             stripe.Account.delete(existing_account["id"])  # Delete old account
 
-        # Step 2: Create a new Stripe Connect account
+        # Path 1.1: Create a new Stripe Connect account
         stripeConnectAccount = ConnectAccount.createConnectAccount(request, userAccount)
         if stripeConnectAccount:
             userAccount.connectAccountID = stripeConnectAccount.id
@@ -123,7 +123,7 @@ def eventCreationSelect(request):
             userAccount.save()
             completedConnectAccount = True
 
-    # Step 3: Now that we have a Connect account ID, generate the onboarding link
+    # Path 2: Now that we have a Connect account ID, generate the onboarding link
     if userAccount.connectAccountID:
         stripeLinkAccount = ConnectAccount.getStripeOnboardingLink(
             request, userAccount.connectAccountID, siteDomain, link
