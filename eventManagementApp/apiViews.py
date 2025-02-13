@@ -61,8 +61,8 @@ class SaveEventProgressAPIView(APIView):
             event.city = request.data.get("city", event.city)
             event.state = request.data.get("state", event.state)
             event.zip_code = request.data.get("zip_code", event.zip_code)
-            event.contact_email = request.data.get("contact_email", event.contact_email)
-            event.contact_phone = request.data.get("contact_phone", event.contact_phone)
+            # event.contact_email = request.data.get("contact_email", event.contact_email)
+            # event.contact_phone = request.data.get("contact_phone", event.contact_phone)
 
             # Handle date and time fields
             date_str = request.data.get("date")
