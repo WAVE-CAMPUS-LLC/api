@@ -20,10 +20,10 @@ class CreateEventAPIView(APIView):
                 'description': request.data.get('description'),
                 'event_type': request.data.get('event_type'),
                 'date': request.data.get('date'),
-                'start_time': request.data.get('start_time'),
-                'location': request.data.get('location'),
-                'price': request.data.get('price'),
-                'capacity': request.data.get('capacity'),
+                'start_time': datetime.strptime(request.data.get('start_time'), "%H:%M").time(),  # Convert to time object
+                # 'location': request.data.get('location'),
+                # 'price': request.data.get('price'),
+                # 'capacity': request.data.get('capacity'),
                 'header_photo': request.FILES.get('header_photo'),
                 'age_restriction': request.data.get('age_restriction'),
                 'host': request.user,
@@ -61,8 +61,8 @@ class SaveEventProgressAPIView(APIView):
             event.city = request.data.get("city", event.city)
             event.state = request.data.get("state", event.state)
             event.zip_code = request.data.get("zip_code", event.zip_code)
-            event.contact_email = request.data.get("contact_email", event.contact_email)
-            event.contact_phone = request.data.get("contact_phone", event.contact_phone)
+            # event.contact_email = request.data.get("contact_email", event.contact_email)
+            # event.contact_phone = request.data.get("contact_phone", event.contact_phone)
 
             # Handle date and time fields
             date_str = request.data.get("date")
