@@ -20,7 +20,7 @@ class CreateEventAPIView(APIView):
                 'description': request.data.get('description'),
                 'event_type': request.data.get('event_type'),
                 'date': request.data.get('date'),
-                'start_time': request.data.get('start_time'),
+                'start_time': datetime.strptime(request.data.get('start_time'), "%H:%M").time(),  # Convert to time object
                 # 'location': request.data.get('location'),
                 # 'price': request.data.get('price'),
                 # 'capacity': request.data.get('capacity'),
