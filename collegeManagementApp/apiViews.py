@@ -15,6 +15,7 @@ from eventManagementApp.models import Event
 from adminDashboardApp.models import College
 from accountManagementApp.models import UserProfile
 from .serializers import CollegeSerializer, EventSerializer
+from accountManagementApp.serializers import UserProfileSerializer
 
 
 @api_view(['GET'])
@@ -82,7 +83,7 @@ def view_college_information_api(request, collegeId):
     
     response_data = {
         "college": CollegeSerializer(college).data,
-        "college_members": [member.id for member in members],
+        "college_members": UserProfileSerializer(members, many=True).data,
         "user_profile": user_profile.id if user_profile else None,
         "organizations": [org.orgId for org in organizations],
         "events":EventSerializer(events, many=True).data,
