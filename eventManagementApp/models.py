@@ -285,7 +285,7 @@ class Event(models.Model):
     )
 
     building_name = models.CharField(
-        _("Building Name"), max_length=250, null=False, blank=False, default=""
+        _("Building Name"), max_length=250, null=True, blank=True, default=""
     )
 
     display_event_on_college = models.BooleanField(
@@ -304,10 +304,6 @@ class Event(models.Model):
         choices=COUNTRY_CHOICES,
     )
 
-    building_name = models.CharField(
-        _("Building Name"), max_length=250, null=False, blank=False, default=""
-    )
-
     display_event_on_college = models.BooleanField(
         _("Do you want this event displayed on your campus?"),
         null=False,
@@ -322,8 +318,8 @@ class Event(models.Model):
     apt_suite_unit = models.CharField(
         _("Appt, suite, unit (optional)"),
         max_length=150,
-        blank=False,
-        null=False,
+        blank=True,
+        null=True,
         default="",
     )
 

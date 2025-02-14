@@ -314,7 +314,8 @@ def eventDetailsView(request, eventId, token=None):
     eventprivacy = EventPrivacy.objects.get(event=event)
     eventPaidFreeTickets = PaidFreeTicket.objects.filter(event=event)
 
-    rsvpForm = RSVPForm(user = request.user) if event.ticketing == "RSVP Required" else None
+    # Create RSVP form for Free events
+    rsvpForm = RSVPForm(user=request.user) if event.ticketing == "Free" else None
     rsvp_guests = RSVPTicket.objects.filter(event=event, display_on_guestlist=True)
     user = None
     user_friends = None

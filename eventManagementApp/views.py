@@ -266,7 +266,7 @@ def createFreeEvent(request):
             if eventForm.is_valid():
                 event = eventForm.save(commit=False)
                 event.host = userAccount
-                event.ticketing = "RSVP Required"
+                event.ticketing = "Free"
                 event.crew_discount = False
                 event.show_guest_list = request.POST.get("show_guest_list") == "on"
 

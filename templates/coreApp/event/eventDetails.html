@@ -113,7 +113,7 @@
                     <li class="eventDetailsTab cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="eventDescription">
                         Description
                     </li>
-                    {% if paidFreeTickets or event.ticketing == "RSVP Required" %}
+                    {% if paidFreeTickets or event.ticketing == "Free" %}
                     <li class="eventDetailsTab cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="eventTicketInformation">
                         Tickets
                     </li>
@@ -220,27 +220,20 @@
                         </div>
                     </div>
 
-                    {% if paidFreeTickets or event.ticketing == "RSVP Required" %}
+                    {% if paidFreeTickets or event.ticketing == "Free" %}
                     <div id="eventTicketInformation" class="ticketinfo-body eventDetailsTabInformation">
                         <div class="eventTickets-body flex flex-col gap-2">
-                            {% if event.ticketing == "RSVP Required" %}
+                            {% if event.ticketing == "Free" %}
                             <div class="ticketBodyHeader font-Wanted-Bold text-Medium xsm:text-Large after-xsm:text-Pre-Xl xxsm:text-1xl pre-sm:text-1xl sm:text-2xl md:text-3xl text-black">
-                                <h3>You can RSVP to reserve your spot!</h3>
+                                <h3>Reserve your spot</h3>
                             </div>
                             <div id="jit-tab-container" class="flex flex-col gap-5">
                                 <div class="jit-role-tab w-full sm:w-4/5">
-                                    <div role="button" class="jit-tab-header flex items-center justify-between font-Wanted-Bold text-xl py-4 px-5 rounded-3xl border border-transparent text-white font-Wanted-SemiBold flex-col sm:flex-row justify-center gap-2 text-Pre-Xl rounded-2xl bg-gradient-to-r from-gradient-start to-gradient-end cursor-pointer">
-                                        <h3>Reserve your spot</h3>
-                                        <p class="font-Wanted-Variable text-XSmall after-xsm:text-Small pre-sm:text-Medium">Tap to RSVP</p>
-                                    </div>
-                                    <div class="jit-tab-body defaulted border-4 border-[#008d95] rounded-b-2xl mx-5 p-5 hidden">
+                                    <div class="jit-tab-body defaulted border-4 border-[#008d95] rounded-2xl mx-5 p-5">
                                         <div class="jtb-container flex flex-col gap-9">    
                                             <form id="rsvpForm" class="flex flex-col gap-6" method="post" action="{% url 'core:handleRSVP' event.eventId %}">
                                                 {% csrf_token %}
                                                 {% if not request.user.is_authenticated %}
-                                                <div class="rsvp-card-header font-Wanted-Bold text-Medium sm:text-Large xxsm:text-xl pre-sm:text-2xl flex justify-center w-full">
-                                                    <h6>Enter your details below</h6>
-                                                </div>
                                                 <div class="form-group flex flex-col pre-sm:flex-row gap-5">
                                                     <label for="{{ rsvpForm.first_name.id_for_label }}" class="flex flex-col gap-1 w-full">
                                                         <p class="font-Wanted-Variable text-Base text-black">{{ rsvpForm.first_name.label }}</p>
@@ -252,7 +245,7 @@
                                                     </label>
                                                 </div>
 
-                                                <div class="form-group flex flex-row gap-5 w-full">
+                                                <div class="form-group w-full">
                                                     <label for="{{ rsvpForm.email.id_for_label }}" class="w-full">
                                                         <p class="font-Wanted-Variable text-Base text-black">{{ rsvpForm.email.label }}</p>
                                                         {{ rsvpForm.email|add_class:"w-full px-4 p-3 rounded-xl border border-custom-rgba5 font-Wanted-Variable text-Medium" }}
@@ -263,20 +256,26 @@
                                                 {{ rsvpForm.last_name|add_class:"hidden" }}
                                                 {{ rsvpForm.email|add_class:"hidden" }}
                                                 {% endif %}
-                                                {% if request.user.is_authenticated %}
+
+                                                {% if rsvpForm %}
                                                 <div class="display-group flex flex-row justify-between items-center">
-                                                    <p class="font-Wanted-Variable text-Base text-black">{{ rsvpForm.display_on_guestlist.label }}</p>
-                                                    
-                                                    <label class="toggle-switch" for="{{ rsvpForm.display_on_guestlist.id_for_label }}">
-                                                        <input 
-                                                        type="checkbox" 
-                                                        id="{{ rsvpForm.display_on_guestlist.auto_id }}" 
-                                                        name="{{ rsvpForm.display_on_guestlist.html_name }}"
-                                                        {% if rsvpForm.display_on_guestlist.value %}checked{% endif %}/>
-                                                        <span class="slider"></span>
+                                                    <label for="{{ rsvpForm.display_on_guestlist.id_for_label }}" class="font-Wanted-Variable text-Base text-black">
+                                                        {{ rsvpForm.display_on_guestlist.label }}
                                                     </label>
+                                                    <div class="switch-container">
+                                                        <label class="toggle-switch">
+                                                            <input 
+                                                                type="checkbox" 
+                                                                id="{{ rsvpForm.display_on_guestlist.auto_id }}" 
+                                                                name="{{ rsvpForm.display_on_guestlist.html_name }}"
+                                                                {% if rsvpForm.display_on_guestlist.value %}checked{% endif %}
+                                                            />
+                                                            <span class="slider"></span>
+                                                        </label>
+                                                    </div>
                                                 </div>
                                                 {% endif %}
+
                                                 <div class="submit-group w-full flex justify-end">
                                                     <button id="submitBtn" type="submit" class="reserveButton gradient-btn w-full" role="button" name="eventAction" value="RSVP">Reserve</button>
                                                 </div>
@@ -284,8 +283,6 @@
                                         </div>
                                     </div>
                                 </div>
-                
-                                
                             </div>
                             {% elif event.ticketing == "Paid" and paidFreeTickets %}
                                 <div class="font-Wanted-Bold text-Medium xsm:text-Large after-xsm:text-Pre-Xl xxsm:text-1xl pre-sm:text-1xl sm:text-2xl md:text-3xl text-black">

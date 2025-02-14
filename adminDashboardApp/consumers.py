@@ -29,7 +29,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             'sent_at': event['sent_at'],
         }))
 
-     async def receive(self, text_data):
+    async def receive(self, text_data):
         text_data_json = json.loads(text_data)
         message = text_data_json['message']
 
