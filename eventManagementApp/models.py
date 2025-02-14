@@ -134,9 +134,8 @@ class Event(models.Model):
     ]
 
     TICKET_CHOICES = [
-        ("Paid/Free", "Paid/Free"),
-        ("RSVP Required", "RSVP Required"),
-        ("Invite Required", "Invite Required"),
+        ("Paid", "Paid"),
+        ("Free", "Free"),
     ]
 
     COUNTRY_CHOICES = [("United States", "United States")]

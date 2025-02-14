@@ -167,7 +167,7 @@ def addCard(request):
         messages.success(request, "Payment method added successfully.")
         return JsonResponse({"success": True})
     except stripe.error.StripeError as e:
-        messages.error(request, f"Stripe error: {e.user_message}")
+        messages.error(request, f"Something went wrong: {str(e)}")
     except Exception as e:
         messages.error(request, f"An error occurred: {str(e)}")
     return JsonResponse({"success": False})

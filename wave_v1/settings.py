@@ -39,6 +39,7 @@ if ENVIORNMENT == "development":
     ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
     CSRF_TRUSTED_ORIGINS = ["http://127.0.0.1:8000"]
     DEBUG = True
+    DEBUG_PROPAGATE_EXCEPTIONS = False
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql",

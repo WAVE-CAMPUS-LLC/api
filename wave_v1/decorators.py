@@ -28,6 +28,7 @@ def support(view_func):
         ):
             return view_func(request, *args, **kwargs)
         else:
+            print("User is not a support member")
             return render(request, "extras/invalid/invalid.html")
 
     return wrapped_view
@@ -45,6 +46,7 @@ def member(view_func):
             # Check if the user is in the group named "Member"
             if request.user.groups.filter(name="Member").exists():
                 return view_func(request, *args, **kwargs)
+        print("User is not a member")
         return render(request, "extras/invalid/invalid.html")
 
     return wrapped_view
@@ -116,6 +118,7 @@ def admin(view_func):
         if request.user.is_authenticated:
             if request.user.groups.filter(name="Admin").exists():
                 return view_func(request, *args, **kwargs)
+        print("User is not an admin")
         return render(request, "extras/invalid/invalid.html")
 
     return wrapped_view
@@ -133,6 +136,7 @@ def superAdmin(view_func):
         if request.user.is_authenticated:
             if request.user.groups.filter(name="Super Admin").exists():
                 return view_func(request, *args, **kwargs)
+        print("User is not a super admin")
         return render(request, "extras/invalid/invalid.html")
 
     return wrapped_view
@@ -150,6 +154,7 @@ def host(view_func):
         if request.user.is_authenticated:
             if request.user.groups.filter(name="Host").exists():
                 return view_func(request, *args, **kwargs)
+        print("User is not a host")
         return render(request, "extras/invalid/invalid.html")
 
     return wrapped_view
