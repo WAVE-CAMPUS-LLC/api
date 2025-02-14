@@ -85,7 +85,7 @@ def view_college_information_api(request, collegeId):
         "college_members": [member.id for member in members],
         "user_profile": user_profile.id if user_profile else None,
         "organizations": [org.id for org in organizations],
-        "events": [event.id for event in events],
+        "events": [event.eventId for event in events],
         "weekly_events": [event.id for event in weekly_events],
         "is_member": is_member,
     }
