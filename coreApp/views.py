@@ -242,6 +242,70 @@ def toggleFavorite(request, eventId):
     else:
         messages.warning(request, "Please login to favorite events.")
         return redirect("authentication:login")
+    
+def handleRSVP(request, eventId):
+    event = get_object_or_404(Event, eventId=eventId)
+    response_data = {}
+    
+    if request.user.is_authenticated:
+        existing_rsvp = RSVPTicket.objects.filter(event=event, email=request.user.email).first()
+    else:
+        existing_rsvp = None
+
+    if existing_rsvp:
+        print("existing rsvp: ", existing_rsvp)
+        messages.warning(request, "Your RSVP has already been submitted.")
+        response_data = {
+            "status": "error",
+            "message": "This email has already been submitted!"
+        }
+        return JsonResponse(response_data)
+
+    # Initialize the form with POST data.
+    rsvpForm = RSVPForm(request.POST, user=request.user)
+    if rsvpForm.is_valid():
+        rsvp_ticket = rsvpForm.save(commit=False)
+        existing_rsvp = RSVPTicket.objects.filter(event=event, email=rsvp_ticket.email).first()
+        if existing_rsvp:
+            messages.warning(request, "This email has already been submitted!")
+            response_data = {
+                "status": "error",
+                "message": "This email has already been submitted! Try a different one."
+            }
+            return JsonResponse(response_data, status=400)
+        # If the event is paid, set the ticket price.
+        
+        # If the user is authenticated, add them to the guest list.
+        if request.user.is_authenticated:
+            user_profile = get_object_or_404(UserProfile, user=request.user)
+            event.guest_list.add(user_profile.user)
+            rsvp_ticket.first_name = request.user.first_name
+            rsvp_ticket.last_name = request.user.last_name
+            rsvp_ticket.email = request.user.email
+            
+        rsvp_ticket.event = event
+        rsvp_ticket.save()
+
+        guestFirstName = rsvp_ticket.first_name
+        guestLastName = rsvp_ticket.last_name
+        guestEmail = rsvp_ticket.email
+        generateTicket(request, event, request.user if request.user.is_authenticated else None, guestFirstName, guestLastName, guestEmail)
+        
+        messages.success(request, "You have reserved a spot! Check your email for confirmation.")
+        response_data = {
+            "status": "success",
+            "message": "You have reserved a spot! Check your email for confirmation."
+        }
+        return JsonResponse(response_data)
+    else:
+        messages.error(request, "There was an error with your submission.")
+        response_data = {
+            "status": "error",
+            "message": "There was an error with your submission.",
+            "errors": rsvpForm.errors,
+        }
+        return JsonResponse(response_data, status=400)
+
 
 
 def eventDetailsView(request, eventId, token=None):
@@ -250,7 +314,7 @@ def eventDetailsView(request, eventId, token=None):
     eventprivacy = EventPrivacy.objects.get(event=event)
     eventPaidFreeTickets = PaidFreeTicket.objects.filter(event=event)
 
-    rsvpForm = RSVPForm() if event.ticketing == "RSVP Required" else None
+    rsvpForm = RSVPForm(user = request.user) if event.ticketing == "RSVP Required" else None
     rsvp_guests = RSVPTicket.objects.filter(event=event, display_on_guestlist=True)
     user = None
     user_friends = None
@@ -287,74 +351,7 @@ def eventDetailsView(request, eventId, token=None):
     if request.method == "POST":
         action = request.POST.get("eventAction")
 
-        if action == "RSVP":
-            user_email = request.POST.get("email")
-            existing_rsvp = RSVPTicket.objects.filter(
-                event=event, email=user_email
-            ).first()
-
-            if existing_rsvp:
-                messages.error(
-                    request,
-                    "This email has already been submitted! Try a different one.",
-                )
-                return render(
-                    request,
-                    "coreApp/event/eventDetails.html",
-                    {
-                        "page": pageName,
-                        "event": event,
-                        "eventPrivacy": eventprivacy,
-                        "rsvpForm": rsvpForm,
-                        "paidFreeTickets": eventPaidFreeTickets,
-                        "friends": user_friends,
-                        "crews": user_crews,
-                        "isFavoriteEvent": isFavoriteEvent,
-                        "guestList": guest_list,
-                    },
-                )
-
-            else:
-                rsvpForm = RSVPForm(request.POST)
-                if rsvpForm.is_valid():
-                    rsvp_ticket = rsvpForm.save(commit=False)
-                    rsvp_ticket.event = event
-                    rsvp_ticket.save()
-
-                    guestFirstName = rsvp_ticket.first_name
-                    guestLastName = rsvp_ticket.last_name
-                    guestEmail = rsvp_ticket.email
-
-                    user = request.user if request.user.is_authenticated else None
-                    
-                    if user:
-                        event.guest_list.add(user)
-
-                    generateTicket(
-                        request, event, user, guestFirstName, guestLastName, guestEmail
-                    )
-
-                    messages.success(
-                        request,
-                        "You have reserved a spot! Check your email for confirmation.",
-                    )
-                    return render(
-                        request,
-                        "coreApp/event/eventDetails.html",
-                        {
-                            "page": pageName,
-                            "event": event,
-                            "eventPrivacy": eventprivacy,
-                            "rsvpForm": rsvpForm,
-                            "paidFreeTickets": eventPaidFreeTickets,
-                            "friends": user_friends,
-                            "crews": user_crews,
-                            "isFavoriteEvent": isFavoriteEvent,
-                            "guestList": guest_list,
-                        },
-                    )
-
-        elif action == "shareEventWithFriend":
+        if action == "shareEventWithFriend":
             if not request.user.is_authenticated:
                 messages.warning(request, "Please login to share this event.")
                 return redirect("authentication:login")

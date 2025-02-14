@@ -152,10 +152,13 @@ def eventCreationSelect(request):
                 messages.error(request, "Please complete your Stripe account setup.")
                 return redirect(stripeLinkAccount)
             return redirect("eventManagement:createPaidEvent")
-        elif eventAction == "rsvp":
-            return redirect("eventManagement:createRsvpEvent")
-        elif eventAction == "invite":
-            return redirect("eventManagement:createInviteEvent")
+        if eventAction == "free":
+            return redirect("eventManagement:createFreeEvent")
+        # TODO remove commented code, we shifted from rsvp and invite to free and paid
+        # elif eventAction == "rsvp":
+        #     return redirect("eventManagement:createRsvpEvent")
+        # elif eventAction == "invite":
+        #     return redirect("eventManagement:createInviteEvent")
 
     return render(request, "eventManagementApp/host/eventCreationSelect.html")
 
@@ -179,7 +182,7 @@ def createPaidEvent(request):
             if eventForm.is_valid():
                 event = eventForm.save(commit=False)
                 event.host = userAccount
-                event.ticketing = "Paid/Free"
+                event.ticketing = "Paid"
                 event.crew_discount = request.POST.get("crew_discount") == "on"
                 event.show_guest_list = request.POST.get("show_guest_list") == "on"
 
@@ -247,92 +250,8 @@ def createPaidEvent(request):
 @member
 @verified
 @check_suspension
-def createInviteEvent(request):
-    event_type_choices = Event.EVENT_TYPE_CHOICES
-    privacy_choices = Event.PRIVACY_CHOICES
-    placesKey = settings.PLACES_API_KEY
-
-    userAccount = get_object_or_404(CustomUser, username=request.user.username)
-
-    if request.method == "POST":
-        eventForm = EventForm(request.POST, request.FILES, user=request.user)
-        eventAction = request.POST.get("eventAction")
-
-        if eventAction == "submit":
-            if eventForm.is_valid():
-                event = eventForm.save(commit=False)
-                event.host = userAccount
-                event.ticketing = "Invite Required"
-                event.crew_discount = request.POST.get("crew_discount") == "on"
-                event.show_guest_list = request.POST.get("show_guest_list") == "on"
-
-                event.status = "live"
-
-                event.save()
-
-                messages.success(request, "Event is live!")
-
-                user_profile = event.host.user_profile
-                hostProfile, _ = HostProfile.objects.get_or_create(user=request.user)
-                organization_membership = OrganizationMembership.objects.filter(
-                    user=event.host
-                ).first()
-
-                # Refactored privacy setting
-                privacy_set = set_event_privacy(
-                    event, user_profile, organization_membership, request
-                )
-                if not privacy_set:
-                    return redirect(
-                        "eventManagement:eventManagement", eventId=event.eventId
-                    )
-
-                event.save()
-                product = createHostProduct(event, hostProfile.stripe_account_id)
-
-                if product:
-                    event.stripeProductId = product.id
-                    event.save()
-                else:
-                    print("Product creation failed")
-                    print("Product creation failed")
-                    print("Product creation failed")
-                    messages.error(request, "Product creation failed")
-                    return redirect(
-                        "eventManagement:inviteTicketing", eventId=event.eventId
-                    )
-
-                return redirect(
-                    "eventManagement:inviteTicketing", eventId=event.eventId
-                )
-
-            else:
-                print(eventForm.errors)
-                print(eventForm.errors)
-                print(eventForm.errors)
-                messages.error(request, "Invalid form submission.")
-                # Optionally, handle form errors here
-
-    else:
-        eventForm = EventForm(user=request.user)
-
-    return render(
-        request,
-        "eventManagementApp/host/create/createInviteEvent.html",
-        {
-            "eventForm": eventForm,
-            "eventTypeChoices": event_type_choices,
-            "privacyChoices": privacy_choices,
-            "placesKey": placesKey,
-        },
-    )
-
-
-@login_required
-@member
-@verified
-@check_suspension
-def createRsvpEvent(request):
+# Used to be createRsvpEvent, now createFreeEvent
+def createFreeEvent(request):
     event_type_choices = Event.EVENT_TYPE_CHOICES
     privacy_choices = Event.PRIVACY_CHOICES
     placesKey = settings.PLACES_API_KEY
@@ -348,7 +267,7 @@ def createRsvpEvent(request):
                 event = eventForm.save(commit=False)
                 event.host = userAccount
                 event.ticketing = "RSVP Required"
-                event.crew_discount = request.POST.get("crew_discount") == "on"
+                event.crew_discount = False
                 event.show_guest_list = request.POST.get("show_guest_list") == "on"
 
                 event.status = "live"
@@ -379,9 +298,6 @@ def createRsvpEvent(request):
                     event.stripeProductId = product.id
                     event.save()
                 else:
-                    print("Product creation failed")
-                    print("Product creation failed")
-                    print("Product creation failed")
                     messages.error(request, "Product creation failed")
                     return redirect(
                         "eventManagement:eventManagement", eventId=event.eventId
@@ -392,9 +308,6 @@ def createRsvpEvent(request):
                 )
 
             else:
-                print(eventForm.errors)
-                print(eventForm.errors)
-                print(eventForm.errors)
                 messages.error(request, "Invalid form submission.")
                 # Optionally, handle form errors here
 
@@ -403,7 +316,7 @@ def createRsvpEvent(request):
 
     return render(
         request,
-        "eventManagementApp/host/create/createRsvpEvent.html",
+        "eventManagementApp/host/create/createFreeEvent.html",
         {
             "eventForm": eventForm,
             "eventTypeChoices": event_type_choices,
@@ -411,6 +324,88 @@ def createRsvpEvent(request):
             "placesKey": placesKey,
         },
     )
+
+
+# This view is invalid because it assumes that the user does not want ant ticket type for invite only events
+# def createInviteEvent(request):
+#     event_type_choices = Event.EVENT_TYPE_CHOICES
+#     privacy_choices = Event.PRIVACY_CHOICES
+#     placesKey = settings.PLACES_API_KEY
+
+#     userAccount = get_object_or_404(CustomUser, username=request.user.username)
+
+#     if request.method == "POST":
+#         eventForm = EventForm(request.POST, request.FILES, user=request.user)
+#         eventAction = request.POST.get("eventAction")
+
+#         if eventAction == "submit":
+#             if eventForm.is_valid():
+#                 event = eventForm.save(commit=False)
+#                 event.host = userAccount
+#                 event.ticketing = "Invite Required"
+#                 event.crew_discount = request.POST.get("crew_discount") == "on"
+#                 event.show_guest_list = request.POST.get("show_guest_list") == "on"
+
+#                 event.status = "live"
+
+#                 event.save()
+
+#                 messages.success(request, "Event is live!")
+
+#                 user_profile = event.host.user_profile
+#                 hostProfile, _ = HostProfile.objects.get_or_create(user=request.user)
+#                 organization_membership = OrganizationMembership.objects.filter(
+#                     user=event.host
+#                 ).first()
+
+#                 # Refactored privacy setting
+#                 privacy_set = set_event_privacy(
+#                     event, user_profile, organization_membership, request
+#                 )
+#                 if not privacy_set:
+#                     return redirect(
+#                         "eventManagement:eventManagement", eventId=event.eventId
+#                     )
+
+#                 event.save()
+#                 product = createHostProduct(event, hostProfile.stripe_account_id)
+
+#                 if product:
+#                     event.stripeProductId = product.id
+#                     event.save()
+#                 else:
+#                     print("Product creation failed")
+#                     print("Product creation failed")
+#                     print("Product creation failed")
+#                     messages.error(request, "Product creation failed")
+#                     return redirect(
+#                         "eventManagement:inviteTicketing", eventId=event.eventId
+#                     )
+
+#                 return redirect(
+#                     "eventManagement:inviteTicketing", eventId=event.eventId
+#                 )
+
+#             else:
+#                 print(eventForm.errors)
+#                 print(eventForm.errors)
+#                 print(eventForm.errors)
+#                 messages.error(request, "Invalid form submission.")
+#                 # Optionally, handle form errors here
+
+#     else:
+#         eventForm = EventForm(user=request.user)
+
+#     return render(
+#         request,
+#         "eventManagementApp/host/create/createInviteEvent.html",
+#         {
+#             "eventForm": eventForm,
+#             "eventTypeChoices": event_type_choices,
+#             "privacyChoices": privacy_choices,
+#             "placesKey": placesKey,
+#         },
+#     )
 
 
 @login_required
@@ -471,10 +466,6 @@ def createPaidEventTicket(request, eventId):
     )
 
 
-@login_required
-@member
-@verified
-@check_suspension
 def createInviteEventTicket(request, event):
     eventId = event.eventId
     invitationForm = InvitationForm(request.POST)
@@ -641,7 +632,7 @@ def eventManagement(request, eventId):
     else:
         invitationForm = InvitationForm()
         paidFreeForm = PaidFreeTicketForm()
-        editEventForm = EditEventForm(instance=event, user=request.user)
+        editEventForm = EditEventForm(instance=event)
 
     return render(
         request,
@@ -670,12 +661,12 @@ def editEvent(request, eventId):
     paid_free_tickets = PaidFreeTicket.objects.filter(event=event)
 
     if request.method == "POST":
-        editEventForm = EditEventForm(request.POST, instance=event, user=request.user)
+        editEventForm = EditEventForm(request.POST, instance=event)
         if editEventForm.is_valid():
             editEventForm.save()
             return redirect("eventManagement:eventManagement", eventId=eventId)
     else:
-        editEventForm = EditEventForm(instance=event, user=request.user)
+        editEventForm = EditEventForm(instance=event)
 
     return render(
         request,
