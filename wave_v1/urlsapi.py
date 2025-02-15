@@ -33,7 +33,7 @@ urlpatterns = [
     path("core/", include("coreApp.apiUrls")),
     # path("career/", include("careerApp.apiUrls")),
     # path("news/", include("newsroomApp.apiUrls")),
-    # path("social/", include("socialApp.apiUrls")),
+    path("social/", include("socialApp.apiUrls")),
     # path("tickets/", include("eventTicketsApp.apiUrls")),
     # path("manager/", include("campusManagerApp.apiUrls")),
     # path("blog/", include("blogApp.apiUrls")),
