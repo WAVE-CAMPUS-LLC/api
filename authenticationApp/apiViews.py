@@ -79,7 +79,16 @@ def login_api(request):
                 'id': authenticated_user.id,
                 'email': authenticated_user.email,
                 'username': authenticated_user.username,
-                # Add any other user fields you need
+                'first_name': authenticated_user.first_name,
+                'last_name': authenticated_user.last_name,
+                'is_active': authenticated_user.is_active,
+                'is_staff': authenticated_user.is_staff,
+                'birthday': authenticated_user.birthday,
+                'age': authenticated_user.age,
+                'is_suspended': authenticated_user.is_suspended,
+                'is_superuser': authenticated_user.is_superuser,
+                'groups': [group.name for group in authenticated_user.groups.all()]
+                
             }
         }, status=status.HTTP_200_OK)
 
