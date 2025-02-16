@@ -107,12 +107,10 @@ class SaveEventProgressAPIView(APIView):
             
             
             
-class HostPortalView(APIView):
-    permission_classes = [IsAuthenticated]
-    
-    @host 
-    @check_suspension  
-    def get(self, request):
+@api_view(['GET', 'POST'])
+@permission_classes([IsAuthenticated])
+def host_portal(request):
+    if request.method == 'GET':
         live_events = Event.objects.filter(host=request.user, status="live")
         incomplete_events = Event.objects.filter(host=request.user, status="incomplete")
         
@@ -125,9 +123,7 @@ class HostPortalView(APIView):
             "isInCollege": is_in_college,
         }, status=status.HTTP_200_OK)
     
-    @host
-    @check_suspension
-    def post(self, request):
+    elif request.method == 'POST':
         action = request.data.get("eventAction")
         event_id = request.data.get("event_id")
 
@@ -138,7 +134,7 @@ class HostPortalView(APIView):
         
         if "displayOnCollege" in request.data:
             event_to_update = get_object_or_404(Event, eventId=event_id, host=request.user)
-            event_to_update.display_event_on_college = request.data["displayOnCollege"] == True
+            event_to_update.display_event_on_college = request.data["displayOnCollege"] is True
             event_to_update.save()
             return Response({"message": "Event display setting updated"}, status=status.HTTP_200_OK)
         

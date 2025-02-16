@@ -1,5 +1,5 @@
 from django.urls import path
-from .apiViews import CreateEventAPIView, SaveEventProgressAPIView, HostPortalView
+from .apiViews import CreateEventAPIView, SaveEventProgressAPIView, host_portal
 
 app_name = "eventManagementAPI"
 
@@ -10,5 +10,5 @@ urlpatterns = [
         SaveEventProgressAPIView.as_view(),
         name="save_event_progress",
     ),
-    path("portal/", HostPortalView.as_view(), name="host_portal"),
+    path("host_portal/", host_portal, name="host_portal"),
 ]
