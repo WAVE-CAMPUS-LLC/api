@@ -3,11 +3,13 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from .models import Event, HostProfile, EventPrivacy
+from accountManagementApp.models import UserProfile
 from .serializers import EventSerializer, EventPrivacySerializer
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from datetime import datetime
 import uuid
+from wave_v1.decorators import host, check_suspension
 
 class CreateEventAPIView(APIView):
     permission_classes = [IsAuthenticated]
@@ -102,3 +104,42 @@ class SaveEventProgressAPIView(APIView):
             return Response(
                 {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+            
+            
+            
+class HostPortalView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    @host 
+    @check_suspension  
+    def get(self, request):
+        live_events = Event.objects.filter(host=request.user, status="live")
+        incomplete_events = Event.objects.filter(host=request.user, status="incomplete")
+        
+        user_profile = get_object_or_404(UserProfile, user=request.user)
+        is_in_college = user_profile.college is not None
+        
+        return Response({
+            "liveEvents": EventSerializer(live_events, many=True).data,
+            "incompleteEvents": EventSerializer(incomplete_events, many=True).data,
+            "isInCollege": is_in_college,
+        }, status=status.HTTP_200_OK)
+    
+    @host
+    @check_suspension
+    def post(self, request):
+        action = request.data.get("eventAction")
+        event_id = request.data.get("event_id")
+
+        if action == "deleteEvent" and event_id:
+            event_to_delete = get_object_or_404(Event, eventId=event_id, host=request.user)
+            event_to_delete.delete()
+            return Response({"message": "Event deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
+        
+        if "displayOnCollege" in request.data:
+            event_to_update = get_object_or_404(Event, eventId=event_id, host=request.user)
+            event_to_update.display_event_on_college = request.data["displayOnCollege"] == True
+            event_to_update.save()
+            return Response({"message": "Event display setting updated"}, status=status.HTTP_200_OK)
+        
+        return Response({"error": "Invalid request"}, status=status.HTTP_400_BAD_REQUEST)
