@@ -139,6 +139,8 @@ def createPaidEvent(request):
             user=event.host
         ).first()
 
+        event.save()
+
         # Set privacy settings before saving
         privacy_set = set_event_privacy(
             event, user_profile, organization_membership, request
@@ -149,7 +151,7 @@ def createPaidEvent(request):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        event.save()
+        
 
         # Create Stripe product
         product = createHostProduct(event, host_profile.stripe_account_id)
