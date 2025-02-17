@@ -107,31 +107,31 @@ def eventCreationSelect(request):
     siteDomain = settings.SITE_URL
     link = request.build_absolute_uri(reverse("eventManagement:eventCreationSelect"))
 
-    # Step 1: If no connectAccountID, search Stripe for an account by email
+    # Create a new Stripe Connect account if none exists
     if not userAccount.connectAccountID:
-        stripe_accounts = stripe.Account.list(email=userAccount.email, limit=1)
+        try:
+            # Create a new Stripe Connect account
+            stripeConnectAccount = ConnectAccount.createConnectAccount(request, userAccount)
+            if stripeConnectAccount:
+                userAccount.connectAccountID = stripeConnectAccount.id
+                userAccount.connectAccountCreated = True
+                userAccount.save()
+                completedConnectAccount = True
+        except stripe.error.StripeError as e:
+            messages.error(request, f"Stripe account creation failed: {str(e)}")
+            return redirect("eventManagement:eventCreationSelect")
 
-        if stripe_accounts.data:
-            existing_account = stripe_accounts.data[0]
-            stripe.Account.delete(existing_account["id"])  # Delete old account
-
-        # Step 2: Create a new Stripe Connect account
-        stripeConnectAccount = ConnectAccount.createConnectAccount(request, userAccount)
-        if stripeConnectAccount:
-            userAccount.connectAccountID = stripeConnectAccount.id
-            userAccount.connectAccountCreated = True
-            userAccount.save()
-            completedConnectAccount = True
-
-    # Step 3: Now that we have a Connect account ID, generate the onboarding link
+    # Generate onboarding link if we have a Connect account ID
     if userAccount.connectAccountID:
-        stripeLinkAccount = ConnectAccount.getStripeOnboardingLink(
-            request, userAccount.connectAccountID, siteDomain, link
-        )
+        try:
+            stripeLinkAccount = ConnectAccount.getStripeOnboardingLink(
+                request, userAccount.connectAccountID, siteDomain, link
+            )
+        except stripe.error.StripeError as e:
+            messages.error(request, f"Failed to generate onboarding link: {str(e)}")
+            stripeLinkAccount = None
     else:
         stripeLinkAccount = None
-
-    print("Stripe Link Account:", stripeLinkAccount)
 
     # Assign "Host" role if not already assigned
     if not userAccount.groups.filter(name="Host").exists():
@@ -142,23 +142,23 @@ def eventCreationSelect(request):
         eventAction = request.POST.get("eventAction")
 
         if eventAction == "paid":
-            stripeConnectAccount = stripe.Account.retrieve(userAccount.connectAccountID)
-            if stripeConnectAccount.get("payouts_enabled"):
-                completedConnectAccount = True
+            try:
+                stripeConnectAccount = stripe.Account.retrieve(userAccount.connectAccountID)
+                if stripeConnectAccount.get("payouts_enabled"):
+                    completedConnectAccount = True
 
-            time.sleep(2)
+                time.sleep(2)
 
-            if not completedConnectAccount:
-                messages.error(request, "Please complete your Stripe account setup.")
-                return redirect(stripeLinkAccount)
-            return redirect("eventManagement:createPaidEvent")
+                if not completedConnectAccount:
+                    messages.error(request, "Please complete your Stripe account setup.")
+                    return redirect(stripeLinkAccount)
+                return redirect("eventManagement:createPaidEvent")
+            except stripe.error.StripeError as e:
+                messages.error(request, f"Stripe account verification failed: {str(e)}")
+                return redirect("eventManagement:eventCreationSelect")
+                
         if eventAction == "free":
             return redirect("eventManagement:createFreeEvent")
-        # TODO remove commented code, we shifted from rsvp and invite to free and paid
-        # elif eventAction == "rsvp":
-        #     return redirect("eventManagement:createRsvpEvent")
-        # elif eventAction == "invite":
-        #     return redirect("eventManagement:createInviteEvent")
 
     return render(request, "eventManagementApp/host/eventCreationSelect.html")
 
