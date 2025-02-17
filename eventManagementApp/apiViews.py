@@ -1,16 +1,30 @@
+from datetime import datetime
+import time
+import json
+import stripe
+from django.conf import settings
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from .models import Event, HostProfile, EventPrivacy
-from accountManagementApp.models import UserProfile
 from .serializers import EventSerializer, EventPrivacySerializer
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from datetime import datetime
 import uuid
 from wave_v1.decorators import host, check_suspension
+from stripeManagementApp.createHostProduct import createHostProduct
+
+from accountManagementApp.models import UserProfile
+from collegeManagementApp.models import Organization, OrganizationMembership
+from .forms import HostApplicationForm, EventForm, EditEventForm
+from eventTicketsApp.forms import InvitationForm, PaidFreeTicketForm
+from .models import EventType, HostApplication, Event, EventPrivacy, HostProfile
+from authenticationApp.models import CustomUser
+from .utils import set_event_privacy
+
 
 class CreateEventAPIView(APIView):
     permission_classes = [IsAuthenticated]
@@ -19,18 +33,20 @@ class CreateEventAPIView(APIView):
         try:
             # Extract data from the request
             event_data = {
-                'title': request.data.get('title'),
-                'description': request.data.get('description'),
-                'event_type': request.data.get('event_type'),
-                'date': request.data.get('date'),
-                'start_time': datetime.strptime(request.data.get('start_time'), "%H:%M").time(),  # Convert to time object
+                "title": request.data.get("title"),
+                "description": request.data.get("description"),
+                "event_type": request.data.get("event_type"),
+                "date": request.data.get("date"),
+                "start_time": datetime.strptime(
+                    request.data.get("start_time"), "%H:%M"
+                ).time(),  # Convert to time object
                 # 'location': request.data.get('location'),
                 # 'price': request.data.get('price'),
                 # 'capacity': request.data.get('capacity'),
-                'header_photo': request.FILES.get('header_photo'),
-                'age_restriction': request.data.get('age_restriction'),
-                'host': request.user,
-                'status': 'incomplete',
+                "header_photo": request.FILES.get("header_photo"),
+                "age_restriction": request.data.get("age_restriction"),
+                "host": request.user,
+                "status": "incomplete",
             }
 
             # Create the event
@@ -44,99 +60,129 @@ class CreateEventAPIView(APIView):
             return Response(
                 {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-        
-class SaveEventProgressAPIView(APIView):
-    permission_classes = [IsAuthenticated]
 
-    def post(self, request, eventId):
-        """
-        Save event progress (update event details).
-        """
-        try:
-            event = get_object_or_404(Event, eventId=eventId, host=request.user)
 
-            # Update event fields
-            event.title = request.data.get("title", event.title)
-            event.event_type = request.data.get("event_type", event.event_type)
-            event.description = request.data.get("description", event.description)
-            event.privacy = request.data.get("privacy", event.privacy)
-            event.country = request.data.get("country", event.country)
-            event.city = request.data.get("city", event.city)
-            event.state = request.data.get("state", event.state)
-            event.zip_code = request.data.get("zip_code", event.zip_code)
-            # event.contact_email = request.data.get("contact_email", event.contact_email)
-            # event.contact_phone = request.data.get("contact_phone", event.contact_phone)
-
-            # Handle date and time fields
-            date_str = request.data.get("date")
-            if date_str:
-                event.date = datetime.strptime(date_str, "%Y-%m-%d").date()
-
-            start_time_str = request.data.get("start_time")
-            if start_time_str:
-                event.start_time = datetime.strptime(start_time_str, "%H:%M").time()
-
-            end_time_str = request.data.get("end_time")
-            if end_time_str:
-                event.end_time = datetime.strptime(end_time_str, "%H:%M").time()
-
-            # Save changes
-            event.save()
-
-            # Handle event privacy
-            if event.privacy == "Discoverable":
-                EventPrivacy.objects.create(
-                    event=event,
-                    display_on_explore=True,
-                    require_invitation=False,
-                )
-            elif event.privacy == "Invite Only":
-                EventPrivacy.objects.create(
-                    event=event,
-                    display_on_explore=False,
-                    require_invitation=True,
-                )
-
-            # Serialize and return the updated event
-            serializer = EventSerializer(event)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-
-        except Exception as e:
-            return Response(
-                {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-            
-            
-            
-@api_view(['GET', 'POST'])
+@api_view(["GET", "POST"])
 @permission_classes([IsAuthenticated])
 def host_portal(request):
-    if request.method == 'GET':
+    if request.method == "GET":
         live_events = Event.objects.filter(host=request.user, status="live")
         incomplete_events = Event.objects.filter(host=request.user, status="incomplete")
-        
+
         user_profile = get_object_or_404(UserProfile, user=request.user)
         is_in_college = user_profile.college is not None
-        
-        return Response({
-            "liveEvents": EventSerializer(live_events, many=True).data,
-            "incompleteEvents": EventSerializer(incomplete_events, many=True).data,
-            "isInCollege": is_in_college,
-        }, status=status.HTTP_200_OK)
-    
-    elif request.method == 'POST':
+
+        return Response(
+            {
+                "liveEvents": EventSerializer(live_events, many=True).data,
+                "incompleteEvents": EventSerializer(incomplete_events, many=True).data,
+                "isInCollege": is_in_college,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+    elif request.method == "POST":
         action = request.data.get("eventAction")
         event_id = request.data.get("event_id")
 
         if action == "deleteEvent" and event_id:
-            event_to_delete = get_object_or_404(Event, eventId=event_id, host=request.user)
+            event_to_delete = get_object_or_404(
+                Event, eventId=event_id, host=request.user
+            )
             event_to_delete.delete()
-            return Response({"message": "Event deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
-        
+            return Response(
+                {"message": "Event deleted successfully"},
+                status=status.HTTP_204_NO_CONTENT,
+            )
+
         if "displayOnCollege" in request.data:
-            event_to_update = get_object_or_404(Event, eventId=event_id, host=request.user)
-            event_to_update.display_event_on_college = request.data["displayOnCollege"] is True
+            event_to_update = get_object_or_404(
+                Event, eventId=event_id, host=request.user
+            )
+            event_to_update.display_event_on_college = (
+                request.data["displayOnCollege"] is True
+            )
             event_to_update.save()
-            return Response({"message": "Event display setting updated"}, status=status.HTTP_200_OK)
-        
-        return Response({"error": "Invalid request"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"message": "Event display setting updated"}, status=status.HTTP_200_OK
+            )
+
+        return Response(
+            {"error": "Invalid request"}, status=status.HTTP_400_BAD_REQUEST
+        )
+
+
+class CreatePaidEventView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        user_account = get_object_or_404(CustomUser, username=request.user.username)
+        event_action = request.data.get("eventAction")
+
+        # Ensure valid event action
+        if event_action != "submit":
+            return Response(
+                {"error": "Invalid action."}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Pass user to the form explicitly
+        event_form = EventForm(request.data, request.FILES, user=request.user)
+
+        if event_form.is_valid():
+            event = event_form.save(commit=False)
+            event.host = user_account
+            event.ticketing = "Paid"
+            event.status = "live"
+
+            user_profile = event.host.user_profile
+            host_profile, _ = HostProfile.objects.get_or_create(user=request.user)
+            organization_membership = OrganizationMembership.objects.filter(
+                user=event.host
+            ).first()
+
+            # Set privacy settings before saving
+            privacy_set = set_event_privacy(
+                event, user_profile, organization_membership, request
+            )
+            if not privacy_set:
+                return Response(
+                    {"error": "Privacy setting failed."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            event.save()
+
+            # Create Stripe product
+            product = createHostProduct(event, host_profile.stripe_account_id)
+            if not product:
+                event.delete()  # Prevent storing an incomplete event
+                return Response(
+                    {"error": "Product creation failed."},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                )
+
+            event.stripeProductId = product.id
+            event.save()
+
+            return Response(
+                {"message": "Event is live!", "eventId": event.eventId},
+                status=status.HTTP_201_CREATED,
+            )
+
+        return Response(
+            {"errors": event_form.errors}, status=status.HTTP_400_BAD_REQUEST
+        )
+
+    def get(self, request):
+        event_type_choices = Event.EVENT_TYPE_CHOICES
+        privacy_choices = Event.PRIVACY_CHOICES
+        places_key = settings.PLACES_API_KEY
+
+        return Response(
+            {
+                "eventTypeChoices": event_type_choices,
+                "privacyChoices": privacy_choices,
+                "placesKey": places_key,
+            },
+            status=status.HTTP_200_OK,
+        )
