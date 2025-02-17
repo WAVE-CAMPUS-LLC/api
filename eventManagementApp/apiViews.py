@@ -173,7 +173,7 @@ def createPaidEvent(request):
     )
 
 
-@api_view(["POST"])
+@api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def getEventFormFields(request):
     form = EventForm(user=request.user)  # Instantiate form with user context
