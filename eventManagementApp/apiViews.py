@@ -2,6 +2,7 @@ from datetime import datetime
 import time
 import json
 import stripe
+from django import forms
 from django.conf import settings
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -174,15 +175,27 @@ class CreatePaidEventView(APIView):
         )
 
     def get(self, request):
-        event_type_choices = Event.EVENT_TYPE_CHOICES
-        privacy_choices = Event.PRIVACY_CHOICES
-        places_key = settings.PLACES_API_KEY
+        """
+        Return event form fields dynamically instead of hardcoding them.
+        """
+        form = EventForm(user=request.user)  # Instantiate form with user context
+        form_fields = {}
 
-        return Response(
-            {
-                "eventTypeChoices": event_type_choices,
-                "privacyChoices": privacy_choices,
-                "placesKey": places_key,
-            },
-            status=status.HTTP_200_OK,
-        )
+        for field_name, field in form.fields.items():
+            field_data = {
+                "type": field.__class__.__name__,  # Get field type
+                "required": field.required,
+                "label": field.label,
+                "help_text": field.help_text,
+            }
+
+            # Include choices for ChoiceFields
+            if isinstance(field, forms.ChoiceField):
+                field_data["choices"] = field.choices
+
+            form_fields[field_name] = field_data
+
+        return Response({
+            "formFields": form_fields,
+            "placesKey": settings.PLACES_API_KEY
+        }, status=status.HTTP_200_OK)
