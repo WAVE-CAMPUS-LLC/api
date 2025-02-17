@@ -112,90 +112,88 @@ def host_portal(request):
             {"error": "Invalid request"}, status=status.HTTP_400_BAD_REQUEST
         )
 
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def createPaidEvent(request):
+    user_account = get_object_or_404(CustomUser, username=request.user.username)
+    event_action = request.data.get("eventAction")
 
-class CreatePaidEventView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request):
-        user_account = get_object_or_404(CustomUser, username=request.user.username)
-        event_action = request.data.get("eventAction")
-
-        # Ensure valid event action
-        if event_action != "submit":
-            return Response(
-                {"error": "Invalid action."}, status=status.HTTP_400_BAD_REQUEST
-            )
-
-        # Pass user to the form explicitly
-        event_form = EventForm(request.data, request.FILES, user=request.user)
-
-        if event_form.is_valid():
-            event = event_form.save(commit=False)
-            event.host = user_account
-            event.ticketing = "Paid"
-            event.status = "live"
-
-            user_profile = event.host.user_profile
-            host_profile, _ = HostProfile.objects.get_or_create(user=request.user)
-            organization_membership = OrganizationMembership.objects.filter(
-                user=event.host
-            ).first()
-
-            # Set privacy settings before saving
-            privacy_set = set_event_privacy(
-                event, user_profile, organization_membership, request
-            )
-            if not privacy_set:
-                return Response(
-                    {"error": "Privacy setting failed."},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-
-            event.save()
-
-            # Create Stripe product
-            product = createHostProduct(event, host_profile.stripe_account_id)
-            if not product:
-                event.delete()  # Prevent storing an incomplete event
-                return Response(
-                    {"error": "Product creation failed."},
-                    status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                )
-
-            event.stripeProductId = product.id
-            event.save()
-
-            return Response(
-                {"message": "Event is live!", "eventId": event.eventId},
-                status=status.HTTP_201_CREATED,
-            )
-
+    # Ensure valid event action
+    if event_action != "submit":
         return Response(
-            {"errors": event_form.errors}, status=status.HTTP_400_BAD_REQUEST
+            {"error": "Invalid action."}, status=status.HTTP_400_BAD_REQUEST
         )
 
-    def get(self, request):
-        """
-        Return event form fields dynamically instead of hardcoding them.
-        """
-        form = EventForm(user=request.user)  # Instantiate form with user context
-        form_fields = {}
+    # Pass user to the form explicitly
+    event_form = EventForm(request.data, request.FILES, user=request.user)
 
-        for field_name, field in form.fields.items():
-            field_data = {
-                "type": field.__class__.__name__,  # Get field type
-                "required": field.required,
-                "label": field.label,
-                "help_text": field.help_text,
-            }
+    if event_form.is_valid():
+        event = event_form.save(commit=False)
+        event.host = user_account
+        event.ticketing = "Paid"
+        event.status = "live"
 
-            # Include choices for ChoiceFields
-            if isinstance(field, forms.ChoiceField):
-                field_data["choices"] = field.choices
+        user_profile = event.host.user_profile
+        host_profile, _ = HostProfile.objects.get_or_create(user=request.user)
+        organization_membership = OrganizationMembership.objects.filter(
+            user=event.host
+        ).first()
 
-            form_fields[field_name] = field_data
+        # Set privacy settings before saving
+        privacy_set = set_event_privacy(
+            event, user_profile, organization_membership, request
+        )
+        if not privacy_set:
+            return Response(
+                {"error": "Privacy setting failed."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
-        return Response({
-            "formFields": form_fields,
-            "placesKey": settings.PLACES_API_KEY
-        }, status=status.HTTP_200_OK)
+        event.save()
+
+        # Create Stripe product
+        product = createHostProduct(event, host_profile.stripe_account_id)
+        if not product:
+            event.delete()  # Prevent storing an incomplete event
+            return Response(
+                {"error": "Product creation failed."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+        event.stripeProductId = product.id
+        event.save()
+
+        return Response(
+            {"message": "Event is live!", "eventId": event.eventId},
+            status=status.HTTP_201_CREATED,
+        )
+
+    return Response(
+        {"errors": event_form.errors}, status=status.HTTP_400_BAD_REQUEST
+    )
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def getEventFormFields(request):
+    form = EventForm(user=request.user)  # Instantiate form with user context
+    form_fields = {}
+
+    for field_name, field in form.fields.items():
+        field_data = {
+            "type": field.__class__.__name__,  # Get field type
+            "required": field.required,
+            "label": field.label,
+            "help_text": field.help_text,
+        }
+
+        # Include choices for ChoiceFields
+        if isinstance(field, forms.ChoiceField):
+            field_data["choices"] = field.choices
+
+        form_fields[field_name] = field_data
+
+    return Response({
+        "formFields": form_fields,
+        "placesKey": settings.PLACES_API_KEY
+    }, status=status.HTTP_200_OK)
