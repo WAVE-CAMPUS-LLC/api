@@ -168,40 +168,113 @@ class CustomerAccount:
             return None
         
     def getCustomerTransactions(request, customer_id):
+        if not customer_id:
+            messages.error(request, "No customer ID provided")
+            return []
+            
         try:
             charges = []
-            payment_intents = stripe.PaymentIntent.list(customer=customer_id, limit=10)
+            processed_ids = set()  # Keep track of processed transaction IDs
             
+            # Get payment intents
+            payment_intents = stripe.PaymentIntent.list(
+                customer=customer_id,
+                limit=100,  # Increased limit to get more transactions
+                expand=['data.latest_charge']  # Expand charge data
+            )
+            
+            # Process payment intents
             for payment in payment_intents.data:
+                if payment.id in processed_ids:
+                    continue
+                    
                 amount = payment.amount / 100  # Convert cents to dollars
                 
-                # Check if the PaymentIntent has an invoice
-                invoice_url = None
-                if payment.invoice:
-                    # Retrieve the invoice object
-                    invoice = stripe.Invoice.retrieve(payment.invoice)
-                    invoice_url = invoice.hosted_invoice_url
+                # Get charge details if available
+                charge = payment.latest_charge if hasattr(payment, 'latest_charge') else None
                 
-                # If no invoice, consider providing an alternative link, like a Stripe Dashboard link
-                if not invoice_url:
-                    invoice_url = f"https://dashboard.stripe.com/payments/{payment.id}"
+                # Get receipt URL from charge
+                receipt_url = charge.receipt_url if charge else None
                 
-                charges.append({
+                # If no receipt URL but has invoice, get invoice URL
+                if not receipt_url and payment.invoice:
+                    try:
+                        invoice = stripe.Invoice.retrieve(payment.invoice)
+                        receipt_url = invoice.hosted_invoice_url
+                    except:
+                        receipt_url = None
+                
+                # If still no URL, use Stripe Dashboard link
+                if not receipt_url:
+                    receipt_url = f"https://dashboard.stripe.com/payments/{payment.id}"
+                
+                transaction = {
                     "id": payment.id,
-                    "invoice_url": invoice_url,
+                    "receipt_url": receipt_url,
                     "amount": amount,
                     "currency": payment.currency,
                     "status": payment.status,
                     "created": payment.created,
-                })
+                    "description": payment.description or "Payment",
+                    "payment_method_details": charge.payment_method_details if charge else None
+                }
+                
+                charges.append(transaction)
+                processed_ids.add(payment.id)
+                if charge:
+                    processed_ids.add(charge.id)
+            
+            # Process direct charges that might not be associated with payment intents
+            direct_charges = stripe.Charge.list(
+                customer=customer_id,
+                limit=100
+            )
+            
+            # Process direct charges that might not be associated with payment intents
+            for charge in direct_charges.data:
+                # Skip if this charge is already included via payment intent
+                if charge.id in processed_ids or (charge.payment_intent and charge.payment_intent in processed_ids):
+                    continue
+                    
+                transaction = {
+                    "id": charge.id,
+                    "receipt_url": charge.receipt_url,
+                    "amount": charge.amount / 100,
+                    "currency": charge.currency,
+                    "status": charge.status,
+                    "created": charge.created,
+                    "description": charge.description or "Payment",
+                    "payment_method_details": charge.payment_method_details
+                }
+                
+                charges.append(transaction)
+                processed_ids.add(charge.id)
+            
+            # Sort all transactions by creation date, newest first
+            charges.sort(key=lambda x: x['created'], reverse=True)
             
             return charges
+            
+        except stripe.error.InvalidRequestError as e:
+            messages.error(request, f"Invalid request: {str(e)}")
+            print(f"Stripe error (Invalid Request): {str(e)}")
+            return []
+        except stripe.error.AuthenticationError as e:
+            messages.error(request, f"Authentication error: {str(e)}")
+            print(f"Stripe error (Authentication): {str(e)}")
+            return []
+        except stripe.error.APIConnectionError as e:
+            messages.error(request, f"API connection error: {str(e)}")
+            print(f"Stripe error (API Connection): {str(e)}")
+            return []
         except stripe.error.StripeError as e:
-            messages.error(request, f"Error: {e.user_message}")
-            return None
+            messages.error(request, f"Payment processing error: {str(e)}")
+            print(f"Stripe error: {str(e)}")
+            return []
         except Exception as e:
-            messages.error(request, f"Error: {str(e)}")
-            return None
+            messages.error(request, f"An unexpected error occurred: {str(e)}")
+            print(f"Unexpected error: {str(e)}")
+            return []
     
 class ConnectAccount:
     def createConnectAccount(request, user):

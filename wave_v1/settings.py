@@ -39,7 +39,7 @@ if ENVIORNMENT == "development":
     ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
     CSRF_TRUSTED_ORIGINS = ["http://localhost:8000", "http://127.0.0.1:8000"]
     DEBUG = True
-    DEBUG_PROPAGATE_EXCEPTIONS = True
+    DEBUG_PROPAGATE_EXCEPTIONS = False
     
     # CORS Settings for development
     CORS_ALLOW_ALL_ORIGINS = True

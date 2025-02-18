@@ -48,7 +48,6 @@
 {% block body %}
 <!-- Always render these, even if they are blank or might not be used -->
 <input type="hidden" id="save-url" value="{% url 'eventTickets:updateCart' %}" />
-<input type="hidden" id="checkout-url" value="{% url 'eventTickets:checkout' %}" />
 <div id="content-container" class="flex flex-col px-[10px] overflow-hidden after-xsm:px-[20px] xxsm:px-[35px] sm:px-[40px] md:px-[40px] pre-lg:px-[50px] lg:px-[80px] xl:px-[150px] 2xl:px-[200px] 3xl:-[300px] gap-[70px]">
     <div class="flex flex-col gap-3">
         <div class="page-header w-full flex flex-col gap-3">
