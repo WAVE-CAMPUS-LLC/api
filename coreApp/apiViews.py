@@ -213,7 +213,14 @@ def event_details(request, eventId):
     
     # Fetch the event and related objects
     event = get_object_or_404(Event, eventId=eventId)
-    eventprivacy = EventPrivacy.objects.get(event=event)
+    eventprivacy, created = EventPrivacy.objects.get_or_create(
+        event=event,
+        defaults={
+            'require_invitation': False,
+            'restricted_college': False,
+            'restricted_organization': False
+        }
+    )
     eventPaidFreeTickets = PaidFreeTicket.objects.filter(event=event)
     
     # Check for RSVP requirement and guest list

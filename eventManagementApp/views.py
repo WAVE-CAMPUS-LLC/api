@@ -191,6 +191,14 @@ def createPaidEvent(request):
 
                 messages.success(request, "Event is live!")
 
+                # Create EventPrivacy object for the event
+                EventPrivacy.objects.create(
+                    event=event,
+                    require_invitation=False,
+                    restricted_college=False,
+                    restricted_organization=False
+                )
+
                 user_profile = event.host.user_profile
                 hostProfile, _ = HostProfile.objects.get_or_create(user=request.user)
                 organization_membership = OrganizationMembership.objects.filter(
@@ -239,7 +247,6 @@ def createPaidEvent(request):
 @member
 @verified
 @check_suspension
-# Used to be createRsvpEvent, now createFreeEvent
 def createFreeEvent(request):
     event_type_choices = Event.EVENT_TYPE_CHOICES
     placesKey = settings.PLACES_API_KEY
@@ -264,6 +271,14 @@ def createFreeEvent(request):
                 event.save()
 
                 messages.success(request, "Event is live!")
+
+                # Create EventPrivacy object for the event
+                EventPrivacy.objects.create(
+                    event=event,
+                    require_invitation=False,
+                    restricted_college=False,
+                    restricted_organization=False
+                )
 
                 user_profile = event.host.user_profile
                 hostProfile, _ = HostProfile.objects.get_or_create(user=request.user)
