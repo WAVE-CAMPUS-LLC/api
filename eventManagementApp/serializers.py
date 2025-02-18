@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Event, EventPrivacy, SharedEvent
+from .models import Event, SharedEvent
 from accountManagementApp.serializers import UserProfileSerializer
 from socialApp.serializers import CrewSerializer
 
@@ -8,14 +8,14 @@ class EventSerializer(serializers.ModelSerializer):
         model = Event
         fields = "__all__"
 
-class EventPrivacySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = EventPrivacy
-        fields = [
-            "event",
-            "display_on_explore",
-            "require_invitation",
-        ]
+# class EventPrivacySerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = EventPrivacy
+#         fields = [
+#             "event",
+#             "display_on_explore",
+#             "require_invitation",
+#         ]
         
 class SharedEventSerializer(serializers.ModelSerializer):
     sender = UserProfileSerializer()

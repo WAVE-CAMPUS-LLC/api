@@ -33,7 +33,7 @@ from stripeManagementApp.getHostTransactions import Transactions
 
 
 from eventTicketsApp.forms import InvitationForm, PaidFreeTicketForm
-from .models import EventType, HostApplication, Event, EventPrivacy, HostProfile
+from .models import EventType, HostApplication, Event, HostProfile
 from authenticationApp.models import CustomUser
 
 from eventTicketsApp.models import InviteEventOption, RSVPTicket, PaidFreeTicket, Ticket
@@ -191,19 +191,9 @@ def createPaidEvent(request):
 
                 messages.success(request, "Event is live!")
 
-                # Create EventPrivacy object for the event
-                EventPrivacy.objects.create(
-                    event=event,
-                    require_invitation=False,
-                    restricted_college=False,
-                    restricted_organization=False
-                )
-
                 user_profile = event.host.user_profile
                 hostProfile, _ = HostProfile.objects.get_or_create(user=request.user)
-                organization_membership = OrganizationMembership.objects.filter(
-                    user=event.host
-                ).first()
+                
 
                 event.save()
                 product = createHostProduct(event, hostProfile.stripe_account_id)
@@ -227,7 +217,6 @@ def createPaidEvent(request):
                 print(eventForm.errors)
                 print(eventForm.errors)
                 messages.error(request, "Invalid form submission.")
-                # Optionally, handle form errors here
 
     else:
         eventForm = EventForm(user=request.user)
@@ -272,31 +261,11 @@ def createFreeEvent(request):
 
                 messages.success(request, "Event is live!")
 
-                # Create EventPrivacy object for the event
-                EventPrivacy.objects.create(
-                    event=event,
-                    require_invitation=False,
-                    restricted_college=False,
-                    restricted_organization=False
-                )
-
                 user_profile = event.host.user_profile
                 hostProfile, _ = HostProfile.objects.get_or_create(user=request.user)
-                organization_membership = OrganizationMembership.objects.filter(
-                    user=event.host
-                ).first()
+                
 
                 event.save()
-                product = createHostProduct(event, hostProfile.stripe_account_id)
-
-                if product:
-                    event.stripeProductId = product.id
-                    event.save()
-                else:
-                    messages.error(request, "Product creation failed")
-                    return redirect(
-                        "eventManagement:eventManagement", eventId=event.eventId
-                    )
 
                 return redirect(
                     "eventManagement:eventManagement", eventId=event.eventId
@@ -304,7 +273,6 @@ def createFreeEvent(request):
 
             else:
                 messages.error(request, "Invalid form submission.")
-                # Optionally, handle form errors here
 
     else:
         eventForm = EventForm(user=request.user)
@@ -318,89 +286,6 @@ def createFreeEvent(request):
             "placesKey": placesKey,
         },
     )
-
-
-# This view is invalid because it assumes that the user does not want ant ticket type for invite only events
-# def createInviteEvent(request):
-#     event_type_choices = Event.EVENT_TYPE_CHOICES
-#     privacy_choices = Event.PRIVACY_CHOICES
-#     placesKey = settings.PLACES_API_KEY
-
-#     userAccount = get_object_or_404(CustomUser, username=request.user.username)
-
-#     if request.method == "POST":
-#         eventForm = EventForm(request.POST, request.FILES, user=request.user)
-#         eventAction = request.POST.get("eventAction")
-
-#         if eventAction == "submit":
-#             if eventForm.is_valid():
-#                 event = eventForm.save(commit=False)
-#                 event.host = userAccount
-#                 event.ticketing = "Invite Required"
-#                 event.crew_discount = request.POST.get("crew_discount") == "on"
-#                 event.show_guest_list = request.POST.get("show_guest_list") == "on"
-
-#                 event.status = "live"
-
-#                 event.save()
-
-#                 messages.success(request, "Event is live!")
-
-#                 user_profile = event.host.user_profile
-#                 hostProfile, _ = HostProfile.objects.get_or_create(user=request.user)
-#                 organization_membership = OrganizationMembership.objects.filter(
-#                     user=event.host
-#                 ).first()
-
-#                 # Refactored privacy setting
-#                 privacy_set = set_event_privacy(
-#                     event, user_profile, organization_membership, request
-#                 )
-#                 if not privacy_set:
-#                     return redirect(
-#                         "eventManagement:eventManagement", eventId=event.eventId
-#                     )
-
-#                 event.save()
-#                 product = createHostProduct(event, hostProfile.stripe_account_id)
-
-#                 if product:
-#                     event.stripeProductId = product.id
-#                     event.save()
-#                 else:
-#                     print("Product creation failed")
-#                     print("Product creation failed")
-#                     print("Product creation failed")
-#                     messages.error(request, "Product creation failed")
-#                     return redirect(
-#                         "eventManagement:inviteTicketing", eventId=event.eventId
-#                     )
-
-#                 return redirect(
-#                     "eventManagement:inviteTicketing", eventId=event.eventId
-#                 )
-
-#             else:
-#                 print(eventForm.errors)
-#                 print(eventForm.errors)
-#                 print(eventForm.errors)
-#                 messages.error(request, "Invalid form submission.")
-#                 # Optionally, handle form errors here
-
-#     else:
-#         eventForm = EventForm(user=request.user)
-
-#     return render(
-#         request,
-#         "eventManagementApp/host/create/createInviteEvent.html",
-#         {
-#             "eventForm": eventForm,
-#             "eventTypeChoices": event_type_choices,
-#             "privacyChoices": privacy_choices,
-#             "placesKey": placesKey,
-#         },
-#     )
-
 
 @login_required
 @member

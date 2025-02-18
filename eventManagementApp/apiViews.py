@@ -9,8 +9,8 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
-from .models import Event, HostProfile, EventPrivacy
-from .serializers import EventSerializer, EventPrivacySerializer
+from .models import Event, HostProfile
+from .serializers import EventSerializer
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from datetime import datetime
@@ -22,45 +22,8 @@ from accountManagementApp.models import UserProfile
 from collegeManagementApp.models import Organization, OrganizationMembership
 from .forms import HostApplicationForm, EventForm, EditEventForm
 from eventTicketsApp.forms import InvitationForm, PaidFreeTicketForm
-from .models import EventType, HostApplication, Event, EventPrivacy, HostProfile
+from .models import EventType, HostApplication, Event, HostProfile
 from authenticationApp.models import CustomUser
-from .utils import set_event_privacy
-
-
-class CreateEventAPIView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request):
-        try:
-            # Extract data from the request
-            event_data = {
-                "title": request.data.get("title"),
-                "description": request.data.get("description"),
-                "event_type": request.data.get("event_type"),
-                "date": request.data.get("date"),
-                "start_time": datetime.strptime(
-                    request.data.get("start_time"), "%H:%M"
-                ).time(),  # Convert to time object
-                # 'location': request.data.get('location'),
-                # 'price': request.data.get('price'),
-                # 'capacity': request.data.get('capacity'),
-                "header_photo": request.FILES.get("header_photo"),
-                "age_restriction": request.data.get("age_restriction"),
-                "host": request.user,
-                "status": "incomplete",
-            }
-
-            # Create the event
-            event = Event.objects.create(**event_data)
-
-            # Serialize and return the event
-            serializer = EventSerializer(event)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-        except Exception as e:
-            return Response(
-                {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
 
 
 @api_view(["GET", "POST"])
@@ -135,23 +98,9 @@ def createPaidEvent(request):
 
         user_profile = event.host.user_profile
         host_profile, _ = HostProfile.objects.get_or_create(user=request.user)
-        organization_membership = OrganizationMembership.objects.filter(
-            user=event.host
-        ).first()
-
-        event.save()
-
-        # Set privacy settings before saving
-        privacy_set = set_event_privacy(
-            event, user_profile, organization_membership, request
-        )
-        if not privacy_set:
-            return Response(
-                {"error": "Privacy setting failed."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
         
+
+        event.save()        
 
         # Create Stripe product
         product = createHostProduct(event, host_profile.stripe_account_id)

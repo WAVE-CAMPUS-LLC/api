@@ -1,6 +1,6 @@
 from authenticationApp.admin import super_admin_restricted_site
 from django.contrib import admin
-from .models import HostApplication, Event, EventPrivacy, HostProfile, SharedEvent
+from .models import HostApplication, Event, HostProfile, SharedEvent
 from eventTicketsApp.models import RSVPTicket, PaidFreeTicket, Ticket
 from authenticationApp.admin import super_admin_restricted_site
 
@@ -25,7 +25,6 @@ class EventAdmin(admin.ModelAdmin):
         "start_time",
         "end_time",
         "description",
-        "privacy",
         "ticketing",
         "country",
         "building_name",
@@ -34,18 +33,23 @@ class EventAdmin(admin.ModelAdmin):
         "city",
         "state",
         "zip_code",
+        "forAllDisplay",
+        "display_event_on_college",
+        "host",
+        "created_at",
+        "updated_at",
+        "forCollegesDisplay",
+        "show_guest_list",
+        "crew_discount_percentage",
+        "minimum_crew_size",
+        "crew_discount",
+        "age_restriction",
+        "hide_address",
+        "admin_status",
+        "stripeProductId",
         "header_photo",
     )
 
-
-class EventPrivacyAdmin(admin.ModelAdmin):
-    list_display = (
-        "event",
-        "display_on_explore",
-        "require_invitation",
-        "restricted_college",
-        "restricted_organization",
-    )
 
 
 class RSVPTicketAdmin(admin.ModelAdmin):
@@ -110,7 +114,6 @@ super_admin_restricted_site.register(Ticket, TicketAdmin)
 super_admin_restricted_site.register(HostProfile, HostProfileAdmin)
 super_admin_restricted_site.register(SharedEvent, SharedEventAdmin)
 super_admin_restricted_site.register(Event, EventAdmin)
-super_admin_restricted_site.register(EventPrivacy, EventPrivacyAdmin)
 super_admin_restricted_site.register(RSVPTicket, RSVPTicketAdmin)
 super_admin_restricted_site.register(PaidFreeTicket, PaidFreeTicketAdmin)
 super_admin_restricted_site.register(HostApplication, HostApplicationAdmin)

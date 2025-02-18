@@ -14,7 +14,6 @@ from .models import Visitor
 from authenticationApp.models import CustomUser
 from eventManagementApp.models import (
     Event,
-    EventPrivacy,
     InviteEventOption,
     SharedEvent,
 )
@@ -315,7 +314,6 @@ def handleRSVP(request, eventId):
 def eventDetailsView(request, eventId, token=None):
     pageName = "eventDetails"
     event = get_object_or_404(Event, eventId=eventId)
-    eventprivacy = EventPrivacy.objects.get(event=event)
     eventPaidFreeTickets = PaidFreeTicket.objects.filter(event=event)
 
     # Create RSVP form for Free events
@@ -437,103 +435,7 @@ def eventDetailsView(request, eventId, token=None):
                     "eventTickets:crewCheckout", crewId=crew_id, ticketId=ticketId
                 )
 
-    # if event.age_restriction:
-    #     if user_age is None or (
-    #         (event.age_restriction == "18+" and user_age < 18) or
-    #         (event.age_restriction == "21+" and user_age < 21)
-    #     ):
-    #         return render(
-    #             request,
-    #             "extras/invalid/eventRestricted.html",  # Render a specific page for age restriction
-    #             {
-    #                 "page": pageName,
-    #                 "event": event,
-    #                 "eventPrivacy": eventprivacy,
-    #             },
-    #         )
-
-    if eventprivacy.require_invitation:
-        if token:
-            invitation = get_object_or_404(InviteEventOption, token=token)
-            return render(
-                request,
-                "coreApp/event/eventDetails.html",
-                {
-                    "page": pageName,
-                    "event": event,
-                    "eventPrivacy": eventprivacy,
-                    "rsvpForm": rsvpForm,
-                    "paidFreeTickets": eventPaidFreeTickets,
-                    "friends": user_friends,
-                    "crews": user_crews,
-                    "isFavoriteEvent": isFavoriteEvent,
-                    "guestList": guest_list,
-                },
-            )
-        else:
-            return render(
-                request,
-                "extras/invalid/eventInvalid.html",
-                {"page": pageName, "event": event, "eventPrivacy": eventprivacy},
-            )
-
-    elif eventprivacy.restricted_college:
-        if request.user.user_profile.college == eventprivacy.restricted_college and event.forCollegesDisplay:  # Added college display check
-            return render(
-                request,
-                "coreApp/event/eventDetails.html",
-                {
-                    "page": pageName,
-                    "event": event,
-                    "rsvpForm": rsvpForm,
-                    "paidFreeTickets": eventPaidFreeTickets,
-                    "friends": user_friends,
-                    "crews": user_crews,
-                    "isFavoriteEvent": isFavoriteEvent,
-                    "guestList": guest_list,
-                },
-            )
-        else:
-            return render(
-                request,
-                "extras/invalid/eventCollegePrivacy.html",
-                {
-                    "page": pageName,
-                    "event": event,
-                    "eventPrivacy": eventprivacy,
-                },
-            )
-
-    elif eventprivacy.restricted_organization:
-        userOrgRelation = OrganizationMembership.objects.filter(
-            user=request.user, organization=eventprivacy.restricted_organization
-        )
-
-        if userOrgRelation.exists():
-            return render(
-                request,
-                "coreApp/event/eventDetails.html",
-                {
-                    "page": pageName,
-                    "event": event,
-                    "rsvpForm": rsvpForm,
-                    "paidFreeTickets": eventPaidFreeTickets,
-                    "friends": user_friends,
-                    "crews": user_crews,
-                    "isFavoriteEvent": isFavoriteEvent,
-                    "guestList": guest_list,
-                },
-            )
-        else:
-            return render(
-                request,
-                "extras/invalid/eventOrganizationPrivacy.html",
-                {
-                    "page": pageName,
-                    "event": event,
-                    "eventPrivacy": eventprivacy,
-                },
-            )
+    
 
     else:
         return render(
@@ -553,32 +455,6 @@ def eventDetailsView(request, eventId, token=None):
 
 
 def categoryView(request, name):
-    # if not request.user.is_authenticated:
-    #     # Restrict events with age restrictions for anonymous users
-    #     age_filter = Q(age_restriction="")
-    # else:
-    #     # For authenticated users, calculate age and apply restrictions
-    #     user_age = request.user.age
-    #     if user_age is None and request.user.birthday:
-    #         today = date.today()
-    #         user_age = (
-    #             today.year
-    #             - request.user.birthday.year
-    #             - (
-    #                 (today.month, today.day)
-    #                 < (request.user.birthday.month, request.user.birthday.day)
-    #             )
-    #         )
-    #         request.user.age = user_age
-    #         request.user.save()
-
-    #     age_filter = Q(age_restriction="")
-    #     if user_age:
-    #         if user_age >= 21:
-    #             age_filter |= Q(age_restriction="21+")
-    #         if user_age >= 18:
-    #             age_filter |= Q(age_restriction="18+")
-
     category_events = Event.objects.filter(event_type=name)
 
     if not category_events.exists():

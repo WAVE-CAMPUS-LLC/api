@@ -30,7 +30,7 @@ from .models import (
 # TODO (Dave): for some reason the college management College model is not working properly. Using this for now.
 from adminDashboardApp.models import College
 from accountManagementApp.models import UserProfile
-from eventManagementApp.models import Event, EventPrivacy
+from eventManagementApp.models import Event
 
 
 # Create your views here.
@@ -195,6 +195,7 @@ def viewCollegeInformation(request, collegeId):
         Event.objects.filter(
             forAllDisplay=True,
             host__user_profile__college=college,
+            forCollegesDisplay=True,
             status="live",
         )
         .filter(age_filter)
@@ -211,7 +212,8 @@ def viewCollegeInformation(request, collegeId):
         Event.objects.filter(
             date__range=[start_of_week, end_of_week],
             status="live",
-            forAllDisplay=True,  # Changed from privacy="Discoverable"
+            forAllDisplay=True,  
+            forCollegesDisplay=True,
             admin_status="active",
         )
         .filter(age_filter)
@@ -538,11 +540,6 @@ def viewOrganization(request, collegeId, orgId):
                 privacy_details__restricted_organization=organization,
             )
             events.delete()
-
-            event_privacy = EventPrivacy.objects.filter(
-                restricted_organization=organization
-            )
-            event_privacy.delete()
 
             organization.delete()
             messages.success(request, f"{organization.name} has been deleted.")
