@@ -79,10 +79,14 @@ def exploreView(request):
 
     # Load initial 6 events
     initial_events = Event.objects.filter(
-        status="live", privacy="Discoverable", admin_status="active"
+        status="live", 
+        forAllDisplay=True,  # Changed from privacy="Discoverable"
+        admin_status="active"
     )[:9]
+    
     trending_events = Event.objects.filter(
-        status="live", privacy="Discoverable"
+        status="live",
+        forAllDisplay=True  # Changed from privacy="Discoverable"
     ).order_by("date")[:3]
 
     # Retrieve the user profile and invited events
@@ -106,7 +110,7 @@ def exploreView(request):
 
     trending_categories = (
         Event.objects.filter(
-            status="live", privacy="Discoverable", admin_status="active"
+            status="live", forAllDisplay=True, admin_status="active"
         )
         .values("event_type")
         .annotate(event_count=Count("event_type"))
@@ -136,7 +140,7 @@ def exploreView(request):
     weekly_events = Event.objects.filter(
         date__range=[start_of_week, end_of_week],
         status="live",
-        privacy="Discoverable",
+        forAllDisplay=True,
         admin_status="active",
     ).order_by("?")[:3]
 
@@ -201,7 +205,7 @@ def load_more_events(request):
                 age_filter |= Q(age_restriction="18+")
 
     more_events = Event.objects.filter(
-        status="live", privacy="Discoverable", admin_status="active"
+        status="live", forAllDisplay=True, admin_status="active"
     )[offset : offset + limit]
 
     events_data = []
@@ -222,7 +226,7 @@ def load_more_events(request):
         )
 
     has_more = Event.objects.filter(
-        status="live", privacy="Discoverable", admin_status="active"
+        status="live", forAllDisplay=True, admin_status="active"
     ).count() > (offset + limit)
 
     return JsonResponse({"events": events_data, "has_more": has_more})
@@ -474,7 +478,7 @@ def eventDetailsView(request, eventId, token=None):
             )
 
     elif eventprivacy.restricted_college:
-        if request.user.user_profile.college == eventprivacy.restricted_college:
+        if request.user.user_profile.college == eventprivacy.restricted_college and event.forCollegesDisplay:  # Added college display check
             return render(
                 request,
                 "coreApp/event/eventDetails.html",

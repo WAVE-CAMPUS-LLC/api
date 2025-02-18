@@ -180,9 +180,10 @@ def viewCollegeInformation(request, collegeId):
         .order_by("-date")
     )
 
+    # Update to use new fields
     events_restricted_to_college = (
         Event.objects.filter(
-            privacy="Private (College)",
+            forCollegesDisplay=True,
             privacy_details__restricted_college=college,
             status="live",
         )
@@ -192,7 +193,7 @@ def viewCollegeInformation(request, collegeId):
 
     display_events_on_college = (
         Event.objects.filter(
-            display_event_on_college=True,
+            forAllDisplay=True,
             host__user_profile__college=college,
             status="live",
         )
@@ -210,7 +211,7 @@ def viewCollegeInformation(request, collegeId):
         Event.objects.filter(
             date__range=[start_of_week, end_of_week],
             status="live",
-            privacy="Discoverable",
+            forAllDisplay=True,  # Changed from privacy="Discoverable"
             admin_status="active",
         )
         .filter(age_filter)

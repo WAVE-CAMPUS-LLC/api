@@ -35,7 +35,6 @@ from stripeManagementApp.getHostTransactions import Transactions
 from eventTicketsApp.forms import InvitationForm, PaidFreeTicketForm
 from .models import EventType, HostApplication, Event, EventPrivacy, HostProfile
 from authenticationApp.models import CustomUser
-from .utils import set_event_privacy  # Import the helper function
 
 from eventTicketsApp.models import InviteEventOption, RSVPTicket, PaidFreeTicket, Ticket
 from stripeManagementApp.customerSetup import ConnectAccount
@@ -169,7 +168,6 @@ def eventCreationSelect(request):
 @check_suspension
 def createPaidEvent(request):
     event_type_choices = Event.EVENT_TYPE_CHOICES
-    privacy_choices = Event.PRIVACY_CHOICES
     placesKey = settings.PLACES_API_KEY
 
     userAccount = get_object_or_404(CustomUser, username=request.user.username)
@@ -185,7 +183,8 @@ def createPaidEvent(request):
                 event.ticketing = "Paid"
                 event.crew_discount = request.POST.get("crew_discount") == "on"
                 event.show_guest_list = request.POST.get("show_guest_list") == "on"
-
+                event.forAllDisplay = request.POST.get("forAllDisplay") == "on"
+                event.forCollegesDisplay = request.POST.get("forCollegesDisplay") == "on"
                 event.status = "live"
 
                 event.save()
@@ -197,15 +196,6 @@ def createPaidEvent(request):
                 organization_membership = OrganizationMembership.objects.filter(
                     user=event.host
                 ).first()
-
-                # Refactored privacy setting
-                privacy_set = set_event_privacy(
-                    event, user_profile, organization_membership, request
-                )
-                if not privacy_set:
-                    return redirect(
-                        "eventManagement:eventManagement", eventId=event.eventId
-                    )
 
                 event.save()
                 product = createHostProduct(event, hostProfile.stripe_account_id)
@@ -240,7 +230,6 @@ def createPaidEvent(request):
         {
             "eventForm": eventForm,
             "eventTypeChoices": event_type_choices,
-            "privacyChoices": privacy_choices,
             "placesKey": placesKey,
         },
     )
@@ -253,7 +242,6 @@ def createPaidEvent(request):
 # Used to be createRsvpEvent, now createFreeEvent
 def createFreeEvent(request):
     event_type_choices = Event.EVENT_TYPE_CHOICES
-    privacy_choices = Event.PRIVACY_CHOICES
     placesKey = settings.PLACES_API_KEY
 
     userAccount = get_object_or_404(CustomUser, username=request.user.username)
@@ -269,7 +257,8 @@ def createFreeEvent(request):
                 event.ticketing = "Free"
                 event.crew_discount = False
                 event.show_guest_list = request.POST.get("show_guest_list") == "on"
-
+                event.forAllDisplay = request.POST.get("forAllDisplay") == "on"
+                event.forCollegesDisplay = request.POST.get("forCollegesDisplay") == "on"
                 event.status = "live"
 
                 event.save()
@@ -281,15 +270,6 @@ def createFreeEvent(request):
                 organization_membership = OrganizationMembership.objects.filter(
                     user=event.host
                 ).first()
-
-                # Refactored privacy setting
-                privacy_set = set_event_privacy(
-                    event, user_profile, organization_membership, request
-                )
-                if not privacy_set:
-                    return redirect(
-                        "eventManagement:eventManagement", eventId=event.eventId
-                    )
 
                 event.save()
                 product = createHostProduct(event, hostProfile.stripe_account_id)
@@ -320,7 +300,6 @@ def createFreeEvent(request):
         {
             "eventForm": eventForm,
             "eventTypeChoices": event_type_choices,
-            "privacyChoices": privacy_choices,
             "placesKey": placesKey,
         },
     )
@@ -524,7 +503,6 @@ def eventManagement(request, eventId):
     user_profile = UserProfile.objects.get(user=request.user)
     hostProfile = HostProfile.objects.get(user=event.host)
     is_in_college = user_profile.college is not None
-    event_privacy = EventPrivacy.objects.get(event=event)
     rsvp_list = RSVPTicket.objects.filter(event=event)
     paid_free_tickets = PaidFreeTicket.objects.filter(event=event)
 
@@ -641,8 +619,6 @@ def eventManagement(request, eventId):
             "event": event,
             "isInCollege": is_in_college,
             "userProfile": user_profile,
-            "eventPrivacy": event_privacy,
-            "invitationForm": invitationForm,
             "rsvpList": rsvp_list,
             "paidFreeForm": paidFreeForm,
             "paidFreeTickets": paid_free_tickets,
@@ -656,7 +632,6 @@ def editEvent(request, eventId):
     user_profile = UserProfile.objects.get(user=request.user)
     hostProfile = HostProfile.objects.get(user=event.host)
     is_in_college = user_profile.college is not None
-    event_privacy = EventPrivacy.objects.get(event=event)
     rsvp_list = RSVPTicket.objects.filter(event=event)
     paid_free_tickets = PaidFreeTicket.objects.filter(event=event)
 
@@ -675,7 +650,6 @@ def editEvent(request, eventId):
             "event": event,
             "isInCollege": is_in_college,
             "userProfile": user_profile,
-            "eventPrivacy": event_privacy,
             "rsvpList": rsvp_list,
             "paidFreeTickets": paid_free_tickets,
             "editEventForm": editEventForm,

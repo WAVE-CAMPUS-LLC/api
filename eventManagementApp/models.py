@@ -126,12 +126,7 @@ class Event(models.Model):
         ("Workshop", "Workshop"),
     ]
 
-    PRIVACY_CHOICES = [
-        ("Discoverable", "Discoverable"),
-        ("Invite Only", "Invite Only"),
-        ("Private (College)", "Private (College)"),
-        ("Private (Organization)", "Private (Organization)"),
-    ]
+    # Remove PRIVACY_CHOICES as it's no longer needed
 
     TICKET_CHOICES = [
         ("Paid", "Paid"),
@@ -225,6 +220,7 @@ class Event(models.Model):
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="events"
     )
 
+
     status = models.CharField(
         max_length=20,
         choices=STATUS_CHOICES,
@@ -266,13 +262,15 @@ class Event(models.Model):
     description = models.TextField(
         _("Describe your event"), null=False, blank=False, default=""
     )
+    
+    # Remove or mark as deprecated the privacy field
     privacy = models.CharField(
         _("Determine the visibility of your event."),
         max_length=23,
-        choices=PRIVACY_CHOICES,
         null=False,
         blank=False,
         default="",
+        # Mark as deprecated or remove if not needed for legacy data
     )
 
     ticketing = models.CharField(
@@ -439,6 +437,18 @@ class Event(models.Model):
         default=True,
     )
 
+    forAllDisplay = models.BooleanField(
+        _("Make event discoverable by all?"),
+        null=False,
+        blank=False,
+        default=True)
+    
+    forCollegesDisplay = models.BooleanField(
+        _("Make event discoverable in colleges?"),
+        null=False,
+        blank=False,
+        default=False)
+
     created_at = models.DateTimeField(auto_now=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -449,6 +459,13 @@ class Event(models.Model):
         default_permissions = ()
 
     def save(self, *args, **kwargs):
+        # You might want to add logic here to handle legacy data
+        # Convert old privacy settings to new display fields if needed
+        if self.privacy == "Discoverable" and not self.forAllDisplay:
+            self.forAllDisplay = True
+        elif self.privacy == "Private (College)" and not self.forCollegesDisplay:
+            self.forCollegesDisplay = True
+            
         super().save(*args, **kwargs)
 
 
