@@ -450,13 +450,6 @@ class Event(models.Model):
         default_permissions = ()
 
     def save(self, *args, **kwargs):
-        # You might want to add logic here to handle legacy data
-        # Convert old privacy settings to new display fields if needed
-        if self.privacy == "Discoverable" and not self.forAllDisplay:
-            self.forAllDisplay = True
-        elif self.privacy == "Private (College)" and not self.forCollegesDisplay:
-            self.forCollegesDisplay = True
-            
         super().save(*args, **kwargs)
 
 
