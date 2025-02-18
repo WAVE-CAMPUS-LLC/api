@@ -450,6 +450,14 @@ class Event(models.Model):
         default_permissions = ()
 
     def save(self, *args, **kwargs):
+        # Ensure forCollegesDisplay can only be true if user has a college
+        if self.forCollegesDisplay and (not self.host or not hasattr(self.host, 'user_profile') or not self.host.user_profile.college):
+            self.forCollegesDisplay = False
+            
+        # If event is displayed on college, ensure forCollegesDisplay is True
+        if self.display_event_on_college and not self.forCollegesDisplay:
+            self.forCollegesDisplay = True
+            
         super().save(*args, **kwargs)
 
 
