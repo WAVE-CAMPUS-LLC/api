@@ -52,12 +52,15 @@ def explore_events(request):
 
     # Load initial events
     initial_events = Event.objects.filter(
-        status="live", privacy="Discoverable", admin_status="active"
+        status="live", 
+        forAllDisplay=True,  # Changed from privacy="Discoverable"
+        admin_status="active"
     )
 
     # Get trending events
     trending_events = Event.objects.filter(
-        status="live", privacy="Discoverable"
+        status="live", 
+        forAllDisplay=True  # Changed from privacy="Discoverable"
     ).order_by("date")[:3]
 
     # Get invited events for authenticated users
@@ -110,7 +113,7 @@ def explore_events(request):
     weekly_events = Event.objects.filter(
         date__range=[start_of_week, end_of_week],
         status="live",
-        privacy="Discoverable",
+        forAllDisplay=True,  # Changed from privacy="Discoverable"
         admin_status="active",
     ).order_by("?")[:3]
 
