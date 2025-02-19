@@ -455,36 +455,35 @@ def send_friend_request(sender, receiver_username):
         if sender.user_profile.is_friends_with(receiver.user):
             return False, "You are already friends with this user.", None
         
-        # Check for existing friend requests in either direction
-        existing_request = FriendRequest.objects.filter(
+        # First check for any active (pending/accepted) requests
+        active_request = FriendRequest.objects.filter(
             Q(sender=sender, receiver=receiver.user) | 
-            Q(sender=receiver.user, receiver=sender)
+            Q(sender=receiver.user, receiver=sender),
+            status__in=['pending', 'accepted']
         ).first()
         
-        if existing_request:
-            if existing_request.status == 'pending':
-                if existing_request.sender == sender:
-                    return False, "You have already sent a friend request to this user.", existing_request
+        if active_request:
+            if active_request.status == 'pending':
+                if active_request.sender == sender:
+                    return False, "You have already sent a friend request to this user.", active_request
                 else:
-                    return False, "This user has already sent you a friend request.", existing_request
-            elif existing_request.status == 'accepted':
-                return False, "You are already friends with this user.", existing_request
-            else:  # status is 'declined' or 'canceled'
-                # If same sender, reuse the request
-                if existing_request.sender == sender:
-                    existing_request.status = 'pending'
-                    existing_request.save()
-                    return True, "Friend request sent successfully.", existing_request
-                else:
-                    # If different sender, delete old request and create new one
-                    existing_request.delete()
-                    friend_request = FriendRequest.objects.create(
-                        sender=sender,
-                        receiver=receiver.user,
-                        status="pending"
-                    )
-                    return True, "Friend request sent successfully.", friend_request
-
+                    return False, "This user has already sent you a friend request.", active_request
+            else:  # status is 'accepted'
+                return False, "You are already friends with this user.", active_request
+        
+        # If no active request exists, check for canceled/declined requests to reuse
+        old_request = FriendRequest.objects.filter(
+            sender=sender,
+            receiver=receiver.user,
+            status__in=['canceled', 'declined']
+        ).first()
+        
+        if old_request:
+            # Reuse the old request
+            old_request.status = 'pending'
+            old_request.save()
+            return True, "Friend request sent successfully.", old_request
+        
         # Create new friend request if none exists
         friend_request = FriendRequest.objects.create(
             sender=sender,

@@ -102,7 +102,7 @@ $(document).ready(function () {
         const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
 
         if (!csrfToken) {
-            alert('CSRF token not found. Please refresh the page and try again.');
+            console.error('CSRF token not found');
             return;
         }
 
@@ -121,28 +121,26 @@ $(document).ready(function () {
                 csrfmiddlewaretoken: csrfToken
             },
             success: function(response) {
-                if (response.status === 'success') {
-                    // Update button to show cancel option
-                    $button.removeClass('bg-gradient-to-r from-[#008d95bc] to-[#13c9d3] opacity-50')
-                           .addClass('bg-red-600')
-                           .text('Cancel Request')
-                           .prop('disabled', false)
-                           .removeClass('send-connect')
-                           .addClass('cancel-connect');
-                } else {
-                    alert(response.message || 'Failed to send friend request');
-                    $button.prop('disabled', false)
-                           .removeClass('opacity-50');
+                // Update button to show cancel option regardless of response message
+                $button.removeClass('bg-gradient-to-r from-[#008d95bc] to-[#13c9d3] opacity-50')
+                       .addClass('bg-red-600')
+                       .text('Cancel Request')
+                       .prop('disabled', false)
+                       .removeClass('send-connect')
+                       .addClass('cancel-connect');
+                
+                // Only show success message if debugging
+                if (response.status === 'success' && window.location.hostname === 'localhost') {
+                    console.log(response.message);
                 }
             },
             error: function(xhr) {
-                let errorMessage = 'An error occurred while sending the friend request';
-                if (xhr.responseJSON && xhr.responseJSON.message) {
-                    errorMessage = xhr.responseJSON.message;
+                // Only show error if it's a real error, not just a message
+                if (xhr.status !== 200) {
+                    console.error('Friend request error:', xhr.responseText);
+                    $button.prop('disabled', false)
+                           .removeClass('opacity-50');
                 }
-                alert(errorMessage);
-                $button.prop('disabled', false)
-                       .removeClass('opacity-50');
             }
         });
     }
@@ -153,7 +151,7 @@ $(document).ready(function () {
         const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
 
         if (!csrfToken) {
-            alert('CSRF token not found. Please refresh the page and try again.');
+            console.error('CSRF token not found');
             return;
         }
 
@@ -172,28 +170,26 @@ $(document).ready(function () {
                 csrfmiddlewaretoken: csrfToken
             },
             success: function(response) {
-                if (response.status === 'success') {
-                    // Update button back to connect
-                    $button.removeClass('bg-red-600 opacity-50')
-                           .addClass('bg-gradient-to-r from-[#008d95bc] to-[#13c9d3]')
-                           .text('Connect')
-                           .prop('disabled', false)
-                           .removeClass('cancel-connect')
-                           .addClass('send-connect');
-                } else {
-                    alert(response.message || 'Failed to cancel friend request');
-                    $button.prop('disabled', false)
-                           .removeClass('opacity-50');
+                // Update button back to connect regardless of response message
+                $button.removeClass('bg-red-600 opacity-50')
+                       .addClass('bg-gradient-to-r from-[#008d95bc] to-[#13c9d3]')
+                       .text('Connect')
+                       .prop('disabled', false)
+                       .removeClass('cancel-connect')
+                       .addClass('send-connect');
+                
+                // Only show success message if debugging
+                if (response.status === 'success' && window.location.hostname === 'localhost') {
+                    console.log(response.message);
                 }
             },
             error: function(xhr) {
-                let errorMessage = 'An error occurred while canceling the friend request';
-                if (xhr.responseJSON && xhr.responseJSON.message) {
-                    errorMessage = xhr.responseJSON.message;
+                // Only show error if it's a real error, not just a message
+                if (xhr.status !== 200) {
+                    console.error('Cancel request error:', xhr.responseText);
+                    $button.prop('disabled', false)
+                           .removeClass('opacity-50');
                 }
-                alert(errorMessage);
-                $button.prop('disabled', false)
-                       .removeClass('opacity-50');
             }
         });
     }

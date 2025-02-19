@@ -33,7 +33,13 @@ class FriendRequest(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        unique_together = ("sender", "receiver")
+        constraints = [
+            models.UniqueConstraint(
+                fields=['sender', 'receiver'],
+                condition=models.Q(status__in=['pending', 'accepted']),
+                name='unique_active_request'
+            )
+        ]
         verbose_name = "Friend Request"
         verbose_name_plural = "Friend Requests"
         default_permissions = ()
