@@ -99,15 +99,21 @@ $(document).ready(function () {
     function sendConnectRequest(button) {
         const username = button.dataset.username;
         const $button = $(button);
+        
+        // Prevent double clicks
+        if ($button.data('processing')) {
+            return;
+        }
+        
         const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
-
         if (!csrfToken) {
             console.error('CSRF token not found');
             return;
         }
 
-        // Disable button to prevent multiple clicks
-        $button.prop('disabled', true)
+        // Mark as processing
+        $button.data('processing', true)
+               .prop('disabled', true)
                .addClass('opacity-50');
 
         $.ajax({
@@ -127,7 +133,8 @@ $(document).ready(function () {
                        .text('Cancel Request')
                        .prop('disabled', false)
                        .removeClass('send-connect')
-                       .addClass('cancel-connect');
+                       .addClass('cancel-connect')
+                       .data('processing', false);
                 
                 // Only show success message if debugging
                 if (response.status === 'success' && window.location.hostname === 'localhost') {
@@ -138,9 +145,10 @@ $(document).ready(function () {
                 // Only show error if it's a real error, not just a message
                 if (xhr.status !== 200) {
                     console.error('Friend request error:', xhr.responseText);
-                    $button.prop('disabled', false)
-                           .removeClass('opacity-50');
                 }
+                $button.prop('disabled', false)
+                       .removeClass('opacity-50')
+                       .data('processing', false);
             }
         });
     }
@@ -148,15 +156,21 @@ $(document).ready(function () {
     function cancelConnectRequest(button) {
         const username = button.dataset.username;
         const $button = $(button);
+        
+        // Prevent double clicks
+        if ($button.data('processing')) {
+            return;
+        }
+        
         const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
-
         if (!csrfToken) {
             console.error('CSRF token not found');
             return;
         }
 
-        // Disable button to prevent multiple clicks
-        $button.prop('disabled', true)
+        // Mark as processing
+        $button.data('processing', true)
+               .prop('disabled', true)
                .addClass('opacity-50');
 
         $.ajax({
@@ -176,7 +190,8 @@ $(document).ready(function () {
                        .text('Connect')
                        .prop('disabled', false)
                        .removeClass('cancel-connect')
-                       .addClass('send-connect');
+                       .addClass('send-connect')
+                       .data('processing', false);
                 
                 // Only show success message if debugging
                 if (response.status === 'success' && window.location.hostname === 'localhost') {
@@ -187,9 +202,10 @@ $(document).ready(function () {
                 // Only show error if it's a real error, not just a message
                 if (xhr.status !== 200) {
                     console.error('Cancel request error:', xhr.responseText);
-                    $button.prop('disabled', false)
-                           .removeClass('opacity-50');
                 }
+                $button.prop('disabled', false)
+                       .removeClass('opacity-50')
+                       .data('processing', false);
             }
         });
     }
@@ -197,11 +213,13 @@ $(document).ready(function () {
     // Add click handlers for connect and cancel buttons
     $(document).on('click', '.send-connect', function(e) {
         e.preventDefault();
+        e.stopPropagation();  // Prevent event bubbling
         sendConnectRequest(this);
     });
 
     $(document).on('click', '.cancel-connect', function(e) {
         e.preventDefault();
+        e.stopPropagation();  // Prevent event bubbling
         cancelConnectRequest(this);
     });
 
