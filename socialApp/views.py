@@ -319,7 +319,10 @@ def crew_invite_action(request, crew_id, action):
     return redirect("social:home")
 
 
-
+@login_required
+@check_suspension
+@member
+@verified
 def publicProfileView(request, username):
     try:
         other_user = get_object_or_404(UserModel, username=username)
