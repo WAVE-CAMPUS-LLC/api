@@ -212,6 +212,7 @@ class CollegeForm(forms.ModelForm):
             "zip_code",
             "country",
             "logo",
+            "campus_image",
             "motto",
             "contact_website",
         ]
@@ -230,6 +231,7 @@ class EditCollegeForm(forms.ModelForm):
             "zip_code",
             "country",
             "logo",
+            "campus_image",
             "motto",
             "contact_website",
         ]
@@ -238,6 +240,11 @@ class EditCollegeForm(forms.ModelForm):
             "state": forms.Select(),
             "country": forms.Select(),
             "logo": forms.ClearableFileInput(
+                attrs={
+                    "class": "editInput hidden w-full appearance-none h-full p-4 py-3 font-Wanted-Variable text-Semi-Medium text-black border rounded-xl focus:ring-0 focus:none placeholder:text-[#00000076] placeholder:font-Wanted-Regular"
+                }
+            ),
+            "campus_image": forms.ClearableFileInput(
                 attrs={
                     "class": "editInput hidden w-full appearance-none h-full p-4 py-3 font-Wanted-Variable text-Semi-Medium text-black border rounded-xl focus:ring-0 focus:none placeholder:text-[#00000076] placeholder:font-Wanted-Regular"
                 }

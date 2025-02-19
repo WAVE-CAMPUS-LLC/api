@@ -8,9 +8,6 @@ WAVE is a web application that simplifies event ticketing for college campuses. 
 2. [Tech Stack](#tech-stack)
 3. [Setup and Installation](#setup-and-installation)
 4. [Setting up apps](#app-creation)
-5. [Usage](#usage)
-6. [Contribution Guidelines](#contribution-guidelines)
-7. [License](#license)
 
 ## Features
 
@@ -23,9 +20,10 @@ WAVE is a web application that simplifies event ticketing for college campuses. 
 
 - **Backend:** Django, Python
 - **Frontend:** HTML, TailwindCSS, JavaScript
-- **Database:** PostgreSQL (or SQLite for development)
-- **Mobile App:** React Native (planned)
-- **Others:** AJAX, (for future integration)
+- **Database:** PostgreSQL (Neon - Development, Supabase - Production)
+- **Hosting:** Render
+- **Payment Processing:** Stripe
+- **Mobile App:** React Native
 
 ## Setup and Installation
 
@@ -61,6 +59,17 @@ source venv\bin\activate
 
 ```python
 pip install -r requirements.txt
+```
+
+### Create a .env file in the project root and add the required environment variables
+### (Obtain the correct environment variable values from a team member)
+
+```python
+# Example of what it should look like
+DEBUG=True
+DATABASE_URL=postgres://user:password@localhost:5432/dbname
+SECRET_KEY=your_secret_key
+...
 ```
 
 ### Migrate the Database

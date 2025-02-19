@@ -2,6 +2,7 @@
 {% load static %}
 {% load user_tags %}
 {% load widget_tweaks %}
+{% load timestamp_filters %}
 
 {% block title %}
 Profile Overview
@@ -297,11 +298,55 @@ Profile Overview
                                 <div class="grid grid-cols-1 xxsm:grid-cols-2 md:grid-cols-3 3xl:grid-cols-4 gap-5">
                                     {% for transaction in transactions %}
                                         <div class="bg-gradient-to-b bg-gradient-start bg-gradient-end py-3 px-5 rounded-2xl flex flex-col text-white gap-3 font-Wanted-Regular text-Semi-Medium">
-                                            <div class="w-full flex justify-end">
-                                                <p class="w-full flex justify-end font-Wanted-Variable text-Large">${{ transaction.amount|floatformat:2 }}</p>
+                                            <div class="w-full flex flex-col gap-2">
+                                                <div class="flex justify-between items-start">
+                                                    <div class="flex items-center gap-2">
+                                                        {% with card=transaction.payment_method_details.card %}
+                                                            {% if card %}
+                                                                <p class="text-Small capitalize">{{ card.brand }} •••• {{ card.last4 }}</p>
+                                                            {% endif %}
+                                                        {% endwith %}
+                                                    </div>
+                                                    <p class="font-Wanted-Variable text-Large">${{ transaction.amount|floatformat:2 }}</p>
+                                                </div>
+                                                
+                                                <div class="flex flex-col gap-1">
+                                                    <div class="flex items-center gap-2">
+                                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs 
+                                                            {% if transaction.status == 'succeeded' %}
+                                                                bg-green-500/20 text-green-300
+                                                            {% elif transaction.status == 'pending' %}
+                                                                bg-yellow-500/20 text-yellow-300
+                                                            {% else %}
+                                                                bg-red-500/20 text-red-300
+                                                            {% endif %}">
+                                                            {{ transaction.status|title }}
+                                                        </span>
+                                                        {% if transaction.currency %}
+                                                            <span class="text-xs text-gray-300 uppercase">{{ transaction.currency }}</span>
+                                                        {% endif %}
+                                                    </div>
+                                                    
+                                                    {% if transaction.description %}
+                                                    <p class="text-Small">{{ transaction.description }}</p>
+                                                    {% endif %}
+                                                </div>
+
+                                                <div class="flex flex-col gap-1 mt-1">
+                                                    <p class="text-Small font-semibold">{{ transaction.created|timestamp|date:"F j, Y" }}</p>
+                                                    <p class="text-Small text-gray-200">{{ transaction.created|timestamp|date:"g:i A" }} UTC</p>
+                                                </div>
                                             </div>
-                                            {% if transaction.invoice_url %}
-                                            <a class="underline text-Small" target="_blank" href="{{ transaction.invoice_url }}">View Receipt</a>
+                                            
+                                            {% if transaction.receipt_url %}
+                                            <div class="flex justify-end">
+                                                <a class="inline-flex items-center gap-1 text-Small hover:text-gray-200 transition-colors" target="_blank" href="{{ transaction.receipt_url }}">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                                                    </svg>
+                                                    Receipt
+                                                </a>
+                                            </div>
                                             {% endif %}
                                         </div>
                                     {% endfor %}
@@ -312,6 +357,9 @@ Profile Overview
                                     <img class="w-[30px] after-xsm:w-[40px] sm:w-[50px] md:w-[60px]" src="{% static "/images/collegeManagementApp/collegeInformation/empty-listing.svg" %}" />
                                 </div>
                                 <p class="font-Wanted-Variable text-[10px] after-xsm:text-[12px] sm:text-[14px] md:text-[16.5px] text-black text-center">You have not made any transactions!</p>
+                                {% if not userRequest.customer_id %}
+                                <p class="font-Wanted-Variable text-[10px] after-xsm:text-[12px] sm:text-[14px] md:text-[16.5px] text-gray-500 text-center">Your payment account is not set up yet.</p>
+                                {% endif %}
                             </div>
                             {% endif %}
                         </div>

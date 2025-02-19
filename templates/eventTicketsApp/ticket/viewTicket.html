@@ -29,8 +29,10 @@ WAVE — Welcome back!
                 <div class="ei-body flex flex-col gap-[10px] justify-between h-full">
                     <div>
                         <p class="eib-location flex flex-col gap-[3px] font-Wanted-Variable text-[14px]">
-                            {{ event.building_name }}, 
-                            <br> 
+                            {% if event.building_name %}
+                                {{ event.building_name }},
+                                <br>
+                            {% endif %}
                             {{ event.street }}, 
                             <br> 
                             {{ event.city }}, {{ event.state }} {{ event.zip_code }}

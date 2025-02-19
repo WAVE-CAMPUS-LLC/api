@@ -10,15 +10,10 @@ urlpatterns = [
     path("host/guide/", views.hostGuideView, name="hostGuide"),
     # path("create/", views.hostCreateEvent, name="hostCreateEvent"),
     path("event/create/select/", views.eventCreationSelect, name="eventCreationSelect"),
-    path(
-        "create/rsvp/",
-        views.createRsvpEvent,
-        name="createRsvpEvent",
-    ),
-    path("create/invite/", views.createInviteEvent, name="createInviteEvent"),
+    path("create/free/", views.createFreeEvent, name="createFreeEvent"),
     path("create/paid/", views.createPaidEvent, name="createPaidEvent"),
     path("tickets/<uuid:eventId>/", views.createPaidEventTicket, name="paidTicketing"),
-    path("invite/<uuid:eventId>/", views.createInviteEvent, name="inviteTicketing"),
+    path("invite/<uuid:eventId>/", views.createInviteEventTicket, name="inviteTicketing"),
     path(
         "event/<uuid:eventId>/manage/",
         views.eventManagement,

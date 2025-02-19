@@ -67,6 +67,17 @@ class HostApplicationForm(forms.ModelForm):
 class EventForm(forms.ModelForm):
     crew_discount = forms.BooleanField(required=False)
     show_guest_list = forms.BooleanField(required=False)
+    forAllDisplay = forms.BooleanField(
+        required=True, 
+        initial=True,
+        label=_("Make event discoverable by all?")
+    )
+    forCollegesDisplay = forms.BooleanField(
+        required=False, 
+        initial=False,
+        label=_("Make event discoverable in colleges?"),
+    )
+
     
     STATE_CHOICES = [
         ("AL", "Alabama"),
@@ -142,22 +153,10 @@ class EventForm(forms.ModelForm):
         ("Volunteer", "Volunteer"),
         ("Workshop", "Workshop"),
     ]
-    PRIVACY_CHOICES = [
-        ("Discoverable", "Discoverable"),
-        ("Invite Only", "Invite Only"),
-        ("Private (College)", "Private (College)"),
-        ("Private (Organization)", "Private (Organization)"),
-    ]
     
     event_type = forms.ChoiceField(
         label=_("Decide what type of experience this is"),
         choices=[("", "Select an option")] + EVENT_TYPE_CHOICES,
-        required=True,
-    )
-    
-    privacy = forms.ChoiceField(
-        label=_("Determine the visibility of your event."),
-        choices=[("", "Select an option")] + PRIVACY_CHOICES,
         required=True,
     )
     
@@ -199,7 +198,6 @@ class EventForm(forms.ModelForm):
             "start_time",
             "end_time",
             "description",
-            "privacy",
             "hide_address",
             "country",
             "building_name",
@@ -218,6 +216,8 @@ class EventForm(forms.ModelForm):
             "minimum_crew_size",
             "crew_discount_percentage",
             "show_guest_list",
+            "forAllDisplay",
+            'forCollegesDisplay',
         ]
 
         widgets = {
@@ -234,18 +234,12 @@ class EventForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         user = kwargs.pop("user", None)
         super().__init__(*args, **kwargs)
-        if not user.user_profile.college:
-            self.fields['privacy'].choices = [
-                choice for choice in self.fields['privacy'].choices 
-                if choice[0] not in ['Private (College)', 'Private (Organization)']
-            ]
-            
-        if not user.org_memberships.exists():
-            self.fields['privacy'].choices = [
-                choice for choice in self.fields['privacy'].choices 
-                if choice[0] != 'Private (Organization)'
-            ]
-            
+        if user:
+            # Check if user is in a college
+            is_in_college = hasattr(user, 'user_profile') and user.user_profile.college is not None
+            self.fields['forCollegesDisplay'].disabled = not is_in_college
+            if not is_in_college:
+                self.fields['forCollegesDisplay'].help_text = _("You must be in a college to enable this option")
         
 
 class EditEventForm(forms.ModelForm):

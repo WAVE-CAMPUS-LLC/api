@@ -184,6 +184,26 @@ Colleges — WAVE.
                                                 </div>
                                             </div>
                                         </section>
+                                        {% if collegeForm.campus_image %}
+                                        <section class="section hidden active">
+                                            <div class="section-container body-section flex flex-col gap-4 h-full">
+                                                <div class="section-title w-full flex justify-center items-center flex-col gap-1">
+                                                    <h4 class="font-Wanted-SemiBold text-3xl">{{ collegeForm.campus_image.label }}</h4>
+                                                    <p class="font-Wanted-Variable text-Semi-Medium text-[rgba(128, 128, 128, 0.798)]">
+                                                        Add some beauty to your college's profile by uploading a campus image.
+                                                    </p>
+                                                </div>
+                                                <div class="image-input-container flex justify-center">
+                                                    <div class="image-input p-12 w-1/2 rounded-2xl border border-dashed border-[rgba(9, 9, 9, 0.108)] flex flex-col justify-center items-center gap-5">
+                                                        <img id="logo-preview" class="max-w-full hidden h-auto max-h-[400px] rounded-2xl" src="#" />
+                                                        <button id="logoUpload" class="gradient-btn" type="button" role="button" onclick="document.getElementById('{{ collegeForm.campus_image.auto_id }}').click();">Upload</button>
+                                                        {{ collegeForm.campusImage|add_class:"hidden" }}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </section>
+                                        {% endif %}
+                                        
                                 
                                         <section class="section hidden active">
                                             <div class="section-container body-section flex flex-col gap-4 h-full">

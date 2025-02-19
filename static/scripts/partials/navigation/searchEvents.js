@@ -94,30 +94,30 @@ $(document).ready(function () {
     }
 
 
-    function sendConnectRequest(button) {
-        const username = button.dataset.username;
+    // function sendConnectRequest(button) {
+    //     const username = button.dataset.username;
 
-        $.ajax({
-            url: '/send-connect-request/',  // You'll need to create this endpoint
-            method: 'POST',
-            data: {
-                'action': 'send_request',
-                'socketUsername': username,
-                'csrfmiddlewaretoken': document.querySelector('[name=csrfmiddlewaretoken]').value
-            },
-            success: function (response) {
-                if (response.status === 'success') {
-                    // Update button state
-                    button.textContent = 'Pending';
-                    button.classList.add('pending');
-                    // You might want to disable the button or change its appearance
-                }
-            },
-            error: function (xhr, status, error) {
-                console.error('Error sending connect request:', error);
-            }
-        });
-    }
+    //     $.ajax({
+    //         url: '/send-connect-request/',  // You'll need to create this endpoint
+    //         method: 'POST',
+    //         data: {
+    //             'action': 'send_request',
+    //             'socketUsername': username,
+    //             'csrfmiddlewaretoken': document.querySelector('[name=csrfmiddlewaretoken]').value
+    //         },
+    //         success: function (response) {
+    //             if (response.status === 'success') {
+    //                 // Update button state
+    //                 button.textContent = 'Pending';
+    //                 button.classList.add('pending');
+    //                 // You might want to disable the button or change its appearance
+    //             }
+    //         },
+    //         error: function (xhr, status, error) {
+    //             console.error('Error sending connect request:', error);
+    //         }
+    //     });
+    // }
 
     function renderEventItem(item) {
         return `
@@ -136,9 +136,9 @@ $(document).ready(function () {
             </a>`;
     }
 
-    $(document).on('click', '.send-connect', function () {
-        sendConnectRequest(this);
-    });
+    // $(document).on('click', '.send-connect', function () {
+    //     sendConnectRequest(this);
+    // });
 
     function renderFriendItem(item) {
         let buttonHtml = '';

@@ -41,7 +41,30 @@ def profileView(request):
     favorite_events = userProfile.favorite_events.all()
     stripeKey = settings.STRIPE_PUBLISHABLE_KEY
     
+    # Debug logging
+    print(f"User customer_id: {userRequest.customer_id}")
+    
+    if not userRequest.customer_id:
+        # Try to create/find a Stripe customer
+        existing_customer = CustomerAccount.searchCustomerAccount(userRequest.email)
+        if existing_customer:
+            userRequest.customer_id = existing_customer.id
+            userRequest.save()
+            print(f"Found existing Stripe customer: {existing_customer.id}")
+        else:
+            new_customer = CustomerAccount.createCustomerAccount(
+                request, userRequest.email, userRequest.first_name, userRequest.last_name
+            )
+            if new_customer:
+                userRequest.customer_id = new_customer.id
+                userRequest.save()
+                print(f"Created new Stripe customer: {new_customer.id}")
+            else:
+                print("Failed to create Stripe customer")
+                messages.error(request, "Failed to set up payment processing. Please contact support.")
+    
     transactions = CustomerAccount.getCustomerTransactions(request, userRequest.customer_id)
+    print(f" transactions: {transactions}")
     
     accountBalance = GetEarnings.getStripeAccountBalance(userRequest.connectAccountID)
     totalEarnings = GetEarnings.getTotalEarnings(userRequest.connectAccountID)
@@ -167,7 +190,7 @@ def addCard(request):
         messages.success(request, "Payment method added successfully.")
         return JsonResponse({"success": True})
     except stripe.error.StripeError as e:
-        messages.error(request, f"Stripe error: {e.user_message}")
+        messages.error(request, f"Something went wrong: {str(e)}")
     except Exception as e:
         messages.error(request, f"An error occurred: {str(e)}")
     return JsonResponse({"success": False})

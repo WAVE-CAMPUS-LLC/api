@@ -3,6 +3,11 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# Cursor AI Config 
+tools/
+.cursorrules
+.cursor
+
 # Virtual environments
 .venv/
 .virtualenv/

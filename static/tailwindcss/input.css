@@ -388,6 +388,16 @@ footer {
     border-radius: 50%;
 }
 
+/* Add this to your CSS */
+.toggle-switch.opacity-50 .slider {
+    cursor: not-allowed;
+    background-color: #ccc;
+}
+
+.toggle-switch.opacity-50 input:checked + .slider {
+    background-color: #999;
+}
+
 input:checked+.slider {
     background-color: #007379;
 }

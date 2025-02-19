@@ -454,6 +454,11 @@ def publicProfileView(request, username):
                 return redirect("social:publicProfile", username=username)
 
     except Http404:
+        print("User not found")
+        print("User not found")
+        print("User not found")
+        print("User not found")
+        print("User not found")
         return render(request, "extras/invalid/invalid.html")
 
     return render(

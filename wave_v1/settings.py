@@ -37,8 +37,25 @@ SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", secrets.token_urlsafe(64))
 ENVIORNMENT = os.getenv("ENVIORNMENT", "production")
 if ENVIORNMENT == "development":
     ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
-    CSRF_TRUSTED_ORIGINS = ["http://127.0.0.1:8000"]
+    CSRF_TRUSTED_ORIGINS = ["http://localhost:8000", "http://127.0.0.1:8000"]
     DEBUG = True
+    DEBUG_PROPAGATE_EXCEPTIONS = False
+    
+    # CORS Settings for development
+    CORS_ALLOW_ALL_ORIGINS = True
+    CORS_ALLOW_CREDENTIALS = True
+    CORS_ALLOWED_ORIGINS = [
+        "http://localhost:8000",
+        "http://127.0.0.1:8000",
+    ]
+    CSP_DEFAULT_SRC = ("'self'", "'unsafe-inline'", "*")
+    CSP_SCRIPT_SRC = ("'self'", "'unsafe-inline'", "'unsafe-eval'", "*")
+    CSP_STYLE_SRC = ("'self'", "'unsafe-inline'", "*")
+    CSP_FONT_SRC = ("'self'", "*")
+    CSP_IMG_SRC = ("'self'", "data:", "*")
+    CSP_FRAME_SRC = ("'self'", "*")
+    CSP_CONNECT_SRC = ("'self'", "ws:", "wss:", "*")  # Allow WebSocket connections
+
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql",
@@ -53,16 +70,6 @@ if ENVIORNMENT == "development":
             },
         }
     }
-    # CORS Settings
-    CORS_ALLOW_ALL_ORIGINS = True  # Temporarily set to True for testing
-    CORS_ALLOW_CREDENTIALS = True
-    CORS_ALLOWED_ORIGINS = ["http://127.0.0.1:8000"]
-    CSP_DEFAULT_SRC = ("*",)
-    CSP_SCRIPT_SRC = ("'self'", "'unsafe-inline'", "'unsafe-eval'", "*")
-    CSP_STYLE_SRC = ("'self'", "'unsafe-inline'", "*")
-    CSP_FONT_SRC = ("*",)
-    CSP_IMG_SRC = ("*", "data:")
-    CSP_FRAME_SRC = ("*",)
     print("Development Environment")
 else:
     ALLOWED_HOSTS = ["wave-v1.onrender.com", "waveoncampus.com"]
@@ -97,6 +104,7 @@ else:
     CSP_FONT_SRC = ("'self'", "https://waveoncampus.com")
     CSP_IMG_SRC = ("'self'", "https://waveoncampus.com")
     CSP_FRAME_SRC = ("'self'",)
+    default_storage._wrapped = SupabaseStorage()
     print("Production Environment")
 
 
@@ -301,7 +309,6 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # DEFAULT_FILE_STORAGE = "adminDashboardApp.storage.SupabaseStorage"
 
 time.sleep(5)
-default_storage._wrapped = SupabaseStorage()
 
 LOGGING = {
     "version": 1,

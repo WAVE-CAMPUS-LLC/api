@@ -24,6 +24,7 @@ class CollegeAdmin(admin.ModelAdmin):
         "state",
         "zip_code",
         "country",
+        "campus_image",
         "logo",
         "motto",
         "contact_website",

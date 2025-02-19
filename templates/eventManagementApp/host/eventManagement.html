@@ -19,7 +19,7 @@ Manage {{ event.title }} | WAVE.
     <script type="text/javascript" src="{% static "scripts/eventManagementApp/host/displayOnCollege.js" %}" defer></script>
     {% endif %}
 
-    {% if event.ticketing == "Paid/Free" %}
+    {% if event.ticketing == "Paid" %}
     <script type="text/javascript" src="{% static "scripts/eventManagementApp/host/eventManage/createTicketDisplay.js" %}" defer></script>
     {% endif %}
 {% endblock script %}
@@ -317,7 +317,7 @@ Manage {{ event.title }} | WAVE.
                                 
                             </div>
                         </div>
-                        {% elif event.ticketing == "Paid/Free" %}
+                        {% elif event.ticketing == "Paid" %}
                         <div class="flex flex-col gap-1">
                             <div class="ticketingHeader">
                                 <div class="ticketingHeading">

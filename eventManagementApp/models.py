@@ -126,17 +126,11 @@ class Event(models.Model):
         ("Workshop", "Workshop"),
     ]
 
-    PRIVACY_CHOICES = [
-        ("Discoverable", "Discoverable"),
-        ("Invite Only", "Invite Only"),
-        ("Private (College)", "Private (College)"),
-        ("Private (Organization)", "Private (Organization)"),
-    ]
+    # Remove PRIVACY_CHOICES as it's no longer needed
 
     TICKET_CHOICES = [
-        ("Paid/Free", "Paid/Free"),
-        ("RSVP Required", "RSVP Required"),
-        ("Invite Required", "Invite Required"),
+        ("Paid", "Paid"),
+        ("Free", "Free"),
     ]
 
     COUNTRY_CHOICES = [("United States", "United States")]
@@ -226,6 +220,7 @@ class Event(models.Model):
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="events"
     )
 
+
     status = models.CharField(
         max_length=20,
         choices=STATUS_CHOICES,
@@ -267,14 +262,7 @@ class Event(models.Model):
     description = models.TextField(
         _("Describe your event"), null=False, blank=False, default=""
     )
-    privacy = models.CharField(
-        _("Determine the visibility of your event."),
-        max_length=23,
-        choices=PRIVACY_CHOICES,
-        null=False,
-        blank=False,
-        default="",
-    )
+    
 
     ticketing = models.CharField(
         _("What type of ticketing do you want?"),
@@ -286,7 +274,7 @@ class Event(models.Model):
     )
 
     building_name = models.CharField(
-        _("Building Name"), max_length=250, null=False, blank=False, default=""
+        _("Building Name"), max_length=250, null=True, blank=True, default=""
     )
 
     display_event_on_college = models.BooleanField(
@@ -305,10 +293,6 @@ class Event(models.Model):
         choices=COUNTRY_CHOICES,
     )
 
-    building_name = models.CharField(
-        _("Building Name"), max_length=250, null=False, blank=False, default=""
-    )
-
     display_event_on_college = models.BooleanField(
         _("Do you want this event displayed on your campus?"),
         null=False,
@@ -323,8 +307,8 @@ class Event(models.Model):
     apt_suite_unit = models.CharField(
         _("Appt, suite, unit (optional)"),
         max_length=150,
-        blank=False,
-        null=False,
+        blank=True,
+        null=True,
         default="",
     )
 
@@ -444,6 +428,18 @@ class Event(models.Model):
         default=True,
     )
 
+    forAllDisplay = models.BooleanField(
+        _("Make event discoverable by all?"),
+        null=False,
+        blank=False,
+        default=True)
+    
+    forCollegesDisplay = models.BooleanField(
+        _("Make event discoverable in colleges?"),
+        null=False,
+        blank=False,
+        default=False)
+
     created_at = models.DateTimeField(auto_now=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -454,37 +450,45 @@ class Event(models.Model):
         default_permissions = ()
 
     def save(self, *args, **kwargs):
+        # Ensure forCollegesDisplay can only be true if user has a college
+        if self.forCollegesDisplay and (not self.host or not hasattr(self.host, 'user_profile') or not self.host.user_profile.college):
+            self.forCollegesDisplay = False
+            
+        # If event is displayed on college, ensure forCollegesDisplay is True
+        if self.display_event_on_college and not self.forCollegesDisplay:
+            self.forCollegesDisplay = True
+            
         super().save(*args, **kwargs)
 
 
-class EventPrivacy(models.Model):
-    event = models.OneToOneField(
-        "Event", on_delete=models.CASCADE, related_name="privacy_details"
-    )
-    display_on_explore = models.BooleanField(
-        _("Do you want this event displayed on the explore page?"),
-        null=True,
-        blank=True,
-        default=False,
-    )
-    require_invitation = models.BooleanField(
-        _("Require invitation?"),
-        null=True,
-        blank=True,
-        default=False,
-    )
-    restricted_college = models.ForeignKey(
-        College, on_delete=models.SET_NULL, blank=True, null=True
-    )
-    restricted_organization = models.ForeignKey(
-        Organization, on_delete=models.SET_NULL, blank=True, null=True
-    )
+# class EventPrivacy(models.Model):
+#     event = models.OneToOneField(
+#         "Event", on_delete=models.CASCADE, related_name="privacy_details"
+#     )
+#     display_on_explore = models.BooleanField(
+#         _("Do you want this event displayed on the explore page?"),
+#         null=True,
+#         blank=True,
+#         default=False,
+#     )
+#     require_invitation = models.BooleanField(
+#         _("Require invitation?"),
+#         null=True,
+#         blank=True,
+#         default=False,
+#     )
+#     restricted_college = models.ForeignKey(
+#         College, on_delete=models.SET_NULL, blank=True, null=True
+#     )
+#     restricted_organization = models.ForeignKey(
+#         Organization, on_delete=models.SET_NULL, blank=True, null=True
+#     )
 
-    class Meta:
-        default_permissions = ()
+#     class Meta:
+#         default_permissions = ()
 
-    def __str__(self):
-        return f"{self.event.title} Privacy Settings"
+#     def __str__(self):
+#         return f"{self.event.title} Privacy Settings"
 
 
 class HostProfile(models.Model):

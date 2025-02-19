@@ -14,7 +14,6 @@ from .models import Visitor
 from authenticationApp.models import CustomUser
 from eventManagementApp.models import (
     Event,
-    EventPrivacy,
     InviteEventOption,
     SharedEvent,
 )
@@ -79,10 +78,14 @@ def exploreView(request):
 
     # Load initial 6 events
     initial_events = Event.objects.filter(
-        status="live", privacy="Discoverable", admin_status="active"
+        status="live", 
+        forAllDisplay=True,  # Changed from privacy="Discoverable"
+        admin_status="active"
     )[:9]
+    
     trending_events = Event.objects.filter(
-        status="live", privacy="Discoverable"
+        status="live",
+        forAllDisplay=True  # Changed from privacy="Discoverable"
     ).order_by("date")[:3]
 
     # Retrieve the user profile and invited events
@@ -106,7 +109,7 @@ def exploreView(request):
 
     trending_categories = (
         Event.objects.filter(
-            status="live", privacy="Discoverable", admin_status="active"
+            status="live", forAllDisplay=True, admin_status="active"
         )
         .values("event_type")
         .annotate(event_count=Count("event_type"))
@@ -136,7 +139,7 @@ def exploreView(request):
     weekly_events = Event.objects.filter(
         date__range=[start_of_week, end_of_week],
         status="live",
-        privacy="Discoverable",
+        forAllDisplay=True,
         admin_status="active",
     ).order_by("?")[:3]
 
@@ -201,7 +204,7 @@ def load_more_events(request):
                 age_filter |= Q(age_restriction="18+")
 
     more_events = Event.objects.filter(
-        status="live", privacy="Discoverable", admin_status="active"
+        status="live", forAllDisplay=True, admin_status="active"
     )[offset : offset + limit]
 
     events_data = []
@@ -222,7 +225,7 @@ def load_more_events(request):
         )
 
     has_more = Event.objects.filter(
-        status="live", privacy="Discoverable", admin_status="active"
+        status="live", forAllDisplay=True, admin_status="active"
     ).count() > (offset + limit)
 
     return JsonResponse({"events": events_data, "has_more": has_more})
@@ -242,15 +245,79 @@ def toggleFavorite(request, eventId):
     else:
         messages.warning(request, "Please login to favorite events.")
         return redirect("authentication:login")
+    
+def handleRSVP(request, eventId):
+    event = get_object_or_404(Event, eventId=eventId)
+    response_data = {}
+    
+    if request.user.is_authenticated:
+        existing_rsvp = RSVPTicket.objects.filter(event=event, email=request.user.email).first()
+    else:
+        existing_rsvp = None
+
+    if existing_rsvp:
+        print("existing rsvp: ", existing_rsvp)
+        messages.warning(request, "Your RSVP has already been submitted.")
+        response_data = {
+            "status": "error",
+            "message": "This email has already been submitted!"
+        }
+        return JsonResponse(response_data)
+
+    # Initialize the form with POST data.
+    rsvpForm = RSVPForm(request.POST, user=request.user)
+    if rsvpForm.is_valid():
+        rsvp_ticket = rsvpForm.save(commit=False)
+        existing_rsvp = RSVPTicket.objects.filter(event=event, email=rsvp_ticket.email).first()
+        if existing_rsvp:
+            messages.warning(request, "This email has already been submitted!")
+            response_data = {
+                "status": "error",
+                "message": "This email has already been submitted! Try a different one."
+            }
+            return JsonResponse(response_data, status=400)
+        # If the event is paid, set the ticket price.
+        
+        # If the user is authenticated, add them to the guest list.
+        if request.user.is_authenticated:
+            user_profile = get_object_or_404(UserProfile, user=request.user)
+            event.guest_list.add(user_profile.user)
+            rsvp_ticket.first_name = request.user.first_name
+            rsvp_ticket.last_name = request.user.last_name
+            rsvp_ticket.email = request.user.email
+            
+        rsvp_ticket.event = event
+        rsvp_ticket.save()
+
+        guestFirstName = rsvp_ticket.first_name
+        guestLastName = rsvp_ticket.last_name
+        guestEmail = rsvp_ticket.email
+        generateTicket(request, event, request.user if request.user.is_authenticated else None, guestFirstName, guestLastName, guestEmail)
+        
+        messages.success(request, "You have reserved a spot! Check your email for confirmation.")
+        response_data = {
+            "status": "success",
+            "message": "You have reserved a spot! Check your email for confirmation."
+        }
+        return JsonResponse(response_data)
+    else:
+        messages.error(request, "There was an error with your submission.")
+        response_data = {
+            "status": "error",
+            "message": "There was an error with your submission.",
+            "errors": rsvpForm.errors,
+        }
+        return JsonResponse(response_data, status=400)
+
 
 
 def eventDetailsView(request, eventId, token=None):
     pageName = "eventDetails"
     event = get_object_or_404(Event, eventId=eventId)
-    eventprivacy = EventPrivacy.objects.get(event=event)
     eventPaidFreeTickets = PaidFreeTicket.objects.filter(event=event)
 
-    rsvpForm = RSVPForm() if event.ticketing == "RSVP Required" else None
+    # Create RSVP form for Free events
+    rsvpForm = RSVPForm(user=request.user) if event.ticketing == "Free" else None
     rsvp_guests = RSVPTicket.objects.filter(event=event, display_on_guestlist=True)
     user = None
     user_friends = None
@@ -287,74 +354,7 @@ def eventDetailsView(request, eventId, token=None):
     if request.method == "POST":
         action = request.POST.get("eventAction")
 
-        if action == "RSVP":
-            user_email = request.POST.get("email")
-            existing_rsvp = RSVPTicket.objects.filter(
-                event=event, email=user_email
-            ).first()
-
-            if existing_rsvp:
-                messages.error(
-                    request,
-                    "This email has already been submitted! Try a different one.",
-                )
-                return render(
-                    request,
-                    "coreApp/event/eventDetails.html",
-                    {
-                        "page": pageName,
-                        "event": event,
-                        "eventPrivacy": eventprivacy,
-                        "rsvpForm": rsvpForm,
-                        "paidFreeTickets": eventPaidFreeTickets,
-                        "friends": user_friends,
-                        "crews": user_crews,
-                        "isFavoriteEvent": isFavoriteEvent,
-                        "guestList": guest_list,
-                    },
-                )
-
-            else:
-                rsvpForm = RSVPForm(request.POST)
-                if rsvpForm.is_valid():
-                    rsvp_ticket = rsvpForm.save(commit=False)
-                    rsvp_ticket.event = event
-                    rsvp_ticket.save()
-
-                    guestFirstName = rsvp_ticket.first_name
-                    guestLastName = rsvp_ticket.last_name
-                    guestEmail = rsvp_ticket.email
-
-                    user = request.user if request.user.is_authenticated else None
-                    
-                    if user:
-                        event.guest_list.add(user)
-
-                    generateTicket(
-                        request, event, user, guestFirstName, guestLastName, guestEmail
-                    )
-
-                    messages.success(
-                        request,
-                        "You have reserved a spot! Check your email for confirmation.",
-                    )
-                    return render(
-                        request,
-                        "coreApp/event/eventDetails.html",
-                        {
-                            "page": pageName,
-                            "event": event,
-                            "eventPrivacy": eventprivacy,
-                            "rsvpForm": rsvpForm,
-                            "paidFreeTickets": eventPaidFreeTickets,
-                            "friends": user_friends,
-                            "crews": user_crews,
-                            "isFavoriteEvent": isFavoriteEvent,
-                            "guestList": guest_list,
-                        },
-                    )
-
-        elif action == "shareEventWithFriend":
+        if action == "shareEventWithFriend":
             if not request.user.is_authenticated:
                 messages.warning(request, "Please login to share this event.")
                 return redirect("authentication:login")
@@ -435,103 +435,7 @@ def eventDetailsView(request, eventId, token=None):
                     "eventTickets:crewCheckout", crewId=crew_id, ticketId=ticketId
                 )
 
-    # if event.age_restriction:
-    #     if user_age is None or (
-    #         (event.age_restriction == "18+" and user_age < 18) or
-    #         (event.age_restriction == "21+" and user_age < 21)
-    #     ):
-    #         return render(
-    #             request,
-    #             "extras/invalid/eventRestricted.html",  # Render a specific page for age restriction
-    #             {
-    #                 "page": pageName,
-    #                 "event": event,
-    #                 "eventPrivacy": eventprivacy,
-    #             },
-    #         )
-
-    if eventprivacy.require_invitation:
-        if token:
-            invitation = get_object_or_404(InviteEventOption, token=token)
-            return render(
-                request,
-                "coreApp/event/eventDetails.html",
-                {
-                    "page": pageName,
-                    "event": event,
-                    "eventPrivacy": eventprivacy,
-                    "rsvpForm": rsvpForm,
-                    "paidFreeTickets": eventPaidFreeTickets,
-                    "friends": user_friends,
-                    "crews": user_crews,
-                    "isFavoriteEvent": isFavoriteEvent,
-                    "guestList": guest_list,
-                },
-            )
-        else:
-            return render(
-                request,
-                "extras/invalid/eventInvalid.html",
-                {"page": pageName, "event": event, "eventPrivacy": eventprivacy},
-            )
-
-    elif eventprivacy.restricted_college:
-        if request.user.user_profile.college == eventprivacy.restricted_college:
-            return render(
-                request,
-                "coreApp/event/eventDetails.html",
-                {
-                    "page": pageName,
-                    "event": event,
-                    "rsvpForm": rsvpForm,
-                    "paidFreeTickets": eventPaidFreeTickets,
-                    "friends": user_friends,
-                    "crews": user_crews,
-                    "isFavoriteEvent": isFavoriteEvent,
-                    "guestList": guest_list,
-                },
-            )
-        else:
-            return render(
-                request,
-                "extras/invalid/eventCollegePrivacy.html",
-                {
-                    "page": pageName,
-                    "event": event,
-                    "eventPrivacy": eventprivacy,
-                },
-            )
-
-    elif eventprivacy.restricted_organization:
-        userOrgRelation = OrganizationMembership.objects.filter(
-            user=request.user, organization=eventprivacy.restricted_organization
-        )
-
-        if userOrgRelation.exists():
-            return render(
-                request,
-                "coreApp/event/eventDetails.html",
-                {
-                    "page": pageName,
-                    "event": event,
-                    "rsvpForm": rsvpForm,
-                    "paidFreeTickets": eventPaidFreeTickets,
-                    "friends": user_friends,
-                    "crews": user_crews,
-                    "isFavoriteEvent": isFavoriteEvent,
-                    "guestList": guest_list,
-                },
-            )
-        else:
-            return render(
-                request,
-                "extras/invalid/eventOrganizationPrivacy.html",
-                {
-                    "page": pageName,
-                    "event": event,
-                    "eventPrivacy": eventprivacy,
-                },
-            )
+    
 
     else:
         return render(
@@ -551,32 +455,6 @@ def eventDetailsView(request, eventId, token=None):
 
 
 def categoryView(request, name):
-    # if not request.user.is_authenticated:
-    #     # Restrict events with age restrictions for anonymous users
-    #     age_filter = Q(age_restriction="")
-    # else:
-    #     # For authenticated users, calculate age and apply restrictions
-    #     user_age = request.user.age
-    #     if user_age is None and request.user.birthday:
-    #         today = date.today()
-    #         user_age = (
-    #             today.year
-    #             - request.user.birthday.year
-    #             - (
-    #                 (today.month, today.day)
-    #                 < (request.user.birthday.month, request.user.birthday.day)
-    #             )
-    #         )
-    #         request.user.age = user_age
-    #         request.user.save()
-
-    #     age_filter = Q(age_restriction="")
-    #     if user_age:
-    #         if user_age >= 21:
-    #             age_filter |= Q(age_restriction="21+")
-    #         if user_age >= 18:
-    #             age_filter |= Q(age_restriction="18+")
-
     category_events = Event.objects.filter(event_type=name)
 
     if not category_events.exists():

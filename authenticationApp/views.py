@@ -46,10 +46,8 @@ def joinView(request):
         if form.is_valid():
             user = form.save()
 
-            group, created = Group.objects.get_or_create(name="Member")
             unverified_group, created = Group.objects.get_or_create(name="Unverified")
             member, created = Group.objects.get_or_create(name="Member")
-            user.groups.add(group)
             user.groups.add(unverified_group)
             user.groups.add(member)
 

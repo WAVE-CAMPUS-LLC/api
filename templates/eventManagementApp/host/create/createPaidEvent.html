@@ -24,7 +24,7 @@ Create your event — WAVE.
         <a href="{% url 'eventManagement:eventCreationSelect' %}" 
            class="bg-[#ff0707] text-white font-Wanted-Regular text-Semi-Medium xs:text-Semi-Medium xsm:text-Semi-Medium after-xsm:text-Semi-Medium xxsm:text-Semi-Medium sm:text-Semi-Medium md:text-Semi-Medium pre-lg:text-Large p-2 pre-lg:p-3 rounded-2xl w-1/3 pre-lg:w-1/5 flex justify-center hover:bg-[#CE0000]"
         >Exit</a>
-        <h1 class="flex justify-start font-Wanted-Bold text-Large after-xsm:text-2xl text-black">Creating paid event</h1>
+        <h1 class="flex justify-start font-Wanted-Bold text-Large after-xsm:text-2xl text-black">Creating Paid Event</h1>
         <a href="{% url 'eventManagement:hostGuide' %}" target="_blank" 
            class="bg-transparent text-black font-Wanted-Regular text-Semi-Medium xs:text-Semi-Medium xsm:text-Semi-Medium after-xsm:text-Semi-Medium xxsm:text-Semi-Medium sm:text-Semi-Medium md:text-Semi-Medium pre-lg:text-Large p-2 pre-lg:p-3 rounded-2xl w-1/3 pre-lg:w-1/5 flex justify-center border border-gray-600 hover:bg-[#007379] hover:text-white hover:border-[#007379]"
         >Guide</a>
@@ -106,13 +106,42 @@ Create your event — WAVE.
                             </div>
                         </div>
                         
-                        <!-- PRIVACY -->
-                        <div class="flex flex-col w-full items-start justify-center">
-                            <p class="font-Wanted-SemiBold text-Base text-gray-400">
-                                {{ eventForm.privacy.label }}
+                        <div class="flex flex-row w-full justify-between items-center">
+                            <p class="font-Wanted-SemiBold text-Base text-gray-400 flex flex-col gap-1">
+                                {{ eventForm.forAllDisplay.label }}
+                                <span class="font-Wanted-Variable text-XSmall">Anyone can see your event in this case</span>
                             </p>
-                            {{ eventForm.privacy|attr:"class:event-visibility-input p-[12px] pl-[13px] pr-[13px] rounded-[13px] border border-solid border-custom-rgba font-Wanted-Variable text-[15px] w-full shadow-form-shadow"|attr:"placeholder:What type of experience is this?" }}
-                            <p id="visibility-error" class="text-[#FF0000] font-Wanted-SemiBold text-Base hidden">Please choose an option</p>
+                            <label class="toggle-switch">
+                                <input 
+                                type="checkbox" 
+                                id="{{ eventForm.forAllDisplay.auto_id }}" 
+                                name="{{ eventForm.forAllDisplay.html_name }}"
+                                {% if eventForm.forAllDisplay.value %}checked{% endif %}/>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="flex flex-row w-full justify-between items-center">
+                            <p class="font-Wanted-SemiBold text-Base text-gray-400 flex flex-col gap-1">
+                                {{ eventForm.forCollegesDisplay.label }}
+                                <span class="font-Wanted-Variable text-XSmall">
+                                    {% if not request.user.user_profile.college %}
+                                        You need to be part of a college to use this feature
+                                    {% else %}
+                                        Only students in your college can see this event
+                                    {% endif %}
+                                </span>
+                            </p>
+                            <label class="toggle-switch {% if not request.user.user_profile.college %}opacity-50{% endif %}">
+                                <input 
+                                    type="checkbox" 
+                                    id="{{ eventForm.forCollegesDisplay.auto_id }}" 
+                                    name="{{ eventForm.forCollegesDisplay.html_name }}"
+                                    {% if eventForm.forCollegesDisplay.value %}checked{% endif %}
+                                    {% if not request.user.user_profile.college %}disabled{% endif %}
+                                />
+                                <span class="slider"></span>
+                            </label>
                         </div>
                     </div>
                 </div>

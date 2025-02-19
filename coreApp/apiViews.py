@@ -16,7 +16,6 @@ from authenticationApp.models import CustomUser
 from .serializers import EventSerializer
 from eventTicketsApp.serializers import RSVPTicketSerializer
 from eventTicketsApp.models import RSVPTicket, PaidFreeTicket
-from eventManagementApp.models import EventPrivacy
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
@@ -52,12 +51,15 @@ def explore_events(request):
 
     # Load initial events
     initial_events = Event.objects.filter(
-        status="live", privacy="Discoverable", admin_status="active"
+        status="live", 
+        forAllDisplay=True,  # Changed from privacy="Discoverable"
+        admin_status="active"
     )
 
     # Get trending events
     trending_events = Event.objects.filter(
-        status="live", privacy="Discoverable"
+        status="live", 
+        forAllDisplay=True  # Changed from privacy="Discoverable"
     ).order_by("date")[:3]
 
     # Get invited events for authenticated users
@@ -88,7 +90,6 @@ def explore_events(request):
     for category_type, category_name in Event.EXPLORE_TYPE_CHOICES:
         count = Event.objects.filter(
             status="live",
-            privacy="Discoverable",
             admin_status="active",
             event_type=category_type
         ).count()
@@ -110,7 +111,6 @@ def explore_events(request):
     weekly_events = Event.objects.filter(
         date__range=[start_of_week, end_of_week],
         status="live",
-        privacy="Discoverable",
         admin_status="active",
     ).order_by("?")[:3]
 
@@ -210,7 +210,6 @@ def event_details(request, eventId):
     
     # Fetch the event and related objects
     event = get_object_or_404(Event, eventId=eventId)
-    eventprivacy = EventPrivacy.objects.get(event=event)
     eventPaidFreeTickets = PaidFreeTicket.objects.filter(event=event)
     
     # Check for RSVP requirement and guest list
@@ -322,11 +321,7 @@ def event_details(request, eventId):
     # Prepare response data
     response_data = {
         "event": EventSerializer(event).data,
-        "eventPrivacy": {
-            "require_invitation": eventprivacy.require_invitation,
-            "restricted_college": eventprivacy.restricted_college,
-            "restricted_organization": eventprivacy.restricted_organization,
-        },
+        
         "rsvpFormRequired": rsvpFormRequired,  # Boolean indicating if RSVP form is required
         "paidFreeTickets": eventPaidFreeTickets.values(),
         "friends": [user_friend.username for user_friend in user_friends] if user_friends else [],
