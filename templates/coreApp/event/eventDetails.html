@@ -71,7 +71,7 @@
         </div>
 
         
-        <div class="flex items-start flex-row justify-center lg:justify-end gap-5">
+        <div class="flex items-start flex-row justify-between lg:justify-end gap-5">
             <button id="shareEventButton" type="button" class="border-none bg-none cursor-pointer" role="button">
                 <img src="{% static "/images/coreApp/eventDetails/share-event.svg" %}" class="size-5 sm:size-8" />
             </button>
@@ -533,7 +533,7 @@
 
 <div id="shareEventPopup" class="hidden bg-[rgba(0, 0, 0, 0.037)] backdrop-blur-sm fixed top-0 left-0 right-0 bottom-0 z-[1005] w-full h-full cursor-default">
     <div class="modalContainer w-full h-full flex justify-center items-center py-5 md:py-11">
-        <div class="modalContentCard w-4/12 h-full lg:h-[75%] bg-white shadow-custom-shadow rounded-2xl p-5 pb-12 flex flex-col gap-3 overflow-y-auto">
+        <div class="modalContentCard w-[95%] pre-sm:w-[80%] sm:w-[70%] md:w-[60%] xl:w-4/12 h-full lg:h-[75%] bg-white shadow-custom-shadow rounded-2xl p-5 pb-12 flex flex-col gap-3 overflow-y-auto">
             <div class="modalHeader w-full flex justify-between items-center flex-col"> 
                 <div class="modalClose">
                     <button type="button" role="button" id="closeShareEventPopup">
