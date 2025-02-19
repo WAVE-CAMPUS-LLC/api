@@ -60,13 +60,16 @@ $(document).ready(function () {
             $results.removeClass('hidden').fadeIn(300);
             showLoadingNotice(context, idName);
 
-            // AJAX call for search
-            const searchUrl = document.getElementById('searchUrl').value;
+            // Determine the correct search URL based on context
+            const searchUrl = context === 'event' 
+                ? '/explore/search/' 
+                : '/social/search/';
+
             $.ajax({
                 url: searchUrl,
                 data: { query, context },
                 dataType: 'json',
-                success: function (data) {
+                success: function(data) {
                     const $items = $(`.${context}-search-items-${idName}`);
                     $items.empty();
 
@@ -85,7 +88,7 @@ $(document).ready(function () {
                         `);
                     }
                 },
-                error: function () {
+                error: function() {
                     const $items = $(`.${context}-search-items-${idName}`);
                     $items.html('<p class="error-message">Failed to fetch results. Please try again.</p>');
                 }
@@ -93,31 +96,118 @@ $(document).ready(function () {
         }
     }
 
+    function sendConnectRequest(button) {
+        const username = button.dataset.username;
+        const $button = $(button);
+        const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
 
-    // function sendConnectRequest(button) {
-    //     const username = button.dataset.username;
+        if (!csrfToken) {
+            alert('CSRF token not found. Please refresh the page and try again.');
+            return;
+        }
 
-    //     $.ajax({
-    //         url: '/send-connect-request/',  // You'll need to create this endpoint
-    //         method: 'POST',
-    //         data: {
-    //             'action': 'send_request',
-    //             'socketUsername': username,
-    //             'csrfmiddlewaretoken': document.querySelector('[name=csrfmiddlewaretoken]').value
-    //         },
-    //         success: function (response) {
-    //             if (response.status === 'success') {
-    //                 // Update button state
-    //                 button.textContent = 'Pending';
-    //                 button.classList.add('pending');
-    //                 // You might want to disable the button or change its appearance
-    //             }
-    //         },
-    //         error: function (xhr, status, error) {
-    //             console.error('Error sending connect request:', error);
-    //         }
-    //     });
-    // }
+        // Disable button to prevent multiple clicks
+        $button.prop('disabled', true)
+               .addClass('opacity-50');
+
+        $.ajax({
+            url: '/social/send-friend-request/',
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken
+            },
+            data: {
+                receiver_username: username,
+                csrfmiddlewaretoken: csrfToken
+            },
+            success: function(response) {
+                if (response.status === 'success') {
+                    // Update button to show cancel option
+                    $button.removeClass('bg-gradient-to-r from-[#008d95bc] to-[#13c9d3] opacity-50')
+                           .addClass('bg-red-600')
+                           .text('Cancel Request')
+                           .prop('disabled', false)
+                           .removeClass('send-connect')
+                           .addClass('cancel-connect');
+                } else {
+                    alert(response.message || 'Failed to send friend request');
+                    $button.prop('disabled', false)
+                           .removeClass('opacity-50');
+                }
+            },
+            error: function(xhr) {
+                let errorMessage = 'An error occurred while sending the friend request';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    errorMessage = xhr.responseJSON.message;
+                }
+                alert(errorMessage);
+                $button.prop('disabled', false)
+                       .removeClass('opacity-50');
+            }
+        });
+    }
+
+    function cancelConnectRequest(button) {
+        const username = button.dataset.username;
+        const $button = $(button);
+        const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
+
+        if (!csrfToken) {
+            alert('CSRF token not found. Please refresh the page and try again.');
+            return;
+        }
+
+        // Disable button to prevent multiple clicks
+        $button.prop('disabled', true)
+               .addClass('opacity-50');
+
+        $.ajax({
+            url: '/social/cancel-friend-request/',
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken
+            },
+            data: {
+                receiver_username: username,
+                csrfmiddlewaretoken: csrfToken
+            },
+            success: function(response) {
+                if (response.status === 'success') {
+                    // Update button back to connect
+                    $button.removeClass('bg-red-600 opacity-50')
+                           .addClass('bg-gradient-to-r from-[#008d95bc] to-[#13c9d3]')
+                           .text('Connect')
+                           .prop('disabled', false)
+                           .removeClass('cancel-connect')
+                           .addClass('send-connect');
+                } else {
+                    alert(response.message || 'Failed to cancel friend request');
+                    $button.prop('disabled', false)
+                           .removeClass('opacity-50');
+                }
+            },
+            error: function(xhr) {
+                let errorMessage = 'An error occurred while canceling the friend request';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    errorMessage = xhr.responseJSON.message;
+                }
+                alert(errorMessage);
+                $button.prop('disabled', false)
+                       .removeClass('opacity-50');
+            }
+        });
+    }
+
+    // Add click handlers for connect and cancel buttons
+    $(document).on('click', '.send-connect', function(e) {
+        e.preventDefault();
+        sendConnectRequest(this);
+    });
+
+    $(document).on('click', '.cancel-connect', function(e) {
+        e.preventDefault();
+        cancelConnectRequest(this);
+    });
 
     function renderEventItem(item) {
         return `
@@ -136,43 +226,39 @@ $(document).ready(function () {
             </a>`;
     }
 
-    // $(document).on('click', '.send-connect', function () {
-    //     sendConnectRequest(this);
-    // });
-
     function renderFriendItem(item) {
         let buttonHtml = '';
+        
         if (item.is_friend) {
-            // Do not display the Connect button if already friends
             buttonHtml = `
-                <button class="bg-[#00b500] text-white py-2 px-5 border border-solid border-transparent pending cursor-not-allowed  text-[18px] rounded-[20px]" type="button" disabled>
+                <button class="py-2 px-5 border border-solid border-transparent text-white font-Wanted-Variable no-underline flex items-center justify-center gap-2.5 cursor-not-allowed text-[18px] rounded-[20px] bg-[#00b500]" disabled>
                     Friend
                 </button>`;
         } else if (item.has_sent_friend_request) {
-            // Display a disabled button with "Pending" text if request is sent
             buttonHtml = `
-                <button class="bg-red-600 text-white py-2 px-5 border border-solid border-transparent pending cursor-not-allowed  text-[18px] rounded-[20px]" type="button" disabled>
+                <button class="py-2 px-5 border border-solid border-transparent text-white font-Wanted-Variable no-underline flex items-center justify-center gap-2.5 cursor-not-allowed text-[18px] rounded-[20px] bg-red-600" disabled>
                     Pending
                 </button>`;
         } else {
-            // Display the active "Connect" button if no request is sent and not friends
             buttonHtml = `
-                <button class="py-2 px-5 border border-solid border-transparent text-white font-Wanted-Variable no-underline flex items-center justify-center gap-2.5 cursor-pointer text-[18px] rounded-[20px] bg-gradient-to-r from-[#008d95bc] to-[#13c9d3] rounded-2xl hover:bg-green send-connect" type="button" role="button" data-username="${item.username}">
+                <button class="py-2 px-5 border border-solid border-transparent text-white font-Wanted-Variable no-underline flex items-center justify-center gap-2.5 cursor-pointer text-[18px] rounded-[20px] bg-gradient-to-r from-[#008d95bc] to-[#13c9d3] rounded-2xl hover:bg-green send-connect" data-username="${item.username}">
                     Connect
                 </button>`;
         }
 
         return `
             <div class="grid grid-cols-2 hover:scale-95 transform transition duration-300 grid grid-cols-2 cursor-pointer">
-                <div class="flex flex-row gap-3 items-center">
-                    <div class="flex justify-center items-center">
-                        <img src="${item.profile_photo_url}" alt="${item.display_name}" class="lazyload size-11 rounded-full">
+                <a href="/profile/${item.username}/" class="flex flex-row gap-3 items-center">
+                    <div class="flex flex-row gap-3 items-center">
+                            <div class="flex justify-center items-center">
+                                <img src="${item.profile_photo_url}" alt="${item.display_name}" class="lazyload size-11 rounded-full">
+                            </div>
+                        <div class="flex flex-col justify-center items-start gap-1">
+                            <h2 class="font-Wanted-SemiBold text-Base">${item.display_name}</h2>
+                            <p class="font-Wanted-Variable text-customGray5">@${item.username}</p>
+                        </div>
                     </div>
-                    <div class="flex flex-col justify-center items-start gap-1">
-                        <h2 class="font-Wanted-SemiBold text-Base">${item.display_name}</h2>
-                        <p class="font-Wanted-Variable text-customGray5">@${item.username}</p>
-                    </div>
-                </div>
+                </a>
                 <div class="flex justify-end items-center">
                     ${buttonHtml}
                 </div>

@@ -38,6 +38,110 @@ def socialHomeView(request):
 
     profileLink = f"{siteUrl}{link}"
 
+    # Handle POST requests for friend request actions
+    if request.method == "POST":
+        action = request.POST.get("action")
+
+        if action == "acceptRequest":
+            friend_request_id = request.POST.get("friend_request_id")
+            friend_request = FriendRequest.objects.get(
+                requestId=friend_request_id, receiver=request.user
+            )
+            sender = get_object_or_404(UserProfile, user=friend_request.sender)
+            # We have to get the sender's user model to match the user id for the channel group name, because the channel rely's on the traditional auth user model instead of the custom user model
+            senderUserModel = get_object_or_404(
+                UserModel, username=sender.user.username
+            )
+            user.friends.add(sender)
+            sender.friends.add(user)
+            friend_request.accept_request()
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                f"user_{senderUserModel.id}",
+                {
+                    "type": "friend_request_action",
+                    "data": {
+                        "message": "Request has been accepted.",
+                    },
+                },
+            )
+            return redirect("social:home")
+
+        elif action == "declineRequest":
+            friend_request_id = request.POST.get("friend_request_id")
+            friend_request = FriendRequest.objects.get(
+                requestId=friend_request_id, receiver=request.user
+            )
+            sender = get_object_or_404(UserProfile, user=friend_request.sender)
+            # We have to get the sender's user model to match the user id for the channel group name, because the channel relies on the traditional auth user model instead of the custom user model
+            senderUserModel = get_object_or_404(
+                UserModel, username=sender.user.username
+            )
+            user.friends.remove(sender)
+            sender.friends.remove(user)
+            friend_request.delete()
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                f"user_{senderUserModel.id}",
+                {
+                    "type": "friend_request_action",
+                    "data": {
+                        "message": "Request has been declined.",
+                    },
+                },
+            )
+            return redirect("social:home")
+
+        elif action == "cancelRequest":
+            request_id = request.POST.get("friend_request_id")
+            if request_id:
+                try:
+                    friend_request = FriendRequest.objects.get(
+                        requestId=request_id,
+                        sender=request.user,
+                        status="pending"
+                    )
+                    friend_request.status = "canceled"
+                    friend_request.save()
+                    messages.success(request, "Friend request canceled successfully.")
+                    return redirect("social:home")
+                except FriendRequest.DoesNotExist:
+                    messages.error(request, "Friend request not found.")
+                    return redirect("social:home")
+
+        elif action == "cancelCrewInvite":
+            crew_request_id = request.POST.get("request_id")
+            crew_request = CrewRequest.objects.get(
+                requestId=crew_request_id, sender=request.user
+            )
+            receiver = get_object_or_404(UserProfile, user=crew_request.receiver)
+            # We have to get the receiver's user model to match the user id for the channel group name, because the channel relies on the traditional auth user model instead of the custom user model
+            receiverUserModel = get_object_or_404(
+                UserModel, username=receiver.user.username
+            )
+            crew_request.delete()
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                f"user_{receiverUserModel.id}",
+                {
+                    "type": "crew_request_action",
+                    "data": {
+                        "message": "Crew invite has been canceled.",
+                    },
+                },
+            )
+            return redirect("social:home")
+
+        elif action == "generateProfileQRCode":
+            profile = UserProfile.objects.get(user=request.user)
+            profile.generate_qr_code()
+            profile.save()
+            messages.success(request, "QR code generated successfully!")
+            return redirect("social:home")
+
+        else:
+            crew_invite_action(request, request.POST.get("crew_id"), action)
+
     myCrews = Crew.objects.filter(created_by=request.user)
     crewsImIn = Crew.objects.filter(crew_members__user=request.user).exclude(
         created_by=request.user
@@ -122,117 +226,6 @@ def socialHomeView(request):
     ]
 
     print(pending_friend_requests)
-
-    if request.method == "POST":
-        action = request.POST.get("action")
-
-        if action == "acceptRequest":
-            friend_request_id = request.POST.get("friend_request_id")
-            friend_request = FriendRequest.objects.get(
-                requestId=friend_request_id, receiver=request.user
-            )
-            sender = get_object_or_404(UserProfile, user=friend_request.sender)
-            # We have to get the sender's user model to match the user id for the channel group name, because the channel rely's on the traditional auth user model instead of the custom user model
-            senderUserModel = get_object_or_404(
-                UserModel, username=sender.user.username
-            )
-            user.friends.add(sender)
-            sender.friends.add(user)
-            friend_request.accept_request()
-            channel_layer = get_channel_layer()
-            async_to_sync(channel_layer.group_send)(
-                f"user_{senderUserModel.id}",
-                {
-                    "type": "friend_request_action",
-                    "data": {
-                        "message": "Request has been accepted.",
-                    },
-                },
-            )
-            return redirect("social:home")
-
-        elif action == "declineRequest":
-            friend_request_id = request.POST.get("friend_request_id")
-            friend_request = FriendRequest.objects.get(
-                requestId=friend_request_id, receiver=request.user
-            )
-            sender = get_object_or_404(UserProfile, user=friend_request.sender)
-            # We have to get the sender's user model to match the user id for the channel group name, because the channel relies on the traditional auth user model instead of the custom user model
-            senderUserModel = get_object_or_404(
-                UserModel, username=sender.user.username
-            )
-            user.friends.remove(sender)
-            sender.friends.remove(user)
-            friend_request.delete()
-            channel_layer = get_channel_layer()
-            async_to_sync(channel_layer.group_send)(
-                f"user_{senderUserModel.id}",
-                {
-                    "type": "friend_request_action",
-                    "data": {
-                        "message": "Request has been declined.",
-                    },
-                },
-            )
-            return redirect("social:home")
-
-        elif action == "cancelRequest":
-            friend_request_id = request.POST.get("friend_request_id")
-            friend_request = FriendRequest.objects.get(
-                requestId=friend_request_id, sender=request.user
-            )
-            receiver = get_object_or_404(UserProfile, user=friend_request.receiver)
-            # We have to get the receiver's user model to match the user id for the channel group name, because the channel relies on the traditional auth user model instead of the custom user model
-            receiverUserModel = get_object_or_404(
-                UserModel, username=receiver.user.username
-            )
-            user.friends.remove(receiver)
-            receiver.friends.remove(user)
-            friend_request.delete()
-            channel_layer = get_channel_layer()
-            async_to_sync(channel_layer.group_send)(
-                f"user_{receiverUserModel.id}",
-                {
-                    "type": "friend_request_action",
-                    "data": {
-                        "message": "Request has been canceled.",
-                    },
-                },
-            )
-            return redirect("social:home")
-
-        elif action == "cancelCrewInvite":
-            crew_request_id = request.POST.get("request_id")
-            crew_request = CrewRequest.objects.get(
-                requestId=crew_request_id, sender=request.user
-            )
-            receiver = get_object_or_404(UserProfile, user=crew_request.receiver)
-            # We have to get the receiver's user model to match the user id for the channel group name, because the channel relies on the traditional auth user model instead of the custom user model
-            receiverUserModel = get_object_or_404(
-                UserModel, username=receiver.user.username
-            )
-            crew_request.delete()
-            channel_layer = get_channel_layer()
-            async_to_sync(channel_layer.group_send)(
-                f"user_{receiverUserModel.id}",
-                {
-                    "type": "crew_request_action",
-                    "data": {
-                        "message": "Crew invite has been canceled.",
-                    },
-                },
-            )
-            return redirect("social:home")
-
-        elif action == "generateProfileQRCode":
-            profile = UserProfile.objects.get(user=request.user)
-            profile.generate_qr_code()
-            profile.save()
-            messages.success(request, "QR code generated successfully!")
-            return redirect("social:home")
-
-        else:
-            crew_invite_action(request, request.POST.get("crew_id"), action)
 
     return render(
         request,
@@ -331,23 +324,8 @@ def crew_invite_action(request, crew_id, action):
 @member
 @verified
 def publicProfileView(request, username):
-    user_profile = get_object_or_404(UserProfile, user__username=username)
-
-    if user_profile.user.groups.filter(name="Host").exists():
-        isHost = True
-    else:
-        isHost = False
-
-    if (
-        user_profile.user.groups.filter(name="Member").exists()
-        and user_profile.user.groups.filter(name="Verified").exists()
-    ):
-        isActiveUser = True
-    else:
-        isActiveUser = False
-
     try:
-        other_user = get_object_or_404(CustomUser, username=username)
+        other_user = get_object_or_404(UserModel, username=username)
         other_user_profile, created = UserProfile.objects.get_or_create(user=other_user)
 
         friend_request = FriendRequest.objects.filter(
@@ -401,6 +379,9 @@ def publicProfileView(request, username):
                 and friend_request
                 and friend_request_status == "pending"
             ):
+                # Update the status to canceled instead of deleting
+                friend_request.status = "canceled"
+                friend_request.save()
 
                 channel_layer = get_channel_layer()
                 async_to_sync(channel_layer.group_send)(
@@ -421,9 +402,6 @@ def publicProfileView(request, username):
                         },
                     },
                 )
-                other_user_profile.friends.remove(receiver)
-                receiver.friends.remove(other_user_profile)
-                friend_request.delete()
                 messages.success(request, "Friend request canceled.")
                 friend_request_status = None
                 return redirect("social:publicProfile", username=username)
@@ -433,7 +411,6 @@ def publicProfileView(request, username):
                 and friend_request
                 and friend_request_status == "accepted"
             ):
-
                 other_user_profile.friends.remove(receiver)
                 receiver.friends.remove(other_user_profile)
                 friend_request_status = None
@@ -455,11 +432,7 @@ def publicProfileView(request, username):
 
     except Http404:
         print("User not found")
-        print("User not found")
-        print("User not found")
-        print("User not found")
-        print("User not found")
-        return render(request, "extras/invalid/invalid.html")
+        return redirect("social:home")
 
     return render(
         request,
@@ -467,32 +440,168 @@ def publicProfileView(request, username):
         {
             "user": other_user,
             "user_profile": other_user_profile,
-            "friend_request_status": friend_request_status,
             "is_profile": is_profile,
-            "isHost": isHost,
-            "isActiveUser": isActiveUser,
+            "friend_request_status": friend_request_status,
         },
     )
 
 
 # Helper function to send friend request, decorator will make this not work because it is not a view
 def send_friend_request(sender, receiver_username):
-    receiver = get_object_or_404(UserProfile, user__username=receiver_username)
-    cannot_send_request = sender.user_profile.is_friends_with(
-        receiver.user
-    ) or sender.user_profile.has_pending_request(receiver.user)
+    try:
+        receiver = get_object_or_404(UserProfile, user__username=receiver_username)
+        
+        # Check if they are already friends
+        if sender.user_profile.is_friends_with(receiver.user):
+            return False, "You are already friends with this user.", None
+        
+        # Check for existing friend requests in either direction
+        existing_request = FriendRequest.objects.filter(
+            Q(sender=sender, receiver=receiver.user) | 
+            Q(sender=receiver.user, receiver=sender)
+        ).first()
+        
+        if existing_request:
+            if existing_request.status == 'pending':
+                if existing_request.sender == sender:
+                    return False, "You have already sent a friend request to this user.", existing_request
+                else:
+                    return False, "This user has already sent you a friend request.", existing_request
+            elif existing_request.status == 'accepted':
+                return False, "You are already friends with this user.", existing_request
+            else:  # status is 'declined' or 'canceled'
+                # If same sender, reuse the request
+                if existing_request.sender == sender:
+                    existing_request.status = 'pending'
+                    existing_request.save()
+                    return True, "Friend request sent successfully.", existing_request
+                else:
+                    # If different sender, delete old request and create new one
+                    existing_request.delete()
+                    friend_request = FriendRequest.objects.create(
+                        sender=sender,
+                        receiver=receiver.user,
+                        status="pending"
+                    )
+                    return True, "Friend request sent successfully.", friend_request
 
-    if cannot_send_request:
-        return False, "Friend request cannot be sent.", None
+        # Create new friend request if none exists
+        friend_request = FriendRequest.objects.create(
+            sender=sender,
+            receiver=receiver.user,
+            status="pending"
+        )
+        
+        return True, "Friend request sent successfully.", friend_request
+    except Exception as e:
+        print(f"Error in send_friend_request: {str(e)}")
+        raise  # Re-raise the exception to be caught by the view
 
-    friend_request, created = FriendRequest.objects.get_or_create(
-        sender=sender, receiver=receiver.user, defaults={"status": "pending"}
-    )
 
-    if not created:
-        return False, "Friend request has already been sent.", friend_request
+@login_required
+@check_suspension
+@member
+@verified
+def send_friend_request_view(request):
+    try:
+        if request.method != 'POST':
+            return JsonResponse({'status': 'error', 'message': 'Only POST method is allowed'}, status=405)
+        
+        receiver_username = request.POST.get('receiver_username')
+        if not receiver_username:
+            return JsonResponse({'status': 'error', 'message': 'Receiver username is required'}, status=400)
+        
+        # Check if trying to send request to self
+        if receiver_username == request.user.username:
+            return JsonResponse({'status': 'error', 'message': 'You cannot send a friend request to yourself'}, status=400)
+        
+        try:
+            success, message, friend_request = send_friend_request(request.user, receiver_username)
+            
+            return JsonResponse({
+                'status': 'success' if success else 'error',
+                'message': message
+            })
+        except UserProfile.DoesNotExist:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'User not found'
+            }, status=404)
+        except FriendRequest.DoesNotExist:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Friend request not found'
+            }, status=404)
+        
+    except Exception as e:
+        error_message = str(e)
+        print(f"Error in send_friend_request_view: {error_message}")
+        return JsonResponse({
+            'status': 'error',
+            'message': f'An error occurred: {error_message}'
+        }, status=500)
 
-    return True, "Friend request sent successfully.", friend_request
+
+@login_required
+@check_suspension
+@member
+@verified
+def cancel_friend_request(request):
+    try:
+        if request.method != 'POST':
+            return JsonResponse({'status': 'error', 'message': 'Only POST method is allowed'}, status=405)
+        
+        receiver_username = request.POST.get('receiver_username')
+        if not receiver_username:
+            return JsonResponse({'status': 'error', 'message': 'Receiver username is required'}, status=400)
+        
+        # Find the pending friend request
+        try:
+            friend_request = FriendRequest.objects.get(
+                sender=request.user,
+                receiver__username=receiver_username,
+                status='pending'
+            )
+            
+            # Update the status to canceled
+            friend_request.status = 'canceled'
+            friend_request.save()
+            
+            # Send notification through WebSocket if needed
+            try:
+                channel_layer = get_channel_layer()
+                async_to_sync(channel_layer.group_send)(
+                    f"user_{friend_request.receiver.id}",
+                    {
+                        "type": "friend_request_action",
+                        "data": {
+                            "message": "Friend request has been canceled.",
+                            "action": "cancel",
+                            "requestId": str(friend_request.requestId)
+                        },
+                    },
+                )
+            except Exception as e:
+                print(f"WebSocket notification failed: {str(e)}")
+                # Continue even if WebSocket fails
+            
+            return JsonResponse({
+                'status': 'success',
+                'message': 'Friend request canceled successfully'
+            })
+            
+        except FriendRequest.DoesNotExist:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'No pending friend request found'
+            }, status=404)
+            
+    except Exception as e:
+        print(f"Error in cancel_friend_request: {str(e)}")
+        return JsonResponse({
+            'status': 'error',
+            'message': f'An error occurred: {str(e)}'
+        }, status=500)
 
 
 @login_required
@@ -693,6 +802,7 @@ def leave_crew(request, crewId):
         crew.delete()
         messages.success(request, f"{crew.name} crew has been deleted.")
     messages.success(request, f"{request.user} has left the {crew.name} crew.")
+    return redirect("social:home")
 
 
 @login_required
@@ -707,6 +817,7 @@ def delete_crew(request, crewId):
 
     crew.delete()
     messages.success(request, f"{crew.name} crew has been deleted.")
+    return redirect("social:home")
 
 
 @login_required
@@ -724,6 +835,7 @@ def kick_member(request, crewId, member_username):
     messages.success(
         request, f"{member.user.username} has been kicked from the {crew.name} crew."
     )
+    return redirect("social:crew", crewId=crewId)
 
     # if request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest':
     #     query = request.GET.get('query', '')

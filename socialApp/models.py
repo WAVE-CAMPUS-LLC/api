@@ -12,6 +12,7 @@ class FriendRequest(models.Model):
         ("pending", "Pending"),
         ("declined", "Declined"),
         ("accepted", "Accepted"),
+        ("canceled", "Canceled"),
     ]
 
     requestId = models.UUIDField(
