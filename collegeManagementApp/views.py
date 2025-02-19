@@ -172,37 +172,11 @@ def viewCollegeInformation(request, collegeId):
             if user_age >= 18:
                 age_filter |= Q(age_restriction="18+")
 
-    events = (
-        Event.objects.filter(
-            display_event_on_college=True, host__user_profile__college=college
-        )
-        .filter(age_filter)
-        .order_by("-date")
-    )
-
-    # Update to use new fields
-    events_restricted_to_college = (
-        Event.objects.filter(
-            forCollegesDisplay=True,
-            privacy_details__restricted_college=college,
-            status="live",
-        )
-        .filter(age_filter)
-        .order_by("-date")
-    )
-
-    display_events_on_college = (
-        Event.objects.filter(
-            forAllDisplay=True,
-            host__user_profile__college=college,
-            forCollegesDisplay=True,
-            status="live",
-        )
-        .filter(age_filter)
-        .order_by("-date")
-    )
-
-    events = (events_restricted_to_college | display_events_on_college).distinct()
+    events = Event.objects.filter(
+        Q(forCollegesDisplay=True, host__user_profile__college=college) |
+        Q(forAllDisplay=True, host__user_profile__college=college),
+        status="live",
+    ).filter(age_filter).order_by("-date")
 
     today = now().date()
     start_of_week = today - timedelta(days=today.weekday())

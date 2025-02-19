@@ -37,37 +37,29 @@ def view_college_information_api(request, collegeId):
     members = UserProfile.objects.filter(college=college)
     organizations = Organization.objects.filter(college=college, status="Accepted")
     
-    # Age restriction filtering
-    if request.user.is_authenticated:
-        user_age = request.user.age if hasattr(request.user, 'age') else None
-        if user_age is None and hasattr(request.user, 'birthday') and request.user.birthday:
+    # Age restriction filtering logic
+    if not request.user.is_authenticated:
+        age_filter = Q(age_restriction="")
+    else:
+        user_age = request.user.age
+        if user_age is None and request.user.birthday:
             today = date.today()
             user_age = today.year - request.user.birthday.year - ((today.month, today.day) < (request.user.birthday.month, request.user.birthday.day))
             request.user.age = user_age
             request.user.save()
-    else:
-        user_age = None
+
+        age_filter = Q(age_restriction="")
+        if user_age:
+            if user_age >= 21:
+                age_filter |= Q(age_restriction="21+")
+            if user_age >= 18:
+                age_filter |= Q(age_restriction="18+")
     
-    age_filter = Q(age_restriction="")
-    if user_age:
-        if user_age >= 21:
-            age_filter |= Q(age_restriction="21+")
-        if user_age >= 18:
-            age_filter |= Q(age_restriction="18+")
-    
-    events_restricted_to_college = Event.objects.filter(
-        privacy="Private (College)",
-        privacy_details__restricted_college=college,
+    events = Event.objects.filter(
+        Q(forCollegesDisplay=True, host__user_profile__college=college) |
+        Q(forAllDisplay=True, host__user_profile__college=college),
         status="live"
     ).filter(age_filter).order_by("-date")
-    
-    display_events_on_college = Event.objects.filter(
-        display_event_on_college=True,
-        host__user_profile__college=college,
-        status="live"
-    ).filter(age_filter).order_by("-date")
-    
-    events = (events_restricted_to_college | display_events_on_college).distinct()
     
     # Weekly events
     today = now().date()
@@ -77,7 +69,8 @@ def view_college_information_api(request, collegeId):
     weekly_events = Event.objects.filter(
         date__range=[start_of_week, end_of_week],
         status="live",
-        privacy="Discoverable",
+        forAllDisplay=True,
+        forCollegesDisplay=True,
         admin_status="active"
     ).filter(age_filter).order_by("?")[:3]
     
@@ -86,7 +79,7 @@ def view_college_information_api(request, collegeId):
         "college_members": UserProfileSerializer(members, many=True).data,
         "user_profile": user_profile.id if user_profile else None,
         "organizations": [org.orgId for org in organizations],
-        "events":EventSerializer(events, many=True).data,
+        "events": EventSerializer(events, many=True).data,
         "weekly_events": EventSerializer(weekly_events, many=True).data,
         "is_member": is_member,
     }
