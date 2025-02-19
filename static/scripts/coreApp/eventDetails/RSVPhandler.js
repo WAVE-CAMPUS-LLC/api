@@ -2,7 +2,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const rsvpForm = document.getElementById("rsvpForm");
     const submitButton = document.getElementById("submitBtn");
 
-    rsvpForm.addEventListener("submit", function (e) {
+    rsvpForm?.addEventListener("submit", function (e) {
         e.preventDefault();
         submitButton.disabled = true;
         submitButton.style.opacity = 0.5;

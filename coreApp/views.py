@@ -26,7 +26,8 @@ from .forms import RSVPForm
 from collegeManagementApp.models import OrganizationMembership
 from eventTicketsApp.views import generateTicket
 from eventTicketsApp.models import Ticket
-
+from django.conf import settings
+from django.urls import reverse
 
 # Create your views here.
 def indexView(request):
@@ -315,7 +316,11 @@ def eventDetailsView(request, eventId, token=None):
     pageName = "eventDetails"
     event = get_object_or_404(Event, eventId=eventId)
     eventPaidFreeTickets = PaidFreeTicket.objects.filter(event=event)
-
+    
+    siteURL = settings.SITE_URL
+    link = reverse('core:eventDetails', kwargs={'eventId': eventId})
+    eventLink = f"{siteURL}{link}"
+    
     # Create RSVP form for Free events
     rsvpForm = RSVPForm(user=request.user) if event.ticketing == "Free" else None
     rsvp_guests = RSVPTicket.objects.filter(event=event, display_on_guestlist=True)
@@ -450,6 +455,7 @@ def eventDetailsView(request, eventId, token=None):
                 "crews": user_crews,
                 "isFavoriteEvent": isFavoriteEvent,
                 "guestList": guest_list,
+                "eventLink": eventLink,
             },
         )
 

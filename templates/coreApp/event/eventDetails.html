@@ -37,6 +37,7 @@
 <script type="text/javascript" src="{% static "scripts/coreApp/eventDetails/favoriteEvent.js" %}" defer></script>
 <script type="text/javascript" src="{% static "scripts/coreApp/eventDetails/chooseCrew.js" %}" defer></script>
 <script type="text/javascript" src="{% static "scripts/coreApp/eventDetails/RSVPhandler.js" %}" defer></script>
+<script type="text/javascript" src="{% static "scripts/coreApp/eventDetails/copyLink.js" %}" defer></script>
 {% endblock script %}
 
 
@@ -549,6 +550,7 @@
                 <div id="shareControl" class="content-control flex flex-row justify-center gap-4 w-full"> 
                     <div class="shareTab tab-active cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="shareFriendList">Friends</div>
                     <div class="shareTab cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="shareCrewList">Crews</div>
+                    <div class="shareTab cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="copyLink">Copy Link</div>
                 </div>
 
                 <div id="shareFriendList" class="shareTabInformation">
@@ -613,6 +615,21 @@
                         <p class="font-Wanted-Variable text-[10px] after-xsm:text-[12px] sm:text-[14px] md:text-[16.5px] text-black text-center">Currently nothing to be displayed.</p>
                     </div>
                     {% endif %}                        
+                </div>
+                <div id="copyLink" class="shareTabInformation">
+                    <div class="flex flex-col gap-4">
+                        <div class="flex flex-row justify-center w-full items-center">
+                            <div>
+                                
+                                <input type="text" id="shareLink" readonly value="{{ eventLink }}" class="hidden">
+                                <input type="hidden" id="copyLinkSuccessUrl" value="{% url "social:copyLinkSuccess" %}" />
+                                <!-- Button to trigger the copy action -->
+                                <button id="shareLinkCopyButton" class="text-white bg-gradient-to-bl bg-gradient-start bg-gradient-end rounded-xl py-2 px-4 decoration-white font-Wanted-SemiBold">
+                                    Copy Share Link
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
