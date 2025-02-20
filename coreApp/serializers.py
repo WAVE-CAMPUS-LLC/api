@@ -5,7 +5,14 @@ from accountManagementApp.serializers import UserProfileSerializer
 
 
 class EventSerializer(serializers.ModelSerializer):
+    host = CustomUserSerializer(read_only=True)  # Changed to CustomUserSerializer since host is a CustomUser
+    host_profile = serializers.SerializerMethodField()  # Add method to get host's profile
+    
     class Meta:
-        host = UserProfileSerializer()
         model = Event
         fields = "__all__"
+        
+    def get_host_profile(self, obj):
+        if hasattr(obj.host, 'user_profile'):
+            return UserProfileSerializer(obj.host.user_profile).data
+        return None
