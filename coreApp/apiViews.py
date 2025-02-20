@@ -5,6 +5,7 @@ from django.db.models import Count, Q
 from django.utils.timezone import now
 from datetime import timedelta, date
 from django.shortcuts import get_object_or_404
+from rest_framework import serializers
 
 import random
 
@@ -16,6 +17,11 @@ from authenticationApp.models import CustomUser
 from .serializers import EventSerializer
 from eventTicketsApp.serializers import RSVPTicketSerializer
 from eventTicketsApp.models import RSVPTicket, PaidFreeTicket
+
+class CustomUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = ('id', 'username', 'email')
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
@@ -324,10 +330,10 @@ def event_details(request, eventId):
         
         "rsvpFormRequired": rsvpFormRequired,  # Boolean indicating if RSVP form is required
         "paidFreeTickets": eventPaidFreeTickets.values(),
-        "friends": [user_friend.username for user_friend in user_friends] if user_friends else [],
+        "friends": [CustomUserSerializer(user_friend).data for user_friend in user_friends] if user_friends else [],
         "crews": [user_crew.name for user_crew in user_crews] if user_crews else [],
         "isFavoriteEvent": isFavoriteEvent,
-        "guestList": [guest.username for guest in guest_list] if guest_list else [],
+        "guestList": [CustomUserSerializer(guest).data for guest in guest_list] if guest_list else [],
     }
 
     return Response(response_data)
