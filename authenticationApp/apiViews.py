@@ -8,7 +8,7 @@ from django.contrib.auth import login as django_login, logout
 from adminDashboardApp.models import LoginHistoryModel
 from authenticationApp.models import CustomUser
 from authenticationApp.forms import UserAuthenticationForm
-from authenticationApp.serializers import LoginSerializer
+from authenticationApp.serializers import LoginSerializer, CustomUserSerializer
 from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 from django.utils.decorators import method_decorator
 
@@ -72,24 +72,13 @@ def login_api(request):
         # Generate tokens
         refresh = RefreshToken.for_user(authenticated_user)
         
+        # Serialize the user data
+        user_serializer = CustomUserSerializer(authenticated_user)
+        
         return Response({
             'access': str(refresh.access_token),
             'refresh': str(refresh),
-            'user': {
-                'id': authenticated_user.id,
-                'email': authenticated_user.email,
-                'username': authenticated_user.username,
-                'first_name': authenticated_user.first_name,
-                'last_name': authenticated_user.last_name,
-                'is_active': authenticated_user.is_active,
-                'is_staff': authenticated_user.is_staff,
-                'birthday': authenticated_user.birthday,
-                'age': authenticated_user.age,
-                'is_suspended': authenticated_user.is_suspended,
-                'is_superuser': authenticated_user.is_superuser,
-                'groups': [group.name for group in authenticated_user.groups.all()]
-                
-            }
+            'user': user_serializer.data
         }, status=status.HTTP_200_OK)
 
     except ValidationError as e:
