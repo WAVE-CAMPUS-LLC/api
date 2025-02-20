@@ -75,9 +75,9 @@ def profile_api(request):
             return Response({"error": f"An error occurred: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     response_data = {
-        "blogItems": [{"id": b.id, "title": b.title} for b in blog_items],
+        "blogItems": [{"id": b.blogId, "title": b.title} for b in blog_items],
         "userProfile": {"username": user.username, "email": user.email, "first_name": user.first_name, "last_name": user.last_name, "profilePic": user_profile.profile_photo.url},
-        "favoriteEvents": [{"id": e.id, "title": e.title} for e in favorite_events],
+        "favoriteEvents": [{"id": e.eventId, "title": e.title} for e in favorite_events],
         "payments": payment_methods if payment_methods else None,
         "purchasedTickets": [{"event": t.event.title, "date": t.event.date} for t in purchased_tickets],
         "accountBalance": account_balance,
