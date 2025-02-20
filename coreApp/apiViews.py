@@ -12,6 +12,8 @@ import random
 from eventManagementApp.models import Event, SharedEvent
 from accountManagementApp.models import UserProfile
 from eventTicketsApp.models import RSVPTicket, PaidFreeTicket
+from eventTicketsApp.views import generateTicket
+from socialApp.models import Crew
 from .forms import RSVPForm
 from authenticationApp.models import CustomUser
 from .serializers import EventSerializer
@@ -338,18 +340,6 @@ def event_details(request, eventId):
 
     return Response(response_data)
 
-def handle_rsvp(request, eventId):
-    event = get_object_or_404(Event, eventId=eventId)
-
-    # Extract user information and validate RSVP
-    email = request.data.get('email')
-    existing_rsvp = RSVPTicket.objects.filter(event=event, email=email).first()
-
-    if existing_rsvp:
-        return Response({"error": "This email has already been submitted! Try a different one."}, status=400)
-
-    rsvp_ticket = RSVPTicket.objects.create(event=event, email=email)
-    return Response({"message": "You have reserved a spot! Check your email for confirmation."}, status=201)
 
 
 def share_event_with_friend(request, eventId):
@@ -387,3 +377,39 @@ def toggle_favorite(request, eventId):
         user_profile.favorite_events.remove(event)
         return Response({"status": "successfulUnfavorite", "message": "Event removed from favorites."})
 
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def handle_rsvp(request, eventId):
+    """
+    API endpoint to handle RSVP for an event.
+    """
+    event = get_object_or_404(Event, eventId=eventId)
+    
+    existing_rsvp = RSVPTicket.objects.filter(event=event, email=request.user.email).first() if request.user.is_authenticated else None
+    
+    if existing_rsvp:
+        return Response({"status": "error", "message": "This email has already been submitted!"}, status=400)
+    
+    rsvp_form = RSVPForm(request.data, user=request.user)
+    if rsvp_form.is_valid():
+        rsvp_ticket = rsvp_form.save(commit=False)
+        
+        if RSVPTicket.objects.filter(event=event, email=rsvp_ticket.email).exists():
+            return Response({"status": "error", "message": "This email has already been submitted! Try a different one."}, status=400)
+        
+        if request.user.is_authenticated:
+            user_profile = get_object_or_404(UserProfile, user=request.user)
+            event.guest_list.add(user_profile.user)
+            rsvp_ticket.first_name = request.user.first_name
+            rsvp_ticket.last_name = request.user.last_name
+            rsvp_ticket.email = request.user.email
+        
+        rsvp_ticket.event = event
+        rsvp_ticket.save()
+        
+        generateTicket(request, event, request.user if request.user.is_authenticated else None, rsvp_ticket.first_name, rsvp_ticket.last_name, rsvp_ticket.email)
+        
+        return Response({"status": "success", "message": "You have reserved a spot! Check your email for confirmation."})
+    else:
+        return Response({"status": "error", "message": "There was an error with your submission.", "errors": rsvp_form.errors}, status=400)
