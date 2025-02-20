@@ -369,16 +369,21 @@ def share_event_with_friend(request, eventId):
         return Response({"message": "Event already shared."}, status=200)
 
 
-def favorite_event(request, eventId):
-    event = get_object_or_404(Event, eventId=eventId)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def toggle_favorite(request, eventId):
+    """
+    API endpoint to toggle favorite status of an event.
+    """
     user_profile = get_object_or_404(UserProfile, user=request.user)
-
-    user_profile.favorite_events.add(event)
-    return Response({"message": "Event added to your favorites."}, status=200)
-
-def unfavorite_event(request, eventId):
     event = get_object_or_404(Event, eventId=eventId)
-    user_profile = get_object_or_404(UserProfile, user=request.user)
+    action = request.data.get('eventAction')
+    
+    if action == "favoriteEvent":
+        user_profile.favorite_events.add(event)
+        return Response({"status": "successfulFavorite", "message": "Event added to favorites."})
+    else:
+        user_profile.favorite_events.remove(event)
+        return Response({"status": "successfulUnfavorite", "message": "Event removed from favorites."})
 
-    user_profile.favorite_events.remove(event)
-    return Response({"message": "Event removed from your favorites."}, status=200)
