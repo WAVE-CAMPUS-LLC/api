@@ -6,6 +6,6 @@ from accountManagementApp.serializers import UserProfileSerializer
 
 class EventSerializer(serializers.ModelSerializer):
     class Meta:
-        host = CustomUserSerializer()
+        host = UserProfileSerializer()
         model = Event
         fields = "__all__"
