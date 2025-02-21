@@ -25,10 +25,9 @@ from authenticationApp.models import CustomUser
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
-def get_event_tickets(request, event_id):
-    event = get_object_or_404(Event, eventId=event_id)
-    tickets = Ticket.objects.filter(event=event)
-    rsvp_tickets = RSVPTicket.objects.filter(event=event)
+def get_event_tickets(request):
+    tickets = Ticket.objects.filter(user=request.user)
+    rsvp_tickets = RSVPTicket.objects.filter(email=request.user.email)
     return Response(
         {
             "tickets": TicketSerializer(tickets, many=True).data,
