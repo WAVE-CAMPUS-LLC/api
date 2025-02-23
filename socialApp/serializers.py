@@ -5,6 +5,8 @@ from authenticationApp.serializers import CustomUserSerializer
 
 
 class CrewSerializer(serializers.ModelSerializer):
+    members=CustomUserSerializer(many=True)
+    created_by=CustomUserSerializer()
     class Meta:
         model = Crew
         fields = "__all__"
