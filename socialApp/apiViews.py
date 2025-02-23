@@ -141,7 +141,7 @@ class NonFriendsListView(APIView):
         combined_data = []
         for user in non_friends:
             user_data = CustomUserSerializer(user).data
-            profile_data = UserProfileSerializer(user.userprofile).data
+            profile_data = UserProfileSerializer(user.user_profile).data
             combined_data.append({
                 'user': user_data,
                 'profile': profile_data
