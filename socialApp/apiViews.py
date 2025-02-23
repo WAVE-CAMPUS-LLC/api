@@ -135,9 +135,18 @@ class NonFriendsListView(APIView):
             id__in=friend_ids
         ).exclude(
             id=request.user.id
-        )
+        ).select_related('userprofile')
         
-        serializer = CustomUserSerializer(non_friends, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        # Create a list to store combined data
+        combined_data = []
+        for user in non_friends:
+            user_data = CustomUserSerializer(user).data
+            profile_data = UserProfileSerializer(user.userprofile).data
+            combined_data.append({
+                'user': user_data,
+                'profile': profile_data
+            })
+        
+        return Response(combined_data, status=status.HTTP_200_OK)
 
 
