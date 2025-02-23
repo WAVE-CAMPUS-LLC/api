@@ -15,8 +15,8 @@ WAVE. — Explore a new wave of events. Tick them off your bucketlist!
     <section class="w-full min-h-screen py-16 xs:px-5 xsm:px-7 after-xsm:px-9 sm:px-11 md:px-16 lg:px-24 xl:px-36 2xl:px-44 3xl:px-52 flex justify-center items-center flex-col xs:flex-col xsm:flex-col after-xsm:flex-col xxsm:flex-col sm:flex-col md:flex-col pre-lg:flex-row gap-20 bg-gradient-to-br from-white to-gray-50">
         <div class="flex flex-col w-full pre-lg:w-1/2 animate-fadeIn">
             <div class="flex justify-center flex-col gap-8 w-full">
-                <div class="text-black w-full items-center pre-lg:items-start text-center pre-lg:text-left">
-                    <h1 class="font-Wanted-Bold text-2xl pre-lg:text-4xl xl:text-5xl mb-4 leading-tight animate-slideUp">
+                <div class="text-black w-full items-center pre-lg:items-start text-center pre-lg:text-left animate-slideUp">
+                    <h1 class="font-Wanted-Bold text-xl pre-lg:text-3xl xl:text-4xl animate-slideUp">
                         Create 
                         experiences with 
                         <span id="body-logo" class="relative inline-block">
@@ -28,10 +28,12 @@ WAVE. — Explore a new wave of events. Tick them off your bucketlist!
 
                 <div class="flex flex-col gap-6 w-full items-center pre-lg:items-start text-center pre-lg:text-left transition-all duration-300" onclick="redirectToPage({% url "core:explore" %})">
                     <div class="w-full 2xl:w-1/2 shadow-lg hover:shadow-xl transition-shadow duration-300 text-black rounded-2xl bg-white backdrop-blur-sm cursor-pointer flex flex-row items-center border border-gray-100">
-                        <input type="text" name="" id="" placeholder="Find an event by title..." class="w-full h-full p-5 text-Semi-Medium font-Wanted-Regular text-black border-none rounded-l-2xl outline-none bg-transparent placeholder-gray-400 transition-all duration-300 focus:ring-2 focus:ring-blue-500">
-                        <div class="flex justify-center p-4 hover:opacity-75 transition-opacity duration-300">
-                            <img src="{% static "/images/home/home-explore-icon.svg" %}" alt="Explore Events" class="w-6 h-6">
-                        </div>
+                        <button type="button" name="" id="" class="w-full h-full p-5 text-Semi-Medium font-Wanted-Regular text-black border-none rounded-l-2xl outline-none bg-transparent placeholder-gray-400 transition-all duration-300">
+                            <div class="flex justify-between hover:opacity-75 transition-opacity duration-300 focus:ring-2 focus:ring-blue-500">
+                                <p class="font-Wanted-Variable text-gray-600 xxsm:font-Wanted-Regular text-Base sm:text-Medium font-thin max-w-xl">Find Events</p>
+                                <img src="{% static "/images/home/home-explore-icon.svg" %}" alt="Explore Events" class="w-6 h-6">
+                            </div>
+                        </button>
                     </div>
                     {% comment %} <button type="button" role="button" class="w-full after-xsm:w-1/2 pre-lg:w-3/5 lg:w-2/5 p-4 rounded-2xl bg-gradient-to-r from-blue-600 to-blue-700 text-white font-Wanted-Medium text-Semi-Medium cursor-pointer hover:shadow-lg hover:opacity-90 transition-all duration-300 transform hover:scale-[1.02]" onclick="redirectToPage({% url "core:explore" %})">View Events</button> {% endcomment %}
                 </div>
@@ -55,7 +57,7 @@ WAVE. — Explore a new wave of events. Tick them off your bucketlist!
         <div class="w-full pre-lg:w-1/2">
             <div class="flex flex-col gap-10">
                 <div class="flex flex-col gap-6 items-center pre-lg:items-start text-center pre-lg:text-left">
-                    <h1 class="font-Wanted-Bold text-2xl pre-lg:text-4xl xl:text-5xl text-black animate-slideUp">Join your campus!</h1>
+                    <h1 class="font-Wanted-Bold text-xl pre-lg:text-3xl xl:text-4xl animate-slideUp">Join your campus!</h1>
                     <p class="font-Wanted-Variable text-gray-600 xxsm:font-Wanted-Regular text-Base sm:text-Medium font-thin max-w-xl">
                         Join your college campus to see all ongoing experiences!
                     </p>
@@ -72,7 +74,7 @@ WAVE. — Explore a new wave of events. Tick them off your bucketlist!
     <section class="w-full min-h-screen py-16 xs:px-5 xsm:px-7 after-xsm:px-9 sm:px-11 md:px-16 lg:px-24 xl:px-36 2xl:px-44 3xl:px-52 flex justify-center items-center flex-col xs:flex-col xsm:flex-col after-xsm:flex-col xxsm:flex-col sm:flex-col md:flex-col pre-lg:flex-row gap-20 text-black bg-gradient-to-br from-white to-gray-50">
         <div class="w-full pre-lg:w-1/2 flex flex-col gap-6">
             <div class="flex flex-col gap-6 items-center pre-lg:items-start text-center pre-lg:text-left">
-                <h1 class="font-Wanted-Bold text-2xl pre-lg:text-4xl xl:text-5xl animate-slideUp">Host an experience</h1>
+                <h1 class="font-Wanted-Bold text-xl pre-lg:text-3xl xl:text-4xl animate-slideUp">Host an experience</h1>
                 <p class="font-Wanted-Regular xxsm:font-Wanted-Medium text-Medium sm:text-Large font-thin text-gray-600 max-w-xl">Create events with the greatest experiences!</p>
             </div>
             <div class="flex flex-col gap-9 items-center pre-lg:items-start text-center pre-lg:text-left">
@@ -98,14 +100,14 @@ WAVE. — Explore a new wave of events. Tick them off your bucketlist!
 
 <style>
 @keyframes fadeIn {
-    from { opacity: 0; }
+    from { opacity: 0.5; }
     to { opacity: 1; }
 }
 
 @keyframes slideUp {
     from {
         opacity: 0;
-        transform: translateY(20px);
+        transform: translateY(-20px);
     }
     to {
         opacity: 1;
@@ -114,11 +116,11 @@ WAVE. — Explore a new wave of events. Tick them off your bucketlist!
 }
 
 .animate-fadeIn {
-    animation: fadeIn 1s ease-out;
+    animation: fadeIn 2s ease-out;
 }
 
 .animate-slideUp {
-    animation: slideUp 1s ease-out;
+    animation: slideUp 2s ease-out;
 }
 </style>
 {% endblock body %}
