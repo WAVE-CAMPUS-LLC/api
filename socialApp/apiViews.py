@@ -17,6 +17,9 @@ from eventManagementApp.models import SharedEvent
 from accountManagementApp.serializers import UserProfileSerializer
 from eventManagementApp.serializers import SharedEventSerializer
 from .serializers import CrewSerializer, FriendRequestSerializer, CrewRequestSerializer
+from authenticationApp.serializers import CustomUserSerializer
+from django.contrib.auth import get_user_model
+from django.db.models import Q
 
 from wave_v1.decorators import check_suspension, member, verified
 
@@ -96,7 +99,7 @@ class SocialHomeView(APIView):
         elif action == "cancelCrewInvite":
             crew_request = get_object_or_404(CrewRequest, requestId=crew_request_id, sender=request.user)
             receiver = get_object_or_404(UserProfile, user=crew_request.receiver)
-            receiver_user_model = get_object_or_404(UserModel, username=receiver.user.username)
+            receiver_user_model = get_object_or_404(CustomUser, username=receiver.user.username)
             crew_request.delete()
             self.send_notification(receiver_user_model.id, "Crew invite has been canceled.")
             return Response({"message": "Crew invite canceled."}, status=status.HTTP_200_OK)
@@ -108,3 +111,33 @@ class SocialHomeView(APIView):
             return Response({"message": "QR code generated successfully!"}, status=status.HTTP_200_OK)
 
         return Response({"error": "Invalid action."}, status=status.HTTP_400_BAD_REQUEST)
+
+class NonFriendsListView(APIView):
+    def get(self, request):
+        User = get_user_model()
+        
+        # Get all accepted friend requests where the current user is either sender or receiver
+        accepted_friends = FriendRequest.objects.filter(
+            (Q(sender=request.user) | Q(receiver=request.user)),
+            status='accepted'
+        )
+        
+        # Get the list of friend user IDs
+        friend_ids = []
+        for friendship in accepted_friends:
+            if friendship.sender == request.user:
+                friend_ids.append(friendship.receiver.id)
+            else:
+                friend_ids.append(friendship.sender.id)
+        
+        # Get all users who are not friends (excluding the request user)
+        non_friends = User.objects.exclude(
+            id__in=friend_ids
+        ).exclude(
+            id=request.user.id
+        )
+        
+        serializer = CustomUserSerializer(non_friends, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
