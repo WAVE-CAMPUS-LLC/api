@@ -33,7 +33,7 @@ WAVE. — Explore a new wave of events. Tick them off your bucketlist!
                             <img src="{% static "/images/home/home-explore-icon.svg" %}" alt="Explore Events" class="w-6 h-6">
                         </div>
                     </div>
-                    <button type="button" role="button" class="w-full after-xsm:w-1/2 pre-lg:w-3/5 lg:w-2/5 p-4 rounded-2xl bg-gradient-to-r from-blue-600 to-blue-700 text-white font-Wanted-Medium text-Semi-Medium cursor-pointer hover:shadow-lg hover:opacity-90 transition-all duration-300 transform hover:scale-[1.02]" onclick="redirectToPage({% url "core:explore" %})">View Events</button>
+                    {% comment %} <button type="button" role="button" class="w-full after-xsm:w-1/2 pre-lg:w-3/5 lg:w-2/5 p-4 rounded-2xl bg-gradient-to-r from-blue-600 to-blue-700 text-white font-Wanted-Medium text-Semi-Medium cursor-pointer hover:shadow-lg hover:opacity-90 transition-all duration-300 transform hover:scale-[1.02]" onclick="redirectToPage({% url "core:explore" %})">View Events</button> {% endcomment %}
                 </div>
             </div>
         </div>
@@ -62,7 +62,7 @@ WAVE. — Explore a new wave of events. Tick them off your bucketlist!
                 </div>
 
                 <div class="flex flex-col xxsm:flex-row gap-6 xxsm:gap-[45px] pre-lg:gap-6 items-center pre-lg:items-start text-center pre-lg:text-left justify-center xxsm:items-center pre-lg:justify-start">
-                    <a id="partnerships" href="{% url "colleges:find" %}" class="p-5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-2xl text-Semi-Medium font-Wanted-Medium hover:shadow-lg hover:opacity-90 transition-all duration-300 transform hover:scale-[1.02]">Find Campus</a>
+                    <a id="partnerships" href="{% url "colleges:find" %}" class="p-5 bg-[#008d95] text-white rounded-2xl text-Semi-Medium font-Wanted-Medium hover:shadow-lg hover:opacity-90 transition-all duration-300 transform hover:scale-[1.02]">Find Campus</a>
                 </div>
             </div>
         </div>
@@ -76,7 +76,7 @@ WAVE. — Explore a new wave of events. Tick them off your bucketlist!
                 <p class="font-Wanted-Regular xxsm:font-Wanted-Medium text-Medium sm:text-Large font-thin text-gray-600 max-w-xl">Create events with the greatest experiences!</p>
             </div>
             <div class="flex flex-col gap-9 items-center pre-lg:items-start text-center pre-lg:text-left">
-                <a href="{% url "eventManagement:eventCreationSelect" %}" type="button" role="button" class="w-full after-xsm:w-1/2 pre-lg:w-3/5 lg:w-2/5 p-4 rounded-2xl bg-gradient-to-r from-blue-600 to-blue-700 text-white font-Wanted-Medium text-Semi-Medium cursor-pointer hover:shadow-lg hover:opacity-90 transition-all duration-300 transform hover:scale-[1.02]">Create</a>
+                <a href="{% url "eventManagement:eventCreationSelect" %}" type="button" role="button" class="p-5 bg-[#008d95] text-white rounded-2xl text-Semi-Medium font-Wanted-Medium hover:shadow-lg hover:opacity-90 transition-all duration-300 transform hover:scale-[1.02]">Create Event</a>
             </div>
         </div>
         <div id="cc-hime3-img" class="w-full pre-lg:w-1/2 transform hover:scale-[1.02] transition-all duration-500">
@@ -89,7 +89,7 @@ WAVE. — Explore a new wave of events. Tick them off your bucketlist!
         <h3 class="animate-slideUp">Ready to explor<span class="spot animate-pulse">e</span>?</h3>
         <div id="catchphrase-link" class="w-full">
             <a href="{% url "core:explore" %}"
-                class="inline-block text-white font-Wanted-SemiBold text-Pre-Xl bg-gradient-to-r from-blue-600 to-blue-700 rounded-3xl p-6 px-12 hover:shadow-lg hover:opacity-90 transition-all duration-300 transform hover:scale-[1.02]"><span
+                class="inline-block text-white font-Wanted-SemiBold text-Pre-Xl bg-[#008d95] rounded-3xl p-6 px-12 hover:shadow-lg hover:opacity-90 transition-all duration-300 transform hover:scale-[1.02]"><span
                     class="hidden xsm:inline-block">Let's</span>
                 Explore!</a>
         </div>
