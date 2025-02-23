@@ -6,6 +6,8 @@ from django.conf import settings
 from django.urls import reverse
 from datetime import datetime
 import random
+from django.utils.timezone import now
+from rest_framework import status
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from .models import FriendRequest, Crew, CrewMember, CrewRequest
@@ -23,86 +25,86 @@ from wave_v1.decorators import check_suspension, member, verified
 class SocialHomeView(APIView):
     permission_classes = [IsAuthenticated]
 
-    @check_suspension
-    @member
-    @verified
     def get(self, request):
-        user = get_object_or_404(UserProfile, user=request.user)
+        user_profile = get_object_or_404(UserProfile, user=request.user)
         site_url = settings.SITE_URL
-        profile_link = f"{site_url}{reverse('social:publicProfile', kwargs={'username': user.user.username})}"
-
+        profile_link = f"{site_url}{reverse('social:publicProfile', kwargs={'username': user_profile.user.username})}"
+        
         my_crews = Crew.objects.filter(created_by=request.user)
         crews_im_in = Crew.objects.filter(crew_members__user=request.user).exclude(created_by=request.user)
-
-        def get_random_members(crew):
-            crew_members = list(crew.members.all())
-            return random.sample(crew_members, min(3, len(crew_members)))
-
-        my_crews_with_members = [
-            {
-                "crew": CrewSerializer(crew).data,
-                "random_members": UserProfileSerializer(get_random_members(crew), many=True).data,
-                "joined_at": crew.crew_members.filter(user=request.user).first().joined_at if crew.crew_members.filter(user=request.user).exists() else None,
-            }
-            for crew in my_crews
-        ]
-
-        crews_im_in_with_members = [
-            {
-                "crew": CrewSerializer(crew).data,
-                "random_members": UserProfileSerializer(get_random_members(crew), many=True).data
-            }
-            for crew in crews_im_in
-        ]
-
-        friends = UserProfileSerializer(user.friends.all(), many=True).data
-        my_shared_events = SharedEventSerializer(SharedEvent.objects.filter(sender=user), many=True).data
-        shared_with_me = SharedEventSerializer(SharedEvent.objects.filter(receiver=user), many=True).data
-
-        is_host = user.user.groups.filter(name="Host").exists()
-        is_active_user = user.user.groups.filter(name="Onboarded").exists() and user.user.groups.filter(name="Verified").exists()
-
-        pending_friend_requests = FriendRequestSerializer(
-            FriendRequest.objects.filter(receiver=request.user, status="pending"), many=True
-        ).data
-        sent_friend_requests = FriendRequestSerializer(
-            FriendRequest.objects.filter(sender=request.user, status="pending"), many=True
-        ).data
-
+        friends = user_profile.friends.all()
+        my_shared_events = SharedEvent.objects.filter(sender=user_profile).select_related("event", "receiver", "crew")
+        shared_with_me = SharedEvent.objects.filter(receiver=user_profile).select_related("event", "sender", "crew")
+        pending_friend_requests = FriendRequest.objects.filter(receiver=request.user, status="pending")
+        sent_friend_requests = FriendRequest.objects.filter(sender=request.user, status="pending")
         pending_crew_requests = CrewRequest.objects.filter(receiver=request.user, status="pending")
-        sent_crew_requests = CrewRequestSerializer(
-            CrewRequest.objects.filter(sender=request.user, status="pending"), many=True
-        ).data
+        sent_crew_requests = CrewRequest.objects.filter(sender=request.user, status="pending")
 
-        def get_pending_crew_request_random_members(crew_request):
-            crew = crew_request.crew
-            crew_members = list(crew.crew_members.all())
-            return random.sample(crew_members, min(3, len(crew_members)))
+        is_host = user_profile.user.groups.filter(name="Host").exists()
+        is_active_user = (user_profile.user.groups.filter(name="Onboarded").exists() and
+                          user_profile.user.groups.filter(name="Verified").exists())
+        
+        response_data = {
+            "user_profile": UserProfileSerializer(user_profile).data,
+            "profile_link": profile_link,
+            "friends": UserProfileSerializer(friends, many=True).data,
+            "my_crews": CrewSerializer(my_crews, many=True).data,
+            "crews_im_in": CrewSerializer(crews_im_in, many=True).data,
+            "my_shared_events": SharedEventSerializer(my_shared_events, many=True).data,
+            "shared_with_me": SharedEventSerializer(shared_with_me, many=True).data,
+            "pending_friend_requests": FriendRequestSerializer(pending_friend_requests, many=True).data,
+            "sent_friend_requests": FriendRequestSerializer(sent_friend_requests, many=True).data,
+            "pending_crew_requests": CrewRequestSerializer(pending_crew_requests, many=True).data,
+            "sent_crew_requests": CrewRequestSerializer(sent_crew_requests, many=True).data,
+            "is_host": is_host,
+            "is_active_user": is_active_user,
+            "timestamp": now().timestamp(),
+        }
+        
+        return Response(response_data, status=status.HTTP_200_OK)
 
-        pending_crew_requests_with_members = [
-            {
-                "crew": CrewSerializer(crew_request.crew).data,
-                "sender": UserProfileSerializer(crew_request.sender).data,
-                "receiver": UserProfileSerializer(crew_request.receiver).data,
-                "created_at": crew_request.created_at,
-                "random_members": UserProfileSerializer(get_pending_crew_request_random_members(crew_request), many=True).data,
-            }
-            for crew_request in pending_crew_requests
-        ]
+    def post(self, request):
+        action = request.data.get("action")
+        friend_request_id = request.data.get("friend_request_id")
+        crew_request_id = request.data.get("request_id")
 
-        return Response({
-            "pending_friend_requests": pending_friend_requests,
-            "sent_friend_requests": sent_friend_requests,
-            "user_profile": UserProfileSerializer(user).data,
-            "pending_crew_requests": pending_crew_requests_with_members,
-            "sent_crew_requests": sent_crew_requests,
-            "friends": friends,
-            "myCrews": my_crews_with_members,
-            "crewsImIn": crews_im_in_with_members,
-            "time": datetime.now().timestamp(),
-            "isHost": is_host,
-            "isActiveUser": is_active_user,
-            "my_shared_events": my_shared_events,
-            "shared_with_me": shared_with_me,
-            "profileLink": profile_link,
-        })
+        if action == "acceptRequest":
+            friend_request = get_object_or_404(FriendRequest, requestId=friend_request_id, receiver=request.user)
+            sender = get_object_or_404(UserProfile, user=friend_request.sender)
+            sender_user_model = get_object_or_404(CustomUser, username=sender.user.username)
+            user_profile = get_object_or_404(UserProfile, user=request.user)
+            user_profile.friends.add(sender)
+            sender.friends.add(user_profile)
+            friend_request.accept_request()
+            self.send_notification(sender_user_model.id, "Request has been accepted.")
+            return Response({"message": "Friend request accepted."}, status=status.HTTP_200_OK)
+
+        elif action == "declineRequest":
+            friend_request = get_object_or_404(FriendRequest, requestId=friend_request_id, receiver=request.user)
+            friend_request.delete()
+            return Response({"message": "Friend request declined."}, status=status.HTTP_200_OK)
+
+        elif action == "cancelRequest":
+            try:
+                friend_request = FriendRequest.objects.get(requestId=friend_request_id, sender=request.user, status="pending")
+                friend_request.status = "canceled"
+                friend_request.save()
+                return Response({"message": "Friend request canceled."}, status=status.HTTP_200_OK)
+            except FriendRequest.DoesNotExist:
+                return Response({"error": "Friend request not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        elif action == "cancelCrewInvite":
+            crew_request = get_object_or_404(CrewRequest, requestId=crew_request_id, sender=request.user)
+            receiver = get_object_or_404(UserProfile, user=crew_request.receiver)
+            receiver_user_model = get_object_or_404(UserModel, username=receiver.user.username)
+            crew_request.delete()
+            self.send_notification(receiver_user_model.id, "Crew invite has been canceled.")
+            return Response({"message": "Crew invite canceled."}, status=status.HTTP_200_OK)
+
+        elif action == "generateProfileQRCode":
+            profile = get_object_or_404(UserProfile, user=request.user)
+            profile.generate_qr_code()
+            profile.save()
+            return Response({"message": "QR code generated successfully!"}, status=status.HTTP_200_OK)
+
+        return Response({"error": "Invalid action."}, status=status.HTTP_400_BAD_REQUEST)
