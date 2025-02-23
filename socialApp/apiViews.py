@@ -113,6 +113,8 @@ class SocialHomeView(APIView):
         return Response({"error": "Invalid action."}, status=status.HTTP_400_BAD_REQUEST)
 
 class NonFriendsListView(APIView):
+    permission_classes = [IsAuthenticated]
+    
     def get(self, request):
         User = get_user_model()
         
@@ -135,7 +137,7 @@ class NonFriendsListView(APIView):
             id__in=friend_ids
         ).exclude(
             id=request.user.id
-        ).select_related('userprofile')
+        ).select_related('user_profile')
         
         # Create a list to store combined data
         combined_data = []
