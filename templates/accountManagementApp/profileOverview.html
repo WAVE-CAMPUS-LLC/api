@@ -209,17 +209,17 @@ Profile Overview
                             <div class="myEventsInformationContainer" id="profilePurchasedEvents">
                                 {% if purchasedEvents %}
                                     <div id="purchasedEvents" class="grid grid-cols-1 xxsm:grid-cols-2 md:grid-cols-3 3xl:grid-cols-4 gap-5">
-                                        {% for ticket in purchasedEvents %}
-                                            {% if ticket.event and ticket.event.eventId %}
-                                            <a target="_blank" href="{% url 'core:eventDetails' eventId=ticket.event.eventId %}" class="category-event-card hover:category-image hover:scale-95 transform transition duration-300 flex flex-col justify-center items-center cursor-pointer overflow-hidden p-[10px] text-black">
+                                        {% for event in purchasedEvents %}
+                                            {% if event and event.eventId %}
+                                            <a target="_blank" href="{% url 'core:eventDetails' eventId=event.eventId %}" class="category-event-card hover:category-image hover:scale-95 transform transition duration-300 flex flex-col justify-center items-center cursor-pointer overflow-hidden p-[10px] text-black">
                                                 <div class="category-image w-full rounded-2xl shadow-custom-shadow-3">
-                                                    <img src="{{ ticket.event.header_photo.url}}" alt="" class="w-full h-[200px] rounded-2xl rounded-b-none object-cover">
+                                                    <img src="{{ event.header_photo.url}}" alt="" class="w-full h-[200px] rounded-2xl rounded-b-none object-cover">
                                                 </div>
                                                 <div class="category-event-name font-Wanted-SemiBold text-Base flex flex-col justify-center items-start gap-1 w-full border border-custom-rgba5 rounded-bl-2xl rounded-br-2xl shadow-custom-shadow-3 border-t-2 px-5 p-2">
-                                                    <h2 id="eventTitle" class="whitespace-nowrap overflow-hidden text-ellipsis w-full text-left text-xl">{{ ticket.event.title }}</h2>
+                                                    <h2 id="eventTitle" class="whitespace-nowrap overflow-hidden text-ellipsis w-full text-left text-xl">{{ event.title }}</h2>
                                                     <div class="eventSubInfo flex flex-col items-start gap-[1px] w-full font-Wanted-Variable text-customGray5">
-                                                        <p id="eventHost" class="flex flex-row justify-start">Hosted by @{{ ticket.event.host.username }}</p>
-                                                        <p id="eventDate" class="w-full flex justify-end font-Wanted-Bold text-Large">{{ ticket.event.date }}</p>
+                                                        <p id="eventHost" class="flex flex-row justify-start">Hosted by @{{ event.host.username }}</p>
+                                                        <p id="eventDate" class="w-full flex justify-end font-Wanted-Bold text-Large">{{ event.date }}</p>
                                                     </div>
                                                 </div>
                                             </a>

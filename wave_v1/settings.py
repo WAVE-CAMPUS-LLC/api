@@ -105,6 +105,45 @@ else:
     CSP_IMG_SRC = ("'self'", "https://waveoncampus.com")
     CSP_FRAME_SRC = ("'self'",)
     default_storage._wrapped = SupabaseStorage()
+    LOGGING = {
+        "version": 1,
+        "disable_existing_loggers": False,
+        "formatters": {
+            "verbose": {
+                "format": "[{levelname}] {asctime} {name} {message}",
+                "style": "{",
+            },
+        },
+        "handlers": {
+            "console": {
+                "class": "logging.StreamHandler",
+                "formatter": "verbose",
+                "level": "DEBUG",
+            },
+            "file": {
+                "class": "logging.FileHandler",
+                "filename": "debug.log",
+                "formatter": "verbose",
+                "level": "DEBUG",
+            },
+        },
+        "loggers": {
+            "": {  # Root logger
+                "handlers": ["console", "file"],
+                "level": "DEBUG",
+            },
+            "adminDashboardApp": {  # Your app logger
+                "handlers": ["console", "file"],
+                "level": "DEBUG",
+                "propagate": True,
+            },
+            "django": {  # Django logger
+                "handlers": ["console", "file"],
+                "level": "INFO",
+                "propagate": True,
+            },
+        },
+    }
     print("Production Environment")
 
 
@@ -309,46 +348,6 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # DEFAULT_FILE_STORAGE = "adminDashboardApp.storage.SupabaseStorage"
 
 time.sleep(5)
-
-LOGGING = {
-    "version": 1,
-    "disable_existing_loggers": False,
-    "formatters": {
-        "verbose": {
-            "format": "[{levelname}] {asctime} {name} {message}",
-            "style": "{",
-        },
-    },
-    "handlers": {
-        "console": {
-            "class": "logging.StreamHandler",
-            "formatter": "verbose",
-            "level": "DEBUG",
-        },
-        "file": {
-            "class": "logging.FileHandler",
-            "filename": "debug.log",
-            "formatter": "verbose",
-            "level": "DEBUG",
-        },
-    },
-    "loggers": {
-        "": {  # Root logger
-            "handlers": ["console", "file"],
-            "level": "DEBUG",
-        },
-        "adminDashboardApp": {  # Your app logger
-            "handlers": ["console", "file"],
-            "level": "DEBUG",
-            "propagate": True,
-        },
-        "django": {  # Django logger
-            "handlers": ["console", "file"],
-            "level": "INFO",
-            "propagate": True,
-        },
-    },
-}
 
 # REST Framework settings
 REST_FRAMEWORK = {

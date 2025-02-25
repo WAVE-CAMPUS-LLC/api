@@ -117,6 +117,10 @@ class UserProfile(models.Model):
     favorite_events = models.ManyToManyField(
         Event, related_name="favorited_by", blank=True, null=True
     )
+    
+    purchased_events = models.ManyToManyField(
+        Event, related_name="purchased_by", blank=True, null=True
+    )
 
     class Meta:
         default_permissions = ()
