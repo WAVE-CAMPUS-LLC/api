@@ -1,30 +1,23 @@
 from django.shortcuts import redirect
 from django.urls import reverse
-from django.utils.deprecation import MiddlewareMixin
-from django.utils import timezone
 
-
-# This is a middleware that prevents already authenticated users from accessing the login and join pages.
-# The `RedirectAuthenticatedUsersMiddleware` class redirects authenticated users from specific
-# restricted URLs to a specified next URL or the index page.
 class RedirectAuthenticatedUsersMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
 
     def __call__(self, request):
-        response = self.get_response(request)
-        # Perform actions before sending the response
+        # Force evaluation of request.user before processing the response.
         if request.user.is_authenticated:
-            # Check if the user has completed onboarding
+            # Check if the user has completed onboarding.
             if not getattr(request.user, "email_verified", False):
-                # Redirect new users to the onboarding page
+                # Redirect new users to the onboarding page.
                 if request.path not in [
                     reverse("authentication:logout"),
                     reverse("authentication:verifyEmail"),
                 ]:
                     return redirect("authentication:verifyEmail")
 
-            # Avoid accessing login or join pages when already logged in
+            # Avoid accessing login or join pages when already logged in.
             restricted_urls = [
                 reverse("authentication:login"),
                 reverse("authentication:join"),
@@ -32,4 +25,7 @@ class RedirectAuthenticatedUsersMiddleware:
             if request.path in restricted_urls:
                 next_url = request.GET.get("next", "accountManagement:userAccount")
                 return redirect(next_url or "core:index")
+        
+        # Proceed with processing the request.
+        response = self.get_response(request)
         return response
