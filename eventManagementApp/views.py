@@ -108,7 +108,7 @@ def eventCreationSelect(request):
 
     # Path 1: If no connectAccountID, search Stripe for an account by email
     if not userAccount.connectAccountID:
-        stripe_accounts = stripe.Customer.search(query=f"email:{userAccount.email}limit:1")
+        stripe_accounts = stripe.Customer.search(query=f'email:"{userAccount.email}" limit:1')
 
         if stripe_accounts.data:
             existing_account = stripe_accounts.data[0]
