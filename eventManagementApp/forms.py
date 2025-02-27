@@ -68,7 +68,7 @@ class EventForm(forms.ModelForm):
     crew_discount = forms.BooleanField(required=False)
     show_guest_list = forms.BooleanField(required=False)
     forAllDisplay = forms.BooleanField(
-        required=True, 
+        required=False, 
         initial=True,
         label=_("Make event discoverable by all?")
     )
