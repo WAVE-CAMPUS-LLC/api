@@ -1,5 +1,64 @@
 let offset = 9;
 
+
+const container = document.getElementById("events-container");
+                    const baseUrl = "event/"
+function paginate() 
+{
+                    var events = null
+                    var card = '';
+                    try {
+                        const response = await fetch('/load-more'); 
+                        const data = await response.json();
+                        events = data.events;
+                        console.log(events);
+                    
+                    
+                    events?.forEach( event => {
+                    card += 
+                    
+                    `<a href="${baseUrl}${event?.id}" class="category-event-card hover:category-image hover:scale-95 transform transition duration-300 flex flex-col justify-center items-center cursor-pointer overflow-hidden p-[10px] text-black" data-event-id="${event.id}" onclick="handleEventClick(${event}, ${event.id})">
+                        <div class="category-image w-full rounded-2xl shadow-custom-shadow-3">
+                            ${event.header_photo ? `<img src="${event.header_photo}" alt="" class="w-full h-[448px] rounded-2xl rounded-b-none object-cover">` : `<img src="{% static "/images/coreApp/boombox.png" %}" alt="" class="w-full h-[448px] rounded-2xl rounded-b-none object-cover">` }
+                            
+                            
+                            
+                        </div>
+                        <div class="category-event-name font-Wanted-SemiBold text-Base flex flex-col justify-center items-start gap-1 w-full border border-custom-rgba5 rounded-bl-2xl rounded-br-2xl shadow-custom-shadow-3 border-t-2 px-5 p-2">
+                            <h2 id="eventTitle" class="whitespace-nowrap overflow-hidden text-ellipsis w-full text-left text-2xl">
+                                ${event.title? event.title : `Title not available`}
+        
+                                </h2>
+                            <div class="eventSubInfo flex flex-col items-start gap-2 w-full font-Wanted-Variable text-customGray5">
+                                <p id="eventHost" class="flex flex-row justify-start">
+                                    ${event.host? `Hosted by @ ${event.host_username}` : `Host not available`}
+                               
+                                    </p>
+                                <div class="flex flex-row justify-between w-full items-center">
+                                    <p id="eventDate" class="w-full flex justify-start font-Wanted-Bold text-Medium">
+                                        ${event.date? event.date : `Date not available`}
+
+                                    </p>
+
+                                    <button class="favoriteEvent" type="button">
+                                    ${event.is_favorite ? '<img src="/static/images/coreApp/eventDetails/favorite.svg" />' : ''}                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </a>`;
+
+
+
+                });
+            
+                    container.innerHTML = card;
+                
+            }
+                    catch (error) {console.error('Error finding more events', error)}
+                    
+}
+
+
 function loadMoreEvents() {
     fetch(`/load-more/?offset=${offset}`)
         .then(response => response.json())

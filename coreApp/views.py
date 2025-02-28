@@ -29,6 +29,8 @@ from eventTicketsApp.models import Ticket
 from django.conf import settings
 from django.urls import reverse
 
+
+
 # Create your views here.
 def indexView(request):
     pageName = "home"
@@ -144,6 +146,12 @@ def exploreView(request):
         admin_status="active",
     ).order_by("?")[:3]
 
+
+   
+
+    live_events = Event.objects.filter(status='live')
+    live_count = live_events.count()
+
     return render(
         request,
         "coreApp/explore.html",
@@ -155,6 +163,7 @@ def exploreView(request):
             "exploreCategoryChoices": trending_category_choices,
             "invited_events_with_tokens": invited_events_with_tokens,
             "isFavoriteEvent": isFavoriteEvent,
+            'page_count': 21
         },
     )
 

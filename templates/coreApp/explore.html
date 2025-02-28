@@ -2,7 +2,7 @@
 {% load static %}
 {% load date_tag %}
 {% load category_tag %}
-
+{% load page_count_truncated %}
 
 {% block title %}
 Explore all possible experiences! — WAVE.
@@ -185,7 +185,8 @@ Explore all possible experiences! — WAVE.
         <div id="categories-row" class="row-container w-full h-full flex flex-col gap-12">
             <div class="row-body event-row-body grid sm:grid-cols-1 pre-lg:grid-cols-2 lg:grid-cols-3" id="events-container">
                 {% for event in events %}
-                    {% if event.status == "live" %}
+                {% if event.status == 'live'%}
+
                     <a href="{% url "core:eventDetails" eventId=event.eventId %}" class="category-event-card hover:category-image hover:scale-95 transform transition duration-300 flex flex-col justify-center items-center cursor-pointer overflow-hidden p-[10px] text-black" data-event-id="{{ event.eventId }}" onclick="handleEventClick(event, {{ event.eventId }})">
                         <div class="category-image w-full rounded-2xl shadow-custom-shadow-3">
                             {% if event.header_photo %}
@@ -227,15 +228,30 @@ Explore all possible experiences! — WAVE.
                                 </div>
                             </div>
                         </div>
+
                     </a>
                     {% endif %}
-                {% endfor %}
-            </div>
+                    {% endfor %}
 
+            </div>
+        </div>
+            
+            <div class="gap-4 row-container w-full h-full flex flex-row justify-center">
+                
+                    {% for i in page_count|page_count_truncated %}
+
+                <div class="border border-green rounded-2xl flex items-center">
+                    <button class="w-full p-3 border rounded-2xl border-black bg-black text-white font-Wanted-Medium text-Semi-Medium cursor-pointer" onclick="paginate()">
+                        <span>{{i}}</span>
+                    </button>
+                </div>
+                {% endfor %}
+                </div>
+               
+          
             <div class="loadMore w-full flex justify-center">
                 <button type="button" class="p-5 w-full xsm:w-4/5 after-xsm:w-3/5 sm:w-2/5 border border-transparent text-white font-Wanted-SemiBold flex flex-row justify-center gap-2 text-Pre-Xl rounded-2xl bg-gradient-to-r from-gradient-start to-gradient-end cursor-pointer" role="button" id="loadMoreButton" onclick="loadMoreEvents()">Load More</button>
             </div>
-        </div>
     </div>
 </div>
 {% endblock body %}
