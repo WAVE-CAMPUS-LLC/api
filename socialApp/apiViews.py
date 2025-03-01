@@ -112,6 +112,7 @@ class SocialHomeView(APIView):
 
         return Response({"error": "Invalid action."}, status=status.HTTP_400_BAD_REQUEST)
 
+
 class NonFriendsListView(APIView):
     permission_classes = [IsAuthenticated]
     
