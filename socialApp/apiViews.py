@@ -159,9 +159,7 @@ class NonFriendsListView(APIView):
         return Response(combined_data, status=status.HTTP_200_OK)
 
 
-class PublicProfileAPIView(APIView):
-    permission_classes = [IsAuthenticated]
-    
+class PublicProfileAPIView(APIView):    
     def get(self, request, username):
         """
         Get a user's public profile
