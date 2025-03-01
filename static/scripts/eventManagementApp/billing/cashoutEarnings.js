@@ -50,8 +50,6 @@ document.addEventListener('DOMContentLoaded', function () {
         const availableBalance = parseFloat(document.getElementById('cashoutAvailableAmount').value);
 
         const cashoutAmountValue = parseFloat(cashoutAmountInput.value);
-        console.log(cashoutAmountValue);
-        console.log(availableBalance);
         if (isNaN(cashoutAmountValue) || cashoutAmountValue <= 0 || cashoutAmountValue > parseFloat(availableBalance)) {
             alert("Invalid cashout amount.");
             return;
@@ -68,11 +66,9 @@ document.addEventListener('DOMContentLoaded', function () {
         })
             .then(response => response.json())
             .then(data => {
-                console.log(data);
                 if (data.success) {
                     alert('Cashout successful');
                     cashoutModal.classList.add('hidden');
-                    console.log('Cashout successful');
                 } else {
                     alert('Cashout failed');
                 }

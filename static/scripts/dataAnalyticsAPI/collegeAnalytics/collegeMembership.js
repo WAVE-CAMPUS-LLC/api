@@ -10,7 +10,6 @@ document.addEventListener('DOMContentLoaded', () => {
         fetch(collegeMembershipURL)
             .then(response => response.json())
             .then(data => {
-                console.log('Membership data:', data);
 
                 const labels = [];
                 const counts = [];

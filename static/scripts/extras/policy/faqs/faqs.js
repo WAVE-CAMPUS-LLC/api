@@ -6,10 +6,6 @@ document.addEventListener("DOMContentLoaded", function () {
         const faqPopupClose = faqInfoDiv.querySelector("#contentCardClose-button");
         const faqPopupContainer = faqInfoDiv.querySelector(".faqIp-container");
 
-        // if (faqPopupClose) {
-        //     console.log("Pop close button found.");
-        // }
-
         faqInfoDiv.addEventListener("click", () => {
             faqInfoPopup.style.display = "block";
         });

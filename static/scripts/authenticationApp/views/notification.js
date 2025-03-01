@@ -23,7 +23,6 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         })
         .catch(error => {
-            console.log("Error:", error)
         })
     });
 });

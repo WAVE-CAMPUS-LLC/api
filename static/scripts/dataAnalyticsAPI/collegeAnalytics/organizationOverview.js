@@ -2,7 +2,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const chartContainer = document.getElementById('organizationChart').getContext('2d');
     let chartInstance;
     const url = document.getElementById('organizationOverviewURL').value;
-    console.log('Organization Overview URL:', url);
 
     const typeSelect = document.getElementById('dataTypeSelect'); // Dropdown to select view type
 
@@ -11,7 +10,6 @@ document.addEventListener('DOMContentLoaded', () => {
         fetch(url)
             .then(response => response.json())
             .then(data => {
-                console.log('Organization data:', data);
 
                 if (typeSelect.value === 'college') {
                     renderChartByCollege(data.organizations_by_college_privacy);

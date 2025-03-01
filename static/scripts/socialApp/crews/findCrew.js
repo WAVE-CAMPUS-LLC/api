@@ -50,7 +50,6 @@ $(document).ready(function () {
           if (data.no_results) {
             $(".searchCardBody").html(data.no_results_html);
           } else {
-            console.log(data.results_html);
             // Append each result to the search card body
             $.each(data.results_html, function (index, resultHtml) {
               $(".searchCardBody").append(resultHtml);

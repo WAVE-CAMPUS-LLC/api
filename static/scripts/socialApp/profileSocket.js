@@ -6,11 +6,9 @@
 //   );
 
 //   socket.onopen = function () {
-//     console.log("WebSocket connected for friend requests");
 //   };
 
 //   socket.onclose = function () {
-//     console.log("WebSocket closed for crew requests");
 
 //     // // 1) Create the HTML for your overlay + popup
 //     // const overlayHTML = `

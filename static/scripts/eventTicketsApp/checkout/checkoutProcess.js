@@ -6,10 +6,6 @@ document.addEventListener("DOMContentLoaded", async function () {
   const failedPaymentURL = document.getElementById("failedPaymentURL").value;
   const paymentRedirectUrl =
     document.getElementById("paymentRedirectUrl").value;
-  console.log(processPaymentURL);
-  console.log(successPaymentURL);
-  console.log(failedPaymentURL);
-  console.log(paymentRedirectUrl);
 
   let elements;
   let paymentElement;
@@ -43,21 +39,18 @@ document.addEventListener("DOMContentLoaded", async function () {
       // Try to get cart from hidden input first
       const cartInput = document.getElementById("cartData");
       if (cartInput && cartInput.value) {
-        console.log("Cart data from input:", cartInput.value);
         return JSON.parse(cartInput.value);
       }
 
       // Fallback to form data attribute
       const form = document.querySelector("form");
       if (form && form.dataset.cart) {
-        console.log("Cart data from form dataset:", form.dataset.cart);
         return JSON.parse(form.dataset.cart);
       }
 
       // Final fallback to localStorage
       const localCart = localStorage.getItem("cart");
       if (localCart) {
-        console.log("Cart data from localStorage:", localCart);
         return JSON.parse(localCart);
       }
 
@@ -71,7 +64,6 @@ document.addEventListener("DOMContentLoaded", async function () {
   async function initializeStripeElements() {
     try {
       const cart = getCartData();
-      console.log("Retrieved cart data:", cart);
 
       if (!cart || Object.keys(cart).length === 0) {
         throw new Error("Cart is empty");
@@ -95,7 +87,6 @@ document.addEventListener("DOMContentLoaded", async function () {
       }
 
       const data = await response.json();
-      console.log("Payment intent response:", data);
 
       if (!data.clientSecret) {
         throw new Error("No client secret received from the server");
@@ -171,10 +162,6 @@ document.addEventListener("DOMContentLoaded", async function () {
 
   if (form && payButton) {
     form.addEventListener("submit", async (e) => {
-      console.log("Form submitted");
-      console.log("Form submitted");
-      console.log("Form submitted");
-      console.log("Form submitted");
       e.preventDefault();
       payButton.disabled = true;
       if (paymentError) paymentError.classList.add("hidden");
@@ -220,8 +207,6 @@ document.addEventListener("DOMContentLoaded", async function () {
           });
 
           const { error, paymentIntent } = result;
-
-          console.log("Payment result:", { error, paymentIntent });
 
           if (error) {
             console.error("Payment failed:", error.message);

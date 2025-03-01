@@ -29,7 +29,6 @@ document.getElementById('profilePreferencesForm').addEventListener('submit', fun
     })
     .then(data => {
         if (data.success) {
-            console.log(data.message); // Handle success
             // Optionally: redirect or update the UI
         } else {
             console.error('Form submission failed:', data.errors); // Handle validation errors

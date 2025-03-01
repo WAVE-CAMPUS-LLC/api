@@ -35,7 +35,6 @@ document.addEventListener('DOMContentLoaded', function () {
             })
             .then(data => {
                 // Handle successful response
-                console.log(data.message); // You can log or use the response data here
                 shareModal.classList.add('hidden');
                 location.reload();
             })

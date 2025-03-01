@@ -135,11 +135,6 @@ $(document).ready(function () {
                        .removeClass('send-connect')
                        .addClass('cancel-connect')
                        .data('processing', false);
-                
-                // Only show success message if debugging
-                if (response.status === 'success' && window.location.hostname === 'localhost') {
-                    console.log(response.message);
-                }
             },
             error: function(xhr) {
                 // Only show error if it's a real error, not just a message
@@ -192,11 +187,6 @@ $(document).ready(function () {
                        .removeClass('cancel-connect')
                        .addClass('send-connect')
                        .data('processing', false);
-                
-                // Only show success message if debugging
-                if (response.status === 'success' && window.location.hostname === 'localhost') {
-                    console.log(response.message);
-                }
             },
             error: function(xhr) {
                 // Only show error if it's a real error, not just a message

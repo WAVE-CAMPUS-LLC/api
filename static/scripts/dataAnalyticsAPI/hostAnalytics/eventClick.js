@@ -26,10 +26,8 @@ function handleEventClick(event, eventId) {
 
 
 function trackEventClick(eventId) {
-    console.log('trackEventClick called with Event ID:', eventId);
 
     const fetchUrl = document.getElementById('trackEventClickURL').value;
-    console.log('Tracking URL:', fetchUrl);
 
     fetch(fetchUrl, {
         method: 'POST',
@@ -43,14 +41,12 @@ function trackEventClick(eventId) {
         }),
     })
         .then(response => {
-            console.log('Fetch response:', response);
             if (!response.ok) {
                 console.error('Fetch failed:', response.statusText);
             }
             return response.json();
         })
         .then(data => {
-            console.log('Response Data:', data);
         })
         .catch(error => console.error('Error during fetch:', error));
 }
