@@ -23,20 +23,37 @@ class CustomUserSerializer(serializers.ModelSerializer):
             # Import here to avoid circular imports
             from accountManagementApp.models import UserProfile
             from django.forms.models import model_to_dict
+            from django.db.models.fields.files import FieldFile
             
             # Get the profile object
             profile = obj.user_profile
             
-            # Convert model instance to dictionary
-            profile_dict = model_to_dict(profile, exclude=['user'])
-            
-            # Handle file fields (like profile_photo, cover_photo) which aren't properly serialized by model_to_dict
-            if hasattr(profile, 'profile_photo') and profile.profile_photo:
-                profile_dict['profile_photo'] = profile.profile_photo.url
+            try:
+                # Convert model instance to dictionary
+                profile_dict = model_to_dict(profile, exclude=['user'])
                 
-            if hasattr(profile, 'profile_qr_code') and profile.profile_qr_code:
-                profile_dict['profile_qr_code'] = profile.profile_qr_code.url
+                # Process all fields to ensure they're JSON serializable
+                for field_name, value in profile_dict.items():
+                    # Handle file fields
+                    if isinstance(value, FieldFile) and value:
+                        try:
+                            profile_dict[field_name] = value.url
+                        except ValueError:
+                            profile_dict[field_name] = None
+                    
+                    # Handle any other non-serializable types
+                    elif hasattr(value, '__dict__') and not isinstance(value, (str, int, float, bool, list, dict, tuple)):
+                        try:
+                            profile_dict[field_name] = model_to_dict(value)
+                        except:
+                            profile_dict[field_name] = str(value)
                 
-                
-            return profile_dict
+                return profile_dict
+            except Exception as e:
+                # Fallback to basic serialization if model_to_dict fails
+                return {
+                    'id': profile.id,
+                    'profile_photo': profile.profile_photo.url if hasattr(profile, 'profile_photo') and profile.profile_photo else None,
+                    'profile_qr_code': profile.profile_qr_code.url if hasattr(profile, 'profile_qr_code') and profile.profile_qr_code else None,
+                }
         return None
