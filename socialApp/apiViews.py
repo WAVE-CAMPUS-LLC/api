@@ -159,3 +159,195 @@ class NonFriendsListView(APIView):
         return Response(combined_data, status=status.HTTP_200_OK)
 
 
+class PublicProfileAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request, username):
+        """
+        Get a user's public profile
+        """
+        try:
+            # Get the requested user and their profile
+            other_user = get_object_or_404(CustomUser, username=username)
+            other_user_profile, created = UserProfile.objects.get_or_create(user=other_user)
+            
+            # Check if the users are friends or have pending requests
+            friend_request = FriendRequest.objects.filter(
+                (Q(sender=request.user) & Q(receiver=other_user))
+                | (Q(sender=other_user) & Q(receiver=request.user))
+            ).first()
+            
+            friend_request_status = None
+            if friend_request:
+                friend_request_status = friend_request.status
+            
+            is_profile = request.user.id == other_user.id
+            
+            # Prepare response data
+            response_data = {
+                "user": CustomUserSerializer(other_user).data,
+                "user_profile": UserProfileSerializer(other_user_profile).data,
+                "is_profile": is_profile,
+                "friend_request_status": friend_request_status,
+                "friend_request_id": str(friend_request.requestId) if friend_request else None
+            }
+            
+            return Response(response_data, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_404_NOT_FOUND)
+    
+    def post(self, request, username):
+        """
+        Handle friend request actions
+        """
+        try:
+            # Get the requested user and their profile
+            other_user = get_object_or_404(CustomUser, username=username)
+            other_user_profile, created = UserProfile.objects.get_or_create(user=other_user)
+            
+            # Get the current user's profile
+            receiver = get_object_or_404(UserProfile, user=request.user)
+            
+            # Get any existing friend request
+            friend_request = FriendRequest.objects.filter(
+                (Q(sender=request.user) & Q(receiver=other_user))
+                | (Q(sender=other_user) & Q(receiver=request.user))
+            ).first()
+            
+            action = request.data.get("action")
+            
+            if action == "send_request":
+                success, message, friend_request = self.send_friend_request(request.user, other_user.username)
+                
+                if success:
+                    # Send notification via WebSocket
+                    channel_layer = get_channel_layer()
+                    async_to_sync(channel_layer.group_send)(
+                        f"user_{other_user.id}",
+                        {
+                            "type": "social_update",
+                            "data": {
+                                "message": f"{request.user.username} sent you a friend request!",
+                                "action": "send",
+                                "friend_request": {
+                                    "requestId": str(friend_request.requestId),
+                                    "sender_first_name": friend_request.sender.first_name,
+                                    "sender_last_name": friend_request.sender.last_name,
+                                    "created_at": friend_request.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+                                    "profile_picture": friend_request.sender.user_profile.profile_photo.url if friend_request.sender.user_profile.profile_photo else None,
+                                },
+                            },
+                        },
+                    )
+                    
+                    return Response({"message": message, "friend_request": FriendRequestSerializer(friend_request).data}, status=status.HTTP_200_OK)
+                else:
+                    return Response({"message": message}, status=status.HTTP_400_BAD_REQUEST)
+                    
+            elif action == "cancel_request" and friend_request and friend_request.status == "pending":
+                # Update the status to canceled instead of deleting
+                friend_request.status = "canceled"
+                friend_request.save()
+                
+                # Send notification via WebSocket
+                channel_layer = get_channel_layer()
+                async_to_sync(channel_layer.group_send)(
+                    f"user_{other_user.id}",
+                    {
+                        "type": "social_update",
+                        "data": {
+                            "message": f"{request.user.username} canceled the friend request.",
+                            "action": "cancel",
+                            "friend_request": {
+                                "requestId": str(friend_request.requestId),
+                                "sender_first_name": friend_request.sender.first_name,
+                                "sender_last_name": friend_request.sender.last_name,
+                                "created_at": friend_request.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+                            },
+                        },
+                    },
+                )
+                
+                return Response({"message": "Friend request canceled."}, status=status.HTTP_200_OK)
+                
+            elif action == "remove_request" and friend_request and friend_request.status == "accepted":
+                other_user_profile.friends.remove(receiver)
+                receiver.friends.remove(other_user_profile)
+                friend_request.delete()
+                
+                # Send notification via WebSocket
+                channel_layer = get_channel_layer()
+                async_to_sync(channel_layer.group_send)(
+                    f"user_{other_user.id}",
+                    {
+                        "type": "social_update",
+                        "data": {
+                            "message": f"{request.user.username} removed you as a friend.",
+                            "action": "remove",
+                        },
+                    },
+                )
+                
+                return Response({"message": "Friend removed."}, status=status.HTTP_200_OK)
+                
+            else:
+                return Response({"message": "Invalid action."}, status=status.HTTP_400_BAD_REQUEST)
+                
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+    
+    def send_friend_request(self, sender, receiver_username):
+        """
+        Helper method to send a friend request
+        """
+        try:
+            receiver = get_object_or_404(CustomUser, username=receiver_username)
+            receiver_profile = get_object_or_404(UserProfile, user=receiver)
+            
+            # Check if they are already friends
+            if hasattr(sender, 'user_profile') and sender.user_profile.is_friends_with(receiver):
+                return False, "You are already friends with this user.", None
+            
+            # First check for any active (pending/accepted) requests
+            active_request = FriendRequest.objects.filter(
+                Q(sender=sender, receiver=receiver) | 
+                Q(sender=receiver, receiver=sender),
+                status__in=['pending', 'accepted']
+            ).first()
+            
+            if active_request:
+                if active_request.status == 'pending':
+                    if active_request.sender == sender:
+                        return False, "You have already sent a friend request to this user.", active_request
+                    else:
+                        return False, "This user has already sent you a friend request.", active_request
+                else:  # status is 'accepted'
+                    return False, "You are already friends with this user.", active_request
+            
+            # If no active request exists, check for canceled/declined requests to reuse
+            old_request = FriendRequest.objects.filter(
+                sender=sender,
+                receiver=receiver,
+                status__in=['canceled', 'declined']
+            ).first()
+            
+            if old_request:
+                # Reuse the old request
+                old_request.status = 'pending'
+                old_request.save()
+                return True, "Friend request sent successfully.", old_request
+            
+            # Create new friend request if none exists
+            friend_request = FriendRequest.objects.create(
+                sender=sender,
+                receiver=receiver,
+                status="pending"
+            )
+            
+            return True, "Friend request sent successfully.", friend_request
+        except Exception as e:
+            print(f"Error in send_friend_request: {str(e)}")
+            return False, str(e), None
+
+

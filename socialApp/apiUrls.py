@@ -6,4 +6,5 @@ app_name = "socialAPI"
 urlpatterns = [
     path("home/", apiViews.SocialHomeView.as_view(), name="home"),
     path('non-friends/', apiViews.NonFriendsListView.as_view(), name='non-friends-list'),
+    path('profile/<str:username>/', apiViews.PublicProfileAPIView.as_view(), name='api_public_profile'),
 ]
