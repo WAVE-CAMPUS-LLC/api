@@ -133,8 +133,10 @@ class NonFriendsListView(APIView):
             else:
                 friend_ids.append(friendship.sender.id)
         
-        # Get all users who are not friends (excluding the request user)
-        non_friends = User.objects.exclude(
+        # Get all users who are not friends (excluding the request user), and who have profiles
+        non_friends = User.objects.filter(
+            user_profile__isnull=False  # Only include users who have profiles
+        ).exclude(
             id__in=friend_ids
         ).exclude(
             id=request.user.id
@@ -143,12 +145,16 @@ class NonFriendsListView(APIView):
         # Create a list to store combined data
         combined_data = []
         for user in non_friends:
-            user_data = CustomUserSerializer(user).data
-            profile_data = UserProfileSerializer(user.user_profile).data
-            combined_data.append({
-                'user': user_data,
-                'profile': profile_data
-            })
+            try:
+                user_data = CustomUserSerializer(user).data
+                profile_data = UserProfileSerializer(user.user_profile).data
+                combined_data.append({
+                    'user': user_data,
+                    'profile': profile_data
+                })
+            except User.user_profile.RelatedObjectDoesNotExist:
+                # Skip users without profiles (this shouldn't happen due to our filter, but just in case)
+                continue
         
         return Response(combined_data, status=status.HTTP_200_OK)
 
