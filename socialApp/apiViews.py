@@ -159,36 +159,51 @@ class NonFriendsListView(APIView):
         return Response(combined_data, status=status.HTTP_200_OK)
 
 
-class PublicProfileAPIView(APIView):    
+class PublicProfileAPIView(APIView):
+    permission_classes = []  # Remove default permission requirements
+    
     def get(self, request, username):
         """
-        Get a user's public profile
+        Get a user's public profile - accessible to anyone
         """
         try:
             # Get the requested user and their profile
             other_user = get_object_or_404(CustomUser, username=username)
             other_user_profile, created = UserProfile.objects.get_or_create(user=other_user)
             
-            # Check if the users are friends or have pending requests
-            friend_request = FriendRequest.objects.filter(
-                (Q(sender=request.user) & Q(receiver=other_user))
-                | (Q(sender=other_user) & Q(receiver=request.user))
-            ).first()
-            
+            # Initialize friend-related data
             friend_request_status = None
-            if friend_request:
-                friend_request_status = friend_request.status
+            friend_request_id = None
+            is_profile = False
             
-            is_profile = request.user.id == other_user.id
+            # Only check friendship status if the user is authenticated
+            if request.user.is_authenticated:
+                # Check if the users are friends or have pending requests
+                friend_request = FriendRequest.objects.filter(
+                    (Q(sender=request.user) & Q(receiver=other_user))
+                    | (Q(sender=other_user) & Q(receiver=request.user))
+                ).first()
+                
+                if friend_request:
+                    friend_request_status = friend_request.status
+                    friend_request_id = str(friend_request.requestId)
+                
+                is_profile = request.user.id == other_user.id
             
             # Prepare response data
             response_data = {
                 "user": CustomUserSerializer(other_user).data,
                 "user_profile": UserProfileSerializer(other_user_profile).data,
                 "is_profile": is_profile,
-                "friend_request_status": friend_request_status,
-                "friend_request_id": str(friend_request.requestId) if friend_request else None
             }
+            
+            # Only include friendship data for authenticated users
+            if request.user.is_authenticated:
+                response_data.update({
+                    "friend_request_status": friend_request_status,
+                    "friend_request_id": friend_request_id,
+                    "can_send_request": request.user.is_authenticated
+                })
             
             return Response(response_data, status=status.HTTP_200_OK)
             
@@ -197,8 +212,15 @@ class PublicProfileAPIView(APIView):
     
     def post(self, request, username):
         """
-        Handle friend request actions
+        Handle friend request actions - requires authentication
         """
+        # Check if user is authenticated
+        if not request.user.is_authenticated:
+            return Response(
+                {"error": "Authentication required to perform this action."},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+            
         try:
             # Get the requested user and their profile
             other_user = get_object_or_404(CustomUser, username=username)
