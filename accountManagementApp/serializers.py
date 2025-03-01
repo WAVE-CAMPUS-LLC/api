@@ -4,7 +4,7 @@ from authenticationApp.serializers import CustomUserSerializer
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
-    user = CustomUserSerializer()
+    user = serializers.PrimaryKeyRelatedField(read_only=True)
     
     class Meta:
         model = UserProfile
