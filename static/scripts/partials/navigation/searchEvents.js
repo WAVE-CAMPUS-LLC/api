@@ -13,6 +13,7 @@ $(document).ready(function () {
         }, 300);
     });
 
+
     // Handle clicking outside search results
     $(document).on('click', function (e) {
         ['large', 'mobile'].forEach(idName => {
@@ -51,6 +52,72 @@ $(document).ready(function () {
         `);
     }
 
+    let is_processing = false; //debouncing
+    $(document).on('click', '.pageChange', (event)=> {
+        const context = $('.search-input').data('context');
+        const idName = $('.search-input').data('id');
+        if(is_processing) {return;}
+        is_processing = true;
+        event.preventDefault();
+
+
+        const button = event.currentTarget;
+        const page = button.value;
+        $('.pageChange').removeClass('active_page_btn');
+        $(button).addClass('active_page_btn')
+        console.log(page + 'This is the page yo')
+        perform_page_change(context, idName, page-1);
+
+        is_processing = false;
+    });
+
+    function perform_page_change(context, idName, page) {
+        const $input = $(`.search-input[data-context=${context}][data-id=${idName}]`);
+        const query = $input.val().trim();
+
+        if (query.length > 0) {
+            const $results = $(`.${context}-search-results-${idName}`);
+            $results.removeClass('hidden').fadeIn(300);
+            showLoadingNotice(context, idName);
+
+            // AJAX call for search
+            const searchUrl = document.getElementById('searchUrl').value;
+            $.ajax({
+                url: searchUrl,
+                data: { query, context },
+                dataType: 'json',
+                success: function (data) {
+                    const $items = $(`.${context}-search-items-${idName}`);
+                    $items.empty();
+                    $items.html(``);
+
+                    if (data.results && data.results.length > page*6) {
+                        i = page*6;
+                        while (i < data.results.length && i < page*6+6) {
+                            const resultHtml = context === 'event'
+                                ? renderEventItem(data.results[i])
+                                : renderFriendItem(data.results[i]);
+                            $items.append(resultHtml); 
+                            i++;
+                        }
+                    }
+                     else {
+                        $items.html(`
+                            <div class="flex justify-center py-5">
+                                <h3 class="font-Wanted-ExtraBold text-[40px] text-center">No results found</h3>
+                            </div>
+                        `);
+                    }
+                },
+                error: function () {
+                    const $items = $(`.${context}-search-items-${idName}`);
+                    $items.html('<p class="error-message">Failed to fetch results. Please try again.</p>');
+                }
+            });
+        }
+    }
+
+
     function performSearch(context, idName) {
         const $input = $(`.search-input[data-context=${context}][data-id=${idName}]`);
         const query = $input.val().trim();
@@ -70,14 +137,35 @@ $(document).ready(function () {
                     const $items = $(`.${context}-search-items-${idName}`);
                     $items.empty();
 
-                    if (data.results && data.results.length > 0) {
+                    // console.log(data.results.length + 'this is THE LENGTH');
+                    pages = parseInt(data.results.length/6);
+                    const $page_num = $(`.${context}-search-pages-${idName}`);
+                    $page_num.empty();
+                    page_count = 1
+                    while (page_count <= pages+1) {
+                        count_result = renderCount(page_count);
+                        $page_num.append(count_result);
+                        page_count++;
+                    }
+
+
+                    if (data.results && data.results.length > 0 && data.results.length<=6) {
                         data.results.forEach(item => {
                             const resultHtml = context === 'event'
                                 ? renderEventItem(item)
                                 : renderFriendItem(item);
-                            $items.append(resultHtml);
-                        });
-                    } else {
+                            $items.append(resultHtml); 
+                        })
+                    }
+                    else if (data.results && data.results.length > 0) {
+                        for(i = 0; i < 6; i++) {
+                            const resultHtml = context === 'event'
+                                ? renderEventItem(data.results[i])
+                                : renderFriendItem(data.results[i]);
+                            $items.append(resultHtml); 
+                        }
+                    }
+                     else {
                         $items.html(`
                             <div class="flex justify-center py-5">
                                 <h3 class="font-Wanted-ExtraBold text-[40px] text-center">No results found</h3>
@@ -139,6 +227,14 @@ $(document).ready(function () {
     // $(document).on('click', '.send-connect', function () {
     //     sendConnectRequest(this);
     // });
+
+    function renderCount(count) {
+        return  `<div class="border border-green rounded-2xl flex items-center">
+                    <button type="button" class="pageChange w-full p-3 border rounded-2xl border-black bg-black text-white font-Wanted-Medium text-Semi-Medium cursor-pointer" value="${count}">
+                        <span>${count}</span>
+                    </button>
+                </div>`;
+    }
 
     function renderFriendItem(item) {
         let buttonHtml = '';

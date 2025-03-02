@@ -163,7 +163,7 @@ def exploreView(request):
             "exploreCategoryChoices": trending_category_choices,
             "invited_events_with_tokens": invited_events_with_tokens,
             "isFavoriteEvent": isFavoriteEvent,
-            'page_count': 21
+            'page_count': live_count//6
         },
     )
 

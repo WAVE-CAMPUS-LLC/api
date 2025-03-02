@@ -4,7 +4,14 @@
 
 <script type="text/javascript" src="{% static "/scripts/partials/navigation/searchEvents.js" %}" defer></script>
 
-
+<style>
+    .active_page_btn {
+        transition: all .5s ease;
+        background-color: white;
+        color: green;
+        box-shadow: 0 0 40px green;
+    }
+</style>
 <div id="navigation-container" class="max-w-full w-full top-0 right-0 left-0 flex-none">
     <div class="flex flex-col gap-3 items-center w-full border-b border-gray-100 shadow-sm pb-6">
         <div id="navigation-bar" class="w-full flex flex-row items-center justify-between px-4 pre-lg:px-8 lg:px-14 xl:px-24 2xl:px-28 py-5">
@@ -107,6 +114,9 @@
                 <div class="event-search-results-large absolute top-full border-2 border-[#30303015] rounded-3xl bg-white shadow-form-shadow-2 w-[90%] after-xsm:w-4/5 sm:w-[65%] mt-2 hidden z-[1040]">
                     <!-- Search items will be dynamically populated here -->
                     <div class="event-search-items-large grid sm:grid-cols-1 lg:grid-cols-2 w-full">
+                        
+                    </div>
+                    <div class="event-search-pages-large gap-4 row-container w-full h-full flex flex-row justify-center">
                         
                     </div>
                 </div>
