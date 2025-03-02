@@ -136,6 +136,20 @@ $(document).ready(function () {
                 success: function (data) {
                     const $items = $(`.${context}-search-items-${idName}`);
                     $items.empty();
+                    if (!data.results || data.results.length <= 0) {
+                        $items.html(`
+                            <div class="flex justify-center py-5">
+                                <h3 class="font-Wanted-ExtraBold text-[40px] text-center">No results found</h3>
+                            </div>
+                        `);
+                        return
+                    }
+                    
+                    else if (data.results.length > 50) {
+                        $items.html('Please refine your search');
+                        return
+                    }
+                    
 
                     // console.log(data.results.length + 'this is THE LENGTH');
                     pages = parseInt(data.results.length/6);
@@ -148,11 +162,8 @@ $(document).ready(function () {
                         page_count++;
                     }
 
-                    if (data.results.length > 50) {
-                        $items.html('Please refine your search');
-                        
-                    }
-                    else if (data.results && data.results.length > 0 && data.results.length<=6) {
+                   
+                    if (data.results && data.results.length > 0 && data.results.length<=6) {
                         data.results.forEach(item => {
                             const resultHtml = context === 'event'
                                 ? renderEventItem(item)
