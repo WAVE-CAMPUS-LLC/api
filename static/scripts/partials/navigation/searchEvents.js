@@ -148,8 +148,11 @@ $(document).ready(function () {
                         page_count++;
                     }
 
-
-                    if (data.results && data.results.length > 0 && data.results.length<=6) {
+                    if (data.results.length > 50) {
+                        $items.html('Please refine your search');
+                        
+                    }
+                    else if (data.results && data.results.length > 0 && data.results.length<=6) {
                         data.results.forEach(item => {
                             const resultHtml = context === 'event'
                                 ? renderEventItem(item)
