@@ -107,6 +107,7 @@ document.addEventListener("DOMContentLoaded", function () {
   // Initialize tab systems for each body section
   initializeTabSystem("socialBody", "social-tab", "social-home-elements", 'social-tab-active');
   initializeTabSystem("pageBody", "crewDetailsTab", "crewTabInformation", 'crew-tab-active');
+  initializeTabSystem("go-with-body", "go-with-tab", "go-with-tab-content", 'tab-active');
 
   // Function to initialize tab system for a specific body section
   function initializeTabSystem(bodyId, tabClass, contentClass, tabActiveName) {

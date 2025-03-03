@@ -15,7 +15,7 @@ from django.template.loader import render_to_string
 from accountManagementApp.models import UserProfile
 from django.contrib import messages
 from django.contrib.auth import login, logout, authenticate
-from .models import FriendRequest, Crew, CrewMember, CrewRequest
+from .models import FriendRequest, Crew, CrewMember, CrewRequest, GoWithRequest
 from django.db.models import Q, F
 from .forms import createCrewForm
 from authenticationApp.models import CustomUser
@@ -131,6 +131,20 @@ def socialHomeView(request):
                 },
             )
             return redirect("social:home")
+        
+        elif action == "acceptGoWithRequest":
+            go_with_request_id = request.POST.get("go_with_request_id")
+            go_with_request = GoWithRequest.objects.get(requestId=go_with_request_id)
+            go_with_request.accept_go_with()
+            messages.success(request, "Go-With request accepted successfully.")
+            return redirect("social:home")
+
+        elif action == "declineGoWithRequest":
+            go_with_request_id = request.POST.get("go_with_request_id")
+            go_with_request = GoWithRequest.objects.get(requestId=go_with_request_id)
+            go_with_request.decline_go_with()
+            messages.success(request, "Go-With request declined successfully.")
+            return redirect("social:home")
 
         elif action == "generateProfileQRCode":
             profile = UserProfile.objects.get(user=request.user)
@@ -225,7 +239,8 @@ def socialHomeView(request):
         for crew_request in pending_crew_requests
     ]
 
-    print(pending_friend_requests)
+    go_with_requests_received = GoWithRequest.objects.filter(receiver=user)
+    go_with_requests_sent = GoWithRequest.objects.filter(sender=user)
 
     return render(
         request,
@@ -240,11 +255,13 @@ def socialHomeView(request):
             "myCrews": myCrews_with_members,
             "crewsImIn": crewsImIn_with_members,
             "time": time,
+            "go_with_requests_received": go_with_requests_received,
+            "go_with_requests_sent": go_with_requests_sent,
             "isHost": isHost,
             "isActiveUser": isActiveUser,
             "my_shared_events": my_shared_events,
             "shared_with_me": shared_with_me,
-            "profileLink": profileLink,
+            "profileLink": profileLink,  
         },
     )
 

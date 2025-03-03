@@ -54,3 +54,15 @@
     color: white;
     background-color: #007379;
 }
+
+.go-with-tab {
+    display: flex;
+    justify-content: center;
+}
+
+.go-with-tab.tab-active {
+    border: 1px solid #007379;
+    font-family: Wanted-Variable;
+    color: white;
+    background-color: #007379;
+}
