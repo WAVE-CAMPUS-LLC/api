@@ -79,7 +79,7 @@ class SocialHomeView(APIView):
             user_profile.friends.add(sender)
             sender.friends.add(user_profile)
             friend_request.accept_request()
-            self.send_notification(sender_user_model.id, "Request has been accepted.")
+            # self.send_notification(sender_user_model.id, "Request has been accepted.")
             return Response({"message": "Friend request accepted."}, status=status.HTTP_200_OK)
 
         elif action == "declineRequest":
@@ -101,7 +101,7 @@ class SocialHomeView(APIView):
             receiver = get_object_or_404(UserProfile, user=crew_request.receiver)
             receiver_user_model = get_object_or_404(CustomUser, username=receiver.user.username)
             crew_request.delete()
-            self.send_notification(receiver_user_model.id, "Crew invite has been canceled.")
+            # self.send_notification(receiver_user_model.id, "Crew invite has been canceled.")
             return Response({"message": "Crew invite canceled."}, status=status.HTTP_200_OK)
 
         elif action == "generateProfileQRCode":
