@@ -13,6 +13,14 @@ from blogApp.models import Blog
 from eventTicketsApp.models import Ticket
 from stripeManagementApp.customerSetup import CustomerAccount, ConnectAccount
 from stripeManagementApp.getEarnings import GetEarnings
+from .serializers import UserProfileSerializer
+from authenticationApp.serializers import CustomUserSerializer
+
+from .forms import (
+    UpdateContactInfo,
+    UpdatePersonalInfo,
+    UpdateProfilePhotoForm,
+)
 
 
 @api_view(['GET', 'POST'])
@@ -85,6 +93,69 @@ def profile_api(request):
         "dashboardLink": dashboard_link,
         "transactions": transactions,
         "canSeePayouts": can_see_payouts,
+    }
+    
+    return Response(response_data, status=status.HTTP_200_OK)
+
+
+@api_view(['GET', 'POST'])
+@permission_classes([IsAuthenticated])
+def settings_api(request):
+    """API endpoint for retrieving and updating user settings and profile information"""
+    
+    user = request.user
+    profile = get_object_or_404(UserProfile, user=user)
+    
+    if request.method == "POST":
+        action = request.data.get("action")
+        
+        try:
+            if action == "updateProfilePicture":
+                form = UpdateProfilePhotoForm(request.data, request.FILES, instance=profile)
+                if form.is_valid():
+                    updated_profile = form.save()
+                    serializer = UserProfileSerializer(updated_profile)
+                    return Response({
+                        "message": "Profile picture updated successfully!",
+                        "profile": serializer.data
+                    }, status=status.HTTP_200_OK)
+                return Response({"errors": form.errors}, status=status.HTTP_400_BAD_REQUEST)
+                
+            elif action == "updatePersonalInfo":
+                form = UpdatePersonalInfo(request.data, instance=user)
+                if form.is_valid():
+                    updated_user = form.save()
+                    serializer = CustomUserSerializer(updated_user)
+                    return Response({
+                        "message": "Personal information updated successfully!",
+                        "user": serializer.data
+                    }, status=status.HTTP_200_OK)
+                return Response({"errors": form.errors}, status=status.HTTP_400_BAD_REQUEST)
+                
+            elif action == "updateContactInfo":
+                form = UpdateContactInfo(request.data, instance=user)
+                if form.is_valid():
+                    updated_user = form.save()
+                    serializer = CustomUserSerializer(updated_user)
+                    return Response({
+                        "message": "Contact information updated successfully!",
+                        "user": serializer.data
+                    }, status=status.HTTP_200_OK)
+                return Response({"errors": form.errors}, status=status.HTTP_400_BAD_REQUEST)
+                
+            else:
+                return Response({"error": "Invalid action."}, status=status.HTTP_400_BAD_REQUEST)
+                
+        except Exception as e:
+            return Response({"error": f"An error occurred: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+    # For GET requests, return the user's current settings using serializers
+    user_serializer = CustomUserSerializer(user)
+    profile_serializer = UserProfileSerializer(profile)
+    
+    response_data = {
+        "user": user_serializer.data,
+        "profile": profile_serializer.data,
     }
     
     return Response(response_data, status=status.HTTP_200_OK)

@@ -11,12 +11,12 @@ import random
 
 from eventManagementApp.models import Event, SharedEvent
 from accountManagementApp.models import UserProfile
+from eventManagementApp.serializers import EventSerializer
 from eventTicketsApp.models import RSVPTicket, PaidFreeTicket
 from eventTicketsApp.views import generateTicket
 from socialApp.models import Crew
 from .forms import RSVPForm
 from authenticationApp.models import CustomUser
-from .serializers import EventSerializer
 from eventTicketsApp.serializers import RSVPTicketSerializer
 from eventTicketsApp.models import RSVPTicket, PaidFreeTicket
 
@@ -80,14 +80,9 @@ def explore_events(request):
             
             for event in invited_events:
                 token = next((invite.token for invite in invitations if invite.event == event), None)
+                event_serializer = EventSerializer(event)
                 invited_events_data.append({
-                    'event': {
-                        'id': str(event.eventId),
-                        'title': event.title,
-                        'date': event.date,
-                        'header_photo': event.header_photo.url if event.header_photo else None,
-                        'host': event.host.username if event.host else None,
-                    },
+                    'event': event_serializer.data,
                     'token': str(token) if token else None
                 })
         except UserProfile.DoesNotExist:
@@ -122,31 +117,17 @@ def explore_events(request):
         admin_status="active",
     ).order_by("?")[:3]
 
+    # Prepare response data using serializers
+    initial_events_serialized = EventSerializer(initial_events, many=True)
+    trending_events_serialized = EventSerializer(trending_events, many=True)
+    weekly_events_serialized = EventSerializer(weekly_events, many=True)
+    
     # Prepare response data
     response_data = {
-        'initial_events': [{
-            'id': str(event.eventId),
-            'title': event.title,
-            'date': event.date,
-            'header_photo': event.header_photo.url if event.header_photo else None,
-            'host': event.host.username if event.host else None,
-            'status': event.status
-        } for event in initial_events],
-        'trending_events': [{
-            'id': str(event.eventId),
-            'title': event.title,
-            'date': event.date,
-            'header_photo': event.header_photo.url if event.header_photo else None,
-            'host': event.host.username if event.host else None,
-        } for event in trending_events],
-        'weekly_events': [{
-            'id': str(event.eventId),
-            'title': event.title,
-            'date': event.date,
-            'header_photo': event.header_photo.url if event.header_photo else None,
-            'host': event.host.username if event.host else None,
-        } for event in weekly_events],
-        'trending_categories': all_categories,  # Changed this line
+        'initial_events': initial_events_serialized.data,
+        'trending_events': trending_events_serialized.data,
+        'weekly_events': weekly_events_serialized.data,
+        'trending_categories': all_categories,
         'invited_events': invited_events_data
     }
 
@@ -185,21 +166,15 @@ def load_more_events(request):
         status="live", privacy="Discoverable", admin_status="active"
     )[offset : offset + limit]
 
-    events_data = [{
-        'id': str(event.eventId),
-        'title': event.title,
-        'date': event.date,
-        'header_photo': event.header_photo.url if event.header_photo else None,
-        'host': event.host.username if event.host else None,
-        'status': event.status
-    } for event in more_events]
+    # Use EventSerializer instead of manual dictionary construction
+    events_serialized = EventSerializer(more_events, many=True)
 
     has_more = Event.objects.filter(
         status="live", privacy="Discoverable", admin_status="active"
     ).count() > (offset + limit)
 
     return Response({
-        'events': events_data,
+        'events': events_serialized.data,
         'has_more': has_more
     })
 
