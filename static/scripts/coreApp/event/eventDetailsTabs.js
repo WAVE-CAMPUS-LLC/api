@@ -1,4 +1,11 @@
 document.addEventListener('DOMContentLoaded', function () {
+    checkoutButton = document.getElementById('checkoutButton');
+    checkoutButton.addEventListener("click", () => {
+        checkoutButton.disabled = true;
+        checkoutButton.innerHTML = "Processing...";
+        checkoutButton.classList.add('opacity-50');
+    });
+
     // Function to handle tab click
     function handleTabClick(tab, tabContents) {
         tab.forEach(tab => {

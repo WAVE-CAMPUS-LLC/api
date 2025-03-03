@@ -392,7 +392,7 @@ def eventDetailsView(request, eventId, token=None):
                 )
                 user = get_object_or_404(UserProfile, user=myUserAccount)
 
-                shared_event, created = SharedEvent.objects.get_or_create(
+                shared_event, created = SharedEvent.objects.update_or_create(
                     sender=user, receiver=friend, event=event
                 )
 
@@ -433,7 +433,7 @@ def eventDetailsView(request, eventId, token=None):
                 user = get_object_or_404(UserProfile, user=request.user)
 
                 for member in crew.members.all():
-                    SharedEvent.objects.get_or_create(
+                    SharedEvent.objects.update_or_create(
                         crew=crew,
                         sender=user,
                         receiver=member.user_profile,

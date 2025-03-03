@@ -19,6 +19,7 @@ from .forms import RSVPForm
 from authenticationApp.models import CustomUser
 from eventTicketsApp.serializers import RSVPTicketSerializer
 from eventTicketsApp.models import RSVPTicket, PaidFreeTicket
+from django.db import IntegrityError
 
 class CustomUserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -256,7 +257,7 @@ def event_details(request, eventId):
             friendUserAccount = get_object_or_404(CustomUser, username=friend_username)
             friend = get_object_or_404(UserProfile, user=friendUserAccount)
 
-            shared_event, created = SharedEvent.objects.get_or_create(sender=user, receiver=friend, event=event)
+            shared_event, created = SharedEvent.objects.update_or_create(sender=user, receiver=friend, event=event)
 
             if created:
                 return Response({"message": f"Event shared with {friend}"}, status=status.HTTP_200_OK)
