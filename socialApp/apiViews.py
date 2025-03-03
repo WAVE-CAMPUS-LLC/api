@@ -238,9 +238,48 @@ class PublicProfileAPIView(APIView):
             action = request.data.get("action")
             
             if action == "send_request":
-                success, message, friend_request = self.send_friend_request(request.user, other_user.username)
-                
-                if success:
+                # Logic moved from send_friend_request method directly into this action handler
+                try:
+                    # Check if they are already friends
+                    if hasattr(request.user, 'user_profile') and request.user.user_profile.is_friends_with(other_user):
+                        return Response({"message": "You are already friends with this user."}, status=status.HTTP_400_BAD_REQUEST)
+                    
+                    # First check for any active (pending/accepted) requests
+                    active_request = FriendRequest.objects.filter(
+                        Q(sender=request.user, receiver=other_user) | 
+                        Q(sender=other_user, receiver=request.user),
+                        status__in=['pending', 'accepted']
+                    ).first()
+                    
+                    if active_request:
+                        if active_request.status == 'pending':
+                            if active_request.sender == request.user:
+                                return Response({"message": "You have already sent a friend request to this user."}, status=status.HTTP_400_BAD_REQUEST)
+                            else:
+                                return Response({"message": "This user has already sent you a friend request."}, status=status.HTTP_400_BAD_REQUEST)
+                        else:  # status is 'accepted'
+                            return Response({"message": "You are already friends with this user."}, status=status.HTTP_400_BAD_REQUEST)
+                    
+                    # If no active request exists, check for canceled/declined requests to reuse
+                    old_request = FriendRequest.objects.filter(
+                        sender=request.user,
+                        receiver=other_user,
+                        status__in=['canceled', 'declined']
+                    ).first()
+                    
+                    if old_request:
+                        # Reuse the old request
+                        old_request.status = 'pending'
+                        old_request.save()
+                        friend_request = old_request
+                    else:
+                        # Create new friend request if none exists
+                        friend_request = FriendRequest.objects.create(
+                            sender=request.user,
+                            receiver=other_user,
+                            status="pending"
+                        )
+                    
                     # Send notification via WebSocket
                     channel_layer = get_channel_layer()
                     async_to_sync(channel_layer.group_send)(
@@ -261,9 +300,10 @@ class PublicProfileAPIView(APIView):
                         },
                     )
                     
-                    return Response({"message": message, "friend_request": FriendRequestSerializer(friend_request).data}, status=status.HTTP_200_OK)
-                else:
-                    return Response({"message": message}, status=status.HTTP_400_BAD_REQUEST)
+                    return Response({"message": "Friend request sent successfully.", "friend_request": FriendRequestSerializer(friend_request).data}, status=status.HTTP_200_OK)
+                except Exception as e:
+                    print(f"Error in send_friend_request action: {str(e)}")
+                    return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
                     
             elif action == "cancel_request" and friend_request and friend_request.status == "pending":
                 # Update the status to canceled instead of deleting
@@ -316,58 +356,5 @@ class PublicProfileAPIView(APIView):
                 
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-    
-    def send_friend_request(self, sender, receiver_username):
-        """
-        Helper method to send a friend request
-        """
-        try:
-            receiver = get_object_or_404(CustomUser, username=receiver_username)
-            receiver_profile = get_object_or_404(UserProfile, user=receiver)
-            
-            # Check if they are already friends
-            if hasattr(sender, 'user_profile') and sender.user_profile.is_friends_with(receiver):
-                return False, "You are already friends with this user.", None
-            
-            # First check for any active (pending/accepted) requests
-            active_request = FriendRequest.objects.filter(
-                Q(sender=sender, receiver=receiver) | 
-                Q(sender=receiver, receiver=sender),
-                status__in=['pending', 'accepted']
-            ).first()
-            
-            if active_request:
-                if active_request.status == 'pending':
-                    if active_request.sender == sender:
-                        return False, "You have already sent a friend request to this user.", active_request
-                    else:
-                        return False, "This user has already sent you a friend request.", active_request
-                else:  # status is 'accepted'
-                    return False, "You are already friends with this user.", active_request
-            
-            # If no active request exists, check for canceled/declined requests to reuse
-            old_request = FriendRequest.objects.filter(
-                sender=sender,
-                receiver=receiver,
-                status__in=['canceled', 'declined']
-            ).first()
-            
-            if old_request:
-                # Reuse the old request
-                old_request.status = 'pending'
-                old_request.save()
-                return True, "Friend request sent successfully.", old_request
-            
-            # Create new friend request if none exists
-            friend_request = FriendRequest.objects.create(
-                sender=sender,
-                receiver=receiver,
-                status="pending"
-            )
-            
-            return True, "Friend request sent successfully.", friend_request
-        except Exception as e:
-            print(f"Error in send_friend_request: {str(e)}")
-            return False, str(e), None
 
 
