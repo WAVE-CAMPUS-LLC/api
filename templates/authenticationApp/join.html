@@ -146,7 +146,15 @@ Come, enjoy the greatest experiences! Join WAVE.
                 </label>
             </div>
 
-            
+            <div id="captchaRow" class="flex flex-col gap-[10px]">
+                <label class="font-Wanted-SemiBold text-[13px] uppercase flex flex-col gap-[5px] w-full">
+                    <div class="flex flex-row gap-1">
+                        Verify you're human
+                        <span id="requiredIndicator" class="text-[red] font-Wanted-Variable">*</span>
+                    </div>
+                    {{ form.captcha }}
+                </label>
+            </div>
 
             <div id="signupComplete" class="flex flex-col gap-[5px] font-Wanted-Regular">
                 <button type="submit" id="proceedBtn" class="bg-[#008d95] border-none rounded-[13px] p-[15px] text-[18px] font-Wanted-Regular text-white">Proceed</button>

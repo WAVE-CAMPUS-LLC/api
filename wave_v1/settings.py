@@ -207,6 +207,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework_simplejwt",
     "corsheaders",
+    "hcaptcha",
 ]
 
 MIDDLEWARE = [
@@ -370,3 +371,7 @@ SIMPLE_JWT = {
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True
 }
+
+# hCaptcha settings
+HCAPTCHA_SITEKEY = os.getenv('HCAPTCHA_SITEKEY')  # Get this from hcaptcha.com
+HCAPTCHA_SECRET = os.getenv('HCAPTCHA_SECRET')  # Get this from hcaptcha.com
