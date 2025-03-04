@@ -5,21 +5,19 @@ from django.db.models import Count, Q
 from django.utils.timezone import now
 from datetime import timedelta, date
 from django.shortcuts import get_object_or_404
-from rest_framework import serializers
+from rest_framework import serializers, status
 
 import random
 
 from eventManagementApp.models import Event, SharedEvent
 from accountManagementApp.models import UserProfile
-from eventManagementApp.serializers import EventSerializer
 from eventTicketsApp.models import RSVPTicket, PaidFreeTicket
 from eventTicketsApp.views import generateTicket
 from socialApp.models import Crew
 from .forms import RSVPForm
 from authenticationApp.models import CustomUser
+from eventManagementApp.serializers import EventSerializer
 from eventTicketsApp.serializers import RSVPTicketSerializer
-from eventTicketsApp.models import RSVPTicket, PaidFreeTicket
-from django.db import IntegrityError
 
 class CustomUserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -31,7 +29,7 @@ class CustomUserSerializer(serializers.ModelSerializer):
 def explore_events(request):
     """
     API endpoint for getting explore page data including:
-    - All events (no longer paginated)
+    - Initial events
     - Trending events
     - Weekly events
     - Trending categories
@@ -114,6 +112,37 @@ def explore_events(request):
 
     return Response(response_data)
 
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def load_more_events(request):
+    """
+    API endpoint for loading more events with pagination
+    """
+    offset = int(request.GET.get("offset", 7))
+    limit = 3
+
+    more_events = Event.objects.filter(
+        status="live", privacy="Discoverable", admin_status="active"
+    )[offset : offset + limit]
+
+    events_data = [{
+        'id': str(event.eventId),
+        'title': event.title,
+        'date': event.date,
+        'header_photo': event.header_photo.url if event.header_photo else None,
+        'host': event.host.username if event.host else None,
+        'status': event.status
+    } for event in more_events]
+
+    has_more = Event.objects.filter(
+        status="live", privacy="Discoverable", admin_status="active"
+    ).count() > (offset + limit)
+
+    return Response({
+        'events': events_data,
+        'has_more': has_more
+    })
+
 
 @api_view(['GET', 'POST'])
 @permission_classes([AllowAny])
@@ -192,7 +221,7 @@ def event_details(request, eventId):
             friendUserAccount = get_object_or_404(CustomUser, username=friend_username)
             friend = get_object_or_404(UserProfile, user=friendUserAccount)
 
-            shared_event, created = SharedEvent.objects.update_or_create(sender=user, receiver=friend, event=event)
+            shared_event, created = SharedEvent.objects.get_or_create(sender=user, receiver=friend, event=event)
 
             if created:
                 return Response({"message": f"Event shared with {friend}"}, status=status.HTTP_200_OK)
