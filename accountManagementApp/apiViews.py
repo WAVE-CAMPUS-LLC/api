@@ -15,7 +15,8 @@ from stripeManagementApp.customerSetup import CustomerAccount, ConnectAccount
 from stripeManagementApp.getEarnings import GetEarnings
 from .serializers import UserProfileSerializer
 from authenticationApp.serializers import CustomUserSerializer
-
+from eventManagementApp.serializers import EventSerializer
+from eventManagementApp.models import Event
 from .forms import (
     UpdateContactInfo,
     UpdatePersonalInfo,
@@ -159,3 +160,15 @@ def settings_api(request):
     }
     
     return Response(response_data, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def favourited_events_api(request):
+    user = request.user
+    profile = get_object_or_404(UserProfile, user=user)
+    favourite_events = profile.favorite_events.all()
+    
+    favourite_events_serialized = EventSerializer(favourite_events, many=True)
+    
+    return Response(favourite_events_serialized.data, status=status.HTTP_200_OK)
