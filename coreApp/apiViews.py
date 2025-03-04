@@ -31,44 +31,24 @@ class CustomUserSerializer(serializers.ModelSerializer):
 def explore_events(request):
     """
     API endpoint for getting explore page data including:
-    - Initial events
+    - All events (no longer paginated)
     - Trending events
     - Weekly events
     - Trending categories
     - Invited events (for authenticated users)
     """
-    # Handle age restrictions
-    if not request.user.is_authenticated:
-        age_filter = Q(age_restriction="")
-    else:
-        user_age = request.user.age
-        if user_age is None and request.user.birthday:
-            today = date.today()
-            user_age = (today.year - request.user.birthday.year) - (
-                (today.month, today.day)
-                < (request.user.birthday.month, request.user.birthday.day)
-            )
-            request.user.age = user_age
-            request.user.save()
-
-        age_filter = Q(age_restriction="")
-        if user_age:
-            if user_age >= 21:
-                age_filter |= Q(age_restriction="21+")
-            if user_age >= 18:
-                age_filter |= Q(age_restriction="18+")
-
-    # Load initial events
-    initial_events = Event.objects.filter(
+    # Load all events at once - no more pagination
+    all_events = Event.objects.filter(
         status="live", 
-        forAllDisplay=True,  # Changed from privacy="Discoverable"
+        forAllDisplay=True,
         admin_status="active"
     )
 
     # Get trending events
     trending_events = Event.objects.filter(
         status="live", 
-        forAllDisplay=True  # Changed from privacy="Discoverable"
+        forAllDisplay=True,
+        admin_status="active"
     ).order_by("date")[:3]
 
     # Get invited events for authenticated users
@@ -76,7 +56,7 @@ def explore_events(request):
     if request.user.is_authenticated:
         try:
             user_profile = UserProfile.objects.get(user=request.user)
-            invited_events = user_profile.invited_events.filter(status="live").filter(age_filter)
+            invited_events = user_profile.invited_events.filter(status="live")
             invitations = user_profile.invitations.all()
             
             for event in invited_events:
@@ -119,13 +99,13 @@ def explore_events(request):
     ).order_by("?")[:3]
 
     # Prepare response data using serializers
-    initial_events_serialized = EventSerializer(initial_events, many=True)
+    all_events_serialized = EventSerializer(all_events, many=True)
     trending_events_serialized = EventSerializer(trending_events, many=True)
     weekly_events_serialized = EventSerializer(weekly_events, many=True)
     
     # Prepare response data
     response_data = {
-        'initial_events': initial_events_serialized.data,
+        'events': all_events_serialized.data,  # All events in a single list
         'trending_events': trending_events_serialized.data,
         'weekly_events': weekly_events_serialized.data,
         'trending_categories': all_categories,
@@ -133,51 +113,6 @@ def explore_events(request):
     }
 
     return Response(response_data)
-
-@api_view(['GET'])
-@permission_classes([AllowAny])
-def load_more_events(request):
-    """
-    API endpoint for loading more events with pagination
-    """
-    offset = int(request.GET.get("offset", 7))
-    limit = 3
-
-    if not request.user.is_authenticated:
-        age_filter = Q(age_restriction="")
-    else:
-        user_age = request.user.age
-        if user_age is None and request.user.birthday:
-            today = date.today()
-            user_age = (today.year - request.user.birthday.year) - (
-                (today.month, today.day)
-                < (request.user.birthday.month, request.user.birthday.day)
-            )
-            request.user.age = user_age
-            request.user.save()
-
-        age_filter = Q(age_restriction="")
-        if user_age:
-            if user_age >= 21:
-                age_filter |= Q(age_restriction="21+")
-            if user_age >= 18:
-                age_filter |= Q(age_restriction="18+")
-
-    more_events = Event.objects.filter(
-        status="live", privacy="Discoverable", admin_status="active"
-    )[offset : offset + limit]
-
-    # Use EventSerializer instead of manual dictionary construction
-    events_serialized = EventSerializer(more_events, many=True)
-
-    has_more = Event.objects.filter(
-        status="live", privacy="Discoverable", admin_status="active"
-    ).count() > (offset + limit)
-
-    return Response({
-        'events': events_serialized.data,
-        'has_more': has_more
-    })
 
 
 @api_view(['GET', 'POST'])

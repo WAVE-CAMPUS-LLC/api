@@ -30,11 +30,10 @@ class UpdateProfilePhotoForm(forms.ModelForm):
 class UpdateContactInfo(forms.ModelForm):
 
     email = forms.EmailField(required=False)
-    phone_number = forms.CharField(required=False)
 
     class Meta:
         model = CustomUser
-        fields = ["email", "phone_number"]
+        fields = ["email"]
 
 
 # The class `UpdatePersonalInfo` is a form that allows users to update their first name and last name. Used in the accountManagementApp/views.py
