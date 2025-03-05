@@ -32,8 +32,8 @@ document.addEventListener('DOMContentLoaded', function () {
     initializeTabSystem('crewRequestsBody', 'crewRequestTab', 'crewRequestTabContainer');
     initializeTabSystem('myCrewsBody', 'myCrewsTab', 'myCrewsTabContainer');
     initializeTabSystem('sharedFriendRequestsBody', 'friendRequestTab', 'friendRequestTabContainer');
-    initializeTabSystem('rsvpBody', 'myEvents-informationTab', 'myEventsInformationContainer')
-    initializeTabSystem('myEvents-information', 'myEvents-informationTab', 'myEventsInformationContainer')
+    initializeTabSystem('rsvpBody', 'myEvents-informationTab', 'myEventsInformationContainer');
+    initializeTabSystem('myEvents-information', 'myEvents-informationTab', 'myEventsInformationContainer');
 
     // Function to initialize tab system for a specific body section
     function initializeTabSystem(bodyId, tabClass, contentClass) {

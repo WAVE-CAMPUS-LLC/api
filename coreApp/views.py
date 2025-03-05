@@ -147,11 +147,6 @@ def exploreView(request):
     ).order_by("?")[:3]
 
 
-   
-
-    live_events = Event.objects.filter(status='live')
-    live_count = live_events.count()
-
     return render(
         request,
         "coreApp/explore.html",
@@ -162,8 +157,7 @@ def exploreView(request):
             "weekly_events": weekly_events,
             "exploreCategoryChoices": trending_category_choices,
             "invited_events_with_tokens": invited_events_with_tokens,
-            "isFavoriteEvent": isFavoriteEvent,
-            'page_count': live_count//6
+            "isFavoriteEvent": isFavoriteEvent
         },
     )
 
@@ -303,6 +297,9 @@ def handleRSVP(request, eventId):
         guestLastName = rsvp_ticket.last_name
         guestEmail = rsvp_ticket.email
         generateTicket(request, event, request.user if request.user.is_authenticated else None, guestFirstName, guestLastName, guestEmail)
+        # profile = UserProfile.objects.get(user=request.user)
+        # profile.all_events.add(event)
+
         
         messages.success(request, "You have reserved a spot! Check your email for confirmation.")
         response_data = {

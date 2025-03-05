@@ -144,7 +144,7 @@ def profileView(request):
             "favoriteEvents": favorite_events,
             "stripeKey": stripeKey,
             "payments": payment_methods,
-            "purchasedTickets": purchased_tickets,
+            "purchasedEvents": purchased_tickets,
             "accountBalance": accountBalance,
             "totalEarnings": totalEarnings,
             "dashboardLink": dashboardLink,
