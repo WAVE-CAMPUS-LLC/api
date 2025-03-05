@@ -178,47 +178,39 @@ def createPaidEvent(request):
         eventForm = EventForm(request.POST, request.FILES, user=request.user)
         eventAction = request.POST.get("eventAction")
 
-        if eventAction == "submit":
-            if eventForm.is_valid():
-                event = eventForm.save(commit=False)
-                event.host = userAccount
-                event.ticketing = "Paid"
-                event.crew_discount = request.POST.get("crew_discount") == "on"
-                event.show_guest_list = request.POST.get("show_guest_list") == "on"
-                event.forAllDisplay = request.POST.get("forAllDisplay") == "on"
-                event.forCollegesDisplay = request.POST.get("forCollegesDisplay") == "on"
-                event.status = "live"
+        if eventAction == "submit" and eventForm.is_valid():
+            event = eventForm.save(commit=False)
+            event.host = userAccount
+            event.ticketing = "Paid"
+            event.crew_discount = request.POST.get("crew_discount") == "on"
+            event.show_guest_list = request.POST.get("show_guest_list") == "on"
+            event.forAllDisplay = request.POST.get("forAllDisplay") == "on"
+            event.forCollegesDisplay = request.POST.get("forCollegesDisplay") == "on"
+            event.status = "live"
+            
+            # Save the event
+            event.save()
 
+            # Ensure host profile exists
+            hostProfile, _ = HostProfile.objects.get_or_create(user=request.user)
+
+            # Create Stripe product
+            product = createHostProduct(event, hostProfile.stripe_account_id)
+
+            if product:
+                event.stripeProductId = product.id
                 event.save()
-
                 messages.success(request, "Event is live!")
-
-                user_profile = event.host.user_profile
-                hostProfile, _ = HostProfile.objects.get_or_create(user=request.user)
-                
-
-                event.save()
-                product = createHostProduct(event, hostProfile.stripe_account_id)
-
-                if product:
-                    event.stripeProductId = product.id
-                    event.save()
-                else:
-                    print("Product creation failed")
-                    print("Product creation failed")
-                    print("Product creation failed")
-                    messages.error(request, "Product creation failed")
-                    return redirect(
-                        "eventManagement:eventManagement", eventId=event.eventId
-                    )
-
                 return redirect("eventManagement:paidTicketing", eventId=event.eventId)
-
             else:
-                print(eventForm.errors)
-                print(eventForm.errors)
-                print(eventForm.errors)
-                messages.error(request, "Invalid form submission.")
+                print(f"Product creation failed for event ID {event.eventId}")
+                messages.error(request, "Stripe product creation failed. Please try again.")
+                event.delete()
+                return redirect("eventManagement:hostHome")
+
+        else:
+            print("Invalid event form submission:", eventForm.errors)
+            messages.error(request, "Invalid form submission.")
 
     else:
         eventForm = EventForm(user=request.user)
@@ -263,11 +255,7 @@ def createFreeEvent(request):
 
                 messages.success(request, "Event is live!")
 
-                user_profile = event.host.user_profile
-                hostProfile, _ = HostProfile.objects.get_or_create(user=request.user)
-                
-
-                event.save()
+                hostProfile, _ = HostProfile.objects.get_or_create(user=request.user)                
 
                 return redirect(
                     "eventManagement:eventManagement", eventId=event.eventId
@@ -323,15 +311,13 @@ def createPaidEventTicket(request, eventId):
             else:
                 messages.error(request, "Invalid form submission.")
                 return redirect(
-                    "eventManagement:createPaidEventTicket", eventId=event.eventId
+                    "eventManagement:paidTicketing", eventId=event.eventId
                 )
-        elif eventAction == "finish":
-            return redirect("eventManagement:eventManagement", eventId=event.eventId)
         elif eventAction == "deleteTicket":
             ticket = get_object_or_404(PaidFreeTicket, ticket_id=ticket_id)
             ticket.delete()
             return redirect(
-                "eventManagement:createPaidEventTicket", eventId=event.eventId
+                "eventManagement:paidTicketing", eventId=event.eventId
             )
         elif eventAction == "editTicket":
             return redirect("eventManagement:eventManagement", eventId=event.eventId)
@@ -508,7 +494,14 @@ def eventManagement(request, eventId):
                 new_ticket.save()
 
             return redirect("eventManagement:eventManagement", eventId=eventId)
-
+        
+        else:
+            event.hide_address = "hide_address" in request.POST
+            print(request.POST.get("hide_address"))
+            event.save()
+            messages.success(request, "Address is now hidden" if event.hide_address else "Address is now visible")
+            return redirect("eventManagement:eventManagement", eventId=eventId)
+        
     else:
         invitationForm = InvitationForm()
         paidFreeForm = PaidFreeTicketForm()

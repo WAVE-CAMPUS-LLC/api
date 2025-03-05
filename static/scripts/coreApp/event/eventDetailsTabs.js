@@ -1,10 +1,12 @@
 document.addEventListener('DOMContentLoaded', function () {
     checkoutButton = document.getElementById('checkoutButton');
-    checkoutButton.addEventListener("click", () => {
-        checkoutButton.disabled = true;
-        checkoutButton.innerHTML = "Processing...";
-        checkoutButton.classList.add('opacity-50');
-    });
+    if (checkoutButton) {
+        checkoutButton.addEventListener("click", () => {
+            checkoutButton.disabled = true;
+            checkoutButton.innerHTML = "Processing...";
+            checkoutButton.classList.add('opacity-50');
+        });
+    }
 
     // Function to handle tab click
     function handleTabClick(tab, tabContents) {
@@ -22,13 +24,13 @@ document.addEventListener('DOMContentLoaded', function () {
     function showTabContent(contents, tabId) {
         // Hide all tab contents
         contents.forEach(content => {
-            content.style.display = 'none';
+            content.classList.add('hidden');
         });
 
         // Show the selected tab content
         const selectedTabContent = document.getElementById(tabId);
         if (selectedTabContent) {
-            selectedTabContent.style.display = 'block';
+            selectedTabContent.classList.remove('hidden');
         }
     }
 
@@ -46,15 +48,20 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         });
 
+        // Show the first tab content and hide all others
         if (tabContents.length > 0) {
-            tabContents[0].style.display = 'block';
+            tabContents.forEach((content, index) => {
+                if (index === 0) {
+                    content.classList.remove('hidden');
+                } else {
+                    content.classList.add('hidden');
+                }
+            });
         }
 
         // Set the first tab as active by default in each body section
         if (tabs.length > 0) {
             tabs[0].classList.add('eventDeets-tab-active');
-            const defaultTabId = tabs[0].getAttribute('data-tab');
-            showTabContent(tabContents, defaultTabId);
         }
     }
 });

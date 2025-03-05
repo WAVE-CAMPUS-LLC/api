@@ -234,7 +234,7 @@
                     </div>
 
                     {% if paidFreeTickets or event.ticketing == "Free" %}
-                    <div id="eventTicketInformation" class="ticketinfo-body eventDetailsTabInformation">
+                    <div id="eventTicketInformation" class="ticketinfo-body eventDetailsTabInformation hidden">
                         <div class="eventTickets-body flex flex-col gap-2">
                             {% if event.ticketing == "Free" %}
                             <div class="ticketBodyHeader font-Wanted-Bold text-Medium xsm:text-Large after-xsm:text-Pre-Xl xxsm:text-1xl pre-sm:text-1xl sm:text-2xl md:text-3xl text-black">
@@ -463,7 +463,7 @@
                     {% endif %}
                     
                     {% if event.body_photo_one or event.body_photo_two or event.body_photo_three or event.body_photo_four or event.body_photo_five %}
-                    <div id="eventPhotosVideos" class="attachment-body eventDetailsTabInformation">
+                    <div id="eventPhotosVideos" class="attachment-body eventDetailsTabInformation hidden">
                         <div class="eventPhotosVideos-body">
                             <div id="slideshow-container" class="slideshow-container grid sm:grid-cols-1 pre-lg:grid-cols-2 lg:grid-cols-3">
                                 {% if event.body_photo_one %}
