@@ -159,7 +159,11 @@
                                         {% if event.hide_address %}
                                             Address hidden by host
                                         {% else %}
-                                            {{ event.building_name}} 
+                                            {% if event.building_name %}
+                                                {{ event.building_name}}
+                                            {% else %}
+                                                {{ event.street }}, {{ event.city }}
+                                            {% endif %}
                                             <span class="text-black text-1xl">•</span>
                                             <a target="_blank" href="https://www.google.com/maps?q={{ event.street|urlencode }},+{{ event.city|urlencode }},+{{ event.state|urlencode }},+{{ event.zip_code|urlencode }},+{{ event.country|urlencode }}" class="text-[#008d95] text-Semi-Medium font-Wanted-Variable">Locate</a>
                                         {% endif %}
