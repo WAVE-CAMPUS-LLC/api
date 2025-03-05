@@ -172,3 +172,19 @@ def favourited_events_api(request):
     favourite_events_serialized = EventSerializer(favourite_events, many=True)
     
     return Response(favourite_events_serialized.data, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_payment_methods_api(request):
+    user = request.user
+    customer_id = user.customer_id
+    payment_methods = CustomerAccount.listPaymentMethods(customer_id)
+    if payment_methods:
+        for method in payment_methods:
+            method["exp_month"] = datetime.strptime(str(method["exp_month"]), "%m").strftime("%B")
+    
+    return Response({
+        "payment_methods": payment_methods or [],
+        "has_payment_methods": bool(payment_methods)
+    }, status=status.HTTP_200_OK)
