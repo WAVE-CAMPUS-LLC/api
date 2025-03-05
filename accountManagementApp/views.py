@@ -35,9 +35,9 @@ UserModel = get_user_model()
 @verified
 def profileView(request):
     userRequest = request.user
-    purchased_tickets = Ticket.objects.filter(user=request.user).select_related('event')
     blogItems = Blog.objects.filter(created_by=userRequest)
     userProfile = UserProfile.objects.get(user=userRequest)
+    purchased_events = userProfile.purchased_events.all()
     favorite_events = userProfile.favorite_events.all()
     stripeKey = settings.STRIPE_PUBLISHABLE_KEY
     
@@ -144,7 +144,7 @@ def profileView(request):
             "favoriteEvents": favorite_events,
             "stripeKey": stripeKey,
             "payments": payment_methods,
-            "purchasedEvents": purchased_tickets,
+            "purchasedTickets": purchased_events,
             "accountBalance": accountBalance,
             "totalEarnings": totalEarnings,
             "dashboardLink": dashboardLink,

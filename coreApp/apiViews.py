@@ -5,17 +5,24 @@ from django.db.models import Count, Q
 from django.utils.timezone import now
 from datetime import timedelta, date
 from django.shortcuts import get_object_or_404
+from rest_framework import serializers, status
 
 import random
 
 from eventManagementApp.models import Event, SharedEvent
 from accountManagementApp.models import UserProfile
 from eventTicketsApp.models import RSVPTicket, PaidFreeTicket
+from eventTicketsApp.views import generateTicket
+from socialApp.models import Crew
 from .forms import RSVPForm
 from authenticationApp.models import CustomUser
-from .serializers import EventSerializer
+from eventManagementApp.serializers import EventSerializer
 from eventTicketsApp.serializers import RSVPTicketSerializer
-from eventTicketsApp.models import RSVPTicket, PaidFreeTicket
+
+class CustomUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = ('id', 'username', 'email')
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
@@ -28,38 +35,18 @@ def explore_events(request):
     - Trending categories
     - Invited events (for authenticated users)
     """
-    # Handle age restrictions
-    if not request.user.is_authenticated:
-        age_filter = Q(age_restriction="")
-    else:
-        user_age = request.user.age
-        if user_age is None and request.user.birthday:
-            today = date.today()
-            user_age = (today.year - request.user.birthday.year) - (
-                (today.month, today.day)
-                < (request.user.birthday.month, request.user.birthday.day)
-            )
-            request.user.age = user_age
-            request.user.save()
-
-        age_filter = Q(age_restriction="")
-        if user_age:
-            if user_age >= 21:
-                age_filter |= Q(age_restriction="21+")
-            if user_age >= 18:
-                age_filter |= Q(age_restriction="18+")
-
-    # Load initial events
-    initial_events = Event.objects.filter(
+    # Load all events at once - no more pagination
+    all_events = Event.objects.filter(
         status="live", 
-        forAllDisplay=True,  # Changed from privacy="Discoverable"
+        forAllDisplay=True,
         admin_status="active"
     )
 
     # Get trending events
     trending_events = Event.objects.filter(
         status="live", 
-        forAllDisplay=True  # Changed from privacy="Discoverable"
+        forAllDisplay=True,
+        admin_status="active"
     ).order_by("date")[:3]
 
     # Get invited events for authenticated users
@@ -67,19 +54,14 @@ def explore_events(request):
     if request.user.is_authenticated:
         try:
             user_profile = UserProfile.objects.get(user=request.user)
-            invited_events = user_profile.invited_events.filter(status="live").filter(age_filter)
+            invited_events = user_profile.invited_events.filter(status="live")
             invitations = user_profile.invitations.all()
             
             for event in invited_events:
                 token = next((invite.token for invite in invitations if invite.event == event), None)
+                event_serializer = EventSerializer(event)
                 invited_events_data.append({
-                    'event': {
-                        'id': str(event.eventId),
-                        'title': event.title,
-                        'date': event.date,
-                        'header_photo': event.header_photo.url if event.header_photo else None,
-                        'host': event.host.username if event.host else None,
-                    },
+                    'event': event_serializer.data,
                     'token': str(token) if token else None
                 })
         except UserProfile.DoesNotExist:
@@ -114,31 +96,17 @@ def explore_events(request):
         admin_status="active",
     ).order_by("?")[:3]
 
+    # Prepare response data using serializers
+    all_events_serialized = EventSerializer(all_events, many=True)
+    trending_events_serialized = EventSerializer(trending_events, many=True)
+    weekly_events_serialized = EventSerializer(weekly_events, many=True)
+    
     # Prepare response data
     response_data = {
-        'initial_events': [{
-            'id': str(event.eventId),
-            'title': event.title,
-            'date': event.date,
-            'header_photo': event.header_photo.url if event.header_photo else None,
-            'host': event.host.username if event.host else None,
-            'status': event.status
-        } for event in initial_events],
-        'trending_events': [{
-            'id': str(event.eventId),
-            'title': event.title,
-            'date': event.date,
-            'header_photo': event.header_photo.url if event.header_photo else None,
-            'host': event.host.username if event.host else None,
-        } for event in trending_events],
-        'weekly_events': [{
-            'id': str(event.eventId),
-            'title': event.title,
-            'date': event.date,
-            'header_photo': event.header_photo.url if event.header_photo else None,
-            'host': event.host.username if event.host else None,
-        } for event in weekly_events],
-        'trending_categories': all_categories,  # Changed this line
+        'events': all_events_serialized.data,  # All events in a single list
+        'trending_events': trending_events_serialized.data,
+        'weekly_events': weekly_events_serialized.data,
+        'trending_categories': all_categories,
         'invited_events': invited_events_data
     }
 
@@ -152,26 +120,6 @@ def load_more_events(request):
     """
     offset = int(request.GET.get("offset", 7))
     limit = 3
-
-    if not request.user.is_authenticated:
-        age_filter = Q(age_restriction="")
-    else:
-        user_age = request.user.age
-        if user_age is None and request.user.birthday:
-            today = date.today()
-            user_age = (today.year - request.user.birthday.year) - (
-                (today.month, today.day)
-                < (request.user.birthday.month, request.user.birthday.day)
-            )
-            request.user.age = user_age
-            request.user.save()
-
-        age_filter = Q(age_restriction="")
-        if user_age:
-            if user_age >= 21:
-                age_filter |= Q(age_restriction="21+")
-            if user_age >= 18:
-                age_filter |= Q(age_restriction="18+")
 
     more_events = Event.objects.filter(
         status="live", privacy="Discoverable", admin_status="active"
@@ -324,26 +272,14 @@ def event_details(request, eventId):
         
         "rsvpFormRequired": rsvpFormRequired,  # Boolean indicating if RSVP form is required
         "paidFreeTickets": eventPaidFreeTickets.values(),
-        "friends": [user_friend.username for user_friend in user_friends] if user_friends else [],
+        "friends": [CustomUserSerializer(user_friend.user).data for user_friend in user_friends] if user_friends else [],
         "crews": [user_crew.name for user_crew in user_crews] if user_crews else [],
         "isFavoriteEvent": isFavoriteEvent,
-        "guestList": [guest.username for guest in guest_list] if guest_list else [],
+        "guestList": [CustomUserSerializer(guest).data for guest in guest_list] if guest_list else [],
     }
 
     return Response(response_data)
 
-def handle_rsvp(request, eventId):
-    event = get_object_or_404(Event, eventId=eventId)
-
-    # Extract user information and validate RSVP
-    email = request.data.get('email')
-    existing_rsvp = RSVPTicket.objects.filter(event=event, email=email).first()
-
-    if existing_rsvp:
-        return Response({"error": "This email has already been submitted! Try a different one."}, status=400)
-
-    rsvp_ticket = RSVPTicket.objects.create(event=event, email=email)
-    return Response({"message": "You have reserved a spot! Check your email for confirmation."}, status=201)
 
 
 def share_event_with_friend(request, eventId):
@@ -363,16 +299,57 @@ def share_event_with_friend(request, eventId):
         return Response({"message": "Event already shared."}, status=200)
 
 
-def favorite_event(request, eventId):
-    event = get_object_or_404(Event, eventId=eventId)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def toggle_favorite(request, eventId):
+    """
+    API endpoint to toggle favorite status of an event.
+    """
     user_profile = get_object_or_404(UserProfile, user=request.user)
-
-    user_profile.favorite_events.add(event)
-    return Response({"message": "Event added to your favorites."}, status=200)
-
-def unfavorite_event(request, eventId):
     event = get_object_or_404(Event, eventId=eventId)
-    user_profile = get_object_or_404(UserProfile, user=request.user)
+    action = request.data.get('eventAction')
+    
+    if action == "favoriteEvent":
+        user_profile.favorite_events.add(event)
+        return Response({"status": "successfulFavorite", "message": "Event added to favorites."})
+    else:
+        user_profile.favorite_events.remove(event)
+        return Response({"status": "successfulUnfavorite", "message": "Event removed from favorites."})
 
-    user_profile.favorite_events.remove(event)
-    return Response({"message": "Event removed from your favorites."}, status=200)
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def handle_rsvp(request, eventId):
+    """
+    API endpoint to handle RSVP for an event.
+    """
+    event = get_object_or_404(Event, eventId=eventId)
+    
+    existing_rsvp = RSVPTicket.objects.filter(event=event, email=request.user.email).first() if request.user.is_authenticated else None
+    
+    if existing_rsvp:
+        return Response({"status": "error", "message": "This email has already been submitted!"}, status=400)
+    
+    rsvp_form = RSVPForm(request.data, user=request.user)
+    if rsvp_form.is_valid():
+        rsvp_ticket = rsvp_form.save(commit=False)
+        
+        if RSVPTicket.objects.filter(event=event, email=rsvp_ticket.email).exists():
+            return Response({"status": "error", "message": "This email has already been submitted! Try a different one."}, status=400)
+        
+        if request.user.is_authenticated:
+            user_profile = get_object_or_404(UserProfile, user=request.user)
+            event.guest_list.add(user_profile.user)
+            rsvp_ticket.first_name = request.user.first_name
+            rsvp_ticket.last_name = request.user.last_name
+            rsvp_ticket.email = request.user.email
+        
+        rsvp_ticket.event = event
+        rsvp_ticket.save()
+        
+        generateTicket(request, event, request.user if request.user.is_authenticated else None, rsvp_ticket.first_name, rsvp_ticket.last_name, rsvp_ticket.email)
+        
+        return Response({"status": "success", "message": "You have reserved a spot! Check your email for confirmation."})
+    else:
+        return Response({"status": "error", "message": "There was an error with your submission.", "errors": rsvp_form.errors}, status=400)

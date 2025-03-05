@@ -55,7 +55,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
       // Update the checkout total amount and display it
       checkoutTotalElement.textContent = `$${totalAmount.toFixed(2)}`;
-      console.log("Total Amount:", totalAmount);
     }
   }
   const saveUrl = document.getElementById("save-url").value;

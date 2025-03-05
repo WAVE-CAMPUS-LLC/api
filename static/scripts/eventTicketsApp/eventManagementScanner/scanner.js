@@ -35,7 +35,6 @@ function startQrScan() {
       config,
       (decodedText, decodedResult) => {
         // alert("QR Code Content: " + decodedText);
-        // console.log("Decoded QR Code Content:", decodedText);
         verifyTicket(decodedText);
       },
       (errorMessage) => {

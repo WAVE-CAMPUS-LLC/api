@@ -64,7 +64,6 @@ $(document).ready(function () {
           if (data.no_results) {
             $(".searchCardBody").html(data.no_results_html);
           } else {
-            console.log(data.results_html);
             // Append each result to the search card body
             $.each(data.results_html, function (index, resultHtml) {
               $(".searchCardBody").append(resultHtml);
@@ -108,6 +107,7 @@ document.addEventListener("DOMContentLoaded", function () {
   // Initialize tab systems for each body section
   initializeTabSystem("socialBody", "social-tab", "social-home-elements", 'social-tab-active');
   initializeTabSystem("pageBody", "crewDetailsTab", "crewTabInformation", 'crew-tab-active');
+  initializeTabSystem("go-with-body", "go-with-tab", "go-with-tab-content", 'tab-active');
 
   // Function to initialize tab system for a specific body section
   function initializeTabSystem(bodyId, tabClass, contentClass, tabActiveName) {

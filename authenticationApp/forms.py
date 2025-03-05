@@ -10,6 +10,7 @@ from django.contrib.auth.forms import (
     PasswordResetForm,
 )
 from django.contrib import messages
+from hcaptcha.fields import hCaptchaField
 
 
 class CustomUserJoinForm(UserCreationForm):
@@ -17,6 +18,7 @@ class CustomUserJoinForm(UserCreationForm):
     password2 = forms.CharField(label="Confirm Password", widget=forms.PasswordInput)
     current_year = datetime.now().year
     birthday = forms.DateField(widget=forms.SelectDateWidget(years=range(1980, current_year + 1)))    
+    captcha = hCaptchaField()
 
     class Meta:
         model = CustomUser
@@ -28,6 +30,7 @@ class CustomUserJoinForm(UserCreationForm):
             "birthday",
             "password1",
             "password2",
+            "captcha",
         )
 
     def clean_password2(self):

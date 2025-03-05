@@ -393,6 +393,9 @@ def generateTicket(
                 fail_silently=False,
                 html_message=qrCodeHtml,
             )
+            # Add event to user's purchased events if authenticated
+            if request.user.is_authenticated:
+                request.user.user_profile.purchased_events.add(event)
 
     except Exception as e:
         print(f"Error generating QR code: {e}")

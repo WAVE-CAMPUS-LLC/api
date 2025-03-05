@@ -231,6 +231,22 @@ def loginView(request):
                     request, email=user.email, password=password
                 )  # Authenticate using email
                 if user:
+                    # Create or find Stripe customer before logging in
+                    if not user.customer_id:
+                        existing_customer = CustomerAccount.searchCustomerAccount(user.email)
+                        if existing_customer:
+                            user.customer_id = existing_customer.id
+                            user.save()
+                        else:
+                            new_customer = CustomerAccount.createCustomerAccount(
+                                request, user.email, user.first_name, user.last_name
+                            )
+                            if new_customer:
+                                user.customer_id = new_customer.id
+                                user.save()
+                            else:
+                                messages.warning(request, "Failed to set up payment processing. You can try again in your account settings.")
+
                     login(request, user)
                     LoginHistoryModel.objects.create(
                         user=user,
@@ -251,7 +267,6 @@ def loginView(request):
             form.add_error(None, "Invalid email/username or password")
     else:
         form = UserAuthenticationForm()
-
     return render(request, "authenticationApp/login.html", {"form": form})
 
 

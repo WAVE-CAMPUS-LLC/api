@@ -118,7 +118,26 @@ $(document).ready(function () {
     }
 
 
-    function performSearch(context, idName) {
+    let is_processing = false; //debouncing
+    $(document).on('click', '.pageChange', (event)=> {
+        const context = $('.search-input').data('context');
+        const idName = $('.search-input').data('id');
+        if(is_processing) {return;}
+        is_processing = true;
+        event.preventDefault();
+
+
+        const button = event.currentTarget;
+        const page = button.value;
+        $('.pageChange').removeClass('active_page_btn');
+        $(button).addClass('active_page_btn')
+        console.log(page + 'This is the page yo')
+        perform_page_change(context, idName, page-1);
+
+        is_processing = false;
+    });
+
+    function perform_page_change(context, idName, page) {
         const $input = $(`.search-input[data-context=${context}][data-id=${idName}]`);
         const query = $input.val().trim();
 
@@ -252,37 +271,37 @@ $(document).ready(function () {
 
     function renderFriendItem(item) {
         let buttonHtml = '';
+        
         if (item.is_friend) {
-            // Do not display the Connect button if already friends
             buttonHtml = `
-                <button class="bg-[#00b500] text-white py-2 px-5 border border-solid border-transparent pending cursor-not-allowed  text-[18px] rounded-[20px]" type="button" disabled>
+                <button class="py-2 px-5 border border-solid border-transparent text-white font-Wanted-Variable no-underline flex items-center justify-center gap-2.5 cursor-not-allowed text-[18px] rounded-[20px] bg-[#00b500]" disabled>
                     Friend
                 </button>`;
         } else if (item.has_sent_friend_request) {
-            // Display a disabled button with "Pending" text if request is sent
             buttonHtml = `
-                <button class="bg-red-600 text-white py-2 px-5 border border-solid border-transparent pending cursor-not-allowed  text-[18px] rounded-[20px]" type="button" disabled>
+                <button class="py-2 px-5 border border-solid border-transparent text-white font-Wanted-Variable no-underline flex items-center justify-center gap-2.5 cursor-not-allowed text-[18px] rounded-[20px] bg-red-600" disabled>
                     Pending
                 </button>`;
         } else {
-            // Display the active "Connect" button if no request is sent and not friends
             buttonHtml = `
-                <button class="py-2 px-5 border border-solid border-transparent text-white font-Wanted-Variable no-underline flex items-center justify-center gap-2.5 cursor-pointer text-[18px] rounded-[20px] bg-gradient-to-r from-[#008d95bc] to-[#13c9d3] rounded-2xl hover:bg-green send-connect" type="button" role="button" data-username="${item.username}">
+                <button class="py-2 px-5 border border-solid border-transparent text-white font-Wanted-Variable no-underline flex items-center justify-center gap-2.5 cursor-pointer text-[18px] rounded-[20px] bg-gradient-to-r from-[#008d95bc] to-[#13c9d3] rounded-2xl hover:bg-green send-connect" data-username="${item.username}">
                     Connect
                 </button>`;
         }
 
         return `
             <div class="grid grid-cols-2 hover:scale-95 transform transition duration-300 grid grid-cols-2 cursor-pointer">
-                <div class="flex flex-row gap-3 items-center">
-                    <div class="flex justify-center items-center">
-                        <img src="${item.profile_photo_url}" alt="${item.display_name}" class="lazyload size-11 rounded-full">
+                <a href="/profile/${item.username}/" class="flex flex-row gap-3 items-center">
+                    <div class="flex flex-row gap-3 items-center">
+                            <div class="flex justify-center items-center">
+                                <img src="${item.profile_photo_url}" alt="${item.display_name}" class="lazyload size-11 rounded-full">
+                            </div>
+                        <div class="flex flex-col justify-center items-start gap-1">
+                            <h2 class="font-Wanted-SemiBold text-Base">${item.display_name}</h2>
+                            <p class="font-Wanted-Variable text-customGray5">@${item.username}</p>
+                        </div>
                     </div>
-                    <div class="flex flex-col justify-center items-start gap-1">
-                        <h2 class="font-Wanted-SemiBold text-Base">${item.display_name}</h2>
-                        <p class="font-Wanted-Variable text-customGray5">@${item.username}</p>
-                    </div>
-                </div>
+                </a>
                 <div class="flex justify-end items-center">
                     ${buttonHtml}
                 </div>

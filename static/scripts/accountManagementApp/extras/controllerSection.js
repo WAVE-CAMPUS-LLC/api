@@ -86,7 +86,6 @@
 //                 contentType: false,
 //                 success: (response) => {
 //                     if (response.success) {
-//                         console.log('Section saved successfully');
 //                         resolve(response);
 //                     } else {
 //                         reject(new Error(response.message || 'Failed to save section data.'));

@@ -150,16 +150,38 @@ Manage {{ event.title }} | WAVE.
                     <div class="flex flex-col gap-1">
                         <h3 class="font-Wanted-ExtraBold text-Medium">Location</h3>
                         <p id="eventLocation" class="font-Wanted-Variable text-Pre-Xl">
-                            {{ event.building_name }}, 
-                            <br/> 
+                            {% if event.building_name %}
+                                {{ event.building_name }}, 
+                                <br/>
+                            {% endif %} 
                             {{ event.street }}, 
-                            {% if event.apt_suite_unit %}{{ event.apt_suite_unit }},{% endif %} 
-                            <br/>
+                            {% if event.apt_suite_unit %}
+                                {{ event.apt_suite_unit }},
+                                <br/>
+                            {% endif %} 
                             {{ event.city }}, 
                             <br/>
                             {{ event.state }}, 
                             {{ event.zip_code }}
                         </p>
+                        <form method="POST">
+                            {% csrf_token %}
+                            <div class="flex flex-row w-full justify-start items-center gap-10">
+                                <p class="font-Wanted-SemiBold text-Medium flex flex-col gap-1">
+                                    Hide address
+                                </p>
+                                <label class="toggle-switch">
+                                    <!-- Removed the hidden input -->
+                                    <input 
+                                        type="checkbox"
+                                        name="hide_address"
+                                        value="on"
+                                        onchange="this.form.submit()"
+                                        {% if event.hide_address %}checked{% endif %} />
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </form>  
                     </div>
                     
                     <!-- Body Images -->
@@ -348,14 +370,11 @@ Manage {{ event.title }} | WAVE.
                                         <div class="w-full flex justify-end">
                                             <p class="w-full flex justify-end font-Wanted-Variable text-Large">${{ ticket.ticket_price }}</p>
                                         </div>
-                                        <form method="post" class="w-full flex justify-between">
+                                        <form method="post" class="w-full flex justify-end">
                                             {% csrf_token %}
-                                            <button class="w-6 h-6 bg-white rounded-full p-2" type="submit" title="Delete Ticket" role="button" name="eventAction" value="deleteTicket" data-ticketid="{{ ticket.ticket_id }}">
-                                                <img src="{% static "/images/eventManagementApp/ticketing/bin.svg" %}" class="size-6" />
-                                            </button>
                                             <input type="hidden" name="ticketId" value="{{ ticket.ticket_id }}" />
-                                            <button class="w-6 h-6 bg-white rounded-full p-2" type="button" title="Edit Ticket" role="button" id="editTicketButton-{{ ticket.ticket_id }}" data-ticketid="{{ ticket.ticket_id }}">
-                                                <img src="{% static "/images/eventManagementApp/host/edit.svg" %}" class="size-6" />
+                                            <button class="flex justify-end" type="submit" title="Delete Ticket" role="button" name="eventAction" value="deleteTicket" data-ticketid="{{ ticket.ticket_id }}">
+                                                <img src="{% static "/images/eventManagementApp/host/delete.svg" %}" class="size-5 flex justify-end" />
                                             </button>
                                         </form>
                                     </div>
@@ -437,10 +456,6 @@ Manage {{ event.title }} | WAVE.
                                 <div class="empty-pcb">
                                     <img class="empty-image size-14" src="{% static "/images/eventManagementApp/host/empty-listing.svg" %}" />
                                     <p class="font-Wanted-Variable text-Pre-Xl">You haven't created any tickets. </p>
-                                    <button type="button" class="createTicketButton gradient-btn" id="createTicketButtonSecond" role="button">
-                                        <img src="{% static "/images/eventManagementApp/host/host_ticket.svg" %}" />
-                                        Create Ticket
-                                    </button>
                                 </div>
                                 {% endif %}
                             </div>

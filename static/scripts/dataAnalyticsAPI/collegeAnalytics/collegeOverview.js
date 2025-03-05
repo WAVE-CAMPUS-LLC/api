@@ -9,7 +9,6 @@ document.addEventListener('DOMContentLoaded', () => {
         fetch(`${url}?type=${type}`)
             .then((response) => response.json())
             .then((data) => {
-                console.log('Fetched data:', data);
 
                 const labels = [];
                 const counts = [];
@@ -25,9 +24,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         counts.push(city.college_count); // Correctly access "college_count"
                     });
                 }
-
-                console.log('Labels:', labels);
-                console.log('Counts:', counts);
 
                 if (chartInstance) {
                     chartInstance.destroy();

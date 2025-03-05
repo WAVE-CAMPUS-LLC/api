@@ -17,7 +17,7 @@ from eventManagementApp.models import (
     InviteEventOption,
     SharedEvent,
 )
-from socialApp.models import FriendRequest, Crew
+from socialApp.models import FriendRequest, Crew, GoWithRequest
 from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
 from eventTicketsApp.models import RSVPTicket, PaidFreeTicket
@@ -315,8 +315,27 @@ def handleRSVP(request, eventId):
             "errors": rsvpForm.errors,
         }
         return JsonResponse(response_data, status=400)
+    
+        
+# Create your views here.
+def send_go_with_request(request, eventId, user, guest):
+    event = get_object_or_404(Event, eventId=eventId)
+    guest = get_object_or_404(UserProfile, user=guest)
 
+    go_with_request, created = GoWithRequest.objects.get_or_create(
+        event=event, sender=user, receiver=guest
+    )
 
+    if created:
+        go_with_request.save()
+        messages.success(request, f"Sent go-with request to {go_with_request.receiver.user.first_name} {go_with_request.receiver.user.last_name}.")
+    else:
+        if go_with_request.status == "Pending":
+            messages.warning(request, f"You have already sent a go-with request to {go_with_request.receiver.user.first_name} {go_with_request.receiver.user.last_name}.")
+        elif go_with_request.status == "Accepted":
+            messages.warning(request, f"You're request has already been accepted by {go_with_request.receiver.user.first_name} {go_with_request.receiver.user.last_name}.")
+        elif go_with_request.status == "Declined":
+            messages.warning(request, f"You're request has been declined by {go_with_request.receiver.user.first_name} {go_with_request.receiver.user.last_name}.")
 
 def eventDetailsView(request, eventId, token=None):
     pageName = "eventDetails"
@@ -326,14 +345,12 @@ def eventDetailsView(request, eventId, token=None):
     siteURL = settings.SITE_URL
     link = reverse('core:eventDetails', kwargs={'eventId': eventId})
     eventLink = f"{siteURL}{link}"
-    
-    # Create RSVP form for Free events
     rsvpForm = RSVPForm(user=request.user) if event.ticketing == "Free" else None
-    rsvp_guests = RSVPTicket.objects.filter(event=event, display_on_guestlist=True)
     user = None
     user_friends = None
     user_crews = None
     guest_list = event.guest_list.all()
+    user_id = request.user.user_id if request.user.is_authenticated else None
 
     if request.user.is_authenticated:
         user = get_object_or_404(UserProfile, user=request.user)
@@ -381,7 +398,7 @@ def eventDetailsView(request, eventId, token=None):
                 )
                 user = get_object_or_404(UserProfile, user=myUserAccount)
 
-                shared_event, created = SharedEvent.objects.get_or_create(
+                shared_event, created = SharedEvent.objects.update_or_create(
                     sender=user, receiver=friend, event=event
                 )
 
@@ -422,7 +439,7 @@ def eventDetailsView(request, eventId, token=None):
                 user = get_object_or_404(UserProfile, user=request.user)
 
                 for member in crew.members.all():
-                    SharedEvent.objects.get_or_create(
+                    SharedEvent.objects.update_or_create(
                         crew=crew,
                         sender=user,
                         receiver=member.user_profile,
@@ -445,9 +462,17 @@ def eventDetailsView(request, eventId, token=None):
                 return redirect(
                     "eventTickets:crewCheckout", crewId=crew_id, ticketId=ticketId
                 )
-
+                
+        elif action == "sendGoWithRequest":
+            guest_id = request.POST.get("guestId")
+            if not user:
+                messages.warning(request, "Please login to send a go with request.")
+                return redirect("authentication:login")
+            else:
+                guest = get_object_or_404(CustomUser, user_id=guest_id)
+                send_go_with_request(request, eventId, user, guest)  
+                return redirect("core:eventDetails", eventId=eventId)
     
-
     else:
         return render(
             request,
@@ -462,6 +487,7 @@ def eventDetailsView(request, eventId, token=None):
                 "isFavoriteEvent": isFavoriteEvent,
                 "guestList": guest_list,
                 "eventLink": eventLink,
+                "userId": user_id,
             },
         )
 

@@ -12,6 +12,7 @@ class FriendRequest(models.Model):
         ("pending", "Pending"),
         ("declined", "Declined"),
         ("accepted", "Accepted"),
+        ("canceled", "Canceled"),
     ]
 
     requestId = models.UUIDField(
@@ -32,7 +33,13 @@ class FriendRequest(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        unique_together = ("sender", "receiver")
+        constraints = [
+            models.UniqueConstraint(
+                fields=['sender', 'receiver'],
+                condition=models.Q(status__in=['pending', 'accepted']),
+                name='unique_active_request'
+            )
+        ]
         verbose_name = "Friend Request"
         verbose_name_plural = "Friend Requests"
         default_permissions = ()
@@ -136,3 +143,50 @@ class CrewRequest(models.Model):
         self.status = "declined"
         self.save()
         return self 
+    
+class GoWithRequest(models.Model):
+    requestId = models.UUIDField(
+        primary_key=True, default=uuid.uuid4, editable=False, unique=True
+    )
+    
+    event = models.ForeignKey(
+        "eventManagementApp.Event", on_delete=models.CASCADE, related_name='go_with_requests'
+    )
+    
+    sender = models.ForeignKey(
+        "accountManagementApp.UserProfile", related_name="sent_go_with", on_delete=models.CASCADE
+    )
+    receiver = models.ForeignKey(
+        "accountManagementApp.UserProfile", related_name="received_go_with", on_delete=models.CASCADE
+    )
+        
+    status = models.CharField(
+        max_length=10,
+        choices=[("pending", "Pending"), ("declined", "Declined"), ("accepted", "Accepted"), ("cancelled", "Cancelled")],
+        default="Pending",
+    )
+    
+    class Meta:
+        unique_together = ("sender", "receiver")
+        verbose_name = "Go With Request"
+        verbose_name_plural = "Go With Requests"
+        default_permissions = []
+
+    def __str__(self):
+        return f"{self.sender.username} -> {self.receiver.username}"
+    
+    def accept_go_with(self):
+        self.status = "accepted"
+        self.save()
+        return self 
+    
+    def decline_go_with(self):
+        self.status = "declined"
+        self.save()
+        return self
+    
+    def cancel_go_with(self):
+        self.status = "cancelled"
+        self.save()
+        return self
+    

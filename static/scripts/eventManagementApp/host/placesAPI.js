@@ -23,10 +23,6 @@
 
 //         // Set the full address as the value of the input
 //         input.value = place.formatted_address;
-
-//         console.log('Selected Address:', place.formatted_address);
-//         console.log('Latitude:', place.geometry.location.lat());
-//         console.log('Longitude:', place.geometry.location.lng());
 //     });
 // }
 

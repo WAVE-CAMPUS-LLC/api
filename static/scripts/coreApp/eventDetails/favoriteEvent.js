@@ -64,8 +64,6 @@ document.addEventListener("DOMContentLoaded", function () {
       return response.json();
     })
     .then((data) => {
-      console.log("Server response:", data);
-
       if (data.status === "successfulFavorite") {
         favoriteForm.style.display = "none";
         unFavoriteForm.style.display = "block";

@@ -17,7 +17,7 @@ def createHostProduct(event, stripeAccountId):
         product = stripe.Product.create(
             name=event.title,
             unit_label="hour",
-            statement_descriptor=event.title,  # Stripe allows max 22 characters for statement descriptor
+            statement_descriptor=event.title[:22],  # Stripe allows max 22 characters for statement descriptor
             description=event.description,
             metadata={
                 "Event ID": event.eventId, 

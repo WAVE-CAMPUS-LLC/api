@@ -8,14 +8,12 @@
 {% endblock title %}
 
 {% block metatags %}
-<meta name="description" content="{{ event.description|safe }}">
+<meta name="description" content="{{ event.description|striptags|escape }}">
 <meta property="og:title" content="{{ event.title}}">
-<meta property="og:description" content="{{ event.description|safe }}">
 <meta property="og:image" content="{{ event.header_photo.url }}">
 <meta property="twitter:card" content="summary_large_image">
 <meta property="twitter:site" content="@waveoncamp">
 <meta property="twitter:title" content="{{ event.title }} ({{ event.date }}) hosted by @{{ event.host.username }}">
-<meta property="twitter:description" content="{{ event.description|safe }}">
 <meta property="twitter:image" content="{{ event.header_photo.url }}">          
 <meta name="theme-color" content="#008d95">
 <link rel="canonical" href="https://waveoncampus.com/event/{{ event.eventId }}">
@@ -71,7 +69,7 @@
         </div>
 
         
-        <div class="flex items-start flex-row justify-center lg:justify-end gap-5">
+        <div class="flex items-start flex-row justify-between lg:justify-end gap-5">
             <button id="shareEventButton" type="button" class="border-none bg-none cursor-pointer" role="button">
                 <img src="{% static "/images/coreApp/eventDetails/share-event.svg" %}" class="size-5 sm:size-8" />
             </button>
@@ -161,7 +159,11 @@
                                         {% if event.hide_address %}
                                             Address hidden by host
                                         {% else %}
-                                            {{ event.building_name}} 
+                                            {% if event.building_name %}
+                                                {{ event.building_name}}
+                                            {% else %}
+                                                {{ event.street }}, {{ event.city }}
+                                            {% endif %}
                                             <span class="text-black text-1xl">•</span>
                                             <a target="_blank" href="https://www.google.com/maps?q={{ event.street|urlencode }},+{{ event.city|urlencode }},+{{ event.state|urlencode }},+{{ event.zip_code|urlencode }},+{{ event.country|urlencode }}" class="text-[#008d95] text-Semi-Medium font-Wanted-Variable">Locate</a>
                                         {% endif %}
@@ -172,9 +174,9 @@
                             
 
                             <div class="flex flex-col gap-0 w-auto quill-content">
-                                <p class="font-Wanted-Regular text-Large w-full quill-content">
+                                <div class="font-Wanted-Regular text-Large w-full quill-content">
                                     {{ event.description|safe }}
-                                </p>
+                                </div>
                             </div>
 
                             {% if event.age_restriction %}
@@ -190,6 +192,7 @@
                                 <div id="guestList" class="flex flex-row gap-7">
                                     {% if guestList %}
                                         {% for guest in guestList %}
+                                        <div class="flex flex-col items-center justify-center gap-1">
                                             <a class="flex flex-col items-center justify-center gap-1" href="{% url 'social:publicProfile' username=guest.username %}">
                                                 {% if guest.user_profile and guest.user_profile.profile_photo %}
                                                     <img class="h-20 w-20 rounded-full"
@@ -202,10 +205,24 @@
                                                 {% endif %}
 
                                                 <p class="font-Wanted-Medium text-black text-sm">
-                                                    {{ guest.first_name }} {{ guest.last_name }}
+                                                    {{ guest.first_name }} {{ guest.last_name }} 
+                                                    {% if guest.user_id == userId %}
+                                                        (you)
+                                                    {% endif %}
                                                 </p>
                                             </a>
-                                        {% endfor %}
+                                            {% if not guest.user_id == userId %}
+                                                <form method="POST">
+                                                    {% csrf_token %}
+                                                    <input type="hidden" name="eventAction" value="sendGoWithRequest">
+                                                    <input type="hidden" name="guestId" value="{{ guest.user_id }}">
+                                                    <button type="submit" title="Request to go with {{ guest.first_name }} {{ guest.last_name }}?" class="p-1 border bg-[#008d95] rounded-2xl px-4 text-white font-Wanted-Regular">
+                                                        Go-With
+                                                    </button>
+                                                </form>
+                                            {% endif %}
+                                        </div>
+                                        {% endfor %}    
                                     {% else %}
                                         <div class="emptyContainer h-full w-full rounded-[20px] py-[70px] flex justify-center flex-col gap-[10px] items-center bg-[rgba(146,146,146,0.096)]">
                                             <div>
@@ -221,7 +238,7 @@
                     </div>
 
                     {% if paidFreeTickets or event.ticketing == "Free" %}
-                    <div id="eventTicketInformation" class="ticketinfo-body eventDetailsTabInformation">
+                    <div id="eventTicketInformation" class="ticketinfo-body eventDetailsTabInformation hidden">
                         <div class="eventTickets-body flex flex-col gap-2">
                             {% if event.ticketing == "Free" %}
                             <div class="ticketBodyHeader font-Wanted-Bold text-Medium xsm:text-Large after-xsm:text-Pre-Xl xxsm:text-1xl pre-sm:text-1xl sm:text-2xl md:text-3xl text-black">
@@ -450,7 +467,7 @@
                     {% endif %}
                     
                     {% if event.body_photo_one or event.body_photo_two or event.body_photo_three or event.body_photo_four or event.body_photo_five %}
-                    <div id="eventPhotosVideos" class="attachment-body eventDetailsTabInformation">
+                    <div id="eventPhotosVideos" class="attachment-body eventDetailsTabInformation hidden">
                         <div class="eventPhotosVideos-body">
                             <div id="slideshow-container" class="slideshow-container grid sm:grid-cols-1 pre-lg:grid-cols-2 lg:grid-cols-3">
                                 {% if event.body_photo_one %}
@@ -533,7 +550,7 @@
 
 <div id="shareEventPopup" class="hidden bg-[rgba(0, 0, 0, 0.037)] backdrop-blur-sm fixed top-0 left-0 right-0 bottom-0 z-[1005] w-full h-full cursor-default">
     <div class="modalContainer w-full h-full flex justify-center items-center py-5 md:py-11">
-        <div class="modalContentCard w-4/12 h-full lg:h-[75%] bg-white shadow-custom-shadow rounded-2xl p-5 pb-12 flex flex-col gap-3 overflow-y-auto">
+        <div class="modalContentCard w-[95%] pre-sm:w-[80%] sm:w-[70%] md:w-[60%] xl:w-4/12 h-full lg:h-[75%] bg-white shadow-custom-shadow rounded-2xl p-5 pb-12 flex flex-col gap-3 overflow-y-auto">
             <div class="modalHeader w-full flex justify-between items-center flex-col"> 
                 <div class="modalClose">
                     <button type="button" role="button" id="closeShareEventPopup">

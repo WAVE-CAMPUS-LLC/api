@@ -105,6 +105,45 @@ else:
     CSP_IMG_SRC = ("'self'", "https://waveoncampus.com")
     CSP_FRAME_SRC = ("'self'",)
     default_storage._wrapped = SupabaseStorage()
+    LOGGING = {
+        "version": 1,
+        "disable_existing_loggers": False,
+        "formatters": {
+            "verbose": {
+                "format": "[{levelname}] {asctime} {name} {message}",
+                "style": "{",
+            },
+        },
+        "handlers": {
+            "console": {
+                "class": "logging.StreamHandler",
+                "formatter": "verbose",
+                "level": "DEBUG",
+            },
+            "file": {
+                "class": "logging.FileHandler",
+                "filename": "debug.log",
+                "formatter": "verbose",
+                "level": "DEBUG",
+            },
+        },
+        "loggers": {
+            "": {  # Root logger
+                "handlers": ["console", "file"],
+                "level": "DEBUG",
+            },
+            "adminDashboardApp": {  # Your app logger
+                "handlers": ["console", "file"],
+                "level": "DEBUG",
+                "propagate": True,
+            },
+            "django": {  # Django logger
+                "handlers": ["console", "file"],
+                "level": "INFO",
+                "propagate": True,
+            },
+        },
+    }
     print("Production Environment")
 
 
@@ -168,6 +207,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework_simplejwt",
     "corsheaders",
+    "hcaptcha",
 ]
 
 MIDDLEWARE = [
@@ -310,46 +350,6 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 time.sleep(5)
 
-LOGGING = {
-    "version": 1,
-    "disable_existing_loggers": False,
-    "formatters": {
-        "verbose": {
-            "format": "[{levelname}] {asctime} {name} {message}",
-            "style": "{",
-        },
-    },
-    "handlers": {
-        "console": {
-            "class": "logging.StreamHandler",
-            "formatter": "verbose",
-            "level": "DEBUG",
-        },
-        "file": {
-            "class": "logging.FileHandler",
-            "filename": "debug.log",
-            "formatter": "verbose",
-            "level": "DEBUG",
-        },
-    },
-    "loggers": {
-        "": {  # Root logger
-            "handlers": ["console", "file"],
-            "level": "DEBUG",
-        },
-        "adminDashboardApp": {  # Your app logger
-            "handlers": ["console", "file"],
-            "level": "DEBUG",
-            "propagate": True,
-        },
-        "django": {  # Django logger
-            "handlers": ["console", "file"],
-            "level": "INFO",
-            "propagate": True,
-        },
-    },
-}
-
 # REST Framework settings
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
@@ -366,8 +366,12 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=10),
-     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
-     'ROTATE_REFRESH_TOKENS': True,
-     'BLACKLIST_AFTER_ROTATION': True
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=183),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=365),  # Doubled the refresh token lifetime
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True
 }
+
+# hCaptcha settings
+HCAPTCHA_SITEKEY = os.getenv('HCAPTCHA_SITEKEY')  # Get this from hcaptcha.com
+HCAPTCHA_SECRET = os.getenv('HCAPTCHA_SECRET')  # Get this from hcaptcha.com

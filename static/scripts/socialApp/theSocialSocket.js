@@ -34,11 +34,9 @@
 //   const socket = new WebSocket(`${protocol}//${window.location.host}/social/`);
 
 //   socket.onopen = function () {
-//     console.log("WebSocket connected for socialHomeView");
 //   };
 
 //   socket.onclose = function () {
-//     console.log("WebSocket closed for crew requests");
 
 //     // // 1) Create the HTML for your overlay + popup
 //     // const overlayHTML = `
@@ -134,7 +132,7 @@
 //         break;
 
 //       default:
-//         console.error("Unknown action:", data.action);
+//         // console.error removed
 //         break;
 //     }
 //   };
@@ -250,7 +248,6 @@
 
 // const removeCrew = (request, currentCount) => {
 //   const crewView = document.getElementById(request.crewId);
-//   console.log(request.crewId);
 //   crewView.remove();
 //   if (currentCount <= 0) {
 //     const crewRequestsContainer = document.getElementById("crewsImIn");

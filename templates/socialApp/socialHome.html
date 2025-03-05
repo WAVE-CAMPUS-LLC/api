@@ -72,6 +72,9 @@ My Social @{{ user.username }} — WAVE.
                             </span>
                         </div>
                     </li>
+                    <li role="button" type="button" class="social-tab block cursor-pointer border-l-4 pl-4 -ml-px border-transparent hover:border-green" data-tab="my-go-with-requests">
+                        <p>Go-With Requests</p>
+                    </li>
                     <li role="button" type="button" class="social-tab block cursor-pointer border-l-4 pl-4 -ml-px border-transparent hover:border-green" data-tab="invitations">
                         <div id="crew-invitations" class="w-full flex justify-between items-center">
                             <p>Crew Invites</p>
@@ -234,6 +237,146 @@ My Social @{{ user.username }} — WAVE.
                         </div>
                     </div>
                     
+                </div>
+            </div>
+
+            <div class="social-home-elements" id="my-go-with-requests">
+                <div id="go-with-body" class="info-container px-5 flex flex-col gap-5">
+                    <div class="home-header">
+                        <div id="shareControl" class="content-control flex flex-row justify-start gap-4 w-full"> 
+                            <div class="go-with-tab tab-active cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="incomingGoWithRequests">Incoming</div>
+                            <div class="go-with-tab cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="sentGoWithRequests">Sent</div>
+                        </div>
+                    </div>
+              
+
+                  <div>
+                    <div class="sharedEventsTabContainer go-with-tab-content" id="incomingGoWithRequests">
+                      {% if go_with_requests_received %}
+                        <div class="home-container grid grid-cols-1 xxsm:grid-cols-2 md:grid-cols-3 3xl:grid-cols-4 gap-5">
+                        {% for request in go_with_requests_received %}
+                            {% if request.status == 'pending' or request.status == 'Pending' %}
+                            <div class="flex flex-col gap-4 items-center cursor-pointer border border-custom-rgba8 hover:border-green shadow-custom-shadow-3 rounded-2xl p-5">
+                                <a target="_blank" href="{% url 'social:publicProfile' username=request.sender.user.username %}" id="{{ request.sender.user.id }}">
+                                <div class="user-pfp w-full flex justify-center">
+                                    <img src="{{ request.sender.profile_photo.url }}" alt="Profile Picture" class="rounded-full size-14" />
+                                </div>
+                                </a>
+                                <div class="user-names flex flex-col gap-1 items-center">
+                                    <p class="font-Wanted-Variable text-[10px] after-xsm:text-[12px] sm:text-[14px] md:text-[16.5px] text-black text-center">
+                                        {{ request.sender.user.first_name }} {{ request.sender.user.last_name }} wants to go with you to "{{ request.event.title }}"
+                                    </p>
+                                    <div class="flex flex-row justify-center items-center gap-4">
+                                        <form method="POST" class="flex justify-center items-center gap-4">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="go_with_request_id" value="{{ request.requestId }}">
+                                        <input type="hidden" name="action" value="acceptGoWithRequest"> 
+                                        <button class="accept flex justify-center font-Wanted-Bold text-white bg-[green] rounded-xl py-2 px-4" type="submit" role="button">
+                                            &#10004;
+                                        </button>
+                                        </form>
+                                        <form method="POST" class="flex justify-center items-center gap-4">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="go_with_request_id" value="{{ request.requestId }}">
+                                        <input type="hidden" name="action" value="declineGoWithRequest"> 
+                                        <button class="decline flex justify-center font-Wanted-Bold text-white bg-[red] rounded-xl py-2 px-4" type="submit" role="button">
+                                            &#10007;
+                                        </button>
+                                        </form>
+                                    </div>
+                                </div> 
+                            </div>
+                            {% elif request.status == 'accepted' or request.status == 'Accepted' %}
+                            <div class="flex flex-col gap-4 items-center cursor-pointer border border-custom-rgba8 hover:border-green shadow-custom-shadow-3 rounded-2xl p-5">
+                                <a target="_blank" href="{% url 'social:publicProfile' username=request.sender.user.username %}" id="{{ request.sender.user.id }}">
+                                <div class="user-pfp w-full flex justify-center">
+                                    <img src="{{ request.sender.profile_photo.url }}" alt="Profile Picture" class="rounded-full size-14" />
+                                </div>
+                                </a>
+                                <div class="user-names flex flex-col gap-1 items-center">
+                                    <p class="font-Wanted-Variable text-[10px] after-xsm:text-[12px] sm:text-[14px] md:text-[16.5px] text-black text-center">
+                                        Going with {{ request.sender.user.first_name }} {{ request.sender.user.last_name }} to "{{ request.event.title }}"
+                                    </p>
+                                    <p class="font-Wanted-Variable text-[10px] after-xsm:text-[12px] sm:text-[14px] md:text-[16.5px] text-green text-center">
+                                        Accepted
+                                    </p>
+                                </div> 
+                            </div>
+                            {% elif request.status == 'declined' or request.status == 'Declined' %}
+                            <div class="flex flex-col gap-4 items-center cursor-pointer border border-custom-rgba8 hover:border-green shadow-custom-shadow-3 rounded-2xl p-5">
+                                <a target="_blank" href="{% url 'social:publicProfile' username=request.sender.user.username %}" id="{{ request.sender.user.id }}">
+                                <div class="user-pfp w-full flex justify-center">
+                                    <img src="{{ request.sender.profile_photo.url }}" alt="Profile Picture" class="rounded-full size-14" />
+                                </div>
+                                </a>
+                                <div class="user-names flex flex-col gap-1 items-center">
+                                    <p class="font-Wanted-Variable text-[10px] after-xsm:text-[12px] sm:text-[14px] md:text-[16.5px] text-black text-center">
+                                        Going with {{ request.sender.user.first_name }} {{ request.sender.user.last_name }} to "{{ request.event.title }}"
+                                    </p>
+                                    <p class="font-Wanted-Variable text-[10px] after-xsm:text-[12px] sm:text-[14px] md:text-[16.5px] text-[red] text-center">
+                                        Declined
+                                    </p>
+                                </div> 
+                            </div>
+                            {% endif %}
+                          {% endfor %}
+                        </div>
+                      {% else %}
+                        <div class="emptyContainer h-full w-full rounded-[20px] py-[70px] flex justify-center flex-col gap-[10px] items-center bg-[rgba(146,146,146,0.096)]">
+                          <div>
+                            <img class="w-[30px] after-xsm:w-[40px] sm:w-[50px] md:w-[60px]" src="{% static '/images/coreApp/eventDetails/friends.svg' %}" />
+                          </div>
+                          <p class="font-Wanted-Variable text-[10px] after-xsm:text-[12px] sm:text-[14px] md:text-[16.5px] text-black text-center">
+                            No go-with requests received yet!
+                          </p>
+                        </div>
+                      {% endif %}
+                    </div>
+              
+                    <!-- Sent Go-With Requests -->
+                    <div class="sharedEventsTabContainer go-with-tab-content" id="sentGoWithRequests">
+                      {% if go_with_requests_sent %}
+                        <div class="home-container grid grid-cols-1 xxsm:grid-cols-2 md:grid-cols-3 3xl:grid-cols-4 gap-5">
+                          {% for request in go_with_requests_sent %}
+                          <div class="flex flex-col gap-4 items-center cursor-pointer border border-custom-rgba8 hover:border-green shadow-custom-shadow-3 rounded-2xl p-5">
+                            <a target="_blank" href="{% url 'social:publicProfile' username=request.receiver.user.username %}" id="{{ request.receiver.user.id }}">
+                              <div class="user-pfp w-full flex justify-center">
+                                <img src="{{ request.receiver.profile_photo.url }}" alt="Profile Picture" class="rounded-full size-14" />
+                              </div>
+                            <a/>
+                              <div class="user-names flex flex-col gap-1 items-center">
+                                <p class="font-Wanted-Variable text-[10px] after-xsm:text-[12px] sm:text-[14px] md:text-[16.5px] text-black text-center">
+                                    Request to go with {{ request.sender.user.first_name }} {{ request.sender.user.last_name }} to "{{ request.event.title }}"
+                                </p>
+                                {% if request.status == 'pending' or request.status == 'Pending' %}
+                                    <p class="font-Wanted-Variable text-Medium text-customGray5">
+                                    Status: {{ request.status }}
+                                    </p>
+                                {% elif request.status == 'accepted' or request.status == 'Accepted' %}
+                                <p class="font-Wanted-Variable text-Medium text-green">
+                                    Status: {{ request.status }}
+                                </p>
+                                {% elif request.status == 'declined' or request.status == 'Declined' %}
+                                <p class="font-Wanted-Variable text-Medium text-[red]">
+                                    Status: {{ request.status }}
+                                </p>
+                                {% endif %}
+                              </div>
+                            </div>
+                          {% endfor %}
+                        </div>
+                      {% else %}
+                        <div class="emptyContainer h-full w-full rounded-[20px] py-[70px] flex justify-center flex-col gap-[10px] items-center bg-[rgba(146,146,146,0.096)]">
+                          <div>
+                            <img class="w-[30px] after-xsm:w-[40px] sm:w-[50px] md:w-[60px]" src="{% static '/images/coreApp/eventDetails/friends.svg' %}" />
+                          </div>
+                          <p class="font-Wanted-Variable text-[10px] after-xsm:text-[12px] sm:text-[14px] md:text-[16.5px] text-black text-center">
+                            No go-with requests sent yet, invite your friends!
+                          </p>
+                        </div>
+                      {% endif %}
+                    </div>
+                  </div>
                 </div>
             </div>
 
