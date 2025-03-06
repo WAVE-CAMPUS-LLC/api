@@ -210,10 +210,10 @@ Edit Your Event — WAVE.
               {% else %}
                 <img id="header-photo-preview" class="max-w-full hidden h-auto max-h-[400px] rounded-2xl" src="#" alt="Header Photo Preview">
               {% endif %}
-              <button class="bg-gradient-to-r from-gradient-start to-gradient-end text-white flex flex-row items-center py-3 px-10 rounded-2xl" type="button" onclick="document.getElementById('id_header_photo').click();">
+              <button class="bg-gradient-to-r from-gradient-start to-gradient-end text-white flex flex-row items-center py-3 px-10 rounded-2xl" type="button" onclick="document.getElementById('photo-input').click();">
                 Upload
               </button>
-              {{ editEventForm.header_photo|add_class:"hidden"|attr:"id:id_header_photo" }}
+              {{ editEventForm.header_photo|add_class:"hidden"|attr:"id:photo-input" }}
               <p id="photo-error" class="text-[#FF0000] font-Wanted-SemiBold text-Base hidden"></p>
             </div>
           </div>
