@@ -34,7 +34,8 @@ urlpatterns = [
     # path("career/", include("careerApp.apiUrls")),
     # path("news/", include("newsroomApp.apiUrls")),
     path("social/", include("socialApp.apiUrls")),
-    path("ticketing/", include("eventTicketsApp.apiUrls")),
+    # Modified to include ticketing prefix consistently
+    path("ticketing/", include("eventTicketsApp.apiUrls", namespace="eventTicketsAPI")),
     # path("manager/", include("campusManagerApp.apiUrls")),
     # path("blog/", include("blogApp.apiUrls")),
     # path("chat/", include("supportCenterApp.apiUrls")),
