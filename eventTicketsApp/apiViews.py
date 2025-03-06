@@ -45,25 +45,44 @@ def get_event_tickets(request):
 def save_mobile_cart(request):
     """Save cart data from mobile app and return web checkout URL"""
     try:
-        # Print request data for debugging
         print("Received request data:", request.data)
         
-        # Extract cart data from request
-        cart_data = request.data
-        if not cart_data:
+        # Extract and validate cart data
+        cart_data = request.data.get('cart', [])
+        if not isinstance(cart_data, list):
             return Response(
-                {"error": "No cart data provided"}, 
+                {"error": "Cart data must be an array"}, 
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+        # Validate required fields for each cart item
+        for item in cart_data:
+            missing_fields = []
+            required_fields = ['ticket_id', 'eventId', 'ticket_name', 'ticket_price', 'quantity']
+            
+            for field in required_fields:
+                if field not in item:
+                    missing_fields.append(field)
+            
+            if missing_fields:
+                return Response(
+                    {
+                        "error": "Missing required fields", 
+                        "missing_fields": missing_fields,
+                        "received_data": item
+                    }, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
         # Format cart data for session storage
         formatted_cart = {}
-        for ticket_id, item in cart_data.items():
+        for item in cart_data:
+            ticket_id = item['ticket_id']
             formatted_cart[ticket_id] = {
-                'eventId': item.get('ticket_id'),  # Use ticket_id as eventId
-                'name': item.get('ticket_name'),
-                'price': str(item.get('ticket_price')),
-                'quantity': item.get('quantity', 1)
+                'eventId': item['eventId'],
+                'name': item['ticket_name'],
+                'price': str(item['ticket_price']),
+                'quantity': item['quantity']
             }
         
         # Generate a unique cart ID
@@ -71,7 +90,7 @@ def save_mobile_cart(request):
         
         # Store cart in session with the unique ID
         request.session[f'mobile_cart_{cart_id}'] = formatted_cart
-        print("Stored cart data:", formatted_cart)  # Debug log
+        print("Stored cart data:", formatted_cart)
         
         # Build the web checkout URL with cart ID
         web_base_url = settings.SITE_URL
@@ -86,9 +105,12 @@ def save_mobile_cart(request):
         }, status=status.HTTP_200_OK)
         
     except Exception as e:
-        print(f"Error saving mobile cart: {str(e)}")  # Add logging
+        print(f"Error saving mobile cart: {str(e)}")
         return Response(
-            {"error": str(e)}, 
+            {
+                "error": str(e),
+                "received_data": request.data
+            }, 
             status=status.HTTP_400_BAD_REQUEST
         )
 
