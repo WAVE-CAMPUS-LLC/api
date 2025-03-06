@@ -43,7 +43,7 @@ Campus Manager — WAVE.
                         {% for event in events %}
                         <a href="{% url "core:eventDetails" eventId=event.eventId %}" class="category-event-card hover:category-image hover:scale-95 transform transition duration-300 flex flex-col justify-center items-center cursor-pointer overflow-hidden p-[10px] text-black">
                             <div class="category-image w-full rounded-2xl shadow-custom-shadow-3">
-                                <img src="{{event.header_photo.url}}" alt="" class="w-full h-[448px] rounded-2xl rounded-b-none object-cover">
+                                <img src="{{ event.header_photo.url|default:'/static/images/explore/display.png' }}" alt="" class="w-full h-[448px] rounded-2xl rounded-b-none object-cover">
                             </div>
                             <div class="category-event-name font-Wanted-SemiBold text-Base flex flex-col justify-center items-start gap-1 w-full border border-custom-rgba5 rounded-bl-2xl rounded-br-2xl shadow-custom-shadow-3 border-t-2 px-5 p-2">
                                 <h2 id="eventTitle" class="whitespace-nowrap overflow-hidden text-ellipsis w-full text-left text-2xl">{{ event.title }}</h2>

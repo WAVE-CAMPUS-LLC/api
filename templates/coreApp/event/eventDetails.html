@@ -10,11 +10,11 @@
 {% block metatags %}
 <meta name="description" content="{{ event.description|striptags|escape }}">
 <meta property="og:title" content="{{ event.title}}">
-<meta property="og:image" content="{{ event.header_photo.url }}">
+<meta property="og:image" content="{{ event.header_photo.url|default:'/static/images/explore/display.png' }}">
 <meta property="twitter:card" content="summary_large_image">
 <meta property="twitter:site" content="@waveoncamp">
 <meta property="twitter:title" content="{{ event.title }} ({{ event.date }}) hosted by @{{ event.host.username }}">
-<meta property="twitter:image" content="{{ event.header_photo.url }}">          
+<meta property="twitter:image" content="{{ event.header_photo.url|default:'/static/images/explore/display.png' }}">          
 <meta name="theme-color" content="#008d95">
 <link rel="canonical" href="https://waveoncampus.com/event/{{ event.eventId }}">
 <meta property="og:type" content="website">
@@ -95,14 +95,14 @@
     </div>
 
     <div id="contentContainerBodyOne" class="flex flex-col gap-12">
-        <div class="header-image hidden pre-sm:inline-block w-full h-full min-w-full min-h-full relative rounded-3xl flex justify-center items-center bg-cover bg-top bg-no-repeat" style="background-image: url('{{ event.header_photo.url }}');">
+        <div class="header-image hidden pre-sm:inline-block w-full h-full min-w-full min-h-full relative rounded-3xl flex justify-center items-center bg-cover bg-top bg-no-repeat" style="background-image: url('{{ event.header_photo.url|default:'/static/images/explore/display.png' }}');">
             <div class="placeHolderImage flex items-center justify-center w-full h-full min-h-[500px] relative p-20">
-                <img id="trending-img" class="w-full h-[300px] xxsm:h-full max-w-[400px] max-h-[400px] object-contain rounded-3xl" src="{{event.header_photo.url}}" />
+                <img id="trending-img" class="w-full h-[300px] xxsm:h-full max-w-[400px] max-h-[400px] object-contain rounded-3xl" src="{{ event.header_photo.url|default:'/static/images/explore/display.png' }}" />
             </div>
         </div>
 
         <div class="w-full inline-block pre-sm:hidden">
-            <img id="trending-img" class="w-full h-[300px] xxsm:h-full max-h-[400px] rounded-3xl" src="{{event.header_photo.url}}" />
+            <img id="trending-img" class="w-full h-[300px] xxsm:h-full max-h-[400px] rounded-3xl" src="{{ event.header_photo.url|default:'/static/images/explore/display.png' }}" />
         </div>
 
         <div id="contentContainerTabs" class="w-full flex flex-col gap-12">

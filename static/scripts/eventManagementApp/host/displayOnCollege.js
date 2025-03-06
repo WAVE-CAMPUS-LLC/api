@@ -1,24 +1,39 @@
-document.addEventListener('DOMContentLoaded', function () {
-    const checkbox = document.getElementById('displayOnCollegeCheckbox');
-    const form = document.getElementById('college-display-form');
+document.addEventListener("DOMContentLoaded", function () {
+  // Get all forms with the college-display-form class
+  const forms = document.querySelectorAll(".college-display-form");
 
-    checkbox.addEventListener('change', function () {
-        // Create a hidden input to send the false value
-        const hiddenInput = document.createElement('input');
-        hiddenInput.type = 'hidden';
-        hiddenInput.name = 'displayOnCollege';
-        hiddenInput.value = checkbox.checked ? 'True' : 'False'; // Set value based on checkbox state
+  // Add event listeners to each form
+  forms.forEach(function (form) {
+    const checkbox = form.querySelector(".displayOnCollegeCheckbox");
 
-        // Clear any previous hidden inputs
-        const existingInput = form.querySelector('input[name="displayOnCollege"]');
-        if (existingInput) {
-            existingInput.remove();
+    if (checkbox) {
+      // Style the checkbox
+      const checkboxSpan = form.querySelector(".checkbox");
+
+      // Update checkbox appearance based on initial state
+      if (checkbox.checked) {
+        checkboxSpan.classList.add("bg-[#008d95]", "border-[#008d95]");
+      }
+
+      checkbox.addEventListener("change", function () {
+        // Toggle the checkbox appearance
+        if (checkbox.checked) {
+          checkboxSpan.classList.add("bg-[#008d95]", "border-[#008d95]");
+        } else {
+          checkboxSpan.classList.remove("bg-[#008d95]", "border-[#008d95]");
         }
 
-        // Append the hidden input
-        form.appendChild(hiddenInput);
+        // Update the hidden input value
+        const hiddenInput = form.querySelector(
+          'input[name="displayOnCollegeValue"]'
+        );
+        if (hiddenInput) {
+          hiddenInput.value = checkbox.checked ? "True" : "False";
+        }
 
         // Submit the form when the checkbox state changes
         form.submit();
-    });
+      });
+    }
+  });
 });

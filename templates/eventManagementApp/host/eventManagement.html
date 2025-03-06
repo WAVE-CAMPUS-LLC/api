@@ -84,14 +84,14 @@ Manage {{ event.title }} | WAVE.
                     
                     <!-- Header Photo -->
                     <div class="flex flex-col gap-1">
-                        <div class="header-image hidden pre-sm:inline-block w-full h-full min-w-full min-h-full relative rounded-3xl flex justify-center items-center bg-cover bg-top bg-no-repeat" style="background-image: url('{{ event.header_photo.url }}');">
+                        <div class="header-image hidden pre-sm:inline-block w-full h-full min-w-full min-h-full relative rounded-3xl flex justify-center items-center bg-cover bg-top bg-no-repeat" style="background-image: url('{{ event.header_photo.url|default:'/static/images/explore/display.png' }}');">
                             <div class="placeHolderImage flex items-center justify-center w-full h-full min-h-[500px] relative p-20">
-                                <img id="trending-img" class="w-full h-[300px] xxsm:h-full max-w-[400px] max-h-[400px] object-contain rounded-3xl" src="{{event.header_photo.url}}" />
+                                <img id="trending-img" class="w-full h-[300px] xxsm:h-full max-w-[400px] max-h-[400px] object-contain rounded-3xl" src="{{ event.header_photo.url|default:'/static/images/explore/display.png' }}" />
                             </div>
                         </div>
                 
                         <div class="w-full inline-block pre-sm:hidden">
-                            <img id="trending-img" class="w-full h-[300px] xxsm:h-full max-h-[400px] rounded-3xl" src="{{event.header_photo.url}}" />
+                            <img id="trending-img" class="w-full h-[300px] xxsm:h-full max-h-[400px] rounded-3xl" src="{{ event.header_photo.url|default:'/static/images/explore/display.png' }}" />
                         </div>
                     </div>
 
@@ -116,7 +116,7 @@ Manage {{ event.title }} | WAVE.
                     <!-- AGE RESTRICTION (MOVED HERE) -->
                     {% comment %} <div class="flex flex-col gap-3 mt-5" id="ageRestrictionWrapper">
                         <h3 class="font-Wanted-ExtraBold text-Medium">Age Restriction</h3>
-                        <!-- View mode: read-only text for the user’s current setting (e.g. “18+” or “No age restriction”). -->
+                        <!-- View mode: read-only text for the user's current setting (e.g. "18+" or "No age restriction"). -->
                         <p id="ageRestrictionView" class="font-Wanted-Variable text-Pre-Xl">
                             {{ event.get_age_restriction_display }}
                         </p>
