@@ -1,4 +1,4 @@
-$(function () {
+document.addEventListener('DOMContentLoaded', () => {
     // Cache selectors for performance
     var $form = $("#eventForm");
     var $submitBtn = $("#submitBtn");
@@ -228,8 +228,12 @@ $(function () {
     }
   
     function validateHeaderPhoto() {
-      var hasPhoto = $("#photo-input")[0].files.length > 0;
-      if (!hasPhoto) {
+      var hasPhoto = $("#photo-input")[0]?.files.length > 0;
+      var hasExistingPhoto = $("#header-photo-preview").is(":visible") || 
+                            ($("#header-photo-preview").attr("src") && 
+                             $("#header-photo-preview").attr("src") !== "#");
+      
+      if (!hasPhoto && !hasExistingPhoto && !($("#photo-input")[0])) {
         showError("#photo-error", "Please upload a header photo");
         $("#photo-input").css("border-color", "red");
         return false;

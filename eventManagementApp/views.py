@@ -68,25 +68,25 @@ def hostPortalView(request):
             )
             event_to_delete.delete()
             return redirect("eventManagement:hostPortal")
-
-        if "displayOnCollege" in request.POST:
+            
+        # Handle the college display form submission
+        if "displayOnCollegeValue" in request.POST and event_id:
             event_to_update = get_object_or_404(
                 Event, eventId=event_id, host=request.user
             )
             event_to_update.display_event_on_college = (
-                request.POST["displayOnCollege"] == "True"
-            )  # Check for 'true'
+                request.POST["displayOnCollegeValue"] == "True"
+            )
             event_to_update.save()
             return redirect("eventManagement:hostPortal")
-    return render(
-        request,
-        "eventManagementApp/host/hostPortal.html",
-        {
-            "liveEvents": live_event,
-            "incompleteEvents": incomplete_event,
-            "isInCollege": is_in_college,
-        },
-    )
+
+    # After handling POST requests
+    context = {
+        "liveEvents": live_event,
+        "incompleteEvents": incomplete_event,
+        "isInCollege": is_in_college,
+    }
+    return render(request, "eventManagementApp/host/hostPortal.html", context)
 
 
 def hostGuideView(request):
@@ -531,10 +531,15 @@ def editEvent(request, eventId):
     paid_free_tickets = PaidFreeTicket.objects.filter(event=event)
 
     if request.method == "POST":
-        editEventForm = EditEventForm(request.POST, instance=event)
+        editEventForm = EditEventForm(request.POST, request.FILES, instance=event)
         if editEventForm.is_valid():
             editEventForm.save()
-            return redirect("eventManagement:eventManagement", eventId=eventId)
+            messages.success(request, "Event updated successfully.")
+        else:
+            for field, errors in editEventForm.errors.items():
+                for error in errors:
+                    messages.error(request, f"Error in {field}: {error}")
+        return redirect("eventManagement:eventManagement", eventId=eventId)
     else:
         editEventForm = EditEventForm(instance=event)
 

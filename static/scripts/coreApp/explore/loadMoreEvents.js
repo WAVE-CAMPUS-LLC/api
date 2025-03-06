@@ -14,8 +14,8 @@ function loadMoreEvents() {
                            data-event-id="${event.eventId}" 
                            onclick="handleEventClick(event, '${event.eventId}')">
                             <div class="category-image w-full rounded-2xl shadow-custom-shadow-3">
-                                <img src="${event.header_photo_url}" 
-                                     alt="" 
+                                <img src="${event.header_photo_url || '/static/images/explore/display.png'}" 
+                                     alt="Event Header" 
                                      class="w-full h-[448px] rounded-2xl rounded-b-none object-cover">
                             </div>
                             <div class="category-event-name font-Wanted-SemiBold text-Base flex flex-col justify-center items-start gap-1 w-full border border-custom-rgba5 rounded-bl-2xl rounded-br-2xl shadow-custom-shadow-3 border-t-2 px-5 p-2">

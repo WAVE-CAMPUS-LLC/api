@@ -102,8 +102,8 @@ Edit Your Event — WAVE.
           <h6 class="flex justify-start font-Wanted-Medium text-Large">Experience Location</h6>
           <div class="flex flex-col gap-2 w-full">
             <div class="flex flex-row w-full justify-between items-center">
-              <p class="font-Wanted-SemiBold text-Base text-gray-400">
-                {{ editEventForm.hide_address.label }}
+              <p class="flex flex-col gap-1 font-Wanted-SemiBold text-Base text-gray-400">
+                Hide address from users?
                 <span class="font-Wanted-Variable text-XSmall">You can make this address public before the event</span>
               </p>
               <label class="toggle-switch">
@@ -153,6 +153,8 @@ Edit Your Event — WAVE.
         </div>
 
         <!-- CREW DISCOUNT OPTIONS -->
+
+        {% if event.ticketing == "Paid" %}
         <div class="flex flex-col gap-4 w-full items-start">
           <div class="w-full flex flex-row justify-between">
             <h6 class="flex justify-start font-Wanted-Medium text-Large">Crew Discounts</h6>
@@ -177,6 +179,7 @@ Edit Your Event — WAVE.
             </div>
           </div>
         </div>
+        {% endif %}
 
         <!-- GUEST LIST OPTION -->
         <div class="flex flex-col gap-4 w-full items-start">
@@ -203,14 +206,14 @@ Edit Your Event — WAVE.
           <div class="flex justify-center items-center flex-col w-full">
             <div class="h-full w-full py-12 px-12 border border-dashed border-custom-rgba rounded-2xl flex flex-col justify-center items-center gap-5">
               {% if event.header_photo %}
-                <img id="header-photo-preview" class="max-w-full h-auto max-h-[400px] rounded-2xl" src="{{ event.header_photo.url }}" alt="Header Photo Preview">
+                <img id="header-photo-preview" class="max-w-full h-auto max-h-[400px] rounded-2xl" src="{{ event.header_photo.url|default:'/static/images/explore/display.png' }}" alt="Header Photo Preview">
               {% else %}
                 <img id="header-photo-preview" class="max-w-full hidden h-auto max-h-[400px] rounded-2xl" src="#" alt="Header Photo Preview">
               {% endif %}
               <button class="bg-gradient-to-r from-gradient-start to-gradient-end text-white flex flex-row items-center py-3 px-10 rounded-2xl" type="button" onclick="document.getElementById('photo-input').click();">
                 Upload
               </button>
-              {{ editEventForm.header_photo|add_class:"photo-input hidden"|attr:"id:photo-input" }}
+              {{ editEventForm.header_photo|add_class:"hidden"|attr:"id:photo-input" }}
               <p id="photo-error" class="text-[#FF0000] font-Wanted-SemiBold text-Base hidden"></p>
             </div>
           </div>

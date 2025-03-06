@@ -2,6 +2,11 @@ document.addEventListener('DOMContentLoaded', function () {
     const headerPhotoInput = document.getElementById("photo-input");
     const headerPhotoPreview = document.getElementById('header-photo-preview');
 
+    if (headerPhotoPreview && headerPhotoPreview.getAttribute('src') && 
+        headerPhotoPreview.getAttribute('src') !== '#') {
+        headerPhotoPreview.style.display = 'block';
+    }
+
     headerPhotoInput.addEventListener('change', function (event) {
         const file = event.target.files[0];
         if (file) {

@@ -1,6 +1,10 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: ["./static/**/*.{js, css}","./static/**/**/*.{css , js}" ,"./templates/*.html", "./templates/**/*.html", "./templates/**/**/*.html", "./templates/**/**/**/*.html", "./templates/**/**/**/**/*.html"],
+  content: [
+    "./static/**/*.{js,css}",  // All JS and CSS files in static folder
+    "./templates/**/*.html",   // All HTML files in templates folder (including subdirectories)
+    "!./node_modules/**"
+  ],
   safelist: [
     'ql-editor',
     'ql-container',

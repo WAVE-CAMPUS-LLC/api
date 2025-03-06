@@ -293,13 +293,6 @@ class Event(models.Model):
         choices=COUNTRY_CHOICES,
     )
 
-    display_event_on_college = models.BooleanField(
-        _("Do you want this event displayed on your campus?"),
-        null=False,
-        blank=False,
-        default=False,
-    )
-
     street = models.CharField(
         _("Street address"), max_length=500, null=False, blank=False, default=""
     )
