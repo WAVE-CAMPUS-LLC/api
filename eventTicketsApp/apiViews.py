@@ -40,28 +40,41 @@ def get_event_tickets(request):
     )
 
 
-@api_view(["GET"])
-@permission_classes([IsAuthenticated])
-def get_ticket_details(request, ticketId):
-    ticket = get_object_or_404(Ticket, ticketId=ticketId)
-    return Response(TicketSerializer(ticket).data, status=status.HTTP_200_OK)
-
-
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def save_mobile_cart(request):
     """Save cart data from mobile app and return web checkout URL"""
     try:
-        cart_data = request.data.get('cart', {})
+        # Print request data for debugging
+        print("Received request data:", request.data)
+        
+        # Extract cart data from request
+        cart_data = request.data
+        if not cart_data:
+            return Response(
+                {"error": "No cart data provided"}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Format cart data for session storage
+        formatted_cart = {}
+        for ticket_id, item in cart_data.items():
+            formatted_cart[ticket_id] = {
+                'eventId': item.get('ticket_id'),  # Use ticket_id as eventId
+                'name': item.get('ticket_name'),
+                'price': str(item.get('ticket_price')),
+                'quantity': item.get('quantity', 1)
+            }
         
         # Generate a unique cart ID
         cart_id = str(uuid.uuid4())
         
         # Store cart in session with the unique ID
-        request.session[f'mobile_cart_{cart_id}'] = cart_data
+        request.session[f'mobile_cart_{cart_id}'] = formatted_cart
+        print("Stored cart data:", formatted_cart)  # Debug log
         
         # Build the web checkout URL with cart ID
-        web_base_url = settings.WEB_BASE_URL  # e.g. https://wave.com
+        web_base_url = settings.SITE_URL
         checkout_path = reverse('eventTickets:hostedCheckout')
         params = urlencode({'cart_id': cart_id})
         web_checkout_url = f"{web_base_url}{checkout_path}?{params}"
@@ -71,8 +84,13 @@ def save_mobile_cart(request):
             "web_checkout_url": web_checkout_url,
             "cart_id": cart_id
         }, status=status.HTTP_200_OK)
+        
     except Exception as e:
-        return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        print(f"Error saving mobile cart: {str(e)}")  # Add logging
+        return Response(
+            {"error": str(e)}, 
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
 
 @api_view(["GET"])
