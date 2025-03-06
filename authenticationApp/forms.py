@@ -2,6 +2,7 @@ import datetime
 from datetime import datetime
 from django import forms
 from .models import CustomUser
+from accountManagementApp.models import UserProfile
 from django.core.exceptions import ValidationError
 from django.contrib.auth.forms import (
     UserCreationForm,
@@ -119,6 +120,9 @@ class UserAuthenticationForm(forms.Form):
         
         return cleaned_data
 
+
+
+from django.contrib.auth import get_user_model
 # Extend from Django's default password reset form and use it to build customized form.
 class EmailPasswordResetForm(PasswordResetForm):
     email = forms.EmailField(
@@ -128,11 +132,13 @@ class EmailPasswordResetForm(PasswordResetForm):
     )
 
     def clean_email(self):
+        User = get_user_model()
         email = self.cleaned_data.get("email")
 
         try:
-            CustomUser.objects.get(email=email)
-        except CustomUser.DoesNotExist:
+            user = User.objects.get(email=email)
+            UserProfile.objects.get(user=user)
+        except UserProfile.DoesNotExist:
             raise forms.ValidationError("Account does not exist.")
         return email
 

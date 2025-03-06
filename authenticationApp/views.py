@@ -285,16 +285,21 @@ def logoutView(request):
 
 
 from datetime import timedelta
+from django.contrib.auth import get_user_model
+
 
 ResetLinkExpiryTime = timedelta(hours=2)
 
 
 def forgotPasswordView(request):
+    print(request.POST)
     if request.method == "POST":
-        emailForm = EmailPasswordResetForm(request.POST)
+        emailForm = EmailPasswordResetForm(data=request.POST)
+        print(emailForm.errors)
         if emailForm.is_valid():
+            print('valid')
             email = emailForm.cleaned_data["email"]
-            user = CustomUser.objects.filter(email=email).first()
+            user = get_user_model().objects.filter(email=email).first()
             if user:
                 token = default_token_generator.make_token(user)
                 uid = urlsafe_base64_encode(force_bytes(user.pk))
@@ -316,7 +321,7 @@ def forgotPasswordView(request):
                     "authenticationApp/passwordReset/email/resetEmailTemplate.html",
                     {"reset_url": reset_url},
                 )
-                send_mail(subject, message, None, [email])
+                send_mail(subject, message, settings.EMAIL_HOST_USER, [email])
                 messages.success(request, "Email sent successfully!")
             else:
                 messages.error(request, "Account does not exist")
@@ -326,7 +331,10 @@ def forgotPasswordView(request):
                 for error in error_list:
                     messages.error(request, f"{error}")
             return redirect("authentication:forgot")
+
+        
     else:
+        print('not valid')
         emailForm = EmailPasswordResetForm()
     return render(
         request,

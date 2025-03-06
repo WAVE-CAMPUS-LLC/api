@@ -335,6 +335,8 @@ def crew_invite_action(request, crew_id, action):
 
     return redirect("social:home")
 
+from eventTicketsApp.models import Ticket
+
 
 @login_required
 @check_suspension
@@ -342,8 +344,13 @@ def crew_invite_action(request, crew_id, action):
 @verified
 def publicProfileView(request, username):
     try:
+        super_user = get_user_model()
+        user_object = super_user.objects.get(username=username)
         other_user = get_object_or_404(UserModel, username=username)
         other_user_profile, created = UserProfile.objects.get_or_create(user=other_user)
+        p_e = Ticket.objects.filter(user=user_object).select_related('event').all()
+        purchased_events = {t.event for t in p_e}
+        print(purchased_events)
 
         friend_request = FriendRequest.objects.filter(
             (Q(sender=request.user) & Q(receiver=other_user))
@@ -463,6 +470,7 @@ def publicProfileView(request, username):
             "user_profile": other_user_profile,
             "is_profile": is_profile,
             "friend_request_status": friend_request_status,
+            'purchasedEvents': list(purchased_events),
         },
     )
 
