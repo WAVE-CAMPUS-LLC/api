@@ -92,7 +92,7 @@ Explore all possible experiences! — WAVE.
                                     {% endif %}
                                 </p>
 
-                                {% if event in isFavoriteEvent %}
+                                {% if event.eventId in isFavoriteEvent %}
                                     <img src="{% static "/images/coreApp/eventDetails/favorite.svg" %}" />
                                 {% endif %}
                             </div>
