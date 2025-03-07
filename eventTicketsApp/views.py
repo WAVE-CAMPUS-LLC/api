@@ -205,7 +205,7 @@ def paymentSuccessful(request):
         del request.session["checkout_user_info"]
     
     if from_mobile:
-        return Response({"status": "paymentSuccessful"}, status=200)
+        return JsonResponse({"status": "paymentSuccessful"}, status=200)
 
     # Render your success page
     return render(request, "eventTicketsApp/checkoutSession/paymentSuccessful.html", {})
@@ -214,7 +214,8 @@ def paymentSuccessful(request):
 def paymentFailed(request):
     from_mobile = request.GET.get("from_mobile")
     if from_mobile:
-        return Response({"status": "paymentFailed"}, status=200)
+        # Use JsonResponse for mobile requests instead of DRF Response
+        return JsonResponse({"status": "paymentFailed"}, status=200)
     return render(request, "eventTicketsApp/checkoutSession/paymentFailed.html")
 
 
