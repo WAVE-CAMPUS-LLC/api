@@ -169,9 +169,8 @@ def get_event_ticket_info(request, eventId):
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
-def mobile_checkout(request):
-    """Mobile-specific checkout endpoint that handles cart from mobile app"""
-    cart = request.session.get("cart", {})
+def processCheckout(request):
+    cart = request.data.get("cart", {})
     if not cart:
         return Response({"error": "Cart is empty"}, status=status.HTTP_400_BAD_REQUEST)
     
@@ -241,12 +240,10 @@ def mobile_checkout(request):
             success_url=request.build_absolute_uri(reverse("eventTickets:paymentSuccessful")) + "?session_id={CHECKOUT_SESSION_ID}",
             cancel_url=request.build_absolute_uri(reverse("eventTickets:paymentFailed")),
         )
+        
 
         return Response({
-            "sessionUrl": checkout_session.url,
-            "sessionId": checkout_session.id,
-            "mobileSuccessUrl": f"wave://payment/success?session_id={checkout_session.id}",
-            "mobileCancelUrl": "wave://payment/cancel"
+            "sessionUrl": checkout_session.url
         }, status=status.HTTP_200_OK)
         
     except Exception as e:
