@@ -51,7 +51,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
     renderEventAll(all_events);
+    if (pages > 1) {
     renderPageAll();
+    }
 
     function renderPageAll() {
         pages_dump.innerHTML = "";

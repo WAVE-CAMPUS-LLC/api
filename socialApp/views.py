@@ -350,7 +350,7 @@ def publicProfileView(request, username):
         user_object = super_user.objects.get(username=username)
         other_user = get_object_or_404(UserModel, username=username)
         other_user_profile, created = UserProfile.objects.get_or_create(user=other_user)
-        p_e = Ticket.objects.filter(user=user_object).select_related('event').all()
+        p_e = Ticket.objects.filter(user=user_object).select_related('event').distinct('event')
         purchased_events = [t.event if t.event and t.event.status and t.event.status == 'live' else None for t in p_e]
 
         friend_request = FriendRequest.objects.filter(
