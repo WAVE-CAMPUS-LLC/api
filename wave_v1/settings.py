@@ -324,7 +324,7 @@ LOGIN_URL = "authentication:login"
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
-
+# STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
 
 # Supabase Configurations
 SUPABASE_URL = os.getenv("SUPABASE_URL")
@@ -340,7 +340,7 @@ supabase = create_client(SUPABASE_URL, SUPABASE_API_KEY)
 
 
 # Static files and media URL configuration
-STATIC_URL = f"/static/"
+STATIC_URL = "https://static.waveoncampus.com/"
 MEDIA_URL = f"{SUPABASE_URL}/storage/v1/object/public/{SUPABASE_STORAGE_BUCKET}/"
 
 # Default primary key field type

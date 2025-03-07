@@ -234,45 +234,6 @@ def stripeWebhook(request):
 
     except stripe.error.SignatureVerificationError as e:
         return HttpResponse(status=400)
-
-    # if event["type"] == "checkout.session.completed":
-    #     session = event["data"]["object"]
-    #     session_id = session.get("id", None)
-    #     time.sleep(15)
-    #     line_items = stripe.checkout.Session.list_line_items(session_id, limit=1)
-    #     return HttpResponse(status=200)
-    
-    # THIS IS GIVING AN ERROR
-    # THIS IS GIVING AN ERROR
-    # THIS IS GIVING AN ERROR
-    
-    # elif event["type"] == "financial_connections.account.created":
-    #     financial_account = event["data"]["object"]
-    #     customer_id = financial_account["account_holder"]["customer"]
-        
-    #     payment_methods = stripe.PaymentMethod.list(customer=customer_id, type="us_bank_account")
-        
-    #     if payment_methods.data:
-    #         bank_account = payment_methods.data[0]
-    #         print(f"Bank account: {bank_account}")
-    #     return JsonResponse({"status": "success"}, status=200)
-    
-    # if event["type"] == "account.updated":
-    #     account = event["data"]["object"]
-    #     full_account = stripe.Account.retrieve(account["id"])
-    #     user = CustomUser.objects.filter(connectAccountID=account["id"]).first()
-    #     if user:
-    #         if full_account["payouts_enabled"]:
-    #             if not user.connectAccountOnboarded:
-    #                 user.connectAccountOnboarded = True
-    #                 user.save()
-    #                 print(f"User {user.id} onboarding completed.")
-    #         else:
-    #             print(f"Account {account['id']} does not have payouts enabled.")
-                
-    # else:
-    #     print(f"Unhandled event type: {event['type']}")
-
         
     return JsonResponse({"status": "success"}, status=200)
     
