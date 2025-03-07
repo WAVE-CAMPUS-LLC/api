@@ -10,7 +10,7 @@
 {% endblock app_page_style %}
 
 {% block script %}
-<script type="text/javascript" src="{% static "scripts/socialApp/profileSocket.js" %}?v={{ time }}" defer></script>
+<script type="text/javascript" src="{% static "/scripts/socialApp/profileSocket.js" %}" defer></script>
 {% endblock script %}
 
 
@@ -20,6 +20,9 @@
 
 
 {% block body %}
+
+
+
 <input id="socketUsername" type="hidden" name="socketUsername" value="{{ user.username }}">
 <div id="content-container" class="w-full flex flex-col gap-[40px] px-[30px] after-xsm: md:px-[100px]">
     <div class="userHeader flex flex-col justify-center items-center gap-[15px] w-full h-auto p-[20px]">
@@ -91,26 +94,21 @@
         </div>
     </div>
 
+    <div class="publicUserEvents flex w-full h-auto justify-center items-center" id="thisUserEvents" >
+        <h2 class="font-Wanted-Variable text-[25px] after-xsm:text-[30px] text-customColor2 font-bold ">
+            {{user.first_name}}'s Events
+        </h2>
+    </div>
     <div class="myEventsInformationContainer" id="profilePurchasedEvents">
-        {% if purchasedEvents %}
-            <div id="purchasedEvents" class="grid grid-cols-1 xxsm:grid-cols-2 md:grid-cols-3 3xl:grid-cols-4 gap-5">
-                {% for event in purchasedEvents %}
-                    {% if event and event.eventId %}
-                    <a target="_blank" href="{% url 'core:eventDetails' eventId=event.eventId %}" class="category-event-card hover:category-image hover:scale-95 transform transition duration-300 flex flex-col justify-center items-center cursor-pointer overflow-hidden p-[10px] text-black">
-                        <div class="category-image w-full rounded-2xl shadow-custom-shadow-3">
-                            <img src="{{ event.header_photo.url}}" alt="" class="w-full h-[200px] rounded-2xl rounded-b-none object-cover">
-                        </div>
-                        <div class="category-event-name font-Wanted-SemiBold text-Base flex flex-col justify-center items-start gap-1 w-full border border-custom-rgba5 rounded-bl-2xl rounded-br-2xl shadow-custom-shadow-3 border-t-2 px-5 p-2">
-                            <h2 id="eventTitle" class="whitespace-nowrap overflow-hidden text-ellipsis w-full text-left text-xl">{{ event.title }}</h2>
-                            <div class="eventSubInfo flex flex-col items-start gap-[1px] w-full font-Wanted-Variable text-customGray5">
-                                <p id="eventHost" class="flex flex-row justify-start">Hosted by @{{ event.host.username }}</p>
-                                <p id="eventDate" class="w-full flex justify-end font-Wanted-Bold text-Large">{{ event.date }}</p>
-                            </div>
-                        </div>
-                    </a>
-                    {% endif %}
-                {% endfor %}
+        {% if pub_user_all_events %}
+            {{ pub_user_all_events|json_script:"pub_all_data" }}
+            <div id="purchasedEvents" class="grid grid-cols-1 grid-rows-3 xxsm:grid-cols-2 md:grid-cols-3 gap-5">
+
+
             </div>
+
+            <div id="purchasedEventPages" class="gap-4 row-container w-full h-full flex flex-row justify-center"></div>
+
             {% endif %}
         </div>
 

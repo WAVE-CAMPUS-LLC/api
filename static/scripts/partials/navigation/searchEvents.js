@@ -65,7 +65,6 @@ $(document).ready(function () {
         const page = button.value;
         $('.pageChange').removeClass('active_page_btn');
         $(button).addClass('active_page_btn')
-        console.log(page + 'This is the page yo')
         perform_page_change(context, idName, page-1);
 
         is_processing = false;
@@ -118,24 +117,6 @@ $(document).ready(function () {
     }
 
 
-    let is_processing = false; //debouncing
-    $(document).on('click', '.pageChange', (event)=> {
-        const context = $('.search-input').data('context');
-        const idName = $('.search-input').data('id');
-        if(is_processing) {return;}
-        is_processing = true;
-        event.preventDefault();
-
-
-        const button = event.currentTarget;
-        const page = button.value;
-        $('.pageChange').removeClass('active_page_btn');
-        $(button).addClass('active_page_btn')
-        console.log(page + 'This is the page yo')
-        perform_page_change(context, idName, page-1);
-
-        is_processing = false;
-    });
 
     function perform_page_change(context, idName, page) {
         const $input = $(`.search-input[data-context=${context}][data-id=${idName}]`);
@@ -308,3 +289,24 @@ $(document).ready(function () {
             </div>`;
     }
 });
+
+
+
+    // let is_processing = false; //debouncing
+    // $(document).on('click', '.pageChange', (event)=> {
+    //     const context = $('.search-input').data('context');
+    //     const idName = $('.search-input').data('id');
+    //     if(is_processing) {return;}
+    //     is_processing = true;
+    //     event.preventDefault();
+
+
+    //     const button = event.currentTarget;
+    //     const page = button.value;
+    //     $('.pageChange').removeClass('active_page_btn');
+    //     $(button).addClass('active_page_btn')
+    //     console.log(page + 'This is the page yo')
+    //     perform_page_change(context, idName, page-1);
+
+    //     is_processing = false;
+    // });

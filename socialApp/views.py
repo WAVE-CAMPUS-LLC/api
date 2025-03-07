@@ -20,6 +20,8 @@ from django.db.models import Q, F
 from .forms import createCrewForm
 from authenticationApp.models import CustomUser
 from eventManagementApp.models import SharedEvent
+from eventTicketsApp.models import Ticket
+
 
 # Decorators to check user roles and permissions
 from wave_v1.decorators import check_suspension, member, verified, onboarded
@@ -335,7 +337,7 @@ def crew_invite_action(request, crew_id, action):
 
     return redirect("social:home")
 
-from eventTicketsApp.models import Ticket
+
 
 
 @login_required
@@ -349,8 +351,7 @@ def publicProfileView(request, username):
         other_user = get_object_or_404(UserModel, username=username)
         other_user_profile, created = UserProfile.objects.get_or_create(user=other_user)
         p_e = Ticket.objects.filter(user=user_object).select_related('event').all()
-        purchased_events = {t.event for t in p_e}
-        print(purchased_events)
+        purchased_events = [t.event if t.event and t.event.status and t.event.status == 'live' else None for t in p_e]
 
         friend_request = FriendRequest.objects.filter(
             (Q(sender=request.user) & Q(receiver=other_user))
@@ -456,12 +457,10 @@ def publicProfileView(request, username):
 
     except Http404:
         print("User not found")
-        # print("User not found")
-        # print("User not found")
-        # print("User not found")
-        # print("User not found")
         return render(request, "extras/invalid/invalid.html")
-
+    
+    fin_pub_all = [{'title': e.title, 'eventId':e.eventId, 'header_photo_url': e.header_photo.url, 'date':e.date, 'host_username':e.host.username} for e in purchased_events] #purchased_events is a list of event structures, this code serializes those events in json format
+    
     return render(
         request,
         "socialApp/publicProfile.html",
@@ -470,9 +469,10 @@ def publicProfileView(request, username):
             "user_profile": other_user_profile,
             "is_profile": is_profile,
             "friend_request_status": friend_request_status,
-            'purchasedEvents': list(purchased_events),
+            'pub_user_all_events': fin_pub_all,
         },
     )
+
 
 
 # Helper function to send friend request, decorator will make this not work because it is not a view
