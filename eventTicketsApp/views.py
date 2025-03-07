@@ -109,10 +109,7 @@ def hostedCheckout(request):
                     "destination": host.connectAccountID,
                 },
             },
-            success_url=request.build_absolute_uri(
-                reverse("eventTickets:paymentSuccessful")
-            )
-            + "?session_id={CHECKOUT_SESSION_ID}",
+            success_url=request.build_absolute_uri(reverse("eventTickets:paymentSuccessful")) + "?session_id={CHECKOUT_SESSION_ID}",
             cancel_url=request.build_absolute_uri(reverse("eventTickets:paymentFailed")),
         )
         return JsonResponse({"sessionUrl": checkout_session.url})

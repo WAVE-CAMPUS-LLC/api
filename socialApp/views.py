@@ -389,7 +389,7 @@ def publicProfileView(request, username):
                     messages.success(request, message)
                     return redirect("social:publicProfile", username=username)
                 else:
-                    messages.warning(request, message)
+                    messages.error(request, message)
                     return redirect("social:publicProfile", username=username)
             elif (
                 action == "cancel_request"
@@ -468,8 +468,8 @@ def send_friend_request(sender, receiver_username):
     try:
         receiver = get_object_or_404(UserProfile, user__username=receiver_username)
         
-        # Check if they are already friends
         if sender.user_profile.is_friends_with(receiver.user):
+            # This is the case where the sender and receiver are already friends
             return False, "You are already friends with this user.", None
         
         # First check for any active (pending/accepted) requests
@@ -482,10 +482,13 @@ def send_friend_request(sender, receiver_username):
         if active_request:
             if active_request.status == 'pending':
                 if active_request.sender == sender:
+                    # This is the case where the sender has already sent a request to the receiver
                     return False, "You have already sent a friend request to this user.", active_request
                 else:
-                    return False, "This user has already sent you a friend request.", active_request
+                    # This is the case where the receiver has already sent a request
+                    return False, f"{receiver.user.username} has already sent you a friend request. Check your notifications to respond.", active_request
             else:  # status is 'accepted'
+                # This is the case where the sender and receiver are already friends
                 return False, "You are already friends with this user.", active_request
         
         # If no active request exists, check for canceled/declined requests to reuse
