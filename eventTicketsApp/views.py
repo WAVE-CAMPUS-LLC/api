@@ -21,6 +21,7 @@ from qr_code.qrcode import maker
 from qr_code.qrcode.utils import QRCodeOptions
 import stripe
 from stripeManagementApp.customerSetup import CustomerAccount
+from rest_framework.response import Response
 
 from socialApp.models import Crew
 from .models import PaidFreeTicket, Ticket, UserPayment, StripePlatformSettings
@@ -125,6 +126,7 @@ def paymentSuccessful(request):
     user_info = request.session.get("checkout_user_info", {})
 
     session_id = request.GET.get("session_id")
+    from_mobile = request.GET.get("from_mobile")
     if not session_id or session_id == "{CHECKOUT_SESSION_ID}":
         # Handle error: session_id was not replaced
         return HttpResponse("Error: session_id is missing or invalid.", status=400)
@@ -201,12 +203,18 @@ def paymentSuccessful(request):
         del request.session["cart"]
     if "checkout_user_info" in request.session:
         del request.session["checkout_user_info"]
+    
+    if from_mobile:
+        return Response({"status": "paymentSuccessful"}, status=200)
 
     # Render your success page
     return render(request, "eventTicketsApp/checkoutSession/paymentSuccessful.html", {})
 
 
 def paymentFailed(request):
+    from_mobile = request.GET.get("from_mobile")
+    if from_mobile:
+        return Response({"status": "paymentFailed"}, status=200)
     return render(request, "eventTicketsApp/checkoutSession/paymentFailed.html")
 
 

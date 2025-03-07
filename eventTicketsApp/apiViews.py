@@ -237,8 +237,17 @@ def processCheckout(request):
                     "destination": host.connectAccountID,
                 },
             },
-            success_url="https://waveoncampus.com/paymentSuccessful?session_id={CHECKOUT_SESSION_ID}",
-            cancel_url="https://waveoncampus.com/paymentFailed",
+            success_url=request.build_absolute_uri
+            (
+                (reverse("eventTickets:paymentSuccessful")) + 
+                "?session_id={CHECKOUT_SESSION_ID}" +
+                "?from_mobile=true"
+            ),
+            cancel_url=request.build_absolute_uri
+            (
+                (reverse("eventTickets:paymentFailed")) +
+                "?from_mobile=true"
+            ),
         )
         
 
