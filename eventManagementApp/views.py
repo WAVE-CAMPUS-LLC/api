@@ -108,11 +108,19 @@ def eventCreationSelect(request):
 
     # Path 1: If no connectAccountID, search Stripe for an account by email
     if not userAccount.connectAccountID:
-        stripe_accounts = stripe.Customer.search(query=f'email:"{userAccount.email}" limit:1')
+        # Search for existing accounts using list instead of search
+        stripe_accounts = stripe.Account.list(limit=1)
+        existing_account = None
+        
+        # Look for account with matching email
+        for account in stripe_accounts.data:
+            if account.get('email') == userAccount.email:
+                existing_account = account
+                break
 
-        if stripe_accounts.data:
-            existing_account = stripe_accounts.data[0]
-            stripe.Account.delete(existing_account["id"])  # Delete old account
+        if existing_account:
+            # Delete old account if found
+            stripe.Account.delete(existing_account.id)
 
         # Path 1.1: Create a new Stripe Connect account
         stripeConnectAccount = ConnectAccount.createConnectAccount(request, userAccount)

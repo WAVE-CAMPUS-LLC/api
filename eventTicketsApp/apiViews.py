@@ -237,8 +237,8 @@ def processCheckout(request):
                     "destination": host.connectAccountID,
                 },
             },
-            success_url="myapp://paymentSuccessful?session_id={CHECKOUT_SESSION_ID}",
-            cancel_url="myapp://paymentFailed",
+            success_url="https://waveoncampus.com/paymentSuccessful?session_id={CHECKOUT_SESSION_ID}",
+            cancel_url="https://waveoncampus.com/paymentFailed",
         )
         
 
