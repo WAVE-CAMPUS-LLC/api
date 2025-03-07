@@ -208,16 +208,16 @@ def processCheckout(request):
         })
     
     # Add service fee as separate line item
-    line_items.append({
-        "price_data": {
-            "currency": "usd",
-            "product_data": {
-                "name": "Service Fee",
-            },
-            "unit_amount": fee_amount,
-        },
-        "quantity": 1,
-    })
+    # line_items.append({
+    #     "price_data": {
+    #         "currency": "usd",
+    #         "product_data": {
+    #             "name": "Service Fee",
+    #         },
+    #         "unit_amount": fee_amount,
+    #     },
+    #     "quantity": 1,
+    # })
 
     # Get event and host info
     first_ticket = next(iter(cart.values()))
