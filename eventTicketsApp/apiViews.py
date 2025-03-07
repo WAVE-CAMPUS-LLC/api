@@ -94,14 +94,13 @@ def save_mobile_cart(request):
         
         # Build the web checkout URL with cart ID
         web_base_url = settings.SITE_URL
-        checkout_path = reverse('eventTickets:hostedCheckout')
+        checkout_path = reverse('eventTicketsAPI:processCheckout')
         params = urlencode({'cart_id': cart_id})
         web_checkout_url = f"{web_base_url}{checkout_path}?{params}"
         
         return Response({
             "message": "Cart saved successfully",
-            "web_checkout_url": web_checkout_url,
-            "cart_id": cart_id
+            "cartSaved": True,
         }, status=status.HTTP_200_OK)
         
     except Exception as e:
@@ -171,6 +170,7 @@ def get_event_ticket_info(request, eventId):
 @permission_classes([AllowAny])
 def processCheckout(request):
     cart = request.data.get("cart", {})
+    print("Received cart data in process checkout: ", cart)
     if not cart:
         return Response({"error": "Cart is empty"}, status=status.HTTP_400_BAD_REQUEST)
     
