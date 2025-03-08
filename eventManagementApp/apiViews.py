@@ -152,27 +152,39 @@ def getEventFormFields(request):
     }, status=status.HTTP_200_OK)
 
 
-@api_view(["POST"])
+@api_view(["POST", "PATCH"])  # Add PATCH support
 @permission_classes([IsAuthenticated])
 def editEvent(request, eventId):
+    """Update event details. Supports both full and partial updates."""
     event = get_object_or_404(Event, eventId=eventId)
     user_profile = UserProfile.objects.get(user=request.user)
     host_profile = HostProfile.objects.get(user=event.host)
     is_in_college = user_profile.college is not None
-    rsvp_list = RSVPTicket.objects.filter(event=event).values()
-    paid_free_tickets = PaidFreeTicket.objects.filter(event=event).values()
 
-    edit_event_form = EditEventForm(request.POST, request.FILES, instance=event)
+    # Use request.data instead of request.POST to support both form data and JSON
+    data = request.data
+    files = request.FILES
+
+    # Handle partial updates for PATCH requests
+    partial = request.method == "PATCH"
+    
+    edit_event_form = EditEventForm(data, files, instance=event, partial=partial)
+    
     if edit_event_form.is_valid():
-        edit_event_form.save()
+        updated_event = edit_event_form.save()
+        
+        # Get updated related data
+        rsvp_list = RSVPTicket.objects.filter(event=updated_event).values()
+        paid_free_tickets = PaidFreeTicket.objects.filter(event=updated_event).values()
+        
         return Response({
             "message": "Event updated successfully.",
             "event": {
-                "id": event.id,
-                "title": event.title,
-                "description": event.description,
-                "date": event.date,
-                "location": event.location,
+                "id": updated_event.id,
+                "title": updated_event.title,
+                "description": updated_event.description,
+                "date": updated_event.date,
+                "location": updated_event.location,
                 "host": {
                     "id": host_profile.id,
                     "name": host_profile.user.get_full_name(),
@@ -186,3 +198,4 @@ def editEvent(request, eventId):
         return Response({
             "errors": edit_event_form.errors,
         }, status=status.HTTP_400_BAD_REQUEST)
+

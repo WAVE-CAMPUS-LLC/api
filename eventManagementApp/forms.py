@@ -313,7 +313,7 @@ class EditEventForm(forms.ModelForm):
             "description",
             "building_name",
             "street",
-            "apt_suite_unit",
+            "apt_suite_unit", 
             "city",
             "state",
             "zip_code",
@@ -323,8 +323,25 @@ class EditEventForm(forms.ModelForm):
             "body_photo_three",
             "body_photo_four",
             "body_photo_five",
-            "age_restriction",  # Added age_restriction field
+            "age_restriction",
+            "hide_address",
+            "forAllDisplay",
+            "forCollegesDisplay",
+            "show_guest_list",
+            "crew_discount",
+            "minimum_crew_size",
+            "crew_discount_percentage"
         ]
+
+    def __init__(self, *args, **kwargs):
+        # Extract partial flag before calling parent's __init__
+        self.partial = kwargs.pop('partial', False)
+        super().__init__(*args, **kwargs)
+        
+        # If this is a partial update, make all fields optional
+        if self.partial:
+            for field in self.fields.values():
+                field.required = False
         
 class HostProfileForm(forms.ModelForm):
     class Meta:
