@@ -177,14 +177,26 @@ def editEvent(request, eventId):
         rsvp_list = RSVPTicket.objects.filter(event=updated_event).values()
         paid_free_tickets = PaidFreeTicket.objects.filter(event=updated_event).values()
         
+        # Format location data
+        location = {
+            "building_name": updated_event.building_name,
+            "street": updated_event.street,
+            "apt_suite_unit": updated_event.apt_suite_unit,
+            "city": updated_event.city,
+            "state": updated_event.state,
+            "zip_code": updated_event.zip_code,
+            "country": updated_event.country,
+            "hide_address": updated_event.hide_address
+        }
+        
         return Response({
             "message": "Event updated successfully.",
             "event": {
-                "id": updated_event.id,
+                "id": str(updated_event.eventId),
                 "title": updated_event.title,
                 "description": updated_event.description,
                 "date": updated_event.date,
-                "location": updated_event.location,
+                "location": location,
                 "host": {
                     "id": host_profile.id,
                     "name": host_profile.user.get_full_name(),
