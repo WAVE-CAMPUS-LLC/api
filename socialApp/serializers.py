@@ -12,6 +12,15 @@ class CrewSerializer(serializers.ModelSerializer):
         model = Crew
         fields = "__all__"
         
+
+class CrewMemberSerializer(serializers.ModelSerializer):
+    user = CustomUserSerializer()
+    crew = CrewSerializer()
+    
+    class Meta:
+        model = CrewMember
+        fields = "__all__"
+        
         
 class FriendRequestSerializer(serializers.ModelSerializer):
     sender = CustomUserSerializer()
