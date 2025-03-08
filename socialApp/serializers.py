@@ -1,27 +1,42 @@
 from rest_framework import serializers
+from django.core.exceptions import ObjectDoesNotExist
 from .models import Crew, CrewMember, CrewRequest, FriendRequest
 from accountManagementApp.models import UserProfile
 from authenticationApp.serializers import CustomUserSerializer
 from accountManagementApp.serializers import UserProfileSerializer
 
 
-class CrewSerializer(serializers.ModelSerializer):
-    members=CustomUserSerializer(many=True)
-    created_by=CustomUserSerializer()
-    class Meta:
-        model = Crew
-        fields = "__all__"
-        
-
 class CrewMemberSerializer(serializers.ModelSerializer):
     user = CustomUserSerializer()
-    crew = CrewSerializer()
+    user_profile = serializers.SerializerMethodField()
     
     class Meta:
         model = CrewMember
         fields = "__all__"
         
+    def get_user_profile(self, obj):
+        try:
+            return UserProfileSerializer(obj.user.user_profile).data
+        except ObjectDoesNotExist:
+            return None
+
+
+class CrewSerializer(serializers.ModelSerializer):
+    created_by = CustomUserSerializer()
+    created_by_profile = serializers.SerializerMethodField()
+    crew_members = CrewMemberSerializer(many=True, source='crew_members.all')
+    
+    class Meta:
+        model = Crew
+        fields = "__all__"
         
+    def get_created_by_profile(self, obj):
+        try:
+            return UserProfileSerializer(obj.created_by.user_profile).data
+        except ObjectDoesNotExist:
+            return None
+        
+
 class FriendRequestSerializer(serializers.ModelSerializer):
     sender = CustomUserSerializer()
     receiver = CustomUserSerializer()

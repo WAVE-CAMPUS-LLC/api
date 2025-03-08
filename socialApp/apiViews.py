@@ -6,18 +6,20 @@ from django.shortcuts import get_object_or_404
 from django.conf import settings
 from django.urls import reverse
 from datetime import datetime
-import random
 from django.utils.timezone import now
 from rest_framework import status
-from asgiref.sync import async_to_sync
-from channels.layers import get_channel_layer
 from .models import FriendRequest, Crew, CrewMember, CrewRequest
 from accountManagementApp.models import UserProfile
 from authenticationApp.models import CustomUser
 from eventManagementApp.models import SharedEvent
 from accountManagementApp.serializers import UserProfileSerializer
 from eventManagementApp.serializers import SharedEventSerializer
-from .serializers import CrewSerializer, FriendRequestSerializer, CrewRequestSerializer
+from .serializers import (
+    CrewSerializer,
+    FriendRequestSerializer,
+    CrewRequestSerializer,
+    CrewMemberSerializer
+)
 from authenticationApp.serializers import CustomUserSerializer
 from django.contrib.auth import get_user_model
 from django.db.models import Q
@@ -225,30 +227,9 @@ def crew_api_view(request, crewId):
 
         if action == "crew_invite":
             invitee_username = request.data.get("invitee_username")
-            receiver = get_object_or_404(UserProfile, user__username=invitee_username)
-            success, message, crew_request = send_crew_request(
+            success, message, _ = send_crew_request(
                 user_profile, invitee_username, crewId
             )
-
-            if success:
-                channel_layer = get_channel_layer()
-                async_to_sync(channel_layer.group_send)(
-                    f"user_{receiver.user.id}",
-                    {
-                        "type": "social_update",
-                        "data": {
-                            "message": f"{request.user.username} sent you a crew invite.",
-                            "action": "sendCrew",
-                            "crew_request": {
-                                "requestId": str(crew_request.requestId),
-                                "crew": str(crew.name),
-                                "crewId": str(crew.crewId),
-                                "sender": {"username": str(user_profile.user.username)},
-                                "profile_picture": user_profile.profile_photo.url,
-                            },
-                        },
-                    },
-                )
             return Response({"success": success, "message": message})
 
         elif action == "leave_crew":
@@ -262,33 +243,18 @@ def crew_api_view(request, crewId):
         elif action == "kick_member":
             member_username = request.data.get("member")
             kick_member(request, crewId, member_username)
-            receiver = get_object_or_404(UserProfile, user__username=member_username)
-            channel_layer = get_channel_layer()
-            async_to_sync(channel_layer.group_send)(
-                f"user_{receiver.user.id}",
-                {
-                    "type": "social_update",
-                    "data": {
-                        "message": f"{request.user.username} kicked you from the crew.",
-                        "action": "kickCrew",
-                        "crew": {"name": crew.name, "crewId": str(crew.crewId)},
-                    },
-                },
-            )
             return Response(
                 {"message": f"{member_username} has been removed from the crew."}
             )
 
     return Response(
         {
-            "crew": {"name": crew.name, "crewId": str(crew.crewId)},
-            "self": user_profile.user.username,
-            "crewMembers": list(crew_members.values("user__username")),
-            "pendingFriends": [friend.user.username for friend in pending_friends],
-            "declinedFriends": [friend.user.username for friend in declined_friends],
-            "notInvitedFriends": [
-                friend.user.username for friend in not_invited_friends
-            ],
+            "crew": CrewSerializer(crew).data,
+            "self": UserProfileSerializer(user_profile).data,
+            "crewMembers": CrewMemberSerializer(crew_members, many=True).data,
+            "pendingFriends": UserProfileSerializer(pending_friends, many=True).data,
+            "declinedFriends": UserProfileSerializer(declined_friends, many=True).data,
+            "notInvitedFriends": UserProfileSerializer(not_invited_friends, many=True).data,
             "time": datetime.now().timestamp(),
             "isCrewOwner": crew.created_by == request.user,
             "isInCrew": is_in_crew,
