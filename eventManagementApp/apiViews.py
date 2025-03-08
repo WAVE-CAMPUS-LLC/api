@@ -21,6 +21,8 @@ from stripeManagementApp.createHostProduct import createHostProduct
 from accountManagementApp.models import UserProfile
 from collegeManagementApp.models import Organization, OrganizationMembership
 from .forms import HostApplicationForm, EventForm, EditEventForm
+from eventTicketsApp.models import InviteEventOption, RSVPTicket, PaidFreeTicket, Ticket
+from eventTicketsApp.serializers import TicketSerializer
 from eventTicketsApp.forms import InvitationForm, PaidFreeTicketForm
 from .models import EventType, HostApplication, Event, HostProfile
 from authenticationApp.models import CustomUser
@@ -148,3 +150,39 @@ def getEventFormFields(request):
         "formFields": form_fields,
         "placesKey": settings.PLACES_API_KEY
     }, status=status.HTTP_200_OK)
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def editEvent(request, eventId):
+    event = get_object_or_404(Event, eventId=eventId)
+    user_profile = UserProfile.objects.get(user=request.user)
+    host_profile = HostProfile.objects.get(user=event.host)
+    is_in_college = user_profile.college is not None
+    rsvp_list = RSVPTicket.objects.filter(event=event).values()
+    paid_free_tickets = PaidFreeTicket.objects.filter(event=event).values()
+
+    edit_event_form = EditEventForm(request.POST, request.FILES, instance=event)
+    if edit_event_form.is_valid():
+        edit_event_form.save()
+        return Response({
+            "message": "Event updated successfully.",
+            "event": {
+                "id": event.id,
+                "title": event.title,
+                "description": event.description,
+                "date": event.date,
+                "location": event.location,
+                "host": {
+                    "id": host_profile.id,
+                    "name": host_profile.user.get_full_name(),
+                },
+                "isInCollege": is_in_college,
+                "rsvpList": list(rsvp_list),
+                "paidFreeTickets": list(paid_free_tickets),
+            }
+        }, status=status.HTTP_200_OK)
+    else:
+        return Response({
+            "errors": edit_event_form.errors,
+        }, status=status.HTTP_400_BAD_REQUEST)
