@@ -26,6 +26,7 @@ from eventTicketsApp.serializers import TicketSerializer
 from eventTicketsApp.forms import InvitationForm, PaidFreeTicketForm
 from .models import EventType, HostApplication, Event, HostProfile
 from authenticationApp.models import CustomUser
+from stripeManagementApp.createHostProduct import createHostProduct
 
 
 @api_view(["GET", "POST"])
@@ -198,7 +199,7 @@ def editEvent(request, eventId):
                 "date": updated_event.date,
                 "location": location,
                 "host": {
-                    "id": host_profile.id,
+                    "id": str(host_profile.hostProfileId),  # Use hostProfileId and convert UUID to string
                     "name": host_profile.user.get_full_name(),
                 },
                 "isInCollege": is_in_college,
