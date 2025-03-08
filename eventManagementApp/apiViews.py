@@ -21,6 +21,7 @@ from collegeManagementApp.models import Organization, OrganizationMembership
 from .forms import HostApplicationForm, EventForm, EditEventForm
 from eventTicketsApp.models import InviteEventOption, RSVPTicket, PaidFreeTicket, Ticket
 from eventTicketsApp.serializers import TicketSerializer
+from .serializers import EventSerializer
 from eventTicketsApp.forms import InvitationForm, PaidFreeTicketForm
 from .models import EventType, HostApplication, Event, HostProfile
 from authenticationApp.models import CustomUser
