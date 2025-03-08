@@ -9,8 +9,6 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
-from .models import Event, HostProfile
-from .serializers import EventSerializer
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from datetime import datetime
@@ -99,10 +97,8 @@ def createPaidEvent(request):
         event.ticketing = "Paid"
         event.status = "live"
 
-        user_profile = event.host.user_profile
         host_profile, _ = HostProfile.objects.get_or_create(user=request.user)
         
-
         event.save()        
 
         # Create Stripe product
@@ -200,7 +196,7 @@ def editEvent(request, eventId):
                 "location": location,
                 "host": {
                     "id": str(host_profile.hostProfileId),  # Use hostProfileId and convert UUID to string
-                    "name": host_profile.user.get_full_name(),
+                    "name": f"{host_profile.user.first_name} {host_profile.user.last_name}",  # Use direct name fields
                 },
                 "isInCollege": is_in_college,
                 "rsvpList": list(rsvp_list),
