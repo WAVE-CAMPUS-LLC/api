@@ -14,7 +14,7 @@ from accountManagementApp.models import UserProfile
 from authenticationApp.models import CustomUser
 from eventManagementApp.models import SharedEvent
 from accountManagementApp.serializers import UserProfileSerializer
-from eventManagementApp.serializers import SharedEventSerializer
+from eventManagementApp.serializers import SharedEventWithoutCrewSerializer
 from .serializers import (
     CrewSerializer,
     FriendRequestSerializer,
@@ -71,8 +71,8 @@ class SocialHomeView(APIView):
             "friends": UserProfileSerializer(friends, many=True).data,
             "my_crews": CrewSerializer(my_crews, many=True).data,
             "crews_im_in": CrewSerializer(crews_im_in, many=True).data,
-            "my_shared_events": SharedEventSerializer(my_shared_events, many=True).data,
-            "shared_with_me": SharedEventSerializer(shared_with_me, many=True).data,
+            "my_shared_events": SharedEventWithoutCrewSerializer(my_shared_events, many=True).data,
+            "shared_with_me": SharedEventWithoutCrewSerializer(shared_with_me, many=True).data,
             "pending_friend_requests": FriendRequestSerializer(
                 pending_friend_requests, many=True
             ).data,
