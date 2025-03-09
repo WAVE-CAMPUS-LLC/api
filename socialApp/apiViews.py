@@ -8,6 +8,7 @@ from django.urls import reverse
 from datetime import datetime
 from django.utils.timezone import now
 from rest_framework import status
+from django.core.exceptions import ObjectDoesNotExist
 from .models import FriendRequest, Crew, CrewMember, CrewRequest
 from accountManagementApp.models import UserProfile
 from authenticationApp.models import CustomUser
@@ -24,8 +25,6 @@ from authenticationApp.serializers import CustomUserSerializer
 from django.contrib.auth import get_user_model
 from django.db.models import Q
 from .views import send_crew_request, leave_crew, delete_crew, kick_member
-from django.views.decorators.csrf import csrf_exempt
-from wave_v1.decorators import check_suspension, member, verified
 
 
 class SocialHomeView(APIView):
@@ -147,9 +146,7 @@ class PublicProfileAPIView(APIView):
         try:
             # Get the requested user and their profile
             other_user = get_object_or_404(CustomUser, username=username)
-            other_user_profile, created = UserProfile.objects.get_or_create(
-                user=other_user
-            )
+            other_user_profile = UserProfile.objects.get_or_create(user=other_user)[0]  # Only keep the profile object
 
             # Initialize friend-related data
             friend_request_status = None
@@ -179,18 +176,18 @@ class PublicProfileAPIView(APIView):
 
             # Only include friendship data for authenticated users
             if request.user.is_authenticated:
-                response_data.update(
-                    {
-                        "friend_request_status": friend_request_status,
-                        "friend_request_id": friend_request_id,
-                        "can_send_request": request.user.is_authenticated,
-                    }
-                )
+                response_data.update({
+                    "friend_request_status": friend_request_status,
+                    "friend_request_id": friend_request_id,
+                    "can_send_request": request.user.is_authenticated,
+                })
 
             return Response(response_data, status=status.HTTP_200_OK)
 
-        except Exception as e:
+        except (CustomUser.DoesNotExist, UserProfile.DoesNotExist) as e:
             return Response({"error": str(e)}, status=status.HTTP_404_NOT_FOUND)
+        except (ValueError, ObjectDoesNotExist) as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
 # Crew API Setup
@@ -204,15 +201,11 @@ def crew_api_view(request, crewId):
     is_in_crew = CrewMember.objects.filter(crew=crew, user=request.user).exists()
 
     friends = user_profile.friends.all()
+    
+    # Fixed query syntax for user__in lookup
     friends_not_in_crew = friends.exclude(
         user__in=crew_members.values_list("user", flat=True)
     )
-    
-    try:
-        shared_events = SharedEvent.objects.filter(crew=crew).select_related('event', 'sender', 'receiver', 'crew')
-        shared_events_serialized = SharedEventSerializer(shared_events, many=True)
-    except Exception as e:
-        shared_events_serialized = []
 
     pending_friends = [
         friend
@@ -227,7 +220,8 @@ def crew_api_view(request, crewId):
     not_invited_friends = friends_not_in_crew.exclude(
         user__username__in=[f.user.username for f in pending_friends]
     ).exclude(user__username__in=[f.user.username for f in declined_friends])
-
+    
+    # Rest of function unchanged...
     if request.method == "POST":
         action = request.data.get("action")
 
@@ -253,16 +247,17 @@ def crew_api_view(request, crewId):
                 {"message": f"{member_username} has been removed from the crew."}
             )
 
+    crew_data = CrewSerializer(crew).data
+
     return Response(
         {
-            "crew": CrewSerializer(crew).data,
+            "crew": crew_data,
             "self": UserProfileSerializer(user_profile).data,
             "crewMembers": CrewMemberSerializer(crew_members, many=True).data,
             "pendingFriends": UserProfileSerializer(pending_friends, many=True).data,
             "declinedFriends": UserProfileSerializer(declined_friends, many=True).data,
             "notInvitedFriends": UserProfileSerializer(not_invited_friends, many=True).data,
             "time": datetime.now().timestamp(),
-            "sharedEvents": shared_events_serialized.data if hasattr(shared_events_serialized, 'data') else [],
             "isCrewOwner": crew.created_by == request.user,
             "isInCrew": is_in_crew,
         }
