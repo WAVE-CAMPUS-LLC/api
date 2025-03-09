@@ -26,3 +26,5 @@ class SharedEventSerializer(serializers.ModelSerializer):
     class Meta:
         model = SharedEvent
         fields = ["id", "sender", "receiver", "crew", "event", "shared_at"]
+        
+        

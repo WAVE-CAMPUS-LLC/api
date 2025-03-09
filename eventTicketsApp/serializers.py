@@ -7,7 +7,7 @@ from django.core.exceptions import ValidationError
 class RSVPTicketSerializer(serializers.ModelSerializer):
     class Meta:
         model = RSVPTicket
-        fields = ['event', 'email', 'first_name', 'last_name', 'display_on_guestlist', 'ticket_id']
+        fields = "__all__" 
 
     def validate_email(self, value):
         """

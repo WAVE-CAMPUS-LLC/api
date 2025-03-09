@@ -209,3 +209,25 @@ def editEvent(request, eventId):
             "errors": edit_event_form.errors,
         }, status=status.HTTP_400_BAD_REQUEST)
 
+
+@api_view(["GET", "POST"])
+@permission_classes([IsAuthenticated])
+def getHostEventTicketing(request, eventId):
+    event = get_object_or_404(Event, eventId=eventId)
+    try:
+        ticketingType = event.ticketing
+        
+        if ticketingType == "Paid":
+            ticket = PaidFreeTicket.objects.filter(event=event)
+        else:
+            ticket = RSVPTicket.objects.filter(event=event)
+            
+        return Response({
+            "ticketingType": ticketingType,
+            "tickets": TicketSerializer(ticket, many=True).data
+        }, status=status.HTTP_200_OK)
+    except:
+        return Response({
+            "error": "Failed to retrieve tickets."
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
