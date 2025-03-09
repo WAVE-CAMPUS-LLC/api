@@ -10,5 +10,5 @@ urlpatterns = [
     path("edit_event/<uuid:eventId>/", editEvent, name="edit_event"),
     
     # Event Ticketing
-    path("getHostEventTicketing/", getHostEventTicketing, name="getHostEventTicketing"),
+    path("getHostEventTicketing/<uuid:eventId>/", getHostEventTicketing, name="getHostEventTicketing"),
 ]
