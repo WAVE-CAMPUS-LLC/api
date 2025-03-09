@@ -208,8 +208,11 @@ def crew_api_view(request, crewId):
         user__in=crew_members.values_list("user", flat=True)
     )
     
-    shared_events = SharedEvent.objects.filter(crew=crew)
-    shared_events_serialized = SharedEventSerializer(shared_events, many=True)
+    try:
+        shared_events = SharedEvent.objects.filter(crew=crew).select_related('event', 'sender', 'receiver', 'crew')
+        shared_events_serialized = SharedEventSerializer(shared_events, many=True)
+    except Exception as e:
+        shared_events_serialized = []
 
     pending_friends = [
         friend
@@ -259,7 +262,7 @@ def crew_api_view(request, crewId):
             "declinedFriends": UserProfileSerializer(declined_friends, many=True).data,
             "notInvitedFriends": UserProfileSerializer(not_invited_friends, many=True).data,
             "time": datetime.now().timestamp(),
-            "sharedEvents": shared_events_serialized.data,
+            "sharedEvents": shared_events_serialized.data if hasattr(shared_events_serialized, 'data') else [],
             "isCrewOwner": crew.created_by == request.user,
             "isInCrew": is_in_crew,
         }
