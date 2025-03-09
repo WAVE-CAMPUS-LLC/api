@@ -216,11 +216,7 @@ class UserProfile(models.Model):
         return crew.created_by == self.user
 
     def get_all_crews(self):
-        all_crew_members = CrewMember.objects.filter(user=self.user).all()
-        all_crews = []
-        for member in all_crew_members:
-            all_crews.append(member.crew)
-        return all_crews
+        return [member.crew for member in CrewMember.objects.filter(user=self.user).select_related('crew')]
 
     def get_shared_events(self):
         return SharedEvent.objects.filter(receiver=self.user)
