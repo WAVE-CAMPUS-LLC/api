@@ -188,8 +188,3 @@ def get_payment_methods_api(request):
         "payment_methods": payment_methods or [],
         "has_payment_methods": bool(payment_methods)
     }, status=status.HTTP_200_OK)
-    
-    
-@api_view(['POST', 'GET'])
-@permission_classes([IsAuthenticated])
-def getHostEventTickets(request):
