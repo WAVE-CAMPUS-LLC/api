@@ -19,7 +19,8 @@ from .serializers import (
     CrewSerializer,
     FriendRequestSerializer,
     CrewRequestSerializer,
-    CrewMemberSerializer
+    CrewMemberSerializer,
+    CreateCrewSerializer
 )
 from authenticationApp.serializers import CustomUserSerializer
 from django.contrib.auth import get_user_model
@@ -262,3 +263,29 @@ def crew_api_view(request, crewId):
             "isInCrew": is_in_crew,
         }
     )
+
+
+
+@api_view(["GET", 'POST'])
+@permission_classes([IsAuthenticated])
+def create_crew_api_view(request):
+    if request.method == "GET":
+        # Return field metadata for frontend usage
+        serializer = CreateCrewSerializer()
+        return Response(serializer.get_fields_metadata(), status=status.HTTP_200_OK)
+
+    serializer = CreateCrewSerializer(data=request.data)
+
+    if serializer.is_valid():
+        crew_instance = serializer.save(created_by=request.user)  # Auto-assign user
+        
+        # Add the creator as an admin member
+        CrewMember.objects.create(
+            user=request.user,
+            crew=crew_instance,
+            is_admin=True,
+        )
+
+        return Response({"message": "Crew created successfully", "crew": serializer.data}, status=status.HTTP_201_CREATED)
+    
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
