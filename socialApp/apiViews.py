@@ -277,23 +277,25 @@ def crew_api_view(request, crewId):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def crew_invite_action(request, crew_id, action):
+def crew_invite_action(request, crew_id):
     crew = get_object_or_404(Crew, crewId=crew_id)
     crew_request = get_object_or_404(CrewRequest, crew=crew, receiver=request.user)
     sender = get_object_or_404(UserProfile, user=crew_request.sender)
     receiver = get_object_or_404(UserProfile, user=request.user)
     
+    if request.method == "POST":
+        action = request.data.get("action")
     
-    if action == "joinCrew":
-        crew_request.accept_request()
-        CrewMember.objects.create(user=request.user, crew=crew)
-        
-        return Response({"message": f"You joined the {crew.name} crew."}, status=200)
+        if action == "joinCrew":
+            crew_request.accept_request()
+            CrewMember.objects.create(user=request.user, crew=crew)
+            
+            return Response({"message": f"You joined the {crew.name} crew."}, status=200)
 
-    elif action == "declineCrew":
-        crew_request.decline_request()
-        crew_request.delete()
-        return Response({"message": "Crew invite declined."}, status=200)
+        elif action == "declineCrew":
+            crew_request.decline_request()
+            crew_request.delete()
+            return Response({"message": "Crew invite declined."}, status=200)
 
     return Response({"error": "Invalid action."}, status=400)
 
