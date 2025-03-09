@@ -25,7 +25,7 @@ urlpatterns = [
         apiViews.delete_crew_view,
         name="api_delete_crew",
     ),
-    path("crew/<uuid:crewId>/invite/", apiViews.crew_invite_action, name="api_crew_invite_action"),
+    path("crew/<uuid:crewId>/member/", apiViews.crew_invite_action, name="api_crew_invite_action"),
     path(
         "crew/<uuid:crewId>/leave/",
         apiViews.leave_crew_view,
