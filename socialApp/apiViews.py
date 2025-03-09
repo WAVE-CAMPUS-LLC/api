@@ -25,7 +25,7 @@ from .serializers import (
 from authenticationApp.serializers import CustomUserSerializer
 from django.contrib.auth import get_user_model
 from django.db.models import Q
-from .views import send_crew_request, leave_crew, delete_crew, kick_member
+from .helpers import send_crew_request, leave_crew, delete_crew, kick_member
 
 
 class SocialHomeView(APIView):
@@ -289,3 +289,69 @@ def create_crew_api_view(request):
         return Response({"message": "Crew created successfully", "crew": serializer.data}, status=status.HTTP_201_CREATED)
     
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def crew_view(request, crewId):
+    """Retrieve crew details and member info."""
+    crew = get_object_or_404(Crew, crewId=crewId)
+    user_profile = get_object_or_404(UserProfile, user=request.user)
+
+    friends = user_profile.friends.all()
+    crew_members = CrewMember.objects.filter(crew=crew)
+    is_in_crew = crew_members.filter(user=request.user).exists()
+
+    friends_not_in_crew = friends.exclude(user__in=crew_members.values_list("user", flat=True))
+    pending_friends = [friend for friend in friends_not_in_crew if friend.has_pending_crew_request(request.user)]
+    declined_friends = [friend for friend in friends_not_in_crew if friend.has_declined_crew_request(request.user)]
+    not_invited_friends = friends_not_in_crew.exclude(
+        user__username__in=pending_friends
+    ).exclude(user__username__in=declined_friends)
+
+    return Response({
+        "crew": {
+            "id": str(crew.crewId),
+            "name": crew.name,
+            "bio": crew.bio,
+            "created_by": crew.created_by.username,
+            "created_at": crew.created_at,
+        },
+        "is_in_crew": is_in_crew,
+        "crew_members": [member.user.username for member in crew_members],
+        "pending_friends": [friend.user.username for friend in pending_friends],
+        "declined_friends": [friend.user.username for friend in declined_friends],
+        "not_invited_friends": [friend.user.username for friend in not_invited_friends],
+        "is_crew_owner": crew.created_by == request.user,
+        "timestamp": now().timestamp(),
+    })
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def invite_member(request, crewId):
+    """Send a crew invite to another user."""
+    invitee_username = request.data.get("invitee_username")
+    success, message, crew_request = send_crew_request(request.user, invitee_username, crewId)
+
+    if success:
+        return Response({"message": message}, status=200)
+    return Response({"error": message}, status=400)
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def leave_crew_view(request, crewId):
+    """Leave a crew."""
+    return leave_crew(request.user, crewId)
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def delete_crew_view(request, crewId):
+    """Delete a crew (only if user is the owner)."""
+    return delete_crew(request.user, crewId)
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def kick_member_view(request, crewId):
+    """Kick a member from the crew."""
+    member_username = request.data.get("member_username")
+    return kick_member(request.user, crewId, member_username)

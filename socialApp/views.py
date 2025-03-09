@@ -856,29 +856,6 @@ def kick_member(request, crewId, member_username):
     )
     return redirect("social:crew", crewId=crewId)
 
-    # if request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest':
-    #     query = request.GET.get('query', '')
-
-    #     user_friends = user.friends.all()
-
-    #     # Filter friends based on the search query (e.g., name)
-    #     results = user_friends.filter(
-    #         Q(user__username__icontains=query) |
-    #         Q(user__first_name__icontains=query) |
-    #         Q(user__last_name__icontains=query)
-    #     )
-
-    #     # Render each result using the template
-    #     if results.exists():
-    #         results_html = []
-    #         for friend in results:
-    #             html = render_to_string('socialApp/extras/search-item.html', {'friend': friend, "time": time, "crew": crew}, request=request)
-    #             results_html.append(html)
-    #         return JsonResponse({'results_html': results_html, 'no_results': False})
-    #     else:
-    #         no_results_html = render_to_string('socialApp/extras/no-result.html')
-    #         return JsonResponse({'results_html': [], 'no_results': True, 'no_results_html': no_results_html})
-
 
 def send_social_socket_message(shared_event, receiver, message, action):
     try:
