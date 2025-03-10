@@ -372,7 +372,7 @@ def leave_crew_view(request, crewId):
     return leave_crew(request.user, crewId)
 
 
-@api_view(["POST"])
+@api_view(["POST", "DELETE"])
 @permission_classes([IsAuthenticated])
 def delete_crew_view(request, crewId):
     """Delete a crew (only if user is the owner)."""
