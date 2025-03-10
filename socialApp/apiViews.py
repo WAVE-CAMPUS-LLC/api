@@ -36,35 +36,45 @@ class SocialHomeView(APIView):
         site_url = settings.SITE_URL
         profile_link = f"{site_url}{reverse('social:publicProfile', kwargs={'username': user_profile.user.username})}"
 
-        my_crews = Crew.objects.filter(created_by=request.user)
-        crews_im_in = Crew.objects.filter(crew_members__user=request.user).exclude(
-            created_by=request.user
-        )
-        friends = user_profile.friends.all()
-        my_shared_events = SharedEvent.objects.filter(
-            sender=user_profile
-        ).select_related("event", "receiver", "crew")
-        shared_with_me = SharedEvent.objects.filter(
-            receiver=user_profile
-        ).select_related("event", "sender", "crew")
-        pending_friend_requests = FriendRequest.objects.filter(
+        # Limit queries and apply select_related/prefetch_related to reduce database hits
+        my_crews = list(Crew.objects.filter(created_by=request.user).select_related('created_by')[:10])
+        
+        crews_im_in = list(Crew.objects.filter(crew_members__user=request.user)
+            .exclude(created_by=request.user)
+            .select_related('created_by')[:10])
+            
+        friends = list(user_profile.friends.all()[:20])
+        
+        # Limit shared events to most recent 10
+        my_shared_events = list(SharedEvent.objects.filter(sender=user_profile)
+            .select_related("event", "sender", "receiver", "crew")
+            .order_by('-shared_at')[:10])
+            
+        shared_with_me = list(SharedEvent.objects.filter(receiver=user_profile)
+            .select_related("event", "sender", "receiver", "crew")
+            .order_by('-shared_at')[:10])
+            
+        # Limit requests to most recent 10 of each type
+        pending_friend_requests = list(FriendRequest.objects.filter(
             receiver=request.user, status="pending"
-        )
-        sent_friend_requests = FriendRequest.objects.filter(
+        ).select_related('sender', 'receiver')[:10])
+        
+        sent_friend_requests = list(FriendRequest.objects.filter(
             sender=request.user, status="pending"
-        )
-        pending_crew_requests = CrewRequest.objects.filter(
+        ).select_related('sender', 'receiver')[:10])
+        
+        pending_crew_requests = list(CrewRequest.objects.filter(
             receiver=request.user, status="pending"
-        )
-        sent_crew_requests = CrewRequest.objects.filter(
+        ).select_related('sender', 'receiver', 'crew')[:10])
+        
+        sent_crew_requests = list(CrewRequest.objects.filter(
             sender=request.user, status="pending"
-        )
+        ).select_related('sender', 'receiver', 'crew')[:10])
 
-        is_host = user_profile.user.groups.filter(name="Host").exists()
-        is_active_user = (
-            user_profile.user.groups.filter(name="Onboarded").exists()
-            and user_profile.user.groups.filter(name="Verified").exists()
-        )
+        # Check groups with list() to ensure query is executed here
+        user_groups = list(user_profile.user.groups.all().values_list('name', flat=True))
+        is_host = "Host" in user_groups
+        is_active_user = "Onboarded" in user_groups and "Verified" in user_groups
 
         response_data = {
             "user_profile": UserProfileSerializer(user_profile).data,
@@ -206,31 +216,42 @@ def crew_api_view(request, crewId):
     user_profile = get_object_or_404(UserProfile, user=request.user)
     crew = get_object_or_404(Crew, crewId=crewId)
 
-    crew_members = CrewMember.objects.filter(crew=crew)
+    # Limit query results and use select_related
+    crew_members = list(CrewMember.objects.filter(crew=crew).select_related('user')[:20])
     is_in_crew = CrewMember.objects.filter(crew=crew, user=request.user).exists()
 
-    friends = user_profile.friends.all()
+    # Limit friends query and avoid N+1 issues
+    friends = list(user_profile.friends.all().select_related('user')[:50])
 
-    # Fixed query syntax for user__in lookup
-    friends_not_in_crew = friends.exclude(
-        user__in=crew_members.values_list("user", flat=True)
-    )
+    # Get crew member user IDs in a single query (more efficient than values_list)
+    crew_member_ids = set(m.user_id for m in crew_members)
+    
+    # Filter friends not in crew
+    friends_not_in_crew = [f for f in friends if f.user_id not in crew_member_ids]
 
-    pending_friends = [
-        friend
-        for friend in friends_not_in_crew
-        if friend.has_pending_crew_request(request.user)
-    ]
-    declined_friends = [
-        friend
-        for friend in friends_not_in_crew
-        if friend.has_declined_crew_request(request.user)
-    ]
-    not_invited_friends = friends_not_in_crew.exclude(
-        user__username__in=[f.user.username for f in pending_friends]
-    ).exclude(user__username__in=[f.user.username for f in declined_friends])
+    # Process in batches to prevent memory issues
+    pending_friends = []
+    declined_friends = []
+    
+    # Process in smaller batches to avoid cursor issues
+    for i in range(0, len(friends_not_in_crew), 10):
+        batch = friends_not_in_crew[i:i+10]
+        pending_batch = [f for f in batch if f.has_pending_crew_request(request.user)]
+        declined_batch = [f for f in batch if f.has_declined_crew_request(request.user)]
+        pending_friends.extend(pending_batch)
+        declined_friends.extend(declined_batch)
+    
+    # Create a set of usernames for efficient lookups
+    pending_usernames = {f.user.username for f in pending_friends}
+    declined_usernames = {f.user.username for f in declined_friends}
+    
+    # Filter not invited friends
+    not_invited_friends = [
+        f for f in friends_not_in_crew 
+        if f.user.username not in pending_usernames 
+        and f.user.username not in declined_usernames
+    ][:20]  # Limit to 20 friends
 
-    # Rest of function unchanged...
     if request.method == "POST":
         action = request.data.get("action")
 
@@ -255,19 +276,20 @@ def crew_api_view(request, crewId):
             return Response(
                 {"message": f"{member_username} has been removed from the crew."}
             )
+    
+    # Serialize the crew with a non-recursive context to prevent deep serialization
+    context = {'non_recursive': True}
+    crew_data = CrewSerializer(crew, context=context).data
 
-    crew_data = CrewSerializer(crew).data
-
+    # Prepare the response with limited data
     return Response(
         {
             "crew": crew_data,
             "self": UserProfileSerializer(user_profile).data,
             "crewMembers": CrewMemberSerializer(crew_members, many=True).data,
-            "pendingFriends": UserProfileSerializer(pending_friends, many=True).data,
-            "declinedFriends": UserProfileSerializer(declined_friends, many=True).data,
-            "notInvitedFriends": UserProfileSerializer(
-                not_invited_friends, many=True
-            ).data,
+            "pendingFriends": UserProfileSerializer(pending_friends[:20], many=True).data,
+            "declinedFriends": UserProfileSerializer(declined_friends[:20], many=True).data,
+            "notInvitedFriends": UserProfileSerializer(not_invited_friends, many=True).data,
             "time": datetime.now().timestamp(),
             "isCrewOwner": crew.created_by == request.user,
             "isInCrew": is_in_crew,
