@@ -454,10 +454,10 @@ def getAllRequests(request):
     
     pending_crew_requests = CrewRequest.objects.filter(
         receiver=request.user, status="pending"
-    )
+    ).select_related('sender')  # Add select_related to efficiently load sender data
     sent_crew_requests = CrewRequest.objects.filter(
         sender=request.user, status="pending"
-    )
+    ).select_related('receiver')  # Similarly optimize receiver loading
 
     response_data = {
         "sent_friend_requests": FriendRequestSerializer(
@@ -466,9 +466,14 @@ def getAllRequests(request):
         "pending_friend_requests": FriendRequestSerializer(
             pending_friend_requests, many=True
         ).data,
-        "sent_crew_requests": CrewRequestSerializer(sent_crew_requests, many=True).data,
+        "sent_crew_requests": CrewRequestSerializer(
+            sent_crew_requests, many=True, 
+            context={'include_user_details': True}  # Add context to include full user details
+        ).data,
         "pending_crew_requests": CrewRequestSerializer(
-            pending_crew_requests, many=True).data,
+            pending_crew_requests, many=True,
+            context={'include_user_details': True}  # Add context to include full user details
+        ).data,
         "timestamp": now().timestamp(),
     }
 

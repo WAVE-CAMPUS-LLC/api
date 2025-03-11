@@ -101,7 +101,21 @@ class CrewRequestSerializer(serializers.ModelSerializer):
     sender = CustomUserSerializer()
     receiver = CustomUserSerializer()
     crew = CrewSerializer()
+    sender_profile = serializers.SerializerMethodField()
+    receiver_profile = serializers.SerializerMethodField()
 
     class Meta:
         model = CrewRequest
         fields = "__all__"
+
+    def get_sender_profile(self, obj) -> Optional[dict]:
+        try:
+            return UserProfileSerializer(obj.sender.user_profile).data if self.context.get('include_user_details') else None
+        except (ObjectDoesNotExist, AttributeError):
+            return None
+
+    def get_receiver_profile(self, obj) -> Optional[dict]:
+        try:
+            return UserProfileSerializer(obj.receiver.user_profile).data if self.context.get('include_user_details') else None
+        except (ObjectDoesNotExist, AttributeError):
+            return None
