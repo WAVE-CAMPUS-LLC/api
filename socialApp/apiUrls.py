@@ -32,7 +32,7 @@ urlpatterns = [
         apiViews.delete_crew_view,
         name="api_delete_crew",
     ),
-    path("social/crew/<uuid:crewId>/invite/", apiViews.invite_member, name="api_invite_member"),
+    path("crew/<uuid:crewId>/invite/", apiViews.invite_member, name="api_invite_member"),
     path("crew/<uuid:crewId>/member/", apiViews.crew_invite_action, name="api_crew_invite_action"),
     path(
         "crew/<uuid:crewId>/leave/",
