@@ -451,6 +451,13 @@ def getAllRequests(request):
     sent_friend_requests = FriendRequest.objects.filter(
         sender=request.user, status="pending"
     )
+    
+    pending_crew_requests = CrewRequest.objects.filter(
+        receiver=request.user, status="pending"
+    )
+    sent_crew_requests = CrewRequest.objects.filter(
+        sender=request.user, status="pending"
+    )
 
     response_data = {
         "sent_friend_requests": FriendRequestSerializer(
@@ -459,6 +466,9 @@ def getAllRequests(request):
         "pending_friend_requests": FriendRequestSerializer(
             pending_friend_requests, many=True
         ).data,
+        "sent_crew_requests": CrewRequestSerializer(sent_crew_requests, many=True).data,
+        "pending_crew_requests": CrewRequestSerializer(
+            pending_crew_requests, many=True).data,
         "timestamp": now().timestamp(),
     }
 
