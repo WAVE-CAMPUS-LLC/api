@@ -4,18 +4,10 @@ from . import apiViews
 app_name = "socialAPI"
 
 urlpatterns = [
-    path("home/", apiViews.SocialHomeView.as_view(), name="home"),
-    path(
-        "non-friends/", apiViews.NonFriendsListView.as_view(), name="non-friends-list"
-    ),
-    path(
-        "profile/<str:username>/",
-        apiViews.PublicProfileAPIView.as_view(),
-        name="api_public_profile",
-    ),
-    path("profile/friends/", apiViews.friends_api_view, name="api_friends"),
-    path("profile/crews/", apiViews.crewInfo_api_view, name="api_crewInfo"),
+    path("profile/friends/", apiViews.user_friends_and_non_friends, name="api_friends"),
+    path("profile/crews/", apiViews.user_crews, name="api_crewInfo"),
     path("crew/<uuid:crewId>/", apiViews.crew_api_view, name="api_crew"),
+    path("friend/connect/<str:receiver_username>/", apiViews.send_friend_request_api, name="api_send_friend_request"),
     path("crew/create/", apiViews.create_crew_api_view, name="api_create_crew"),
     path(
         "crew/<uuid:crewId>/kick/",
