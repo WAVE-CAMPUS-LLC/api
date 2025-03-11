@@ -7,7 +7,7 @@ urlpatterns = [
     # Put specific paths before pattern paths to avoid conflicts
     path("profile/friends/", apiViews.friends_api_view, name="api_friends"),
     path("profile/crews/", apiViews.crewInfo_api_view, name="api_crewInfo"),
-        # Then include the pattern paths
+    # Then include the pattern paths
     path(
         "profile/<str:username>/",
         apiViews.public_profile,
@@ -16,7 +16,7 @@ urlpatterns = [
     path("crew/<uuid:crewId>/", apiViews.crew_api_view, name="api_crew"),
     path("friend/connect/<str:username>/", apiViews.send_friend_request_api, name="api_send_friend_request"),
     path("crew/create/", apiViews.create_crew_api_view, name="api_create_crew"),
-    path("profile/get-requests/", apiViews.getAllRequests, name="api_get_requests"),
+    path("profile/requests/get-all-requests/", apiViews.getAllRequests, name="api_get_requests"),
     path("profile/friend-request/accept/", apiViews.accept_friend_request, name="accept_friend_request"),
     path("profile/friend-request/decline/", apiViews.decline_friend_request, name="decline_friend_request"),
     path("profile/friend-request/cancel/", apiViews.cancel_friend_request, name="cancel_friend_request"),
@@ -38,5 +38,4 @@ urlpatterns = [
         apiViews.leave_crew_view,
         name="api_leave_crew",
     ),
-    path("crew/<uuid:crewId>/invite/", apiViews.invite_member, name="api_invite"),
 ]

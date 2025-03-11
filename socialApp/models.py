@@ -43,6 +43,7 @@ class FriendRequest(models.Model):
         verbose_name = "Friend Request"
         verbose_name_plural = "Friend Requests"
         default_permissions = ()
+        app_label = 'socialApp'
 
     def __str__(self):
         return f"{self.sender.username} -> {self.receiver.username} ({self.status})"
@@ -74,6 +75,7 @@ class Crew(models.Model):
     
     class Meta:
         default_permissions = ()
+        app_label = 'socialApp'
     
     def __str__(self):
         return self.name
@@ -88,6 +90,7 @@ class CrewMember(models.Model):
     class Meta:
         unique_together = ('crew', 'user')
         default_permissions = ()
+        app_label = 'socialApp'
 
     def __str__(self):
         return f"{self.user.username} in {self.crew.name}"
@@ -130,6 +133,7 @@ class CrewRequest(models.Model):
         verbose_name = "Crew Request"
         verbose_name_plural = "Crew Requests"
         default_permissions = ()
+        app_label = 'socialApp'
 
     def __str__(self):
         return f"{self.sender.username} -> {self.receiver.username} ({self.status})"
@@ -165,12 +169,9 @@ class GoWithRequest(models.Model):
         choices=[("pending", "Pending"), ("declined", "Declined"), ("accepted", "Accepted"), ("cancelled", "Cancelled")],
         default="Pending",
     )
-    
+
     class Meta:
-        unique_together = ("sender", "receiver")
-        verbose_name = "Go With Request"
-        verbose_name_plural = "Go With Requests"
-        default_permissions = []
+        app_label = 'socialApp'
 
     def __str__(self):
         return f"{self.sender.username} -> {self.receiver.username}"
@@ -189,4 +190,3 @@ class GoWithRequest(models.Model):
         self.status = "cancelled"
         self.save()
         return self
-    
