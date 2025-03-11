@@ -8,6 +8,8 @@ from django.urls import reverse
 from datetime import datetime
 from django.utils.timezone import now
 from rest_framework import status
+from django.contrib.auth import get_user_model
+from django.db.models import Q
 from django.core.exceptions import ObjectDoesNotExist
 from .models import FriendRequest, Crew, CrewMember, CrewRequest
 from accountManagementApp.models import UserProfile
@@ -27,7 +29,7 @@ from django.contrib.auth import get_user_model
 from django.db.models import Q
 from .helpers import send_crew_request, leave_crew, delete_crew, kick_member
 
-
+User = get_user_model()
 
 
 @api_view(["GET"])
