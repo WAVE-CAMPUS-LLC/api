@@ -13,6 +13,8 @@ urlpatterns = [
         apiViews.PublicProfileAPIView.as_view(),
         name="api_public_profile",
     ),
+    path("profile/friends/", apiViews.friends_api_view, name="api_friends"),
+    path("profile/crews/", apiViews.crewInfo_api_view, name="api_crewInfo"),
     path("crew/<uuid:crewId>/", apiViews.crew_api_view, name="api_crew"),
     path("crew/create/", apiViews.create_crew_api_view, name="api_create_crew"),
     path(
