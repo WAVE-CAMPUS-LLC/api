@@ -396,42 +396,45 @@ def invite_member(request, crewId):
 def getAllRequests(request):
     """
     API view to get all friend and crew requests for the authenticated user.
-    Provides better error handling to avoid 'No CustomUser matches the given query' errors.
     """
     if request.method == "GET":
         try:
-            user = request.user
-            
-            # Get all friend requests - use filter with appropriate handling
+            # Get pending friend requests with prefetch_related for nested relationships
             friend_requests = FriendRequest.objects.filter(
-                receiver=user,
+                receiver=request.user,
                 status="pending"
-            ).select_related('sender', 'receiver')
-            
-            # Get all crew requests - use filter with appropriate handling
-            crew_requests = CrewRequest.objects.filter(
-                receiver=user,
-                status="pending"
-            ).select_related('sender', 'receiver', 'crew')
-            
-            return Response(
-                {
-                    "friend_requests": FriendRequestSerializer(friend_requests, many=True).data,
-                    "crew_requests": CrewRequestSerializer(crew_requests, many=True).data,
-                    "timestamp": now().timestamp(),
-                },
-                status=200,
+            ).prefetch_related(
+                'sender__user_profile',
+                'receiver__user_profile'
             )
+            
+            # Get pending crew requests with prefetch_related for nested relationships
+            crew_requests = CrewRequest.objects.filter(
+                receiver=request.user,
+                status="pending"
+            ).prefetch_related(
+                'sender__user_profile',
+                'receiver__user_profile'
+            ).select_related('crew')
+            
+            response_data = {
+                "friend_requests": FriendRequestSerializer(friend_requests, many=True).data,
+                "crew_requests": CrewRequestSerializer(crew_requests, many=True).data,
+                "timestamp": now().timestamp(),
+            }
+            
+            return Response(response_data, status=200)
+            
         except Exception as e:
-            # Return a helpful error message
+            print(f"Error in getAllRequests: {str(e)}")  # For debugging
             return Response(
                 {
-                    "error": f"Error retrieving requests: {str(e)}",
                     "friend_requests": [],
                     "crew_requests": [],
+                    "error": str(e),
                     "timestamp": now().timestamp(),
                 },
-                status=200,  # Still return 200 for frontend compatibility
+                status=200,  # Keep 200 for frontend compatibility
             )
     
     return Response({"error": "Invalid request method."}, status=400)
