@@ -4,13 +4,15 @@ from . import apiViews
 app_name = "socialAPI"
 
 urlpatterns = [
+    # Put specific paths before pattern paths to avoid conflicts
+    path("profile/friends/", apiViews.friends_api_view, name="api_friends"),
+    path("profile/crews/", apiViews.crewInfo_api_view, name="api_crewInfo"),
+    # Then include the pattern paths
     path(
         "profile/<str:username>/",
         apiViews.public_profile,
         name="api_public_profile",
     ),
-    path("profile/friends/", apiViews.friends_api_view, name="api_friends"),
-    path("profile/crews/", apiViews.crewInfo_api_view, name="api_crewInfo"),
     path("crew/<uuid:crewId>/", apiViews.crew_api_view, name="api_crew"),
     path("friend/connect/<str:username>/", apiViews.send_friend_request_api, name="api_send_friend_request"),
     path("crew/create/", apiViews.create_crew_api_view, name="api_create_crew"),

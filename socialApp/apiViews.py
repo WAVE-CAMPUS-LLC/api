@@ -29,11 +29,9 @@ from .helpers import send_crew_request, leave_crew, delete_crew, kick_member
 
 User = get_user_model()
 
+
 @api_view(["GET"])
 def public_profile(request, username):
-    """
-    Get a user's public profile - accessible to anyone.
-    """
     try:
         # Get the requested user and their profile
         other_user = get_object_or_404(User, username=username)
@@ -82,61 +80,99 @@ def public_profile(request, username):
     except ValueError as e:
         return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-# @api_view(["GET", "POST"])
-# @permission_classes([IsAuthenticated])
-# def user_friends_and_non_friends(request):
-#     """
-#     Get a list of friends and users who are not friends with the requested user.
-#     """
-#     user_profile = get_object_or_404(UserProfile, user=request.user)
+@api_view(["GET", "POST"])
+@permission_classes([IsAuthenticated])
+def friends_api_view(request):
+    """
+    API view to show a user's friends and non-friends.
+    """
+    try:
+        User = get_user_model()  # Get the CustomUser model
+        user_profile = get_object_or_404(UserProfile, user=request.user)
+        
+        # Get all friends with optimized query using select_related
+        # Add select_related to ensure user is prefetched
+        friends = list(user_profile.friends.filter(user__isnull=False).select_related("user"))
+        
+        # Get IDs of friends' users - safely extract IDs and handle possible None values
+        friend_user_ids = []
+        for f in friends:
+            if hasattr(f, 'user') and f.user is not None:
+                friend_user_ids.append(f.user.id)
+        
+        # Add current user's ID to the exclusion list
+        exclude_ids = friend_user_ids + [request.user.id]
+        
+        # Get all non-friends excluding the current user
+        # Only include users who have profiles
+        non_friends = list(
+            UserProfile.objects.filter(
+                user__isnull=False  # Only include users who have profiles
+            )
+            .exclude(user__id__in=exclude_ids)
+            .select_related("user")
+        )
+        2
+        return Response(
+            {
+                "friends": UserProfileSerializer(friends, many=True).data,
+                "non_friends": UserProfileSerializer(non_friends, many=True).data,
+                "timestamp": now().timestamp(),
+            },
+            status=200,
+        )
+    except Exception as e:
+        # Return an informative error for debugging
+        return Response(
+            {
+                "error": f"Error retrieving friends: {str(e)}",
+                "timestamp": now().timestamp(),
+            },
+            status=200,  # Still return 200 with error info for frontend compatibility
+        )
 
-#     # Get all accepted friends
-#     friends = list(user_profile.friends.all())
 
-#     # Get all accepted friend request relationships
-#     accepted_friends = FriendRequest.objects.filter(
-#         Q(sender=request.user) | Q(receiver=request.user), status="accepted"
-#     )
-
-#     # Extract friend user IDs
-#     friend_ids = set(
-#         friend.receiver.id if friend.sender == request.user else friend.sender.id
-#         for friend in accepted_friends
-#     )
-
-#     # Get non-friends who have a profile
-#     non_friends = User.objects.filter(user_profile__isnull=False).exclude(
-#         id__in=friend_ids
-#     ).exclude(id=request.user.id)
-
-#     return Response(
-#         {
-#             "friends": UserProfileSerializer(friends, many=True).data,
-#             "non_friends": CustomUserSerializer(non_friends, many=True).data,
-#         },
-#         status=status.HTTP_200_OK,
-#     )
-    
-    
-# @api_view(["GET", "POST"])
-# @permission_classes([IsAuthenticated])
-# def user_crews(request):
-#     """
-#     Get crews a user has created and crews they are a member of.
-#     """
-#     my_crews = Crew.objects.filter(created_by=request.user)[:10]
-#     crews_im_in = Crew.objects.filter(crew_members__user=request.user).exclude(
-#         created_by=request.user
-#     )[:10]
-
-#     return Response(
-#         {
-#             "my_crews": CrewSerializer(my_crews, many=True).data,
-#             "crews_im_in": CrewSerializer(crews_im_in, many=True).data,
-#         },
-#         status=status.HTTP_200_OK,
-#     )
-
+@api_view(["GET", "POST"])
+@permission_classes([IsAuthenticated])
+def crewInfo_api_view(request):
+    """
+    API view to get information about crews the user is a member of.
+    """
+    try:
+        # Use a safer query approach to prevent errors
+        user = request.user
+        
+        # Get crews the user created - direct relationship
+        my_crews = list(Crew.objects.filter(created_by=user).select_related("created_by"))
+        
+        # Get crews where the user is a member - through CrewMember
+        crew_memberships = list(CrewMember.objects.filter(user=user).select_related('crew', 'crew__created_by'))
+        crews_im_in = [membership.crew for membership in crew_memberships if hasattr(membership, 'crew')]
+        
+        # Filter out duplicates if the user created and is a member of the same crew
+        crews_im_in = [c for c in crews_im_in if c.created_by != user]
+        
+        return Response(
+            {
+                "crews": CrewSerializer(my_crews + crews_im_in, many=True).data,
+                "my_crews": CrewSerializer(my_crews, many=True).data,
+                "crews_im_in": CrewSerializer(crews_im_in, many=True).data,
+                "time": datetime.now().timestamp(),
+            },
+            status=200,
+        )
+    except Exception as e:
+        # Return an informative error message for debugging
+        return Response(
+            {
+                "crews": [],
+                "my_crews": [],
+                "crews_im_in": [],
+                "error": f"Error retrieving crew information: {str(e)}",
+                "time": datetime.now().timestamp(),
+            },
+            status=200,  # Still return 200 with empty data and error message
+        )
 
 
 @api_view(["POST"])
@@ -375,78 +411,3 @@ def kick_member_view(request, crewId):
     """Kick a member from the crew."""
     member_username = request.data.get("member_username")
     return kick_member(request.user, crewId, member_username)
-
-@api_view(["GET", "POST"])
-@permission_classes([IsAuthenticated])
-def friends_api_view(request):
-    """
-    API view to show a user's friends and non-friends.
-    """
-    User = get_user_model()  # Get the CustomUser model
-    user_profile = get_object_or_404(UserProfile, user=request.user)
-    
-    # Get all friends with optimized query using select_related
-    friends = list(user_profile.friends.all().select_related("user"))
-    
-    # Get IDs of friends' users
-    friend_user_ids = [f.user.id for f in friends if hasattr(f, 'user')]
-    
-    # Add current user's ID to the exclusion list
-    exclude_ids = friend_user_ids + [request.user.id]
-    
-    # Get all non-friends excluding the current user
-    # Only include users who have profiles
-    non_friends = User.objects.filter(
-        user_profile__isnull=False  # Only include users who have profiles
-    ).exclude(
-        id__in=exclude_ids
-    ).select_related("user_profile")
-    
-    return Response(
-        {
-            "friends": UserProfileSerializer(friends, many=True).data,
-            "non_friends": CustomUserSerializer(non_friends, many=True).data,
-            "timestamp": now().timestamp(),
-        },
-        status=200,
-    )
-
-@api_view(["GET", "POST"])
-@permission_classes([IsAuthenticated])
-def crewInfo_api_view(request):
-    """
-    API view to get information about crews the user is a member of.
-    """
-    # Use try-except to handle and debug potential errors
-    try:
-        # Get crews the user created
-        my_crews = list(Crew.objects.filter(created_by=request.user).select_related("created_by"))
-        
-        # Get crews the user is a member of but didn't create
-        member_crews = list(
-            Crew.objects.filter(crew_members__user=request.user)
-            .exclude(created_by=request.user)
-            .select_related("created_by")
-        )
-        
-        # Combine for all crews
-        all_crews = my_crews + member_crews
-        
-        return Response(
-            {
-                "crews": CrewSerializer(all_crews, many=True).data,
-                "my_crews": CrewSerializer(my_crews, many=True).data,
-                "crews_im_in": CrewSerializer(member_crews, many=True).data,
-                "time": datetime.now().timestamp(),
-            },
-            status=200,
-        )
-    except Exception as e:
-        # Return an informative error for debugging
-        return Response(
-            {
-                "error": f"Error retrieving crew information: {str(e)}",
-                "time": datetime.now().timestamp(),
-            },
-            status=200,  # Still return 200 with error details to prevent frontend crashes
-        )
