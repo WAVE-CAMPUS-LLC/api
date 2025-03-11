@@ -83,59 +83,59 @@ def public_profile(request, username):
 
 @api_view(["GET", "POST"])
 @permission_classes([IsAuthenticated])
-def friends_api_view(request):
+def user_friends_and_non_friends(request):
     """
-    API view to show a user's friends and non-friends.
+    Get a list of friends and users who are not friends with the requested user.
     """
     user_profile = get_object_or_404(UserProfile, user=request.user)
-    
-    # Get all friends with optimized query using select_related
-    friends = list(user_profile.friends.all().select_related("user"))
-    
-    # Get IDs of friends' users
-    friend_user_ids = [f.user.id for f in friends]
-    
-    # Get all non-friends excluding the current user
-    non_friends = list(
-        UserProfile.objects.filter(user__isnull=False)
-        .exclude(user__id__in=friend_user_ids)
-        .exclude(user__id=request.user.id)
-        .select_related("user")
+
+    # Get all accepted friends
+    friends = list(user_profile.friends.all())
+
+    # Get all accepted friend request relationships
+    accepted_friends = FriendRequest.objects.filter(
+        Q(sender=request.user) | Q(receiver=request.user), status="accepted"
     )
-    
-    
+
+    # Extract friend user IDs
+    friend_ids = set(
+        friend.receiver.id if friend.sender == request.user else friend.sender.id
+        for friend in accepted_friends
+    )
+
+    # Get non-friends who have a profile
+    non_friends = User.objects.filter(user_profile__isnull=False).exclude(
+        id__in=friend_ids
+    ).exclude(id=request.user.id)
+
     return Response(
         {
             "friends": UserProfileSerializer(friends, many=True).data,
-            "non_friends": UserProfileSerializer(non_friends, many=True).data,
-            "timestamp": now().timestamp(),
+            "non_friends": CustomUserSerializer(non_friends, many=True).data,
         },
-        status=200,
+        status=status.HTTP_200_OK,
     )
-
-
+    
+    
 @api_view(["GET", "POST"])
 @permission_classes([IsAuthenticated])
-def crewInfo_api_view(request):
+def user_crews(request):
     """
-    API view to get information about crews the user is a member of.
+    Get crews a user has created and crews they are a member of.
     """
-    user_profile = get_object_or_404(UserProfile, user=request.user)
-    
-    # Get crews where the user is a member through CrewMember relationship
-    crew_members = CrewMember.objects.filter(user=request.user).select_related('crew', 'crew__created_by')
-    crews = [member.crew for member in crew_members]
-    
-    # Serialize the crews
-    crews_data = CrewSerializer(crews, many=True).data
-    
+    my_crews = Crew.objects.filter(created_by=request.user)[:10]
+    crews_im_in = Crew.objects.filter(crew_members__user=request.user).exclude(
+        created_by=request.user
+    )[:10]
+
     return Response(
         {
-            "crews": crews_data,
-            "time": datetime.now().timestamp(),
+            "my_crews": CrewSerializer(my_crews, many=True).data,
+            "crews_im_in": CrewSerializer(crews_im_in, many=True).data,
         },
-        status=200,
+        status=status.HTTP_200_OK,
     )
+
 
 
 @api_view(["POST"])
