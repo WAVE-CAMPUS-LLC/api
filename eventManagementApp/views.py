@@ -19,7 +19,7 @@ from django.views.decorators.csrf import csrf_exempt
 
 from accountManagementApp.models import UserProfile
 from collegeManagementApp.models import Organization, OrganizationMembership
-from .forms import HostApplicationForm, EventForm, EditEventForm
+from .forms import CouponCodeForm, HostApplicationForm, EventForm, EditEventForm
 from stripeManagementApp.getRequiredActions import getRequiredActions
 from stripeManagementApp.updateConnectWithStripeDetails import (
     updateConnectWithStripeDetails,
@@ -33,7 +33,7 @@ from stripeManagementApp.getHostTransactions import Transactions
 
 
 from eventTicketsApp.forms import InvitationForm, PaidFreeTicketForm
-from .models import EventType, HostApplication, Event, HostProfile
+from .models import EventType, HostApplication, Event, HostProfile, CouponCode
 from authenticationApp.models import CustomUser
 
 from eventTicketsApp.models import InviteEventOption, RSVPTicket, PaidFreeTicket, Ticket
@@ -292,8 +292,15 @@ def createFreeEvent(request):
 def createPaidEventTicket(request, eventId):
     event = get_object_or_404(Event, eventId=eventId)
     hostProfile = HostProfile.objects.get(user=event.host)
-    paidFreeForm = PaidFreeTicketForm(request.POST)
-    paid_free_tickets = PaidFreeTicket.objects.filter(event=event)
+    try:
+        paidFreeForm = PaidFreeTicketForm(request.POST)
+        paid_free_tickets = PaidFreeTicket.objects.filter(event=event)
+        couponCodeForm = CouponCodeForm(request.POST)
+        coupon_codes = CouponCode.objects.filter(event=event)
+    except Exception as e:
+        print(f"Error in createPaidEventTicket: {str(e)}")
+        messages.error(request, "An error occurred. Please try again.")
+        return redirect("eventManagement:hostHome")
 
     eventAction = request.POST.get("eventAction")
     ticket_id = request.POST.get("ticketId")
@@ -329,6 +336,21 @@ def createPaidEventTicket(request, eventId):
             )
         elif eventAction == "editTicket":
             return redirect("eventManagement:eventManagement", eventId=event.eventId)
+        elif eventAction == "createCouponCode":
+            if couponCodeForm.is_valid():
+                new_coupon = couponCodeForm.save(commit=False)
+                new_coupon.event = event
+                new_coupon.save()
+                return redirect("eventManagement:paidTicketing", eventId=event.eventId)
+            else:
+                messages.error(request, "Invalid form submission.")
+                return redirect("eventManagement:paidTicketing", eventId=event.eventId)
+        elif eventAction == "deleteCouponCode":
+            coupon_id = request.POST.get("couponId")
+            coupon = get_object_or_404(CouponCode, coupon_id=coupon_id)
+            coupon.delete()
+            return redirect("eventManagement:paidTicketing", eventId=event.eventId)
+            
 
     return render(
         request,
@@ -337,6 +359,8 @@ def createPaidEventTicket(request, eventId):
             "paidFreeForm": paidFreeForm,
             "paidFreeTickets": paid_free_tickets,
             "event": event,
+            "couponCodesForm": couponCodeForm,
+            "couponCodes": coupon_codes,
         },
     )
 

@@ -228,6 +228,19 @@ Create your event — WAVE.
                 <!-- CREW DISCOUNT -->
                 <div class="flex flex-col gap-4 w-full items-start">
                     <div class="w-full flex flex-row justify-between">
+                        <h6 class="flex justify-start font-Wanted-Medium text-Large">Activate Coupons?</h6>
+                        <input class="hidden" id="toggleButtonID" name="{{ eventForm.couponsActivated.html_name }}" value="{{ eventForm.couponsActivated.auto_id }}">
+                        <label class="toggle-switch">
+                            <input 
+                                type="checkbox" 
+                                name="{{ eventForm.couponsActivated.html_name }}" 
+                                id="{{ eventForm.couponsActivated.auto_id }}"
+                                {% if eventForm.couponsActivated.value %}checked{% endif %}
+                            >
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="w-full flex flex-row justify-between">
                         <h6 class="flex justify-start font-Wanted-Medium text-Large">Crew Discounts</h6>
                         <input class="hidden" id="toggleButtonID" name="{{ eventForm.crew_discount.html_name }}" value="{{ eventForm.crew_discount.auto_id }}">
                         <label class="toggle-switch">

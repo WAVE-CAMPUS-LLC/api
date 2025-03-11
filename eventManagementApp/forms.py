@@ -1,7 +1,7 @@
 from django import forms
 from .models import HostApplication, Event, HostProfile
 from django.utils.translation import gettext_lazy as _
-from .models import Event
+from .models import Event, CouponCode
 from adminDashboardApp.models import College
 from accountManagementApp.models import UserProfile
 from collegeManagementApp.models import OrganizationMembership, Organization
@@ -67,6 +67,7 @@ class HostApplicationForm(forms.ModelForm):
 class EventForm(forms.ModelForm):
     crew_discount = forms.BooleanField(required=False)
     show_guest_list = forms.BooleanField(required=False)
+    couponsActivated = forms.BooleanField(required=False)
     forAllDisplay = forms.BooleanField(
         required=False, 
         initial=True,
@@ -199,6 +200,7 @@ class EventForm(forms.ModelForm):
             "end_time",
             "description",
             "hide_address",
+            "couponsActivated",
             "country",
             "building_name",
             "street",
@@ -348,4 +350,7 @@ class HostProfileForm(forms.ModelForm):
         model = HostProfile
         fields = [ "cashapp_id", "google_pay_id", "apple_pay_id"]
         
-    # bank_account_details = forms.JSONField(widget=forms.Textarea, required=False)
+class CouponCodeForm(forms.ModelForm):
+    class Meta:
+        model = CouponCode
+        fields = ['code', 'discount_percentage', 'expiration_date']

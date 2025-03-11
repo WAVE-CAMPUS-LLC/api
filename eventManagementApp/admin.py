@@ -1,6 +1,6 @@
 from authenticationApp.admin import super_admin_restricted_site
 from django.contrib import admin
-from .models import HostApplication, Event, HostProfile, SharedEvent
+from .models import HostApplication, Event, HostProfile, SharedEvent, CouponCode
 from eventTicketsApp.models import RSVPTicket, PaidFreeTicket, Ticket
 from authenticationApp.admin import super_admin_restricted_site
 
@@ -19,6 +19,7 @@ class HostApplicationAdmin(admin.ModelAdmin):
 class EventAdmin(admin.ModelAdmin):
     list_display = (
         "eventId",
+        "couponsActivated",
         "title",
         "event_type",
         "date",
@@ -109,10 +110,20 @@ class SharedEventAdmin(admin.ModelAdmin):
         "event",
         "shared_at",
     )
+    
+class CouponCodeAdmin(admin.ModelAdmin):
+    list_display = (
+        "code",
+        "event",
+        "discount_percentage",
+        'expiration_date',
+        "created_at",
+    )
 
 super_admin_restricted_site.register(Ticket, TicketAdmin)
 super_admin_restricted_site.register(HostProfile, HostProfileAdmin)
 super_admin_restricted_site.register(SharedEvent, SharedEventAdmin)
+super_admin_restricted_site.register(CouponCode, CouponCodeAdmin)
 super_admin_restricted_site.register(Event, EventAdmin)
 super_admin_restricted_site.register(RSVPTicket, RSVPTicketAdmin)
 super_admin_restricted_site.register(PaidFreeTicket, PaidFreeTicketAdmin)

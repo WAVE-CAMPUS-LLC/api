@@ -25,7 +25,7 @@ from rest_framework.response import Response
 
 from socialApp.models import Crew
 from .models import PaidFreeTicket, Ticket, UserPayment, StripePlatformSettings
-from eventManagementApp.models import Event, HostProfile
+from eventManagementApp.models import CouponCode, Event, HostProfile
 from authenticationApp.models import CustomUser
 
 
@@ -64,20 +64,42 @@ def hostedCheckout(request):
     
     # Calculate your service fee (for example, 7% of the ticket total plus 99 cents)
     fee_amount = int(amount_in_cents * 0.07) + 99
+    
+    valid_coupon_code = True
+    
+    # Retrieve an event from one of the cart items and get its host's connected account ID
+    ticket = next(iter(cart.values()))
+    event = Event.objects.get(eventId=ticket.get("eventId"))
+    host = CustomUser.objects.get(id=event.host.id)  # Assumes the host has a field "connectAccountID"
+    coupon_code = CouponCode.objects.filter(event=event)
+    
 
     # Build Stripe line items for each ticket
     line_items = []
-    for ticket in cart.values():
-        line_items.append({
-            "price_data": {
-                "currency": "usd",
-                "product_data": {
-                    "name": ticket["name"],
+    if valid_coupon_code:
+        for ticket in cart.values():
+            line_items.append({
+                "price_data": {
+                    "currency": "usd",
+                    "product_data": {
+                        "name": ticket["name"],
+                    },
+                    "unit_amount": (int(Decimal(ticket["price"]) * 100)) * (1 - (coupon_code.discount_percentage/100)),
                 },
-                "unit_amount": int(Decimal(ticket["price"]) * 100),
-            },
-            "quantity": ticket["quantity"],
-        })
+                "quantity": ticket["quantity"],
+            })
+    else:
+        for ticket in cart.values():
+            line_items.append({
+                "price_data": {
+                    "currency": "usd",
+                    "product_data": {
+                        "name": ticket["name"],
+                    },
+                    "unit_amount": int(Decimal(ticket["price"]) * 100),
+                },
+                "quantity": ticket["quantity"],
+            })
     
     # Append a separate line item for the service fee so the user sees it
     line_items.append({
@@ -90,11 +112,6 @@ def hostedCheckout(request):
         },
         "quantity": 1,
     })
-
-    # Retrieve an event from one of the cart items and get its host's connected account ID
-    ticket = next(iter(cart.values()))
-    event = Event.objects.get(eventId=ticket.get("eventId"))
-    host = CustomUser.objects.get(id=event.host.id)  # Assumes the host has a field "connectAccountID"
 
     try:
         checkout_session = stripe.checkout.Session.create(

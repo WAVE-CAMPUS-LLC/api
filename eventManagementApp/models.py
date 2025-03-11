@@ -4,6 +4,7 @@ from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext as _
 from django.utils import timezone
+from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db.models.signals import post_save
 from datetime import timedelta
 from django.dispatch import receiver
@@ -414,6 +415,15 @@ class Event(models.Model):
         null=True,
     )
     
+    couponsActivated = models.BooleanField(
+        _("Activate coupons?"),
+        null=True,
+        blank=True,
+        default=False,
+    )
+    
+    coupons = models.ManyToManyField("CouponCode", blank=True, null=True, related_name="available_for_events")
+    
     show_guest_list = models.BooleanField(
         _("Show guest list to attendees?"),
         null=True,
@@ -551,3 +561,35 @@ class SharedEvent(models.Model):
                 fields=["receiver", "event"], name="unique_event_per_receiver"
             )
         ]
+
+class CouponCode(models.Model):
+    coupon_id = models.UUIDField(
+        primary_key=True, default=uuid.uuid4, editable=False, unique=True, null=False, blank=False
+    )
+    code = models.CharField(max_length=10, unique=True, db_index=True)
+    discount_percentage = models.IntegerField(
+        validators=[
+            MinValueValidator(0),
+            MaxValueValidator(100)
+        ]
+    )
+    expiration_date = models.DateField(db_index=True)
+    event = models.ForeignKey(
+        "eventManagementApp.Event",
+        on_delete=models.CASCADE,
+        related_name="event_coupons"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        permissions = [
+            ('can_use_coupon', 'Can apply coupon code'),
+        ]
+        ordering = ['expiration_date', 'code']
+
+    def __str__(self):
+        return self.code
+
+    def is_valid(self):
+        return self.expiration_date >= timezone.now().date()

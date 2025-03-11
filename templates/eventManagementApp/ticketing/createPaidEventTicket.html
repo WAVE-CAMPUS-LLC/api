@@ -116,6 +116,80 @@ Create tickets for {{ event.title }} — WAVE.
                     
                 </div>
             </div>
+
+            {% if event.couponsActivated %}
+                <div class="listContainer flex flex-col gap-3">
+                    <div class="flex flex-col gap-8">
+                        {% if couponCodes %}
+                        <div class="grid grid-cols-1 xxsm:grid-cols-2 md:grid-cols-3 3xl:grid-cols-4 gap-5">
+                            {% for coupon in couponCodes %}
+                            <div class="bg-gradient-to-b bg-gradient-start bg-gradient-end p-6 rounded-2xl flex flex-col text-white gap-3 font-Wanted-Black text-xl">
+                                <div class="flex flex-row flex-nowrap justify-between w-full">
+                                    <h6 class="flex-nowrap w-full">{{ coupon.code }}</h6>
+                                    <p class="w-full flex justify-end font-Wanted-Variable text-Large">{{ coupon.discount_percentage }}%</p>
+                                    <p class="w-full flex justify-end font-Wanted-Variable text-Large">Expires: {{ coupon.expiration_date }}</p>
+                                </div>
+                                <form method="post" class="w-full flex justify-end">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="couponId" value="{{ coupon.coupon_id }}" />
+                                    <button class="flex justify-end" type="submit" title="Delete Ticket" role="button" name="eventAction" value="deleteCouponCode" data-coupon-id="{{ coupon.coupon_id }}">
+                                        <img src="{% static "/images/eventManagementApp/host/delete.svg" %}" class="size-5 flex justify-end" />
+                                    </button>
+                                </form>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <hr />
+                        {% else %}
+                        <div class="empty-container w-full h-full flex flex-col text-center justify-center items-center gap-2 bg-customGray4 p-12 rounded-2xl">
+                            <img class="size-14" src="{% static "/images/eventManagementApp/host/empty-listing.svg" %}" />
+                            <p class="font-Wanted-Variable text-Base xsm:text-Medium xxsm:text-Large md:text-xl flex flex-row gap-1">
+                                No coupons created yet.
+                            </p>
+                        </div>
+                        <hr/>
+                        {% endif %}
+                        
+                        <div class="flex flex-col gap-4 border border-gray-100 p-4 rounded-2xl">
+                            <div class="w-full flex justify-start">
+                                <div class="w-full flex justify-start flex-col font-Wanted-Bold text-Pre-Xl">
+                                    <h3>Create a coupon</h3>
+                                    <p class="font-Wanted-Variable text-Base">Create coupons for your attendees!</p>
+                                </div>
+                            </div>
+
+                            <form id="ticketCreateForm" class="flex flex-col gap-5" method="post">
+                                {% csrf_token %}
+                                <div class="creationRow flex flex-col pre-sm:flex-row gap-4 w-full">
+                                    <label for="{{ couponCodesForm.code.id_for_label }}" class="w-full">
+                                        <p class="font-Wanted-Variable text-Semi-Medium text-black">{{ couponCodesForm.code.label }}</p>
+                                        {{ couponCodesForm.code|add_class:"w-full px-4 p-3 rounded-xl border border-custom-rgba5 font-Wanted-Variable text-Medium" }}
+                                        <p id="coupon_code_error" class="text-red-500 text-sm mt-1 hidden"></p>
+                                    </label>
+                                </div>
+                
+                                <div class="creationRow flex flex-col pre-sm:flex-row gap-4 w-full">
+                                    <label for="{{ couponCodesForm.discount_percentage.id_for_label }}" class="w-full">
+                                        <p class="font-Wanted-Variable text-Semi-Medium text-black">{{ couponCodesForm.discount_percentage.label }}</p>
+                                        {{ couponCodesForm.discount_percentage|add_class:"w-full px-4 p-3 rounded-xl border border-custom-rgba5 font-Wanted-Variable text-Medium" }}
+                                        <p id="coupon_discount_percentage_error" class="text-red-500 text-sm mt-1 hidden"></p>
+                                    </label>
+                                    <label for="{{ couponCodesForm.expiration_date.id_for_label }}" class="w-full">
+                                        <p class="font-Wanted-Variable text-Semi-Medium text-black">{{ couponCodesForm.expiration_date.label }}</p>
+                                        {{ couponCodesForm.expiration_date|add_class:"w-full px-4 p-3 rounded-xl border border-custom-rgba5 font-Wanted-Variable text-Medium" }}
+                                        <p id="coupon_expiration_date_error" class="text-red-500 text-sm mt-1 hidden"></p>
+                                    </label>
+                                </div>
+                
+                                <div class="creationSubmitRow w-full flex justify-center">
+                                    <button type="submit" class="createPaidTicketButton gradient-btn w-full transition-all duration-200" role="button" name="eventAction" value="createCouponCode">Create Coupon</button>
+                                </div>
+                            </form>
+                        </div>
+                        
+                    </div>
+                </div>
+            {% endif %}
         </div>
     </div>
     
