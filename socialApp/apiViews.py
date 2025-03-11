@@ -177,11 +177,11 @@ def crewInfo_api_view(request):
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
-def send_friend_request_api(request, receiver_username):
+def send_friend_request_api(request, username):
     sender = request.user
 
     try:
-        receiver = get_object_or_404(UserProfile, user__username=receiver_username)
+        receiver = get_object_or_404(UserProfile, user__username=username)
 
         if sender.user_profile.is_friends_with(receiver.user):
             return Response({"success": False, "message": "You are already friends with this user."}, status=400)
