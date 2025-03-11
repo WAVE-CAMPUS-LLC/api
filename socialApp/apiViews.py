@@ -394,67 +394,227 @@ def invite_member(request, crewId):
 @api_view(["POST", "GET"])
 @permission_classes([IsAuthenticated])
 def getAllRequests(request):
+    """
+    API view to get all friend and crew requests for the authenticated user.
+    Provides better error handling to avoid 'No CustomUser matches the given query' errors.
+    """
     if request.method == "GET":
-        # Get all friend requests
-        friend_requests = FriendRequest.objects.filter(receiver=request.user)
-        crew_requests = CrewRequest.objects.filter(receiver=request.user)
-        return Response(
-            {
-                "friend_requests": FriendRequestSerializer(friend_requests, many=True).data,
-                "crew_requests": CrewRequestSerializer(crew_requests, many=True).data,
-            },
-            status=200,
-        )
+        try:
+            user = request.user
+            
+            # Get all friend requests - use filter with appropriate handling
+            friend_requests = FriendRequest.objects.filter(
+                receiver=user,
+                status="pending"
+            ).select_related('sender', 'receiver')
+            
+            # Get all crew requests - use filter with appropriate handling
+            crew_requests = CrewRequest.objects.filter(
+                receiver=user,
+                status="pending"
+            ).select_related('sender', 'receiver', 'crew')
+            
+            return Response(
+                {
+                    "friend_requests": FriendRequestSerializer(friend_requests, many=True).data,
+                    "crew_requests": CrewRequestSerializer(crew_requests, many=True).data,
+                    "timestamp": now().timestamp(),
+                },
+                status=200,
+            )
+        except Exception as e:
+            # Return a helpful error message
+            return Response(
+                {
+                    "error": f"Error retrieving requests: {str(e)}",
+                    "friend_requests": [],
+                    "crew_requests": [],
+                    "timestamp": now().timestamp(),
+                },
+                status=200,  # Still return 200 for frontend compatibility
+            )
+    
     return Response({"error": "Invalid request method."}, status=400)
 
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def accept_friend_request(request):
-    requestId = request.data.get("requestId")
-    friend_request = get_object_or_404(FriendRequest, requestId=requestId)
-    friend_request.accept_request()
-    return Response({"message": "Friend request accepted."}, status=200)
+    """Accept a friend request and create the friendship."""
+    try:
+        requestId = request.data.get("requestId")
+        if not requestId:
+            return Response({"error": "Request ID is required."}, status=400)
+            
+        friend_request = get_object_or_404(FriendRequest, requestId=requestId)
+        
+        # Verify the current user is the receiver of the request
+        if friend_request.receiver != request.user:
+            return Response({"error": "You are not authorized to accept this request."}, status=403)
+            
+        # Verify request is still pending
+        if friend_request.status != "pending":
+            return Response({"error": "This request is no longer pending."}, status=400)
+        
+        # Accept the request
+        friend_request.accept_request()
+        
+        # Add users as friends
+        sender_profile = UserProfile.objects.get(user=friend_request.sender)
+        receiver_profile = UserProfile.objects.get(user=friend_request.receiver)
+        sender_profile.friends.add(receiver_profile)
+        receiver_profile.friends.add(sender_profile)
+        
+        return Response({
+            "success": True,
+            "message": "Friend request accepted successfully."
+        }, status=200)
+        
+    except Exception as e:
+        return Response({
+            "success": False,
+            "error": str(e)
+        }, status=400)
 
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def decline_friend_request(request):
-    requestId = request.data.get("requestId")
-    friend_request = get_object_or_404(FriendRequest, requestId=requestId)
-    friend_request.decline_request()
-    return Response({"message": "Friend request declined."}, status=200)
+    """Decline a friend request."""
+    try:
+        requestId = request.data.get("requestId")
+        if not requestId:
+            return Response({"error": "Request ID is required."}, status=400)
+            
+        friend_request = get_object_or_404(FriendRequest, requestId=requestId)
+        
+        # Verify the current user is the receiver of the request
+        if friend_request.receiver != request.user:
+            return Response({"error": "You are not authorized to decline this request."}, status=403)
+            
+        # Verify request is still pending
+        if friend_request.status != "pending":
+            return Response({"error": "This request is no longer pending."}, status=400)
+        
+        friend_request.decline_request()
+        return Response({
+            "success": True,
+            "message": "Friend request declined successfully."
+        }, status=200)
+        
+    except Exception as e:
+        return Response({
+            "success": False,
+            "error": str(e)
+        }, status=400)
 
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def cancel_friend_request(request):
-    requestId = request.data.get("requestId")
-    friend_request = get_object_or_404(FriendRequest, requestId=requestId)
-    friend_request.status = "canceled"
-    friend_request.save()
-    return Response({"message": "Friend request canceled."}, status=200)
+    """Cancel a sent friend request."""
+    try:
+        requestId = request.data.get("requestId")
+        if not requestId:
+            return Response({"error": "Request ID is required."}, status=400)
+            
+        friend_request = get_object_or_404(FriendRequest, requestId=requestId)
+        
+        # Verify the current user is the sender of the request
+        if friend_request.sender != request.user:
+            return Response({"error": "You are not authorized to cancel this request."}, status=403)
+            
+        # Verify request is still pending
+        if friend_request.status != "pending":
+            return Response({"error": "This request is no longer pending."}, status=400)
+        
+        friend_request.status = "canceled"
+        friend_request.save()
+        return Response({
+            "success": True,
+            "message": "Friend request canceled successfully."
+        }, status=200)
+        
+    except Exception as e:
+        return Response({
+            "success": False,
+            "error": str(e)
+        }, status=400)
 
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def decline_crew_request(request):
-    requestId = request.data.get("requestId")
-    crew_request = get_object_or_404(CrewRequest, requestId=requestId)
-    crew_request.decline_request()
-    crew_request.save()
-    crew_request.delete()
-    return Response({"message": "Crew request declined."}, status=200)
+    """Decline a crew invitation."""
+    try:
+        requestId = request.data.get("requestId")
+        if not requestId:
+            return Response({"error": "Request ID is required."}, status=400)
+            
+        crew_request = get_object_or_404(CrewRequest, requestId=requestId)
+        
+        # Verify the current user is the receiver of the request
+        if crew_request.receiver != request.user:
+            return Response({"error": "You are not authorized to decline this invitation."}, status=403)
+            
+        # Verify request is still pending
+        if crew_request.status != "pending":
+            return Response({"error": "This invitation is no longer pending."}, status=400)
+        
+        crew_request.decline_request()
+        return Response({
+            "success": True,
+            "message": "Crew invitation declined successfully."
+        }, status=200)
+        
+    except Exception as e:
+        return Response({
+            "success": False,
+            "error": str(e)
+        }, status=400)
 
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def accept_crew_request(request):
-    requestId = request.data.get("requestId")
-    crew_request = get_object_or_404(CrewRequest, requestId=requestId)
-    crew_request.accept_request()
-    CrewMember.objects.create(user=request.user, crew=crew_request.crew)
-    return Response({"message": "Crew request accepted."}, status=200)
+    """Accept a crew invitation."""
+    try:
+        requestId = request.data.get("requestId")
+        if not requestId:
+            return Response({"error": "Request ID is required."}, status=400)
+            
+        crew_request = get_object_or_404(CrewRequest, requestId=requestId)
+        
+        # Verify the current user is the receiver of the request
+        if crew_request.receiver != request.user:
+            return Response({"error": "You are not authorized to accept this invitation."}, status=403)
+            
+        # Verify request is still pending
+        if crew_request.status != "pending":
+            return Response({"error": "This invitation is no longer pending."}, status=400)
+            
+        # Check if user is already a member of the crew
+        if CrewMember.objects.filter(user=request.user, crew=crew_request.crew).exists():
+            return Response({"error": "You are already a member of this crew."}, status=400)
+        
+        # Accept the request and create crew membership
+        crew_request.accept_request()
+        CrewMember.objects.create(
+            user=request.user,
+            crew=crew_request.crew,
+            is_admin=False
+        )
+        
+        return Response({
+            "success": True,
+            "message": f"You have successfully joined {crew_request.crew.name}."
+        }, status=200)
+        
+    except Exception as e:
+        return Response({
+            "success": False,
+            "error": str(e)
+        }, status=400)
 
 
 @api_view(["POST"])

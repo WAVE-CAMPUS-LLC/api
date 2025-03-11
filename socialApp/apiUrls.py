@@ -7,7 +7,7 @@ urlpatterns = [
     # Put specific paths before pattern paths to avoid conflicts
     path("profile/friends/", apiViews.friends_api_view, name="api_friends"),
     path("profile/crews/", apiViews.crewInfo_api_view, name="api_crewInfo"),
-    # Then include the pattern paths
+        # Then include the pattern paths
     path(
         "profile/<str:username>/",
         apiViews.public_profile,
