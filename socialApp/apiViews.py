@@ -8,8 +8,6 @@ from django.urls import reverse
 from datetime import datetime
 from django.utils.timezone import now
 from rest_framework import status
-from django.contrib.auth import get_user_model
-from django.db.models import Q
 from django.core.exceptions import ObjectDoesNotExist
 from .models import FriendRequest, Crew, CrewMember, CrewRequest
 from accountManagementApp.models import UserProfile
@@ -30,61 +28,113 @@ from django.db.models import Q
 from .helpers import send_crew_request, leave_crew, delete_crew, kick_member
 
 User = get_user_model()
-
-
 @api_view(["GET"])
-@permission_classes([IsAuthenticated])
-def user_friends_and_non_friends(request):
+def public_profile(request, username):
     """
-    Get a list of friends and users who are not friends with the requested user.
+    Get a user's public profile - accessible to anyone.
+    """
+    try:
+        # Get the requested user and their profile
+        other_user = get_object_or_404(User, username=username)
+        other_user_profile, _ = UserProfile.objects.get_or_create(user=other_user)
+
+        # Initialize friend-related data
+        friend_request_status = None
+        friend_request_id = None
+        is_profile = False
+
+        # Only check friendship status if the user is authenticated
+        if request.user.is_authenticated:
+            # Check if the users are friends or have pending requests
+            friend_request = FriendRequest.objects.filter(
+                Q(sender=request.user, receiver=other_user)
+                | Q(sender=other_user, receiver=request.user)
+            ).first()
+
+            if friend_request:
+                friend_request_status = friend_request.status
+                friend_request_id = str(friend_request.requestId)
+
+            is_profile = request.user.id == other_user.id
+
+        # Prepare response data
+        response_data = {
+            "user": CustomUserSerializer(other_user).data,
+            "user_profile": UserProfileSerializer(other_user_profile).data,
+            "is_profile": is_profile,
+        }
+
+        # Only include friendship data for authenticated users
+        if request.user.is_authenticated:
+            response_data.update(
+                {
+                    "friend_request_status": friend_request_status,
+                    "friend_request_id": friend_request_id,
+                    "can_send_request": True,
+                }
+            )
+
+        return Response(response_data, status=status.HTTP_200_OK)
+
+    except ObjectDoesNotExist as e:
+        return Response({"error": str(e)}, status=status.HTTP_404_NOT_FOUND)
+    except ValueError as e:
+        return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(["GET", "POST"])
+@permission_classes([IsAuthenticated])
+def friends_api_view(request):
+    """
+    API view to show a user's friends and non-friends.
     """
     user_profile = get_object_or_404(UserProfile, user=request.user)
-
-    # Get all accepted friends
-    friends = list(user_profile.friends.all())
-
-    # Get all accepted friend request relationships
-    accepted_friends = FriendRequest.objects.filter(
-        Q(sender=request.user) | Q(receiver=request.user), status="accepted"
+    
+    # Get all friends with optimized query using select_related
+    friends = list(user_profile.friends.all().select_related("user"))
+    
+    # Get IDs of friends' users
+    friend_user_ids = [f.user.id for f in friends]
+    
+    # Get all non-friends excluding the current user
+    non_friends = list(
+        UserProfile.objects.filter(user__isnull=False)
+        .exclude(user__id__in=friend_user_ids)
+        .exclude(user__id=request.user.id)
+        .select_related("user")
     )
-
-    # Extract friend user IDs
-    friend_ids = set(
-        friend.receiver.id if friend.sender == request.user else friend.sender.id
-        for friend in accepted_friends
-    )
-
-    # Get non-friends who have a profile
-    non_friends = User.objects.filter(user_profile__isnull=False).exclude(
-        id__in=friend_ids
-    ).exclude(id=request.user.id)
-
+    
+    
     return Response(
         {
             "friends": UserProfileSerializer(friends, many=True).data,
-            "non_friends": CustomUserSerializer(non_friends, many=True).data,
+            "non_friends": UserProfileSerializer(non_friends, many=True).data,
+            "timestamp": now().timestamp(),
         },
-        status=status.HTTP_200_OK,
+        status=200,
     )
 
 
-@api_view(["GET"])
+@api_view(["GET", "POST"])
 @permission_classes([IsAuthenticated])
-def user_crews(request):
+def crewInfo_api_view(request):
     """
-    Get crews a user has created and crews they are a member of.
+    API view to get information about crews the user is a member of.
     """
-    my_crews = Crew.objects.filter(created_by=request.user)[:10]
-    crews_im_in = Crew.objects.filter(crew_members__user=request.user).exclude(
-        created_by=request.user
-    )[:10]
-
+    user_profile = get_object_or_404(UserProfile, user=request.user)
+    
+    # Get crews where the user is a member through CrewMember relationship
+    crew_members = CrewMember.objects.filter(user=request.user).select_related('crew', 'crew__created_by')
+    crews = [member.crew for member in crew_members]
+    
+    # Serialize the crews
+    crews_data = CrewSerializer(crews, many=True).data
+    
     return Response(
         {
-            "my_crews": CrewSerializer(my_crews, many=True).data,
-            "crews_im_in": CrewSerializer(crews_im_in, many=True).data,
+            "crews": crews_data,
+            "time": datetime.now().timestamp(),
         },
-        status=status.HTTP_200_OK,
+        status=200,
     )
 
 
