@@ -16,6 +16,12 @@ urlpatterns = [
     path("crew/<uuid:crewId>/", apiViews.crew_api_view, name="api_crew"),
     path("friend/connect/<str:username>/", apiViews.send_friend_request_api, name="api_send_friend_request"),
     path("crew/create/", apiViews.create_crew_api_view, name="api_create_crew"),
+    path("profile/get-requests/", apiViews.getAllRequests, name="api_get_requests"),
+    path("profile/friend-request/accept/", apiViews.accept_friend_request, name="accept_friend_request"),
+    path("profile/friend-request/decline/", apiViews.decline_friend_request, name="decline_friend_request"),
+    path("profile/friend-request/cancel/", apiViews.cancel_friend_request, name="cancel_friend_request"),
+    path("crew/decline/", apiViews.decline_crew_request, name="decline_crew_request"),
+    path("crew/accept/", apiViews.accept_crew_request, name="accept_crew_request"),
     path(
         "crew/<uuid:crewId>/kick/",
         apiViews.kick_member_view,

@@ -391,6 +391,72 @@ def invite_member(request, crewId):
     return Response({"error": message}, status=400)
 
 
+@api_view(["POST", "GET"])
+@permission_classes([IsAuthenticated])
+def getAllRequests(request):
+    if request.method == "GET":
+        # Get all friend requests
+        friend_requests = FriendRequest.objects.filter(receiver=request.user)
+        crew_requests = CrewRequest.objects.filter(receiver=request.user)
+        return Response(
+            {
+                "friend_requests": FriendRequestSerializer(friend_requests, many=True).data,
+                "crew_requests": CrewRequestSerializer(crew_requests, many=True).data,
+            },
+            status=200,
+        )
+    return Response({"error": "Invalid request method."}, status=400)
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def accept_friend_request(request):
+    requestId = request.data.get("requestId")
+    friend_request = get_object_or_404(FriendRequest, requestId=requestId)
+    friend_request.accept_request()
+    return Response({"message": "Friend request accepted."}, status=200)
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def decline_friend_request(request):
+    requestId = request.data.get("requestId")
+    friend_request = get_object_or_404(FriendRequest, requestId=requestId)
+    friend_request.decline_request()
+    return Response({"message": "Friend request declined."}, status=200)
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def cancel_friend_request(request):
+    requestId = request.data.get("requestId")
+    friend_request = get_object_or_404(FriendRequest, requestId=requestId)
+    friend_request.status = "canceled"
+    friend_request.save()
+    return Response({"message": "Friend request canceled."}, status=200)
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def decline_crew_request(request):
+    requestId = request.data.get("requestId")
+    crew_request = get_object_or_404(CrewRequest, requestId=requestId)
+    crew_request.decline_request()
+    crew_request.save()
+    crew_request.delete()
+    return Response({"message": "Crew request declined."}, status=200)
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def accept_crew_request(request):
+    requestId = request.data.get("requestId")
+    crew_request = get_object_or_404(CrewRequest, requestId=requestId)
+    crew_request.accept_request()
+    CrewMember.objects.create(user=request.user, crew=crew_request.crew)
+    return Response({"message": "Crew request accepted."}, status=200)
+
+
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def leave_crew_view(request, crewId):
