@@ -351,6 +351,19 @@ class HostProfileForm(forms.ModelForm):
         fields = [ "cashapp_id", "google_pay_id", "apple_pay_id"]
         
 class CouponCodeForm(forms.ModelForm):
+    discount_percentage = forms.IntegerField(
+        min_value=1, 
+        max_value=100,
+        label=_("Discount Percentage"),
+        widget=forms.NumberInput(attrs={"type": "number"})
+    )
+    expiration_date = forms.DateField(
+        label=_("Choose expiration date"),
+        required=False,
+        widget=forms.DateInput(format="%Y-%m-%d", attrs={"type": "date"}),
+        input_formats=["%Y-%m-%d"],
+    )
+        
     class Meta:
         model = CouponCode
         fields = ['code', 'discount_percentage', 'expiration_date']

@@ -45,94 +45,189 @@ def paymentRedirect(request):
     return render(request, "eventTicketsApp/checkoutSession/paymentRedirect.html")
 
 def hostedCheckout(request):
-    cart = request.session.get("cart", {})
-    if not cart:
-        return JsonResponse({"error": "Cart is empty"}, status=400)
-    
-    # Calculate the total amount for tickets in dollars and convert to cents
-    total_amount = sum(
-        float(item.get("price", 0)) * int(item.get("quantity", 0))
-        for item in cart.values()
-    )
-    amount_in_cents = int(total_amount * 100)
-    if amount_in_cents <= 0:
-        return JsonResponse({"error": "Invalid amount"}, status=400)
-
-    # Save the cart in the session if needed
-    cart_id = str(uuid.uuid4())
-    request.session[f"cart_data_{cart_id}"] = cart
-    
-    # Calculate your service fee (for example, 7% of the ticket total plus 99 cents)
-    fee_amount = int(amount_in_cents * 0.07) + 99
-    
-    valid_coupon_code = True
-    
-    # Retrieve an event from one of the cart items and get its host's connected account ID
-    ticket = next(iter(cart.values()))
-    event = Event.objects.get(eventId=ticket.get("eventId"))
-    host = CustomUser.objects.get(id=event.host.id)  # Assumes the host has a field "connectAccountID"
-    coupon_code = CouponCode.objects.filter(event=event)
-    
-
-    # Build Stripe line items for each ticket
-    line_items = []
-    if valid_coupon_code:
-        for ticket in cart.values():
-            line_items.append({
-                "price_data": {
-                    "currency": "usd",
-                    "product_data": {
-                        "name": ticket["name"],
-                    },
-                    "unit_amount": (int(Decimal(ticket["price"]) * 100)) * (1 - (coupon_code.discount_percentage/100)),
-                },
-                "quantity": ticket["quantity"],
-            })
-    else:
-        for ticket in cart.values():
-            line_items.append({
-                "price_data": {
-                    "currency": "usd",
-                    "product_data": {
-                        "name": ticket["name"],
-                    },
-                    "unit_amount": int(Decimal(ticket["price"]) * 100),
-                },
-                "quantity": ticket["quantity"],
-            })
-    
-    # Append a separate line item for the service fee so the user sees it
-    line_items.append({
-        "price_data": {
-            "currency": "usd",
-            "product_data": {
-                "name": "Service Fee",
-            },
-            "unit_amount": fee_amount,
-        },
-        "quantity": 1,
-    })
-
     try:
-        checkout_session = stripe.checkout.Session.create(
-            customer=request.user.customer_id if request.user.is_authenticated else None,
-            payment_method_types=["card"],
-            line_items=line_items,
-            mode="payment",
-            payment_intent_data={
-                # This tells Stripe to deduct your service fee from the total
-                "application_fee_amount": fee_amount,
-                # The remaining funds are transferred to the host's connected account
-                "transfer_data": {
-                    "destination": host.connectAccountID,
+        # Try to get the cart from the request body first
+        if request.method == 'POST' and request.body:
+            try:
+                # Parse the JSON data from the request body
+                cart_data = json.loads(request.body)
+                # Store the cart in the session
+                request.session["cart"] = cart_data
+                print(f"Cart data received: {cart_data}")
+            except json.JSONDecodeError as e:
+                print(f"JSON decode error: {e}")
+                return JsonResponse({"error": "Invalid JSON data"}, status=400)
+        
+        # Get the cart from the session
+        cart = request.session.get("cart", {})
+        print(f"Cart from session: {cart}")
+        
+        if not cart:
+            return JsonResponse({"error": "Cart is empty"}, status=400)
+        
+        # Filter out any non-ticket items (like coupon_code) for total calculation
+        ticket_items = {}
+        for k, v in cart.items():
+            if k == 'coupon_code':
+                continue
+            if isinstance(v, dict) and "price" in v and "quantity" in v:
+                ticket_items[k] = v
+            else:
+                print(f"Skipping non-ticket item: {k} = {v}")
+        
+        print(f"Ticket items: {ticket_items}")
+        
+        if not ticket_items:
+            return JsonResponse({"error": "No valid tickets in cart"}, status=400)
+        
+        # Calculate the total amount for tickets in dollars and convert to cents
+        try:
+            total_amount = sum(
+                float(item.get("price", 0)) * int(item.get("quantity", 0))
+                for item in ticket_items.values()
+            )
+            amount_in_cents = int(total_amount * 100)
+            print(f"Total amount: {total_amount}, Amount in cents: {amount_in_cents}")
+            
+            if amount_in_cents <= 0:
+                return JsonResponse({"error": "Invalid amount"}, status=400)
+        except Exception as e:
+            print(f"Error calculating total amount: {e}")
+            return JsonResponse({"error": f"Error calculating total: {str(e)}"}, status=400)
+
+        # Save the cart in the session if needed
+        cart_id = str(uuid.uuid4())
+        request.session[f"cart_data_{cart_id}"] = cart
+        
+        # Calculate your service fee (for example, 7% of the ticket total plus 99 cents)
+        fee_amount = int(amount_in_cents * 0.07) + 99
+        
+        # Retrieve an event from one of the cart items and get its host's connected account ID
+        try:
+            ticket_keys = [k for k in cart.keys() if k != 'coupon_code']
+            if not ticket_keys:
+                return JsonResponse({"error": "No tickets in cart"}, status=400)
+                
+            ticket = cart[ticket_keys[0]]
+            print(f"Selected ticket for event lookup: {ticket}")
+            
+            event_id = ticket.get("eventId")
+            if not event_id:
+                return JsonResponse({"error": "No event ID found in ticket"}, status=400)
+                
+            event = Event.objects.get(eventId=event_id)
+            host = CustomUser.objects.get(id=event.host.id)
+            
+            if not hasattr(host, 'connectAccountID') or not host.connectAccountID:
+                return JsonResponse({"error": "Host does not have a connected Stripe account"}, status=400)
+        except Event.DoesNotExist:
+            return JsonResponse({"error": "Event not found"}, status=404)
+        except CustomUser.DoesNotExist:
+            return JsonResponse({"error": "Host not found"}, status=404)
+        except Exception as e:
+            print(f"Error retrieving event or host: {e}")
+            return JsonResponse({"error": f"Error retrieving event details: {str(e)}"}, status=400)
+        
+        # Check if there's a valid coupon code in the cart
+        valid_coupon_code = False
+        discount_percentage = 0
+        
+        # Get the coupon code from the cart if it exists
+        coupon_code_value = None
+        if 'coupon_code' in cart:
+            coupon_code_value = cart.get('coupon_code')
+        
+        if coupon_code_value:
+            try:
+                # Try to get the coupon code object for this event
+                coupon = CouponCode.objects.get(code=coupon_code_value, event=event)
+                
+                # Check if the coupon is valid (not expired)
+                if hasattr(coupon, 'is_valid') and coupon.is_valid():
+                    valid_coupon_code = True
+                    discount_percentage = coupon.discount_percentage
+                    print(f"Valid coupon applied: {coupon_code_value}, Discount: {discount_percentage}%")
+            except CouponCode.DoesNotExist:
+                # Coupon doesn't exist or doesn't belong to this event
+                valid_coupon_code = False
+                print(f"Coupon not found: {coupon_code_value}")
+
+        # Build Stripe line items for each ticket
+        line_items = []
+        try:
+            for key, ticket in cart.items():
+                # Skip non-ticket items like coupon_code
+                if key == 'coupon_code' or not isinstance(ticket, dict) or 'price' not in ticket or 'quantity' not in ticket:
+                    continue
+                    
+                ticket_price = Decimal(str(ticket["price"]))  # Convert to Decimal safely
+                ticket_quantity = int(ticket["quantity"])
+                
+                if valid_coupon_code:
+                    discounted_price = ticket_price * (1 - (Decimal(discount_percentage)/100))
+                    unit_amount = int(discounted_price * 100)
+                    print(f"Discounted price for {ticket['name']}: {discounted_price}, Unit amount: {unit_amount}")
+                else:
+                    unit_amount = int(ticket_price * 100)
+                    print(f"Regular price for {ticket['name']}: {ticket_price}, Unit amount: {unit_amount}")
+                
+                line_items.append({
+                    "price_data": {
+                        "currency": "usd",
+                        "product_data": {
+                            "name": ticket["name"],
+                        },
+                        "unit_amount": unit_amount,
+                    },
+                    "quantity": ticket_quantity,
+                })
+        except Exception as e:
+            print(f"Error building line items: {e}")
+            return JsonResponse({"error": f"Error building line items: {str(e)}"}, status=400)
+        
+        # Append a separate line item for the service fee so the user sees it
+        line_items.append({
+            "price_data": {
+                "currency": "usd",
+                "product_data": {
+                    "name": "Service Fee",
                 },
+                "unit_amount": fee_amount,
             },
-            success_url=request.build_absolute_uri(reverse("eventTickets:paymentSuccessful")) + "?session_id={CHECKOUT_SESSION_ID}",
-            cancel_url=request.build_absolute_uri(reverse("eventTickets:paymentFailed")),
-        )
-        return JsonResponse({"sessionUrl": checkout_session.url})
+            "quantity": 1,
+        })
+
+        try:
+            print(f"Creating Stripe checkout session with {len(line_items)} line items")
+            checkout_session = stripe.checkout.Session.create(
+                customer=request.user.customer_id if request.user.is_authenticated else None,
+                payment_method_types=["card"],
+                line_items=line_items,
+                mode="payment",
+                payment_intent_data={
+                    # This tells Stripe to deduct your service fee from the total
+                    "application_fee_amount": fee_amount,
+                    # The remaining funds are transferred to the host's connected account
+                    "transfer_data": {
+                        "destination": host.connectAccountID,
+                    },
+                },
+                success_url=request.build_absolute_uri(reverse("eventTickets:paymentSuccessful")) + "?session_id={CHECKOUT_SESSION_ID}",
+                cancel_url=request.build_absolute_uri(reverse("eventTickets:paymentFailed")),
+            )
+            print(f"Checkout session created: {checkout_session.id}")
+            return JsonResponse({"sessionUrl": checkout_session.url})
+        except stripe.error.StripeError as e:
+            print(f"Stripe error: {e}")
+            return JsonResponse({"error": f"Stripe error: {str(e)}"}, status=400)
+        except Exception as e:
+            print(f"Error creating checkout session: {e}")
+            return JsonResponse({"error": str(e)}, status=400)
     except Exception as e:
-        return JsonResponse({"error": str(e)}, status=400)
+        import traceback
+        print(f"Unexpected error in hostedCheckout: {e}")
+        print(traceback.format_exc())
+        return JsonResponse({"error": f"An unexpected error occurred: {str(e)}"}, status=500)
 
 
 def paymentSuccessful(request):
@@ -265,14 +360,81 @@ def stripeWebhook(request):
 def updateCartView(request):
     # Used in ajax Event Ticket updating.
     if request.method == "POST":
+        try:
+            # Get the cart data from the request
+            cart_data = json.loads(request.body)
 
-        # Get the cart data from the request
-        cart_data = json.loads(request.body)
+            # Save the cart data to the session
+            request.session["cart"] = cart_data
+            return JsonResponse({"success": True})
+        except json.JSONDecodeError:
+            return JsonResponse({"success": False, "error": "Invalid JSON data"}, status=400)
+        except Exception as e:
+            return JsonResponse({"success": False, "error": str(e)}, status=500)
+    return JsonResponse({"success": False, "error": "Only POST method is allowed"}, status=400)
 
-        # Save the cart data to the session
-        request.session["cart"] = cart_data
-        return JsonResponse({"success": True})
-    return JsonResponse({"success": False}, status=400)
+
+@require_http_methods(["POST"])
+def applyCouponCode(request):
+    """Apply a coupon code to the cart"""
+    try:
+        data = json.loads(request.body)
+        coupon_code = data.get('coupon_code')
+        event_id = data.get('event_id')
+        
+        if not coupon_code or not event_id:
+            return JsonResponse({
+                "success": False,
+                "message": "Coupon code and event ID are required"
+            }, status=400)
+            
+        try:
+            event = Event.objects.get(eventId=event_id)
+            coupon = CouponCode.objects.get(code=coupon_code, event=event)
+            
+            # Check if coupon is valid
+            if hasattr(coupon, 'is_valid') and not coupon.is_valid():
+                return JsonResponse({
+                    "success": False,
+                    "message": "This coupon has expired"
+                }, status=400)
+                
+            # Get the current cart
+            cart = request.session.get("cart", {})
+            
+            # Add the coupon code to the cart
+            cart['coupon_code'] = coupon_code
+            
+            # Save the updated cart back to the session
+            request.session["cart"] = cart
+            
+            return JsonResponse({
+                "success": True,
+                "message": "Coupon applied successfully",
+                "discount_percentage": coupon.discount_percentage
+            })
+            
+        except Event.DoesNotExist:
+            return JsonResponse({
+                "success": False,
+                "message": "Event not found"
+            }, status=404)
+        except CouponCode.DoesNotExist:
+            return JsonResponse({
+                "success": False,
+                "message": "Invalid coupon code for this event"
+            }, status=404)
+            
+    except json.JSONDecodeError:
+        return JsonResponse({
+            "success": False,
+            "message": "Invalid JSON format"
+        }, status=400)
+    except Exception as e:
+        return JsonResponse({
+            "success": False,
+            "message": f"An error occurred: {str(e)}"
+        }, status=500)
 
 
 def viewTicket(request, mainId):

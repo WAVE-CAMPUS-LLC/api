@@ -422,8 +422,6 @@ class Event(models.Model):
         default=False,
     )
     
-    coupons = models.ManyToManyField("CouponCode", blank=True, null=True, related_name="available_for_events")
-    
     show_guest_list = models.BooleanField(
         _("Show guest list to attendees?"),
         null=True,
