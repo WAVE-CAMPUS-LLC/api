@@ -97,35 +97,34 @@ def get_csrf_token(request):
     return JsonResponse({'detail': 'CSRF cookie set'})
 
 
-class LogoutAPIView(APIView):
-    permission_classes = [IsAuthenticated]
-    
-    def post(self, request):
-        try:
-            # Update the latest login history record
-            login_history = LoginHistoryModel.objects.filter(
-                user=request.user
-            ).latest("login_time")
-            login_history.end_session()
-            
-            # Perform logout
-            logout(request)
-            
-            return Response(
-                {"detail": "Successfully logged out"},
-                status=status.HTTP_200_OK
-            )
-            
-        except LoginHistoryModel.DoesNotExist:
-            # If no login history exists, just perform logout
-            logout(request)
-            return Response(
-                {"detail": "Successfully logged out"},
-                status=status.HTTP_200_OK
-            )
-            
-        except Exception as e:
-            return Response(
-                {"error": "An error occurred during logout"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def logout_api(request):
+    try:
+        # Update the latest login history record
+        login_history = LoginHistoryModel.objects.filter(
+            user=request.user
+        ).latest("login_time")
+        login_history.end_session()
+        
+        # Perform logout
+        logout(request)
+        
+        return Response(
+            {"detail": "Successfully logged out"},
+            status=status.HTTP_200_OK
+        )
+        
+    except LoginHistoryModel.DoesNotExist:
+        # If no login history exists, just perform logout
+        logout(request)
+        return Response(
+            {"detail": "Successfully logged out"},
+            status=status.HTTP_200_OK
+        )
+        
+    except Exception as e:
+        return Response(
+            {"error": "An error occurred during logout"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
