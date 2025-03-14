@@ -366,17 +366,31 @@ def verify_ticket(request):
     try:
         # Parse incoming data
         data = request.data
-        print(f"Received ticket data: {data}")  # Debug log
+        print(f"Raw request data from mobile: {data}")
+        print(f"Request headers: {request.headers}")
 
-        ticket_id = data.get('ticketId')
-        event_id = data.get('eventId')
+        # Try to get data from request body if data is empty
+        if not data and request.body:
+            try:
+                data = json.loads(request.body)
+            except json.JSONDecodeError:
+                print("Failed to parse request body as JSON")
+
+        # Extract data with fallbacks for mobile app format
+        ticket_id = data.get('ticketId') or data.get('ticket_id')
+        event_id = data.get('eventId') or data.get('event_id')
         
+        print(f"Extracted ticket_id: {ticket_id}, event_id: {event_id}")
+
         if not all([ticket_id, event_id]):
-            return Response({
+            error_response = {
                 'valid': False,
                 'message': 'Missing required fields',
-                'ticketData': None
-            }, status=status.HTTP_400_BAD_REQUEST)
+                'required': ['ticketId/ticket_id', 'eventId/event_id'],
+                'received': data,
+            }
+            print(f"Sending error response: {error_response}")
+            return Response(error_response, status=status.HTTP_400_BAD_REQUEST)
 
         try:
             ticket = Ticket.objects.get(ticketId=ticket_id, event__eventId=event_id)
@@ -387,47 +401,37 @@ def verify_ticket(request):
                 'ticketData': {
                     'guestFirstName': data.get('guestFirstName'),
                     'guestLastName': data.get('guestLastName'),
-                    'userFirstName': data.get('userFirstName'),
-                    'userLastName': data.get('userLastName'),
                     'status': 'Invalid'
                 }
             }, status=status.HTTP_404_NOT_FOUND)
 
-        if ticket.status in ['Scanned', 'Invalid']:
+        # Check ticket status
+        if ticket.status == 'Scanned':
             return Response({
                 'valid': False,
-                'message': f'Ticket already {ticket.status.lower()}',
-                'ticketData': {
-                    'guestFirstName': ticket.guestFirstName or data.get('guestFirstName'),
-                    'guestLastName': ticket.guestLastName or data.get('guestLastName'),
-                    'userFirstName': ticket.user.first_name if ticket.user else data.get('userFirstName'),
-                    'userLastName': ticket.user.last_name if ticket.user else data.get('userLastName'),
-                    'status': ticket.status
-                }
+                'message': 'Ticket already scanned',
+                'ticketData': get_ticket_data(ticket)
             }, status=status.HTTP_400_BAD_REQUEST)
 
         # Valid ticket, update status
         ticket.status = 'Scanned'
         ticket.save()
 
-        return Response({
+        success_response = {
             'valid': True,
             'message': 'Valid ticket',
-            'ticketData': {
-                'guestFirstName': ticket.guestFirstName or data.get('guestFirstName'),
-                'guestLastName': ticket.guestLastName or data.get('guestLastName'),
-                'userFirstName': ticket.user.first_name if ticket.user else data.get('userFirstName'),
-                'userLastName': ticket.user.last_name if ticket.user else data.get('userLastName'),
-                'status': ticket.status
-            }
-        }, status=status.HTTP_200_OK)
+            'ticketData': get_ticket_data(ticket)
+        }
+        print(f"Sending success response: {success_response}")
+        return Response(success_response, status=status.HTTP_200_OK)
 
     except Exception as e:
-        print(f"Verification error: {str(e)}")  # Debug log
+        error_msg = f"Verification error: {str(e)}"
+        print(error_msg)
         return Response({
             'valid': False,
-            'message': f'Error processing ticket: {str(e)}',
-            'ticketData': None
+            'message': 'Error processing ticket',
+            'error': str(e)
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
