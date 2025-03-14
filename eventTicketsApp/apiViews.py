@@ -364,15 +364,19 @@ def mobile_payment_success(request):
 @permission_classes([IsAuthenticated])
 def verify_ticket(request):
     try:
-        # Try to get ticket ID from request body first, then fallback to URL parameters
-        ticket_id = request.data.get('ticketId') or request.GET.get('ticketId')
+        # Get ticket ID from request body
+        ticket_id = request.data.get('ticketId')
         
         if not ticket_id:
             return Response({
                 'valid': False,
                 'message': 'Ticket ID is required',
-                'received': {'GET': request.GET, 'POST': request.data}
+                'received': request.data
             }, status=status.HTTP_400_BAD_REQUEST)
+
+        # Log the received data for debugging
+        print(f"Verifying ticket: {ticket_id}")
+        print(f"Request data: {request.data}")
 
         try:
             ticket = Ticket.objects.get(ticketId=ticket_id)
