@@ -358,3 +358,74 @@ def mobile_payment_success(request):
 
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def verify_ticket(request):
+    try:
+        data = request.data
+        ticket_id = data.get("ticketId")
+        event_id = data.get("eventId")
+        ticket_status = data.get("status")
+
+        if not all([ticket_id, event_id, ticket_status]):
+            return Response(
+                {"valid": False, "message": "Invalid ticket data"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            ticket = Ticket.objects.get(ticketId=ticket_id, event__eventId=event_id)
+        except Ticket.DoesNotExist:
+            return Response(
+                {"valid": False, "message": "Ticket not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        if ticket.status in ["Scanned", "Invalid"]:
+            return Response(
+                {
+                    "valid": False,
+                    "message": "Ticket already scanned.",
+                    "ticketData": get_ticket_data(ticket),
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        ticket.status = "Scanned"
+        ticket.save()
+
+        return Response(
+            {
+                "valid": True,
+                "message": f"{ticket.guestFirstName} {ticket.guestLastName}: Valid",
+                "ticketData": get_ticket_data(ticket),
+            }
+        )
+
+    except json.JSONDecodeError:
+        return Response(
+            {"valid": False, "message": "Invalid JSON format"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    except Exception as e:
+        return Response(
+            {"valid": False, "message": f"An error occurred: {e}"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+def get_ticket_data(ticket):
+    return {
+        "guestFirstName": (
+            ticket.guestFirstName if ticket.guestFirstName else ticket.user.first_name
+        ),
+        "guestLastName": (
+            ticket.guestLastName if ticket.guestLastName else ticket.user.last_name
+        ),
+        "userFirstName": ticket.user.first_name if ticket.user else None,
+        "userLastName": ticket.user.last_name if ticket.user else None,
+        "status": ticket.status,
+    }
