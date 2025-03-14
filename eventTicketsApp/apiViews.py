@@ -360,31 +360,22 @@ def mobile_payment_success(request):
         return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
-@api_view(["POST"])
+@api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def verify_ticket(request):
     try:
-        # Handle both JSON and form data
-        if request.content_type == 'application/json':
-            data = request.data
-        else:
-            try:
-                data = json.loads(request.body)
-            except json.JSONDecodeError:
-                data = request.POST
+        # Parse incoming data
+        data = request.data
+        print(f"Received ticket data: {data}")  # Debug log
 
         ticket_id = data.get('ticketId')
         event_id = data.get('eventId')
-        ticket_status = data.get('status')
-
-        # Log incoming request data for debugging
-        print(f"Received ticket verification request: {data}")
-
+        
         if not all([ticket_id, event_id]):
             return Response({
                 'valid': False,
                 'message': 'Missing required fields',
-                'received_data': data
+                'ticketData': None
             }, status=status.HTTP_400_BAD_REQUEST)
 
         try:
@@ -393,33 +384,50 @@ def verify_ticket(request):
             return Response({
                 'valid': False,
                 'message': 'Ticket not found',
-                'ticketData': None
+                'ticketData': {
+                    'guestFirstName': data.get('guestFirstName'),
+                    'guestLastName': data.get('guestLastName'),
+                    'userFirstName': data.get('userFirstName'),
+                    'userLastName': data.get('userLastName'),
+                    'status': 'Invalid'
+                }
             }, status=status.HTTP_404_NOT_FOUND)
 
-        # Check if ticket is already scanned
         if ticket.status in ['Scanned', 'Invalid']:
             return Response({
                 'valid': False,
                 'message': f'Ticket already {ticket.status.lower()}',
-                'ticketData': get_ticket_data(ticket)
+                'ticketData': {
+                    'guestFirstName': ticket.guestFirstName or data.get('guestFirstName'),
+                    'guestLastName': ticket.guestLastName or data.get('guestLastName'),
+                    'userFirstName': ticket.user.first_name if ticket.user else data.get('userFirstName'),
+                    'userLastName': ticket.user.last_name if ticket.user else data.get('userLastName'),
+                    'status': ticket.status
+                }
             }, status=status.HTTP_400_BAD_REQUEST)
 
-        # Update ticket status
+        # Valid ticket, update status
         ticket.status = 'Scanned'
         ticket.save()
 
         return Response({
             'valid': True,
-            'message': 'Ticket verified successfully',
-            'ticketData': get_ticket_data(ticket)
+            'message': 'Valid ticket',
+            'ticketData': {
+                'guestFirstName': ticket.guestFirstName or data.get('guestFirstName'),
+                'guestLastName': ticket.guestLastName or data.get('guestLastName'),
+                'userFirstName': ticket.user.first_name if ticket.user else data.get('userFirstName'),
+                'userLastName': ticket.user.last_name if ticket.user else data.get('userLastName'),
+                'status': ticket.status
+            }
         }, status=status.HTTP_200_OK)
 
     except Exception as e:
-        print(f"Ticket verification error: {str(e)}")
+        print(f"Verification error: {str(e)}")  # Debug log
         return Response({
             'valid': False,
             'message': f'Error processing ticket: {str(e)}',
-            'error_details': str(e)
+            'ticketData': None
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
