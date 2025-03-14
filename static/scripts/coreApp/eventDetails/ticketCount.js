@@ -315,6 +315,10 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
     
+    // Check if a discount is applied
+    const hasDiscount = 'discount_percentage' in cartFromStorage;
+    const discountPercentage = hasDiscount ? parseFloat(cartFromStorage.discount_percentage) : 0;
+    
     // Copy only valid ticket items to the cart
     for (const [key, value] of Object.entries(cartFromStorage)) {
       if (key === 'coupon_code') {
@@ -339,23 +343,25 @@ document.addEventListener("DOMContentLoaded", function () {
         };
         
         // If there's an original price (before discount), include it
-        if (value.original_price) {
-          ticketItem.original_price = parseFloat(value.original_price);
+        if (value.originalPrice) {
+          ticketItem.originalPrice = parseFloat(value.originalPrice);
         }
         
         // Only add items with valid values
-        if (!isNaN(ticketItem.price) && !isNaN(ticketItem.quantity) && 
-            ticketItem.quantity > 0 && ticketItem.price > 0) {
+        // For 100% discounts, allow zero-priced tickets
+        if (!isNaN(ticketItem.price) && !isNaN(ticketItem.quantity) && ticketItem.quantity > 0 && 
+            (ticketItem.price > 0 || (hasDiscount && discountPercentage >= 100))) {
           cart[key] = ticketItem;
         }
       }
     }
     
     // Check if we have any valid tickets after filtering
-    if (Object.keys(cart).length === 0 || 
-        (Object.keys(cart).length === 1 && 'coupon_code' in cart) ||
-        (Object.keys(cart).length === 1 && 'discount_percentage' in cart) ||
-        (Object.keys(cart).length === 2 && 'coupon_code' in cart && 'discount_percentage' in cart)) {
+    const hasOnlyCouponInfo = (Object.keys(cart).length === 1 && 'coupon_code' in cart) || 
+                             (Object.keys(cart).length === 1 && 'discount_percentage' in cart) ||
+                             (Object.keys(cart).length === 2 && 'coupon_code' in cart && 'discount_percentage' in cart);
+                             
+    if (Object.keys(cart).length === 0 || hasOnlyCouponInfo) {
       alert("Your cart doesn't contain any valid tickets. Please add tickets before checking out.");
       return;
     }

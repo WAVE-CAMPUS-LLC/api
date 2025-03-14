@@ -40,6 +40,17 @@ Create tickets for {{ event.title }} — WAVE.
         <div class="myEventsInformationContainer" id="viewRSVPList">
             <div class="listContainer flex flex-col gap-3">
                 <div id="ticketandcouponcontianer" class="flex flex-col gap-8">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <button type="button" id="createTicketButton" class="w-full font-Wanted-ExtraBold bg-gradient-to-br bg-gradient-start bg-gradient-end py-3 px-6 rounded-2xl text-white text-Pre-Xl">Create Tickets</button>
+                        </div>
+                        
+                        {% if event.couponsActivated %}
+                        <div>
+                            <button type="button" id="createCouponButton" class="w-full font-Wanted-ExtraBold bg-gradient-to-br bg-gradient-start bg-gradient-end py-3 px-6 rounded-2xl text-white text-Pre-Xl">Create Coupons</button>
+                        </div>
+                        {% endif %}
+                    </div>
                     <!-- Tickets Section -->
                     <div class="flex flex-col gap-4">
                         <h3 class="font-Wanted-Bold text-Large">Tickets</h3>
@@ -106,18 +117,6 @@ Create tickets for {{ event.title }} — WAVE.
                     {% endif %}
 
                     <hr />
-
-                    <div class="grid grid-cols-2 gap-3">
-                        <div>
-                            <button type="button" id="createTicketButton" class="w-full font-Wanted-ExtraBold bg-gradient-to-br bg-gradient-start bg-gradient-end py-3 px-6 rounded-2xl text-white text-Pre-Xl">Create Tickets</button>
-                        </div>
-                        
-                        {% if event.couponsActivated %}
-                        <div>
-                            <button type="button" id="createCouponButton" class="w-full font-Wanted-ExtraBold bg-gradient-to-br bg-gradient-start bg-gradient-end py-3 px-6 rounded-2xl text-white text-Pre-Xl">Create Coupons</button>
-                        </div>
-                        {% endif %}
-                    </div>
 
                     <span id="createTicketForm" class="hidden bg-[rgba(0, 0, 0, 0.037)] backdrop-blur-sm fixed top-0 left-0 right-0 bottom-0 z-[1005] w-full h-full cursor-default">
                         <div class="applicationPopupBg w-full h-full flex justify-center items-center">
