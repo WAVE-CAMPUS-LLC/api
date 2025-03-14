@@ -359,7 +359,7 @@ class CouponCodeForm(forms.ModelForm):
     )
     expiration_date = forms.DateField(
         label=_("Choose expiration date"),
-        required=False,
+        required=True,
         widget=forms.DateInput(format="%Y-%m-%d", attrs={"type": "date"}),
         input_formats=["%Y-%m-%d"],
     )

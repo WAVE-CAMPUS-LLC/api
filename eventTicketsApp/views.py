@@ -68,7 +68,7 @@ def hostedCheckout(request):
         # Filter out any non-ticket items (like coupon_code) for total calculation
         ticket_items = {}
         for k, v in cart.items():
-            if k == 'coupon_code':
+            if k == 'coupon_code' or k == 'discount_percentage':
                 continue
             if isinstance(v, dict) and "price" in v and "quantity" in v:
                 ticket_items[k] = v
@@ -104,7 +104,8 @@ def hostedCheckout(request):
         
         # Retrieve an event from one of the cart items and get its host's connected account ID
         try:
-            ticket_keys = [k for k in cart.keys() if k != 'coupon_code']
+            # Filter out non-ticket keys (like coupon_code and discount_percentage)
+            ticket_keys = [k for k in cart.keys() if k != 'coupon_code' and k != 'discount_percentage']
             if not ticket_keys:
                 return JsonResponse({"error": "No tickets in cart"}, status=400)
                 
@@ -137,7 +138,12 @@ def hostedCheckout(request):
         if 'coupon_code' in cart:
             coupon_code_value = cart.get('coupon_code')
         
-        if coupon_code_value:
+        # Get the discount percentage directly from the cart if it exists
+        if 'discount_percentage' in cart:
+            discount_percentage = float(cart.get('discount_percentage'))
+            valid_coupon_code = True
+            print(f"Using discount percentage from cart: {discount_percentage}%")
+        elif coupon_code_value:
             try:
                 # Try to get the coupon code object for this event
                 coupon = CouponCode.objects.get(code=coupon_code_value, event=event)
@@ -156,20 +162,17 @@ def hostedCheckout(request):
         line_items = []
         try:
             for key, ticket in cart.items():
-                # Skip non-ticket items like coupon_code
-                if key == 'coupon_code' or not isinstance(ticket, dict) or 'price' not in ticket or 'quantity' not in ticket:
+                # Skip non-ticket items like coupon_code and discount_percentage
+                if key == 'coupon_code' or key == 'discount_percentage' or not isinstance(ticket, dict) or 'price' not in ticket or 'quantity' not in ticket:
                     continue
                     
                 ticket_price = Decimal(str(ticket["price"]))  # Convert to Decimal safely
                 ticket_quantity = int(ticket["quantity"])
                 
-                if valid_coupon_code:
-                    discounted_price = ticket_price * (1 - (Decimal(discount_percentage)/100))
-                    unit_amount = int(discounted_price * 100)
-                    print(f"Discounted price for {ticket['name']}: {discounted_price}, Unit amount: {unit_amount}")
-                else:
-                    unit_amount = int(ticket_price * 100)
-                    print(f"Regular price for {ticket['name']}: {ticket_price}, Unit amount: {unit_amount}")
+                # The price in the cart is already discounted if a coupon was applied
+                # No need to apply the discount again
+                unit_amount = int(ticket_price * 100)
+                print(f"Using price for {ticket['name']}: {ticket_price}, Unit amount: {unit_amount}")
                 
                 line_items.append({
                     "price_data": {

@@ -343,7 +343,7 @@ def createPaidEventTicket(request, eventId):
                 new_coupon.save()
                 return redirect("eventManagement:paidTicketing", eventId=event.eventId)
             else:
-                messages.error(request, "Invalid form submission.")
+                messages.error(request, "Invalid coupon code.")
                 return redirect("eventManagement:paidTicketing", eventId=event.eventId)
         elif eventAction == "deleteCouponCode":
             coupon_id = request.POST.get("couponId")
@@ -425,6 +425,7 @@ def eventManagement(request, eventId):
     is_in_college = user_profile.college is not None
     rsvp_list = RSVPTicket.objects.filter(event=event)
     paid_free_tickets = PaidFreeTicket.objects.filter(event=event)
+    coupon_codes = CouponCode.objects.filter(event=event)
 
     if request.method == "POST":
         action = request.POST.get("eventAction")
@@ -453,6 +454,25 @@ def eventManagement(request, eventId):
             if paidFreeForm.is_valid():
                 ticket = paidFreeForm.save(commit=False)
                 ticket.save()
+            return redirect("eventManagement:eventManagement", eventId=eventId)
+
+        elif action == "createCouponCode":
+            couponCodeForm = CouponCodeForm(request.POST)
+            if couponCodeForm.is_valid():
+                new_coupon = couponCodeForm.save(commit=False)
+                new_coupon.event = event
+                new_coupon.save()
+                messages.success(request, "Coupon created successfully!")
+            else:
+                print(f"Coupon form errors: {couponCodeForm.errors}")
+                messages.error(request, f"Invalid form submission: {couponCodeForm.errors}")
+            return redirect("eventManagement:eventManagement", eventId=eventId)
+
+        elif action == "deleteCouponCode":
+            coupon_id = request.POST.get("couponId")
+            coupon = get_object_or_404(CouponCode, coupon_id=coupon_id)
+            coupon.delete()
+            messages.success(request, "Coupon deleted successfully!")
             return redirect("eventManagement:eventManagement", eventId=eventId)
 
         elif "displayOnCollege" in request.POST:
@@ -538,6 +558,7 @@ def eventManagement(request, eventId):
         invitationForm = InvitationForm()
         paidFreeForm = PaidFreeTicketForm()
         editEventForm = EditEventForm(instance=event)
+        couponCodeForm = CouponCodeForm()
 
     return render(
         request,
@@ -550,6 +571,8 @@ def eventManagement(request, eventId):
             "paidFreeForm": paidFreeForm,
             "paidFreeTickets": paid_free_tickets,
             "editEventForm": editEventForm,
+            "couponCodes": coupon_codes,
+            "couponCodeForm": couponCodeForm,
         },
     )
 

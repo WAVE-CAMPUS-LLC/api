@@ -564,7 +564,7 @@ class CouponCode(models.Model):
     coupon_id = models.UUIDField(
         primary_key=True, default=uuid.uuid4, editable=False, unique=True, null=False, blank=False
     )
-    code = models.CharField(max_length=10, unique=True, db_index=True)
+    code = models.CharField(max_length=10, db_index=True)
     discount_percentage = models.IntegerField(
         validators=[
             MinValueValidator(0),
@@ -585,6 +585,7 @@ class CouponCode(models.Model):
             ('can_use_coupon', 'Can apply coupon code'),
         ]
         ordering = ['expiration_date', 'code']
+        unique_together = ['code', 'event']
 
     def __str__(self):
         return self.code

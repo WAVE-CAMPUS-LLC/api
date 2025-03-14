@@ -39,25 +39,42 @@ Create tickets for {{ event.title }} — WAVE.
     <div id="rsvpBody" class="flex flex-col gap-4">
         <div class="myEventsInformationContainer" id="viewRSVPList">
             <div class="listContainer flex flex-col gap-3">
-                <div class="flex flex-col gap-8">
-                    {% if paidFreeTickets %}
-                    <div class="grid grid-cols-1 xxsm:grid-cols-2 md:grid-cols-3 3xl:grid-cols-4 gap-5">
-                        {% for ticket in paidFreeTickets %}
-                        <div class="bg-gradient-to-b bg-gradient-start bg-gradient-end p-6 rounded-2xl flex flex-col text-white gap-3 font-Wanted-Black text-xl">
-                            <div class="flex flex-row flex-nowrap justify-between w-full">
-                                <h6 class="flex-nowrap w-full">{{ ticket.ticket_name }}</h6>
-                                <p class="w-full flex justify-end font-Wanted-Variable text-Large">${{ ticket.ticket_price }}</p>
+                <div id="ticketandcouponcontianer" class="flex flex-col gap-8">
+                    <!-- Tickets Section -->
+                    <div class="flex flex-col gap-4">
+                        <h3 class="font-Wanted-Bold text-Large">Tickets</h3>
+                        {% if paidFreeTickets %}
+                        <div class="grid grid-cols-1 xxsm:grid-cols-2 md:grid-cols-3 3xl:grid-cols-4 gap-5">
+                            {% for ticket in paidFreeTickets %}
+                            <div class="bg-gradient-to-b bg-gradient-start bg-gradient-end p-6 rounded-2xl flex flex-col text-white gap-3 font-Wanted-Black text-xl">
+                                <div class="flex flex-row flex-nowrap justify-between w-full">
+                                    <h6 class="flex-nowrap w-full">{{ ticket.ticket_name }}</h6>
+                                    <p class="w-full flex justify-end font-Wanted-Variable text-Large">${{ ticket.ticket_price }}</p>
+                                </div>
+                                <form method="post" class="w-full flex justify-end">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="ticketId" value="{{ ticket.ticket_id }}" />
+                                    <button class="flex justify-end" type="submit" title="Delete Ticket" role="button" name="eventAction" value="deleteTicket" data-ticketid="{{ ticket.ticket_id }}">
+                                        <img src="{% static "/images/eventManagementApp/host/delete.svg" %}" class="size-5 flex justify-end" />
+                                    </button>
+                                </form>
                             </div>
-                            <form method="post" class="w-full flex justify-end">
-                                {% csrf_token %}
-                                <input type="hidden" name="ticketId" value="{{ ticket.ticket_id }}" />
-                                <button class="flex justify-end" type="submit" title="Delete Ticket" role="button" name="eventAction" value="deleteTicket" data-ticketid="{{ ticket.ticket_id }}">
-                                    <img src="{% static "/images/eventManagementApp/host/delete.svg" %}" class="size-5 flex justify-end" />
-                                </button>
-                            </form>
+                            {% endfor %}
                         </div>
-                        {% endfor %}
+                        {% else %}
+                        <div class="empty-container w-full h-full flex flex-col text-center justify-center items-center gap-2 bg-customGray4 p-12 rounded-2xl">
+                            <img class="size-14" src="{% static "/images/eventManagementApp/host/empty-listing.svg" %}" />
+                            <p class="font-Wanted-Variable text-Base xsm:text-Medium xxsm:text-Large md:text-xl flex flex-row gap-1">
+                                No tickets created yet.
+                            </p>
+                        </div>
+                        {% endif %}
+                    </div>
 
+                    <!-- Coupons Section -->
+                    {% if event.couponsActivated %}
+                    <div class="flex flex-col gap-4">
+                        <h3 class="font-Wanted-Bold text-Large">Coupons</h3>
                         {% if couponCodes %}
                         <div class="grid grid-cols-1 xxsm:grid-cols-2 md:grid-cols-3 3xl:grid-cols-4 gap-5">
                             {% for coupon in couponCodes %}
@@ -65,30 +82,30 @@ Create tickets for {{ event.title }} — WAVE.
                                 <div class="flex flex-row flex-nowrap justify-between w-full">
                                     <h6 class="flex-nowrap w-full">{{ coupon.code }}</h6>
                                     <p class="w-full flex justify-end font-Wanted-Variable text-Large">{{ coupon.discount_percentage }}%</p>
-                                    <p class="w-full flex justify-end font-Wanted-Variable text-Large">Expires: {{ coupon.expiration_date }}</p>
                                 </div>
+                                <p class="font-Wanted-Variable text-Medium">Expires: {{ coupon.expiration_date }}</p>
                                 <form method="post" class="w-full flex justify-end">
                                     {% csrf_token %}
                                     <input type="hidden" name="couponId" value="{{ coupon.coupon_id }}" />
-                                    <button class="flex justify-end" type="submit" title="Delete Ticket" role="button" name="eventAction" value="deleteCouponCode" data-coupon-id="{{ coupon.coupon_id }}">
+                                    <button class="flex justify-end" type="submit" title="Delete Coupon" role="button" name="eventAction" value="deleteCouponCode" data-coupon-id="{{ coupon.coupon_id }}">
                                         <img src="{% static "/images/eventManagementApp/host/delete.svg" %}" class="size-5 flex justify-end" />
                                     </button>
                                 </form>
                             </div>
                             {% endfor %}
                         </div>
+                        {% else %}
+                        <div class="empty-container w-full h-full flex flex-col text-center justify-center items-center gap-2 bg-customGray4 p-12 rounded-2xl">
+                            <img class="size-14" src="{% static "/images/eventManagementApp/host/empty-listing.svg" %}" />
+                            <p class="font-Wanted-Variable text-Base xsm:text-Medium xxsm:text-Large md:text-xl flex flex-row gap-1">
+                                No coupons created yet.
+                            </p>
+                        </div>
                         {% endif %}
                     </div>
-                    <hr />
-                    {% else %}
-                    <div class="empty-container w-full h-full flex flex-col text-center justify-center items-center gap-2 bg-customGray4 p-12 rounded-2xl">
-                        <img class="size-14" src="{% static "/images/eventManagementApp/host/empty-listing.svg" %}" />
-                        <p class="font-Wanted-Variable text-Base xsm:text-Medium xxsm:text-Large md:text-xl flex flex-row gap-1">
-                            No tickets created yet.
-                        </p>
-                    </div>
-                    <hr/>
                     {% endif %}
+
+                    <hr />
 
                     <div class="grid grid-cols-2 gap-3">
                         <div>
