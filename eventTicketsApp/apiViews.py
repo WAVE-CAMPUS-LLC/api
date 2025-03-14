@@ -364,57 +364,63 @@ def mobile_payment_success(request):
 @permission_classes([IsAuthenticated])
 def verify_ticket(request):
     try:
-        data = request.data
-        ticket_id = data.get("ticketId")
-        event_id = data.get("eventId")
-        ticket_status = data.get("status")
+        # Handle both JSON and form data
+        if request.content_type == 'application/json':
+            data = request.data
+        else:
+            try:
+                data = json.loads(request.body)
+            except json.JSONDecodeError:
+                data = request.POST
 
-        if not all([ticket_id, event_id, ticket_status]):
-            return Response(
-                {"valid": False, "message": "Invalid ticket data"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        ticket_id = data.get('ticketId')
+        event_id = data.get('eventId')
+        ticket_status = data.get('status')
+
+        # Log incoming request data for debugging
+        print(f"Received ticket verification request: {data}")
+
+        if not all([ticket_id, event_id]):
+            return Response({
+                'valid': False,
+                'message': 'Missing required fields',
+                'received_data': data
+            }, status=status.HTTP_400_BAD_REQUEST)
 
         try:
             ticket = Ticket.objects.get(ticketId=ticket_id, event__eventId=event_id)
         except Ticket.DoesNotExist:
-            return Response(
-                {"valid": False, "message": "Ticket not found."},
-                status=status.HTTP_404_NOT_FOUND,
-            )
+            return Response({
+                'valid': False,
+                'message': 'Ticket not found',
+                'ticketData': None
+            }, status=status.HTTP_404_NOT_FOUND)
 
-        if ticket.status in ["Scanned", "Invalid"]:
-            return Response(
-                {
-                    "valid": False,
-                    "message": "Ticket already scanned.",
-                    "ticketData": get_ticket_data(ticket),
-                },
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        # Check if ticket is already scanned
+        if ticket.status in ['Scanned', 'Invalid']:
+            return Response({
+                'valid': False,
+                'message': f'Ticket already {ticket.status.lower()}',
+                'ticketData': get_ticket_data(ticket)
+            }, status=status.HTTP_400_BAD_REQUEST)
 
-        ticket.status = "Scanned"
+        # Update ticket status
+        ticket.status = 'Scanned'
         ticket.save()
 
-        return Response(
-            {
-                "valid": True,
-                "message": f"{ticket.guestFirstName} {ticket.guestLastName}: Valid",
-                "ticketData": get_ticket_data(ticket),
-            }
-        )
-
-    except json.JSONDecodeError:
-        return Response(
-            {"valid": False, "message": "Invalid JSON format"},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
+        return Response({
+            'valid': True,
+            'message': 'Ticket verified successfully',
+            'ticketData': get_ticket_data(ticket)
+        }, status=status.HTTP_200_OK)
 
     except Exception as e:
-        return Response(
-            {"valid": False, "message": f"An error occurred: {e}"},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        )
+        print(f"Ticket verification error: {str(e)}")
+        return Response({
+            'valid': False,
+            'message': f'Error processing ticket: {str(e)}',
+            'error_details': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 def get_ticket_data(ticket):
