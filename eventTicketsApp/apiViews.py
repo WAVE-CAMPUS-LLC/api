@@ -364,66 +364,38 @@ def mobile_payment_success(request):
 @permission_classes([IsAuthenticated])
 def verify_ticket(request):
     try:
-        # Parse incoming data
-        data = request.data
-        print(f"Raw request data from mobile: {data}")
-        print(f"Request headers: {request.headers}")
-
-        # Try to get data from request body if data is empty
-        if not data and request.body:
-            try:
-                data = json.loads(request.body)
-            except json.JSONDecodeError:
-                print("Failed to parse request body as JSON")
-
-        # Extract data with fallbacks for mobile app format
-        ticket_id = data.get('ticketId') or data.get('ticket_id')
-        event_id = data.get('eventId') or data.get('event_id')
-        
-        print(f"Extracted ticket_id: {ticket_id}, event_id: {event_id}")
-
-        if not all([ticket_id, event_id]):
-            error_response = {
+        # Get ticket ID from URL path parameter
+        ticket_id = request.GET.get('ticketId')
+        if not ticket_id:
+            return Response({
                 'valid': False,
-                'message': 'Missing required fields',
-                'required': ['ticketId/ticket_id', 'eventId/event_id'],
-                'received': data,
-            }
-            print(f"Sending error response: {error_response}")
-            return Response(error_response, status=status.HTTP_400_BAD_REQUEST)
+                'message': 'Ticket ID is required',
+                'received': request.GET
+            }, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            ticket = Ticket.objects.get(ticketId=ticket_id, event__eventId=event_id)
+            ticket = Ticket.objects.get(ticketId=ticket_id)
         except Ticket.DoesNotExist:
             return Response({
                 'valid': False,
                 'message': 'Ticket not found',
                 'ticketData': {
-                    'guestFirstName': data.get('guestFirstName'),
-                    'guestLastName': data.get('guestLastName'),
                     'status': 'Invalid'
                 }
             }, status=status.HTTP_404_NOT_FOUND)
 
-        # Check ticket status
-        if ticket.status == 'Scanned':
-            return Response({
-                'valid': False,
-                'message': 'Ticket already scanned',
-                'ticketData': get_ticket_data(ticket)
-            }, status=status.HTTP_400_BAD_REQUEST)
+        # Update ticket status if provided
+        new_status = request.data.get('status')
+        if new_status:
+            ticket.status = new_status
+            ticket.save()
 
-        # Valid ticket, update status
-        ticket.status = 'Scanned'
-        ticket.save()
-
-        success_response = {
+        # Return ticket data
+        return Response({
             'valid': True,
-            'message': 'Valid ticket',
+            'message': 'Ticket status updated successfully',
             'ticketData': get_ticket_data(ticket)
-        }
-        print(f"Sending success response: {success_response}")
-        return Response(success_response, status=status.HTTP_200_OK)
+        }, status=status.HTTP_200_OK)
 
     except Exception as e:
         error_msg = f"Verification error: {str(e)}"
