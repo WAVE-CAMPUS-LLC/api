@@ -162,4 +162,30 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Run validation once on page load to ensure button state is correct
     validateForm();
+
+
+
+    const createTicketButon = document.getElementById('createTicketButton');
+    const createCouponButton = document.getElementById('createCouponButton');
+    const hideCouponModalButton =  document.getElementById('hideCouponModalButton');
+    const createTicketForm = document.getElementById('createTicketForm');
+    const createCouponForm = document.getElementById('createCouponForm');
+    const hideTicketModalButton = document.getElementById('hideTicketModalButton');
+    createTicketButon.addEventListener('click', function() {
+        createTicketForm.classList.remove('hidden');
+    });
+
+    createCouponButton.addEventListener('click', function() {
+        createCouponForm.classList.remove('hidden');
+    });
+
+    hideCouponModalButton.addEventListener('click', function() {
+        createCouponForm.classList.add('hidden');
+    });
+
+    hideTicketModalButton.addEventListener('click', function() {
+        createTicketForm.classList.add('hidden');
+    });
+
+
 });

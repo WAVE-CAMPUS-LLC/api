@@ -13,6 +13,7 @@ from socialApp.views import send_social_socket_message
 from .models import Visitor
 from authenticationApp.models import CustomUser
 from eventManagementApp.models import (
+    CouponCode,
     Event,
     InviteEventOption,
     SharedEvent,
@@ -335,6 +336,7 @@ def eventDetailsView(request, eventId, token=None):
     pageName = "eventDetails"
     event = get_object_or_404(Event, eventId=eventId)
     eventPaidFreeTickets = PaidFreeTicket.objects.filter(event=event)
+    eventCoupons = CouponCode.objects.filter(event=event)
     
     siteURL = settings.SITE_URL
     link = reverse('core:eventDetails', kwargs={'eventId': eventId})
@@ -459,31 +461,60 @@ def eventDetailsView(request, eventId, token=None):
                 
         elif action == "sendGoWithRequest":
             guest_id = request.POST.get("guestId")
-            if not user:
+            if not request.user.is_authenticated:
                 messages.warning(request, "Please login to send a go with request.")
                 return redirect("authentication:login")
             else:
                 guest = get_object_or_404(CustomUser, user_id=guest_id)
                 send_go_with_request(request, eventId, user, guest)  
                 return redirect("core:eventDetails", eventId=eventId)
+            
+        elif action == "applyCouponCode":
+            coupon_code = request.POST.get("couponCode")
+            if not coupon_code:
+                return JsonResponse({"status": "failed", "message": "Coupon code cannot be empty"}, status=400)
+                
+            coupon = CouponCode.objects.filter(code=coupon_code, event=event).first()
+            if not coupon:
+                return JsonResponse({"status": "failed", "message": "Invalid coupon code"}, status=400)
+            
+            # Check if coupon is valid (you may want to add more validation)
+            # The logic here was inverted - if is_valid() returns False, the coupon is expired
+            if hasattr(coupon, 'is_valid') and not coupon.is_valid():
+                return JsonResponse({"status": "failed", "message": "Coupon has expired"}, status=400)
+                
+            if hasattr(coupon, 'is_used') and coupon.is_used():
+                return JsonResponse({"status": "failed", "message": "Coupon has already been used"}, status=400)
+                
+            # Return success response with discount information
+            discount_data = {
+                "status": "success", 
+                "message": "Valid coupon code applied successfully"
+            }
+            
+            # Only add these fields if they exist
+            if hasattr(coupon, 'discount_percentage'):
+                discount_data["discount_percentage"] = coupon.discount_percentage
+                
+            return JsonResponse(discount_data)
     
-    else:
-        return render(
-            request,
-            "coreApp/event/eventDetails.html",
-            {
-                "page": pageName,
-                "event": event,
-                "rsvpForm": rsvpForm,
-                "paidFreeTickets": eventPaidFreeTickets,
-                "friends": user_friends,
-                "crews": user_crews,
-                "isFavoriteEvent": isFavoriteEvent,
-                "guestList": guest_list,
-                "eventLink": eventLink,
-                "userId": user_id,
-            },
-        )
+    return render(
+        request,
+        "coreApp/event/eventDetails.html",
+        {
+            "page": pageName,
+            "event": event,
+            "rsvpForm": rsvpForm,
+            "paidFreeTickets": eventPaidFreeTickets,
+            "friends": user_friends,
+            "crews": user_crews,
+            "isFavoriteEvent": isFavoriteEvent,
+            "guestList": guest_list,
+            "eventLink": eventLink,
+            "userId": user_id,
+            "coupons": eventCoupons,
+        },
+    )
 
 
 def categoryView(request, name):

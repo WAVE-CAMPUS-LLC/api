@@ -21,6 +21,7 @@ Manage {{ event.title }} | WAVE.
 
     {% if event.ticketing == "Paid" %}
     <script type="text/javascript" src="{% static "scripts/eventManagementApp/host/eventManage/createTicketDisplay.js" %}" defer></script>
+    <script type="text/javascript" src="{% static "scripts/eventManagementApp/host/eventManage/createCouponDisplay.js" %}" defer></script>
     {% endif %}
 {% endblock script %}
 
@@ -340,21 +341,21 @@ Manage {{ event.title }} | WAVE.
                             </div>
                         </div>
                         {% elif event.ticketing == "Paid" %}
-                        <div class="flex flex-col gap-1">
-                            <div class="ticketingHeader">
+                        <div class="flex flex-col gap-5">
+                            <div class="couponHeader flex flex-col gap-4">
                                 <div class="ticketingHeading">
-                                    <h4>
+                                    <h4 class="font-Wanted-Bold text-xl">
                                         {% if paidFreeTickets %}
-                                        Manage your tickets here!
+                                        Manage tickets
                                         {% else %}
                                         Create tickets for users to purchase!
                                         {% endif %}
                                     </h4>
                                 </div>
-                                <div class="createTicketButtonRow w-full flex justify-center sm:justify-end">
-                                    <button type="button" class="createTicketButton gradient-btn" id="createTicketButtonFirst" role="button">
-                                        <img src="{% static "/images/eventManagementApp/host/host_ticket.svg" %}" />
-                                        Create Ticket
+                                <div class="buttonContainer w-full flex justify-center sm:justify-end">
+                                    <button type="button" class="actionButton gradient-btn flex items-center justify-center" id="createTicketButtonFirst" role="button">
+                                        <img src="{% static "/images/eventManagementApp/host/host_ticket.svg" %}" class="size-5 mr-2" />
+                                        <span class="font-Wanted-Regular">Create Ticket</span>
                                     </button>
                                 </div>
                             </div>
@@ -459,6 +460,58 @@ Manage {{ event.title }} | WAVE.
                                 </div>
                                 {% endif %}
                             </div>
+                            
+                            <!-- Coupon Management Section -->
+                            {% if event.couponsActivated %}
+                            <div class="mt-10 border-t pt-8">
+                                <div class="couponHeader flex flex-col gap-4">
+                                    <div class="ticketingHeading">
+                                        <h4 class="font-Wanted-Bold text-xl">
+                                            {% if couponCodes %}
+                                            Manage coupons
+                                            {% else %}
+                                            Create coupons for users to use!
+                                            {% endif %}
+                                        </h4>
+                                    </div>
+                                    <div class="buttonContainer w-full flex justify-center sm:justify-end">
+                                        <button type="button" class="actionButton gradient-btn flex items-center justify-center" id="createCouponButton" role="button">
+                                            <img src="{% static "/images/eventManagementApp/host/host_ticket.svg" %}" class="size-5 mr-2" />
+                                            <span class="font-Wanted-Regular">Create Coupon</span>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div class="couponBody">
+                                    {% if couponCodes %}
+                                    <div class="grid grid-cols-1 xxsm:grid-cols-2 md:grid-cols-3 3xl:grid-cols-4 gap-5">
+                                        {% for coupon in couponCodes %}
+                                        <div class="bg-gradient-to-b bg-gradient-start bg-gradient-end p-6 rounded-2xl flex flex-col text-white gap-3 font-Wanted-Black text-xl">
+                                            <div class="flex flex-col">
+                                                <h6>{{ coupon.code }}</h6>
+                                            </div>
+                                            <div class="w-full flex justify-end">
+                                                <p class="w-full flex justify-end font-Wanted-Variable text-Large">{{ coupon.discount_percentage }}%</p>
+                                            </div>
+                                            <form method="post" class="w-full flex justify-end">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="couponId" value="{{ coupon.coupon_id }}" />
+                                                <button class="flex justify-end" type="submit" title="Delete Coupon" role="button" name="eventAction" value="deleteCouponCode" data-coupon-id="{{ coupon.coupon_id }}">
+                                                    <img src="{% static "/images/eventManagementApp/host/delete.svg" %}" class="size-5 flex justify-end" />
+                                                </button>
+                                            </form>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                    {% else %}
+                                    <div class="empty-pcb">
+                                        <img class="empty-image size-14" src="{% static "/images/eventManagementApp/host/empty-listing.svg" %}" />
+                                        <p class="font-Wanted-Variable text-Pre-Xl">You haven't created any coupons. </p>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endif %}
                         </div>
                         {% endif %}
                     </div>
@@ -560,6 +613,49 @@ Manage {{ event.title }} | WAVE.
     </div>
 </div>
 
+<!-- COUPON CREATION MODAL -->
+<div id="couponCreationModal" class="hidden bg-[rgba(0, 0, 0, 0.037)] backdrop-blur-sm fixed top-0 left-0 right-0 bottom-0 z-[1005] w-full h-full cursor-default">
+    <div class="w-full h-full flex justify-center items-center py-10">
+        <div class="w-11/12 xxsm:w-9/12 pre-sm:w-10/12 sm:w-10/12 md:w-10/12 pre-lg:w-10/12 lg:w-10/12 xl:w-3/5 h-auto min-h-[60%] max-h-[90%] bg-white shadow-custom-shadow rounded-2xl p-5 pb-12 flex flex-col gap-3 overflow-y-auto">
+            <div class="w-full flex justify-between">
+                <div class="w-full flex justify-start flex-col font-Wanted-Bold text-Pre-Xl">
+                    <h3>Create a coupon</h3>
+                    <p class="font-Wanted-Variable text-Base">Create discount coupons for your attendees!</p>
+                </div>
 
+                <div class="closeCouponCreationButtonRow w-full flex justify-end">
+                    <button type="button" role="button" id="closeCreateCouponModalButton" class="closeCouponCreationModalButton border-none bg-none cursor-pointer">
+                        <img src="{% static '/images/admin/roles/modalClose.svg' %}" alt="Close create coupon tab">
+                    </button>
+                </div>
+            </div>
+
+            <form class="flex flex-col gap-5" method="post">
+                {% csrf_token %}
+                <div class="creationRow flex flex-col pre-sm:flex-row gap-4 w-full">
+                    <label for="id_code" class="w-full">
+                        <p class="font-Wanted-Variable text-Semi-Medium text-gray-200">Coupon Code</p>
+                        <input type="text" name="code" id="id_code" class="w-full px-4 p-3 rounded-xl border border-custom-rgba5 font-Wanted-Variable text-Medium" placeholder="e.g. SUMMER25">
+                    </label>
+                </div>
+
+                <div class="creationRow flex flex-col pre-sm:flex-row gap-4 w-full">
+                    <label for="id_discount_percentage" class="w-full">
+                        <p class="font-Wanted-Variable text-Semi-Medium text-gray-200">Discount Percentage</p>
+                        <input type="number" name="discount_percentage" id="id_discount_percentage" min="1" max="100" class="w-full px-4 p-3 rounded-xl border border-custom-rgba5 font-Wanted-Variable text-Medium" placeholder="e.g. 25">
+                    </label>
+                    <label for="id_expiration_date" class="w-full">
+                        <p class="font-Wanted-Variable text-Semi-Medium text-gray-200">Expiration Date</p>
+                        <input type="date" name="expiration_date" id="id_expiration_date" class="w-full px-4 p-3 rounded-xl border border-custom-rgba5 font-Wanted-Variable text-Medium">
+                    </label>
+                </div>
+
+                <div class="creationSubmitRow w-full flex justify-center">
+                    <button type="submit" class="createCouponButton gradient-btn w-full" role="button" name="eventAction" value="createCouponCode">Create Coupon</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
 {% endblock body %}

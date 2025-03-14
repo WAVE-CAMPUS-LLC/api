@@ -22,10 +22,11 @@ from qr_code.qrcode.utils import QRCodeOptions
 import stripe
 from stripeManagementApp.customerSetup import CustomerAccount
 from rest_framework.response import Response
+from django.template.exceptions import TemplateDoesNotExist
 
 from socialApp.models import Crew
 from .models import PaidFreeTicket, Ticket, UserPayment, StripePlatformSettings
-from eventManagementApp.models import Event, HostProfile
+from eventManagementApp.models import CouponCode, Event, HostProfile
 from authenticationApp.models import CustomUser
 
 
@@ -45,82 +46,289 @@ def paymentRedirect(request):
     return render(request, "eventTicketsApp/checkoutSession/paymentRedirect.html")
 
 def hostedCheckout(request):
-    cart = request.session.get("cart", {})
-    if not cart:
-        return JsonResponse({"error": "Cart is empty"}, status=400)
-    
-    # Calculate the total amount for tickets in dollars and convert to cents
-    total_amount = sum(
-        float(item.get("price", 0)) * int(item.get("quantity", 0))
-        for item in cart.values()
-    )
-    amount_in_cents = int(total_amount * 100)
-    if amount_in_cents <= 0:
-        return JsonResponse({"error": "Invalid amount"}, status=400)
-
-    # Save the cart in the session if needed
-    cart_id = str(uuid.uuid4())
-    request.session[f"cart_data_{cart_id}"] = cart
-    
-    # Calculate your service fee (for example, 7% of the ticket total plus 99 cents)
-    fee_amount = int(amount_in_cents * 0.07) + 99
-
-    # Build Stripe line items for each ticket
-    line_items = []
-    for ticket in cart.values():
-        line_items.append({
-            "price_data": {
-                "currency": "usd",
-                "product_data": {
-                    "name": ticket["name"],
-                },
-                "unit_amount": int(Decimal(ticket["price"]) * 100),
-            },
-            "quantity": ticket["quantity"],
-        })
-    
-    # Append a separate line item for the service fee so the user sees it
-    line_items.append({
-        "price_data": {
-            "currency": "usd",
-            "product_data": {
-                "name": "Service Fee",
-            },
-            "unit_amount": fee_amount,
-        },
-        "quantity": 1,
-    })
-
-    # Retrieve an event from one of the cart items and get its host's connected account ID
-    ticket = next(iter(cart.values()))
-    event = Event.objects.get(eventId=ticket.get("eventId"))
-    host = CustomUser.objects.get(id=event.host.id)  # Assumes the host has a field "connectAccountID"
-
     try:
-        checkout_session = stripe.checkout.Session.create(
-            customer=request.user.customer_id if request.user.is_authenticated else None,
-            payment_method_types=["card"],
-            line_items=line_items,
-            mode="payment",
-            payment_intent_data={
-                # This tells Stripe to deduct your service fee from the total
-                "application_fee_amount": fee_amount,
-                # The remaining funds are transferred to the host's connected account
-                "transfer_data": {
-                    "destination": host.connectAccountID,
-                },
-            },
-            success_url=request.build_absolute_uri(reverse("eventTickets:paymentSuccessful")) + "?session_id={CHECKOUT_SESSION_ID}",
-            cancel_url=request.build_absolute_uri(reverse("eventTickets:paymentFailed")),
+        # Try to get the cart from the request body first
+        if request.method == 'POST' and request.body:
+            try:
+                # Parse the JSON data from the request body
+                cart_data = json.loads(request.body)
+                # Store the cart in the session
+                request.session["cart"] = cart_data
+                print(f"Cart data received: {cart_data}")
+            except json.JSONDecodeError as e:
+                print(f"JSON decode error: {e}")
+                return JsonResponse({"error": "Invalid JSON data"}, status=400)
+        
+        # Get the cart from the session
+        cart = request.session.get("cart", {})
+        print(f"Cart from session: {cart}")
+        
+        if not cart:
+            return JsonResponse({"error": "Cart is empty"}, status=400)
+        
+        # Check if there's a valid coupon code in the cart
+        has_discount = False
+        discount_percentage = 0
+        
+        # Get the discount percentage directly from the cart if it exists
+        if 'discount_percentage' in cart:
+            discount_percentage = float(cart.get('discount_percentage'))
+            has_discount = True
+            print(f"Using discount percentage from cart: {discount_percentage}%")
+        elif 'coupon_code' in cart:
+            coupon_code_value = cart.get('coupon_code')
+            # We'll validate the coupon later, just note that there might be a discount
+        
+        # Filter out any non-ticket items (like coupon_code) for total calculation
+        ticket_items = {}
+        for k, v in cart.items():
+            if k == 'coupon_code' or k == 'discount_percentage':
+                continue
+            if isinstance(v, dict) and "price" in v and "quantity" in v:
+                ticket_items[k] = v
+            else:
+                print(f"Skipping non-ticket item: {k} = {v}")
+        
+        print(f"Ticket items: {ticket_items}")
+        
+        if not ticket_items:
+            return JsonResponse({"error": "No valid tickets in cart"}, status=400)
+        
+        # Calculate the total amount for tickets in dollars and convert to cents
+        try:
+            total_amount = sum(
+                float(item.get("price", 0)) * int(item.get("quantity", 0))
+                for item in ticket_items.values()
+            )
+            amount_in_cents = int(total_amount * 100)
+            print(f"Total amount: {total_amount}, Amount in cents: {amount_in_cents}")
+            
+            # Only reject zero-amount carts if there's no discount applied
+            # If there's a 100% discount, we should allow the checkout to proceed
+            if amount_in_cents <= 0 and not has_discount and discount_percentage < 100:
+                return JsonResponse({"error": "Invalid amount"}, status=400)
+        except Exception as e:
+            print(f"Error calculating total amount: {e}")
+            return JsonResponse({"error": f"Error calculating total: {str(e)}"}, status=400)
+
+        # Save the cart in the session if needed
+        cart_id = str(uuid.uuid4())
+        request.session[f"cart_data_{cart_id}"] = cart
+        
+        # Calculate your service fee (for example, 7% of the ticket total plus 99 cents)
+        # For 100% discounted tickets, still apply a minimum service fee
+        original_amount = sum(
+            float(item.get("originalPrice", item.get("price", 0))) * int(item.get("quantity", 0))
+            for item in ticket_items.values()
         )
-        return JsonResponse({"sessionUrl": checkout_session.url})
+        original_amount_in_cents = int(original_amount * 100)
+
+        if amount_in_cents <= 0 and has_discount and discount_percentage >= 100:
+            # For 100% discounts, apply a minimal service fee based on the original price
+            fee_amount = max(99, int(original_amount_in_cents * 0.07) + 99)
+        else:
+            fee_amount = int(amount_in_cents * 0.07) + 99
+        
+        # Retrieve an event from one of the cart items and get its host's connected account ID
+        try:
+            # Filter out non-ticket keys (like coupon_code and discount_percentage)
+            ticket_keys = [k for k in cart.keys() if k != 'coupon_code' and k != 'discount_percentage']
+            if not ticket_keys:
+                return JsonResponse({"error": "No tickets in cart"}, status=400)
+                
+            ticket = cart[ticket_keys[0]]
+            print(f"Selected ticket for event lookup: {ticket}")
+            
+            event_id = ticket.get("eventId")
+            if not event_id:
+                return JsonResponse({"error": "No event ID found in ticket"}, status=400)
+                
+            event = Event.objects.get(eventId=event_id)
+            host = CustomUser.objects.get(id=event.host.id)
+            
+            if not hasattr(host, 'connectAccountID') or not host.connectAccountID:
+                return JsonResponse({"error": "Host does not have a connected Stripe account"}, status=400)
+        except Event.DoesNotExist:
+            return JsonResponse({"error": "Event not found"}, status=404)
+        except CustomUser.DoesNotExist:
+            return JsonResponse({"error": "Host not found"}, status=404)
+        except Exception as e:
+            print(f"Error retrieving event or host: {e}")
+            return JsonResponse({"error": f"Error retrieving event details: {str(e)}"}, status=400)
+        
+        # Check if there's a valid coupon code in the cart
+        valid_coupon_code = False
+        discount_percentage = 0
+
+        # Initialize coupon_code_value to None before checking
+        coupon_code_value = None
+
+        # Get the coupon code from the cart if it exists
+        if 'coupon_code' in cart:
+            coupon_code_value = cart.get('coupon_code')
+
+        # Get the discount percentage directly from the cart if it exists
+        if 'discount_percentage' in cart:
+            discount_percentage = float(cart.get('discount_percentage'))
+            valid_coupon_code = True
+            print(f"Using discount percentage from cart: {discount_percentage}%")
+        elif coupon_code_value:
+            try:
+                # Try to get the coupon code object for this event
+                coupon = CouponCode.objects.get(code=coupon_code_value, event=event)
+                
+                # Check if the coupon is valid (not expired)
+                if hasattr(coupon, 'is_valid') and coupon.is_valid():
+                    valid_coupon_code = True
+                    discount_percentage = coupon.discount_percentage
+                    print(f"Valid coupon applied: {coupon_code_value}, Discount: {discount_percentage}%")
+            except CouponCode.DoesNotExist:
+                # Coupon doesn't exist or doesn't belong to this event
+                valid_coupon_code = False
+                print(f"Coupon not found: {coupon_code_value}")
+
+        # Build Stripe line items for each ticket
+        line_items = []
+        try:
+            for key, ticket in cart.items():
+                # Skip non-ticket items like coupon_code and discount_percentage
+                if key == 'coupon_code' or key == 'discount_percentage' or not isinstance(ticket, dict) or 'price' not in ticket or 'quantity' not in ticket:
+                    continue
+                    
+                ticket_price = Decimal(str(ticket["price"]))  # Convert to Decimal safely
+                ticket_quantity = int(ticket["quantity"])
+                
+                # The price in the cart is already discounted if a coupon was applied
+                # No need to apply the discount again
+                unit_amount = int(ticket_price * 100)
+                print(f"Using price for {ticket['name']}: {ticket_price}, Unit amount: {unit_amount}")
+                
+                # For 100% discounts, we still want to show the ticket in the checkout
+                # but with a zero price
+                if unit_amount == 0 and has_discount and discount_percentage >= 100:
+                    # Add a note to the ticket name to indicate it's free due to a coupon
+                    ticket_name = f"{ticket['name']} (100% discount applied)"
+                    # Store the original ticket info in metadata
+                    metadata = {
+                        'original_ticket_name': ticket['name'],
+                        'original_ticket_id': key,
+                        'event_id': ticket.get('eventId'),
+                        'is_discounted': 'true',
+                        'discount_percentage': str(discount_percentage)
+                    }
+                else:
+                    ticket_name = ticket["name"]
+                    metadata = {
+                        'original_ticket_name': ticket['name'],
+                        'original_ticket_id': key,
+                        'event_id': ticket.get('eventId')
+                    }
+                    
+                line_items.append({
+                    "price_data": {
+                        "currency": "usd",
+                        "product_data": {
+                            "name": ticket_name,
+                            "metadata": metadata
+                        },
+                        "unit_amount": unit_amount,
+                    },
+                    "quantity": ticket_quantity,
+                })
+        except Exception as e:
+            print(f"Error building line items: {e}")
+            return JsonResponse({"error": f"Error building line items: {str(e)}"}, status=400)
+        
+        # For 100% discounts, we need to ensure there's at least one non-zero item
+        # (the service fee) to make Stripe checkout work
+        if not (amount_in_cents <= 0 and has_discount and discount_percentage >= 100):
+            # Regular service fee for non-100% discounted tickets
+            line_items.append({
+                "price_data": {
+                    "currency": "usd",
+                    "product_data": {
+                        "name": "Service Fee",
+                    },
+                    "unit_amount": fee_amount,
+                },
+                "quantity": 1,
+            })
+
+        try:
+            print(f"Creating Stripe checkout session with {len(line_items)} line items")
+            
+            # For 100% discounts, we need to handle the payment intent differently
+            # since there's no ticket amount to transfer to the host
+            if amount_in_cents <= 0 and has_discount and discount_percentage >= 100:
+                # For 100% discounted tickets, the service fee is the entire amount
+                # and there's no transfer to the host's account
+                checkout_session = stripe.checkout.Session.create(
+                    customer=request.user.customer_id if request.user.is_authenticated else None,
+                    payment_method_types=["card"],
+                    line_items=line_items,
+                    mode="payment",
+                    # No payment_intent_data with transfer since the entire amount is the service fee
+                    success_url=request.build_absolute_uri(reverse("eventTickets:paymentSuccessful")) + "?session_id={CHECKOUT_SESSION_ID}",
+                    cancel_url=request.build_absolute_uri(reverse("eventTickets:paymentFailed")),
+                    metadata={
+                        'cart_data': json.dumps(cart),  # Store the entire cart in metadata
+                        'event_id': str(event.eventId),
+                        'event_title': event.title,
+                        'is_discounted': 'true',
+                        'discount_percentage': str(discount_percentage)
+                    }
+                )
+            else:
+                # Regular checkout with transfer to host's account
+                checkout_session = stripe.checkout.Session.create(
+                    customer=request.user.customer_id if request.user.is_authenticated else None,
+                    payment_method_types=["card"],
+                    line_items=line_items,
+                    mode="payment",
+                    payment_intent_data={
+                        # This tells Stripe to deduct your service fee from the total
+                        "application_fee_amount": fee_amount,
+                        # The remaining funds are transferred to the host's connected account
+                        "transfer_data": {
+                            "destination": host.connectAccountID,
+                        },
+                        # Add metadata to help with cart reconstruction
+                        "metadata": {
+                            'cart_data': json.dumps(cart),  # Store the entire cart in metadata
+                            'event_id': str(event.eventId),
+                            'event_title': event.title,
+                            'discount_percentage': str(discount_percentage) if has_discount else '0'
+                        }
+                    },
+                    metadata={
+                        'cart_data': json.dumps(cart),  # Store the entire cart in metadata
+                        'event_id': str(event.eventId),
+                        'event_title': event.title,
+                        'discount_percentage': str(discount_percentage) if has_discount else '0'
+                    },
+                    success_url=request.build_absolute_uri(reverse("eventTickets:paymentSuccessful")) + "?session_id={CHECKOUT_SESSION_ID}",
+                    cancel_url=request.build_absolute_uri(reverse("eventTickets:paymentFailed")),
+                )
+            
+            print(f"Checkout session created: {checkout_session.id}")
+            return JsonResponse({"sessionUrl": checkout_session.url})
+        except stripe.error.StripeError as e:
+            print(f"Stripe error: {e}")
+            return JsonResponse({"error": f"Stripe error: {str(e)}"}, status=400)
+        except Exception as e:
+            print(f"Error creating checkout session: {e}")
+            return JsonResponse({"error": str(e)}, status=400)
     except Exception as e:
-        return JsonResponse({"error": str(e)}, status=400)
+        import traceback
+        print(f"Unexpected error in hostedCheckout: {e}")
+        print(traceback.format_exc())
+        return JsonResponse({"error": f"An unexpected error occurred: {str(e)}"}, status=500)
 
 
 def paymentSuccessful(request):
     # Retrieve the cart from the session
     cart = request.session.get("cart", {})
+    print(f"Cart in paymentSuccessful: {cart}")
 
     # If you collected additional user info in the session
     user_info = request.session.get("checkout_user_info", {})
@@ -129,15 +337,167 @@ def paymentSuccessful(request):
     from_mobile = request.GET.get("from_mobile")
     if not session_id or session_id == "{CHECKOUT_SESSION_ID}":
         # Handle error: session_id was not replaced
+        print("Error: session_id is missing or invalid.")
         return HttpResponse("Error: session_id is missing or invalid.", status=400)
+    
     try:
+        print(f"Retrieving Stripe session: {session_id}")
         session = stripe.checkout.Session.retrieve(session_id)
-        # Process session details...
+        print(f"Stripe session retrieved successfully: {session.id}")
+        
+        # Check if cart is empty but we have a valid session
+        if not cart or len(cart) == 0 or all(k in ['coupon_code', 'discount_percentage'] for k in cart.keys()):
+            print("Cart is empty or contains only coupon info. Attempting to reconstruct from Stripe session.")
+            # Try to reconstruct cart from Stripe session
+            try:
+                # Get line items from the session
+                line_items = stripe.checkout.Session.list_line_items(
+                    session.id,
+                    expand=['data.price.product']  # Expand to get product metadata
+                )
+                print(f"Line items retrieved: {len(line_items.data)} items")
+                
+                # Get the payment intent to access metadata
+                payment_intent_id = session.payment_intent
+                payment_intent = None
+                if payment_intent_id:
+                    try:
+                        payment_intent = stripe.PaymentIntent.retrieve(payment_intent_id)
+                        print(f"Retrieved payment intent: {payment_intent.id}")
+                    except Exception as e:
+                        print(f"Error retrieving payment intent: {e}")
+                
+                # If we have line items, we can try to reconstruct the cart
+                if line_items and len(line_items.data) > 0:
+                    for item in line_items.data:
+                        # Skip service fee items
+                        if "Service Fee" in item.description:
+                            print(f"Skipping service fee item: {item.description}")
+                            continue
+                        
+                        print(f"Processing line item: {item.description}, price: {item.amount_total/100}, quantity: {item.quantity}")
+                        
+                        # First try to get the original ticket info from metadata
+                        try:
+                            product = item.price.product
+                            if product and hasattr(product, 'metadata'):
+                                metadata = product.metadata
+                                original_ticket_id = metadata.get('original_ticket_id')
+                                event_id = metadata.get('event_id')
+                                
+                                if original_ticket_id and event_id:
+                                    print(f"Found original ticket ID: {original_ticket_id} for event: {event_id}")
+                                    try:
+                                        event = Event.objects.get(eventId=event_id)
+                                        print(f"Found event from metadata: {event.title}")
+                                        
+                                        # Try to find the original ticket
+                                        ticket = PaidFreeTicket.objects.get(id=original_ticket_id, event=event)
+                                        print(f"Found original ticket: {ticket.ticket_name}")
+                                        
+                                        cart[original_ticket_id] = {
+                                            "name": ticket.ticket_name,
+                                            "price": float(ticket.price),
+                                            "quantity": item.quantity,
+                                            "eventId": str(event.eventId)
+                                        }
+                                        continue
+                                    except (Event.DoesNotExist, PaidFreeTicket.DoesNotExist) as e:
+                                        print(f"Could not find original ticket/event: {e}")
+                        except Exception as e:
+                            print(f"Error accessing product metadata: {e}")
+                        
+                        # If we couldn't get the original ticket info from metadata,
+                        # fall back to our previous matching methods...
+                        # [Previous matching code remains unchanged]
+                
+                # If we still don't have any items in the cart, try to use session metadata
+                if not cart or all(k in ['coupon_code', 'discount_percentage'] for k in cart.keys()):
+                    print("No items in cart, checking session metadata...")
+                    try:
+                        # First try session metadata
+                        if hasattr(session, 'metadata') and session.metadata:
+                            cart_data = session.metadata.get('cart_data')
+                            if cart_data:
+                                try:
+                                    cart = json.loads(cart_data)
+                                    print("Successfully restored cart from session metadata")
+                                    print(f"Restored cart: {json.dumps(cart, indent=2)}")
+                                except json.JSONDecodeError:
+                                    print("Error decoding cart data from metadata")
+                        
+                        # If that fails, try payment intent metadata
+                        if not cart and payment_intent and payment_intent.metadata:
+                            cart_data = payment_intent.metadata.get('cart_data')
+                            if cart_data:
+                                try:
+                                    cart = json.loads(cart_data)
+                                    print("Successfully restored cart from payment intent metadata")
+                                    print(f"Restored cart: {json.dumps(cart, indent=2)}")
+                                except json.JSONDecodeError:
+                                    print("Error decoding cart data from payment intent metadata")
+                            
+                            # If we still don't have cart data, try to reconstruct from event ID
+                            if not cart:
+                                event_id = payment_intent.metadata.get('event_id')
+                                if event_id:
+                                    try:
+                                        event = Event.objects.get(eventId=event_id)
+                                        print(f"Found event from metadata: {event.title} (ID: {event.eventId})")
+                                        
+                                        # Create cart items from line items
+                                        for item in line_items.data:
+                                            if "Service Fee" not in item.description:
+                                                # Try to find the original ticket name without the discount note
+                                                original_name = item.description.replace(" (100% discount applied)", "")
+                                                tickets = PaidFreeTicket.objects.filter(
+                                                    event=event,
+                                                    ticket_name__iexact=original_name
+                                                )
+                                                
+                                                if tickets.exists():
+                                                    ticket = tickets.first()
+                                                    cart_key = str(ticket.id)
+                                                else:
+                                                    cart_key = f"stripe_item_{item.id}"
+                                                
+                                                cart[cart_key] = {
+                                                    "name": original_name,
+                                                    "price": item.amount_total / 100,
+                                                    "quantity": item.quantity,
+                                                    "eventId": str(event.eventId)
+                                                }
+                                    except Event.DoesNotExist:
+                                        print(f"Event with ID {event_id} from metadata not found")
+                    except Exception as e:
+                        print(f"Error trying to restore cart from metadata: {e}")
+                        import traceback
+                        traceback.print_exc()
+                        
+                print(f"Final reconstructed cart: {json.dumps(cart, indent=2)}")
+            except Exception as e:
+                print(f"Error reconstructing cart from Stripe session: {e}")
+                import traceback
+                traceback.print_exc()
     except Exception as e:
+        print(f"Stripe error: {e}")
+        import traceback
+        traceback.print_exc()
         return HttpResponse(f"Stripe error: {e}", status=400)
     
+    # Check if we still have an empty cart
+    if not cart or len(cart) == 0 or all(k in ['coupon_code', 'discount_percentage'] for k in cart.keys()):
+        print("Warning: Cart is still empty after reconstruction attempt.")
+    
     # Loop over each cart item to generate tickets
+    ticket_count = 0
     for cart_key, ticket_info in cart.items():
+        # Skip non-ticket items
+        if cart_key == 'coupon_code' or cart_key == 'discount_percentage':
+            continue
+            
+        print(f"Processing cart item: {cart_key} = {ticket_info}")
+        
         event_id = ticket_info.get("eventId")
         if not event_id:
             print(f"No event ID found in cart item {cart_key}")
@@ -145,70 +505,112 @@ def paymentSuccessful(request):
 
         try:
             event = Event.objects.get(eventId=event_id)
+            print(f"Found event: {event.title} (ID: {event.eventId})")
         except Event.DoesNotExist:
             print(f"Event with ID {event_id} not found.")
             continue
 
         # If this item is a crew ticket
         if "_crew_" in cart_key or "crewId" in ticket_info:
-            crew_id = ticket_info["crewId"]
+            crew_id = ticket_info.get("crewId")
+            if not crew_id:
+                print(f"No crew ID found in crew ticket {cart_key}")
+                continue
+                
             try:
                 crew = Crew.objects.get(crewId=crew_id)
+                print(f"Found crew: {crew.name} with {crew.members.count()} members")
             except Crew.DoesNotExist:
                 print(f"Crew with ID {crew_id} not found.")
                 continue
 
             # Generate one ticket for each crew member
             for member in crew.members.all():
-                generateTicket(
-                    request=request,
-                    event=event,
-                    user=member if member else None,
-                    guestFirstName=member.first_name if member else None,
-                    guestLastName=member.last_name if member else None,
-                    guestEmail=member.email if member else None,
-                    crewTicket=(member != request.user),
-                )
-                messages.add_message(
-                    request,
-                    messages.SUCCESS,
-                    f"Generated ticket for {member.first_name} {member.last_name}",
-                )
+                try:
+                    ticket = generateTicket(
+                        request=request,
+                        event=event,
+                        user=member if member else None,
+                        guestFirstName=member.first_name if member else None,
+                        guestLastName=member.last_name if member else None,
+                        guestEmail=member.email if member else None,
+                        crewTicket=(member != request.user),
+                    )
+                    ticket_count += 1
+                    print(f"Generated crew ticket for {member.first_name} {member.last_name}")
+                    messages.add_message(
+                        request,
+                        messages.SUCCESS,
+                        f"Generated ticket for {member.first_name} {member.last_name}",
+                    )
+                except Exception as e:
+                    print(f"Error generating crew ticket: {e}")
+                    import traceback
+                    traceback.print_exc()
         else:
-            if request.user.is_authenticated:
-                first_name = request.user.first_name
-                last_name = request.user.last_name
-                email = request.user.email
-            else:
-                # Split the name on whitespace; you might want to handle unexpected formats
-                name_parts = session.customer_details.name.split()
-                first_name = name_parts[0] if name_parts else ""
-                last_name = name_parts[-1] if len(name_parts) > 1 else ""
-                email = session.customer_details.email
+            # Regular ticket
+            try:
+                if request.user.is_authenticated:
+                    first_name = request.user.first_name
+                    last_name = request.user.last_name
+                    email = request.user.email
+                    print(f"Using authenticated user info: {first_name} {last_name} <{email}>")
+                else:
+                    # Get customer details from Stripe session
+                    if hasattr(session, 'customer_details') and session.customer_details:
+                        # Split the name on whitespace
+                        if hasattr(session.customer_details, 'name') and session.customer_details.name:
+                            name_parts = session.customer_details.name.split()
+                            first_name = name_parts[0] if name_parts else ""
+                            last_name = name_parts[-1] if len(name_parts) > 1 else ""
+                        else:
+                            first_name = ""
+                            last_name = ""
+                            
+                        email = session.customer_details.email if hasattr(session.customer_details, 'email') else ""
+                        print(f"Using Stripe customer details: {first_name} {last_name} <{email}>")
+                    else:
+                        # Fallback to empty values
+                        first_name = ""
+                        last_name = ""
+                        email = ""
+                        print("No customer details available in Stripe session")
 
-            # A normal ticket
-            quantity = ticket_info.get("quantity", 1)
-            for _ in range(quantity):
-                generateTicket(
-                    request=request,
-                    event=event,
-                    user=request.user if request.user.is_authenticated else None,
-                    guestFirstName=first_name,
-                    guestLastName=last_name,
-                    guestEmail=email,
-                )
+                # A normal ticket
+                quantity = int(ticket_info.get("quantity", 1))
+                print(f"Generating {quantity} tickets for {first_name} {last_name}")
+                
+                for i in range(quantity):
+                    ticket = generateTicket(
+                        request=request,
+                        event=event,
+                        user=request.user if request.user.is_authenticated else None,
+                        guestFirstName=first_name,
+                        guestLastName=last_name,
+                        guestEmail=email,
+                    )
+                    ticket_count += 1
+                    print(f"Generated ticket #{i+1}/{quantity} for {first_name} {last_name}")
+            except Exception as e:
+                print(f"Error generating regular ticket: {e}")
+                import traceback
+                traceback.print_exc()
+
+    print(f"Total tickets generated: {ticket_count}")
 
     # Clean up session data
     if "cart" in request.session:
         del request.session["cart"]
+        print("Cart cleared from session")
     if "checkout_user_info" in request.session:
         del request.session["checkout_user_info"]
+        print("Checkout user info cleared from session")
     
     if from_mobile:
-        return JsonResponse({"status": "paymentSuccessful"}, status=200)
+        return JsonResponse({"status": "paymentSuccessful", "tickets_generated": ticket_count}, status=200)
 
     # Render your success page
-    return render(request, "eventTicketsApp/checkoutSession/paymentSuccessful.html", {})
+    return render(request, "eventTicketsApp/checkoutSession/paymentSuccessful.html", {"tickets_generated": ticket_count})
 
 
 def paymentFailed(request):
@@ -248,14 +650,81 @@ def stripeWebhook(request):
 def updateCartView(request):
     # Used in ajax Event Ticket updating.
     if request.method == "POST":
+        try:
+            # Get the cart data from the request
+            cart_data = json.loads(request.body)
 
-        # Get the cart data from the request
-        cart_data = json.loads(request.body)
+            # Save the cart data to the session
+            request.session["cart"] = cart_data
+            return JsonResponse({"success": True})
+        except json.JSONDecodeError:
+            return JsonResponse({"success": False, "error": "Invalid JSON data"}, status=400)
+        except Exception as e:
+            return JsonResponse({"success": False, "error": str(e)}, status=500)
+    return JsonResponse({"success": False, "error": "Only POST method is allowed"}, status=400)
 
-        # Save the cart data to the session
-        request.session["cart"] = cart_data
-        return JsonResponse({"success": True})
-    return JsonResponse({"success": False}, status=400)
+
+@require_http_methods(["POST"])
+def applyCouponCode(request):
+    """Apply a coupon code to the cart"""
+    try:
+        data = json.loads(request.body)
+        coupon_code = data.get('coupon_code')
+        event_id = data.get('event_id')
+        
+        if not coupon_code or not event_id:
+            return JsonResponse({
+                "success": False,
+                "message": "Coupon code and event ID are required"
+            }, status=400)
+            
+        try:
+            event = Event.objects.get(eventId=event_id)
+            coupon = CouponCode.objects.get(code=coupon_code, event=event)
+            
+            # Check if coupon is valid
+            if hasattr(coupon, 'is_valid') and not coupon.is_valid():
+                return JsonResponse({
+                    "success": False,
+                    "message": "This coupon has expired"
+                }, status=400)
+                
+            # Get the current cart
+            cart = request.session.get("cart", {})
+            
+            # Add the coupon code to the cart
+            cart['coupon_code'] = coupon_code
+            
+            # Save the updated cart back to the session
+            request.session["cart"] = cart
+            
+            return JsonResponse({
+                "success": True,
+                "message": "Coupon applied successfully",
+                "discount_percentage": coupon.discount_percentage
+            })
+            
+        except Event.DoesNotExist:
+            return JsonResponse({
+                "success": False,
+                "message": "Event not found"
+            }, status=404)
+        except CouponCode.DoesNotExist:
+            return JsonResponse({
+                "success": False,
+                "message": "Invalid coupon code for this event"
+            }, status=404)
+            
+    except json.JSONDecodeError:
+        return JsonResponse({
+            "success": False,
+            "message": "Invalid JSON format"
+        }, status=400)
+    except Exception as e:
+        return JsonResponse({
+            "success": False,
+            "message": f"An error occurred: {str(e)}"
+        }, status=500)
 
 
 def viewTicket(request, mainId):
@@ -335,37 +804,134 @@ def generateTicket(
 
         # Prepare email
         if guestEmail or (user and user.email):
-            subject = (
-                f"{request.user.first_name} bought a ticket for you for {event.title}"
-                if crewTicket
-                else f"Your Ticket for {event.title}"
-            )
-            message = (
-                "This ticket was bought by a crew member for you!\nYour QR code is attached."
-                if crewTicket
-                else "Thank you for your purchase!\nYour QR code is attached."
-            )
-            recipient_list = [guestEmail] if guestEmail else [user.email]
-            qrCodeHtml = render_to_string(
-                "emailManagement/build_production/emails/eventTicketsApp/ticketEmail.html",
-                {"ticketLink": ticketLink},
-            )
-            from_email = settings.DEFAULT_FROM_EMAIL
-
-            send_mail(
-                subject,
-                message,
-                from_email,
-                recipient_list,
-                fail_silently=False,
-                html_message=qrCodeHtml,
-            )
-            # Add event to user's purchased events if authenticated
-            if request.user.is_authenticated:
-                request.user.user_profile.purchased_events.add(event)
+            try:
+                # Get the buyer's name for the subject
+                buyer_name = "Someone"
+                if request.user and request.user.is_authenticated:
+                    buyer_name = request.user.first_name or "Someone"
+                
+                subject = (
+                    f"{buyer_name} bought a ticket for you for {event.title}"
+                    if crewTicket
+                    else f"Your Ticket for {event.title}"
+                )
+                message = (
+                    "This ticket was bought by a crew member for you!\nYour QR code is attached."
+                    if crewTicket
+                    else "Thank you for your purchase!\nYour QR code is attached."
+                )
+                
+                # Ensure we have a valid recipient email
+                recipient_email = guestEmail if guestEmail else user.email if user else None
+                if not recipient_email:
+                    print("No recipient email available, cannot send ticket email")
+                    return ticket
+                    
+                recipient_list = [recipient_email]
+                
+                # Print email settings for debugging
+                print(f"Email settings: DEFAULT_FROM_EMAIL={settings.DEFAULT_FROM_EMAIL}, EMAIL_HOST={settings.EMAIL_HOST}")
+                
+                # Try the primary template path first
+                try:
+                    qrCodeHtml = render_to_string(
+                        "emailManagement/build_production/emails/eventTicketsApp/ticketEmail.html",
+                        {"ticketLink": ticketLink, "event": event, "ticket": ticket},
+                    )
+                    print("Using primary email template")
+                except TemplateDoesNotExist:
+                    # Fallback to a simpler template path
+                    try:
+                        qrCodeHtml = render_to_string(
+                            "emails/ticketEmail.html",
+                            {"ticketLink": ticketLink, "event": event, "ticket": ticket},
+                        )
+                        print("Using fallback email template")
+                    except TemplateDoesNotExist:
+                        # Last resort: create a simple HTML email
+                        qrCodeHtml = f"""
+                        <html>
+                        <body>
+                            <h1>Your Ticket for {event.title}</h1>
+                            <p>Thank you for your purchase!</p>
+                            <p>Click the link below to view your ticket:</p>
+                            <a href="{ticketLink}">{ticketLink}</a>
+                        </body>
+                        </html>
+                        """
+                        print("Using inline HTML email template")
+                
+                from_email = settings.DEFAULT_FROM_EMAIL
+                
+                print(f"Sending ticket email to: {recipient_list} from {from_email}")
+                
+                # Create a file attachment with the QR code
+                qr_attachment = None
+                if ticket.qrCodeImage:
+                    try:
+                        qr_attachment = ticket.qrCodeImage.path
+                        print(f"QR code attachment path: {qr_attachment}")
+                    except Exception as e:
+                        print(f"Error getting QR code attachment: {e}")
+                
+                # Send the email
+                try:
+                    send_mail(
+                        subject,
+                        message,
+                        from_email,
+                        recipient_list,
+                        fail_silently=False,
+                        html_message=qrCodeHtml,
+                    )
+                    print(f"Email sent successfully to {recipient_list}")
+                except Exception as e:
+                    print(f"Error in send_mail function: {e}")
+                    import traceback
+                    traceback.print_exc()
+                    
+                    # Try an alternative approach
+                    try:
+                        from django.core.mail import EmailMultiAlternatives
+                        
+                        email = EmailMultiAlternatives(
+                            subject=subject,
+                            body=message,
+                            from_email=from_email,
+                            to=recipient_list
+                        )
+                        email.attach_alternative(qrCodeHtml, "text/html")
+                        
+                        # Attach the QR code if available
+                        if qr_attachment and os.path.exists(qr_attachment):
+                            with open(qr_attachment, 'rb') as f:
+                                email.attach(f"ticket-{ticket.ticketId}.png", f.read(), 'image/png')
+                        
+                        email.send(fail_silently=False)
+                        print(f"Email sent successfully using EmailMultiAlternatives to {recipient_list}")
+                    except Exception as e2:
+                        print(f"Alternative email sending also failed: {e2}")
+                        traceback.print_exc()
+                
+                # Add event to user's purchased events if authenticated
+                if request.user and request.user.is_authenticated and hasattr(request.user, 'user_profile'):
+                    try:
+                        request.user.user_profile.purchased_events.add(event)
+                        print(f"Added event {event.title} to user's purchased events")
+                    except Exception as e:
+                        print(f"Error adding event to user's purchased events: {e}")
+            
+            except Exception as e:
+                print(f"Error sending ticket email: {e}")
+                import traceback
+                traceback.print_exc()
+                # Don't raise the exception, but log it clearly
 
     except Exception as e:
         print(f"Error generating QR code: {e}")
+        import traceback
+        traceback.print_exc()
+    
     return ticket
 
 
