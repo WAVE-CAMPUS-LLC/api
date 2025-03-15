@@ -222,6 +222,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "authenticationApp.middleware.RedirectAuthenticatedUsersMiddleware",
+    "coreApp.middleware.TimezoneMiddleware",  # Add this line
 ]
 
 ROOT_URLCONF = "wave_v1.urls"
@@ -309,7 +310,9 @@ AUTH_USER_MODEL = "authenticationApp.CustomUser"
 
 LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = "UTC"
+# Change the time zone to Eastern Time (US & Canada)
+# For a list of valid time zones, see: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+TIME_ZONE = "America/New_York"  # Changed from "UTC" to Eastern Time
 
 USE_I18N = True
 
