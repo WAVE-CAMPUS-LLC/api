@@ -126,6 +126,29 @@ def createPaidEvent(request):
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
+def getHostStripeAccountLink(request):
+    user_account = get_object_or_404(CustomUser, username=request.user.username)
+    host_profile = get_object_or_404(HostProfile, user=user_account)
+
+    if host_profile.stripe_account_id:
+        return Response(
+            {"message": "Stripe account already connected."},
+            status=status.HTTP_200_OK,
+        )
+
+    stripe_account_link = stripe.AccountLink.create(
+        account=host_profile.stripe_account_id,
+        refresh_url="https://waveoncampus.com/explore/",
+        return_url="https://waveoncampus.com/explore/",
+        type="account_onboarding",
+    )
+
+    return Response(
+        {"url": stripe_account_link.url}, status=status.HTTP_200_OK
+    )
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
 def getEventFormFields(request):
     form = EventForm(user=request.user)  # Instantiate form with user context
     form_fields = {}
