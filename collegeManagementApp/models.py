@@ -54,7 +54,7 @@ class Organization(models.Model):
     status = models.CharField(
         _("Approval Status"), max_length=10, choices=STATUS_CHOICES, default="Pending"
     )
-    logo = models.ImageField(
+    logo = models.FileField(
         _("Upload an image to represent the org"),
         upload_to="organization_logos/",
         blank=True,

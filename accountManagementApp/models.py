@@ -92,7 +92,7 @@ class UserProfile(models.Model):
     is_campus_manager = models.BooleanField(default=False)
 
     
-    profile_photo = models.ImageField(
+    profile_photo = models.FileField(
         upload_to='profile/profile-pictures/',
         null=True,
         blank=True,
@@ -110,7 +110,7 @@ class UserProfile(models.Model):
         InviteEventOption, related_name="invitations", blank=True
     )
 
-    profile_qr_code = models.ImageField(
+    profile_qr_code = models.FileField(
         upload_to="profile/qr_code/", null=True, blank=True
     )
     

@@ -208,49 +208,49 @@
 
 @font-face {
 	font-family: "Wanted-ExtraBlack";
-	src: url("../fonts/Wanted/WantedSans-ExtraBlack-BF65baf133c4859.otf")
+	src: url("https://cdn.waveoncampus.com/fonts/Wanted/WantedSans-ExtraBlack-BF65baf133c4859.otf")
 		format("opentype");
 }
 
 @font-face {
 	font-family: "Wanted-Black";
-	src: url("../fonts/Wanted/WantedSans-Black-BF65baf1369b817.otf")
+	src: url("https://cdn.waveoncampus.com/fonts/Wanted/WantedSans-Black-BF65baf1369b817.otf")
 		format("opentype");
 }
 
 @font-face {
 	font-family: "Wanted-ExtraBold";
-	src: url("../fonts/Wanted/WantedSans-ExtraBold-BF65baf137317a5.otf")
+	src: url("https://cdn.waveoncampus.com/fonts/Wanted/WantedSans-ExtraBold-BF65baf137317a5.otf")
 		format("opentype");
 }
 
 @font-face {
 	font-family: "Wanted-SemiBold";
-	src: url("../fonts/Wanted/WantedSans-SemiBold-BF65baf13722853.otf")
+	src: url("https://cdn.waveoncampus.com/fonts/Wanted/WantedSans-SemiBold-BF65baf13722853.otf")
 		format("opentype");
 }
 
 @font-face {
 	font-family: "Wanted-Bold";
-	src: url("../fonts/Wanted/WantedSans-Bold-BF65baf135d5a25.otf")
+	src: url("https://cdn.waveoncampus.com/fonts/Wanted/WantedSans-Bold-BF65baf135d5a25.otf")
 		format("opentype");
 }
 
 @font-face {
 	font-family: "Wanted-Medium";
-	src: url("../fonts/Wanted/WantedSans-Medium-BF65baf1388963b.otf")
+	src: url("https://cdn.waveoncampus.com/fonts/Wanted/WantedSans-Medium-BF65baf1388963b.otf")
 		format("opentype");
 }
 
 @font-face {
 	font-family: "Wanted-Regular";
-	src: url("../fonts/Wanted/WantedSans-Regular-BF65baf13579965.otf")
+	src: url("https://cdn.waveoncampus.com/fonts/Wanted/WantedSans-Regular-BF65baf13579965.otf")
 		format("opentype");
 }
 
 @font-face {
 	font-family: "Wanted-Variable";
-	src: url("../fonts/Wanted/WantedSansVariable-BF65baf13a24667.ttf")
+	src: url("https://cdn.waveoncampus.com/fonts/Wanted/WantedSansVariable-BF65baf13a24667.ttf")
 		format("truetype");
 }
 

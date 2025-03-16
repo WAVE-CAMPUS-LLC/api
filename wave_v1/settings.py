@@ -321,12 +321,47 @@ USE_TZ = True
 # Login Link
 LOGIN_URL = "authentication:login"
 
+# Cloudflare R2 / AWS S3 Credentials
+AWS_S3_ACCESS_KEY_ID = os.getenv("R2_ACCESS_KEY_ID")
+AWS_S3_SECRET_ACCESS_KEY = os.getenv("R2_SECRET_ACCESS_KEY")
+
+# Cloudflare R2 Bucket & Endpoint
+AWS_STORAGE_BUCKET_NAME = os.getenv("R2_BUCKET_NAME")
+AWS_S3_ENDPOINT_URL = os.getenv("R2_ENDPOINT_URL")
+AWS_S3_CUSTOM_DOMAIN = os.getenv("R2_CUSTOM_DOMAIN")
+
+# AWS S3 Parameters
+AWS_S3_OBJECT_PARAMETERS = {
+    "CacheControl": "max-age=86400",
+}
+AWS_QUERYSTRING_AUTH = False
+AWS_S3_VERIFY = True
+
+STORAGES = {
+    "default": {
+        "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+    },
+    "staticfiles": {
+        "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+    },
+}
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
-STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+
+# Static files configuration
+STATIC_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/static/"
+STATICFILES_STORAGE = "storages.backends.s3boto3.S3StaticStorage"
+
+# Static files and media URL configuration
+MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/media/"
+DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
+
+AWS_S3_MAX_CONCURRENCY = 2
+AWS_MAX_ATTEMPTS=10
+AWS_S3_USE_THREADS = True
+AWS_S3_FILE_OVERWRITE = False
 
 
 # Supabase Configurations
@@ -340,11 +375,6 @@ if not all([SUPABASE_URL, SUPABASE_API_KEY, SUPABASE_STORAGE_BUCKET]):
 
 # Create Supabase client
 supabase = create_client(SUPABASE_URL, SUPABASE_API_KEY)
-
-
-# Static files and media URL configuration
-STATIC_URL = f"/static/"
-MEDIA_URL = f"{SUPABASE_URL}/storage/v1/object/public/{SUPABASE_STORAGE_BUCKET}/"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field

@@ -323,7 +323,7 @@ class Event(models.Model):
     
     hide_address = models.BooleanField(_("Hide address from users?"), blank=False, null=False, default=False)
 
-    header_photo = models.ImageField(
+    header_photo = models.FileField(
         _("Add a cover photo"),
         upload_to="event_images/header/",
         null=True,
@@ -331,35 +331,35 @@ class Event(models.Model):
         max_length=500,
     )
 
-    body_photo_one = models.ImageField(
+    body_photo_one = models.FileField(
         _("(Optional)"),
         upload_to="event_images/body/one/",
         null=True,
         blank=True,
         max_length=500,
     )
-    body_photo_two = models.ImageField(
+    body_photo_two = models.FileField(
         _("(Optional)"),
         upload_to="event_images/body/two/",
         null=True,
         blank=True,
         max_length=500,
     )
-    body_photo_three = models.ImageField(
+    body_photo_three = models.FileField(
         _("(Optional)"),
         upload_to="event_images/body/three",
         null=True,
         blank=True,
         max_length=500,
     )
-    body_photo_four = models.ImageField(
+    body_photo_four = models.FileField(
         _("(Optional)"),
         upload_to="event_images/body/four/",
         null=True,
         blank=True,
         max_length=500,
     )
-    body_photo_five = models.ImageField(
+    body_photo_five = models.FileField(
         _("(Optional)"),
         upload_to="event_images/body/five/",
         null=True,

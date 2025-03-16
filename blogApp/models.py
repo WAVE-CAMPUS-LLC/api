@@ -21,21 +21,21 @@ class Blog(models.Model):
     body = models.TextField(max_length=10000)
     created_at = models.DateTimeField(editable=False, auto_now_add=True)
 
-    imageOne = models.ImageField(
+    imageOne = models.FileField(
         _("First Image"),
         upload_to="blog/images/body/",
         blank=True,
         null=True,
     )
 
-    imageTwo = models.ImageField(
+    imageTwo = models.FileField(
         _("Second Image"),
         upload_to="blog/images/body/",
         blank=True,
         null=True,
     )
 
-    imageThree = models.ImageField(
+    imageThree = models.FileField(
         _("Third Image"),
         upload_to="blog/images/body/",
         blank=True,

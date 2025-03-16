@@ -30,7 +30,7 @@ class Ticket(models.Model):
     guestEmail = models.EmailField(max_length=254, blank=True, null=True)
     event = models.ForeignKey("eventManagementApp.Event", on_delete=models.CASCADE)
     qrCodeData = models.TextField(blank=True, null=True)
-    qrCodeImage = models.ImageField(upload_to='qr_codes/', blank=True, null=True)
+    qrCodeImage = models.FileField(upload_to='qr_codes/', blank=True, null=True)
     status = models.CharField(max_length=10, choices=TICKET_STATUS_CHOICES, default="Valid")
     created_at = models.DateTimeField(auto_now_add=True)
     

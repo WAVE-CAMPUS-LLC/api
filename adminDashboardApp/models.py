@@ -189,28 +189,28 @@ class Newsroom(models.Model):
         default="",
     )
 
-    headerImage = models.ImageField(
+    headerImage = models.FileField(
         _("Header Image"),
         upload_to="newsroom/images/header/",
         blank=False,
         null=False,
     )
 
-    imageOne = models.ImageField(
+    imageOne = models.FileField(
         _("Body Image"),
         upload_to="newsroom/images/body/",
         blank=True,
         null=True,
     )
 
-    imageTwo = models.ImageField(
+    imageTwo = models.FileField(
         _("Body Image"),
         upload_to="newsroom/images/body/",
         blank=True,
         null=True,
     )
 
-    imageThree = models.ImageField(
+    imageThree = models.FileField(
         _("Body Image"),
         upload_to="newsroom/images/body/",
         blank=True,
@@ -301,8 +301,8 @@ class College(models.Model):
     state = models.CharField("State", max_length=2, choices=STATE_CHOICES, default="")
     zip_code = models.CharField("ZIP Code", max_length=5)
     country = models.CharField("Country", max_length=5, choices=COUNTRY_CHOICES)
-    campus_image = models.ImageField("Upload a campus image", upload_to="campus_images/", null=True, blank=True, default="")
-    logo = models.ImageField(
+    campus_image = models.FileField("Upload a campus image", upload_to="campus_images/", null=True, blank=True, default="")
+    logo = models.FileField(
         "Upload the college logo", upload_to="college_logos/", blank=True, null=False
     )
     motto = models.CharField("What's your college's motto?", max_length=200)
