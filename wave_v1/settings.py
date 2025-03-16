@@ -104,7 +104,8 @@ else:
     CSP_FONT_SRC = ("'self'", "https://waveoncampus.com")
     CSP_IMG_SRC = ("'self'", "https://waveoncampus.com")
     CSP_FRAME_SRC = ("'self'",)
-    default_storage._wrapped = SupabaseStorage()
+    # using cloudflare r2 for storage
+    # default_storage._wrapped = SupabaseStorage()
     LOGGING = {
         "version": 1,
         "disable_existing_loggers": False,
