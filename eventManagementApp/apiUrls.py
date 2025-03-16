@@ -1,5 +1,5 @@
 from django.urls import path
-from .apiViews import createPaidEvent, getEventFormFields, host_portal, editEvent, getHostEventTicketing
+from .apiViews import createPaidEvent, getEventFormFields, host_portal, editEvent, getHostEventTicketing, getHostStripeAccountLink
 
 app_name = "eventManagementAPI"
 
@@ -8,7 +8,7 @@ urlpatterns = [
     path("create_paid_event/", createPaidEvent, name="create_paid_event"),
     path("get_event_form_fields/", getEventFormFields, name="get_event_form_fields"),
     path("edit_event/<uuid:eventId>/", editEvent, name="edit_event"),
-    
+    path("get_host_stripe_account_link/", getHostStripeAccountLink, name="get_host_stripe_account_link"),
     # Event Ticketing
     path("getHostEventTicketing/<uuid:eventId>/", getHostEventTicketing, name="getHostEventTicketing"),
 ]
