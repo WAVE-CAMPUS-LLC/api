@@ -130,10 +130,8 @@ def getHostStripeAccountLink(request):
     user_account = get_object_or_404(CustomUser, username=request.user.username)
     
     try:
-        host_profile = get_object_or_404(HostProfile, user=user_account)
-
         # Check if stripe account ID exists
-        if not host_profile.stripe_account_id:
+        if not user_account.connectAccountID:
             return Response(
             {"error": "You aren't a host yet. Host your first event to get started."},
             status=status.HTTP_400_BAD_REQUEST,
@@ -141,7 +139,7 @@ def getHostStripeAccountLink(request):
         
         # At this point we should have a valid stripe_account_id
         stripe_account_link = stripe.AccountLink.create(
-            account=host_profile.stripe_account_id,
+            account=user_account.connectAccountID,
             refresh_url="https://waveoncampus.com/explore/",
             return_url="https://waveoncampus.com/explore/",
             type="account_onboarding",
