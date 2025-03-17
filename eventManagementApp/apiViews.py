@@ -128,24 +128,31 @@ def createPaidEvent(request):
 @permission_classes([IsAuthenticated])
 def getHostStripeAccountLink(request):
     user_account = get_object_or_404(CustomUser, username=request.user.username)
-    host_profile = get_object_or_404(HostProfile, user=user_account)
+    
+    try:
+        host_profile = get_object_or_404(HostProfile, user=user_account)
 
-    if host_profile.stripe_account_id:
-        return Response(
-            {"message": "Stripe account already connected."},
-            status=status.HTTP_200_OK,
+        if host_profile.stripe_account_id:
+            return Response(
+                {"message": "Stripe account already connected."},
+                status=status.HTTP_200_OK,
+            )
+
+        stripe_account_link = stripe.AccountLink.create(
+            account=host_profile.stripe_account_id,
+            refresh_url="https://waveoncampus.com/explore/",
+            return_url="https://waveoncampus.com/explore/",
+            type="account_onboarding",
         )
 
-    stripe_account_link = stripe.AccountLink.create(
-        account=host_profile.stripe_account_id,
-        refresh_url="https://waveoncampus.com/explore/",
-        return_url="https://waveoncampus.com/explore/",
-        type="account_onboarding",
-    )
-
-    return Response(
-        {"url": stripe_account_link.url}, status=status.HTTP_200_OK
-    )
+        return Response(
+            {"url": stripe_account_link.url}, status=status.HTTP_200_OK
+        )
+    except:
+        return Response(
+            {"error": "Failed to get Stripe account link."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
