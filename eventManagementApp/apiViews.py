@@ -132,12 +132,14 @@ def getHostStripeAccountLink(request):
     try:
         host_profile = get_object_or_404(HostProfile, user=user_account)
 
-        if host_profile.stripe_account_id:
+        # Check if stripe account ID exists
+        if not host_profile.stripe_account_id:
             return Response(
-                {"message": "Stripe account already connected."},
-                status=status.HTTP_200_OK,
-            )
-
+            {"error": "You aren't a host yet. Host your first event to get started."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+        
+        # At this point we should have a valid stripe_account_id
         stripe_account_link = stripe.AccountLink.create(
             account=host_profile.stripe_account_id,
             refresh_url="https://waveoncampus.com/explore/",
@@ -148,9 +150,11 @@ def getHostStripeAccountLink(request):
         return Response(
             {"url": stripe_account_link.url}, status=status.HTTP_200_OK
         )
-    except:
+    except Exception as e:
+        # Log the specific error for debugging
+        print(f"Stripe error: {str(e)}")
         return Response(
-            {"error": "Failed to get Stripe account link."},
+            {"error": f"Failed to get Stripe account link: {str(e)}"},
             status=status.HTTP_400_BAD_REQUEST,
         )
 
@@ -260,4 +264,3 @@ def getHostEventTicketing(request, eventId):
         return Response({
             "error": "Failed to retrieve tickets."
         }, status=status.HTTP_400_BAD_REQUEST)
-    
