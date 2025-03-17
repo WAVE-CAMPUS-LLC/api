@@ -139,7 +139,7 @@ def getHostStripeAccountLink(request):
         
         # At this point we should have a valid stripe_account_id
         stripe_login_link = stripe.Account.create_login_link(
-            user_account.stripe_account_id
+            user_account.connectAccountID
         )
 
         return Response(
