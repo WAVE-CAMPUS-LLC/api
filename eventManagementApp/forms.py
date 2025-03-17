@@ -7,7 +7,7 @@ from accountManagementApp.models import UserProfile
 from collegeManagementApp.models import OrganizationMembership, Organization
 
 
-class HostApplicationForm(forms.ModelForm):    
+class HostApplicationForm(forms.ModelForm):
     EVENT_TYPE_CHOICES = [
         ("Academic", "Academic"),
         ("Adventure", "Adventure"),
@@ -51,7 +51,7 @@ class HostApplicationForm(forms.ModelForm):
             "eventHostedAnnually",
             "eventPopulation",
         ]
-        
+
     def __init__(self, *args, **kwargs):
         user = kwargs.pop("user", None)
         super().__init__(*args, **kwargs)
@@ -69,17 +69,14 @@ class EventForm(forms.ModelForm):
     show_guest_list = forms.BooleanField(required=False)
     couponsActivated = forms.BooleanField(required=False)
     forAllDisplay = forms.BooleanField(
-        required=False, 
-        initial=True,
-        label=_("Make event discoverable by all?")
+        required=False, initial=True, label=_("Make event discoverable by all?")
     )
     forCollegesDisplay = forms.BooleanField(
-        required=False, 
+        required=False,
         initial=False,
         label=_("Make event discoverable in colleges?"),
     )
 
-    
     STATE_CHOICES = [
         ("AL", "Alabama"),
         ("AK", "Alaska"),
@@ -132,7 +129,7 @@ class EventForm(forms.ModelForm):
         ("WI", "Wisconsin"),
         ("WY", "Wyoming"),
     ]
-    
+
     EVENT_TYPE_CHOICES = [
         ("Academic", "Academic"),
         ("Adventure", "Adventure"),
@@ -154,20 +151,19 @@ class EventForm(forms.ModelForm):
         ("Volunteer", "Volunteer"),
         ("Workshop", "Workshop"),
     ]
-    
+
     event_type = forms.ChoiceField(
         label=_("Decide what type of experience this is"),
         choices=[("", "Select an option")] + EVENT_TYPE_CHOICES,
         required=True,
     )
-    
-    
+
     state = forms.ChoiceField(
         label=_("State"),
         choices=[("", "Select an option")] + STATE_CHOICES,
         required=True,
     )
-    
+
     date = forms.DateField(
         label=_("Choose date"),
         required=False,
@@ -199,50 +195,61 @@ class EventForm(forms.ModelForm):
             "start_time",
             "end_time",
             "description",
-            "hide_address",
-            "couponsActivated",
-            "country",
+            
             "building_name",
             "street",
             "apt_suite_unit",
             "city",
             "state",
             "zip_code",
+            "country",
+            "hide_address",
+            
             "header_photo",
             "body_photo_one",
             "body_photo_two",
             "body_photo_three",
             "body_photo_four",
             "body_photo_five",
+            
+            "age_restriction",
+            "couponsActivated",
+            
+            
             "crew_discount",
             "minimum_crew_size",
             "crew_discount_percentage",
             "show_guest_list",
             "forAllDisplay",
-            'forCollegesDisplay',
+            "forCollegesDisplay",
         ]
 
         widgets = {
-            'address': forms.TextInput(attrs={
-                'placeholder': 'Enter full address',
-                'class': 'address-input'
-            }),
-            'building_name': forms.TextInput(attrs={
-                'placeholder': 'Building name (optional)',
-                'class': 'building-name-input'
-            }),
+            "address": forms.TextInput(
+                attrs={"placeholder": "Enter full address", "class": "address-input"}
+            ),
+            "building_name": forms.TextInput(
+                attrs={
+                    "placeholder": "Building name (optional)",
+                    "class": "building-name-input",
+                }
+            ),
         }
-        
+
     def __init__(self, *args, **kwargs):
         user = kwargs.pop("user", None)
         super().__init__(*args, **kwargs)
         if user:
             # Check if user is in a college
-            is_in_college = hasattr(user, 'user_profile') and user.user_profile.college is not None
-            self.fields['forCollegesDisplay'].disabled = not is_in_college
+            is_in_college = (
+                hasattr(user, "user_profile") and user.user_profile.college is not None
+            )
+            self.fields["forCollegesDisplay"].disabled = not is_in_college
             if not is_in_college:
-                self.fields['forCollegesDisplay'].help_text = _("You must be in a college to enable this option")
-        
+                self.fields["forCollegesDisplay"].help_text = _(
+                    "You must be in a college to enable this option"
+                )
+
 
 class EditEventForm(forms.ModelForm):
     AGE_RESTRICTION_CHOICES = [
@@ -255,7 +262,7 @@ class EditEventForm(forms.ModelForm):
         label=_("Age Restriction"),
         required=False,
         choices=AGE_RESTRICTION_CHOICES,
-        widget=forms.RadioSelect(attrs={'class': 'age-restriction-radio'}),
+        widget=forms.RadioSelect(attrs={"class": "age-restriction-radio"}),
     )
 
     date = forms.DateField(
@@ -278,30 +285,24 @@ class EditEventForm(forms.ModelForm):
         widget=forms.TimeInput(format="%H:%M", attrs={"type": "time"}),
         input_formats=["%H:%M"],
     )
-    
+
     header_photo = forms.ImageField(
-        required=False,
-        widget=forms.FileInput(attrs={'class': 'custom-file-input'})
+        required=False, widget=forms.FileInput(attrs={"class": "custom-file-input"})
     )
     body_photo_one = forms.ImageField(
-        required=False,
-        widget=forms.FileInput(attrs={'class': 'custom-file-input'})
+        required=False, widget=forms.FileInput(attrs={"class": "custom-file-input"})
     )
     body_photo_two = forms.ImageField(
-        required=False,
-        widget=forms.FileInput(attrs={'class': 'custom-file-input'})
+        required=False, widget=forms.FileInput(attrs={"class": "custom-file-input"})
     )
     body_photo_three = forms.ImageField(
-        required=False,
-        widget=forms.FileInput(attrs={'class': 'custom-file-input'})
+        required=False, widget=forms.FileInput(attrs={"class": "custom-file-input"})
     )
     body_photo_four = forms.ImageField(
-        required=False,
-        widget=forms.FileInput(attrs={'class': 'custom-file-input'})
+        required=False, widget=forms.FileInput(attrs={"class": "custom-file-input"})
     )
     body_photo_five = forms.ImageField(
-        required=False,
-        widget=forms.FileInput(attrs={'class': 'custom-file-input'})
+        required=False, widget=forms.FileInput(attrs={"class": "custom-file-input"})
     )
 
     class Meta:
@@ -313,49 +314,58 @@ class EditEventForm(forms.ModelForm):
             "start_time",
             "end_time",
             "description",
+            
             "building_name",
             "street",
-            "apt_suite_unit", 
+            "apt_suite_unit",
             "city",
             "state",
             "zip_code",
+            "country",
+            "hide_address",
+            
             "header_photo",
             "body_photo_one",
             "body_photo_two",
             "body_photo_three",
             "body_photo_four",
             "body_photo_five",
+            
             "age_restriction",
-            "hide_address",
-            "forAllDisplay",
-            "forCollegesDisplay",
-            "show_guest_list",
+            "couponsActivated",
+            
+            
             "crew_discount",
             "minimum_crew_size",
-            "crew_discount_percentage"
+            "crew_discount_percentage",
+            "show_guest_list",
+            "forAllDisplay",
+            "forCollegesDisplay",
         ]
 
     def __init__(self, *args, **kwargs):
         # Extract partial flag before calling parent's __init__
-        self.partial = kwargs.pop('partial', False)
+        self.partial = kwargs.pop("partial", False)
         super().__init__(*args, **kwargs)
-        
+
         # If this is a partial update, make all fields optional
         if self.partial:
             for field in self.fields.values():
                 field.required = False
-        
+
+
 class HostProfileForm(forms.ModelForm):
     class Meta:
         model = HostProfile
-        fields = [ "cashapp_id", "google_pay_id", "apple_pay_id"]
-        
+        fields = ["cashapp_id", "google_pay_id", "apple_pay_id"]
+
+
 class CouponCodeForm(forms.ModelForm):
     discount_percentage = forms.IntegerField(
-        min_value=1, 
+        min_value=1,
         max_value=100,
         label=_("Discount Percentage"),
-        widget=forms.NumberInput(attrs={"type": "number"})
+        widget=forms.NumberInput(attrs={"type": "number"}),
     )
     expiration_date = forms.DateField(
         label=_("Choose expiration date"),
@@ -363,7 +373,7 @@ class CouponCodeForm(forms.ModelForm):
         widget=forms.DateInput(format="%Y-%m-%d", attrs={"type": "date"}),
         input_formats=["%Y-%m-%d"],
     )
-        
+
     class Meta:
         model = CouponCode
-        fields = ['code', 'discount_percentage', 'expiration_date']
+        fields = ["code", "discount_percentage", "expiration_date"]

@@ -127,14 +127,14 @@ class Event(models.Model):
         ("Workshop", "Workshop"),
     ]
 
-    # Remove PRIVACY_CHOICES as it's no longer needed
-
     TICKET_CHOICES = [
         ("Paid", "Paid"),
         ("Free", "Free"),
     ]
 
-    COUNTRY_CHOICES = [("United States", "United States")]
+    COUNTRY_CHOICES = [
+        ("United States", "United States"),
+    ]
 
     STATE_CHOICES = [
         ("AL", "Alabama"),
@@ -221,7 +221,6 @@ class Event(models.Model):
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="events"
     )
 
-
     status = models.CharField(
         max_length=20,
         choices=STATUS_CHOICES,
@@ -254,16 +253,18 @@ class Event(models.Model):
     date = models.DateField(
         _("Date your experience"), null=False, blank=False, default=timezone.now
     )
+    
     start_time = models.TimeField(
         _("End time"), null=False, blank=False, default=timezone.now
     )
+    
     end_time = models.TimeField(
         _("Choose time"), null=False, blank=False, default=timezone.now
     )
+    
     description = models.TextField(
         _("Describe your event"), null=False, blank=False, default=""
     )
-    
 
     ticketing = models.CharField(
         _("What type of ticketing do you want?"),
@@ -320,11 +321,13 @@ class Event(models.Model):
     zip_code = models.CharField(
         _("ZIP code"), max_length=5, null=False, blank=False, default=""
     )
-    
-    hide_address = models.BooleanField(_("Hide address from users?"), blank=False, null=False, default=False)
+
+    hide_address = models.BooleanField(
+        _("Hide address from users?"), blank=False, null=False, default=False
+    )
 
     header_photo = models.FileField(
-        _("Add a cover photo"),
+        _("Preferred Cover Photo"),
         upload_to="event_images/header/",
         null=True,
         blank=False,
@@ -332,35 +335,35 @@ class Event(models.Model):
     )
 
     body_photo_one = models.FileField(
-        _("(Optional)"),
+        _("Additional photos (optional)"),
         upload_to="event_images/body/one/",
         null=True,
         blank=True,
         max_length=500,
     )
     body_photo_two = models.FileField(
-        _("(Optional)"),
+        _("Additional photos (optional)"),
         upload_to="event_images/body/two/",
         null=True,
         blank=True,
         max_length=500,
     )
     body_photo_three = models.FileField(
-        _("(Optional)"),
+        _("Additional photos (optional)"),
         upload_to="event_images/body/three",
         null=True,
         blank=True,
         max_length=500,
     )
     body_photo_four = models.FileField(
-        _("(Optional)"),
+        _("Additional photos (optional)"),
         upload_to="event_images/body/four/",
         null=True,
         blank=True,
         max_length=500,
     )
     body_photo_five = models.FileField(
-        _("(Optional)"),
+        _("Additional photos (optional)"),
         upload_to="event_images/body/five/",
         null=True,
         blank=True,
@@ -374,6 +377,7 @@ class Event(models.Model):
     )
 
     age_restriction = models.CharField(
+        _("Age Restrictions?"),
         max_length=5,
         choices=AGE_CHOICES,
         null=True,
@@ -389,7 +393,7 @@ class Event(models.Model):
     )
 
     minimum_crew_size = models.PositiveIntegerField(
-        _("Minimum crew size"),
+        _("Minimum Crew Size"),
         null=True,
         blank=True,
         default=None,
@@ -399,7 +403,7 @@ class Event(models.Model):
     )
 
     crew_discount_percentage = models.DecimalField(
-        _("Discounts percentage"),
+        _("Crew Discount Percentage"),
         max_digits=5,
         decimal_places=2,
         null=True,
@@ -407,39 +411,38 @@ class Event(models.Model):
         default=None,
         help_text=_("Percentage discount for crew purchases (e.g., 10.00 for 10%)"),
     )
-    
+
     guest_list = models.ManyToManyField(
         settings.AUTH_USER_MODEL,
         related_name="guest_list",
         blank=True,
         null=True,
     )
-    
+
     couponsActivated = models.BooleanField(
         _("Activate coupons?"),
         null=True,
         blank=True,
         default=False,
     )
-    
+
     show_guest_list = models.BooleanField(
-        _("Show guest list to attendees?"),
+        _("Make guest list public?"),
         null=True,
         blank=True,
         default=True,
     )
 
     forAllDisplay = models.BooleanField(
-        _("Make event discoverable by all?"),
-        null=False,
-        blank=False,
-        default=True)
-    
+        _("Make event discoverable by all?"), null=False, blank=False, default=True
+    )
+
     forCollegesDisplay = models.BooleanField(
         _("Make event discoverable in colleges?"),
         null=False,
         blank=False,
-        default=False)
+        default=False,
+    )
 
     created_at = models.DateTimeField(auto_now=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -452,13 +455,17 @@ class Event(models.Model):
 
     def save(self, *args, **kwargs):
         # Ensure forCollegesDisplay can only be true if user has a college
-        if self.forCollegesDisplay and (not self.host or not hasattr(self.host, 'user_profile') or not self.host.user_profile.college):
+        if self.forCollegesDisplay and (
+            not self.host
+            or not hasattr(self.host, "user_profile")
+            or not self.host.user_profile.college
+        ):
             self.forCollegesDisplay = False
-            
+
         # If event is displayed on college, ensure forCollegesDisplay is True
         if self.display_event_on_college and not self.forCollegesDisplay:
             self.forCollegesDisplay = True
-            
+
         super().save(*args, **kwargs)
 
 
@@ -560,32 +567,35 @@ class SharedEvent(models.Model):
             )
         ]
 
+
 class CouponCode(models.Model):
     coupon_id = models.UUIDField(
-        primary_key=True, default=uuid.uuid4, editable=False, unique=True, null=False, blank=False
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False,
+        unique=True,
+        null=False,
+        blank=False,
     )
     code = models.CharField(max_length=10, db_index=True)
     discount_percentage = models.IntegerField(
-        validators=[
-            MinValueValidator(0),
-            MaxValueValidator(100)
-        ]
+        validators=[MinValueValidator(0), MaxValueValidator(100)]
     )
     expiration_date = models.DateField(db_index=True)
     event = models.ForeignKey(
         "eventManagementApp.Event",
         on_delete=models.CASCADE,
-        related_name="event_coupons"
+        related_name="event_coupons",
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         permissions = [
-            ('can_use_coupon', 'Can apply coupon code'),
+            ("can_use_coupon", "Can apply coupon code"),
         ]
-        ordering = ['expiration_date', 'code']
-        unique_together = ['code', 'event']
+        ordering = ["expiration_date", "code"]
+        unique_together = ["code", "event"]
 
     def __str__(self):
         return self.code
