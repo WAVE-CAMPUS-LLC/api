@@ -138,15 +138,12 @@ def getHostStripeAccountLink(request):
         )
         
         # At this point we should have a valid stripe_account_id
-        stripe_account_link = stripe.AccountLink.create(
-            account=user_account.connectAccountID,
-            refresh_url="https://waveoncampus.com/explore/",
-            return_url="https://waveoncampus.com/explore/",
-            type="account_onboarding",
+        stripe_login_link = stripe.Account.create_login_link(
+            user_account.stripe_account_id
         )
 
         return Response(
-            {"url": stripe_account_link.url}, status=status.HTTP_200_OK
+            {"url": stripe_login_link.url}, status=status.HTTP_200_OK
         )
     except Exception as e:
         # Log the specific error for debugging
