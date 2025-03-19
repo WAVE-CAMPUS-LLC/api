@@ -22,6 +22,7 @@ from .forms import HostApplicationForm, EventForm, EditEventForm
 from eventTicketsApp.models import InviteEventOption, RSVPTicket, PaidFreeTicket, Ticket
 from eventTicketsApp.serializers import TicketSerializer
 from .serializers import EventSerializer
+from eventManagementApp.models import CouponCode, Event
 from eventTicketsApp.forms import InvitationForm, PaidFreeTicketForm
 from .models import EventType, HostApplication, Event, HostProfile
 from authenticationApp.models import CustomUser
@@ -77,6 +78,7 @@ def host_portal(request):
             {"error": "Invalid request"}, status=status.HTTP_400_BAD_REQUEST
         )
 
+
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def createPaidEvent(request):
@@ -99,8 +101,8 @@ def createPaidEvent(request):
         event.status = "live"
 
         host_profile, _ = HostProfile.objects.get_or_create(user=request.user)
-        
-        event.save()        
+
+        event.save()
 
         # Create Stripe product
         product = createHostProduct(event, host_profile.stripe_account_id)
@@ -119,32 +121,30 @@ def createPaidEvent(request):
             status=status.HTTP_201_CREATED,
         )
 
-    return Response(
-        {"errors": event_form.errors}, status=status.HTTP_400_BAD_REQUEST
-    )
+    return Response({"errors": event_form.errors}, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def getHostStripeAccountLink(request):
     user_account = get_object_or_404(CustomUser, username=request.user.username)
-    
+
     try:
         # Check if stripe account ID exists
         if not user_account.connectAccountID:
             return Response(
-            {"error": "You aren't a host yet. Host your first event to get started."},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
-        
+                {
+                    "error": "You aren't a host yet. Host your first event to get started."
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         # At this point we should have a valid stripe_account_id
         stripe_login_link = stripe.Account.create_login_link(
             user_account.connectAccountID
         )
 
-        return Response(
-            {"url": stripe_login_link.url}, status=status.HTTP_200_OK
-        )
+        return Response({"url": stripe_login_link.url}, status=status.HTTP_200_OK)
     except Exception as e:
         # Log the specific error for debugging
         print(f"Stripe error: {str(e)}")
@@ -152,6 +152,7 @@ def getHostStripeAccountLink(request):
             {"error": f"Failed to get Stripe account link: {str(e)}"},
             status=status.HTTP_400_BAD_REQUEST,
         )
+
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
@@ -173,10 +174,10 @@ def getEventFormFields(request):
 
         form_fields[field_name] = field_data
 
-    return Response({
-        "formFields": form_fields,
-        "placesKey": settings.PLACES_API_KEY
-    }, status=status.HTTP_200_OK)
+    return Response(
+        {"formFields": form_fields, "placesKey": settings.PLACES_API_KEY},
+        status=status.HTTP_200_OK,
+    )
 
 
 @api_view(["POST", "PATCH"])  # Add PATCH support
@@ -194,16 +195,16 @@ def editEvent(request, eventId):
 
     # Handle partial updates for PATCH requests
     partial = request.method == "PATCH"
-    
+
     edit_event_form = EditEventForm(data, files, instance=event, partial=partial)
-    
+
     if edit_event_form.is_valid():
         updated_event = edit_event_form.save()
-        
+
         # Get updated related data
         rsvp_list = RSVPTicket.objects.filter(event=updated_event).values()
         paid_free_tickets = PaidFreeTicket.objects.filter(event=updated_event).values()
-        
+
         # Format location data
         location = {
             "building_name": updated_event.building_name,
@@ -213,49 +214,131 @@ def editEvent(request, eventId):
             "state": updated_event.state,
             "zip_code": updated_event.zip_code,
             "country": updated_event.country,
-            "hide_address": updated_event.hide_address
+            "hide_address": updated_event.hide_address,
         }
-        
-        return Response({
-            "message": "Event updated successfully.",
-            "event": {
-                "id": str(updated_event.eventId),
-                "title": updated_event.title,
-                "description": updated_event.description,
-                "date": updated_event.date,
-                "location": location,
-                "host": {
-                    "id": str(host_profile.hostProfileId),  # Use hostProfileId and convert UUID to string
-                    "name": f"{host_profile.user.first_name} {host_profile.user.last_name}",  # Use direct name fields
+
+        return Response(
+            {
+                "message": "Event updated successfully.",
+                "event": {
+                    "id": str(updated_event.eventId),
+                    "title": updated_event.title,
+                    "description": updated_event.description,
+                    "date": updated_event.date,
+                    "location": location,
+                    "host": {
+                        "id": str(
+                            host_profile.hostProfileId
+                        ),  # Use hostProfileId and convert UUID to string
+                        "name": f"{host_profile.user.first_name} {host_profile.user.last_name}",  # Use direct name fields
+                    },
+                    "isInCollege": is_in_college,
+                    "rsvpList": list(rsvp_list),
+                    "paidFreeTickets": list(paid_free_tickets),
                 },
-                "isInCollege": is_in_college,
-                "rsvpList": list(rsvp_list),
-                "paidFreeTickets": list(paid_free_tickets),
-            }
-        }, status=status.HTTP_200_OK)
+            },
+            status=status.HTTP_200_OK,
+        )
     else:
-        return Response({
-            "errors": edit_event_form.errors,
-        }, status=status.HTTP_400_BAD_REQUEST)
+        return Response(
+            {
+                "errors": edit_event_form.errors,
+            },
+            status=status.HTTP_400_BAD_REQUEST,
+        )
 
 
-@api_view(["GET", "POST"])
+@api_view(["POST", "GET", "DELETE", "PATCH", "PUT", "OPTIONS"])
 @permission_classes([IsAuthenticated])
-def getHostEventTicketing(request, eventId):
+def getTicketsForEvent(request, eventId):
     event = get_object_or_404(Event, eventId=eventId)
-    try:
-        ticketingType = event.ticketing
-        
-        if ticketingType == "Paid":
-            ticket = PaidFreeTicket.objects.filter(event=event)
-        else:
-            ticket = RSVPTicket.objects.filter(event=event)
-            
-        return Response({
-            "ticketingType": ticketingType,
-            "tickets": TicketSerializer(ticket, many=True).data
-        }, status=status.HTTP_200_OK)
-    except:
-        return Response({
-            "error": "Failed to retrieve tickets."
-        }, status=status.HTTP_400_BAD_REQUEST)
+    paid_free_tickets = PaidFreeTicket.objects.filter(event=event)
+    rsvp_list = RSVPTicket.objects.filter(event=event)
+
+    return Response(
+        {
+            "paidFreeTickets": TicketSerializer(paid_free_tickets, many=True).data,
+            "rsvpList": TicketSerializer(rsvp_list, many=True).data,
+        },
+        status=status.HTTP_200_OK,
+    )
+
+
+@api_view(["POST", "GET", "DELETE", "PATCH", "PUT", "OPTIONS"])
+@permission_classes([IsAuthenticated])
+def getCouponsForEvent(request, eventId):
+    event = get_object_or_404(Event, eventId=eventId)
+    coupons = CouponCode.objects.filter(event=event)
+    if request.method == "POST":
+        coupon_code = request.data.get("coupon_code")
+        discount = request.data.get("discount")
+        expiry_date = request.data.get("expiry_date")
+
+        if not coupon_code or not discount or not expiry_date:
+            return Response(
+                {"error": "Missing required fields."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            expiry_date = datetime.strptime(expiry_date, "%Y-%m-%d").date()
+        except ValueError:
+            return Response(
+                {"error": "Invalid date format. Use YYYY-MM-DD."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        coupon = CouponCode.objects.create(
+            event=event,
+            code=coupon_code,
+            discount=discount,
+            expiry_date=expiry_date,
+        )
+        coupon.save()
+
+        return Response(
+            {
+                "message": "Coupon created successfully.",
+                "coupon": {
+                    "coupon_id": coupon.coupon_id,
+                    "code": coupon.code,
+                    "discount": coupon.discount,
+                    "expiry_date": coupon.expiry_date,
+                },
+            },
+            status=status.HTTP_201_CREATED,
+        )
+
+    elif request.method == "DELETE":
+        coupon_id = request.data.get("coupon_id")
+        if not coupon_id:
+            return Response(
+                {"error": "Missing coupon ID."}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            coupon = CouponCode.objects.get(coupon_id=coupon_id, event=event)
+            coupon.delete()
+            return Response(
+                {"message": "Coupon deleted successfully."},
+                status=status.HTTP_204_NO_CONTENT,
+            )
+        except CouponCode.DoesNotExist:
+            return Response(
+                {"error": "Coupon not found."}, status=status.HTTP_404_NOT_FOUND
+            )
+
+    return Response(
+        {
+            "coupons": [
+                {
+                    "id": coupon.id,
+                    "code": coupon.code,
+                    "discount": coupon.discount,
+                    "expiry_date": coupon.expiry_date,
+                }
+                for coupon in coupons
+            ]
+        },
+        status=status.HTTP_200_OK,
+    )
