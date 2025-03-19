@@ -615,10 +615,10 @@ def paymentSuccessful(request):
 
 def paymentFailed(request):
     from_mobile = request.GET.get("from_mobile")
-    if from_mobile:
-        # Use JsonResponse for mobile requests instead of DRF Response
-        return JsonResponse({"status": "paymentFailed"}, status=200)
-    return render(request, "eventTicketsApp/checkoutSession/paymentFailed.html")
+    # if from_mobile:
+    #     # Use JsonResponse for mobile requests instead of DRF Response
+    #     return JsonResponse({"status": "paymentFailed"}, status=200)
+    return render(request, "eventTicketsApp/checkoutSession/paymentFailed.html", {"fromMobile": True})
 
 
 @csrf_exempt

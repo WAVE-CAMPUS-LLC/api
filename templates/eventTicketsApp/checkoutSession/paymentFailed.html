@@ -8,6 +8,10 @@
 {% include "partials/nav-footer/nav/main_nav.html" %}
 {% endblock header %}
 
+{% block script %}
+<script type="text/javascript" src="{% static "scripts/eventTicketsApp/checkout/paymentFailed.js" %}" defer></script>
+{% endblock script %}
+
 {% block title %}Payment Failed{% endblock title %}
 
 {% block body %}
@@ -20,7 +24,12 @@
             </div>
             <div class="flex flex-col gap-1 font-Wanted-Variable items-center justify-center">
                 <p>Your purchase failed!</p>
+                {% if fromMobile %}
+                <h1 class="font-Wanted-ExtraBold text-[red] text-3xl">This page will redirect you back to the app</h1>
+                <input type="hidden" id="fromMobile" value="{{ fromMobile }}"/>
+                {% else %}
                 <p>Please check your payment method.</p>
+                {% endif %}
             </div>
         </div>
     </div>
