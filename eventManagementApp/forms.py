@@ -65,9 +65,9 @@ class HostApplicationForm(forms.ModelForm):
 
 
 class EventForm(forms.ModelForm):
-    crew_discount = forms.BooleanField(required=False)
-    show_guest_list = forms.BooleanField(required=False)
-    couponsActivated = forms.BooleanField(required=False)
+    crew_discount = forms.BooleanField(required=False, label=_("Do you want to offer discounts for crew purchases?"))
+    show_guest_list = forms.BooleanField(required=False, label=_("Make guest list public?"),)
+    couponsActivated = forms.BooleanField(required=False, label=_("Activate coupons?"))
     forAllDisplay = forms.BooleanField(
         required=False, initial=True, label=_("Make event discoverable by all?")
     )
