@@ -14,6 +14,7 @@ from eventTicketsApp.models import Ticket
 from stripeManagementApp.customerSetup import CustomerAccount, ConnectAccount
 from stripeManagementApp.getEarnings import GetEarnings
 from .serializers import UserProfileSerializer
+from adminDashboardApp.serializers import CollegeSerializer
 from authenticationApp.serializers import CustomUserSerializer
 from eventManagementApp.serializers import EventSerializer
 from eventManagementApp.models import Event
@@ -173,6 +174,18 @@ def favourited_events_api(request):
     
     return Response(favourite_events_serialized.data, status=status.HTTP_200_OK)
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_user_college(request):
+    user = request.user
+    profile = get_object_or_404(UserProfile, user=user)
+    
+    if profile.college:
+        college_data = CollegeSerializer(profile.college).data
+    else:
+        college_data = None
+    
+    return Response(college_data, status=status.HTTP_200_OK)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
