@@ -251,7 +251,15 @@ def editEvent(request, eventId):
 @api_view(["POST", "GET", "DELETE", "PATCH", "PUT", "OPTIONS"])
 @permission_classes([IsAuthenticated])
 def getTicketsForEvent(request, eventId):
+    # First, get the event and check if the requesting user is the host
     event = get_object_or_404(Event, eventId=eventId)
+    
+    # Check if the requesting user is the host of the event
+    if event.host != request.user:
+        return Response(
+            {"error": "You don't have permission to access these tickets. Only the event host can view ticket information."},
+            status=status.HTTP_403_FORBIDDEN
+        )
     
     # Get ticket types available for the event
     paid_free_tickets = PaidFreeTicket.objects.filter(event=event)
