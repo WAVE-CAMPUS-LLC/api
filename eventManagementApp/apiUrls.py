@@ -27,6 +27,6 @@ urlpatterns = [
         getTicketsForEvent,
         name="getHostEventTicketing",
     ),
-    path("getTicketsForEvent/<uuid:", getTicketsForEvent, name="getTicketsForEvent"),
-    path("getCouponsForEvent/", getCouponsForEvent, name="getCouponsForEvent"),
+    path("getTicketsForEvent/<uuid:eventId>/", getTicketsForEvent, name="getTicketsForEvent"),
+    path("getCouponsForEvent/<uuid:eventId>/", getCouponsForEvent, name="getCouponsForEvent"),
 ]
