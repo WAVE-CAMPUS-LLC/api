@@ -24,7 +24,7 @@ urlpatterns = [
     # Event Ticketing
     path(
         "getHostEventTicketing/<uuid:eventId>/",
-        getHostEventTicketing,
+        getTicketsForEvent,
         name="getHostEventTicketing",
     ),
     path("getTicketsForEvent/<uuid:", getTicketsForEvent, name="getTicketsForEvent"),
