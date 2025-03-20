@@ -252,13 +252,24 @@ def editEvent(request, eventId):
 @permission_classes([IsAuthenticated])
 def getTicketsForEvent(request, eventId):
     event = get_object_or_404(Event, eventId=eventId)
+    
+    # Get ticket types available for the event
     paid_free_tickets = PaidFreeTicket.objects.filter(event=event)
+    
+    # Get RSVP tickets for the event
     rsvp_list = RSVPTicket.objects.filter(event=event)
+    
+    # Get actual purchased tickets for the event
+    purchased_tickets = Ticket.objects.filter(event=event)
+
+    # Import the serializers from eventTicketsApp
+    from eventTicketsApp.serializers import PaidFreeTicketSerializer, RSVPTicketSerializer, TicketSerializer
 
     return Response(
         {
-            "paidFreeTickets": TicketSerializer(paid_free_tickets, many=True).data,
-            "rsvpList": TicketSerializer(rsvp_list, many=True).data,
+            "paidFreeTickets": PaidFreeTicketSerializer(paid_free_tickets, many=True).data,
+            "rsvpList": RSVPTicketSerializer(rsvp_list, many=True).data,
+            "purchasedTickets": TicketSerializer(purchased_tickets, many=True).data,
         },
         status=status.HTTP_200_OK,
     )

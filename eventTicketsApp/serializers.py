@@ -1,10 +1,13 @@
 from rest_framework import serializers
-from .models import RSVPTicket, Ticket
+from .models import RSVPTicket, Ticket, PaidFreeTicket
 from eventManagementApp.models import Event
 from eventManagementApp.serializers import EventSerializer
 from django.core.exceptions import ValidationError
+import uuid
 
 class RSVPTicketSerializer(serializers.ModelSerializer):
+    event = EventSerializer(read_only=True)
+    
     class Meta:
         model = RSVPTicket
         fields = "__all__" 
@@ -35,6 +38,18 @@ class RSVPTicketSerializer(serializers.ModelSerializer):
         instance.display_on_guestlist = validated_data.get('display_on_guestlist', instance.display_on_guestlist)
         instance.save()
         return instance
+
+
+class PaidFreeTicketSerializer(serializers.ModelSerializer):
+    event = EventSerializer(read_only=True)
+    available_tickets = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = PaidFreeTicket
+        fields = "__all__"
+    
+    def get_available_tickets(self, obj):
+        return obj.available_tickets()
     
     
 class TicketSerializer(serializers.ModelSerializer):
