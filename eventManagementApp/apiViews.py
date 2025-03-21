@@ -250,6 +250,7 @@ def editEvent(request, eventId):
         return Response(
             {
                 "errors": edit_event_form.errors,
+                "message": "Failed to update event.",
             },
             status=status.HTTP_400_BAD_REQUEST,
         )
@@ -479,7 +480,13 @@ def getCouponsForEvent(request, eventId):
             )
 
         try:
-            coupon = CouponCode.objects.get(coupon_id=coupon_id, event=event)
+            # Try different ways to find the coupon - by id or by coupon_id
+            try:
+                coupon = CouponCode.objects.get(id=coupon_id, event=event)
+            except (CouponCode.DoesNotExist, ValueError):
+                # If id doesn't work, try with coupon_id as a string field
+                coupon = CouponCode.objects.get(code=coupon_id, event=event)
+            
             coupon.delete()
             return Response(
                 {"message": "Coupon deleted successfully."},
@@ -488,6 +495,11 @@ def getCouponsForEvent(request, eventId):
         except CouponCode.DoesNotExist:
             return Response(
                 {"error": "Coupon not found."}, status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            return Response(
+                {"error": f"Failed to delete coupon: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
     return Response(
