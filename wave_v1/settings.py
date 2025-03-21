@@ -219,7 +219,7 @@ MIDDLEWARE = [
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.BrokenLinkEmailsMiddleware",
     "django.middleware.common.CommonMiddleware",
-    "middleware.keep_alive.KeepAliveMiddleware",
+    "wave_v1.middleware.keep_alive.KeepAliveMiddleware",  # Updated path
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
