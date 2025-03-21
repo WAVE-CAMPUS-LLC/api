@@ -15,6 +15,7 @@ from eventTicketsApp.models import RSVPTicket, PaidFreeTicket
 from eventTicketsApp.views import generateTicket
 from socialApp.models import Crew
 from .forms import RSVPForm
+from eventManagementApp.models import CouponCode, Event
 from authenticationApp.models import CustomUser
 from eventManagementApp.serializers import EventSerializer
 from eventTicketsApp.serializers import RSVPTicketSerializer
@@ -265,6 +266,29 @@ def event_details(request, eventId):
                 {"message": "Redirecting to crew checkout."}, 
                 status=status.HTTP_200_OK
             )
+            
+        elif action == "applyCouponCode":
+            try:
+                couponCode = request.data.get("couponCode")
+                coupon = get_object_or_404(CouponCode, code=couponCode)
+            except coupon.DoesNotExist:
+                return Response({"message": "Invalid coupon code."}, status=status.HTTP_400_BAD_REQUEST)
+            
+            if coupon.is_valid():
+                # Return success response with discount information
+                discount_data = {
+                    "status": "success", 
+                    "message": "Valid coupon code applied successfully"
+                }
+                
+                # Only add these fields if they exist
+                if hasattr(coupon, 'discount_percentage'):
+                    discount_data["discount_percentage"] = coupon.discount_percentage
+                    
+                return Response(discount_data, status=status.HTTP_200_OK)
+            else:
+                return Response({"message": "Coupon is not valid anymore."}, status=status.HTTP_400_BAD_REQUEST)
+            
 
     # Prepare response data
     response_data = {

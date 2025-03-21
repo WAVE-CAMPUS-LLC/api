@@ -20,13 +20,19 @@ from accountManagementApp.models import UserProfile
 from collegeManagementApp.models import Organization, OrganizationMembership
 from .forms import HostApplicationForm, EventForm, EditEventForm
 from eventTicketsApp.models import InviteEventOption, RSVPTicket, PaidFreeTicket, Ticket
-from eventTicketsApp.serializers import TicketSerializer
+from eventTicketsApp.serializers import (
+    TicketSerializer,
+    PaidFreeTicketSerializer,
+    RSVPTicketSerializer,
+)
 from .serializers import EventSerializer
 from eventManagementApp.models import CouponCode, Event
 from eventTicketsApp.forms import InvitationForm, PaidFreeTicketForm
 from .models import EventType, HostApplication, Event, HostProfile
 from authenticationApp.models import CustomUser
+from eventTicketsApp.models import RSVPTicket, PaidFreeTicket
 from stripeManagementApp.createHostProduct import createHostProduct
+from stripeManagementApp.createHostProductPrice import createProductPriceType
 
 
 @api_view(["GET", "POST"])
@@ -248,36 +254,176 @@ def editEvent(request, eventId):
         )
 
 
+
+# Ticketing and RSVP Management
 @api_view(["POST", "GET", "DELETE", "PATCH", "PUT", "OPTIONS"])
 @permission_classes([IsAuthenticated])
-def getTicketsForEvent(request, eventId):
+def getRSVPTicketsForEvent(request, eventId):
     # First, get the event and check if the requesting user is the host
     event = get_object_or_404(Event, eventId=eventId)
-    
+
     # Check if the requesting user is the host of the event
     if event.host != request.user:
         return Response(
-            {"error": "You don't have permission to access these tickets. Only the event host can view ticket information."},
-            status=status.HTTP_403_FORBIDDEN
+            {
+                "error": "You don't have permission to access these tickets. Only the event host can view ticket information."
+            },
+            status=status.HTTP_403_FORBIDDEN,
         )
-    
-    # Get ticket types available for the event
-    paid_free_tickets = PaidFreeTicket.objects.filter(event=event)
-    
+
     # Get RSVP tickets for the event
     rsvp_list = RSVPTicket.objects.filter(event=event)
-    
+
     # Get actual purchased tickets for the event
     purchased_tickets = Ticket.objects.filter(event=event)
 
-    # Import the serializers from eventTicketsApp
-    from eventTicketsApp.serializers import PaidFreeTicketSerializer, RSVPTicketSerializer, TicketSerializer
-
     return Response(
         {
-            "paidFreeTickets": PaidFreeTicketSerializer(paid_free_tickets, many=True).data,
             "rsvpList": RSVPTicketSerializer(rsvp_list, many=True).data,
             "purchasedTickets": TicketSerializer(purchased_tickets, many=True).data,
+        },
+        status=status.HTTP_200_OK,
+    )
+
+
+@api_view(["GET", "POST", "DELETE"])
+@permission_classes([IsAuthenticated])
+def getPaidFreeTicketsForEvent(request, eventId):
+    """
+    GET: Retrieve all paid/free tickets for an event
+    POST: Create a new ticket for an event
+    DELETE: Delete a specific ticket
+
+    Requires authentication. User must be the event host.
+    """
+    event = get_object_or_404(Event, eventId=eventId)
+
+    # Check if the requesting user is the host of the event
+    if event.host != request.user:
+        return Response(
+            {"error": "You don't have permission to manage tickets for this event."},
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
+    # Get ticket types available for the event
+    paid_free_tickets = PaidFreeTicket.objects.filter(event=event)
+
+    # Get actual purchased tickets for the event
+    purchased_tickets = Ticket.objects.filter(event=event)
+
+    if request.method == "DELETE":
+        ticket_id = request.data.get("ticket_id")
+        if not ticket_id:
+            return Response(
+                {"error": "Missing ticket ID."}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            ticket = PaidFreeTicket.objects.get(ticket_id=ticket_id, event=event)
+            ticket.delete()
+            return Response(
+                {"message": "Ticket deleted successfully."},
+                status=status.HTTP_204_NO_CONTENT,
+            )
+        except PaidFreeTicket.DoesNotExist:
+            return Response(
+                {"error": "Ticket not found."}, status=status.HTTP_404_NOT_FOUND
+            )
+
+    elif request.method == "POST":
+        action = request.data.get("eventAction")
+
+        if action != "createTicket":
+            return Response(
+                {"error": "Invalid action. Use 'createTicket' to create a new ticket."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            hostProfile = HostProfile.objects.get(user=event.host)
+        except HostProfile.DoesNotExist:
+            return Response(
+                {"error": "Host profile not found."}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        paidFreeForm = PaidFreeTicketForm(request.data)
+        if paidFreeForm.is_valid():
+            ticket = paidFreeForm.save(commit=False)
+            ticket.event = event
+            ticket.save()
+
+            try:
+                eventStripeId = event.stripeProductId
+                if not eventStripeId:
+                    return Response(
+                        {"error": "Event does not have a valid Stripe product ID."},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+
+                stripePrice = createProductPriceType(
+                    eventStripeId,
+                    ticket.ticket_price,
+                    hostProfile.stripe_account_id,
+                    ticket.ticket_quantity,
+                )
+
+                ticket.stripePriceId = stripePrice.id
+                ticket.save()
+
+                return Response(
+                    {
+                        "message": "Ticket created successfully.",
+                        "ticket": PaidFreeTicketSerializer(ticket).data,
+                    },
+                    status=status.HTTP_201_CREATED,
+                )
+            except Exception as e:
+                # Rollback the ticket creation if Stripe integration fails
+                ticket.delete()
+                return Response(
+                    {"error": f"Failed to create Stripe price: {str(e)}"},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                )
+        else:
+            return Response(
+                {"errors": paidFreeForm.errors}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+    # Default GET response
+    return Response(
+        {
+            "paidFreeTickets": PaidFreeTicketSerializer(
+                paid_free_tickets, many=True
+            ).data,
+            "purchasedTickets": TicketSerializer(purchased_tickets, many=True).data,
+        },
+        status=status.HTTP_200_OK,
+    )
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def getPaidTicketFormFields(request):
+    form = PaidFreeTicketForm()
+    form_fields = {}
+
+    for field_name, field in form.fields.items():
+        field_data = {
+            "type": field.__class__.__name__,  # Get field type
+            "required": field.required,
+            "label": field.label,
+            "help_text": field.help_text,
+        }
+
+        # Include choices for ChoiceFields
+        if isinstance(field, forms.ChoiceField):
+            field_data["choices"] = field.choices
+
+        form_fields[field_name] = field_data
+    return Response(
+        {
+            "formFields": form_fields,
+            "placesKey": settings.PLACES_API_KEY,
         },
         status=status.HTTP_200_OK,
     )

@@ -5,9 +5,9 @@ from .apiViews import (
     host_portal,
     editEvent,
     getHostStripeAccountLink,
-    getTicketsForEvent,
     getCouponsForEvent
 )
+from . import apiViews
 
 app_name = "eventManagementAPI"
 
@@ -22,11 +22,8 @@ urlpatterns = [
         name="get_host_stripe_account_link",
     ),
     # Event Ticketing
-    path(
-        "getHostEventTicketing/<uuid:eventId>/",
-        getTicketsForEvent,
-        name="getHostEventTicketing",
-    ),
-    path("getTicketsForEvent/<uuid:eventId>/", getTicketsForEvent, name="getTicketsForEvent"),
+    
+    path("getPaidTicketFormFields/", apiViews.getPaidTicketFormFields, name="getPaidTicketFormFields"),
+    path("getPaidFreeTicketsForEvent/<uuid:eventId>/", apiViews.getPaidFreeTicketsForEvent, name="getPaidFreeTicketsForEvent"),
     path("getCouponsForEvent/<uuid:eventId>/", getCouponsForEvent, name="getCouponsForEvent"),
 ]
