@@ -68,6 +68,7 @@ if ENVIORNMENT == "development":
                 "sslmode": "require",
                 "options": "-c timezone=UTC",
             },
+            "CONN_MAX_AGE": 1200,  # Keep the connection open for 10 minutes
         }
     }
     print("Development Environment")
@@ -218,6 +219,7 @@ MIDDLEWARE = [
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.BrokenLinkEmailsMiddleware",
     "django.middleware.common.CommonMiddleware",
+    "middleware.keep_alive.KeepAliveMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",

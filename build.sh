@@ -24,4 +24,4 @@ python manage.py migrate
 
 # Step 5: Start the application server
 echo "Starting the application server..."
-gunicorn wave_v1.wsgi:application
+gunicorn wave_v1.wsgi:application --workers 3 --timeout 30 --keep-alive 5
