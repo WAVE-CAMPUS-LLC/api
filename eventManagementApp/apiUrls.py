@@ -26,4 +26,5 @@ urlpatterns = [
     path("getPaidTicketFormFields/", apiViews.getPaidTicketFormFields, name="getPaidTicketFormFields"),
     path("getPaidFreeTicketsForEvent/<uuid:eventId>/", apiViews.getPaidFreeTicketsForEvent, name="getPaidFreeTicketsForEvent"),
     path("getCouponsForEvent/<uuid:eventId>/", getCouponsForEvent, name="getCouponsForEvent"),
+    path("get_rsvp_list_for_event/<uuid:eventId>/", apiViews.getRSVPTicketsForEvent, name="get_rsvp_list_for_event"),
 ]

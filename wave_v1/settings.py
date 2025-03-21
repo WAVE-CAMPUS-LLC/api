@@ -340,32 +340,61 @@ AWS_S3_OBJECT_PARAMETERS = {
 AWS_QUERYSTRING_AUTH = False
 AWS_S3_VERIFY = True
 
-STORAGES = {
-    "default": {
-        "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
-    },
-    "staticfiles": {
-        "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
-    },
-}
+# Check if we're in development or if R2 credentials are missing
+if ENVIORNMENT == "development" or not all([
+    AWS_S3_ACCESS_KEY_ID, 
+    AWS_S3_SECRET_ACCESS_KEY,
+    AWS_STORAGE_BUCKET_NAME
+]):
+    print("Using local file storage for development or due to missing R2 credentials")
+    
+    # Configure local file storage
+    STATIC_URL = "/static/"
+    STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+    MEDIA_URL = "/media/"
+    MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+    
+    # Use Django's built-in storage backends
+    STORAGES = {
+        "default": {
+            "BACKEND": "django.core.files.storage.FileSystemStorage",
+        },
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        },
+    }
+    
+    # Create the MEDIA_ROOT directory if it doesn't exist
+    os.makedirs(MEDIA_ROOT, exist_ok=True)
+    os.makedirs(STATIC_ROOT, exist_ok=True)
+else:
+    print(f"Using R2 storage with bucket: {AWS_STORAGE_BUCKET_NAME}")
+    
+    # Use R2/S3 storage
+    STORAGES = {
+        "default": {
+            "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+        },
+        "staticfiles": {
+            "BACKEND": "storages.backends.s3boto3.S3StaticStorage",
+        },
+    }
+    
+    # Static files and media URL configuration
+    STATIC_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/static/" if AWS_S3_CUSTOM_DOMAIN else "/static/"
+    STATICFILES_STORAGE = "storages.backends.s3boto3.S3StaticStorage"
+    MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/" if AWS_S3_CUSTOM_DOMAIN else "/media/"
+    DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
+    
+    # Additional S3 configuration
+    AWS_S3_MAX_CONCURRENCY = 2
+    AWS_MAX_ATTEMPTS = 10
+    AWS_S3_USE_THREADS = True
+    AWS_S3_FILE_OVERWRITE = False
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.0/howto/static-files/
-STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
-
-# Static files configuration
-STATIC_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/static/"
-STATICFILES_STORAGE = "storages.backends.s3boto3.S3StaticStorage"
-
-# Static files and media URL configuration
-MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/"
-DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
-
-AWS_S3_MAX_CONCURRENCY = 2
-AWS_MAX_ATTEMPTS=10
-AWS_S3_USE_THREADS = True
-AWS_S3_FILE_OVERWRITE = False
-
+# Ensure we don't have the old STORAGES configs that might interfere
+if 'STATICFILES_DIRS' not in locals():
+    STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
 
 # Supabase Configurations
 SUPABASE_URL = os.getenv("SUPABASE_URL")

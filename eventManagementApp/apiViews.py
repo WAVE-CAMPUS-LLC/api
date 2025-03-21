@@ -273,12 +273,56 @@ def getRSVPTicketsForEvent(request, eventId):
             status=status.HTTP_403_FORBIDDEN,
         )
 
+    # Handle DELETE request for RSVP tickets
+    if request.method == "DELETE":
+        ticket_id = request.data.get("ticket_id")
+        if not ticket_id:
+            return Response(
+                {"error": "Missing ticket ID."}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            # First try to find and delete the RSVP ticket
+            rsvp_ticket = RSVPTicket.objects.get(id=ticket_id, event=event)
+            
+            # Also find and delete any associated actual ticket with QR code
+            try:
+                tickets_to_delete = Ticket.objects.filter(
+                    event=event, 
+                    user=rsvp_ticket.user,
+                    email=rsvp_ticket.email
+                )
+                deleted_count = tickets_to_delete.count()
+                tickets_to_delete.delete()
+            except Exception as e:
+                # Continue even if no associated tickets found
+                deleted_count = 0
+            
+            # Delete the RSVP ticket itself
+            rsvp_ticket.delete()
+            
+            return Response(
+                {
+                    "message": f"RSVP deleted successfully with {deleted_count} associated ticket(s)."
+                },
+                status=status.HTTP_200_OK
+            )
+        except RSVPTicket.DoesNotExist:
+            return Response(
+                {"error": "RSVP ticket not found."}, status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            return Response(
+                {"error": f"Failed to delete RSVP: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
     # Get RSVP tickets for the event
     rsvp_list = RSVPTicket.objects.filter(event=event)
 
     # Get actual purchased tickets for the event
     purchased_tickets = Ticket.objects.filter(event=event)
-
+    
     return Response(
         {
             "rsvpList": RSVPTicketSerializer(rsvp_list, many=True).data,
