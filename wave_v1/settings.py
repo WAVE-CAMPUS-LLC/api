@@ -361,11 +361,56 @@ STATICFILES_STORAGE = "storages.backends.s3boto3.S3StaticStorage"
 MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/"
 DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
 
-AWS_S3_MAX_CONCURRENCY = 2
-AWS_MAX_ATTEMPTS=10
+AWS_S3_MAX_CONCURRENCY = 1  # Reduce concurrency to avoid overwhelming the service
+AWS_MAX_ATTEMPTS = 15  # Increase max attempts for retries
 AWS_S3_USE_THREADS = True
 AWS_S3_FILE_OVERWRITE = False
+AWS_S3_RETRY_MODE = 'standard'  # Use standard retry mode
+AWS_S3_SIGNATURE_VERSION = 's3v4'  # Ensure using the latest signature version
 
+# Configure boto3 retry settings
+# These settings will help with temporary failures
+AWS_BOTO3_RETRY_CONFIG = {
+    'max_attempts': 15,
+    'mode': 'standard',
+}
+
+# Define a fallback storage if cloudfront/R2 fails
+class FallbackStorage:
+    def __init__(self):
+        from django.core.files.storage import FileSystemStorage
+        from storages.backends.s3boto3 import S3Boto3Storage
+        self.s3boto3_storage = S3Boto3Storage()
+        self.filesystem_storage = FileSystemStorage()
+        
+    def _handle_s3_operation(self, method_name, *args, **kwargs):
+        try:
+            method = getattr(self.s3boto3_storage, method_name)
+            return method(*args, **kwargs)
+        except Exception as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"S3 operation failed: {method_name}, error: {str(e)}")
+            
+            # Fall back to filesystem storage for critical operations
+            if hasattr(self.filesystem_storage, method_name):
+                fallback_method = getattr(self.filesystem_storage, method_name)
+                return fallback_method(*args, **kwargs)
+            raise
+    
+    def __getattr__(self, name):
+        return lambda *args, **kwargs: self._handle_s3_operation(name, *args, **kwargs)
+
+# Conditionally use the fallback storage in production
+if not DEBUG:
+    STORAGES = {
+        "default": {
+            "BACKEND": "wave_v1.settings.FallbackStorage",
+        },
+        "staticfiles": {
+            "BACKEND": "wave_v1.settings.FallbackStorage",
+        },
+    }
 
 # Supabase Configurations
 SUPABASE_URL = os.getenv("SUPABASE_URL")
