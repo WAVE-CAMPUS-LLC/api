@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from .models import RSVPTicket, Ticket, PaidFreeTicket
-from eventManagementApp.models import Event
+from eventManagementApp.models import Event, CouponCode
 from eventManagementApp.serializers import EventSerializer
 from django.core.exceptions import ValidationError
 import uuid
@@ -57,4 +57,12 @@ class TicketSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Ticket
+        fields = "__all__"
+        
+        
+class CouponSerializer(serializers.ModelSerializer):
+    event = EventSerializer()
+    
+    class Meta:
+        model = CouponCode
         fields = "__all__"

@@ -24,6 +24,7 @@ from eventTicketsApp.serializers import (
     TicketSerializer,
     PaidFreeTicketSerializer,
     RSVPTicketSerializer,
+    CouponSerializer,
 )
 from .serializers import EventSerializer
 from eventManagementApp.models import CouponCode, Event
@@ -434,6 +435,7 @@ def getPaidTicketFormFields(request):
 def getCouponsForEvent(request, eventId):
     event = get_object_or_404(Event, eventId=eventId)
     coupons = CouponCode.objects.filter(event=event)
+    
     if request.method == "POST":
         coupon_code = request.data.get("coupon_code")
         discount = request.data.get("discount")
@@ -464,12 +466,7 @@ def getCouponsForEvent(request, eventId):
         return Response(
             {
                 "message": "Coupon created successfully.",
-                "coupon": {
-                    "coupon_id": coupon.coupon_id,
-                    "code": coupon.code,
-                    "discount": coupon.discount,
-                    "expiry_date": coupon.expiry_date,
-                },
+                "coupon": CouponSerializer(coupon).data,
             },
             status=status.HTTP_201_CREATED,
         )
@@ -495,15 +492,7 @@ def getCouponsForEvent(request, eventId):
 
     return Response(
         {
-            "coupons": [
-                {
-                    "id": coupon.id,
-                    "code": coupon.code,
-                    "discount": coupon.discount,
-                    "expiry_date": coupon.expiry_date,
-                }
-                for coupon in coupons
-            ]
+            "coupons": CouponSerializer(coupons, many=True).data
         },
         status=status.HTTP_200_OK,
     )
