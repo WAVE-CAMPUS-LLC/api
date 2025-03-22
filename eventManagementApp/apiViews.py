@@ -559,38 +559,52 @@ def getCouponsForEvent(request, eventId):
     
     if request.method == "POST":
         coupon_code = request.data.get("coupon_code")
-        discount = request.data.get("discount")
+        discount_percentage = request.data.get("discount")
         expiry_date = request.data.get("expiry_date")
 
-        if not coupon_code or not discount or not expiry_date:
+        if not coupon_code or not discount_percentage:
             return Response(
-                {"error": "Missing required fields."},
+                {"error": "Missing required fields: coupon code and discount percentage are required."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        # Check if expiry_date was provided and parse it
+        expiry_date_obj = None
+        if expiry_date:
+            try:
+                expiry_date_obj = datetime.strptime(expiry_date, "%Y-%m-%d").date()
+            except ValueError:
+                return Response(
+                    {"error": "Invalid date format. Use YYYY-MM-DD."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+        # Create the coupon with the correct field names that match the model
+        # The field names in the model appear to be 'code' and 'discount_percentage'
         try:
-            expiry_date = datetime.strptime(expiry_date, "%Y-%m-%d").date()
-        except ValueError:
-            return Response(
-                {"error": "Invalid date format. Use YYYY-MM-DD."},
-                status=status.HTTP_400_BAD_REQUEST,
+            coupon = CouponCode.objects.create(
+                event=event,
+                code=coupon_code,
+                discount_percentage=discount_percentage,  # Using the correct field name
             )
+            
+            # Only set expiry_date if it was provided and valid
+            if expiry_date_obj:
+                coupon.expiration_date = expiry_date_obj  # Using the correct field name
+                coupon.save()
 
-        coupon = CouponCode.objects.create(
-            event=event,
-            code=coupon_code,
-            discount=discount,
-            expiry_date=expiry_date,
-        )
-        coupon.save()
-
-        return Response(
-            {
-                "message": "Coupon created successfully.",
-                "coupon": CouponSerializer(coupon).data,
-            },
-            status=status.HTTP_201_CREATED,
-        )
+            return Response(
+                {
+                    "message": "Coupon created successfully.",
+                    "coupon": CouponSerializer(coupon).data,
+                },
+                status=status.HTTP_201_CREATED,
+            )
+        except Exception as e:
+            return Response(
+                {"error": f"Failed to create coupon: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
     elif request.method == "DELETE":
         coupon_id = request.data.get("coupon_id")
