@@ -287,15 +287,30 @@ def getRSVPTicketsForEvent(request, eventId):
             
             # Also find and delete any associated actual ticket with QR code
             try:
+                # More specific matching criteria to find the correct associated tickets
+                # Using a combination of identifiers that would uniquely match the RSVP to tickets
                 tickets_to_delete = Ticket.objects.filter(
-                    event=event, 
-                    user=rsvp_ticket.user,
+                    event=event,
                     email=rsvp_ticket.email
                 )
+                
+                # If user is available, further refine the query
+                if rsvp_ticket.user:
+                    tickets_to_delete = tickets_to_delete.filter(user=rsvp_ticket.user)
+                
+                # Optionally add more matching criteria if available in your models
+                # For example, if both models have a name field:
+                if hasattr(rsvp_ticket, 'name') and rsvp_ticket.name:
+                    tickets_to_delete = tickets_to_delete.filter(name=rsvp_ticket.name)
+                
                 deleted_count = tickets_to_delete.count()
                 tickets_to_delete.delete()
+                
+                # Log the deletion for debugging purposes
+                print(f"Deleted {deleted_count} tickets associated with RSVP {ticket_id}")
             except Exception as e:
                 # Continue even if no associated tickets found
+                print(f"Error while deleting associated tickets: {str(e)}")
                 deleted_count = 0
             
             # Delete the RSVP ticket itself

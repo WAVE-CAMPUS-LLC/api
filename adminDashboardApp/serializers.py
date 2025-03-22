@@ -6,6 +6,7 @@ class CollegeSerializer(serializers.ModelSerializer):
     class Meta:
         model = College
         fields = [
+            "collegeId",
             "name",
             "address",
             "city",
