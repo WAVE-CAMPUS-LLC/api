@@ -5,6 +5,9 @@ import stripe
 from django import forms
 from django.conf import settings
 from rest_framework.views import APIView
+from django.urls import reverse
+from django.http import JsonResponse
+from django.shortcuts import render
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
@@ -88,10 +91,11 @@ def host_portal(request):
         )
 
 
-@api_view(["POST"])
+@api_view(["POST", "GET"])
 @permission_classes([IsAuthenticated])
 def become_host(request):
     user = get_object_or_404(CustomUser, username=request.user.username)
+    completedConnectAccount = False
 
     if user.groups.filter(name="Host").exists():
         return Response(
@@ -102,14 +106,73 @@ def become_host(request):
         action = request.data.get("eventAction")
 
         if action == "becomeHost":
+            # Create Stripe Connect account first
+            siteDomain = settings.SITE_URL
+            link = request.build_absolute_uri(
+                reverse("eventManagement:eventCreationSelect")
+            )
+
+            # Path 1: If no connectAccountID, search Stripe for an account by email
+            if not user.connectAccountID:
+                # Search for existing accounts using list instead of search
+                stripe_accounts = stripe.Account.list(limit=1)
+                existing_account = None
+
+                # Look for account with matching email
+                for account in stripe_accounts.data:
+                    if account.get("email") == user.email:
+                        existing_account = account
+                        break
+
+                if existing_account:
+                    # Delete old account if found
+                    stripe.Account.delete(existing_account.id)
+
+                # Create a new Stripe Connect account
+                stripeConnectAccount = ConnectAccount.createConnectAccount(
+                    request, user
+                )
+                if stripeConnectAccount:
+                    user.connectAccountID = stripeConnectAccount.id
+                    user.connectAccountCreated = True
+                    completedConnectAccount = True
+
+            # Path 2: Now that we have a Connect account ID, generate the onboarding link
+            if user.connectAccountID:
+                try:
+                    stripeLinkAccount = ConnectAccount.getStripeOnboardingLink(
+                        request, user.connectAccountID, siteDomain, link
+                    )
+                except stripe.error.StripeError as e:
+                    return Response(
+                        {"error": f"Failed to generate onboarding link: {str(e)}"},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+            else:
+                return Response(
+                    {"error": "Failed to create Stripe Connect account"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            # Assign "Host" role
             event_host = Group.objects.get_or_create(name="Host")[0]
             user.groups.add(event_host)
 
+            # Save the user with updated connectAccountID
             user.save()
+
             return Response(
-                {"message": "Welcome to hosting on WAVE."}, status=status.HTTP_200_OK
+                {
+                    "message": "Welcome to hosting on WAVE.",
+                    "stripe_onboarding_link": stripeLinkAccount,
+                    "connect_account_id": user.connectAccountID,
+                },
+                status=status.HTTP_200_OK,
             )
-    
+
+        return Response(
+            {"error": "Invalid action specified."}, status=status.HTTP_400_BAD_REQUEST
+        )
 
 
 @api_view(["POST"])
