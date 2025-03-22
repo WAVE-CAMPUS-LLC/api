@@ -83,6 +83,7 @@ class UserProfile(models.Model):
         on_delete=models.CASCADE,
         related_name="user_profile",
         null=True,
+        db_index=True,
     )
     group = models.ManyToManyField(Group, related_name="user_group")
     college = models.ForeignKey(
