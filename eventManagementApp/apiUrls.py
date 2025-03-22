@@ -21,8 +21,10 @@ urlpatterns = [
         getHostStripeAccountLink,
         name="get_host_stripe_account_link",
     ),
-    # Event Ticketing
     
+    # Event Hosting
+    path("become_host/", apiViews.become_host, name="become_host"),
+    # Event Ticketing
     path("getPaidTicketFormFields/", apiViews.getPaidTicketFormFields, name="getPaidTicketFormFields"),
     path("getPaidFreeTicketsForEvent/<uuid:eventId>/", apiViews.getPaidFreeTicketsForEvent, name="getPaidFreeTicketsForEvent"),
     path("getCouponsForEvent/<uuid:eventId>/", getCouponsForEvent, name="getCouponsForEvent"),

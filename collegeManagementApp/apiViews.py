@@ -69,7 +69,6 @@ def view_college_information_api(request, collegeId):
     weekly_events = Event.objects.filter(
         date__range=[start_of_week, end_of_week],
         status="live",
-        forAllDisplay=True,
         forCollegesDisplay=True,
         admin_status="active"
     ).filter(age_filter).order_by("?")[:3]

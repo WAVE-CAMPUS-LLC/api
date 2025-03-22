@@ -8,6 +8,8 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.conf import settings
 from django.shortcuts import get_object_or_404
+from django.contrib.auth.models import Group
+from django.db.models import Q
 from .models import UserProfile
 from blogApp.models import Blog
 from eventTicketsApp.models import Ticket
@@ -35,6 +37,12 @@ def profile_api(request):
     blog_items = Blog.objects.filter(created_by=user)
     user_profile = get_object_or_404(UserProfile, user=user)
     favorite_events = user_profile.favorite_events.all()
+    
+    is_host = user.groups.filter(name='Host').exists()
+    if is_host:
+        host_true = True
+    else:
+        host_true = False
     
     transactions = CustomerAccount.getCustomerTransactions(request, user.customer_id)
     account_balance = GetEarnings.getStripeAccountBalance(user.connectAccountID)
@@ -95,6 +103,7 @@ def profile_api(request):
         "dashboardLink": dashboard_link,
         "transactions": transactions,
         "canSeePayouts": can_see_payouts,
+        "isHost": host_true,
     }
     
     return Response(response_data, status=status.HTTP_200_OK)

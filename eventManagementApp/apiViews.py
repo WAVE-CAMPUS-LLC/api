@@ -15,7 +15,9 @@ from datetime import datetime
 import uuid
 from wave_v1.decorators import host, check_suspension
 from stripeManagementApp.createHostProduct import createHostProduct
-
+from django.contrib.auth.models import Group
+from django.db.models import Q
+from django.db.models import Count
 from accountManagementApp.models import UserProfile
 from collegeManagementApp.models import Organization, OrganizationMembership
 from .forms import HostApplicationForm, EventForm, EditEventForm
@@ -84,6 +86,30 @@ def host_portal(request):
         return Response(
             {"error": "Invalid request"}, status=status.HTTP_400_BAD_REQUEST
         )
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def become_host(request):
+    user = get_object_or_404(CustomUser, username=request.user.username)
+
+    if user.groups.filter(name="Host").exists():
+        return Response(
+            {"error": "You are already a host."}, status=status.HTTP_400_BAD_REQUEST
+        )
+
+    if request.method == "POST":
+        action = request.data.get("eventAction")
+
+        if action == "becomeHost":
+            event_host = Group.objects.get_or_create(name="Host")[0]
+            user.groups.add(event_host)
+
+            user.save()
+            return Response(
+                {"message": "Welcome to hosting on WAVE."}, status=status.HTTP_200_OK
+            )
+    
 
 
 @api_view(["POST"])
@@ -256,7 +282,6 @@ def editEvent(request, eventId):
         )
 
 
-
 # Ticketing and RSVP Management
 @api_view(["POST", "GET", "DELETE", "PATCH", "PUT", "OPTIONS"])
 @permission_classes([IsAuthenticated])
@@ -284,43 +309,44 @@ def getRSVPTicketsForEvent(request, eventId):
         try:
             # First try to find and delete the RSVP ticket
             rsvp_ticket = RSVPTicket.objects.get(id=ticket_id, event=event)
-            
+
             # Also find and delete any associated actual ticket with QR code
             try:
                 # More specific matching criteria to find the correct associated tickets
                 # Using a combination of identifiers that would uniquely match the RSVP to tickets
                 tickets_to_delete = Ticket.objects.filter(
-                    event=event,
-                    email=rsvp_ticket.email
+                    event=event, email=rsvp_ticket.email
                 )
-                
+
                 # If user is available, further refine the query
                 if rsvp_ticket.user:
                     tickets_to_delete = tickets_to_delete.filter(user=rsvp_ticket.user)
-                
+
                 # Optionally add more matching criteria if available in your models
                 # For example, if both models have a name field:
-                if hasattr(rsvp_ticket, 'name') and rsvp_ticket.name:
+                if hasattr(rsvp_ticket, "name") and rsvp_ticket.name:
                     tickets_to_delete = tickets_to_delete.filter(name=rsvp_ticket.name)
-                
+
                 deleted_count = tickets_to_delete.count()
                 tickets_to_delete.delete()
-                
+
                 # Log the deletion for debugging purposes
-                print(f"Deleted {deleted_count} tickets associated with RSVP {ticket_id}")
+                print(
+                    f"Deleted {deleted_count} tickets associated with RSVP {ticket_id}"
+                )
             except Exception as e:
                 # Continue even if no associated tickets found
                 print(f"Error while deleting associated tickets: {str(e)}")
                 deleted_count = 0
-            
+
             # Delete the RSVP ticket itself
             rsvp_ticket.delete()
-            
+
             return Response(
                 {
                     "message": f"RSVP deleted successfully with {deleted_count} associated ticket(s)."
                 },
-                status=status.HTTP_200_OK
+                status=status.HTTP_200_OK,
             )
         except RSVPTicket.DoesNotExist:
             return Response(
@@ -329,7 +355,7 @@ def getRSVPTicketsForEvent(request, eventId):
         except Exception as e:
             return Response(
                 {"error": f"Failed to delete RSVP: {str(e)}"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
     # Get RSVP tickets for the event
@@ -337,7 +363,7 @@ def getRSVPTicketsForEvent(request, eventId):
 
     # Get actual purchased tickets for the event
     purchased_tickets = Ticket.objects.filter(event=event)
-    
+
     return Response(
         {
             "rsvpList": RSVPTicketSerializer(rsvp_list, many=True).data,
@@ -399,30 +425,32 @@ def getPaidFreeTicketsForEvent(request, eventId):
             return Response(
                 {"error": "Missing ticket ID."}, status=status.HTTP_400_BAD_REQUEST
             )
-            
+
         try:
             ticket = PaidFreeTicket.objects.get(ticket_id=ticket_id, event=event)
         except PaidFreeTicket.DoesNotExist:
             return Response(
                 {"error": "Ticket not found."}, status=status.HTTP_404_NOT_FOUND
             )
-            
+
         # Use PaidFreeTicketForm for validation and updating
         paidFreeForm = PaidFreeTicketForm(request.data, instance=ticket)
         if paidFreeForm.is_valid():
             updated_ticket = paidFreeForm.save(commit=False)
-            
+
             # Check if price has changed
-            price_changed = float(updated_ticket.ticket_price) != float(ticket.ticket_price)
-            
+            price_changed = float(updated_ticket.ticket_price) != float(
+                ticket.ticket_price
+            )
+
             # Save the updated ticket
             updated_ticket.save()
-            
+
             # If price changed, update the Stripe price
             if price_changed and ticket.stripePriceId:
                 try:
                     hostProfile = HostProfile.objects.get(user=event.host)
-                    
+
                     # Create a new price (Stripe doesn't allow updating prices)
                     stripePrice = createProductPriceType(
                         event.stripeProductId,
@@ -430,7 +458,7 @@ def getPaidFreeTicketsForEvent(request, eventId):
                         hostProfile.stripe_account_id,
                         updated_ticket.ticket_quantity,
                     )
-                    
+
                     # Update the ticket with the new price ID
                     updated_ticket.stripePriceId = stripePrice.id
                     updated_ticket.save()
@@ -439,7 +467,7 @@ def getPaidFreeTicketsForEvent(request, eventId):
                         {"error": f"Failed to update Stripe price: {str(e)}"},
                         status=status.HTTP_500_INTERNAL_SERVER_ERROR,
                     )
-            
+
             return Response(
                 {
                     "message": "Ticket updated successfully.",
@@ -556,7 +584,7 @@ def getPaidTicketFormFields(request):
 def getCouponsForEvent(request, eventId):
     event = get_object_or_404(Event, eventId=eventId)
     coupons = CouponCode.objects.filter(event=event)
-    
+
     if request.method == "POST":
         coupon_code = request.data.get("coupon_code")
         discount_percentage = request.data.get("discount")
@@ -564,7 +592,9 @@ def getCouponsForEvent(request, eventId):
 
         if not coupon_code or not discount_percentage:
             return Response(
-                {"error": "Missing required fields: coupon code and discount percentage are required."},
+                {
+                    "error": "Missing required fields: coupon code and discount percentage are required."
+                },
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -587,7 +617,7 @@ def getCouponsForEvent(request, eventId):
                 code=coupon_code,
                 discount_percentage=discount_percentage,  # Using the correct field name
             )
-            
+
             # Only set expiry_date if it was provided and valid
             if expiry_date_obj:
                 coupon.expiration_date = expiry_date_obj  # Using the correct field name
@@ -620,7 +650,7 @@ def getCouponsForEvent(request, eventId):
             except (CouponCode.DoesNotExist, ValueError):
                 # If id doesn't work, try with coupon_id as a string field
                 coupon = CouponCode.objects.get(code=coupon_id, event=event)
-            
+
             coupon.delete()
             return Response(
                 {"message": "Coupon deleted successfully."},
@@ -637,8 +667,6 @@ def getCouponsForEvent(request, eventId):
             )
 
     return Response(
-        {
-            "coupons": CouponSerializer(coupons, many=True).data
-        },
+        {"coupons": CouponSerializer(coupons, many=True).data},
         status=status.HTTP_200_OK,
     )
