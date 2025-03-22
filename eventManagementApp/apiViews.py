@@ -347,13 +347,14 @@ def getRSVPTicketsForEvent(request, eventId):
     )
 
 
-@api_view(["GET", "POST", "DELETE"])
+@api_view(["GET", "POST", "DELETE", "PUT"])
 @permission_classes([IsAuthenticated])
 def getPaidFreeTicketsForEvent(request, eventId):
     """
     GET: Retrieve all paid/free tickets for an event
     POST: Create a new ticket for an event
     DELETE: Delete a specific ticket
+    PUT: Update existing ticket information
 
     Requires authentication. User must be the event host.
     """
@@ -389,6 +390,66 @@ def getPaidFreeTicketsForEvent(request, eventId):
         except PaidFreeTicket.DoesNotExist:
             return Response(
                 {"error": "Ticket not found."}, status=status.HTTP_404_NOT_FOUND
+            )
+
+    elif request.method == "PUT":
+        # Logic to edit an existing ticket
+        ticket_id = request.data.get("ticket_id")
+        if not ticket_id:
+            return Response(
+                {"error": "Missing ticket ID."}, status=status.HTTP_400_BAD_REQUEST
+            )
+            
+        try:
+            ticket = PaidFreeTicket.objects.get(ticket_id=ticket_id, event=event)
+        except PaidFreeTicket.DoesNotExist:
+            return Response(
+                {"error": "Ticket not found."}, status=status.HTTP_404_NOT_FOUND
+            )
+            
+        # Use PaidFreeTicketForm for validation and updating
+        paidFreeForm = PaidFreeTicketForm(request.data, instance=ticket)
+        if paidFreeForm.is_valid():
+            updated_ticket = paidFreeForm.save(commit=False)
+            
+            # Check if price has changed
+            price_changed = float(updated_ticket.ticket_price) != float(ticket.ticket_price)
+            
+            # Save the updated ticket
+            updated_ticket.save()
+            
+            # If price changed, update the Stripe price
+            if price_changed and ticket.stripePriceId:
+                try:
+                    hostProfile = HostProfile.objects.get(user=event.host)
+                    
+                    # Create a new price (Stripe doesn't allow updating prices)
+                    stripePrice = createProductPriceType(
+                        event.stripeProductId,
+                        updated_ticket.ticket_price,
+                        hostProfile.stripe_account_id,
+                        updated_ticket.ticket_quantity,
+                    )
+                    
+                    # Update the ticket with the new price ID
+                    updated_ticket.stripePriceId = stripePrice.id
+                    updated_ticket.save()
+                except Exception as e:
+                    return Response(
+                        {"error": f"Failed to update Stripe price: {str(e)}"},
+                        status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    )
+            
+            return Response(
+                {
+                    "message": "Ticket updated successfully.",
+                    "ticket": PaidFreeTicketSerializer(updated_ticket).data,
+                },
+                status=status.HTTP_200_OK,
+            )
+        else:
+            return Response(
+                {"errors": paidFreeForm.errors}, status=status.HTTP_400_BAD_REQUEST
             )
 
     elif request.method == "POST":
