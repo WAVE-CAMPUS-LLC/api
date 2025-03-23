@@ -39,6 +39,7 @@ from authenticationApp.models import CustomUser
 from eventTicketsApp.models import RSVPTicket, PaidFreeTicket
 from stripeManagementApp.createHostProduct import createHostProduct
 from stripeManagementApp.createHostProductPrice import createProductPriceType
+from stripeManagementApp.customerSetup import ConnectAccount
 
 
 @api_view(["GET", "POST"])
@@ -95,7 +96,7 @@ def host_portal(request):
 @permission_classes([IsAuthenticated])
 def become_host(request):
     user = get_object_or_404(CustomUser, username=request.user.username)
-    completedConnectAccount = False
+    completed_connect_account = False
 
     if user.groups.filter(name="Host").exists():
         return Response(
@@ -135,7 +136,7 @@ def become_host(request):
                 if stripeConnectAccount:
                     user.connectAccountID = stripeConnectAccount.id
                     user.connectAccountCreated = True
-                    completedConnectAccount = True
+                    completed_connect_account = True
 
             # Path 2: Now that we have a Connect account ID, generate the onboarding link
             if user.connectAccountID:
@@ -610,6 +611,105 @@ def getPaidFreeTicketsForEvent(request, eventId):
             ).data,
             "purchasedTickets": TicketSerializer(purchased_tickets, many=True).data,
         },
+        status=status.HTTP_200_OK,
+    )
+
+
+@api_view(["POST", "GET"])
+@permission_classes([IsAuthenticated])
+def createPaidTicketForEvent(request, eventId):
+    event = get_object_or_404(Event, eventId=eventId)
+
+    # Check if the requesting user is the host of the event
+    if event.host != request.user:
+        return Response(
+            {"error": "You don't have permission to manage tickets for this event."},
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
+    if request.method == "POST":
+        paid_free_ticket_form = PaidFreeTicketForm(request.data)
+        if paid_free_ticket_form.is_valid():
+            ticket = paid_free_ticket_form.save(commit=False)
+            ticket.event = event
+            ticket.save()
+
+            return Response(
+                {
+                    "message": "Paid ticket created successfully.",
+                    "ticket": PaidFreeTicketSerializer(ticket).data,
+                },
+                status=status.HTTP_201_CREATED,
+            )
+        else:
+            return Response(
+                {"errors": paid_free_ticket_form.errors},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+    return Response(
+        {"paidFreeTickets": PaidFreeTicketSerializer(event.paid_free_tickets.all())},
+        status=status.HTTP_200_OK,
+    )
+
+
+@api_view(["POST", "GET"])
+@permission_classes([IsAuthenticated])
+def createCouponForEvent(request):
+    event = get_object_or_404(Event, eventId=request.data.get("eventId"))
+
+    if request.method == "POST":
+        coupon_code = request.data.get("coupon_code")
+        discount_percentage = request.data.get("discount")
+        expiry_date = request.data.get("expiry_date")
+
+        if not coupon_code or not discount_percentage:
+            return Response(
+                {
+                    "error": "Missing required fields: coupon code and discount percentage are required."
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Check if expiry_date was provided and parse it
+        expiry_date_obj = None
+        if expiry_date:
+            try:
+                expiry_date_obj = datetime.strptime(expiry_date, "%Y-%m-%d").date()
+            except ValueError:
+                return Response(
+                    {"error": "Invalid date format. Use YYYY-MM-DD."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+        # Create the coupon with the correct field names that match the model
+        try:
+            coupon = CouponCode.objects.create(
+                event=event,
+                code=coupon_code,
+                discount_percentage=discount_percentage,
+            )
+
+            # Only set expiry_date if it was provided and valid
+            if expiry_date_obj:
+                coupon.expiration_date = expiry_date_obj
+                coupon.save()
+
+            return Response(
+                {
+                    "message": "Coupon created successfully.",
+                    "coupon": CouponSerializer(coupon).data,
+                },
+                status=status.HTTP_201_CREATED,
+            )
+        except Exception as e:
+            return Response(
+                {"error": f"Failed to create coupon: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+    return Response(
+        {"coupons": CouponSerializer(event.coupon_codes.all(), many=True).data},
         status=status.HTTP_200_OK,
     )
 
