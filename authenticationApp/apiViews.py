@@ -104,6 +104,7 @@ def login_api(request):
 
 @api_view(["POST", "GET"])
 @permission_classes([AllowAny])
+@include_form_fields(MobileCustomUserJoinForm)
 def join_api(request):
     try:
         # Determine if request is from mobile
