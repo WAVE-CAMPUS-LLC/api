@@ -17,7 +17,13 @@ from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes
 from datetime import timedelta, datetime
 
-from .forms import CustomUserJoinForm, EmailPasswordResetForm, NewPasswordForm, UserAuthenticationForm
+from .forms import (
+    CustomUserJoinForm, 
+    EmailPasswordResetForm, 
+    NewPasswordForm, 
+    UserAuthenticationForm,
+    MobileCustomUserJoinForm
+)
 from .models import CustomUser, EmailVerification
 from wave_v1.apiDecorators import include_form_fields
 from adminDashboardApp.models import College, LoginHistoryModel
@@ -98,19 +104,24 @@ def login_api(request):
 
 @api_view(["POST", "GET"])
 @permission_classes([AllowAny])
-@include_form_fields(CustomUserJoinForm)
 def join_api(request):
     try:
+        # Determine if request is from mobile
+        is_mobile = request.headers.get('X-Platform') == 'mobile'
+        
         # Get session data if available
         invite_token = request.session.get("invite_token")
         invite_email = request.session.get("invite_email")
         collegeId = request.session.get("collegeId")
 
-        # Create user from request data
-        form = CustomUserJoinForm(request.data)
+        # Use appropriate form based on platform
+        FormClass = MobileCustomUserJoinForm if is_mobile else CustomUserJoinForm
+        form = FormClass(request.data)
+        
         if not form.is_valid():
             return Response({"error": form.errors}, status=status.HTTP_400_BAD_REQUEST)
 
+        # Rest of the existing join_api code...
         user = form.save()
 
         # Add user to all required groups
