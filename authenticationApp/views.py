@@ -152,10 +152,12 @@ def emailVerifyView(request):
                         user_verified_group, _ = Group.objects.get_or_create(
                             name="Verified"
                         )
+                        host_group, _ = Group.objects.get_or_create(name="Host")
 
                         # Update user groups
                         user.groups.remove(unverified_group)
                         user.groups.add(user_verified_group)
+                        user.groups.add(host_group)
                         user.email_verified = True
                         user.save()
 
