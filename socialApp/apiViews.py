@@ -90,23 +90,26 @@ def public_profile(request, username):
 def friends_api_view(request):
     """
     API view to show a user's friends and non-friends.
+    Optimized for better performance.
     """
     try:
-        # Enhanced query with better prefetching
-        user_profile = UserProfile.objects.select_related('user').prefetch_related(
-            Prefetch('friends', queryset=UserProfile.objects.select_related('user'))
-        ).get(user=request.user)
-
-        # Get all friends with optimized query
-        friends = list(user_profile.friends.filter(user__isnull=False))
-
-        # Get IDs of friends' users more efficiently
-        friend_user_ids = [f.user_id for f in friends if f.user_id]
-
+        # Get user profile with minimal prefetching - only what's needed
+        user_profile = UserProfile.objects.select_related('user').get(user=request.user)
+        
+        # Use a more efficient query for friends
+        # Directly query the through table for better performance
+        friends_query = user_profile.friends.filter(user__isnull=False).select_related('user')
+        
+        # Get friend user IDs directly from the database in a single query
+        friend_user_ids = list(friends_query.values_list('user_id', flat=True))
+        
         # Add current user's ID to the exclusion list
         exclude_ids = friend_user_ids + [request.user.id]
-
-        # Get all non-friends excluding the current user - limit to 50 for performance
+        
+        # Fetch friends with a limit for better performance
+        friends = list(friends_query[:100])  # Limit to 100 friends
+        
+        # Get non-friends with a limit for better performance
         non_friends = list(
             UserProfile.objects.filter(user__isnull=False)
             .exclude(user__id__in=exclude_ids)

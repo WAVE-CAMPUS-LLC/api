@@ -89,7 +89,7 @@ class UserProfile(models.Model):
     college = models.ForeignKey(
         College, null=True, blank=True, on_delete=models.SET_NULL
     )
-    friends = models.ManyToManyField("self", symmetrical=True, blank=True)
+    friends = models.ManyToManyField("self", symmetrical=True, blank=True, db_index=True)
     is_campus_manager = models.BooleanField(default=False)
 
     
