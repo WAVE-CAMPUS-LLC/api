@@ -53,7 +53,6 @@ Manage {{ event.title }} | WAVE.
             <div role="button" type="button" class="dashboard-tab tab-active cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="event-information">Overview</div>
             <div role="button" type="button" class="dashboard-tab cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="event-privacy">Privacy</div>
             <div role="button" type="button" class="dashboard-tab cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="event-ticketing">Ticketing</div>
-            <div role="button" type="button" class="dashboard-tab cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="event-scanner">QR Scanner</div>
         </div>
 
         <div id="portal-body-content">
@@ -520,38 +519,14 @@ Manage {{ event.title }} | WAVE.
             <!-- END TICKETING TAB -->
 
             <!-- QR SCANNER TAB -->
-            <div class="pbc-element-content" id="event-scanner">
+            {% comment %} <div class="pbc-element-content" id="event-scanner">
                 <div class="event-scanner-container flex flex-col gap-10">
                     <div class="scannerHeader">
                         <h3 class="font-Wanted-ExtraBold text-Medium">Ticket Scanner</h3>
-                        <p class="font-Wanted-Variable text-Pre-Xl">Scan tickets to check-in users!</p>
-                    </div>
-
-                    <div id="scanner-container" class="scanner-container">
-                        <button type="button" role="button" class="startScanningButton" id="startScanningButton">
-                            <img src="{% static "/images/eventTicketsApp/icons/scanner.svg" %}" />
-                            Start Scanning
-                        </button>
-                    </div>
-
-
-                    <div class="scanner-display" id="scanner-display">
-                        <div class="scanner-display-container">
-                            <div class="scanned-ticket-status" >
-                                <h3 class="ticket-status-valid ticket-status">
-                                </h3>
-                                <h3 class="ticket-status-invalid ticket-status">
-                                </h3>
-                            </div>
-                        
-                            <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
-
-                            <div id="qrReader" class="qrReader" data-save-url="{% url "eventTickets:verifyTicket" %}"></div>
-                        </div>
-                        
+                        <p class="font-Wanted-Variable text-Pre-Xl">Scan Tickets using your camera to check-in users!</p>
                     </div>
                 </div>
-            </div>
+            </div> {% endcomment %}
             <!-- END SCANNER TAB -->
         </div>
     </div>
