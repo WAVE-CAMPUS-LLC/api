@@ -5,7 +5,7 @@ from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.exceptions import ValidationError
 from django.contrib.auth import authenticate, login, logout
-from django.views.decorators.csrf import ensure_csrf_cookie
+from django.views.decorators.csrf import ensure_csrf_cookie, csrf_exempt
 from django.template.loader import get_template, render_to_string
 from django.utils.html import strip_tags
 from django.utils import timezone
@@ -103,6 +103,7 @@ def login_api(request):
         )
 
 
+@csrf_exempt
 @api_view(["POST", "GET"])
 @permission_classes([AllowAny])
 def join_api(request):
