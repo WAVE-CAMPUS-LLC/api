@@ -326,19 +326,39 @@ def hostedCheckout(request):
 
 
 def paymentSuccessful(request):
-    # Retrieve the cart from the session
+    # Get the cart from the session or initialize an empty one
     cart = request.session.get("cart", {})
-    print(f"Cart in paymentSuccessful: {cart}")
-
-    # If you collected additional user info in the session
-    user_info = request.session.get("checkout_user_info", {})
-
+    print(f"Cart from session: {json.dumps(cart, indent=2)}")
+    
     session_id = request.GET.get("session_id")
     from_mobile = request.GET.get("from_mobile")
     if not session_id or session_id == "{CHECKOUT_SESSION_ID}":
         # Handle error: session_id was not replaced
         print("Error: session_id is missing or invalid.")
         return HttpResponse("Error: session_id is missing or invalid.", status=400)
+    
+    # Check if tickets have already been generated for this session
+    existing_tickets = Ticket.objects.filter(stripe_session_id=session_id)
+    if existing_tickets.exists():
+        ticket_count = existing_tickets.count()
+        print(f"Found {ticket_count} existing tickets for session {session_id}. Preventing duplicate generation.")
+        
+        # Clean up session data if not already done
+        if "cart" in request.session:
+            del request.session["cart"]
+            print("Cart cleared from session")
+        if "checkout_user_info" in request.session:
+            del request.session["checkout_user_info"]
+            print("Checkout user info cleared from session")
+        
+        if from_mobile:
+            return JsonResponse({"status": "paymentSuccessful", "tickets_generated": ticket_count, "duplicate": True}, status=200)
+            
+        # Render success page with existing ticket count
+        return render(request, "eventTicketsApp/checkoutSession/paymentSuccessful.html", {
+            "tickets_generated": ticket_count,
+            "duplicate": True
+        })
     
     try:
         print(f"Retrieving Stripe session: {session_id}")
@@ -535,6 +555,7 @@ def paymentSuccessful(request):
                         guestLastName=member.last_name if member else None,
                         guestEmail=member.email if member else None,
                         crewTicket=(member != request.user),
+                        stripe_session_id=session_id,
                     )
                     ticket_count += 1
                     print(f"Generated crew ticket for {member.first_name} {member.last_name}")
@@ -588,6 +609,7 @@ def paymentSuccessful(request):
                         guestFirstName=first_name,
                         guestLastName=last_name,
                         guestEmail=email,
+                        stripe_session_id=session_id,
                     )
                     ticket_count += 1
                     print(f"Generated ticket #{i+1}/{quantity} for {first_name} {last_name}")
@@ -740,6 +762,25 @@ def viewTicket(request, mainId):
     else:
         return redirect("core:explore")
 
+def activateTicket(request, mainId):
+    ticket = get_object_or_404(Ticket, mainId=mainId)
+    event = ticket.event
+
+    # check if post action is "activate"
+    if request.method == "POST" and request.POST.get("eventAction") == "activate":
+        if ticket.status == "Scanned":
+            messages.error(request, "Ticket is already activated")
+            return redirect("eventTickets:activateTicket", mainId=mainId)
+        ticket.status = "Scanned"
+        ticket.save()
+        messages.success(request, "Ticket activated successfully")
+        return redirect("eventTickets:activateTicket", mainId=mainId)
+    return render(
+        request,
+        "eventTicketsApp/ticket/activateTicket.html",
+        {"ticket": ticket, "event": event},
+    )
+
 
 def generateTicket(
     request,
@@ -749,33 +790,29 @@ def generateTicket(
     guestLastName=None,
     guestEmail=None,
     crewTicket=False,
-):
+    stripe_session_id=None,
+): 
     ticket = Ticket(
         user=user if user and user.is_authenticated else None,
         event=event,
-        guestFirstName=(
-            guestFirstName if guestFirstName else user.first_name if user else None
-        ),
-        guestLastName=(
-            guestLastName if guestLastName else user.last_name if user else None
-        ),
+        guestFirstName=guestFirstName if guestFirstName else user.first_name if user else None,
+        guestLastName=guestLastName if guestLastName else user.last_name if user else None,
         guestEmail=guestEmail if guestEmail else user.email if user else None,
+        stripe_session_id=stripe_session_id,
     )
     ticket.save()
-
-    qr_data = json.dumps(
-        {
-            "ticketId": str(ticket.ticketId),
-            "eventId": str(event.eventId),
-            "status": ticket.status,
-            "guestFirstName": guestFirstName if guestFirstName else None,
-            "guestLastName": guestLastName if guestLastName else None,
-            "guestEmail": guestEmail if guestEmail else None,
-            "userFirstName": user.first_name if user else None,
-            "userLastName": user.last_name if user else None,
-            "userEmail": user.email if user else None,
-        }
+    
+    # Get the ticket's main ID and build the activation URL.
+    ticketMainId = ticket.mainId
+    activationLink = request.build_absolute_uri(
+        reverse("eventTickets:activateTicket", kwargs={"mainId": ticketMainId})
     )
+    viewLink = request.build_absolute_uri(
+        reverse("eventTickets:viewTicket", kwargs={"mainId": ticketMainId})
+    )
+    
+    # Use the activationLink as the data encoded in the QR code.
+    qr_data = activationLink
 
     qr_code_options = QRCodeOptions(
         size=200,
@@ -787,7 +824,7 @@ def generateTicket(
     )
 
     try:
-        # Generate the QR code using maker
+        # Generate the QR code with the activation URL.
         qr_code_image = maker.make_qr_code_image(
             data=qr_data, qr_code_options=qr_code_options, force_text=True
         )
@@ -797,15 +834,10 @@ def generateTicket(
 
         ticket.save()
 
-        ticketMainId = ticket.mainId
-        ticketLink = request.build_absolute_uri(
-            reverse("eventTickets:viewTicket", kwargs={"mainId": ticketMainId})
-        )
-
         # Prepare email
         if guestEmail or (user and user.email):
             try:
-                # Get the buyer's name for the subject
+                # Get the buyer's name for the subject.
                 buyer_name = "Someone"
                 if request.user and request.user.is_authenticated:
                     buyer_name = request.user.first_name or "Someone"
@@ -821,7 +853,7 @@ def generateTicket(
                     else "Thank you for your purchase!\nYour QR code is attached."
                 )
                 
-                # Ensure we have a valid recipient email
+                # Ensure we have a valid recipient email.
                 recipient_email = guestEmail if guestEmail else user.email if user else None
                 if not recipient_email:
                     print("No recipient email available, cannot send ticket email")
@@ -829,33 +861,32 @@ def generateTicket(
                     
                 recipient_list = [recipient_email]
                 
-                # Print email settings for debugging
                 print(f"Email settings: DEFAULT_FROM_EMAIL={settings.DEFAULT_FROM_EMAIL}, EMAIL_HOST={settings.EMAIL_HOST}")
                 
-                # Try the primary template path first
+                # Attempt to load the primary email template.
                 try:
                     qrCodeHtml = render_to_string(
                         "emailManagement/build_production/emails/eventTicketsApp/ticketEmail.html",
-                        {"ticketLink": ticketLink, "event": event, "ticket": ticket},
+                        {"ticketLink": activationLink, "event": event, "ticket": ticket, "viewLink": viewLink},
                     )
                     print("Using primary email template")
                 except TemplateDoesNotExist:
-                    # Fallback to a simpler template path
+                    # Fallback to a simpler template.
                     try:
                         qrCodeHtml = render_to_string(
                             "emails/ticketEmail.html",
-                            {"ticketLink": ticketLink, "event": event, "ticket": ticket},
+                            {"ticketLink": activationLink, "event": event, "ticket": ticket, "viewLink": viewLink},
                         )
                         print("Using fallback email template")
                     except TemplateDoesNotExist:
-                        # Last resort: create a simple HTML email
+                        # Last resort: create a simple inline HTML template.
                         qrCodeHtml = f"""
                         <html>
                         <body>
                             <h1>Your Ticket for {event.title}</h1>
                             <p>Thank you for your purchase!</p>
-                            <p>Click the link below to view your ticket:</p>
-                            <a href="{ticketLink}">{ticketLink}</a>
+                            <p>Click the link below to activate your ticket:</p>
+                            <a href="{viewLink}">{viewLink}</a>
                         </body>
                         </html>
                         """
@@ -865,7 +896,7 @@ def generateTicket(
                 
                 print(f"Sending ticket email to: {recipient_list} from {from_email}")
                 
-                # Create a file attachment with the QR code
+                # Create a file attachment with the QR code.
                 qr_attachment = None
                 if ticket.qrCodeImage:
                     try:
@@ -874,7 +905,7 @@ def generateTicket(
                     except Exception as e:
                         print(f"Error getting QR code attachment: {e}")
                 
-                # Send the email
+                # Send the email.
                 try:
                     send_mail(
                         subject,
@@ -890,7 +921,7 @@ def generateTicket(
                     import traceback
                     traceback.print_exc()
                     
-                    # Try an alternative approach
+                    # Try an alternative approach with EmailMultiAlternatives.
                     try:
                         from django.core.mail import EmailMultiAlternatives
                         
@@ -902,7 +933,6 @@ def generateTicket(
                         )
                         email.attach_alternative(qrCodeHtml, "text/html")
                         
-                        # Attach the QR code if available
                         if qr_attachment and os.path.exists(qr_attachment):
                             with open(qr_attachment, 'rb') as f:
                                 email.attach(f"ticket-{ticket.ticketId}.png", f.read(), 'image/png')
@@ -913,7 +943,7 @@ def generateTicket(
                         print(f"Alternative email sending also failed: {e2}")
                         traceback.print_exc()
                 
-                # Add event to user's purchased events if authenticated
+                # Add event to the user's purchased events if authenticated.
                 if request.user and request.user.is_authenticated and hasattr(request.user, 'user_profile'):
                     try:
                         request.user.user_profile.purchased_events.add(event)
@@ -925,7 +955,6 @@ def generateTicket(
                 print(f"Error sending ticket email: {e}")
                 import traceback
                 traceback.print_exc()
-                # Don't raise the exception, but log it clearly
 
     except Exception as e:
         print(f"Error generating QR code: {e}")
@@ -933,7 +962,6 @@ def generateTicket(
         traceback.print_exc()
     
     return ticket
-
 
 def verifyTicket(request):
     if request.method == "POST":

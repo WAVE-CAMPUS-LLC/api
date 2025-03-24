@@ -33,6 +33,7 @@ class Ticket(models.Model):
     qrCodeImage = models.FileField(upload_to='qr_codes/', blank=True, null=True)
     status = models.CharField(max_length=10, choices=TICKET_STATUS_CHOICES, default="Valid")
     created_at = models.DateTimeField(auto_now_add=True)
+    stripe_session_id = models.CharField(max_length=100, blank=True, null=True)
     
     def __str__(self):
         if self.user:
