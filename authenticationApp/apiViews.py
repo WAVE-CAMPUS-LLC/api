@@ -33,6 +33,7 @@ from django.contrib.auth.models import Group
 from django.conf import settings
 from .views import generateVerificationCode
 from .serializers import CustomUserSerializer
+from wave_v1.apiUtils import get_form_fields
 
 ResetLinkExpiryTime = timedelta(hours=2)
 
@@ -104,9 +105,17 @@ def login_api(request):
 
 @api_view(["POST", "GET"])
 @permission_classes([AllowAny])
-@include_form_fields(MobileCustomUserJoinForm)
 def join_api(request):
     try:
+        # For GET requests, just return the form fields
+        if request.method == "GET":
+            # Determine if request is from mobile
+            is_mobile = request.headers.get('X-Platform') == 'mobile'
+            FormClass = MobileCustomUserJoinForm if is_mobile else CustomUserJoinForm
+            fields_info = get_form_fields(FormClass)
+            return Response({'form_fields': fields_info}, status=status.HTTP_200_OK)
+
+        # Handle POST request for user registration
         # Determine if request is from mobile
         is_mobile = request.headers.get('X-Platform') == 'mobile'
         
