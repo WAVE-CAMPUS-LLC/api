@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 import time
 import json
 import stripe
@@ -661,7 +661,6 @@ def createCouponForEvent(request, eventId):
     if request.method == "POST":
         coupon_code = request.data.get("coupon_code")
         discount_percentage = request.data.get("discount")
-        expiry_date = request.data.get("expiry_date")
 
         if not coupon_code or not discount_percentage:
             return Response(
@@ -671,17 +670,6 @@ def createCouponForEvent(request, eventId):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # Check if expiry_date was provided and parse it
-        expiry_date_obj = None
-        if expiry_date:
-            try:
-                expiry_date_obj = datetime.strptime(expiry_date, "%Y-%m-%d").date()
-            except ValueError:
-                return Response(
-                    {"error": "Invalid date format. Use YYYY-MM-DD."},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-
         # Create the coupon with the correct field names that match the model
         try:
             coupon = CouponCode.objects.create(
@@ -689,11 +677,6 @@ def createCouponForEvent(request, eventId):
                 code=coupon_code,
                 discount_percentage=discount_percentage,
             )
-
-            # Only set expiry_date if it was provided and valid
-            if expiry_date_obj:
-                coupon.expiration_date = expiry_date_obj
-                coupon.save()
 
             return Response(
                 {
@@ -751,7 +734,6 @@ def getCouponsForEvent(request, eventId):
     if request.method == "POST":
         coupon_code = request.data.get("coupon_code")
         discount_percentage = request.data.get("discount")
-        expiry_date = request.data.get("expiry_date")
 
         if not coupon_code or not discount_percentage:
             return Response(
@@ -760,17 +742,6 @@ def getCouponsForEvent(request, eventId):
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
-
-        # Check if expiry_date was provided and parse it
-        expiry_date_obj = None
-        if expiry_date:
-            try:
-                expiry_date_obj = datetime.strptime(expiry_date, "%Y-%m-%d").date()
-            except ValueError:
-                return Response(
-                    {"error": "Invalid date format. Use YYYY-MM-DD."},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
 
         # Create the coupon with the correct field names that match the model
         # The field names in the model appear to be 'code' and 'discount_percentage'
@@ -781,10 +752,6 @@ def getCouponsForEvent(request, eventId):
                 discount_percentage=discount_percentage,  # Using the correct field name
             )
 
-            # Only set expiry_date if it was provided and valid
-            if expiry_date_obj:
-                coupon.expiration_date = expiry_date_obj  # Using the correct field name
-                coupon.save()
 
             return Response(
                 {

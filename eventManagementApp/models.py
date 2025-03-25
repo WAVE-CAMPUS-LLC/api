@@ -581,7 +581,6 @@ class CouponCode(models.Model):
     discount_percentage = models.IntegerField(
         validators=[MinValueValidator(0), MaxValueValidator(100)]
     )
-    expiration_date = models.DateField(db_index=True)
     event = models.ForeignKey(
         "eventManagementApp.Event",
         on_delete=models.CASCADE,
@@ -594,11 +593,9 @@ class CouponCode(models.Model):
         permissions = [
             ("can_use_coupon", "Can apply coupon code"),
         ]
-        ordering = ["expiration_date", "code"]
+        ordering = ["code"]
         unique_together = ["code", "event"]
 
     def __str__(self):
         return self.code
 
-    def is_valid(self):
-        return self.expiration_date >= timezone.now().date()

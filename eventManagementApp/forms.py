@@ -367,13 +367,7 @@ class CouponCodeForm(forms.ModelForm):
         label=_("Discount Percentage"),
         widget=forms.NumberInput(attrs={"type": "number"}),
     )
-    expiration_date = forms.DateField(
-        label=_("Choose expiration date"),
-        required=True,
-        widget=forms.DateInput(format="%Y-%m-%d", attrs={"type": "date"}),
-        input_formats=["%Y-%m-%d"],
-    )
 
     class Meta:
         model = CouponCode
-        fields = ["code", "discount_percentage", "expiration_date"]
+        fields = ["code", "discount_percentage"]

@@ -116,7 +116,6 @@ class CouponCodeAdmin(admin.ModelAdmin):
         "code",
         "event",
         "discount_percentage",
-        'expiration_date',
         "created_at",
     )
 
