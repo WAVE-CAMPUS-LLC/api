@@ -177,11 +177,10 @@ def hostedCheckout(request):
                 # Try to get the coupon code object for this event
                 coupon = CouponCode.objects.get(code=coupon_code_value, event=event)
                 
-                # Check if the coupon is valid (not expired)
-                if hasattr(coupon, 'is_valid') and coupon.is_valid():
-                    valid_coupon_code = True
-                    discount_percentage = coupon.discount_percentage
-                    print(f"Valid coupon applied: {coupon_code_value}, Discount: {discount_percentage}%")
+                # Coupons no longer expire - all coupons are valid
+                valid_coupon_code = True
+                discount_percentage = coupon.discount_percentage
+                print(f"Valid coupon applied: {coupon_code_value}, Discount: {discount_percentage}%")
             except CouponCode.DoesNotExist:
                 # Coupon doesn't exist or doesn't belong to this event
                 valid_coupon_code = False
@@ -704,13 +703,8 @@ def applyCouponCode(request):
             event = Event.objects.get(eventId=event_id)
             coupon = CouponCode.objects.get(code=coupon_code, event=event)
             
-            # Check if coupon is valid
-            if hasattr(coupon, 'is_valid') and not coupon.is_valid():
-                return JsonResponse({
-                    "success": False,
-                    "message": "This coupon has expired"
-                }, status=400)
-                
+            # Removed expiry date validation - coupons no longer expire
+            
             # Get the current cart
             cart = request.session.get("cart", {})
             

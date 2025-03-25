@@ -94,7 +94,6 @@ Create tickets for {{ event.title }} — WAVE.
                                     <h6 class="flex-nowrap w-full">{{ coupon.code }}</h6>
                                     <p class="w-full flex justify-end font-Wanted-Variable text-Large">{{ coupon.discount_percentage }}%</p>
                                 </div>
-                                <p class="font-Wanted-Variable text-Medium">Expires: {{ coupon.expiration_date }}</p>
                                 <form method="post" class="w-full flex justify-end">
                                     {% csrf_token %}
                                     <input type="hidden" name="couponId" value="{{ coupon.coupon_id }}" />

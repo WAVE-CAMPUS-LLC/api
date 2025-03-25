@@ -478,10 +478,7 @@ def eventDetailsView(request, eventId, token=None):
             if not coupon:
                 return JsonResponse({"status": "failed", "message": "Invalid coupon code"}, status=400)
             
-            # Check if coupon is valid (you may want to add more validation)
-            # The logic here was inverted - if is_valid() returns False, the coupon is expired
-            if hasattr(coupon, 'is_valid') and not coupon.is_valid():
-                return JsonResponse({"status": "failed", "message": "Coupon has expired"}, status=400)
+            # Removed expiry date validation - coupons no longer expire
                 
             if hasattr(coupon, 'is_used') and coupon.is_used():
                 return JsonResponse({"status": "failed", "message": "Coupon has already been used"}, status=400)
