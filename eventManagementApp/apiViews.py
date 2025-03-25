@@ -655,8 +655,8 @@ def createPaidTicketForEvent(request, eventId):
 
 @api_view(["POST", "GET"])
 @permission_classes([IsAuthenticated])
-def createCouponForEvent(request):
-    event = get_object_or_404(Event, eventId=request.data.get("eventId"))
+def createCouponForEvent(request, eventId):
+    event = get_object_or_404(Event, eventId=eventId)
 
     if request.method == "POST":
         coupon_code = request.data.get("coupon_code")
