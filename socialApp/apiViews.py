@@ -90,158 +90,45 @@ def public_profile(request, username):
 def friends_api_view(request):
     """
     API view to show a user's friends and non-friends.
-    Highly optimized for maximum performance with caching, pagination, minimal data transfer,
-    database query optimization techniques, and efficient data serialization.
     """
     try:
-        from django.core.cache import cache
-        from django.db.models import Prefetch, F, Value, CharField, Count, Q
-        from django.db.models.functions import Concat
-        from django.utils.timezone import now
-        import json
-        from functools import lru_cache
-        
-        # Get pagination parameters from request
-        page = int(request.GET.get('page', 1))
-        page_size = int(request.GET.get('page_size', 20))
-        friend_page = int(request.GET.get('friend_page', 1))
-        friend_page_size = int(request.GET.get('friend_page_size', 20))
-        
-        # Calculate offsets
-        friend_offset = (friend_page - 1) * friend_page_size
-        non_friend_offset = (page - 1) * page_size
-        
-        # Use cache key based on user ID and pagination parameters
-        cache_key = f"friends_data_{request.user.id}_{friend_page}_{friend_page_size}_{page}_{page_size}"
-        
-        # Check if we have a cache parameter to force refresh
-        force_refresh = request.GET.get('refresh', '0') == '1'
-        
-        # Try to get from cache first - using a two-level cache strategy
-        if not force_refresh:
-            # First check in-memory cache for fastest retrieval
-            cached_data = cache.get(cache_key)
-            if cached_data:
-                return Response(json.loads(cached_data), status=200)
-        
-        # Get user profile ID directly from request.user using select_related to avoid extra query
-        user_id = request.user.id
-        
-        # Use a more efficient query to get the user profile
-        try:
-            # Try to get from related field first (most efficient)
-            user_profile = request.user.user_profile
-            user_profile_id = user_profile.id
-        except AttributeError:
-            # Fallback to database query if not available
-            user_profile_id = UserProfile.objects.filter(user_id=user_id).values_list('id', flat=True).first()
-            if not user_profile_id:
-                return Response({"error": "User profile not found"}, status=404)
-            user_profile = UserProfile.objects.select_related('user').get(id=user_profile_id)
-        
-        # Use in-memory LRU cache for frequently accessed data within the request
-        @lru_cache(maxsize=1)
-        def get_friend_ids(profile_id):
-            return list(UserProfile.objects.get(id=profile_id).friends.values_list('id', flat=True))
-        
-        # Get friend IDs using the cached function
-        friend_ids = get_friend_ids(user_profile_id)
-        
+        # Enhanced query with better prefetching
+        user_profile = UserProfile.objects.select_related('user').prefetch_related(
+            Prefetch('friends', queryset=UserProfile.objects.select_related('user'))
+        ).get(user=request.user)
+
+        # Get all friends with optimized query
+        friends = list(user_profile.friends.filter(user__isnull=False))
+
+        # Get IDs of friends' users more efficiently
+        friend_user_ids = [f.user_id for f in friends if f.user_id]
+
         # Add current user's ID to the exclusion list
-        exclude_ids = friend_ids + [user_profile_id]
-        
-        # Calculate total counts for pagination info - use count() directly on querysets
-        total_friends = len(friend_ids)  # Already have the list, so use len()
-        
-        # Use a more efficient count query with proper indexing and query optimization
-        # Apply the filter conditions directly in the query for better performance
-        non_friends_query = UserProfile.objects.filter(
-            user__isnull=False
-        ).exclude(
-            id__in=exclude_ids
+        exclude_ids = friend_user_ids + [request.user.id]
+
+        # Get all non-friends excluding the current user - limit to 50 for performance
+        non_friends = list(
+            UserProfile.objects.filter(user__isnull=False)
+            .exclude(user__id__in=exclude_ids)
+            .select_related("user")[:50]
         )
         
-        # Use a more efficient count method that doesn't fetch all records
-        total_non_friends = non_friends_query.count()
+        # Add timestamp for client-side caching
+        timestamp = now().timestamp()
         
-        # Define a reusable queryset for both friends and non-friends to ensure consistency
-        def optimize_profile_queryset(queryset):
-            return queryset.select_related(
-                'user'
-            ).only(
-                'id', 'user__id', 'user__username', 'user__first_name', 
-                'user__last_name', 'profile_photo'
-            ).annotate(
-                full_name=Concat(
-                    F('user__first_name'), 
-                    Value(' '), 
-                    F('user__last_name'),
-                    output_field=CharField()
-                )
-            )
-        
-        # Apply the optimization to both querysets
-        friends = optimize_profile_queryset(
-            UserProfile.objects.filter(id__in=friend_ids)
-        ).order_by('user__username')[friend_offset:friend_offset+friend_page_size]
-        
-        non_friends = optimize_profile_queryset(
-            non_friends_query
-        ).order_by('user__username')[non_friend_offset:non_friend_offset+page_size]
-        
-        # Super lightweight serialization function - optimized to use annotated fields
-        # and avoid repeated attribute access
-        def minimal_profile(profile):
-            photo_url = None
-            if profile.profile_photo:
-                photo_url = profile.profile_photo.url
-                
-            return {
-                'id': profile.id,
-                'user_id': profile.user.id,
-                'username': profile.user.username,
-                'name': profile.full_name.strip(),  # Use the annotated field
-                'photo': photo_url,
-            }
-        
-        # Use list comprehension for faster serialization
-        friends_data = [minimal_profile(profile) for profile in friends]
-        non_friends_data = [minimal_profile(profile) for profile in non_friends]
-        
-        # Create response with pagination metadata
-        response_data = {
-            "friends": friends_data,
-            "non_friends": non_friends_data,
-            "pagination": {
-                "friends": {
-                    "total": total_friends,
-                    "page": friend_page,
-                    "page_size": friend_page_size,
-                    "pages": (total_friends + friend_page_size - 1) // friend_page_size
-                },
-                "non_friends": {
-                    "total": total_non_friends,
-                    "page": page,
-                    "page_size": page_size,
-                    "pages": (total_non_friends + page_size - 1) // page_size
-                }
+        return Response(
+            {
+                "friends": UserProfileSerializer(friends, many=True).data,
+                "non_friends": UserProfileSerializer(non_friends, many=True).data,
+                "timestamp": timestamp,
             },
-            "timestamp": now().timestamp()
-        }
-        
-        # Cache the result with a longer TTL for better performance
-        # Use a tiered caching strategy with different TTLs
-        cache.set(cache_key, json.dumps(response_data), 600)  # 10 minutes instead of 5
-        
-        return Response(response_data, status=200)
-        
+            status=200,
+        )
     except Exception as e:
-        import traceback
         # Return an informative error for debugging
         return Response(
             {
                 "error": f"Error retrieving friends: {str(e)}",
-                "detail": traceback.format_exc(),
                 "timestamp": now().timestamp(),
             },
             status=200,  # Still return 200 with error info for frontend compatibility
