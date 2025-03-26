@@ -22,6 +22,7 @@ from .forms import (
     EmailPasswordResetForm, 
     NewPasswordForm, 
     UserAuthenticationForm,
+    MobileUserJoinForm
 )
 from .models import CustomUser, EmailVerification
 from wave_v1.apiDecorators import include_form_fields
@@ -105,13 +106,14 @@ def login_api(request):
 @csrf_exempt
 @api_view(["POST", "GET"])
 @permission_classes([AllowAny])
+@include_form_fields(MobileUserJoinForm)
 def join_api(request):
     try:
         # For GET requests, just return the form fields
         if request.method == "GET":
             # Determine if request is from mobile
             is_mobile = request.headers.get('X-Platform') == 'mobile'
-            FormClass = CustomUserJoinForm
+            FormClass = MobileUserJoinForm
             fields_info = get_form_fields(FormClass)
             return Response({'form_fields': fields_info}, status=status.HTTP_200_OK)
 
@@ -125,7 +127,7 @@ def join_api(request):
         collegeId = request.session.get("collegeId")
 
         # Use appropriate form based on platform
-        FormClass = CustomUserJoinForm
+        FormClass = MobileUserJoinForm
         form = FormClass(request.data)
         
         if not form.is_valid():
