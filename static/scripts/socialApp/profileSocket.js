@@ -1,38 +1,66 @@
-// document.addEventListener("DOMContentLoaded", function () {
-//   const username = document.getElementById("socketUsername").value;
-//   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-//   const socket = new WebSocket(
-//     `${protocol}//${window.location.host}/profile/${username}/`
-//   );
+document.addEventListener("DOMContentLoaded", function () {
+  try {
+    const usernameElement = document.getElementById("socketUsername");
+    if (!usernameElement) {
+      console.error("socketUsername element not found");
+      return;
+    }
+    
+    const username = usernameElement.value;
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const socketUrl = `${protocol}//${window.location.host}/profile/${username}/`;
+    
+    console.log("Connecting profile WebSocket to:", socketUrl);
+    
+    let socket;
+    let reconnectAttempts = 0;
+    const maxReconnectAttempts = 5;
+    const reconnectDelay = 3000; // 3 seconds between reconnection attempts
 
-//   socket.onopen = function () {
-//   };
+    function connectWebSocket() {
+      try {
+        socket = new WebSocket(socketUrl);
 
-//   socket.onclose = function () {
+        socket.onopen = function () {
+          console.log("Profile WebSocket connection established");
+          reconnectAttempts = 0; // Reset reconnect attempts when successfully connected
+        };
 
-//     // // 1) Create the HTML for your overlay + popup
-//     // const overlayHTML = `
-//     //   <div id="crew-updates-overlay" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-[9999]">
-//     //     <div class="relative w-[400px] bg-white rounded-[10px] shadow-lg p-[20px] text-center">
-//     //       <button id="closeOverlayBtn" 
-//     //               class="absolute top-[10px] right-[10px] text-2xl border-none bg-none cursor-pointer">
-//     //         &times;
-//     //       </button>
-//     //           <h4><strong>Live Updates are off!</strong></h4>
-//     //     </div>
-//     //   </div>
-//     // `;
+        socket.onclose = function (event) {
+          console.log("Profile WebSocket connection closed", event);
+          
+          // Try to reconnect if not closed normally and we haven't exceeded max attempts
+          if (event.code !== 1000 && reconnectAttempts < maxReconnectAttempts) {
+            reconnectAttempts++;
+            console.log(`Attempting to reconnect (${reconnectAttempts}/${maxReconnectAttempts})...`);
+            setTimeout(connectWebSocket, reconnectDelay);
+          } else if (reconnectAttempts >= maxReconnectAttempts) {
+            console.log("Maximum reconnection attempts reached");
+          }
+        };
 
-//     // // 2) Insert this HTML into the DOM
-//     // document.body.insertAdjacentHTML("beforeend", overlayHTML);
+        socket.onerror = function (error) {
+          console.error("Profile WebSocket error:", error);
+        };
 
-//     // // 3) Attach close functionality to the button
-//     // document.getElementById("closeOverlayBtn").onclick = function () {
-//     //   document.getElementById("crew-updates-overlay").remove();
-//     // };
-//   };
+        socket.onmessage = function (event) {
+          console.log("Profile WebSocket message received:", event.data);
+          try {
+            const data = JSON.parse(event.data);
+            // Reload page to reflect friend status changes
+            location.reload();
+          } catch (error) {
+            console.error("Error processing WebSocket message:", error);
+          }
+        };
+      } catch (error) {
+        console.error("Error connecting to WebSocket:", error);
+      }
+    }
 
-//   socket.onmessage = function (event) {
-//     location.reload();
-//   };
-// });
+    // Start the WebSocket connection
+    connectWebSocket();
+  } catch (error) {
+    console.error("Error setting up WebSocket:", error);
+  }
+});
