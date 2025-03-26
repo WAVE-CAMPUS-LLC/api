@@ -37,6 +37,7 @@ from wave_v1.apiUtils import get_form_fields
 
 ResetLinkExpiryTime = timedelta(hours=2)
 
+@csrf_exempt
 @api_view(["POST"])
 @permission_classes([AllowAny])
 @include_form_fields(UserAuthenticationForm)
