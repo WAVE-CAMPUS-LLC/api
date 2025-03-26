@@ -22,7 +22,6 @@ from .forms import (
     EmailPasswordResetForm, 
     NewPasswordForm, 
     UserAuthenticationForm,
-    MobileCustomUserJoinForm
 )
 from .models import CustomUser, EmailVerification
 from wave_v1.apiDecorators import include_form_fields
