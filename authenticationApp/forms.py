@@ -89,6 +89,7 @@ class MobileCustomUserJoinForm(UserCreationForm):
     password2 = forms.CharField(label="Confirm Password", widget=forms.PasswordInput)
     current_year = datetime.now().year
     birthday = forms.DateField(widget=forms.SelectDateWidget(years=range(1980, current_year + 1)))    
+    captcha = hCaptchaField(required=False)  # Override captcha to make it not required
 
     class Meta:
         model = CustomUser
