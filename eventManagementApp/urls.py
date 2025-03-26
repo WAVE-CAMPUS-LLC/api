@@ -35,5 +35,10 @@ urlpatterns = [
         views.hostEventAnalytics,
         name="hostEventAnalytics",
     ),
+    path(
+        "analytics/event/<uuid:eventId>/sales/",
+        views.eventSalesAnalytics,
+        name="eventSalesAnalytics",
+    ),
     path("billing/add/card/new/", views.addCard, name="hostBillingAddCard"),
 ]

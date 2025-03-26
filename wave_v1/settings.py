@@ -71,6 +71,7 @@ if ENVIORNMENT == "development":
             "CONN_MAX_AGE": 1200,  # Keep the connection open for 10 minutes
         }
     }
+    print("DEBUG: " + str(DEBUG))
     print("Development Environment")
 else:
     ALLOWED_HOSTS = ["wave-v1.onrender.com", "waveoncampus.com"]
@@ -147,6 +148,7 @@ else:
         },
     }
     print("Production Environment")
+    print("DEBUG: " + str(DEBUG))
 
 
 url = os.getenv("SUPABASE_URL")

@@ -3,12 +3,13 @@
 
 
 {% block title %}
-{{ event.title }} analytics | WAVE.
+{{ event.title }} Analytics | WAVE.
 {% endblock title %}
 
 
 {% block script %}
 <script type="text/javascript" src="{% static "scripts/eventManagementApp/host/hostPortal.js" %}" defer></script>
+<script type="text/javascript" src="{% static "scripts/eventManagementApp/analytics/eventSales.js" %}" defer></script>
 {% endblock script %}
 
 
@@ -20,13 +21,14 @@
 {% block body %}
 <div class="flex flex-col gap-[70px] px-[20px] after-xsm:px-[30px] xxsm:px-[60px] sm:px-[70px] md:px-[60px] pre-lg:px-[70px] lg:px-[100px] xl:px-[140px] 2xl:px-[200px] 3xl:px-[300px]">
     <div class="page-heading font-Wanted-SemiBold text-[25px] md:text-[30px] flex flex-col gap-1 w-full">
-        <h2>{{ event.title }} [Analytics]</h2>
-        <p class="font-Wanted-Variable text-Semi-Medium text-gray-500">See an in-depth analysis of {{ event.title|lower }}!</p>
+        <h2>{{ event.title }} Analytics</h2>
+        <p id="analyticsHeading" class="font-Wanted-Variable text-Semi-Medium text-gray-500">See an in-depth analysis of {{ event.title }}!</p>
+        <input type="hidden" id="eventSalesURL" value="{% url "eventManagement:eventSalesAnalytics" event.eventId %}" />
     </div>
 
     <div id="portal-body" class="flex flex-col gap-10">
         <div class="content-control flex flex-row gap-4 w-full">
-            <div class="analytics-tab tab-active cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="engagement">Engagement</div>
+            <div class="analytics-tab tab-active cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="sales">Sales</div>
             <div class="analytics-tab cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="conversion">Conversion</div>
             <div class="analytics-tab cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="traffic">Traffic</div>
             <div class="analytics-tab cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="devices">Devices</div>
@@ -34,8 +36,21 @@
         </div>
 
         <div>
-            <div class="analytics-tab-content" id="engagement">
-                <div class="container-elements-analytics">Engagement</div>
+            <div class="analytics-tab-content" id="sales">
+                <div class="container-elements-analytics">
+                    <div class="content-control flex flex-row items-center gap-4 w-full mb-6">
+                        <label for="periodSelect" class="font-Wanted-Bold">Select Period:</label>
+                        <select id="periodSelect" class="cursor-pointer font-Wanted-Variable border border-gray-100 p-2 px-5 rounded-xl w-auto">
+                            <option value="daily">Daily</option>
+                            <option value="weekly">Weekly</option>
+                            <option value="monthly">Monthly</option>
+                        </select>
+                    </div>
+                    
+                    <div id="sales-content">
+                        <canvas id="eventSalesChartOverall" class="font-Wanted-Bold w-[600px] h-[500px] text-green"></canvas>
+                    </div>
+                </div>
             </div>
             <div class="analytics-tab-content" id="conversion">
                 <div class="container-elements-analytics">Conversion</div>

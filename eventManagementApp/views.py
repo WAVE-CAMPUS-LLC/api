@@ -16,7 +16,6 @@ from wave_v1.decorators import check_suspension, host, member, verified, onboard
 from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
 
-
 from accountManagementApp.models import UserProfile
 from collegeManagementApp.models import Organization, OrganizationMembership
 from .forms import CouponCodeForm, HostApplicationForm, EventForm, EditEventForm
@@ -30,7 +29,6 @@ from stripeManagementApp.getEarnings import GetEarnings
 from stripeManagementApp.processCashout import CashoutRequest
 from stripeManagementApp.createExternalAccount import ExternalAccounts
 from stripeManagementApp.getHostTransactions import Transactions
-
 
 from eventTicketsApp.forms import InvitationForm, PaidFreeTicketForm
 from .models import EventType, HostApplication, Event, HostProfile, CouponCode
@@ -612,6 +610,188 @@ def editEvent(request, eventId):
     )
 
 
+@login_required
+@host
+@member
+@check_suspension
+def hostEventAnalytics(request, eventId):
+    event = get_object_or_404(Event, eventId=eventId)
+    return render(
+        request,
+        "eventManagementApp/host/analytics/event/event.html",
+        {"event": event},
+    )
+
+
+@login_required
+@host
+@member
+@check_suspension
+def eventSalesAnalytics(request, eventId):
+    """
+    API endpoint for event sales analytics.
+    Returns sales data for the specified event based on the requested period.
+    """
+    from django.db.models import Count
+    from django.db.models.functions import TruncDay, TruncWeek, TruncMonth
+    from django.core.cache import cache
+    from django.utils import timezone
+    import datetime
+    import traceback
+    from eventTicketsApp.models import Ticket
+    
+    # Get period from request (default to daily)
+    period = request.GET.get('period', 'daily')
+    print(f"Event Sales Analytics requested for event {eventId} with period {period}")
+    
+    try:
+        # Get the event
+        event = get_object_or_404(Event, eventId=eventId, host=request.user)
+        
+        # Generate cache key based on event ID and period
+        cache_key = f'event_sales_analytics_{eventId}_{period}'
+        
+        # Try to get data from cache
+        cached_data = cache.get(cache_key)
+        if cached_data:
+            print(f"Returning cached data for {cache_key}")
+            return JsonResponse(cached_data)
+        
+        # If not in cache, query the database
+        # Get tickets for this event with Valid or Scanned status
+        tickets = Ticket.objects.filter(event=event, status__in=["Valid", "Scanned"])
+        
+        print(f"Found {tickets.count()} tickets for event {eventId}")
+        
+        # Get the date range
+        today = timezone.now().date()
+        
+        # Set date format based on period
+        if period == 'daily':
+            date_format = '%b %d'
+            date_field = TruncDay('created_at')
+            start_date = today - datetime.timedelta(days=29)  # Last 30 days
+        elif period == 'weekly':
+            date_format = '%b %d'
+            date_field = TruncWeek('created_at')
+            start_date = today - datetime.timedelta(weeks=11)  # Last 12 weeks
+        else:  # monthly
+            date_format = '%b %Y'
+            date_field = TruncMonth('created_at')
+            start_date = today.replace(day=1) - datetime.timedelta(days=365)  # Last 12 months
+        
+        # Initialize response data
+        data = {
+            'labels': [],
+            'counts': []
+        }
+        
+        try:
+            # Query the database with the appropriate grouping
+            sales_by_period = tickets.filter(
+                created_at__date__gte=start_date
+            ).annotate(
+                period=date_field
+            ).values(
+                'period'
+            ).annotate(
+                count=Count('mainId')  # Use mainId instead of id
+            ).order_by('period')
+            
+            print(f"Query returned {len(sales_by_period)} data points")
+        except Exception as e:
+            print(f"Error executing query: {str(e)}")
+            print(traceback.format_exc())
+            # Fallback to empty dataset
+            sales_by_period = []
+        
+        # Convert query results to the response format
+        for sale in sales_by_period:
+            try:
+                # Format the date based on the period
+                if period == 'daily':
+                    label = sale['period'].strftime(date_format)
+                elif period == 'weekly':
+                    label = f"Week {sale['period'].strftime('%W')}"
+                else:  # monthly
+                    label = sale['period'].strftime(date_format)
+                
+                data['labels'].append(label)
+                data['counts'].append(sale['count'])
+            except Exception as e:
+                print(f"Error formatting data point: {str(e)}")
+        
+        # Fill in gaps in the data
+        if period == 'daily':
+            date_range = [start_date + datetime.timedelta(days=i) for i in range(30)]
+            expected_labels = [d.strftime(date_format) for d in date_range]
+        elif period == 'weekly':
+            # Generate weeks
+            date_range = []
+            for i in range(12):
+                week_start = start_date + datetime.timedelta(weeks=i)
+                date_range.append(week_start)
+            expected_labels = [f"Week {d.strftime('%W')}" for d in date_range]
+        else:  # monthly
+            # Generate months
+            date_range = []
+            for i in range(12):
+                month_start = (start_date + datetime.timedelta(days=32 * i)).replace(day=1)
+                date_range.append(month_start)
+            expected_labels = [d.strftime(date_format) for d in date_range]
+        
+        # Fill in missing data points with zeros
+        complete_data = {
+            'labels': expected_labels,
+            'counts': [0] * len(expected_labels)
+        }
+        
+        # Update with actual data
+        for i, label in enumerate(data['labels']):
+            if label in expected_labels:
+                idx = expected_labels.index(label)
+                complete_data['counts'][idx] = data['counts'][i]
+        
+        # If there's no data at all, provide a fallback message
+        if sum(complete_data['counts']) == 0:
+            print(f"No sales data found for event {eventId}")
+            # Add a note to the first label to indicate no data
+            if complete_data['labels']:
+                complete_data['labels'][0] += " (No sales data)"
+        
+        # Cache the result for 1 hour
+        cache.set(cache_key, complete_data, 3600)
+        print(f"Returning real data for {cache_key}")
+        
+        return JsonResponse(complete_data)
+    
+    except Exception as e:
+        # Print the full traceback for debugging
+        print(f"Error in eventSalesAnalytics: {str(e)}")
+        print(traceback.format_exc())
+        
+        # Return a fallback response with error information
+        error_data = {
+            'error': str(e),
+            'labels': [f"{period.capitalize()} (Error)"],
+            'counts': [0]
+        }
+        return JsonResponse(error_data)
+
+
+@login_required
+@host
+@member
+@check_suspension
+def hostAnalyticsHome(request):
+    hostLiveEvents = Event.objects.filter(host=request.user, status="live")
+    return render(
+        request,
+        "eventManagementApp/host/analytics/analyticsHome.html",
+        {"hostLiveEvents": hostLiveEvents},
+    )
+
+
 def addCard(request):
     print("addCard view reached!")  # Debug print
     try:
@@ -677,29 +857,3 @@ def hostBillingCashout(request):
                 {"success": False, "error": "An error occurred"}, status=400
             )
     return JsonResponse({"success": False, "error": "Invalid request"}, status=405)
-
-
-@login_required
-@host
-@member
-@check_suspension
-def hostAnalyticsHome(request):
-    hostLiveEvents = Event.objects.filter(host=request.user, status="live")
-    return render(
-        request,
-        "eventManagementApp/host/analytics/analyticsHome.html",
-        {"hostLiveEvents": hostLiveEvents},
-    )
-
-
-@login_required
-@host
-@member
-@check_suspension
-def hostEventAnalytics(request, eventId):
-    event = get_object_or_404(Event, eventId=eventId)
-    return render(
-        request,
-        "eventManagementApp/host/analytics/event/event.html",
-        {"event": event},
-    )
