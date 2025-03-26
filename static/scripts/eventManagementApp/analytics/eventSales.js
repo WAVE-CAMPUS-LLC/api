@@ -59,6 +59,9 @@ function initializeChart(eventSalesURL) {
         xhr.open('GET', `${eventSalesURL}?period=${period}`, true);
         xhr.setRequestHeader('Content-Type', 'application/json');
         xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+        xhr.setRequestHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        xhr.setRequestHeader('Pragma', 'no-cache');
+        xhr.setRequestHeader('Expires', '0');
         
         xhr.onreadystatechange = function() {
             console.log(`XHR readyState: ${xhr.readyState}, status: ${xhr.status}`);
@@ -144,6 +147,9 @@ function initializeChart(eventSalesURL) {
                             noDataMessage.textContent = 'No sales data available for this period.';
                             salesContent.appendChild(noDataMessage);
                         }
+                        
+                        // Update ticket sales summary
+                        updateTicketSalesSummary(data);
                         
                         // Add event listeners for period selection
                         const periodSelect = document.getElementById('periodSelect');
@@ -188,6 +194,76 @@ function initializeChart(eventSalesURL) {
     }
 }
 
+// Function to update ticket sales summary
+function updateTicketSalesSummary(data) {
+    try {
+        console.log('Updating ticket sales summary with data:', JSON.stringify(data));
+        
+        // Check if the summary data exists in the response
+        if (!data.summary) {
+            console.log('No summary data available in the response');
+            
+            // Set default values
+            const elements = {
+                'tickets-today': document.getElementById('tickets-today'),
+                'tickets-week': document.getElementById('tickets-week'),
+                'tickets-month': document.getElementById('tickets-month'),
+                'tickets-year': document.getElementById('tickets-year')
+            };
+            
+            // Set default values for all elements
+            Object.keys(elements).forEach(key => {
+                if (elements[key]) {
+                    elements[key].textContent = '0';
+                }
+            });
+            
+            return;
+        }
+        
+        console.log('Summary data found:', JSON.stringify(data.summary));
+        
+        // Get all elements at once
+        const elements = {
+            today: document.getElementById('tickets-today'),
+            week: document.getElementById('tickets-week'),
+            month: document.getElementById('tickets-month'),
+            year: document.getElementById('tickets-year')
+        };
+        
+        console.log('Elements found:', {
+            today: elements.today ? 'yes' : 'no',
+            week: elements.week ? 'yes' : 'no',
+            month: elements.month ? 'yes' : 'no',
+            year: elements.year ? 'yes' : 'no'
+        });
+        
+        // Update each element if it exists
+        if (elements.today) {
+            console.log('Setting today tickets to:', data.summary.today);
+            elements.today.textContent = data.summary.today.toString();
+        }
+        
+        if (elements.week) {
+            console.log('Setting week tickets to:', data.summary.week);
+            elements.week.textContent = data.summary.week.toString();
+        }
+        
+        if (elements.month) {
+            console.log('Setting month tickets to:', data.summary.month);
+            elements.month.textContent = data.summary.month.toString();
+        }
+        
+        if (elements.year) {
+            console.log('Setting year tickets to:', data.summary.year);
+            elements.year.textContent = data.summary.year.toString();
+        }
+    } catch (e) {
+        console.error('Error updating ticket sales summary:', e);
+        console.error('Error stack:', e.stack);
+    }
+}
+
 // Function to update chart with new period
 function updateChart(eventSalesURL, period) {
     try {
@@ -211,6 +287,9 @@ function updateChart(eventSalesURL, period) {
         xhr.open('GET', `${eventSalesURL}?period=${period}`, true);
         xhr.setRequestHeader('Content-Type', 'application/json');
         xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+        xhr.setRequestHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        xhr.setRequestHeader('Pragma', 'no-cache');
+        xhr.setRequestHeader('Expires', '0');
         
         xhr.onreadystatechange = function() {
             console.log(`XHR readyState: ${xhr.readyState}, status: ${xhr.status}`);
@@ -219,7 +298,7 @@ function updateChart(eventSalesURL, period) {
                     console.log('XHR response text:', xhr.responseText);
                     try {
                         const data = JSON.parse(xhr.responseText);
-                        console.log('Parsed data:', data);
+                        console.log('Parsed data for period', period, ':', data);
                         
                         // Restore the canvas element
                         salesContent.innerHTML = '<canvas id="eventSalesChartOverall" class="font-Wanted-Bold w-[600px] h-[500px] text-green"></canvas>';
@@ -237,10 +316,10 @@ function updateChart(eventSalesURL, period) {
                         window.chartInstance = new Chart(ctx, {
                             type: 'bar',
                             data: {
-                                labels: data.labels, // These labels will be the dates or periods
+                                labels: data.labels,
                                 datasets: [{
                                     label: `${period.charAt(0).toUpperCase() + period.slice(1)} Sales`,
-                                    data: data.counts, // The total sales for each period
+                                    data: data.counts,
                                     borderColor: 'rgba(75, 192, 192, 1)',
                                     backgroundColor: 'rgba(75, 192, 192, 0.2)',
                                     borderWidth: 2,
@@ -296,16 +375,18 @@ function updateChart(eventSalesURL, period) {
                             noDataMessage.textContent = 'No sales data available for this period.';
                             salesContent.appendChild(noDataMessage);
                         }
+                        
+                        // Update ticket sales summary with the new data
+                        updateTicketSalesSummary(data);
+                        
                     } catch (e) {
                         console.error('Error parsing JSON:', e);
-                        console.error('Raw response:', xhr.responseText);
                         salesContent.innerHTML = `<div class="flex justify-center items-center h-[500px]">
                             <p class="text-red-500">Error loading sales data. Please try again later.</p>
                         </div>`;
                     }
                 } else {
                     console.error('HTTP error:', xhr.status);
-                    console.error('Response text:', xhr.responseText);
                     salesContent.innerHTML = `<div class="flex justify-center items-center h-[500px]">
                         <p class="text-red-500">Error loading sales data. Please try again later.</p>
                     </div>`;
@@ -313,16 +394,14 @@ function updateChart(eventSalesURL, period) {
             }
         };
         
-        xhr.onerror = function(e) {
-            console.error('XHR error:', e);
+        xhr.onerror = function() {
+            console.error('XHR error');
             salesContent.innerHTML = `<div class="flex justify-center items-center h-[500px]">
                 <p class="text-red-500">Error loading sales data. Please try again later.</p>
             </div>`;
         };
         
-        console.log('Sending XHR request to:', `${eventSalesURL}?period=${period}`);
         xhr.send();
-        console.log('XHR request sent');
     } catch (e) {
         console.error('Error in updateChart:', e);
     }

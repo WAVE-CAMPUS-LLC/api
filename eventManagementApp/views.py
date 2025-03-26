@@ -651,12 +651,6 @@ def eventSalesAnalytics(request, eventId):
         # Generate cache key based on event ID and period
         cache_key = f'event_sales_analytics_{eventId}_{period}'
         
-        # Try to get data from cache
-        cached_data = cache.get(cache_key)
-        if cached_data:
-            print(f"Returning cached data for {cache_key}")
-            return JsonResponse(cached_data)
-        
         # If not in cache, query the database
         # Get tickets for this event with Valid or Scanned status
         tickets = Ticket.objects.filter(event=event, status__in=["Valid", "Scanned"])
@@ -759,6 +753,47 @@ def eventSalesAnalytics(request, eventId):
             if complete_data['labels']:
                 complete_data['labels'][0] += " (No sales data)"
         
+        # Add ticket sales summary data
+        now = timezone.now()
+        today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        
+        # Calculate week start (Monday of current week)
+        week_start = (now.date() - datetime.timedelta(days=now.weekday()))
+        
+        # Calculate month and year start
+        month_start = now.date().replace(day=1)
+        year_start = now.date().replace(month=1, day=1)
+        
+        print(f"Calculating summary data with date ranges:")
+        print(f"Current time: {now}")
+        print(f"Today start: {today_start}")
+        print(f"Week start: {week_start}")
+        print(f"Month start: {month_start}")
+        print(f"Year start: {year_start}")
+        
+        # Get the count of tickets for each time period
+        # Use distinct() to avoid counting the same ticket multiple times
+        tickets_today = tickets.filter(created_at__date=now.date()).distinct().count()
+        tickets_week = tickets.filter(created_at__date__gte=week_start).distinct().count()
+        tickets_month = tickets.filter(created_at__date__gte=month_start).distinct().count()
+        tickets_year = tickets.filter(created_at__date__gte=year_start).distinct().count()
+        
+        print(f"Summary counts calculated:")
+        print(f"Today: {tickets_today}")
+        print(f"This week (since {week_start}): {tickets_week}")
+        print(f"This month (since {month_start}): {tickets_month}")
+        print(f"This year (since {year_start}): {tickets_year}")
+        
+        # Add summary to the response data
+        complete_data['summary'] = {
+            'today': tickets_today,
+            'week': tickets_week,
+            'month': tickets_month,
+            'year': tickets_year
+        }
+        
+        print(f"Complete data with summary: {json.dumps(complete_data)}")
+        
         # Cache the result for 1 hour
         cache.set(cache_key, complete_data, 3600)
         print(f"Returning real data for {cache_key}")
@@ -774,7 +809,13 @@ def eventSalesAnalytics(request, eventId):
         error_data = {
             'error': str(e),
             'labels': [f"{period.capitalize()} (Error)"],
-            'counts': [0]
+            'counts': [0],
+            'summary': {
+                'today': 0,
+                'week': 0,
+                'month': 0,
+                'year': 0
+            }
         }
         return JsonResponse(error_data)
 

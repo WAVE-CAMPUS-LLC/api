@@ -22,7 +22,7 @@
 <div class="flex flex-col gap-[70px] px-[20px] after-xsm:px-[30px] xxsm:px-[60px] sm:px-[70px] md:px-[60px] pre-lg:px-[70px] lg:px-[100px] xl:px-[140px] 2xl:px-[200px] 3xl:px-[300px]">
     <div class="page-heading font-Wanted-SemiBold text-[25px] md:text-[30px] flex flex-col gap-1 w-full">
         <h2>{{ event.title }} Analytics</h2>
-        <p id="analyticsHeading" class="font-Wanted-Variable text-Semi-Medium text-gray-500">See an in-depth analysis of {{ event.title }}!</p>
+        <p class="font-Wanted-Variable text-Semi-Medium text-gray-500">See an in-depth analysis of {{ event.title }}!</p>
         <input type="hidden" id="eventSalesURL" value="{% url "eventManagement:eventSalesAnalytics" event.eventId %}" />
     </div>
 
@@ -49,6 +49,29 @@
                     
                     <div id="sales-content">
                         <canvas id="eventSalesChartOverall" class="font-Wanted-Bold w-[600px] h-[500px] text-green"></canvas>
+                    </div>
+                    
+                    <!-- Ticket sales summary section -->
+                    <div id="ticket-sales-summary" class="mt-8 p-4 bg-gray-50 rounded-xl border border-gray-100">
+                        <h3 class="font-Wanted-Bold text-[18px] mb-4">Ticket Sales Summary</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="p-3 bg-white rounded-lg shadow-sm">
+                                <p class="font-Wanted-Variable text-gray-500">Tickets sold today:</p>
+                                <p id="tickets-today" class="font-Wanted-Bold text-[22px] text-green-600">0</p>
+                            </div>
+                            <div class="p-3 bg-white rounded-lg shadow-sm">
+                                <p class="font-Wanted-Variable text-gray-500">Tickets sold this week:</p>
+                                <p id="tickets-week" class="font-Wanted-Bold text-[22px] text-green-600">0</p>
+                            </div>
+                            <div class="p-3 bg-white rounded-lg shadow-sm">
+                                <p class="font-Wanted-Variable text-gray-500">Tickets sold this month:</p>
+                                <p id="tickets-month" class="font-Wanted-Bold text-[22px] text-green-600">0</p>
+                            </div>
+                            <div class="p-3 bg-white rounded-lg shadow-sm">
+                                <p class="font-Wanted-Variable text-gray-500">Tickets sold this year:</p>
+                                <p id="tickets-year" class="font-Wanted-Bold text-[22px] text-green-600">0</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
