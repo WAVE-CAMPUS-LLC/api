@@ -71,7 +71,6 @@ if ENVIORNMENT == "development":
             "CONN_MAX_AGE": 1200,  # Keep the connection open for 10 minutes
         }
     }
-    print("DEBUG: " + str(DEBUG))
     print("Development Environment")
 else:
     ALLOWED_HOSTS = ["wave-v1.onrender.com", "waveoncampus.com"]
@@ -148,7 +147,6 @@ else:
         },
     }
     print("Production Environment")
-    print("DEBUG: " + str(DEBUG))
 
 
 url = os.getenv("SUPABASE_URL")
@@ -342,28 +340,22 @@ AWS_S3_OBJECT_PARAMETERS = {
 AWS_QUERYSTRING_AUTH = False
 AWS_S3_VERIFY = True
 
-
+STORAGES = {
+    "default": {
+        "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+    },
+    "staticfiles": {
+        "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+    },
+}
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
 
-if DEBUG:
-    STATIC_URL = '/static/'
-    STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
-    STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
-else:
-    STATIC_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/static/"
-    STATICFILES_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
-    
-    STORAGES = {
-        "default": {
-            "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
-        },
-        "staticfiles": {
-            "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
-        },
-    }
+# Static files configuration
+STATIC_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/static/"
+STATICFILES_STORAGE = "storages.backends.s3boto3.S3StaticStorage"
 
 # Static files and media URL configuration
 MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/"
