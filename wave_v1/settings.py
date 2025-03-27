@@ -206,11 +206,61 @@ INSTALLED_APPS = [
     "qr_code",
     "storages",
     "channels",
+    "channels_redis",
     "rest_framework",
     "rest_framework_simplejwt",
     "corsheaders",
     "hcaptcha",
 ]
+
+# Redis and Channels configuration
+# Use the external Redis URL with proper authentication
+REDIS_URL = os.getenv("REDIS_URL", "rediss://red-cvhpb0aqgecs73d362ag:TNJQNjiXBUOuEJYV0npy4GJb0bsgJsPf@oregon-keyvalue.render.com:6379")
+use_redis = False
+
+if REDIS_URL:
+    # Test the Redis connection before configuring
+    import socket
+    import redis
+    from urllib.parse import urlparse
+    
+    # Parse the Redis URL to get the hostname and port
+    try:
+        # Try to connect to Redis using the redis-py client
+        r = redis.from_url(REDIS_URL, socket_timeout=3.0, socket_connect_timeout=3.0)
+        try:
+            # Ping the server to check the connection
+            r.ping()
+            use_redis = True
+            print(f"Successfully connected to Redis at {REDIS_URL.split('@')[-1]}")
+        except (redis.exceptions.ConnectionError, redis.exceptions.TimeoutError) as e:
+            print(f"Failed to connect to Redis: {e}")
+    except Exception as e:
+        print(f"Error connecting to Redis: {e}")
+
+if use_redis:
+    # Use Redis channel layer for production or when Redis is available
+    CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": "channels_redis.core.RedisChannelLayer",
+            "CONFIG": {
+                "hosts": [REDIS_URL],
+                "capacity": 1500,  # Channel layer message capacity
+                "expiry": 10,  # Message expiry time in seconds
+                "symmetric_encryption_keys": [SECRET_KEY],
+            },
+        }
+    }
+    print("Using Redis channel layer for WebSockets")
+else:
+    # Fallback to in-memory channel layer for development or when Redis is unavailable
+    CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": "channels.layers.InMemoryChannelLayer",
+        }
+    }
+    print("Using in-memory channel layer for WebSockets (Redis unavailable)")
+
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
