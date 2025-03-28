@@ -80,3 +80,6 @@ node_modules/
 
 # Package files
 package-lock.json
+
+# Static files
+staticfiles/
