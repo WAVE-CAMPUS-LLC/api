@@ -258,8 +258,86 @@ function updateTicketSalesSummary(data) {
             console.log('Setting year tickets to:', data.summary.year);
             elements.year.textContent = data.summary.year.toString();
         }
+
+        // Update ticket type data if available
+        updateTicketTypeData(data);
     } catch (e) {
         console.error('Error updating ticket sales summary:', e);
+        console.error('Error stack:', e.stack);
+    }
+}
+
+// Function to update ticket type data in the "Ticket Sales: In Depth" section
+function updateTicketTypeData(data) {
+    try {
+        console.log('Updating ticket type data');
+        
+        // Get the ticket type container
+        const ticketTypeContainer = document.getElementById('ticket-types-container');
+        
+        // If container doesn't exist or no ticket type data, return
+        if (!ticketTypeContainer || !data.ticket_types) {
+            console.log('No ticket type container or data found');
+            return;
+        }
+        
+        console.log('Ticket type data found:', JSON.stringify(data.ticket_types));
+        
+        // Clear the container
+        ticketTypeContainer.innerHTML = '';
+        
+        // If no ticket types, show a message
+        if (data.ticket_types.length === 0) {
+            ticketTypeContainer.innerHTML = '<p class="text-gray-500 text-center p-4">No ticket types found for this event.</p>';
+            return;
+        }
+        
+        // Create a grid for the ticket types
+        const grid = document.createElement('div');
+        grid.className = 'grid grid-cols-1 md:grid-cols-2 gap-4';
+        
+        // Add each ticket type to the grid
+        data.ticket_types.forEach(ticketType => {
+            const ticketTypeElement = document.createElement('div');
+            ticketTypeElement.className = 'p-3 bg-white rounded-lg shadow-sm';
+            
+            // Format the price and revenue as currency
+            const formattedPrice = new Intl.NumberFormat('en-US', { 
+                style: 'currency', 
+                currency: 'USD' 
+            }).format(ticketType.price);
+            
+            const formattedRevenue = new Intl.NumberFormat('en-US', { 
+                style: 'currency', 
+                currency: 'USD' 
+            }).format(ticketType.total_revenue);
+            
+            // Create the ticket type content
+            ticketTypeElement.innerHTML = `
+                <p class="font-Wanted-Bold text-[18px]">${ticketType.name}</p>
+                <div class="mt-2">
+                    <p class="font-Wanted-Variable text-gray-500">Price per ticket:</p>
+                    <p class="font-Wanted-Bold text-[16px]">${formattedPrice}</p>
+                </div>
+                <div class="mt-2">
+                    <p class="font-Wanted-Variable text-gray-500">Tickets sold:</p>
+                    <p class="font-Wanted-Bold text-[16px] text-green-600">${ticketType.tickets_sold}</p>
+                </div>
+                <div class="mt-2">
+                    <p class="font-Wanted-Variable text-gray-500">Total revenue:</p>
+                    <p class="font-Wanted-Bold text-[16px] text-green-600">${formattedRevenue}</p>
+                </div>
+            `;
+            
+            // Add the ticket type element to the grid
+            grid.appendChild(ticketTypeElement);
+        });
+        
+        // Add the grid to the container
+        ticketTypeContainer.appendChild(grid);
+        
+    } catch (e) {
+        console.error('Error updating ticket type data:', e);
         console.error('Error stack:', e.stack);
     }
 }

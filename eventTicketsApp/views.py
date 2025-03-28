@@ -612,6 +612,19 @@ def paymentSuccessful(request):
                     )
                     ticket_count += 1
                     print(f"Generated ticket #{i+1}/{quantity} for {first_name} {last_name}")
+                    
+                    # Update the ticket_sold count in the PaidFreeTicket model
+                    # The cart_key is the ticket ID (PaidFreeTicket.ticket_id)
+                    try:
+                        # Find the ticket type and increment its sold count
+                        ticket_type = PaidFreeTicket.objects.get(ticket_id=cart_key, event=event)
+                        ticket_type.ticket_sold += 1
+                        ticket_type.save()
+                        print(f"Updated ticket_sold count for {ticket_type.ticket_name}: now {ticket_type.ticket_sold}")
+                    except PaidFreeTicket.DoesNotExist:
+                        print(f"Could not find ticket type with ID {cart_key}")
+                    except Exception as e:
+                        print(f"Error updating ticket_sold count: {e}")
             except Exception as e:
                 print(f"Error generating regular ticket: {e}")
                 import traceback

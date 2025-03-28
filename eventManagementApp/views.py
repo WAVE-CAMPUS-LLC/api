@@ -632,13 +632,13 @@ def eventSalesAnalytics(request, eventId):
     API endpoint for event sales analytics.
     Returns sales data for the specified event based on the requested period.
     """
-    from django.db.models import Count
+    from django.db.models import Count, Sum, F
     from django.db.models.functions import TruncDay, TruncWeek, TruncMonth
     from django.core.cache import cache
     from django.utils import timezone
     import datetime
     import traceback
-    from eventTicketsApp.models import Ticket
+    from eventTicketsApp.models import Ticket, PaidFreeTicket
     
     # Get period from request (default to daily)
     period = request.GET.get('period', 'daily')
@@ -792,6 +792,29 @@ def eventSalesAnalytics(request, eventId):
             'year': tickets_year
         }
         
+        # Get ticket type data for the "Ticket Sales: In Depth" section
+        if event.ticketing == "Paid":
+            # Get all ticket types for this event
+            ticket_types = PaidFreeTicket.objects.filter(event=event)
+            ticket_type_data = []
+            
+            for ticket_type in ticket_types:
+                # Use the ticket_sold field directly from the PaidFreeTicket model
+                tickets_sold = ticket_type.ticket_sold
+                
+                # Calculate total revenue (price * tickets sold)
+                total_revenue = float(ticket_type.ticket_price) * tickets_sold
+                
+                ticket_type_data.append({
+                    'name': ticket_type.ticket_name,
+                    'price': float(ticket_type.ticket_price),
+                    'tickets_sold': tickets_sold,
+                    'total_revenue': total_revenue
+                })
+            
+            # Add ticket type data to the response
+            complete_data['ticket_types'] = ticket_type_data
+        
         print(f"Complete data with summary: {json.dumps(complete_data)}")
         
         # Cache the result for 1 hour
@@ -815,7 +838,8 @@ def eventSalesAnalytics(request, eventId):
                 'week': 0,
                 'month': 0,
                 'year': 0
-            }
+            },
+            'ticket_types': []
         }
         return JsonResponse(error_data)
 
