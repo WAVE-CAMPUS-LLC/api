@@ -11,6 +11,7 @@ from django.shortcuts import get_object_or_404
 from django.contrib.auth.models import Group
 from django.db.models import Q
 from .models import UserProfile
+from authenticationApp.models import CustomUser
 from blogApp.models import Blog
 from eventTicketsApp.models import Ticket
 from stripeManagementApp.customerSetup import CustomerAccount, ConnectAccount
@@ -107,6 +108,24 @@ def profile_api(request):
     }
     
     return Response(response_data, status=status.HTTP_200_OK)
+
+
+@api_view(["GET", "POST"])
+@permission_classes([IsAuthenticated])
+def delete_account(request):
+    """API endpoint for deleting a user account"""
+    
+    user = request.user
+    userAccount = get_object_or_404(CustomUser, username=user.username)
+    
+    if request.method == "POST":
+        try:
+            userAccount.delete()
+            return Response({"message": "Account deleted successfully."}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"error": f"An error occurred: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+    return Response({"error": "Invalid request method."}, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['GET', 'POST'])
