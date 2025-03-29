@@ -8,6 +8,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework import serializers, status
 
 import random
+import logging
 
 from eventManagementApp.models import Event, SharedEvent
 from accountManagementApp.models import UserProfile
@@ -348,11 +349,20 @@ def handle_rsvp(request, eventId):
     """
     API endpoint to handle RSVP for an event.
     """
+    # Add debug logging
+    logger = logging.getLogger(__name__)
+    logger.info(f"RSVP request received for event {eventId}")
+    logger.info(f"Request path: {request.path}")
+    logger.info(f"Request method: {request.method}")
+    logger.info(f"Request headers: {dict(request.headers)}")
+    logger.info(f"Request user: {request.user} (authenticated: {request.user.is_authenticated})")
+    
     event = get_object_or_404(Event, eventId=eventId)
     
     existing_rsvp = RSVPTicket.objects.filter(event=event, email=request.user.email).first() if request.user.is_authenticated else None
     
     if existing_rsvp:
+        logger.warning(f"User {request.user.email} already has an RSVP for this event")
         return Response({"status": "error", "message": "This email has already been submitted!"}, status=400)
     
     rsvp_form = RSVPForm(request.data, user=request.user)
@@ -360,6 +370,7 @@ def handle_rsvp(request, eventId):
         rsvp_ticket = rsvp_form.save(commit=False)
         
         if RSVPTicket.objects.filter(event=event, email=rsvp_ticket.email).exists():
+            logger.warning(f"Email {rsvp_ticket.email} already has an RSVP for this event")
             return Response({"status": "error", "message": "This email has already been submitted! Try a different one."}, status=400)
         
         if request.user.is_authenticated:
@@ -374,6 +385,8 @@ def handle_rsvp(request, eventId):
         
         generateTicket(request, event, request.user if request.user.is_authenticated else None, rsvp_ticket.first_name, rsvp_ticket.last_name, rsvp_ticket.email)
         
+        logger.info(f"RSVP successful for {rsvp_ticket.email}")
         return Response({"status": "success", "message": "You have reserved a spot! Check your email for confirmation."})
     else:
+        logger.error(f"RSVP form validation failed: {rsvp_form.errors}")
         return Response({"status": "error", "message": "There was an error with your submission.", "errors": rsvp_form.errors}, status=400)

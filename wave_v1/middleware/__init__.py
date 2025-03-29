@@ -1,1 +1,1 @@
-# This file makes the middleware directory a proper Python package
+# This file is intentionally empty to make the directory a proper Python package.
