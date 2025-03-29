@@ -248,6 +248,29 @@ def get_csrf_token(request):
     return JsonResponse({"detail": "CSRF cookie set"})
 
 
+@api_view(["GET"])
+@permission_classes([AllowAny])
+@ensure_csrf_cookie
+def csrf_token_api(request):
+    """
+    Dedicated API endpoint for mobile apps to obtain a CSRF token.
+    This endpoint:
+    1. Sets the CSRF cookie via @ensure_csrf_cookie
+    2. Explicitly returns the token value in the response
+    3. Is exempt from CSRF protection itself
+    """
+    from django.middleware.csrf import get_token
+    
+    # Get or generate the CSRF token
+    csrf_token = get_token(request)
+    
+    # Return both the cookie (via ensure_csrf_cookie) and the actual token value
+    return Response({
+        "csrf_token": csrf_token,
+        "detail": "CSRF token generated successfully"
+    }, status=status.HTTP_200_OK)
+
+
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def logout_api(request):
@@ -405,3 +428,23 @@ def set_new_password_api(request, uidb64, token):
             {"error": "An error occurred while resetting password"},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def csrf_test_api(request):
+    """
+    Test endpoint that requires CSRF validation.
+    This is useful for testing that CSRF token handling works correctly.
+    For mobile apps, this endpoint should be accessed with:
+    1. The X-CSRFToken header set
+    2. The Referer and Origin headers matching CSRF_TRUSTED_ORIGINS
+    3. The withCredentials option set to true
+    """
+    return Response({
+        "success": True,
+        "message": "CSRF validation successful",
+        "received_data": request.data
+    }, status=status.HTTP_200_OK)
+
+# The file currently ends here - remove the dangling decorators below

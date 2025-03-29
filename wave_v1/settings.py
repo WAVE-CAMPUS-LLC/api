@@ -269,18 +269,12 @@ MIDDLEWARE = [
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.BrokenLinkEmailsMiddleware",
     "django.middleware.common.CommonMiddleware",
-    "wave_v1.middleware.keep_alive.KeepAliveMiddleware",  # Updated path
-    "wave_v1.middleware.csrf_exempt.CustomCsrfMiddleware",  # Use our custom CSRF middleware
+    "django.middleware.csrf.CsrfViewMiddleware",  # Use our custom CSRF middleware
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "authenticationApp.middleware.RedirectAuthenticatedUsersMiddleware",
     "coreApp.middleware.TimezoneMiddleware",  # Add this line
-]
-
-# Define paths that should be exempt from CSRF protection (useful for mobile API endpoints)
-CSRF_EXEMPT_PATHS = [
-    '/nativeTSUReactAPI/',  # Exempt all mobile API endpoints
 ]
 
 ROOT_URLCONF = "wave_v1.urls"
