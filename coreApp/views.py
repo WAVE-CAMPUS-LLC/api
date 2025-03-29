@@ -85,10 +85,64 @@ def exploreView(request):
         admin_status="active"
     )[:9]
     
-    trending_events = Event.objects.filter(
+    # Calculate trending events based on favorites, shares, and views
+    from django.db.models import Count, F, ExpressionWrapper, FloatField
+    from accountManagementApp.models import UserProfile
+    from django.db.models.functions import Coalesce
+    from django.db.models import Value
+    
+    # Get events eligible for trending calculation
+    eligible_events = Event.objects.filter(
         status="live",
-        forAllDisplay=True  # Changed from privacy="Discoverable"
-    ).order_by("date")[:3]
+        forAllDisplay=True,
+        admin_status="active"
+    )
+    
+    # Count favorites for each event
+    event_favorites = UserProfile.objects.values('favorite_events').annotate(
+        count=Count('favorite_events')
+    ).filter(favorite_events__isnull=False)
+    
+    # Create a dictionary to store favorite counts by event ID
+    favorites_dict = {str(item['favorite_events']): item['count'] for item in event_favorites}
+    
+    # Count shares for each event
+    event_shares = SharedEvent.objects.values('event').annotate(
+        count=Count('event')
+    )
+    
+    # Create a dictionary to store share counts by event ID
+    shares_dict = {str(item['event']): item['count'] for item in event_shares}
+    
+    # Calculate a trending score for each event
+    trending_events_with_scores = []
+    for event in eligible_events:
+        favorite_count = favorites_dict.get(str(event.eventId), 0)
+        share_count = shares_dict.get(str(event.eventId), 0)
+        view_count = event.views
+        
+        # Calculate weighted score - you can adjust these weights
+        trending_score = (favorite_count * 3) + (share_count * 2) + (view_count * 1)
+        
+        # Add to list with score
+        trending_events_with_scores.append((event, trending_score))
+    
+    # Check if we have any meaningful trending data
+    has_trending_data = any(score > 0 for _, score in trending_events_with_scores)
+    
+    if has_trending_data:
+        # Sort by trending score (highest first)
+        trending_events_with_scores.sort(key=lambda x: x[1], reverse=True)
+        # Get top 3 trending events
+        trending_events = [event for event, _ in trending_events_with_scores[:3]]
+    else:
+        # Fall back to most recent events by date (for future events)
+        # For events on the same date, newer eventId (more recently created) will be prioritized
+        trending_events = Event.objects.filter(
+            status="live",
+            forAllDisplay=True,
+            admin_status="active"
+        ).order_by('-date', '-eventId')[:3]
 
     # Retrieve the user profile and invited events
     try:
