@@ -29,7 +29,7 @@
     <div id="portal-body" class="flex flex-col gap-10">
         <div class="content-control flex flex-row gap-4 w-full">
             <div class="analytics-tab tab-active cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="sales">Sales</div>
-            <div class="analytics-tab cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="conversion">Conversion</div>
+            <div class="analytics-tab cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="engagement">Engagement</div>
             <div class="analytics-tab cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="traffic">Traffic</div>
             <div class="analytics-tab cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="devices">Devices</div>
             <div class="analytics-tab cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="tickets">Tickets</div>
@@ -86,8 +86,54 @@
                     </div>
                 </div>
             </div>
-            <div class="analytics-tab-content" id="conversion">
-                <div class="container-elements-analytics">Conversion</div>
+            <div class="analytics-tab-content" id="engagement">
+                <div class="container-elements-analytics">
+                    <h3 class="font-Wanted-Bold text-[18px] mb-4">Engagement Analytics</h3>
+                    
+                    <!-- Views summary card -->
+                    <div class="p-4 bg-gray-50 rounded-xl border border-gray-100">
+                        <h4 class="font-Wanted-Bold text-[16px] mb-3">Page Views</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="p-3 bg-white rounded-lg shadow-sm">
+                                <p class="font-Wanted-Variable text-gray-500">Total Unique Views:</p>
+                                <p id="total-views" class="font-Wanted-Bold text-[22px]">{{ event.views }}</p>
+                                <p class="font-Wanted-Variable text-xs text-gray-400 mt-1">Each visitor is counted only once</p>
+                            </div>
+                            <div class="p-3 bg-white rounded-lg shadow-sm">
+                                <p class="font-Wanted-Variable text-gray-500">View-to-Ticket Conversion:</p>
+                                {% if event.views > 0 %}
+                                    <p id="conversion-rate" class="font-Wanted-Bold text-[22px] ">
+                                        {{ ticket_conversion_rate|default:"Calculating..." }}%
+                                    </p>
+                                {% else %}
+                                    <p id="conversion-rate" class="font-Wanted-Bold text-[22px] text-blue-600">
+                                        N/A
+                                    </p>
+                                {% endif %}
+                                <p class="font-Wanted-Variable text-xs text-gray-400 mt-1">Percentage of views resulting in ticket sales</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Engagement metrics -->
+                    <div class="mt-8 p-4 bg-gray-50 rounded-xl border border-gray-100">
+                        <h4 class="font-Wanted-Bold text-[16px] mb-3">Engagement Metrics</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div class="p-3 bg-white rounded-lg shadow-sm">
+                                <p class="font-Wanted-Variable text-gray-500">Shares:</p>
+                                <p id="total-shares" class="font-Wanted-Bold text-[22px] text-purple-600">{{ event_shares|default:"0" }}</p>
+                            </div>
+                            <div class="p-3 bg-white rounded-lg shadow-sm">
+                                <p class="font-Wanted-Variable text-gray-500">Favorites:</p>
+                                <p id="total-favorites" class="font-Wanted-Bold text-[22px] ">{{ event_favorites|default:"0" }}</p>
+                            </div>
+                            <div class="p-3 bg-white rounded-lg shadow-sm">
+                                <p class="font-Wanted-Variable text-gray-500">Go-With Requests:</p>
+                                <p id="total-go-with" class="font-Wanted-Bold text-[22px] text-green-600">{{ event_go_with|default:"0" }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
             <div class="analytics-tab-content" id="traffic">
                 <div class="container-elements-analytics">Traffic</div>
