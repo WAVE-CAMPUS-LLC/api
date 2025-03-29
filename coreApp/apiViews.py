@@ -20,6 +20,7 @@ from eventManagementApp.models import CouponCode, Event
 from authenticationApp.models import CustomUser
 from eventManagementApp.serializers import EventSerializer
 from eventTicketsApp.serializers import RSVPTicketSerializer
+from django.views.decorators.csrf import csrf_exempt
 
 class CustomUserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -343,6 +344,7 @@ def toggle_favorite(request, eventId):
         return Response({"status": "successfulUnfavorite", "message": "Event removed from favorites."})
 
 
+@csrf_exempt
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def handle_rsvp(request, eventId):
