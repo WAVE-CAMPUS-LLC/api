@@ -31,7 +31,7 @@ from stripeManagementApp.createExternalAccount import ExternalAccounts
 from stripeManagementApp.getHostTransactions import Transactions
 
 from eventTicketsApp.forms import InvitationForm, PaidFreeTicketForm
-from .models import EventType, HostApplication, Event, HostProfile, CouponCode
+from .models import EventType, HostApplication, Event, HostProfile, CouponCode, SharedEvent
 from authenticationApp.models import CustomUser
 
 from eventTicketsApp.models import InviteEventOption, RSVPTicket, PaidFreeTicket, Ticket
@@ -615,11 +615,49 @@ def editEvent(request, eventId):
 @member
 @check_suspension
 def hostEventAnalytics(request, eventId):
+    from django.db.models import Count
+    from accountManagementApp.models import UserProfile
+    from socialApp.models import GoWithRequest
+    from coreApp.models import EventView
+    from eventTicketsApp.models import Ticket
+    
     event = get_object_or_404(Event, eventId=eventId)
+    
+    # Calculate engagement metrics
+    
+    # 1. Get total shares for this event
+    event_shares = SharedEvent.objects.filter(event=event).count()
+    
+    # 2. Get total favorites for this event
+    event_favorites = UserProfile.objects.filter(favorite_events=event).count()
+    
+    # 3. Get total go-with requests for this event
+    event_go_with = GoWithRequest.objects.filter(event=event).count()
+    
+    # 4. Calculate view-to-ticket conversion rate
+    unique_purchasers = Ticket.objects.filter(event=event).values('user', 'guestEmail').distinct().count()
+    
+    if event.views > 0:
+        # Calculate conversion rate but cap it at 100%
+        conversion_rate = (unique_purchasers / event.views) * 100
+        ticket_conversion_rate = round(min(conversion_rate, 100), 1)
+    else:
+        ticket_conversion_rate = 0
+    
+    # Prepare context data for the template
+    context = {
+        "event": event,
+        "event_shares": event_shares,
+        "event_favorites": event_favorites,
+        "event_go_with": event_go_with,
+        "ticket_conversion_rate": ticket_conversion_rate,
+        "total_tickets": unique_purchasers,
+    }
+    
     return render(
         request,
         "eventManagementApp/host/analytics/event/event.html",
-        {"event": event},
+        context,
     )
 
 
@@ -632,13 +670,13 @@ def eventSalesAnalytics(request, eventId):
     API endpoint for event sales analytics.
     Returns sales data for the specified event based on the requested period.
     """
-    from django.db.models import Count
+    from django.db.models import Count, Sum, F
     from django.db.models.functions import TruncDay, TruncWeek, TruncMonth
     from django.core.cache import cache
     from django.utils import timezone
     import datetime
     import traceback
-    from eventTicketsApp.models import Ticket
+    from eventTicketsApp.models import Ticket, PaidFreeTicket
     
     # Get period from request (default to daily)
     period = request.GET.get('period', 'daily')
@@ -792,6 +830,29 @@ def eventSalesAnalytics(request, eventId):
             'year': tickets_year
         }
         
+        # Get ticket type data for the "Ticket Sales: In Depth" section
+        if event.ticketing == "Paid":
+            # Get all ticket types for this event
+            ticket_types = PaidFreeTicket.objects.filter(event=event)
+            ticket_type_data = []
+            
+            for ticket_type in ticket_types:
+                # Use the ticket_sold field directly from the PaidFreeTicket model
+                tickets_sold = ticket_type.ticket_sold
+                
+                # Calculate total revenue (price * tickets sold)
+                total_revenue = float(ticket_type.ticket_price) * tickets_sold
+                
+                ticket_type_data.append({
+                    'name': ticket_type.ticket_name,
+                    'price': float(ticket_type.ticket_price),
+                    'tickets_sold': tickets_sold,
+                    'total_revenue': total_revenue
+                })
+            
+            # Add ticket type data to the response
+            complete_data['ticket_types'] = ticket_type_data
+        
         print(f"Complete data with summary: {json.dumps(complete_data)}")
         
         # Cache the result for 1 hour
@@ -815,7 +876,8 @@ def eventSalesAnalytics(request, eventId):
                 'week': 0,
                 'month': 0,
                 'year': 0
-            }
+            },
+            'ticket_types': []
         }
         return JsonResponse(error_data)
 

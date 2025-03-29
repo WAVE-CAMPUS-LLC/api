@@ -10,7 +10,7 @@ from django.contrib import messages
 from django.utils.timezone import now
 
 from socialApp.views import send_social_socket_message
-from .models import Visitor
+from .models import Visitor, EventView
 from authenticationApp.models import CustomUser
 from eventManagementApp.models import (
     CouponCode,
@@ -332,11 +332,79 @@ def send_go_with_request(request, eventId, user, guest):
         elif go_with_request.status == "Declined":
             messages.warning(request, f"You're request has been declined by {go_with_request.receiver.user.first_name} {go_with_request.receiver.user.last_name}.")
 
+def track_event_view(request, event):
+    """
+    Tracks unique views for an event.
+    Increments the event's view count only if this is a new view from this user/session.
+    """
+    from .models import EventView
+    from django.db import IntegrityError
+    
+    # Get the client's IP address
+    ip_address = get_client_ip(request)
+    
+    # Get session key (for anonymous users)
+    session_key = request.session.session_key
+    if not session_key:
+        # Create a session if one doesn't exist
+        request.session.save()
+        session_key = request.session.session_key
+    
+    # Check if this view has already been counted
+    if request.user.is_authenticated:
+        # For authenticated users, check by user
+        view_exists = EventView.objects.filter(
+            event=event,
+            user=request.user
+        ).exists()
+        
+        if not view_exists:
+            # This is a new view, create a record and increment count
+            try:
+                EventView.objects.create(
+                    event=event,
+                    user=request.user,
+                    ip_address=ip_address,
+                    session_key=session_key
+                )
+                # Only increment the view count for new views
+                event.views += 1
+                event.save()
+            except IntegrityError:
+                # Handle race condition if view was created in another request
+                pass
+    else:
+        # For anonymous users, check by session and IP
+        view_exists = EventView.objects.filter(
+            event=event,
+            session_key=session_key,
+            ip_address=ip_address,
+            user__isnull=True
+        ).exists()
+        
+        if not view_exists:
+            # This is a new view, create a record and increment count
+            try:
+                EventView.objects.create(
+                    event=event,
+                    session_key=session_key,
+                    ip_address=ip_address
+                )
+                # Only increment the view count for new views
+                event.views += 1
+                event.save()
+            except IntegrityError:
+                # Handle race condition if view was created in another request
+                pass
+
 def eventDetailsView(request, eventId, token=None):
     pageName = "eventDetails"
     event = get_object_or_404(Event, eventId=eventId)
     eventPaidFreeTickets = PaidFreeTicket.objects.filter(event=event)
     eventCoupons = CouponCode.objects.filter(event=event)
+    
+    # Track unique views for this event
+    track_event_view(request, event)
     
     siteURL = settings.SITE_URL
     link = reverse('core:eventDetails', kwargs={'eventId': eventId})

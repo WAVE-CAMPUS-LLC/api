@@ -217,6 +217,8 @@ class Event(models.Model):
 
     stripeProductId = models.CharField(max_length=255, blank=True, null=True)
 
+    views = models.PositiveIntegerField(default=0, help_text="Number of unique views this event has received")
+
     host = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="events"
     )
@@ -598,4 +600,3 @@ class CouponCode(models.Model):
 
     def __str__(self):
         return self.code
-
