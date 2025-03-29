@@ -42,16 +42,19 @@ def exploreView(request):
     user = None
     user_friends = None
     user_crews = None
+    user_profile = None
 
     if request.user.is_authenticated:
-        user = get_object_or_404(UserProfile, user=request.user)
-        user_friends = user.friends.all()
-        user_crews = user.get_all_crews()
+        try:
+            user_profile = UserProfile.objects.get(user=request.user)
+            user = user_profile
+            user_friends = user.friends.all()
+            user_crews = user.get_all_crews()
+        except UserProfile.DoesNotExist:
+            # Handle case where authenticated user doesn't have a profile yet
+            pass
 
-    else:
-        # Anonymous users cannot bypass age restrictions
-        user_age = None
-
+    # Initialize empty favorites list
     isFavoriteEvent = []
 
     if user and hasattr(user, "favorite_events"):
@@ -60,6 +63,8 @@ def exploreView(request):
 
     if not request.user.is_authenticated:
         age_filter = Q(age_restriction="")
+        # Anonymous users cannot bypass age restrictions
+        user_age = None
     else:
         user_age = request.user.age
         if user_age is None and request.user.birthday:
@@ -78,18 +83,19 @@ def exploreView(request):
             if user_age >= 18:
                 age_filter |= Q(age_restriction="18+")
 
-    # Load initial 6 events
+    # Load initial 9 events
     initial_events = Event.objects.filter(
         status="live", 
         forAllDisplay=True,  # Changed from privacy="Discoverable"
         admin_status="active"
     )[:9]
     
-    # Calculate trending events based on favorites, shares, and views
-    from django.db.models import Count, F, ExpressionWrapper, FloatField
+    # Calculate trending events based on tickets, favorites, shares, and views
+    from django.db.models import Count, F, Sum, Case, When, IntegerField
     from accountManagementApp.models import UserProfile
     from django.db.models.functions import Coalesce
     from django.db.models import Value
+    from eventTicketsApp.models import Ticket, RSVPTicket, PaidFreeTicket
     
     # Get events eligible for trending calculation
     eligible_events = Event.objects.filter(
@@ -114,15 +120,36 @@ def exploreView(request):
     # Create a dictionary to store share counts by event ID
     shares_dict = {str(item['event']): item['count'] for item in event_shares}
     
+    # Count tickets for each event (both paid tickets and RSVPs)
+    paid_tickets = Ticket.objects.values('event').annotate(
+        count=Count('event')
+    )
+    
+    rsvp_tickets = RSVPTicket.objects.values('event').annotate(
+        count=Count('event')
+    )
+    
+    # Create dictionaries to store ticket counts by event ID
+    paid_tickets_dict = {str(item['event']): item['count'] for item in paid_tickets}
+    rsvp_tickets_dict = {str(item['event']): item['count'] for item in rsvp_tickets}
+    
     # Calculate a trending score for each event
     trending_events_with_scores = []
     for event in eligible_events:
-        favorite_count = favorites_dict.get(str(event.eventId), 0)
-        share_count = shares_dict.get(str(event.eventId), 0)
+        event_id_str = str(event.eventId)
+        favorite_count = favorites_dict.get(event_id_str, 0)
+        share_count = shares_dict.get(event_id_str, 0)
         view_count = event.views
+        paid_ticket_count = paid_tickets_dict.get(event_id_str, 0)
+        rsvp_ticket_count = rsvp_tickets_dict.get(event_id_str, 0)
+        total_ticket_count = paid_ticket_count + rsvp_ticket_count
         
-        # Calculate weighted score - you can adjust these weights
-        trending_score = (favorite_count * 3) + (share_count * 2) + (view_count * 1)
+        # Calculate weighted score based on priority:
+        # 1. Tickets gotten (highest priority)
+        # 2. Number of favorites
+        # 3. Number of shares
+        # 4. Number of views (lowest priority)
+        trending_score = (total_ticket_count * 10) + (favorite_count * 5) + (share_count * 3) + (view_count * 1)
         
         # Add to list with score
         trending_events_with_scores.append((event, trending_score))
@@ -146,21 +173,24 @@ def exploreView(request):
 
     # Retrieve the user profile and invited events
     try:
-        user_profile = UserProfile.objects.get(user=request.user)
-        invited_events = user_profile.invited_events.filter(status="live").filter(
-            age_filter
-        )
-        invitations = user_profile.invitations.all()
-        invited_events_with_tokens = []
-        for event in invited_events:
-            token = None
-            for invite in invitations:
-                if invite.event == event:
-                    token = invite.token
-                    break
-            invited_events_with_tokens.append((event, token))
-    except (TypeError, AttributeError, UserProfile.DoesNotExist):
-        user_profile = None
+        invited_events = None
+        invitations = None
+        invited_events_with_tokens = None
+        
+        if user_profile:
+            invited_events = user_profile.invited_events.filter(status="live").filter(
+                age_filter
+            )
+            invitations = user_profile.invitations.all()
+            invited_events_with_tokens = []
+            for event in invited_events:
+                token = None
+                for invite in invitations:
+                    if invite.event == event:
+                        token = invite.token
+                        break
+                invited_events_with_tokens.append((event, token))
+    except (TypeError, AttributeError):
         invited_events_with_tokens = None
 
     trending_categories = (
