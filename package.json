@@ -9,7 +9,7 @@
 	},
 	"scripts": {
 		"build:prod": "npx tailwindcss -i static/tailwindcss/input.css -o static/tailwindcss/output.css --minify && cd templates/emailManagement && maizzle build production",
-		"build:dev": "npx tailwindcss -i static/tailwindcss/input.css -o static/tailwindcss/output.css --minify && cd templates/emailManagement && maizzle build production && cd .. && cd .. && python manage.py collectstatic --noinput && python manage.py runserver",
+		"build:dev": "npx tailwindcss -i static/tailwindcss/input.css -o static/tailwindcss/output.css --minify && cd templates/emailManagement && maizzle build production && cd .. && cd .. && python manage.py runserver",
 		"start": "echo 'Starting Django application...'",
 		"stripe": "stripe listen --forward-to http://127.0.0.1:8000/stripeWebhook/"
 	},

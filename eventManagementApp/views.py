@@ -615,7 +615,8 @@ def editEvent(request, eventId):
 @member
 @check_suspension
 def hostEventAnalytics(request, eventId):
-    from django.db.models import Count
+    from django.db import models
+    from django.db.models import Count, Case, When, IntegerField, Q
     from accountManagementApp.models import UserProfile
     from socialApp.models import GoWithRequest
     from coreApp.models import EventView
@@ -644,6 +645,43 @@ def hostEventAnalytics(request, eventId):
     else:
         ticket_conversion_rate = 0
     
+    # 5. Calculate audience age distribution
+    age_distribution = {}
+    
+    # Define age groups
+    age_groups = [
+        {'min': 18, 'max': 24, 'label': '18-24'},
+        {'min': 25, 'max': 34, 'label': '25-34'},
+        {'min': 35, 'max': 44, 'label': '35-44'},
+        {'min': 45, 'max': 54, 'label': '45-54'},
+        {'min': 55, 'max': 64, 'label': '55-64'},
+        {'min': 65, 'max': 200, 'label': '65+'},
+    ]
+    
+    # Initialize age groups with zero counts
+    for group in age_groups:
+        age_distribution[group['label']] = 0
+    
+    # Count tickets by user age groups
+    tickets_with_users = Ticket.objects.filter(
+        event=event,
+        user__isnull=False
+    ).select_related('user')
+    
+    for ticket in tickets_with_users:
+        user_age = ticket.user.age
+        if user_age:
+            for group in age_groups:
+                if group['min'] <= user_age <= group['max']:
+                    age_distribution[group['label']] += 1
+                    break
+    
+    # 6. Calculate login status distribution (logged in vs guest users)
+    login_status_distribution = {
+        'Logged-in Users': Ticket.objects.filter(event=event, user__isnull=False).count(),
+        'Guest Users': Ticket.objects.filter(event=event, user__isnull=True).count()
+    }
+    
     # Prepare context data for the template
     context = {
         "event": event,
@@ -652,6 +690,8 @@ def hostEventAnalytics(request, eventId):
         "event_go_with": event_go_with,
         "ticket_conversion_rate": ticket_conversion_rate,
         "total_tickets": unique_purchasers,
+        "age_distribution": json.dumps(age_distribution),
+        "login_status_distribution": json.dumps(login_status_distribution),
     }
     
     return render(

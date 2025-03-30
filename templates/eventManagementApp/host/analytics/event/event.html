@@ -10,6 +10,7 @@
 {% block script %}
 <script type="text/javascript" src="{% static "scripts/eventManagementApp/host/hostPortal.js" %}" defer></script>
 <script type="text/javascript" src="{% static "scripts/eventManagementApp/analytics/eventSales.js" %}" defer></script>
+<script type="text/javascript" src="{% static "scripts/eventManagementApp/analytics/audienceAnalytics.js" %}" defer></script>
 {% endblock script %}
 
 
@@ -24,15 +25,15 @@
         <h2>{{ event.title }} Analytics</h2>
         <p class="font-Wanted-Variable text-Semi-Medium text-gray-500">See an in-depth analysis of {{ event.title }}!</p>
         <input type="hidden" id="eventSalesURL" value="{% url "eventManagement:eventSalesAnalytics" event.eventId %}" />
+        <input type="hidden" id="ageDistributionData" value="{{ age_distribution }}" />
+        <input type="hidden" id="loginStatusData" value="{{ login_status_distribution }}" />
     </div>
 
     <div id="portal-body" class="flex flex-col gap-10">
         <div class="content-control flex flex-row gap-4 w-full">
             <div class="analytics-tab tab-active cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="sales">Sales</div>
             <div class="analytics-tab cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="engagement">Engagement</div>
-            <div class="analytics-tab cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="traffic">Traffic</div>
-            <div class="analytics-tab cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="devices">Devices</div>
-            <div class="analytics-tab cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="tickets">Tickets</div>
+            <div class="analytics-tab cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="audience">Audience</div>
         </div>
 
         <div>
@@ -135,14 +136,28 @@
                     </div>
                 </div>
             </div>
-            <div class="analytics-tab-content" id="traffic">
-                <div class="container-elements-analytics">Traffic</div>
-            </div>
-            <div class="analytics-tab-content" id="devices">
-                <div class="container-elements-analytics">Devices</div>
-            </div>
-            <div class="analytics-tab-content" id="tickets">
-                <div class="container-elements-analytics">Tickets</div>
+            <div class="analytics-tab-content" id="audience">
+                <div class="container-elements-analytics">
+                    <h3 class="font-Wanted-Bold text-[18px] mb-4">Audience Analytics</h3>
+                    
+                    <!-- Age Distribution Chart -->
+                    <div class="mt-4 p-4 bg-gray-50 rounded-xl border border-gray-100">
+                        <h4 class="font-Wanted-Bold text-[16px] mb-3">Audience Age Distribution</h4>
+                        <div id="age-distribution-container" class="w-full h-[400px]">
+                            <canvas id="ageDistributionChart" class="font-Wanted-Bold w-full h-full"></canvas>
+                        </div>
+                        <p class="font-Wanted-Variable text-xs text-gray-400 mt-3">Age data is collected from logged-in users who purchased tickets</p>
+                    </div>
+                    
+                    <!-- Login Status Pie Chart -->
+                    <div class="mt-8 p-4 bg-gray-50 rounded-xl border border-gray-100">
+                        <h4 class="font-Wanted-Bold text-[16px] mb-3">User Login Status</h4>
+                        <div id="login-status-container" class="w-full h-[500px]">
+                            <canvas id="loginStatusChart" class="font-Wanted-Bold w-full h-full"></canvas>
+                        </div>
+                        <p class="font-Wanted-Variable text-xs text-gray-400 mt-3">Shows the proportion of ticket purchases made by registered users vs. guest users</p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
