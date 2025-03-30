@@ -38,19 +38,21 @@ def indexView(request):
 
 def exploreView(request):
     pageName = "explore"
-
+    
     user = None
     user_friends = None
     user_crews = None
     user_profile = None
 
     if request.user.is_authenticated:
+        # Store the UserProfile class in a local variable to ensure it's available in the exception block
+        UserProfileModel = UserProfile
         try:
-            user_profile = UserProfile.objects.get(user=request.user)
+            user_profile = UserProfileModel.objects.get(user=request.user)
             user = user_profile
             user_friends = user.friends.all()
             user_crews = user.get_all_crews()
-        except UserProfile.DoesNotExist:
+        except UserProfileModel.DoesNotExist:
             # Handle case where authenticated user doesn't have a profile yet
             pass
 
@@ -92,7 +94,6 @@ def exploreView(request):
     
     # Calculate trending events based on tickets, favorites, shares, and views
     from django.db.models import Count, F, Sum, Case, When, IntegerField
-    from accountManagementApp.models import UserProfile
     from django.db.models.functions import Coalesce
     from django.db.models import Value
     from eventTicketsApp.models import Ticket, RSVPTicket, PaidFreeTicket
