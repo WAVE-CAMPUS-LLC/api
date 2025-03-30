@@ -11,6 +11,7 @@
 <script type="text/javascript" src="{% static "scripts/eventManagementApp/host/hostPortal.js" %}" defer></script>
 <script type="text/javascript" src="{% static "scripts/eventManagementApp/analytics/eventSales.js" %}" defer></script>
 <script type="text/javascript" src="{% static "scripts/eventManagementApp/analytics/audienceAnalytics.js" %}" defer></script>
+<script type="text/javascript" src="{% static "scripts/eventManagementApp/analytics/attendanceAnalytics.js" %}" defer></script>
 {% endblock script %}
 
 
@@ -27,6 +28,7 @@
         <input type="hidden" id="eventSalesURL" value="{% url "eventManagement:eventSalesAnalytics" event.eventId %}" />
         <input type="hidden" id="ageDistributionData" value="{{ age_distribution }}" />
         <input type="hidden" id="loginStatusData" value="{{ login_status_distribution }}" />
+        <input type="hidden" id="attendanceData" value="{{ attendance_distribution }}" />
     </div>
 
     <div id="portal-body" class="flex flex-col gap-10">
@@ -34,6 +36,7 @@
             <div class="analytics-tab tab-active cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="sales">Sales</div>
             <div class="analytics-tab cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="engagement">Engagement</div>
             <div class="analytics-tab cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="audience">Audience</div>
+            <div class="analytics-tab cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="attendance">Attendance</div>
         </div>
 
         <div>
@@ -156,6 +159,42 @@
                             <canvas id="loginStatusChart" class="font-Wanted-Bold w-full h-full"></canvas>
                         </div>
                         <p class="font-Wanted-Variable text-xs text-gray-400 mt-3">Shows the proportion of ticket purchases made by registered users vs. guest users</p>
+                    </div>
+                </div>
+            </div>
+            <div class="analytics-tab-content" id="attendance">
+                <div class="container-elements-analytics">
+                    <h3 class="font-Wanted-Bold text-[18px] mb-4">Attendance Analytics</h3>
+                    
+                    <!-- Attendance Summary -->
+                    <div class="mt-4 p-4 bg-gray-50 rounded-xl border border-gray-100">
+                        <h4 class="font-Wanted-Bold text-[16px] mb-3">Attendance Summary</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                            <div class="p-3 bg-white rounded-lg shadow-sm">
+                                <p class="font-Wanted-Variable text-gray-500">Total Tickets:</p>
+                                <p id="total-tickets" class="font-Wanted-Bold text-[22px] text-blue-600">{{ total_tickets_count|default:"0" }}</p>
+                            </div>
+                            <div class="p-3 bg-white rounded-lg shadow-sm">
+                                <p class="font-Wanted-Variable text-gray-500">Tickets Scanned:</p>
+                                <p id="scanned-tickets" class="font-Wanted-Bold text-[22px] text-green-600">{{ scanned_tickets_count|default:"0" }}</p>
+                            </div>
+                            <div class="p-3 bg-white rounded-lg shadow-sm">
+                                <p class="font-Wanted-Variable text-gray-500">Attendance Rate:</p>
+                                <p id="attendance-rate" class="font-Wanted-Bold text-[22px] text-purple-600">
+                                    {% if total_tickets_count > 0 %}
+                                        {{ scanned_tickets_count|floatformat:0 }}%
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <!-- Attendance Chart -->
+                        <div id="attendance-chart-container" class="w-full h-[500px]">
+                            <canvas id="attendanceChart" class="font-Wanted-Bold w-full h-full"></canvas>
+                        </div>
+                        <p class="font-Wanted-Variable text-xs text-gray-400 mt-3">A ticket is considered "Attended" when its status is "Scanned"</p>
                     </div>
                 </div>
             </div>

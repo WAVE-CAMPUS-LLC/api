@@ -682,6 +682,16 @@ def hostEventAnalytics(request, eventId):
         'Guest Users': Ticket.objects.filter(event=event, user__isnull=True).count()
     }
     
+    # 7. Calculate attendance data (scanned vs not scanned tickets)
+    total_tickets = Ticket.objects.filter(event=event).count()
+    scanned_tickets = Ticket.objects.filter(event=event, status="Scanned").count()
+    not_scanned_tickets = total_tickets - scanned_tickets
+    
+    attendance_distribution = {
+        'Attended': scanned_tickets,
+        'Did Not Attend': not_scanned_tickets
+    }
+    
     # Prepare context data for the template
     context = {
         "event": event,
@@ -692,6 +702,9 @@ def hostEventAnalytics(request, eventId):
         "total_tickets": unique_purchasers,
         "age_distribution": json.dumps(age_distribution),
         "login_status_distribution": json.dumps(login_status_distribution),
+        "attendance_distribution": json.dumps(attendance_distribution),
+        "total_tickets_count": total_tickets,
+        "scanned_tickets_count": scanned_tickets,
     }
     
     return render(
