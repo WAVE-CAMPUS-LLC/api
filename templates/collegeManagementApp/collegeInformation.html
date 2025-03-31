@@ -37,6 +37,14 @@
         </div>
     </div>
 
+    {% if college.campus_image %}
+    <div>
+        <div class="collegeBannerContainer w-full h-[300px] sm:h-[400px] md:h-[500px] lg:h-[600px] xl:h-[700px] 2xl:h-[800px] rounded-[20px] overflow-hidden shadow-custom-shadow-3">
+            <img src="{{ college.campus_image.url }}" alt="{{ college.name }}" class="w-full h-full object-cover rounded-[20px]"/>
+        </div>
+    </div>
+    {% endif %}
+    
     <div id="pageBody" class="flex flex-col gap-[30px] w-full">
         <div id="pageBodyContent">
             <div id="contentContainerTabs" class="w-full flex flex-col gap-[50px]">
