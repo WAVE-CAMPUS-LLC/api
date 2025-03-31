@@ -131,10 +131,6 @@ def requestCollege(request):
     )
 
 
-@login_required
-@member
-@verified
-@check_suspension
 def viewCollegeInformation(request, collegeId):
     pageName = "Colleges"
 
