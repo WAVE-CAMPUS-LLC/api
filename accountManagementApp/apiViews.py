@@ -112,7 +112,7 @@ def profile_api(request):
 
 
 @csrf_exempt
-@api_view(["GET", "POST"])
+@api_view(["GET", "POST", "DELETE"])
 @permission_classes([IsAuthenticated])
 def delete_account(request):
     """API endpoint for deleting a user account"""
@@ -120,7 +120,7 @@ def delete_account(request):
     user = request.user
     userAccount = get_object_or_404(CustomUser, username=user.username)
     
-    if request.method == "POST":
+    if request.method in ["POST", "DELETE"]:
         try:
             # Delete Stripe customer account if it exists
             if user.customer_id:
@@ -133,7 +133,7 @@ def delete_account(request):
             return Response({"error": f"An error occurred: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     # For GET requests, return a confirmation message
-    return Response({"message": "Send a POST request to confirm account deletion."}, status=status.HTTP_200_OK)
+    return Response({"message": "Send a POST or DELETE request to confirm account deletion."}, status=status.HTTP_200_OK)
 
 
 @api_view(['GET', 'POST'])
