@@ -9,7 +9,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from eventManagementApp.models import Event, HostProfile
+from eventManagementApp.models import Event, HostProfile, CouponCode
 from .serializers import EventSerializer
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -24,6 +24,7 @@ from accountManagementApp.models import UserProfile
 from collegeManagementApp.models import Organization, OrganizationMembership
 from .models import Ticket, RSVPTicket, PaidFreeTicket, StripePlatformSettings
 from .serializers import TicketSerializer, RSVPTicketSerializer
+from eventManagementApp.serializers import CouponSerializer
 from authenticationApp.models import CustomUser
 
 
@@ -39,6 +40,39 @@ def get_event_tickets(request):
         },
         status=status.HTTP_200_OK,
     )
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def get_event_coupons(request, eventId):
+    event = get_object_or_404(Event, eventId=eventId)
+    try:
+        # Get all coupon codes for the event instead of using get_object_or_404
+        coupons = CouponCode.objects.filter(event=event)
+
+        if coupons.exists():
+            return Response(
+                {
+                    "coupons": CouponSerializer(coupons, many=True).data
+                }, 
+                status=status.HTTP_200_OK,
+            )
+        else:
+            return Response(
+                {
+                    "error": "No coupons found for this event"
+                }, 
+                status=status.HTTP_404_NOT_FOUND,
+            )
+            
+    except Exception as e:
+        return Response(
+            {
+                "error": f"Error retrieving coupons: {str(e)}"
+            }, 
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
 
 
 @api_view(["POST"])

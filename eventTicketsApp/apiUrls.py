@@ -8,6 +8,7 @@ from .apiViews import (
     get_user_ticket_info,
     verify_ticket
 )
+from . import apiViews
 
 app_name = "eventTicketsAPI"
 
@@ -19,5 +20,6 @@ urlpatterns = [
     path("event/<uuid:eventId>/tickets/", get_event_ticket_info, name="get_event_ticket_info"),
     path("get_user_ticket_info/<str:ticketId>/", get_user_ticket_info, name="get_user_ticket_info"),
     path('checkout/', processCheckout, name="processCheckout"),
-    path('verify_ticket/', verify_ticket, name="verify_ticket")
+    path('verify_ticket/', verify_ticket, name="verify_ticket"),
+    path("<uuid:eventId>/coupons/", apiViews.get_event_coupons, name="get_event_coupons"),
 ]

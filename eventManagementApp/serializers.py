@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Event, SharedEvent
+from .models import Event, SharedEvent, CouponCode
 from accountManagementApp.serializers import UserProfileSerializer
 
 class EventBasicSerializer(serializers.ModelSerializer):
@@ -75,3 +75,8 @@ class SharedEventSerializer(serializers.ModelSerializer):
             data['crew_name'] = instance.crew.name
         return data
 
+class CouponSerializer(serializers.ModelSerializer):
+    event = EventBasicSerializer()
+    class Meta:
+        model = CouponCode
+        fields = "__all__"
