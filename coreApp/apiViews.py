@@ -23,9 +23,16 @@ from eventTicketsApp.serializers import RSVPTicketSerializer
 from django.views.decorators.csrf import csrf_exempt
 
 class CustomUserSerializer(serializers.ModelSerializer):
+    profile_picture = serializers.SerializerMethodField()
+    
     class Meta:
         model = CustomUser
-        fields = ('id', 'username', 'email')
+        fields = ('id', 'username', 'email', 'first_name', 'profile_picture')
+        
+    def get_profile_picture(self, obj):
+        if hasattr(obj, 'user_profile') and obj.user_profile and obj.user_profile.profile_photo:
+            return obj.user_profile.profile_photo.url
+        return None
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
