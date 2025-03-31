@@ -22,7 +22,7 @@ from eventManagementApp.serializers import EventSerializer
 from eventTicketsApp.serializers import RSVPTicketSerializer
 from django.views.decorators.csrf import csrf_exempt
 
-class CustomUserSerializer(serializers.ModelSerializer):
+class GuestListCustomUserSerializer(serializers.ModelSerializer):
     profile_picture = serializers.SerializerMethodField()
     
     class Meta:
@@ -312,10 +312,10 @@ def event_details(request, eventId):
         
         "rsvpFormRequired": rsvpFormRequired,  # Boolean indicating if RSVP form is required
         "paidFreeTickets": eventPaidFreeTickets.values(),
-        "friends": [CustomUserSerializer(user_friend.user).data for user_friend in user_friends] if user_friends else [],
+        "friends": [GuestListCustomUserSerializer(user_friend.user).data for user_friend in user_friends] if user_friends else [],
         "crews": [user_crew.name for user_crew in user_crews] if user_crews else [],
         "isFavoriteEvent": isFavoriteEvent,
-        "guestList": [CustomUserSerializer(guest).data for guest in guest_list] if guest_list else [],
+        "guestList": [GuestListCustomUserSerializer(guest).data for guest in guest_list] if guest_list else [],
     }
 
     return Response(response_data)
