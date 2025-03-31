@@ -406,3 +406,46 @@ def handle_rsvp(request, eventId):
     else:
         logger.error(f"RSVP form validation failed: {rsvp_form.errors}")
         return Response({"status": "error", "message": "There was an error with your submission.", "errors": rsvp_form.errors}, status=400)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def event_guests(request, eventId):
+    """
+    API endpoint for getting the guest list of an event.
+    Only shows guests if the event has show_guest_list set to True.
+    Returns profile pictures, first names, and last names of guests.
+    """
+    # Fetch the event
+    event = get_object_or_404(Event, eventId=eventId)
+    
+    # Check if the event allows showing the guest list
+    if not event.show_guest_list:
+        return Response(
+            {"message": "Guest list is not available for this event."},
+            status=status.HTTP_403_FORBIDDEN
+        )
+    
+    # Fetch the guest list
+    guest_list = event.guest_list.all()
+    
+    # Prepare the response data with profile pictures and names
+    guests_data = []
+    for guest in guest_list:
+        profile_picture = None
+        if hasattr(guest, 'user_profile') and guest.user_profile and guest.user_profile.profile_photo:
+            profile_picture = guest.user_profile.profile_photo.url
+            
+        guests_data.append({
+            'id': str(guest.id),
+            'first_name': guest.first_name,
+            'last_name': guest.last_name,
+            'profile_picture': profile_picture,
+        })
+    
+    return Response({
+        "event_id": str(event.eventId),
+        "event_title": event.title,
+        "guest_count": len(guests_data),
+        "guests": guests_data
+    })
