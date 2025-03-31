@@ -492,8 +492,15 @@ def eventDetailsView(request, eventId, token=None):
     track_event_view(request, event)
     
     siteURL = settings.SITE_URL
+    
+    # Generate both regular and universal links for this event
     link = reverse('core:eventDetails', kwargs={'eventId': eventId})
     eventLink = f"{siteURL}{link}"
+    
+    # Create an app-compatible Universal Link
+    app_link = reverse('core:app_event_link', kwargs={'eventId': eventId})
+    universalLink = f"{siteURL}{app_link}"
+    
     rsvpForm = RSVPForm(user=request.user) if event.ticketing == "Free" else None
     user = None
     user_friends = None
@@ -661,6 +668,7 @@ def eventDetailsView(request, eventId, token=None):
             "isFavoriteEvent": isFavoriteEvent,
             "guestList": guest_list,
             "eventLink": eventLink,
+            "universalLink": universalLink,  # Add the universal link
             "userId": user_id,
             "coupons": eventCoupons,
         },
