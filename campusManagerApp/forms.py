@@ -21,6 +21,7 @@ class EditCampusAsManagerForm(forms.ModelForm):
             "contact_website",
             "motto",
             "logo",
+            "campus_image",
         ]
 
         labels = {
@@ -33,5 +34,6 @@ class EditCampusAsManagerForm(forms.ModelForm):
             "contact_website": _("Website"),
             "motto": _("Motto"),
             "logo": _("Logo"),
+            "campus_image": _("Campus Image"),
         }
         widgets = {"state": forms.Select(), "country": forms.Select()}
