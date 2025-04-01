@@ -221,6 +221,51 @@ def createPaidEvent(request):
     return Response({"errors": event_form.errors}, status=status.HTTP_400_BAD_REQUEST)
 
 
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def createFreeEvent(request):
+    user_account = get_object_or_404(CustomUser, username=request.user.username)
+    event_action = request.data.get("eventAction")
+
+    # Ensure valid event action
+    if event_action != "submit":
+        return Response(
+            {"error": "Invalid action."}, status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # Pass user to the form explicitly
+    event_form = EventForm(request.data, request.FILES, user=request.user)
+
+    if event_form.is_valid():
+        event = event_form.save(commit=False)
+        event.host = user_account
+        event.ticketing = "Free"
+        event.status = "live"
+
+        host_profile, _ = HostProfile.objects.get_or_create(user=request.user)
+
+        event.save()
+
+        # Create Stripe product
+        product = createHostProduct(event, host_profile.stripe_account_id)
+        if not product:
+            event.delete()  # Prevent storing an incomplete event
+            return Response(
+                {"error": "Product creation failed."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+        event.stripeProductId = product.id
+        event.save()
+
+        return Response(
+            {"message": "Event is live!", "eventId": event.eventId},
+            status=status.HTTP_201_CREATED,
+        )
+
+    return Response({"errors": event_form.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def getHostStripeAccountLink(request):

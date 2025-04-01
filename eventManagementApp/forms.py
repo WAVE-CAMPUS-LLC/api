@@ -65,8 +65,13 @@ class HostApplicationForm(forms.ModelForm):
 
 
 class EventForm(forms.ModelForm):
-    crew_discount = forms.BooleanField(required=False, label=_("Do you want to offer discounts for crew purchases?"))
-    show_guest_list = forms.BooleanField(required=False, label=_("Make guest list public?"),)
+    crew_discount = forms.BooleanField(
+        required=False, label=_("Do you want to offer discounts for crew purchases?")
+    )
+    show_guest_list = forms.BooleanField(
+        required=False,
+        label=_("Make guest list public?"),
+    )
     couponsActivated = forms.BooleanField(required=False, label=_("Activate coupons?"))
     forAllDisplay = forms.BooleanField(
         required=False, initial=True, label=_("Make event discoverable by all?")
@@ -195,7 +200,6 @@ class EventForm(forms.ModelForm):
             "start_time",
             "end_time",
             "description",
-            
             "building_name",
             "street",
             "apt_suite_unit",
@@ -204,18 +208,15 @@ class EventForm(forms.ModelForm):
             "zip_code",
             "country",
             "hide_address",
-            
             "header_photo",
             "body_photo_one",
             "body_photo_two",
             "body_photo_three",
             "body_photo_four",
             "body_photo_five",
-            
             "age_restriction",
             "couponsActivated",
-            
-            
+            "ticketing",
             "crew_discount",
             "minimum_crew_size",
             "crew_discount_percentage",
@@ -314,7 +315,6 @@ class EditEventForm(forms.ModelForm):
             "start_time",
             "end_time",
             "description",
-            
             "building_name",
             "street",
             "apt_suite_unit",
@@ -323,19 +323,16 @@ class EditEventForm(forms.ModelForm):
             "zip_code",
             "country",
             "hide_address",
-            
             "header_photo",
             "body_photo_one",
             "body_photo_two",
             "body_photo_three",
             "body_photo_four",
             "body_photo_five",
-            
             "age_restriction",
             "couponsActivated",
-            
-            
             "crew_discount",
+            "ticketing",
             "minimum_crew_size",
             "crew_discount_percentage",
             "show_guest_list",
