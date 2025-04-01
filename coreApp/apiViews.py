@@ -285,25 +285,57 @@ def event_details(request, eventId):
             
         elif action == "applyCouponCode":
             try:
-                couponCode = request.data.get("couponCode")
-                coupon = get_object_or_404(CouponCode, code=couponCode)
-            except coupon.DoesNotExist:
-                return Response({"message": "Invalid coupon code."}, status=status.HTTP_400_BAD_REQUEST)
-            
-            if coupon.is_valid():
-                # Return success response with discount information
-                discount_data = {
-                    "status": "success", 
-                    "message": "Valid coupon code applied successfully"
-                }
+                # Get required parameters
+                coupon_code = request.data.get("couponCode")
                 
-                # Only add these fields if they exist
-                if hasattr(coupon, 'discount_percentage'):
-                    discount_data["discount_percentage"] = coupon.discount_percentage
+                if not coupon_code:
+                    return Response({
+                        "success": False,
+                        "message": "Coupon code is required"
+                    }, status=status.HTTP_400_BAD_REQUEST)
+                
+                # Validate the coupon code
+                try:
+                    coupon = CouponCode.objects.get(code=coupon_code, event=event)
+                except CouponCode.DoesNotExist:
+                    return Response({
+                        "success": False,
+                        "message": "Invalid coupon code for this event"
+                    }, status=status.HTTP_404_NOT_FOUND)
+                
+                # Check if coupon is valid
+                if coupon.is_valid():
+                    # Get the current cart
+                    cart = request.session.get("cart", {})
                     
-                return Response(discount_data, status=status.HTTP_200_OK)
-            else:
-                return Response({"message": "Coupon is not valid anymore."}, status=status.HTTP_400_BAD_REQUEST)
+                    # Add the coupon code to the cart
+                    cart['coupon_code'] = coupon_code
+                    
+                    # Save the updated cart back to the session
+                    request.session["cart"] = cart
+                    
+                    # Return success response with discount information
+                    return Response({
+                        "success": True,
+                        "message": "Coupon applied successfully",
+                        "discount_percentage": coupon.discount_percentage
+                    }, status=status.HTTP_200_OK)
+                else:
+                    return Response({
+                        "success": False,
+                        "message": "Coupon is not valid anymore."
+                    }, status=status.HTTP_400_BAD_REQUEST)
+                    
+            except json.JSONDecodeError:
+                return Response({
+                    "success": False,
+                    "message": "Invalid JSON format"
+                }, status=status.HTTP_400_BAD_REQUEST)
+            except Exception as e:
+                return Response({
+                    "success": False,
+                    "message": f"An error occurred: {str(e)}"
+                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
             
 
     # Prepare response data
