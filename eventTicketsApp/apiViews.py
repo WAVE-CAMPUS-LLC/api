@@ -203,13 +203,44 @@ def processCheckout(request):
     if not cart:
         return Response({"error": "Cart is empty"}, status=status.HTTP_400_BAD_REQUEST)
 
+    # Check if there's a valid coupon code in the cart
+    has_discount = False
+    discount_percentage = 0
+    
+    # Get the discount percentage directly from the cart if it exists
+    if 'discount_percentage' in cart:
+        discount_percentage = float(cart.get('discount_percentage'))
+        has_discount = True
+        print(f"Using discount percentage from cart: {discount_percentage}%")
+    elif 'coupon_code' in cart:
+        coupon_code_value = cart.get('coupon_code')
+        # We'll validate the coupon later, just note that there might be a discount
+    
+    # Filter out any non-ticket items (like coupon_code) for total calculation
+    ticket_items = {}
+    for k, v in cart.items():
+        if k == 'coupon_code' or k == 'discount_percentage':
+            continue
+        if isinstance(v, dict) and "price" in v and "quantity" in v:
+            ticket_items[k] = v
+        else:
+            print(f"Skipping non-ticket item: {k} = {v}")
+    
+    print(f"Ticket items: {ticket_items}")
+    
+    if not ticket_items:
+        return Response({"error": "No valid tickets in cart"}, status=status.HTTP_400_BAD_REQUEST)
+
     # Calculate the total amount for tickets
     total_amount = sum(
         float(item.get("price", 0)) * int(item.get("quantity", 0))
-        for item in cart.values()
+        for item in ticket_items.values()
     )
     amount_in_cents = int(total_amount * 100)
-    if amount_in_cents <= 0:
+    
+    # Only reject zero-amount carts if there's no discount applied
+    # If there's a 100% discount, we should allow the checkout to proceed
+    if amount_in_cents <= 0 and not has_discount and discount_percentage < 100:
         return Response({"error": "Invalid amount"}, status=status.HTTP_400_BAD_REQUEST)
 
     # Get platform settings for fees
@@ -217,72 +248,197 @@ def processCheckout(request):
     if not platform_settings:
         platform_settings = StripePlatformSettings.objects.create()
 
-    # Calculate service fee based on platform settings
-    percentage_fee = (total_amount * float(platform_settings.salesTaxPercentage)) / 100
-    fixed_fee = float(platform_settings.salesFeeAmount)
-    fee_amount = int((percentage_fee + fixed_fee) * 100)  # Convert to cents
+    # Get event and host info
+    first_ticket_key = next(iter(ticket_items.keys()))
+    first_ticket = ticket_items[first_ticket_key]
+    event_id = first_ticket.get("eventId")
+    
+    try:
+        event = Event.objects.get(eventId=event_id)
+        host = CustomUser.objects.get(id=event.host.id)
+        
+        # Check if there's a valid coupon code in the cart
+        valid_coupon_code = False
+        
+        # Initialize coupon_code_value to None before checking
+        coupon_code_value = None
+        
+        # Get the coupon code from the cart if it exists
+        if 'coupon_code' in cart:
+            coupon_code_value = cart.get('coupon_code')
+        
+        # Get the discount percentage directly from the cart if it exists
+        if 'discount_percentage' in cart:
+            discount_percentage = float(cart.get('discount_percentage'))
+            valid_coupon_code = True
+            print(f"Using discount percentage from cart: {discount_percentage}%")
+        elif coupon_code_value:
+            try:
+                # Try to get the coupon code object for this event
+                from eventManagementApp.models import CouponCode
+                coupon = CouponCode.objects.get(code=coupon_code_value, event=event)
+                
+                # Coupons no longer expire - all coupons are valid
+                valid_coupon_code = True
+                discount_percentage = coupon.discount_percentage
+                print(f"Valid coupon applied: {coupon_code_value}, Discount: {discount_percentage}%")
+            except CouponCode.DoesNotExist:
+                # Coupon doesn't exist or doesn't belong to this event
+                valid_coupon_code = False
+                print(f"Coupon not found: {coupon_code_value}")
+        
+        # Calculate original amount for service fee calculation
+        original_amount = sum(
+            float(item.get("originalPrice", item.get("price", 0))) * int(item.get("quantity", 0))
+            for item in ticket_items.values()
+        )
+        original_amount_in_cents = int(original_amount * 100)
+        
+        # Calculate service fee based on platform settings
+        percentage_fee = (total_amount * float(platform_settings.salesTaxPercentage)) / 100
+        fixed_fee = float(platform_settings.salesFeeAmount)
+        
+        if amount_in_cents <= 0 and has_discount and discount_percentage >= 100:
+            # For 100% discounts, apply a minimal service fee based on the original price
+            fee_amount = max(99, int(original_amount_in_cents * 0.07) + 99)
+        else:
+            fee_amount = int((percentage_fee + fixed_fee) * 100)  # Convert to cents
 
-    # Build Stripe line items
-    line_items = []
-    for ticket in cart.values():
-        line_items.append(
-            {
+        # Build Stripe line items
+        line_items = []
+        for key, ticket in ticket_items.items():
+            unit_amount = int(Decimal(ticket["price"]) * 100)
+            print(f"Using price for {ticket['name']}: {ticket['price']}, Unit amount: {unit_amount}")
+            
+            # For 100% discounts, we still want to show the ticket in the checkout
+            # but with a zero price
+            if unit_amount == 0 and has_discount and discount_percentage >= 100:
+                # Add a note to the ticket name to indicate it's free due to a coupon
+                ticket_name = f"{ticket['name']} (100% discount applied)"
+                # Store the original ticket info in metadata
+                metadata = {
+                    'original_ticket_name': ticket['name'],
+                    'original_ticket_id': key,
+                    'event_id': ticket.get('eventId'),
+                    'is_discounted': 'true',
+                    'discount_percentage': str(discount_percentage)
+                }
+            else:
+                ticket_name = ticket["name"]
+                metadata = {
+                    'original_ticket_name': ticket['name'],
+                    'original_ticket_id': key,
+                    'event_id': ticket.get('eventId')
+                }
+                
+            line_items.append({
                 "price_data": {
                     "currency": "usd",
                     "product_data": {
-                        "name": ticket["name"],
+                        "name": ticket_name,
+                        "metadata": metadata
                     },
-                    "unit_amount": int(Decimal(ticket["price"]) * 100),
+                    "unit_amount": unit_amount,
                 },
                 "quantity": ticket["quantity"],
-            }
-        )
+            })
 
-    # Add service fee as separate line item
-    # line_items.append({
-    #     "price_data": {
-    #         "currency": "usd",
-    #         "product_data": {
-    #             "name": "Service Fee",
-    #         },
-    #         "unit_amount": fee_amount,
-    #     },
-    #     "quantity": 1,
-    # })
-
-    # Get event and host info
-    first_ticket = next(iter(cart.values()))
-    event = Event.objects.get(eventId=first_ticket.get("eventId"))
-    host = CustomUser.objects.get(id=event.host.id)
-
-    try:
-        # Create Stripe checkout session
-        checkout_session = stripe.checkout.Session.create(
-            customer=(
-                request.user.customer_id if request.user.is_authenticated else None
-            ),
-            payment_method_types=["card"],
-            line_items=line_items,
-            mode="payment",
-            payment_intent_data={
-                "application_fee_amount": fee_amount,
-                "transfer_data": {
-                    "destination": host.connectAccountID,
+        # For 100% discounts, we need to ensure there's at least one non-zero item
+        # (the service fee) to make Stripe checkout work
+        if not (amount_in_cents <= 0 and has_discount and discount_percentage >= 100):
+            # Regular service fee for non-100% discounted tickets
+            line_items.append({
+                "price_data": {
+                    "currency": "usd",
+                    "product_data": {
+                        "name": "Service Fee",
+                    },
+                    "unit_amount": fee_amount,
                 },
-            },
-            success_url=request.build_absolute_uri(
-                (reverse("eventTickets:paymentSuccessful"))
-                + "?session_id={CHECKOUT_SESSION_ID}"
-                + "?from_mobile=true"
-            ),
-            cancel_url=request.build_absolute_uri(
-                (reverse("eventTickets:paymentFailed")) + "?from_mobile=true"
-            ),
-        )
+                "quantity": 1,
+            })
 
-        return Response({"sessionUrl": checkout_session.url}, status=status.HTTP_200_OK)
-
+        try:
+            print(f"Creating Stripe checkout session with {len(line_items)} line items")
+            
+            # For 100% discounts, we need to handle the payment intent differently
+            # since there's no ticket amount to transfer to the host
+            if amount_in_cents <= 0 and has_discount and discount_percentage >= 100:
+                # For 100% discounted tickets, the service fee is the entire amount
+                # and there's no transfer to the host's account
+                checkout_session = stripe.checkout.Session.create(
+                    customer=request.user.customer_id if request.user.is_authenticated else None,
+                    payment_method_types=["card"],
+                    line_items=line_items,
+                    mode="payment",
+                    # No payment_intent_data with transfer since the entire amount is the service fee
+                    success_url=request.build_absolute_uri(
+                        (reverse("eventTickets:paymentSuccessful"))
+                        + "?session_id={CHECKOUT_SESSION_ID}"
+                        + "&from_mobile=true"
+                    ),
+                    cancel_url=request.build_absolute_uri(
+                        (reverse("eventTickets:paymentFailed")) + "?from_mobile=true"
+                    ),
+                    metadata={
+                        'cart_data': json.dumps(cart),  # Store the entire cart in metadata
+                        'event_id': str(event.eventId),
+                        'event_title': event.title,
+                        'is_discounted': 'true',
+                        'discount_percentage': str(discount_percentage)
+                    }
+                )
+            else:
+                # Regular checkout with transfer to host's account
+                checkout_session = stripe.checkout.Session.create(
+                    customer=request.user.customer_id if request.user.is_authenticated else None,
+                    payment_method_types=["card"],
+                    line_items=line_items,
+                    mode="payment",
+                    payment_intent_data={
+                        "application_fee_amount": fee_amount,
+                        "transfer_data": {
+                            "destination": host.connectAccountID,
+                        },
+                        # Add metadata to help with cart reconstruction
+                        "metadata": {
+                            'cart_data': json.dumps(cart),  # Store the entire cart in metadata
+                            'event_id': str(event.eventId),
+                            'event_title': event.title,
+                            'discount_percentage': str(discount_percentage) if has_discount else '0'
+                        }
+                    },
+                    metadata={
+                        'cart_data': json.dumps(cart),  # Store the entire cart in metadata
+                        'event_id': str(event.eventId),
+                        'event_title': event.title,
+                        'discount_percentage': str(discount_percentage) if has_discount else '0'
+                    },
+                    success_url=request.build_absolute_uri(
+                        (reverse("eventTickets:paymentSuccessful"))
+                        + "?session_id={CHECKOUT_SESSION_ID}"
+                        + "&from_mobile=true"
+                    ),
+                    cancel_url=request.build_absolute_uri(
+                        (reverse("eventTickets:paymentFailed")) + "?from_mobile=true"
+                    ),
+                )
+            
+            print(f"Checkout session created: {checkout_session.id}")
+            return Response({"sessionUrl": checkout_session.url}, status=status.HTTP_200_OK)
+        
+        except stripe.error.StripeError as e:
+            print(f"Stripe error: {e}")
+            return Response({"error": f"Stripe error: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
+        
+    except Event.DoesNotExist:
+        return Response({"error": "Event not found"}, status=status.HTTP_404_NOT_FOUND)
+    except CustomUser.DoesNotExist:
+        return Response({"error": "Host not found"}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
+        import traceback
+        print(f"Unexpected error in processCheckout: {e}")
+        print(traceback.format_exc())
         return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
