@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from extras.deep_links import handle_event_link
 
 
 app_name = "core"
@@ -18,5 +19,8 @@ urlpatterns = [
     path("event/reserved/", views.rsvpConfirm, name="rsvpConfirm"),
     path("explore/search/", views.searchEvents, name="search"),
     path("social/search/", views.search_users, name="search_users"),
-    path('send-connect-request/', views.send_connect_request, name='send_connect_request'),  
+    path('send-connect-request/', views.send_connect_request, name='send_connect_request'),
+    
+    # Universal Link route - opens in app if available, otherwise web
+    path("event/app/<uuid:eventId>/", handle_event_link, name="app_event_link"),
 ]

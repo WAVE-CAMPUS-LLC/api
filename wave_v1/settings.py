@@ -160,7 +160,7 @@ if not DEBUG:  # In production
     CSRF_COOKIE_SAMESITE = "Lax"
     SESSION_COOKIE_SAMESITE = "Lax"
     CSRF_COOKIE_HTTPONLY = False  # False because we need to access it from JavaScript
-    CSRF_TRUSTED_ORIGINS = ["https://waveoncampus.com"]
+    CSRF_TRUSTED_ORIGINS = ["https://waveoncampus.com", "https://wave-v1.onrender.com"]
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
     SECURE_HSTS_SECONDS = 31536000
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
@@ -269,7 +269,7 @@ MIDDLEWARE = [
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.BrokenLinkEmailsMiddleware",
     "django.middleware.common.CommonMiddleware",
-    "django.middleware.csrf.CsrfViewMiddleware",  # Use our custom CSRF middleware
+    "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",

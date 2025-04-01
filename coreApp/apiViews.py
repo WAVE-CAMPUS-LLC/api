@@ -22,10 +22,17 @@ from eventManagementApp.serializers import EventSerializer
 from eventTicketsApp.serializers import RSVPTicketSerializer
 from django.views.decorators.csrf import csrf_exempt
 
-class CustomUserSerializer(serializers.ModelSerializer):
+class GuestListCustomUserSerializer(serializers.ModelSerializer):
+    profile_picture = serializers.SerializerMethodField()
+    
     class Meta:
         model = CustomUser
-        fields = ('id', 'username', 'email')
+        fields = ('id', 'username', 'email', 'first_name', 'profile_picture')
+        
+    def get_profile_picture(self, obj):
+        if hasattr(obj, 'user_profile') and obj.user_profile and obj.user_profile.profile_photo:
+            return obj.user_profile.profile_photo.url
+        return None
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
@@ -100,15 +107,22 @@ def explore_events(request):
     ).order_by("?")[:3]
 
     # Prepare response data using serializers
-    all_events_serialized = EventSerializer(all_events, many=True)
-    trending_events_serialized = EventSerializer(trending_events, many=True)
-    weekly_events_serialized = EventSerializer(weekly_events, many=True)
+    all_events_serialized = EventSerializer(all_events, many=True).data
+    trending_events_serialized = EventSerializer(trending_events, many=True).data
+    weekly_events_serialized = EventSerializer(weekly_events, many=True).data
+    
+    # Add college name for events with display_event_on_college=True
+    for events_list in [all_events_serialized, trending_events_serialized, weekly_events_serialized]:
+        for event_data in events_list:
+            event_obj = next((e for e in all_events if str(e.eventId) == event_data['eventId']), None)
+            if event_obj and event_obj.display_event_on_college and event_obj.host and hasattr(event_obj.host, 'user_profile') and event_obj.host.user_profile.college:
+                event_data['college_name'] = event_obj.host.user_profile.college.name
     
     # Prepare response data
     response_data = {
-        'events': all_events_serialized.data,  # All events in a single list
-        'trending_events': trending_events_serialized.data,
-        'weekly_events': weekly_events_serialized.data,
+        'events': all_events_serialized,  # All events in a single list
+        'trending_events': trending_events_serialized,
+        'weekly_events': weekly_events_serialized,
         'trending_categories': all_categories,
         'invited_events': invited_events_data
     }
@@ -298,10 +312,10 @@ def event_details(request, eventId):
         
         "rsvpFormRequired": rsvpFormRequired,  # Boolean indicating if RSVP form is required
         "paidFreeTickets": eventPaidFreeTickets.values(),
-        "friends": [CustomUserSerializer(user_friend.user).data for user_friend in user_friends] if user_friends else [],
+        "friends": [GuestListCustomUserSerializer(user_friend.user).data for user_friend in user_friends] if user_friends else [],
         "crews": [user_crew.name for user_crew in user_crews] if user_crews else [],
         "isFavoriteEvent": isFavoriteEvent,
-        "guestList": [CustomUserSerializer(guest).data for guest in guest_list] if guest_list else [],
+        "guestList": [GuestListCustomUserSerializer(guest).data for guest in guest_list] if guest_list else [],
     }
 
     return Response(response_data)
@@ -392,3 +406,46 @@ def handle_rsvp(request, eventId):
     else:
         logger.error(f"RSVP form validation failed: {rsvp_form.errors}")
         return Response({"status": "error", "message": "There was an error with your submission.", "errors": rsvp_form.errors}, status=400)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def event_guests(request, eventId):
+    """
+    API endpoint for getting the guest list of an event.
+    Only shows guests if the event has show_guest_list set to True.
+    Returns profile pictures, first names, and last names of guests.
+    """
+    # Fetch the event
+    event = get_object_or_404(Event, eventId=eventId)
+    
+    # Check if the event allows showing the guest list
+    if not event.show_guest_list:
+        return Response(
+            {"message": "Guest list is not available for this event."},
+            status=status.HTTP_403_FORBIDDEN
+        )
+    
+    # Fetch the guest list
+    guest_list = event.guest_list.all()
+    
+    # Prepare the response data with profile pictures and names
+    guests_data = []
+    for guest in guest_list:
+        profile_picture = None
+        if hasattr(guest, 'user_profile') and guest.user_profile and guest.user_profile.profile_photo:
+            profile_picture = guest.user_profile.profile_photo.url
+            
+        guests_data.append({
+            'id': str(guest.id),
+            'first_name': guest.first_name,
+            'last_name': guest.last_name,
+            'profile_picture': profile_picture,
+        })
+    
+    return Response({
+        "event_id": str(event.eventId),
+        "event_title": event.title,
+        "guest_count": len(guests_data),
+        "guests": guests_data
+    })

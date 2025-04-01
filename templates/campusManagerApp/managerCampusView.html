@@ -244,6 +244,26 @@ Campus Manager — WAVE.
                             </div>
                         </div>
 
+                        <!-- Add campus image field -->
+                        <div class="display-row">
+                            <div class="display-info flex flex-col gap-2">
+                                <h3 class="font-Wanted-Bold text-[20px]">Campus Image</h3>
+                                <p class="font-Wanted-Variable text-Small text-black">
+                                    {% if college.campus_image %}
+                                    <img class="campus-image size-28 rounded-2xl" src="{{ college.campus_image.url }}">
+                                    {% else %}
+                                    No campus image uploaded.
+                                    {% endif %}
+                                </p>
+                            </div>
+                            <div class="edit-info hidden">
+                                <div class="flex flex-col gap-2">
+                                    <h6 class="font-Wanted-Bold text-Large">Campus Image</h6>
+                                    {{ editCampusForm.campus_image|add_class:"w-full appearance-none h-full p-4 py-3 font-Wanted-Variable text-Semi-Medium text-black border rounded-xl focus:ring-0 focus:none placeholder:text-[#00000076] placeholder:font-Wanted-Regular" }}
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="display-row">
                             <div class="display-info flex flex-col gap-2">
                                 <h6 class="font-Wanted-Bold text-Large">Campus Motto</h6>

@@ -3,13 +3,14 @@ import time
 import json
 import stripe
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework import status
 from django.conf import settings
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.models import Group
 from django.db.models import Q
+from django.views.decorators.csrf import csrf_exempt
 from .models import UserProfile
 from authenticationApp.models import CustomUser
 from blogApp.models import Blog
@@ -110,7 +111,8 @@ def profile_api(request):
     return Response(response_data, status=status.HTTP_200_OK)
 
 
-@api_view(["GET", "POST"])
+@csrf_exempt
+@api_view(["GET", "POST", "DELETE"])
 @permission_classes([IsAuthenticated])
 def delete_account(request):
     """API endpoint for deleting a user account"""
@@ -118,14 +120,20 @@ def delete_account(request):
     user = request.user
     userAccount = get_object_or_404(CustomUser, username=user.username)
     
-    if request.method == "POST":
+    if request.method in ["POST", "DELETE"]:
         try:
+            # Delete Stripe customer account if it exists
+            if user.customer_id:
+                CustomerAccount.deleteCustomerAccount(user.customer_id)
+                
+            # Delete the actual user account
             userAccount.delete()
             return Response({"message": "Account deleted successfully."}, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({"error": f"An error occurred: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
-    return Response({"error": "Invalid request method."}, status=status.HTTP_400_BAD_REQUEST)
+    # For GET requests, return a confirmation message
+    return Response({"message": "Send a POST or DELETE request to confirm account deletion."}, status=status.HTTP_200_OK)
 
 
 @api_view(['GET', 'POST'])
