@@ -72,11 +72,11 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById("emailLiveValidationError").textContent = "- Invalid email";
             document.getElementById("emailLiveValidationValid").textContent = "";
             return false;
+        } else {
+            document.getElementById("emailLiveValidationError").textContent = "";
+            document.getElementById("emailLiveValidationValid").textContent = "- Perfect!";
+            return true;
         }
-
-        document.getElementById("emailLiveValidationError").textContent = "";
-        document.getElementById("emailLiveValidationValid").textContent = "- Perfect!";
-        return true;
     }
 
 
