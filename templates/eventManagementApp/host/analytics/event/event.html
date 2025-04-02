@@ -1,24 +1,65 @@
 {% extends "base/base.html" %}
 {% load static %}
 
-
 {% block title %}
 {{ event.title }} Analytics | WAVE.
 {% endblock title %}
 
+{% block head %}
+<style>
+    /* Pagination styles */
+    #customersTable th.sort-asc::after {
+        content: " ▲";
+        font-size: 0.8em;
+        color: #4B5563;
+    }
+    
+    #customersTable th.sort-desc::after {
+        content: " ▼";
+        font-size: 0.8em;
+        color: #4B5563;
+    }
+    
+    #entriesPerPage {
+        transition: border-color 0.2s;
+    }
+    
+    #entriesPerPage:focus {
+        outline: none;
+        border-color: #3B82F6;
+        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+    }
+    
+    .pagination-btn, #pageNumbers button {
+        transition: all 0.2s;
+    }
+    
+    .pagination-btn:hover:not(:disabled), #pageNumbers button:hover:not(.bg-blue-500) {
+        background-color: #F3F4F6;
+        border-color: #9CA3AF;
+    }
+    
+    .pagination-btn:active:not(:disabled), #pageNumbers button:active:not(.bg-blue-500) {
+        background-color: #E5E7EB;
+    }
+    
+    #pageNumbers button.bg-blue-500 {
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+</style>
+{% endblock head %}
 
 {% block script %}
 <script type="text/javascript" src="{% static "scripts/eventManagementApp/host/hostPortal.js" %}" defer></script>
 <script type="text/javascript" src="{% static "scripts/eventManagementApp/analytics/eventSales.js" %}" defer></script>
 <script type="text/javascript" src="{% static "scripts/eventManagementApp/analytics/audienceAnalytics.js" %}" defer></script>
 <script type="text/javascript" src="{% static "scripts/eventManagementApp/analytics/attendanceAnalytics.js" %}" defer></script>
+<script type="text/javascript" src="{% static "scripts/eventManagementApp/analytics/customerAnalytics.js" %}" defer></script>
 {% endblock script %}
-
 
 {% block header %}
 {% include "partials/nav-footer/nav/host/host_portal.html" %}
 {% endblock header %}
-
 
 {% block body %}
 <div class="flex flex-col gap-[70px] px-[20px] after-xsm:px-[30px] xxsm:px-[60px] sm:px-[70px] md:px-[60px] pre-lg:px-[70px] lg:px-[100px] xl:px-[140px] 2xl:px-[200px] 3xl:px-[300px]">
@@ -37,6 +78,7 @@
             <div class="analytics-tab cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="engagement">Engagement</div>
             <div class="analytics-tab cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="audience">Audience</div>
             <div class="analytics-tab cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="attendance">Attendance</div>
+            <div class="analytics-tab cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="customers">Customers</div>
         </div>
 
         <div>
@@ -166,17 +208,13 @@
                 <div class="container-elements-analytics">
                     <h3 class="font-Wanted-Bold text-[18px] mb-4">Attendance Analytics</h3>
                     
-                    <!-- Attendance Summary -->
-                    <div class="mt-4 p-4 bg-gray-50 rounded-xl border border-gray-100">
+                    <!-- Attendance summary card -->
+                    <div class="p-4 bg-gray-50 rounded-xl border border-gray-100">
                         <h4 class="font-Wanted-Bold text-[16px] mb-3">Attendance Summary</h4>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div class="p-3 bg-white rounded-lg shadow-sm">
                                 <p class="font-Wanted-Variable text-gray-500">Total Tickets:</p>
-                                <p id="total-tickets" class="font-Wanted-Bold text-[22px] text-blue-600">{{ total_tickets_count|default:"0" }}</p>
-                            </div>
-                            <div class="p-3 bg-white rounded-lg shadow-sm">
-                                <p class="font-Wanted-Variable text-gray-500">Tickets Scanned:</p>
-                                <p id="scanned-tickets" class="font-Wanted-Bold text-[22px] text-green-600">{{ scanned_tickets_count|default:"0" }}</p>
+                                <p id="total-tickets" class="font-Wanted-Bold text-[22px]">{{ total_tickets_count }}</p>
                             </div>
                             <div class="p-3 bg-white rounded-lg shadow-sm">
                                 <p class="font-Wanted-Variable text-gray-500">Attendance Rate:</p>
@@ -195,6 +233,87 @@
                             <canvas id="attendanceChart" class="font-Wanted-Bold w-full h-full"></canvas>
                         </div>
                         <p class="font-Wanted-Variable text-xs text-gray-400 mt-3">A ticket is considered "Attended" when its status is "Scanned"</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Customers Section -->
+            <div class="analytics-tab-content" id="customers">
+                <div class="container-elements-analytics">
+                    <h3 class="font-Wanted-Bold text-[18px] mb-4">Customer Information</h3>
+                    
+                    <!-- Customer list card -->
+                    <div class="p-4 bg-gray-50 rounded-xl border border-gray-100">
+                        <h4 class="font-Wanted-Bold text-[16px] mb-3">Ticket Purchasers</h4>
+                        
+                        {% if customers %}
+                            <!-- Pagination controls - top -->
+                            <div class="flex flex-wrap justify-between items-center mb-4">
+                                <div class="flex items-center">
+                                    <label for="entriesPerPage" class="mr-2 font-Wanted-Variable text-gray-600">Show</label>
+                                    <select id="entriesPerPage" class="border border-gray-300 rounded-md px-2 py-1 font-Wanted-Variable text-gray-700 cursor-pointer">
+                                        <option value="5">5</option>
+                                        <option value="10" selected>10</option>
+                                        <option value="25">25</option>
+                                        <option value="50">50</option>
+                                        <option value="100">100</option>
+                                    </select>
+                                    <span class="ml-2 font-Wanted-Variable text-gray-600">entries</span>
+                                </div>
+                                <div class="flex items-center mt-2 sm:mt-0">
+                                    <span id="paginationInfo" class="font-Wanted-Variable text-gray-600 mr-4">Showing 1-10 of 0</span>
+                                </div>
+                            </div>
+                            
+                            <div class="overflow-x-auto">
+                                <table id="customersTable" class="min-w-full bg-white rounded-lg">
+                                    <thead class="bg-gray-100">
+                                        <tr>
+                                            <th class="py-3 px-4 text-left font-Wanted-Bold text-gray-700">First Name</th>
+                                            <th class="py-3 px-4 text-left font-Wanted-Bold text-gray-700">Last Name</th>
+                                            <th class="py-3 px-4 text-left font-Wanted-Bold text-gray-700">Email Address</th>
+                                            <th class="py-3 px-4 text-left font-Wanted-Bold text-gray-700">Ticket Type</th>
+                                            <th class="py-3 px-4 text-left font-Wanted-Bold text-gray-700">Date of Purchase</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for customer in customers %}
+                                            <tr class="border-t border-gray-200 customer-row">
+                                                <td class="py-3 px-4 font-Wanted-Variable">{{ customer.first_name|default:"--" }}</td>
+                                                <td class="py-3 px-4 font-Wanted-Variable">{{ customer.last_name|default:"--" }}</td>
+                                                <td class="py-3 px-4 font-Wanted-Variable">{{ customer.email|default:"--" }}</td>
+                                                <td class="py-3 px-4 font-Wanted-Variable">{{ customer.ticket_type|default:"General Admission" }}</td>
+                                                <td class="py-3 px-4 font-Wanted-Variable">{{ customer.purchase_date|date:"F j, Y" }}</td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <!-- Pagination controls - bottom -->
+                            <div class="flex flex-wrap justify-between items-center mt-4">
+                                <div class="text-sm font-Wanted-Variable text-gray-500">
+                                    <span id="totalCustomers">Total customers: {{ customers|length }}</span>
+                                </div>
+                                <div class="flex items-center justify-center space-x-2 mt-2 sm:mt-0">
+                                    <button id="prevPage" class="pagination-btn px-3 py-1 border border-gray-300 rounded-md bg-white font-Wanted-Variable text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                        Previous
+                                    </button>
+                                    <div id="pageNumbers" class="flex items-center space-x-1">
+                                        <!-- Page numbers will be inserted here by JavaScript -->
+                                    </div>
+                                    <button id="nextPage" class="pagination-btn px-3 py-1 border border-gray-300 rounded-md bg-white font-Wanted-Variable text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                        Next
+                                    </button>
+                                </div>
+                            </div>
+                        {% else %}
+                            <div class="p-6 text-center">
+                                <p class="font-Wanted-Variable text-gray-500">No ticket purchasers found for this event.</p>
+                            </div>
+                        {% endif %}
+                        
+                        <p class="font-Wanted-Variable text-xs text-gray-400 mt-3">This list shows all individuals who have purchased tickets for this event.</p>
                     </div>
                 </div>
             </div>

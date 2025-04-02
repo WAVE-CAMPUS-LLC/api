@@ -620,7 +620,7 @@ def hostEventAnalytics(request, eventId):
     from accountManagementApp.models import UserProfile
     from socialApp.models import GoWithRequest
     from coreApp.models import EventView
-    from eventTicketsApp.models import Ticket
+    from eventTicketsApp.models import Ticket, PaidFreeTicket
     
     event = get_object_or_404(Event, eventId=eventId)
     
@@ -661,6 +661,29 @@ def hostEventAnalytics(request, eventId):
         'Did Not Attend': not_scanned_tickets
     }
     
+    # 7. Get customer data for the Customers section
+    # Fetch all tickets for this event
+    tickets = Ticket.objects.filter(event=event).select_related('user').order_by('-created_at')
+    
+    # Prepare customer data list
+    customers = []
+    for ticket in tickets:
+        # Get ticket type information
+        ticket_type = "General Admission"  # Default value
+        
+        # Try to find the ticket type from the cart data in session
+        # Since we don't have a direct relationship between Ticket and PaidFreeTicket,
+        # we'll use a descriptive placeholder
+        
+        customer = {
+            'first_name': ticket.user.first_name if ticket.user else ticket.guestFirstName,
+            'last_name': ticket.user.last_name if ticket.user else ticket.guestLastName,
+            'email': ticket.user.email if ticket.user else ticket.guestEmail,
+            'ticket_type': ticket_type,
+            'purchase_date': ticket.created_at,
+        }
+        customers.append(customer)
+    
     # Prepare context data for the template
     context = {
         "event": event,
@@ -673,6 +696,7 @@ def hostEventAnalytics(request, eventId):
         "attendance_distribution": json.dumps(attendance_distribution),
         "total_tickets_count": total_tickets,
         "scanned_tickets_count": scanned_tickets,
+        "customers": customers,  # Add customers data to context
     }
     
     return render(
