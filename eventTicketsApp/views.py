@@ -164,6 +164,12 @@ def hostedCheckout(request):
         coupon_code_value = None
 
         # Get the coupon code from the cart if it exists
+        print(f"Cart data: {cart}")
+        print(f"Cart data: {cart}")
+        print(f"Cart data: {cart}")
+        print(f"Cart coupon code: {cart.get('coupon_code')}")
+        print(f"Cart coupon code: {cart.get('coupon_code')}")
+        print(f"Cart coupon code: {cart.get('coupon_code')}")
         if 'coupon_code' in cart:
             coupon_code_value = cart.get('coupon_code')
 
