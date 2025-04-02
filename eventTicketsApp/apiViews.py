@@ -72,8 +72,9 @@ def get_event_coupons(request, eventId):
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
 
-@api_view(["POST"])
-@permission_classes([IsAuthenticated])
+@api_view(["GET"])
+@permission_classes([AllowAny])
+@csrf_exempt
 def applyCouponCode(request, eventId, couponCode):
     """
     Apply a coupon code to the user's cart for a specific event.
