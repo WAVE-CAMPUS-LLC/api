@@ -47,14 +47,6 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         help_text=(_("Username")),
     )
 
-    birthday = models.DateField(
-        _("Birthday"), null=False, blank=False, default=datetime.date.today
-    )
-    age = models.IntegerField(
-        null=True,
-        blank=True,
-    )
-
     date_joined = models.DateField(auto_now_add=True)
 
     is_active = models.BooleanField(default=True)
@@ -73,7 +65,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     customer_id = models.CharField(max_length=255, null=True, blank=True)
     connectAccountCreated = models.BooleanField(default=False)
     connectAccountID = models.CharField(max_length=255, null=True, blank=True)
-    
+
     def suspend(self):
         suspend_group, created = Group.objects.get_or_create(name="Suspend")
         member_group = Group.objects.get(name="Member")
@@ -124,13 +116,6 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
                     None, self.email, self.first_name, self.last_name
                 )
                 self.customer_id = new_customer.id
-        if self.birthday:
-            today = date.today()
-            self.age = (
-                today.year
-                - self.birthday.year
-                - ((today.month, today.day) < (self.birthday.month, self.birthday.day))
-            )
 
         super(CustomUser, self).save(*args, **kwargs)
 

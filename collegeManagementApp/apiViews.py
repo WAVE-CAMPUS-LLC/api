@@ -54,55 +54,24 @@ def view_college_information_api(request, collegeId):
     organizations = Organization.objects.filter(college=college, status="Accepted")
 
     # Age restriction filtering logic
-    if not request.user.is_authenticated:
-        age_filter = Q(age_restriction="")
-    else:
-        user_age = request.user.age
-        if user_age is None and request.user.birthday:
-            today = date.today()
-            user_age = (
-                today.year
-                - request.user.birthday.year
-                - (
-                    (today.month, today.day)
-                    < (request.user.birthday.month, request.user.birthday.day)
-                )
-            )
-            request.user.age = user_age
-            request.user.save()
 
-        age_filter = Q(age_restriction="")
-        if user_age:
-            if user_age >= 21:
-                age_filter |= Q(age_restriction="21+")
-            if user_age >= 18:
-                age_filter |= Q(age_restriction="18+")
-
-    events = (
-        Event.objects.filter(
-            Q(forCollegesDisplay=True, host__user_profile__college=college)
-            | Q(forAllDisplay=True, host__user_profile__college=college),
-            status="live",
-        )
-        .filter(age_filter)
-        .order_by("-date")
-    )
+    events = Event.objects.filter(
+        Q(forCollegesDisplay=True, host__user_profile__college=college)
+        | Q(forAllDisplay=True, host__user_profile__college=college),
+        status="live",
+    ).order_by("-date")
 
     # Weekly events
     today = now().date()
     start_of_week = today - timedelta(days=today.weekday())
     end_of_week = start_of_week + timedelta(days=6)
 
-    weekly_events = (
-        Event.objects.filter(
-            date__range=[start_of_week, end_of_week],
-            status="live",
-            forCollegesDisplay=True,
-            admin_status="active",
-        )
-        .filter(age_filter)
-        .order_by("?")[:3]
-    )
+    weekly_events = Event.objects.filter(
+        date__range=[start_of_week, end_of_week],
+        status="live",
+        forCollegesDisplay=True,
+        admin_status="active",
+    ).order_by("?")[:3]
 
     response_data = {
         "college": CollegeSerializer(college).data,

@@ -103,7 +103,6 @@ def collegeCampusesView(request):
     )
 
 
-
 def requestCollege(request):
     pageName = "Colleges"
 
@@ -146,37 +145,11 @@ def viewCollegeInformation(request, collegeId):
     members = UserProfile.objects.filter(college=college)
     organizations = Organization.objects.filter(college=college, status="Accepted")
 
-    if not request.user.is_authenticated:
-        # Restrict events with age restrictions for anonymous users
-        age_filter = Q(age_restriction="")
-    else:
-        # For authenticated users, calculate age and apply restrictions
-        user_age = request.user.age
-        if user_age is None and request.user.birthday:
-            today = date.today()
-            user_age = (
-                today.year
-                - request.user.birthday.year
-                - (
-                    (today.month, today.day)
-                    < (request.user.birthday.month, request.user.birthday.day)
-                )
-            )
-            request.user.age = user_age
-            request.user.save()
-
-        age_filter = Q(age_restriction="")
-        if user_age:
-            if user_age >= 21:
-                age_filter |= Q(age_restriction="21+")
-            if user_age >= 18:
-                age_filter |= Q(age_restriction="18+")
-
     events = Event.objects.filter(
-        Q(forCollegesDisplay=True, host__user_profile__college=college) |
-        Q(forAllDisplay=True, host__user_profile__college=college),
+        Q(forCollegesDisplay=True, host__user_profile__college=college)
+        | Q(forAllDisplay=True, host__user_profile__college=college),
         status="live",
-    ).filter(age_filter).order_by("-date")
+    ).order_by("-date")
 
     today = now().date()
     start_of_week = today - timedelta(days=today.weekday())
@@ -186,7 +159,7 @@ def viewCollegeInformation(request, collegeId):
         Event.objects.filter(
             date__range=[start_of_week, end_of_week],
             status="live",
-            forAllDisplay=True,  
+            forAllDisplay=True,
             forCollegesDisplay=True,
             admin_status="active",
         )
@@ -316,7 +289,6 @@ def exitCollege(request, collegeId):
         messages.error(request, "You aren't a member of this college.")
         return redirect("colleges:find")
 
-
     if user_profile.college and str(user_profile.college.collegeId) == str(collegeId):
         user_profile.college = None
         collegeMembership.delete()
@@ -443,41 +415,11 @@ def viewOrganization(request, collegeId, orgId):
         organization=organization
     ).select_related("user")
 
-    if not request.user.is_authenticated:
-        # Restrict events with age restrictions for anonymous users
-        age_filter = Q(age_restriction="")
-    else:
-        # For authenticated users, calculate age and apply restrictions
-        user_age = request.user.age
-        if user_age is None and request.user.birthday:
-            today = date.today()
-            user_age = (
-                today.year
-                - request.user.birthday.year
-                - (
-                    (today.month, today.day)
-                    < (request.user.birthday.month, request.user.birthday.day)
-                )
-            )
-            request.user.age = user_age
-            request.user.save()
-
-        age_filter = Q(age_restriction="")
-        if user_age:
-            if user_age >= 21:
-                age_filter |= Q(age_restriction="21+")
-            if user_age >= 18:
-                age_filter |= Q(age_restriction="18+")
-
     # Get events restricted to this organization
-    restricted_events = (
-        Event.objects.filter(
-            privacy="Private (Organization)",
-            privacy_details__restricted_organization=organization,
-        )
-        .filter(age_filter)
-        .order_by("-date")
-    )
+    restricted_events = Event.objects.filter(
+        privacy="Private (Organization)",
+        privacy_details__restricted_organization=organization,
+    ).order_by("-date")
 
     org_privacy = organization.privacy
     org_owner = organization.created_by

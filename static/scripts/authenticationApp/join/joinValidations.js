@@ -63,7 +63,6 @@ document.addEventListener('DOMContentLoaded', function () {
     function validateEmail() {
         var emailInputValue = emailInput.value.trim();
         var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        var blockedDomains = ["edu", "ac.uk", "school.com", "uni.com"]; // Add more if needed
 
         if (emailInputValue === "") {
             document.getElementById("emailLiveValidationError").textContent = "- Required";
@@ -73,16 +72,6 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById("emailLiveValidationError").textContent = "- Invalid email";
             document.getElementById("emailLiveValidationValid").textContent = "";
             return false;
-        } else {
-            var domainParts = emailInputValue.split("@")[1].split(".");
-            var domainExtension = domainParts.slice(-1)[0]; // Gets the last part of the domain (e.g., edu)
-
-            // If the domain extension or full domain is blocked, show an error
-            if (blockedDomains.includes(domainExtension) || blockedDomains.some(domain => emailInputValue.endsWith(domain))) {
-                document.getElementById("emailLiveValidationError").textContent = "- School emails are not allowed";
-                document.getElementById("emailLiveValidationValid").textContent = "";
-                return false;
-            }
         }
 
         document.getElementById("emailLiveValidationError").textContent = "";

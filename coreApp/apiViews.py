@@ -190,19 +190,7 @@ def event_details(request, eventId):
         user_friends = user.friends.all()
         user_crews = user.get_all_crews()
 
-        # Calculate user's age if not already stored
-        user_age = request.user.age
-        if user_age is None and request.user.birthday:
-            today = date.today()
-            user_age = (today.year - request.user.birthday.year) - (
-                (today.month, today.day)
-                < (request.user.birthday.month, request.user.birthday.day)
-            )
-            request.user.age = user_age
-            request.user.save()
-    else:
-        user_age = None  # Anonymous users don't have age available
-
+        
     # Check if the event is a favorite event for the current user
     isFavoriteEvent = False
     if user and hasattr(user, "favorite_events"):

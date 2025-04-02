@@ -71,7 +71,7 @@ Come, enjoy the greatest experiences! Join WAVE.
                 </label>
             </div>
 
-            <div id="rowTwo">
+            <div id="rowThree" class="flex flex-col sm:flex-row gap-[10px]">
                 <label for="{{ form.email.id_for_label }}" class="font-Wanted-SemiBold text-[13px] uppercase flex flex-col gap-[5px] w-full">
                     <div class="flex flex-row gap-1">
                         {{ form.email.label }} 
@@ -85,9 +85,7 @@ Come, enjoy the greatest experiences! Join WAVE.
                     </div>
                     <input type="{{ form.email.field.widget.input_type }}" name="{{ form.email.html_name }}" id="{{ form.email.auto_id }}" autocomplete="off" required class="emailAddress p-[10px] pl-[13px] pr-[13px] rounded-[10px] border border-solid border-custom-rgba font-Wanted-Regular text-[15px] w-full shadow-form-shadow">
                 </label>
-            </div>
-
-            <div id="rowThree" class="flex flex-col sm:flex-row gap-[10px]">
+                
                 <label for="{{ form.username.id_for_label }}" class="font-Wanted-SemiBold text-[13px] uppercase flex flex-col gap-[5px] w-full">
                     <div class="flex flex-row gap-1">
                         {{ form.username.label }} 
@@ -102,17 +100,6 @@ Come, enjoy the greatest experiences! Join WAVE.
                     <div id="usernamePlaceholder" class="flex flex-row items-center gap-[10px] rounded-[10px] border border-solid border-custom-rgba p-[12px] pt-0 pb-0 pl-0">
                         <h6 class="font-Wanted-Bold text-[18px] sm:text-[20px] md:text-[23px] pl-[12px] pr-[12px] border-r border-solid border-custom-rgba">@</h6>
                         <input type="{{ form.username.field.widget.input_type }}" name="{{ form.username.html_name }}" id="{{ form.username.auto_id }}" autocomplete="off" required class="username p-[10px] border-none outline-none focus:border-none font-Wanted-Regular text-[15px] w-full shadow-form-shadow" maxlength="20">
-                    </div>
-                </label>
-
-                <label for="{{ form.birthday.id_for_label }}" class="font-Wanted-SemiBold text-[13px] uppercase flex flex-col gap-[5px] w-full">
-                    <div class="flex flex-row gap-1">
-                        {{ form.birthday.label }} 
-                        <span id="requiredIndicator" class="text-[red] font-Wanted-Variable">*</span>
-                    </div>
-                    <div id="usernamePlaceholder" class="flex flex-row px-2 items-center gap-[10px] p-[12px] pt-0 pb-0 pl-0 h-auto">
-                        
-                        {{ form.birthday|add_class:"username border rounded-[10px] border-solid font-Wanted-Regular text-[15px] w-full p-[12px] shadow-form-shadow outline-none" }}
                     </div>
                 </label>
             </div>

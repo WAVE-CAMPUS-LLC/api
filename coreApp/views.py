@@ -63,28 +63,6 @@ def exploreView(request):
         favorite_events = user.favorite_events.all()
         isFavoriteEvent = [event.eventId for event in favorite_events]
 
-    if not request.user.is_authenticated:
-        age_filter = Q(age_restriction="")
-        # Anonymous users cannot bypass age restrictions
-        user_age = None
-    else:
-        user_age = request.user.age
-        if user_age is None and request.user.birthday:
-            today = date.today()
-            user_age = (today.year - request.user.birthday.year) - (
-                (today.month, today.day)
-                < (request.user.birthday.month, request.user.birthday.day)
-            )
-            request.user.age = user_age
-            request.user.save()
-
-        age_filter = Q(age_restriction="")
-        if user_age:
-            if user_age >= 21:
-                age_filter |= Q(age_restriction="21+")
-            if user_age >= 18:
-                age_filter |= Q(age_restriction="18+")
-
     # Load initial 9 events
     initial_events = Event.objects.filter(
         status="live", 
@@ -179,9 +157,7 @@ def exploreView(request):
         invited_events_with_tokens = None
         
         if user_profile:
-            invited_events = user_profile.invited_events.filter(status="live").filter(
-                age_filter
-            )
+            invited_events = user_profile.invited_events.filter(status="live")
             invitations = user_profile.invitations.all()
             invited_events_with_tokens = []
             for event in invited_events:
@@ -263,32 +239,6 @@ def categoriesView(request):
 def load_more_events(request):
     offset = int(request.GET.get("offset", 9))
     limit = 3
-
-    if not request.user.is_authenticated:
-        # Restrict events with age restrictions for anonymous users
-        age_filter = Q(age_restriction="")
-    else:
-        # For authenticated users, calculate age and apply restrictions
-        user_age = request.user.age
-        if user_age is None and request.user.birthday:
-            today = date.today()
-            user_age = (
-                today.year
-                - request.user.birthday.year
-                - (
-                    (today.month, today.day)
-                    < (request.user.birthday.month, request.user.birthday.day)
-                )
-            )
-            request.user.age = user_age
-            request.user.save()
-
-        age_filter = Q(age_restriction="")
-        if user_age:
-            if user_age >= 21:
-                age_filter |= Q(age_restriction="21+")
-            if user_age >= 18:
-                age_filter |= Q(age_restriction="18+")
 
     more_events = Event.objects.filter(
         status="live", forAllDisplay=True, admin_status="active"
@@ -512,23 +462,10 @@ def eventDetailsView(request, eventId, token=None):
         user = get_object_or_404(UserProfile, user=request.user)
         user_friends = user.friends.all()
         user_crews = user.get_all_crews()
-
-        user_age = request.user.age
-        if user_age is None and request.user.birthday:
-            today = date.today()
-            user_age = (
-                today.year
-                - request.user.birthday.year
-                - (
-                    (today.month, today.day)
-                    < (request.user.birthday.month, request.user.birthday.day)
-                )
-            )
-            request.user.age = user_age
-            request.user.save()
+        
     else:
-        # Anonymous users cannot bypass age restrictions
-        user_age = None
+        user_friends = None
+        user_crews = None
 
     isFavoriteEvent = False
 
@@ -701,30 +638,6 @@ def rsvpConfirm(request):
 def searchEvents(request):
     search_query = request.GET.get("query", "")
     results = []
-
-    if not request.user.is_authenticated:
-        age_filter = Q(age_restriction="")
-    else:
-        user_age = request.user.age
-        if user_age is None and request.user.birthday:
-            today = date.today()
-            user_age = (
-                today.year
-                - request.user.birthday.year
-                - (
-                    (today.month, today.day)
-                    < (request.user.birthday.month, request.user.birthday.day)
-                )
-            )
-            request.user.age = user_age
-            request.user.save()
-
-        age_filter = Q(age_restriction="")
-        if user_age:
-            if user_age >= 21:
-                age_filter |= Q(age_restriction="21+")
-            if user_age >= 18:
-                age_filter |= Q(age_restriction="18+")
 
     if search_query:
         search_events = Event.objects.filter(
