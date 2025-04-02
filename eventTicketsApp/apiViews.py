@@ -347,18 +347,12 @@ def processCheckout(request):
     if not ticket_items:
         return Response({"error": "No valid tickets in cart"}, status=status.HTTP_400_BAD_REQUEST)
 
-    # Calculate the total amount for tickets
+    # Calculate the total amount for tickets (without discount)
     total_amount = sum(
         float(item.get("price", 0)) * int(item.get("quantity", 0))
         for item in ticket_items.values()
     )
-    amount_in_cents = int(total_amount * 100)
     
-    # Only reject zero-amount carts if there's no discount applied
-    # If there's a 100% discount, we should allow the checkout to proceed
-    if amount_in_cents <= 0 and not has_discount and discount_percentage < 100:
-        return Response({"error": "Invalid amount"}, status=status.HTTP_400_BAD_REQUEST)
-
     # Get platform settings for fees
     platform_settings = StripePlatformSettings.objects.first()
     if not platform_settings:
@@ -403,14 +397,26 @@ def processCheckout(request):
                 valid_coupon_code = False
                 print(f"Coupon not found: {coupon_code_value}")
         
-        # Calculate original amount for service fee calculation
-        original_amount = sum(
-            float(item.get("originalPrice", item.get("price", 0))) * int(item.get("quantity", 0))
-            for item in ticket_items.values()
-        )
+        # Store original amount for reference
+        original_amount = total_amount
         original_amount_in_cents = int(original_amount * 100)
         
-        # Calculate service fee based on platform settings
+        # Apply discount to the total amount if a valid coupon is present
+        if valid_coupon_code and discount_percentage > 0:
+            discount_amount = total_amount * (discount_percentage / 100)
+            total_amount = total_amount - discount_amount
+            has_discount = True
+            print(f"Applied {discount_percentage}% discount: Original: ${original_amount}, Discount: ${discount_amount}, New total: ${total_amount}")
+        
+        # Convert to cents after discount is applied
+        amount_in_cents = int(total_amount * 100)
+        
+        # Only reject zero-amount carts if there's no discount applied
+        # If there's a 100% discount, we should allow the checkout to proceed
+        if amount_in_cents <= 0 and not has_discount and discount_percentage < 100:
+            return Response({"error": "Invalid amount"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Calculate service fee based on the discounted amount
         percentage_fee = (total_amount * float(platform_settings.salesTaxPercentage)) / 100
         fixed_fee = float(platform_settings.salesFeeAmount)
         
@@ -419,12 +425,22 @@ def processCheckout(request):
             fee_amount = max(99, int(original_amount_in_cents * 0.07) + 99)
         else:
             fee_amount = int((percentage_fee + fixed_fee) * 100)  # Convert to cents
+        
+        print(f"Service fee: ${fee_amount/100} calculated on discounted amount: ${total_amount}")
 
         # Build Stripe line items
         line_items = []
         for key, ticket in ticket_items.items():
-            unit_amount = int(Decimal(ticket["price"]) * 100)
-            print(f"Using price for {ticket['name']}: {ticket['price']}, Unit amount: {unit_amount}")
+            # Calculate the discounted price for each ticket
+            original_price = float(ticket["price"])
+            
+            if valid_coupon_code and discount_percentage > 0:
+                discounted_price = original_price * (1 - discount_percentage / 100)
+                unit_amount = int(Decimal(discounted_price) * 100)
+                print(f"Discounted price for {ticket['name']}: Original: ${original_price}, Discounted: ${discounted_price}, Unit amount: {unit_amount}")
+            else:
+                unit_amount = int(Decimal(original_price) * 100)
+                print(f"Using original price for {ticket['name']}: ${original_price}, Unit amount: {unit_amount}")
             
             # For 100% discounts, we still want to show the ticket in the checkout
             # but with a zero price
@@ -437,15 +453,24 @@ def processCheckout(request):
                     'original_ticket_id': key,
                     'event_id': ticket.get('eventId'),
                     'is_discounted': 'true',
-                    'discount_percentage': str(discount_percentage)
+                    'discount_percentage': str(discount_percentage),
+                    'original_price': str(original_price)
                 }
             else:
                 ticket_name = ticket["name"]
+                if valid_coupon_code and discount_percentage > 0:
+                    ticket_name = f"{ticket['name']} ({discount_percentage}% discount applied)"
+                
                 metadata = {
                     'original_ticket_name': ticket['name'],
                     'original_ticket_id': key,
-                    'event_id': ticket.get('eventId')
+                    'event_id': ticket.get('eventId'),
+                    'original_price': str(original_price)
                 }
+                
+                if valid_coupon_code and discount_percentage > 0:
+                    metadata['is_discounted'] = 'true'
+                    metadata['discount_percentage'] = str(discount_percentage)
                 
             line_items.append({
                 "price_data": {
@@ -501,7 +526,9 @@ def processCheckout(request):
                         'event_id': str(event.eventId),
                         'event_title': event.title,
                         'is_discounted': 'true',
-                        'discount_percentage': str(discount_percentage)
+                        'discount_percentage': str(discount_percentage),
+                        'original_amount': str(original_amount),
+                        'discounted_amount': str(total_amount)
                     }
                 )
             else:
@@ -521,14 +548,18 @@ def processCheckout(request):
                             'cart_data': json.dumps(cart),  # Store the entire cart in metadata
                             'event_id': str(event.eventId),
                             'event_title': event.title,
-                            'discount_percentage': str(discount_percentage) if has_discount else '0'
+                            'discount_percentage': str(discount_percentage) if has_discount else '0',
+                            'original_amount': str(original_amount),
+                            'discounted_amount': str(total_amount)
                         }
                     },
                     metadata={
                         'cart_data': json.dumps(cart),  # Store the entire cart in metadata
                         'event_id': str(event.eventId),
                         'event_title': event.title,
-                        'discount_percentage': str(discount_percentage) if has_discount else '0'
+                        'discount_percentage': str(discount_percentage) if has_discount else '0',
+                        'original_amount': str(original_amount),
+                        'discounted_amount': str(total_amount)
                     },
                     success_url=request.build_absolute_uri(
                         (reverse("eventTickets:paymentSuccessful"))
