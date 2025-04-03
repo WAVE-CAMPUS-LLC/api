@@ -39,6 +39,10 @@ def profileView(request):
     userProfile = UserProfile.objects.get(user=userRequest)
     purchased_events = userProfile.purchased_events.all()
     favorite_events = userProfile.favorite_events.all()
+    
+    # Get user tickets sorted by purchase time (most recent first)
+    user_tickets = Ticket.objects.filter(user=userRequest).select_related('event').order_by('-created_at')
+    
     stripeKey = settings.STRIPE_PUBLISHABLE_KEY
     
     # Debug logging
@@ -150,6 +154,7 @@ def profileView(request):
             "dashboardLink": dashboardLink,
             "transactions": transactions,
             "canSeePayouts": canSeePayouts,
+            "user_tickets": user_tickets,
         },
     )
 
