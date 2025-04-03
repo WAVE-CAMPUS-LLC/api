@@ -16,13 +16,11 @@ function initializeAudienceAnalytics() {
         
         // Initialize charts when audience tab is clicked
         audienceTab.addEventListener('click', function() {
-            renderAgeDistributionChart();
             renderLoginStatusChart();
         });
         
         // Also initialize if audience tab is already active
         if (audienceTab.classList.contains('tab-active')) {
-            renderAgeDistributionChart();
             renderLoginStatusChart();
         }
     } catch (e) {
@@ -30,119 +28,7 @@ function initializeAudienceAnalytics() {
     }
 }
 
-// Function to render age distribution chart
-function renderAgeDistributionChart() {
-    try {
-        console.log('Rendering age distribution chart');
-        
-        // Get the age distribution data from the hidden input
-        const ageDistributionElement = document.getElementById('ageDistributionData');
-        if (!ageDistributionElement) {
-            console.error('ageDistributionData element not found!');
-            return;
-        }
-        
-        const ageDistributionData = JSON.parse(ageDistributionElement.value);
-        console.log('Age distribution data:', ageDistributionData);
-        
-        // Get the canvas element
-        const ctx = document.getElementById('ageDistributionChart').getContext('2d');
-        
-        // Destroy existing chart if it exists
-        if (window.ageDistributionChartInstance) {
-            window.ageDistributionChartInstance.destroy();
-        }
-        
-        // Check if we have any data
-        const hasData = Object.values(ageDistributionData).some(value => value > 0);
-        
-        // Create a new chart with the data
-        window.ageDistributionChartInstance = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: Object.keys(ageDistributionData),
-                datasets: [{
-                    label: 'Number of Attendees',
-                    data: Object.values(ageDistributionData),
-                    backgroundColor: [
-                        'rgba(54, 162, 235, 0.6)',
-                        'rgba(75, 192, 192, 0.6)',
-                        'rgba(153, 102, 255, 0.6)',
-                        'rgba(255, 159, 64, 0.6)',
-                        'rgba(255, 99, 132, 0.6)',
-                        'rgba(255, 205, 86, 0.6)'
-                    ],
-                    borderColor: [
-                        'rgba(54, 162, 235, 1)',
-                        'rgba(75, 192, 192, 1)',
-                        'rgba(153, 102, 255, 1)',
-                        'rgba(255, 159, 64, 1)',
-                        'rgba(255, 99, 132, 1)',
-                        'rgba(255, 205, 86, 1)'
-                    ],
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            precision: 0,
-                            stepSize: 1
-                        },
-                        title: {
-                            display: true,
-                            text: 'Number of Attendees'
-                        }
-                    },
-                    x: {
-                        title: {
-                            display: true,
-                            text: 'Age Groups'
-                        }
-                    }
-                },
-                plugins: {
-                    legend: {
-                        display: false
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return `Attendees: ${context.raw}`;
-                            }
-                        }
-                    },
-                    title: {
-                        display: true,
-                        text: 'Audience Age Distribution',
-                        font: {
-                            size: 16
-                        }
-                    }
-                }
-            }
-        });
-        
-        // Display a message if there's no data
-        if (!hasData) {
-            const container = document.getElementById('age-distribution-container');
-            
-            // Check if the message already exists
-            if (!container.querySelector('.no-data-message')) {
-                const noDataMessage = document.createElement('div');
-                noDataMessage.className = 'no-data-message text-center mt-4 text-gray-500';
-                noDataMessage.textContent = 'No age data available. This may be because all tickets were purchased by guest users.';
-                container.appendChild(noDataMessage);
-            }
-        }
-    } catch (e) {
-        console.error('Error in renderAgeDistributionChart:', e);
-    }
-}
+
 
 // Function to render login status pie chart
 function renderLoginStatusChart() {
