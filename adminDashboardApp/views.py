@@ -476,6 +476,7 @@ def adminEventsView(request):
                 event = get_object_or_404(Event, eventId=event_id)
                 event.admin_status = "paused"
                 event.save()
+                messages.success(request, "Event paused successfully.")
                 return redirect("waveAdmin:events")
             except Event.DoesNotExist:
                 messages.error(request, "Event not found.")
@@ -485,6 +486,20 @@ def adminEventsView(request):
                 event = get_object_or_404(Event, eventId=event_id)
                 event.admin_status = "active"
                 event.save()
+                messages.success(request, "Event activated successfully.")
+                return redirect("waveAdmin:events")
+            except Event.DoesNotExist:
+                messages.error(request, "Event not found.")
+                
+        elif action == "delete" and event_id:
+            try:
+                event = get_object_or_404(Event, eventId=event_id)
+                # Store event title for success message
+                event_title = event.title or "Untitled Event"
+                # Delete the event
+                event.delete()
+                from django.utils.safestring import mark_safe
+                messages.success(request, mark_safe(f"Event '{event_title}' deleted successfully."))
                 return redirect("waveAdmin:events")
             except Event.DoesNotExist:
                 messages.error(request, "Event not found.")
@@ -500,6 +515,96 @@ def adminEventsView(request):
             "archivedEvents": archived_events,
         },
     )
+    
+        
+    # 
+            #     try:
+            #     event = get_object_or_404(Event, eventId=event_id)
+            #     # Store event title for success message
+            #     event_title = event.title or "Untitled Event"
+                
+            #     try:
+            #         # Use Django's transaction management for atomic operations
+            #         from django.db import transaction
+            #         from accountManagementApp.models import UserProfile
+            #         from django.db import connection
+                    
+            #         # The error message specifically mentions this table
+            #         specific_table = "accountManagementApp_userprofile_all_events"
+                    
+            #         with transaction.atomic():
+            #             # Clear favorite_events relationships
+            #             for profile in UserProfile.objects.filter(favorite_events=event):
+            #                 profile.favorite_events.remove(event)
+                        
+            #             # Clear purchased_events relationships
+            #             for profile in UserProfile.objects.filter(purchased_events=event):
+            #                 profile.purchased_events.remove(event)
+                        
+            #             # Clear invited_events relationships
+            #             for profile in UserProfile.objects.filter(invited_events=event):
+            #                 profile.invited_events.remove(event)
+                        
+            #             # Direct approach to handle the specific table mentioned in the error
+            #             try:
+            #                 # Use a more direct approach based on the exact error message
+            #                 # The error message shows the exact constraint name and table
+            #                 with connection.cursor() as cursor:
+            #                     # First, try to find all tables that might be related to userprofile and events
+            #                     cursor.execute("""
+            #                         SELECT table_name FROM information_schema.tables 
+            #                         WHERE table_schema = 'public' 
+            #                         AND (table_name ILIKE '%userprofile%' AND table_name ILIKE '%event%')
+            #                     """)
+            #                     potential_tables = [row[0] for row in cursor.fetchall()]
+            #                     print(f"Found potential tables: {potential_tables}")
+                                
+            #                     # Try each potential table
+            #                     for table in potential_tables:
+            #                         try:
+            #                             # Check if this table has an event_id column
+            #                             cursor.execute(f"""
+            #                                 SELECT column_name FROM information_schema.columns 
+            #                                 WHERE table_schema = 'public' 
+            #                                 AND table_name = %s 
+            #                                 AND column_name ILIKE '%event%id%'
+            #                             """, [table])
+            #                             columns = [row[0] for row in cursor.fetchall()]
+                                        
+            #                             if columns:
+            #                                 for column in columns:
+            #                                     print(f"Attempting to clear {table}.{column} for event {event.eventId}")
+            #                                     try:
+            #                                         # Use double quotes to preserve case in PostgreSQL
+            #                                         cursor.execute(f'DELETE FROM "{table}" WHERE "{column}" = %s', [event.eventId])
+            #                                         print(f"Successfully cleared references in {table}.{column}")
+            #                                     except Exception as col_error:
+            #                                         print(f"Error clearing {table}.{column}: {str(col_error)}")
+            #                         except Exception as table_error:
+            #                             print(f"Error with table {table}: {str(table_error)}")
+                                        
+            #                     # As a last resort, try a direct approach with the exact table name from the error
+            #                     try:
+            #                         cursor.execute('DELETE FROM "accountManagementApp_userprofile_all_events" WHERE "event_id" = %s', [event.eventId])
+            #                         print("Cleared references using exact table name from error")
+            #                     except Exception as direct_error:
+            #                         print(f"Error with direct approach: {str(direct_error)}")
+            #             except Exception as e:
+            #                 print(f"Error handling tables: {str(e)}")
+                        
+            #             # Finally, delete the event
+            #             event.delete()
+                        
+            #         messages.success(request, f"Event '{event_title}' deleted successfully.")
+            #     except Exception as e:
+            #         messages.error(request, f"Error deleting event: {str(e)}")
+            #         import traceback
+            #         print(traceback.format_exc())
+                
+            #     return redirect("waveAdmin:events")
+            # except Event.DoesNotExist:
+            #     messages.error(request, "Event not found.")
+    # 
 
 
 @login_required(login_url="authentication:login")
