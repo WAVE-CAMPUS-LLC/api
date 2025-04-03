@@ -34,7 +34,7 @@ class SocialHomeConsumer(AsyncWebsocketConsumer):
         await self.accept()
 
     async def social_update(self, event):
-        # Send the friend request update to the client
+        # Send the social update to the client
         await self.send(text_data=json.dumps(event["data"]))
 
     async def disconnect(self, close_code):
@@ -55,7 +55,7 @@ class CrewConsumer(AsyncWebsocketConsumer):
         await self.accept()
 
     async def crew_request_update(self, event):
-        # Send the friend request update to the client
+        # Send the crew request update to the client
         await self.send(text_data=json.dumps(event["data"]))
 
     async def disconnect(self, close_code):

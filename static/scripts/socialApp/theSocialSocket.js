@@ -9,6 +9,9 @@ document.addEventListener("DOMContentLoaded", function () {
   const requestCountElementCrew = document.getElementById(
     "number-of-requests-crew"
   );
+  const goWithRequestsIndicator = document.getElementById(
+    "go-with-requests-indicator"
+  );
 
   // Default to 0 if elements don't exist or don't have the attribute
   let currentCount = requestCountElement ? parseInt(
@@ -18,6 +21,8 @@ document.addEventListener("DOMContentLoaded", function () {
   let currentCountCrew = requestCountElementCrew ? parseInt(
     requestCountElementCrew.getAttribute("data-initial-count") || "0"
   ) : 0;
+  
+  let goWithRequestsCount = 0;
 
   if (requestCountElement) {
     requestCountElement.style.display = currentCount == 0 ? "none" : "block";
@@ -26,6 +31,10 @@ document.addEventListener("DOMContentLoaded", function () {
   if (requestCountElementCrew) {
     requestCountElementCrew.style.display =
       currentCountCrew == 0 ? "none" : "block";
+  }
+  
+  if (goWithRequestsIndicator) {
+    goWithRequestsIndicator.style.display = "none";
   }
 
   const sharedEventsContainer = document.getElementById("shared-events");
@@ -140,7 +149,26 @@ document.addEventListener("DOMContentLoaded", function () {
 
             case "declineCrewRequest":
             case "acceptCrewRequest":
-              location.reload();
+              // Only reload if we're on the crew page
+              if (window.location.pathname.includes('/crew/')) {
+                location.reload();
+              }
+              break;
+
+            case "sendGoWith":
+              goWithRequestsCount += 1;
+              if (goWithRequestsIndicator) {
+                goWithRequestsIndicator.style.display = "block";
+              }
+              // Show go-with request in real-time if we're on the social home page
+              renderGoWithRequest(data.go_with_request);
+              break;
+              
+            case "acceptGoWithRequest":
+            case "declineGoWithRequest":
+            case "cancelGoWithRequest":
+              // Update go-with request UI without page refresh
+              updateGoWithRequestStatus(data.go_with_request);
               break;
 
             case "shared_event":
@@ -378,4 +406,86 @@ const renderSharedEvent = (request) => {
   }
 
   sharedEventsContainer.insertAdjacentHTML("beforeend", sharedEventHTML);
+};
+
+// New function to render go-with requests in real-time
+const renderGoWithRequest = (request) => {
+  if (!request) return;
+  
+  // Get go-with container on the social home page
+  const goWithContainer = document.getElementById("incomingGoWithRequests");
+  if (!goWithContainer) return;
+  
+  const emptyContainer = goWithContainer.querySelector(".emptyContainer");
+  if (emptyContainer) {
+    emptyContainer.remove();
+  }
+  
+  const goWithRequestHTML = `
+    <div class="flex flex-col gap-4 items-center cursor-pointer border border-custom-rgba8 hover:border-green shadow-custom-shadow-3 rounded-2xl p-5" id="go-with-${request.requestId}">
+      <a target="_blank" href="/social/publicProfile/${request.sender.username}" id="${request.sender.username}">
+        <div class="user-pfp w-full flex justify-center">
+          <img src="${request.sender.profile_photo}" alt="Profile Picture" class="rounded-full size-14" />
+        </div>
+      </a>
+      <div class="user-names flex flex-col gap-1 items-center">
+        <p class="font-Wanted-Variable text-[10px] after-xsm:text-[12px] sm:text-[14px] md:text-[16.5px] text-black text-center">
+          ${request.sender.first_name} ${request.sender.last_name} wants to go with you to "${request.event.title}"
+        </p>
+        <div class="flex flex-row justify-center items-center gap-4">
+          <form method="POST" class="flex justify-center items-center gap-4">
+            <input type="hidden" name="csrfmiddlewaretoken" value="${csrfToken}">
+            <input type="hidden" name="go_with_request_id" value="${request.requestId}">
+            <input type="hidden" name="action" value="acceptGoWithRequest"> 
+            <button class="accept flex justify-center font-Wanted-Bold text-white bg-[green] rounded-xl py-2 px-4" type="submit" role="button">
+              &#10004;
+            </button>
+          </form>
+          <form method="POST" class="flex justify-center items-center gap-4">
+            <input type="hidden" name="csrfmiddlewaretoken" value="${csrfToken}">
+            <input type="hidden" name="go_with_request_id" value="${request.requestId}">
+            <input type="hidden" name="action" value="declineGoWithRequest"> 
+            <button class="decline flex justify-center font-Wanted-Bold text-white bg-[red] rounded-xl py-2 px-4" type="submit" role="button">
+              &#10007;
+            </button>
+          </form>
+        </div>
+      </div> 
+    </div>
+  `;
+  
+  goWithContainer.insertAdjacentHTML("beforeend", goWithRequestHTML);
+};
+
+// Update go-with request status without page refresh
+const updateGoWithRequestStatus = (request) => {
+  if (!request) return;
+  
+  const requestElement = document.getElementById(`go-with-${request.requestId}`);
+  if (!requestElement) return;
+  
+  if (request.status === "accepted" || request.status === "Accepted") {
+    // Update UI to show accepted status
+    requestElement.querySelector(".user-names").innerHTML = `
+      <p class="font-Wanted-Variable text-[10px] after-xsm:text-[12px] sm:text-[14px] md:text-[16.5px] text-black text-center">
+        Going with ${request.receiver.first_name} ${request.receiver.last_name} to "${request.event.title}"
+      </p>
+      <p class="font-Wanted-Variable text-[10px] after-xsm:text-[12px] sm:text-[14px] md:text-[16.5px] text-green text-center">
+        Accepted
+      </p>
+    `;
+  } else if (request.status === "declined" || request.status === "Declined") {
+    // Update UI to show declined status
+    requestElement.querySelector(".user-names").innerHTML = `
+      <p class="font-Wanted-Variable text-[10px] after-xsm:text-[12px] sm:text-[14px] md:text-[16.5px] text-black text-center">
+        Request to go with ${request.receiver.first_name} ${request.receiver.last_name} to "${request.event.title}"
+      </p>
+      <p class="font-Wanted-Variable text-[10px] after-xsm:text-[12px] sm:text-[14px] md:text-[16.5px] text-[red] text-center">
+        Declined
+      </p>
+    `;
+  } else if (request.status === "cancelled" || request.status === "Cancelled") {
+    // Remove the go-with request from the UI
+    requestElement.remove();
+  }
 };
