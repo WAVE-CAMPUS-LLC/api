@@ -33,4 +33,5 @@ urlpatterns = [
     path("create_coupon_for_event/<uuid:eventId>/", apiViews.createCouponForEvent, name="create_coupon_for_event"),
     path("getCouponsForEvent/<uuid:eventId>/", getCouponsForEvent, name="getCouponsForEvent"),
     path("get_rsvp_list_for_event/<uuid:eventId>/", apiViews.getRSVPTicketsForEvent, name="get_rsvp_list_for_event"),
+    path("delete_event/<uuid:eventId>/", apiViews.deleteEvent, name="delete_event"),
 ]

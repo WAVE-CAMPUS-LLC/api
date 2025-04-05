@@ -741,6 +741,27 @@ def createCouponForEvent(request, eventId):
         status=status.HTTP_200_OK,
     )
 
+@api_view(["GET", "POST"])
+@permission_classes([IsAuthenticated])
+def deleteEvent(request, eventId):
+    event = get_object_or_404(Event, eventId=eventId)
+
+    # Check if the requesting user is the host of the event
+    if event.host != request.user:
+        return Response(
+            {"error": "You don't have permission to delete this event."},
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
+    if request.method == "POST":
+        event.delete()
+        return Response(
+            {"message": "Event deleted successfully."}, status=status.HTTP_204_NO_CONTENT
+        )
+
+    return Response(
+        {"error": "Invalid request method."}, status=status.HTTP_400_BAD_REQUEST
+    )
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
