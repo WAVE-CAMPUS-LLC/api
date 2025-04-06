@@ -56,19 +56,16 @@ if ENVIORNMENT == "development":
     CSP_FRAME_SRC = ("'self'", "*")
     CSP_CONNECT_SRC = ("'self'", "ws:", "wss:", "*")  # Allow WebSocket connections
 
+    tmpPostgres = urlparse(os.getenv("DATABASE_URL"))
+
     DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.postgresql",
-            "NAME": "crewBuying",
-            "USER": "wave_owner",
-            "PASSWORD": "1PhnjKA8VBOY",
-            "HOST": "ep-cold-band-a5n17hct.us-east-2.aws.neon.tech",
-            "PORT": "5432",
-            "OPTIONS": {
-                "sslmode": "require",
-                "options": "-c timezone=UTC",
-            },
-            "CONN_MAX_AGE": 1200,  # Keep the connection open for 10 minutes
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': tmpPostgres.path.replace('/', ''),
+            'USER': tmpPostgres.username,
+            'PASSWORD': tmpPostgres.password,
+            'HOST': tmpPostgres.hostname,
+            'PORT': 5432,
         }
     }
     print("Development Environment")
