@@ -25,7 +25,7 @@
         <script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-        {% comment %} <meta name="apple-itunes-app" content="app-id=[appId]"> {% endcomment %}
+        <meta name="apple-itunes-app" content="app-id=6744196161">
 
         <script type="text/javascript" src="//code.jquery.com/jquery-1.11.0.min.js"></script>
         <script type="text/javascript" src="//code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
@@ -80,6 +80,17 @@
         {% block auth_body %}
         <div id="html-content" class="flex flex-col gap-[70px] overflow-y-auto h-full">
             <div id="notification-container" class="fixed top-14 left-0 right-0 w-full z-[1060]"></div>
+            
+            <!-- App Download Banner -->
+            <div id="app-download-banner" class="bg-gradient-to-r from-[#008d95] to-[#13c9d3] text-white py-2 px-4 sm:px-6 text-center relative z-50 font-Wanted-Variable">
+                <span class="text-sm sm:text-base">Get a better experience with the Wave OC mobile app!</span>
+                <a href="https://apps.apple.com/us/app/wave-oc/id6744196161" target="_blank" class="text-white font-Wanted-Bold hover:opacity-90 ml-2 underline inline-flex items-center">
+                    Download Now
+                    <img src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/en-us?size=small" alt="Download on App Store" class="h-5 ml-1 inline-block align-middle">
+                </a>
+                <button id="close-banner" aria-label="Close banner" class="absolute right-4 top-1/2 transform -translate-y-1/2 cursor-pointer text-xl border-none bg-transparent text-white hover:text-gray-200">×</button>
+            </div>
+            
             {% block pageHeader %}
             <header>
                 {% block header %}{% endblock header %}
@@ -136,6 +147,26 @@
                     }, 5000);  // Hide after 5 seconds
                 {% endfor %}
             {% endif %}
+            
+            // Check if the banner has been dismissed before
+            function getCookie(name) {
+                const value = `; ${document.cookie}`;
+                const parts = value.split(`; ${name}=`);
+                if (parts.length === 2) return parts.pop().split(';').shift();
+            }
+            
+            if (getCookie('app_banner_dismissed')) {
+                $('#app-download-banner').hide();
+            }
+            
+            // Handle banner dismissal
+            $('#close-banner').on('click', function() {
+                $('#app-download-banner').slideUp();
+                // Set a cookie to remember the dismissal for 30 days
+                const date = new Date();
+                date.setTime(date.getTime() + (30 * 24 * 60 * 60 * 1000));
+                document.cookie = `app_banner_dismissed=true; expires=${date.toUTCString()}; path=/`;
+            });
         });
     </script>
 
