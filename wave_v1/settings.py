@@ -68,7 +68,6 @@ if ENVIORNMENT == "development":
                 "sslmode": "require",
                 "options": "-c timezone=UTC",
             },
-            "CONN_MAX_AGE": 1200,  # Keep the connection open for 10 minutes
         }
     }
     print("Development Environment")
@@ -205,12 +204,14 @@ INSTALLED_APPS = [
     "widget_tweaks",
     "qr_code",
     "storages",
+    "silk",
     "channels",
     "channels_redis",
     "rest_framework",
     "rest_framework_simplejwt",
     "corsheaders",
     "hcaptcha",
+    
 ]
 
 # Redis and Channels configuration
@@ -274,6 +275,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "authenticationApp.middleware.RedirectAuthenticatedUsersMiddleware",
+    "silk.middleware.SilkyMiddleware",
     "coreApp.middleware.TimezoneMiddleware",  # Add this line
 ]
 
