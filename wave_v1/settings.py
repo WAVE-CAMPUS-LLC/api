@@ -70,8 +70,8 @@ if ENVIORNMENT == "development":
     }
     print("Development Environment")
 else:
-    ALLOWED_HOSTS = ["wave-v1.onrender.com", "waveoncampus.com"]
-    CSRF_TRUSTED_ORIGINS = ["https://wave-v1.onrender.com", "https://waveoncampus.com"]
+    ALLOWED_HOSTS = ["wave-v1-1.onrender.com"]
+    CSRF_TRUSTED_ORIGINS = ["https://wave-v1-1.onrender.com"]
     DEBUG = False
     DEBUG_PROPAGATE_EXCEPTIONS = True
     DATABASES = {
@@ -95,12 +95,12 @@ else:
     # CORS Settings
     CORS_ALLOW_ALL_ORIGINS = False
     CORS_ALLOW_CREDENTIALS = False
-    CORS_ALLOWED_ORIGINS = ["https://wave-v1.onrender.com", "https://waveoncampus.com"]
-    CSP_DEFAULT_SRC = ("'self'", "https://waveoncampus.com")
-    CSP_SCRIPT_SRC = ("'self'", "https://waveoncampus.com")
-    CSP_STYLE_SRC = ("'self'", "https://waveoncampus.com")
-    CSP_FONT_SRC = ("'self'", "https://waveoncampus.com")
-    CSP_IMG_SRC = ("'self'", "https://waveoncampus.com")
+    CORS_ALLOWED_ORIGINS = ["https://wave-v1-1.onrender.com"]
+    CSP_DEFAULT_SRC = ("'self'", "https://wave-v1-1.onrender.com")
+    CSP_SCRIPT_SRC = ("'self'", "https://wave-v1-1.onrender.com")
+    CSP_STYLE_SRC = ("'self'", "https://wave-v1-1.onrender.com")
+    CSP_FONT_SRC = ("'self'", "https://wave-v1-1.onrender.com")
+    CSP_IMG_SRC = ("'self'", "https://wave-v1-1.onrender.com")
     CSP_FRAME_SRC = ("'self'",)
     # using cloudflare r2 for storage
     # default_storage._wrapped = SupabaseStorage()
@@ -157,7 +157,7 @@ if not DEBUG:  # In production
     CSRF_COOKIE_SAMESITE = "Lax"
     SESSION_COOKIE_SAMESITE = "Lax"
     CSRF_COOKIE_HTTPONLY = False  # False because we need to access it from JavaScript
-    CSRF_TRUSTED_ORIGINS = ["https://waveoncampus.com", "https://wave-v1.onrender.com"]
+    CSRF_TRUSTED_ORIGINS = ["https://wave-v1-1.onrender.com"]
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
     SECURE_HSTS_SECONDS = 31536000
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
@@ -284,7 +284,7 @@ ROOT_URLCONF = "wave_v1.urls"
 if DEBUG:
     SITE_URL = "http://127.0.0.1:8000"
 else:
-    SITE_URL = "https://waveoncampus.com"
+    SITE_URL = "https://wave-v1-1.onrender.com"
 
 TEMPLATES = [
     {
