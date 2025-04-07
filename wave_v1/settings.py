@@ -40,7 +40,7 @@ if ENVIORNMENT == "development":
     CSRF_TRUSTED_ORIGINS = ["http://localhost:8000", "http://127.0.0.1:8000"]
     DEBUG = True
     DEBUG_PROPAGATE_EXCEPTIONS = False
-    
+
     # CORS Settings for development
     CORS_ALLOW_ALL_ORIGINS = True
     CORS_ALLOW_CREDENTIALS = True
@@ -59,13 +59,13 @@ if ENVIORNMENT == "development":
     tmpPostgres = urlparse(os.getenv("DATABASE_URL"))
 
     DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': tmpPostgres.path.replace('/', ''),
-            'USER': tmpPostgres.username,
-            'PASSWORD': tmpPostgres.password,
-            'HOST': tmpPostgres.hostname,
-            'PORT': 5432,
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": tmpPostgres.path.replace("/", ""),
+            "USER": tmpPostgres.username,
+            "PASSWORD": tmpPostgres.password,
+            "HOST": tmpPostgres.hostname,
+            "PORT": 5432,
         }
     }
     print("Development Environment")
@@ -209,12 +209,14 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt",
     "corsheaders",
     "hcaptcha",
-    
 ]
 
 # Redis and Channels configuration
 # Use the external Redis URL with proper authentication
-REDIS_URL = os.getenv("REDIS_URL", "rediss://red-cvhpb0aqgecs73d362ag:TNJQNjiXBUOuEJYV0npy4GJb0bsgJsPf@oregon-keyvalue.render.com:6379")
+REDIS_URL = os.getenv(
+    "REDIS_URL",
+    "rediss://red-cvhpb0aqgecs73d362ag:TNJQNjiXBUOuEJYV0npy4GJb0bsgJsPf@oregon-keyvalue.render.com:6379",
+)
 use_redis = False
 
 if REDIS_URL:
@@ -222,7 +224,7 @@ if REDIS_URL:
     import socket
     import redis
     from urllib.parse import urlparse
-    
+
     # Parse the Redis URL to get the hostname and port
     try:
         # Try to connect to Redis using the redis-py client
@@ -273,6 +275,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "authenticationApp.middleware.RedirectAuthenticatedUsersMiddleware",
+    "django.middleware.gzip.GZipMiddleware",
     "silk.middleware.SilkyMiddleware",
     "coreApp.middleware.TimezoneMiddleware",  # Add this line
 ]
@@ -395,12 +398,12 @@ STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
 if DEBUG:
-    STATIC_URL = '/static/'
-    STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
+    STATIC_URL = "/static/"
+    STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
 else:
     STATIC_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/static/"
     STATICFILES_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
-    
+
     STORAGES = {
         "default": {
             "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
@@ -418,41 +421,45 @@ AWS_S3_MAX_CONCURRENCY = 1  # Reduce concurrency to avoid overwhelming the servi
 AWS_MAX_ATTEMPTS = 15  # Increase max attempts for retries
 AWS_S3_USE_THREADS = True
 AWS_S3_FILE_OVERWRITE = False
-AWS_S3_RETRY_MODE = 'standard'  # Use standard retry mode
-AWS_S3_SIGNATURE_VERSION = 's3v4'  # Ensure using the latest signature version
+AWS_S3_RETRY_MODE = "standard"  # Use standard retry mode
+AWS_S3_SIGNATURE_VERSION = "s3v4"  # Ensure using the latest signature version
 
 # Configure boto3 retry settings
 # These settings will help with temporary failures
 AWS_BOTO3_RETRY_CONFIG = {
-    'max_attempts': 15,
-    'mode': 'standard',
+    "max_attempts": 15,
+    "mode": "standard",
 }
+
 
 # Define a fallback storage if cloudfront/R2 fails
 class FallbackStorage:
     def __init__(self):
         from django.core.files.storage import FileSystemStorage
         from storages.backends.s3boto3 import S3Boto3Storage
+
         self.s3boto3_storage = S3Boto3Storage()
         self.filesystem_storage = FileSystemStorage()
-        
+
     def _handle_s3_operation(self, method_name, *args, **kwargs):
         try:
             method = getattr(self.s3boto3_storage, method_name)
             return method(*args, **kwargs)
         except Exception as e:
             import logging
+
             logger = logging.getLogger(__name__)
             logger.error(f"S3 operation failed: {method_name}, error: {str(e)}")
-            
+
             # Fall back to filesystem storage for critical operations
             if hasattr(self.filesystem_storage, method_name):
                 fallback_method = getattr(self.filesystem_storage, method_name)
                 return fallback_method(*args, **kwargs)
             raise
-    
+
     def __getattr__(self, name):
         return lambda *args, **kwargs: self._handle_s3_operation(name, *args, **kwargs)
+
 
 # Conditionally use the fallback storage in production
 if not DEBUG:
@@ -497,6 +504,14 @@ REST_FRAMEWORK = {
     "DEFAULT_RENDERER_CLASSES": [
         "rest_framework.renderers.JSONRenderer",
     ],
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle'
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '20/min',
+        'user': '100/min'
+    }
 }
 
 # Update AWS S3 / Cloudflare R2 configuration with better retry settings
@@ -504,47 +519,51 @@ AWS_S3_MAX_CONCURRENCY = 1  # Reduce concurrency to avoid overwhelming the servi
 AWS_MAX_ATTEMPTS = 15  # Increase max attempts for retries
 AWS_S3_USE_THREADS = True
 AWS_S3_FILE_OVERWRITE = False
-AWS_RETRY_MODE = 'standard'  # Use standard retry mode for boto3 clients
-AWS_S3_SIGNATURE_VERSION = 's3v4'  # Ensure using the latest signature version
-AWS_S3_ADDRESSING_STYLE = 'virtual'  # Use virtual-hosted style addressing
+AWS_RETRY_MODE = "standard"  # Use standard retry mode for boto3 clients
+AWS_S3_SIGNATURE_VERSION = "s3v4"  # Ensure using the latest signature version
+AWS_S3_ADDRESSING_STYLE = "virtual"  # Use virtual-hosted style addressing
 
 # Configure boto3 connect timeout and read timeout
 AWS_CONNECT_TIMEOUT = 5  # 5 seconds for connection timeout
-AWS_READ_TIMEOUT = 15    # 15 seconds for read timeout
+AWS_READ_TIMEOUT = 15  # 15 seconds for read timeout
 
 # Create a custom storage class to handle S3 failures gracefully
 if not DEBUG:  # Only apply in production
     from django.conf import settings
     from storages.backends.s3boto3 import S3Boto3Storage
     import logging
-    
+
     class ResilientS3Storage(S3Boto3Storage):
         """S3 Storage with improved error handling and retry logic"""
-        
+
         def __init__(self, *args, **kwargs):
             super().__init__(*args, **kwargs)
-            self.logger = logging.getLogger('wave_v1.storage')
-            
+            self.logger = logging.getLogger("wave_v1.storage")
+
         def _save(self, name, content):
             try:
                 return super()._save(name, content)
             except Exception as e:
                 self.logger.error(f"S3 save operation failed for {name}: {str(e)}")
                 # Use a local path that's relative to MEDIA_ROOT
-                local_path = os.path.join('fallback_storage', name)
-                
+                local_path = os.path.join("fallback_storage", name)
+
                 # Ensure the directory exists
                 directory = os.path.dirname(local_path)
-                os.makedirs(os.path.join(settings.BASE_DIR, 'media', directory), exist_ok=True)
-                
+                os.makedirs(
+                    os.path.join(settings.BASE_DIR, "media", directory), exist_ok=True
+                )
+
                 # Save locally
-                with open(os.path.join(settings.BASE_DIR, 'media', local_path), 'wb') as f:
+                with open(
+                    os.path.join(settings.BASE_DIR, "media", local_path), "wb"
+                ) as f:
                     for chunk in content.chunks():
                         f.write(chunk)
-                
+
                 self.logger.info(f"Saved file {name} to local storage as fallback")
                 return local_path
-    
+
     # Update storage configuration to use our resilient storage
     STORAGES = {
         "default": {
@@ -554,17 +573,17 @@ if not DEBUG:  # Only apply in production
             "BACKEND": "wave_v1.settings.ResilientS3Storage",
         },
     }
-    
+
     # Ensure we have a local media directory for fallbacks
-    os.makedirs(os.path.join(BASE_DIR, 'media'), exist_ok=True)
+    os.makedirs(os.path.join(BASE_DIR, "media"), exist_ok=True)
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(days=183),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=365),  # Doubled the refresh token lifetime
-    'ROTATE_REFRESH_TOKENS': True,
-    'BLACKLIST_AFTER_ROTATION': True
+    "ACCESS_TOKEN_LIFETIME": timedelta(days=183),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=365),  # Doubled the refresh token lifetime
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": True,
 }
 
 # hCaptcha settings
-HCAPTCHA_SITEKEY = os.getenv('HCAPTCHA_SITEKEY')  # Get this from hcaptcha.com
-HCAPTCHA_SECRET = os.getenv('HCAPTCHA_SECRET')  # Get this from hcaptcha.com
+HCAPTCHA_SITEKEY = os.getenv("HCAPTCHA_SITEKEY")  # Get this from hcaptcha.com
+HCAPTCHA_SECRET = os.getenv("HCAPTCHA_SECRET")  # Get this from hcaptcha.com
