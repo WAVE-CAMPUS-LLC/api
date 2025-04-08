@@ -37,6 +37,8 @@ class GuestListCustomUserSerializer(serializers.ModelSerializer):
             return obj.user_profile.profile_photo.url
         return None
 
+@api_view(['GET'])
+@permission_classes([AllowAny])
 def explore_events(request):
     all_events = cache.get("live_events")
     if not all_events:
