@@ -163,7 +163,6 @@ def viewCollegeInformation(request, collegeId):
             forCollegesDisplay=True,
             admin_status="active",
         )
-        .filter(age_filter)
         .order_by("?")[:3]
     )
 
