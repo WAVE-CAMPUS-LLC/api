@@ -6,6 +6,8 @@ from django.utils.timezone import now
 from datetime import timedelta, date
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers, status
+from django.core.cache import cache
+import json
 
 import random
 import logging
@@ -16,6 +18,7 @@ from eventTicketsApp.models import RSVPTicket, PaidFreeTicket
 from eventTicketsApp.views import generateTicket
 from socialApp.models import Crew
 from .forms import RSVPForm
+from .serializers import ExplorePageEventSerializer
 from eventManagementApp.models import CouponCode, Event
 from authenticationApp.models import CustomUser
 from eventManagementApp.serializers import EventSerializer
@@ -34,97 +37,34 @@ class GuestListCustomUserSerializer(serializers.ModelSerializer):
             return obj.user_profile.profile_photo.url
         return None
 
-@api_view(['GET'])
-@permission_classes([AllowAny])
 def explore_events(request):
-    """
-    API endpoint for getting explore page data including:
-    - Initial events
-    - Trending events
-    - Weekly events
-    - Trending categories
-    - Invited events (for authenticated users)
-    """
-    # Load all events at once - no more pagination
-    all_events = Event.objects.filter(
-        status="live", 
-        forAllDisplay=True,
-        admin_status="active"
-    )
+    all_events = cache.get("live_events")
+    if not all_events:
+        all_events = Event.objects.filter(
+            status="live", forAllDisplay=True, admin_status="active"
+        ).only("eventId", "title", "date", "header_photo", "state", "city", "ticketing", "forAllDisplay", "forCollegesDisplay")
+        cache.set("live_events", all_events, timeout=60 * 5)
 
-    # Get trending events
-    trending_events = Event.objects.filter(
-        status="live", 
-        forAllDisplay=True,
-        admin_status="active"
-    ).order_by("date")[:3]
+    all_events_serialized = ExplorePageEventSerializer(all_events, many=True).data
 
-    # Get invited events for authenticated users
-    invited_events_data = []
-    if request.user.is_authenticated:
-        try:
-            user_profile = UserProfile.objects.get(user=request.user)
-            invited_events = user_profile.invited_events.filter(status="live")
-            invitations = user_profile.invitations.all()
-            
-            for event in invited_events:
-                token = next((invite.token for invite in invitations if invite.event == event), None)
-                event_serializer = EventSerializer(event)
-                invited_events_data.append({
-                    'event': event_serializer.data,
-                    'token': str(token) if token else None
-                })
-        except UserProfile.DoesNotExist:
-            pass
-
-    # Replace the trending categories section with all categories
-    all_categories = []
-    for category_type, category_name in Event.EXPLORE_TYPE_CHOICES:
-        count = Event.objects.filter(
-            status="live",
-            admin_status="active",
-            event_type=category_type
-        ).count()
-        
-        all_categories.append({
-            'type': category_type,
-            'display_name': category_name,
-            'count': count
-        })
-
-    # Sort categories by count in descending order
-    all_categories.sort(key=lambda x: x['count'], reverse=True)
-
-    # Get weekly events
-    today = now().date()
-    start_of_week = today - timedelta(days=today.weekday())
-    end_of_week = start_of_week + timedelta(days=6)
-
-    weekly_events = Event.objects.filter(
-        date__range=[start_of_week, end_of_week],
-        status="live",
-        admin_status="active",
-    ).order_by("?")[:3]
-
-    # Prepare response data using serializers
-    all_events_serialized = EventSerializer(all_events, many=True).data
-    trending_events_serialized = EventSerializer(trending_events, many=True).data
-    weekly_events_serialized = EventSerializer(weekly_events, many=True).data
-    
     # Add college name for events with display_event_on_college=True
-    for events_list in [all_events_serialized, trending_events_serialized, weekly_events_serialized]:
+    for events_list in [all_events_serialized]:
         for event_data in events_list:
-            event_obj = next((e for e in all_events if str(e.eventId) == event_data['eventId']), None)
-            if event_obj and event_obj.display_event_on_college and event_obj.host and hasattr(event_obj.host, 'user_profile') and event_obj.host.user_profile.college:
-                event_data['college_name'] = event_obj.host.user_profile.college.name
-    
+            event_obj = next(
+                (e for e in all_events if str(e.eventId) == event_data["eventId"]), None
+            )
+            if (
+                event_obj
+                and event_obj.display_event_on_college
+                and event_obj.host
+                and hasattr(event_obj.host, "user_profile")
+                and event_obj.host.user_profile.college
+            ):
+                event_data["college_name"] = event_obj.host.user_profile.college.name
+
     # Prepare response data
     response_data = {
-        'events': all_events_serialized,  # All events in a single list
-        'trending_events': trending_events_serialized,
-        'weekly_events': weekly_events_serialized,
-        'trending_categories': all_categories,
-        'invited_events': invited_events_data
+        "events": all_events_serialized,
     }
 
     return Response(response_data)
