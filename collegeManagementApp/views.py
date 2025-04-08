@@ -416,8 +416,7 @@ def viewOrganization(request, collegeId, orgId):
 
     # Get events restricted to this organization
     restricted_events = Event.objects.filter(
-        privacy="Private (Organization)",
-        privacy_details__restricted_organization=organization,
+        privacy_details__restricted_organization=organization
     ).order_by("-date")
 
     org_privacy = organization.privacy
@@ -451,7 +450,6 @@ def viewOrganization(request, collegeId, orgId):
             all_memberships.delete()
 
             events = Event.objects.filter(
-                privacy="Private (Organization)",
                 privacy_details__restricted_organization=organization,
             )
             events.delete()
