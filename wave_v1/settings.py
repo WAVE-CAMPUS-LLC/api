@@ -74,16 +74,22 @@ else:
     CSRF_TRUSTED_ORIGINS = ["https://wave-v1.onrender.com", "https://waveoncampus.com"]
     DEBUG = False
     DEBUG_PROPAGATE_EXCEPTIONS = True
-    tmpPostgres = urlparse(os.getenv("DATABASE_URL"))
-
     DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': tmpPostgres.path.replace('/', ''),
-            'USER': tmpPostgres.username,
-            'PASSWORD': tmpPostgres.password,
-            'HOST': tmpPostgres.hostname,
-            'PORT': 5432,
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": "postgres",
+            "USER": "postgres.zqwamcznyosnkrevxmhm",
+            "PASSWORD": os.getenv("DB_PASSWORD"),
+            "HOST": "aws-0-us-east-1.pooler.supabase.com",
+            "PORT": "6543",
+            "OPTIONS": {
+                "sslmode": "require",
+                "options": "-c timezone=UTC",
+                "keepalives": 1,
+                "keepalives_idle": 30,
+                "keepalives_interval": 10,
+                "keepalives_count": 5,
+            },
         }
     }
     # CORS Settings
@@ -196,12 +202,14 @@ INSTALLED_APPS = [
     "widget_tweaks",
     "qr_code",
     "storages",
+    "silk",
     "channels",
     "channels_redis",
     "rest_framework",
     "rest_framework_simplejwt",
     "corsheaders",
     "hcaptcha",
+    
 ]
 
 # Redis and Channels configuration
@@ -265,6 +273,8 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "authenticationApp.middleware.RedirectAuthenticatedUsersMiddleware",
+    'django.middleware.gzip.GZipMiddleware',
+    "silk.middleware.SilkyMiddleware",
     "coreApp.middleware.TimezoneMiddleware",  # Add this line
 ]
 
