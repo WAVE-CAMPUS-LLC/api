@@ -49,21 +49,6 @@ def explore_events(request):
 
     all_events_serialized = ExplorePageEventSerializer(all_events, many=True).data
 
-    # Add college name for events with display_event_on_college=True
-    for events_list in [all_events_serialized]:
-        for event_data in events_list:
-            event_obj = next(
-                (e for e in all_events if str(e.eventId) == event_data["eventId"]), None
-            )
-            if (
-                event_obj
-                and event_obj.display_event_on_college
-                and event_obj.host
-                and hasattr(event_obj.host, "user_profile")
-                and event_obj.host.user_profile.college
-            ):
-                event_data["college_name"] = event_obj.host.user_profile.college.name
-
     # Prepare response data
     response_data = {
         "events": all_events_serialized,

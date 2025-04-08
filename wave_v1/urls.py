@@ -40,7 +40,8 @@ urlpatterns = [
     path("admin/", super_admin_restricted_site.urls),
     path("analytics/", include("dataAnalyticsApp.urls")),
     path("dataApi/", include("dataAnalyticsAPI.urls")),
-    path('nativeTSUReactAPI/', include('wave_v1.urlsapi'))
+    path('nativeTSUReactAPI/', include('wave_v1.urlsapi')),
+    path("silk/", include("silk.urls", namespace="silk")),
 ]
 
 # Using s3 for media storage
