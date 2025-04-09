@@ -56,16 +56,34 @@ if ENVIORNMENT == "development":
     CSP_FRAME_SRC = ("'self'", "*")
     CSP_CONNECT_SRC = ("'self'", "ws:", "wss:", "*")  # Allow WebSocket connections
 
-    tmpPostgres = urlparse(os.getenv("DATABASE_URL"))
+    PGHOST=os.getenv("PGHOST")
+    PGDATABASE=os.getenv("PGDATABASE")
+    PGUSER=os.getenv("PGUSER")
+    PGPASSWORD=os.getenv("PGPASSWORD")
+    print('PGHOST', PGHOST)
+    print('PGDATABASE', PGDATABASE)
+    print('PGUSER', PGUSER)
+    print('PGPASSWORD', PGPASSWORD)
+    print('PGHOST', PGHOST)
+    print('PGDATABASE', PGDATABASE)
+    print('PGUSER', PGUSER)
+    print('PGPASSWORD', PGPASSWORD)
+    print('PGHOST', PGHOST)
+    print('PGDATABASE', PGDATABASE)
+    print('PGUSER', PGUSER)
+    print('PGPASSWORD', PGPASSWORD)
 
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
-            'NAME': tmpPostgres.path.replace('/', ''),
-            'USER': tmpPostgres.username,
-            'PASSWORD': tmpPostgres.password,
-            'HOST': tmpPostgres.hostname,
+            'NAME': PGDATABASE,
+            'USER': PGUSER,
+            'PASSWORD': PGPASSWORD,
+            'HOST': PGHOST,
             'PORT': 5432,
+            'OPTIONS': {
+                'sslmode': 'require',  # 👈 Fix for problem #2
+            },
         }
     }
     print("Development Environment")

@@ -13,6 +13,7 @@ Profile Overview
 <script type="text/javascript" src="{% static "/scripts/accountManagementApp/settings/profileManagement.js" %}" defer></script>
 <script type="text/javascript" src="{% static "scripts/accountManagementApp/profileOverview/addPaymentMethod.js" %}" defer></script>
 <script type="text/javascript" src="{% static "scripts/adminDashboardApp/applications/applications.js" %}" defer></script>
+<script type="text/javascript" src="{% static "scripts/accountManagementApp/profileOverview/pagination.js" %}" defer></script>
 <script type="module" src="{% static "scripts/base/stripe.js" %}" defer></script>
 {% endblock script %}
 
@@ -198,8 +199,23 @@ Profile Overview
 
                 <div class="profile-tab-content hidden" id="myTickets-information">
                     <div class="border border-custom-rgba11 rounded-[10px] w-full flex flex-col gap-[20px] py-[20px] px-[30px] shadow-custom-shadow-6">
-                        <div class="home-header">
-                            <h3 class="font-Wanted-Bold text-xl mb-4">My Tickets</h3>
+                        <div class="home-header flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                            <h3 class="font-Wanted-Bold text-xl">My Tickets</h3>
+                            
+                            {% if user_tickets %}
+                            <!-- This div will be populated by JavaScript -->
+                            <div id="tickets-pagination-top" class="flex items-center gap-2">
+                                <div class="entries-selector-container flex items-center gap-2 text-sm">
+                                    <label for="tickets-entries-selector" class="text-gray-600">Show:</label>
+                                    <select id="tickets-entries-selector" class="border border-gray-200 rounded px-2 py-1 text-sm">
+                                        <option value="10" selected>10</option>
+                                        <option value="25">25</option>
+                                        <option value="50">50</option>
+                                        <option value="100">100</option>
+                                    </select>
+                                </div>
+                            </div>
+                            {% endif %}
                         </div>
                         
                         {% if user_tickets %}
@@ -235,6 +251,7 @@ Profile Overview
                                     </div>
                                 {% endfor %}
                             </div>
+                            <!-- Pagination controls will be inserted here by JavaScript -->
                         {% else %}
                             <div class="empty-state p-4 bg-gray-50 rounded-lg text-center">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mx-auto text-gray-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -297,8 +314,23 @@ Profile Overview
                 <div class="profile-tab-content" id="myPurchases-information">
                     <div class="border border-custom-rgba11 rounded-[10px] w-full flex flex-col gap-[20px] py-[20px] px-[30px] shadow-custom-shadow-6">
                         <div class="home-header">
-                            <div id="shareControl" class="content-control flex flex-row justify-between gap-4 w-full"> 
+                            <div id="shareControl" class="content-control flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 w-full"> 
                                 <div class="myEvents-informationTab tab-active cursor-pointer font-Wanted-Variable border border-gray-100 p-2 rounded-xl w-auto flex justify-center" data-tab="myPurchases">Transactions</div>
+                                
+                                {% if transactions %}
+                                <!-- This div will be populated by JavaScript -->
+                                <div id="transactions-pagination-top" class="flex items-center gap-2">
+                                    <div class="entries-selector-container flex items-center gap-2 text-sm">
+                                        <label for="transactions-entries-selector" class="text-gray-600">Show:</label>
+                                        <select id="transactions-entries-selector" class="border border-gray-200 rounded px-2 py-1 text-sm">
+                                            <option value="10" selected>10</option>
+                                            <option value="25">25</option>
+                                            <option value="50">50</option>
+                                            <option value="100">100</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                {% endif %}
                             </div>
                         </div>
 
@@ -360,6 +392,7 @@ Profile Overview
                                         </div>
                                     {% endfor %}
                                 </div>
+                                <!-- Pagination controls will be inserted here by JavaScript -->
                             {% else %}
                             <div class="emptyContainer w-full rounded-[20px] pt-[40px] after-xsm:pt-[50px] sm:pt-[60px] md:pt-[70px] pb-[40px] after-xsm:pb-[50px] sm:pb-[60px] md:pb-[70px] flex flex-col justify-center gap-[7px] after-xsm:gap-[8px] sm:gap-[9px] md:gap-[10px] items-center bg-[rgba(146,146,146,0.096)]">
                                 <div>
