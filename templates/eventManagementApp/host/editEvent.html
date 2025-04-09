@@ -13,6 +13,34 @@ Edit Your Event — WAVE.
 <script src="{% static 'scripts/eventManagementApp/host/photoPreview.js' %}" defer></script>
 <script src="{% static 'scripts/quilljs/eventCreationQuill.js' %}"></script>
 <script src="{% static 'scripts/eventManagementApp/host/crewDiscountToggle.js' %}" defer></script>
+<script>
+  // Add confirmation before leaving page with unsaved changes
+  document.addEventListener('DOMContentLoaded', function() {
+    let formChanged = false;
+    const form = document.getElementById('eventForm');
+    
+    if (form) {
+      const inputs = form.querySelectorAll('input, textarea, select');
+      inputs.forEach(input => {
+        input.addEventListener('change', function() {
+          formChanged = true;
+        });
+      });
+      
+      form.addEventListener('submit', function() {
+        formChanged = false;
+      });
+      
+      window.addEventListener('beforeunload', function(e) {
+        if (formChanged) {
+          e.preventDefault();
+          e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
+          return e.returnValue;
+        }
+      });
+    }
+  });
+</script>
 {% endblock script %}
 
 {% block header %}
@@ -22,15 +50,31 @@ Edit Your Event — WAVE.
 {% block body %}
 <div id="body-content" class="flex flex-col px-[15px] after-xsm:px-[20px] xxsm:px-[35px] sm:px-[40px] md:px-[40px] pre-lg:px-[50px] lg:px-[80px] gap-[70px]">
   <!-- Top Bar -->
-  <div class="flex flex-row justify-between">
+  <div class="flex flex-row justify-between items-center">
     <!-- Exit Button -->
-    <a href="{% url 'eventManagement:eventManagement' event.eventId %}" class="bg-[#ff0707] text-white font-Wanted-Regular text-Semi-Medium p-2 pre-lg:p-3 rounded-2xl w-1/3 pre-lg:w-1/5 flex justify-center hover:bg-[#CE0000]">
+    <a href="{% url 'eventManagement:eventManagement' event.eventId %}" class="bg-[#ff0707] text-white font-Wanted-Regular text-Semi-Medium p-2 pre-lg:p-3 rounded-2xl w-1/3 pre-lg:w-1/5 flex justify-center items-center hover:bg-[#CE0000] transition-colors">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+      </svg>
       Exit
     </a>
     <h1 class="flex justify-start font-Wanted-Bold text-Large text-black">Edit Your Event</h1>
-    <a href="{% url 'eventManagement:hostGuide' %}" target="_blank" class="bg-transparent text-black font-Wanted-Regular text-Semi-Medium p-2 pre-lg:p-3 rounded-2xl w-1/3 pre-lg:w-1/5 flex justify-center border border-gray-600 hover:bg-[#007379] hover:text-white hover:border-[#007379]">
+    <a href="{% url 'eventManagement:hostGuide' %}" target="_blank" class="bg-transparent text-black font-Wanted-Regular text-Semi-Medium p-2 pre-lg:p-3 rounded-2xl w-1/3 pre-lg:w-1/5 flex justify-center items-center border border-gray-600 hover:bg-[#007379] hover:text-white hover:border-[#007379] transition-colors">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
       Guide
     </a>
+  </div>
+  
+  <!-- Form status message -->
+  <div id="form-status" class="hidden bg-green-100 text-green-800 p-4 rounded-lg shadow-md">
+    <div class="flex items-center">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+      </svg>
+      <span class="font-Wanted-Medium">Your changes have been saved successfully!</span>
+    </div>
   </div>
 
   <!-- The Edit Event Form -->
@@ -41,157 +85,227 @@ Edit Your Event — WAVE.
       <!-- LEFT COLUMN: Basic Details, Description, Location, Crew & Guest Options -->
       <div class="flex flex-col gap-8 w-full">
         <!-- EXPERIENCE DETAILS -->
-        <div class="flex flex-col gap-4 w-full items-start">
-          <h6 class="flex justify-start font-Wanted-Medium text-Large">Experience Details</h6>
-          <div class="flex flex-col gap-3 w-full">
+        <div class="flex flex-col gap-4 w-full items-start bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+          <h6 class="flex justify-start font-Wanted-Medium text-Large text-black border-b border-gray-100 pb-2 w-full">Experience Details</h6>
+          <div class="flex flex-col gap-5 w-full">
             <!-- Title -->
             <div class="section-intake flex flex-col w-full items-start justify-center">
-              <p class="font-Wanted-SemiBold text-Base text-gray-400">{{ editEventForm.title.label }}</p>
-              {{ editEventForm.title|attr:"class:title-input p-[12px] pl-[13px] pr-[13px] rounded-[13px] border border-solid border-custom-rgba font-Wanted-Variable text-[15px] w-full shadow-form-shadow" }}
-              <p id="title-error" class="text-[#FF0000] font-Wanted-SemiBold text-Base hidden"></p>
+              <label for="{{ editEventForm.title.auto_id }}" class="font-Wanted-SemiBold text-Base text-gray-600 flex items-center">
+                {{ editEventForm.title.label }}
+                <span class="text-[#ff0707] ml-1">*</span>
+                <span class="ml-2 text-xs text-gray-400">(3-100 characters)</span>
+              </label>
+              {{ editEventForm.title|attr:"class:title-input p-[12px] pl-[13px] pr-[13px] rounded-[13px] border border-solid border-custom-rgba font-Wanted-Variable text-[15px] w-full shadow-form-shadow"|attr:"placeholder:Enter a catchy title for your event"|attr:"maxlength:100"|attr:"minlength:3" }}
+              <p id="title-error" class="text-[#FF0707] font-Wanted-SemiBold text-Base hidden mt-1"></p>
             </div>
             <!-- Event Type -->
             <div class="section-intake flex flex-col w-full items-start justify-center">
-              <p class="font-Wanted-SemiBold text-Base text-gray-400">{{ editEventForm.event_type.label }}</p>
+              <label for="{{ editEventForm.event_type.auto_id }}" class="font-Wanted-SemiBold text-Base text-gray-600 flex items-center">
+                {{ editEventForm.event_type.label }}
+                <span class="text-[#ff0707] ml-1">*</span>
+              </label>
               {{ editEventForm.event_type|attr:"class:event-type-input p-[12px] pl-[13px] pr-[13px] rounded-[13px] border border-solid border-custom-rgba font-Wanted-Variable text-[15px] w-full shadow-form-shadow"|attr:"placeholder:What type of experience is this?" }}
-              <p id="event-type-error" class="text-[#FF0000] font-Wanted-SemiBold text-Base hidden">Please choose an option</p>
+              <p id="event-type-error" class="text-[#FF0707] font-Wanted-SemiBold text-Base hidden mt-1">Please choose an option</p>
             </div>
             <!-- Date & Time -->
-            <div class="flex flex-col pre-sm:flex-row gap-2 w-full">
+            <div class="flex flex-col pre-sm:flex-row gap-4 w-full">
               <!-- Date -->
               <div class="section-intake flex flex-col w-full items-start justify-center">
-                <p class="font-Wanted-SemiBold text-Base text-gray-400">{{ editEventForm.date.label }}</p>
-                {{ editEventForm.date|attr:"class:date-input p-[12px] pl-[13px] pr-[13px] rounded-[13px] border border-solid border-custom-rgba font-Wanted-Variable text-[15px] w-full shadow-form-shadow" }}
-                <p id="date-error" class="text-[#FF0000] font-Wanted-SemiBold text-Base hidden"></p>
+                <label for="{{ editEventForm.date.auto_id }}" class="font-Wanted-SemiBold text-Base text-gray-600 flex items-center">
+                  {{ editEventForm.date.label }}
+                  <span class="text-[#ff0707] ml-1">*</span>
+                </label>
+                {{ editEventForm.date|attr:"class:date-input p-[12px] pl-[13px] pr-[13px] rounded-[13px] border border-solid border-custom-rgba font-Wanted-Variable text-[15px] w-full shadow-form-shadow"|attr:"min:2025-04-09" }}
+                <p id="date-error" class="text-[#FF0707] font-Wanted-SemiBold text-Base hidden mt-1"></p>
               </div>
               <!-- Start & End Time -->
               <div class="flex flex-col xsm:flex-row gap-3 w-full">
                 <div class="flex flex-col gap-1 w-full">
-                  <p class="font-Wanted-SemiBold text-Base text-gray-400">{{ editEventForm.start_time.label }}</p>
+                  <label for="{{ editEventForm.start_time.auto_id }}" class="font-Wanted-SemiBold text-Base text-gray-600 flex items-center">
+                    {{ editEventForm.start_time.label }}
+                    <span class="text-[#ff0707] ml-1">*</span>
+                  </label>
                   {{ editEventForm.start_time|attr:"class:start-time-input p-[12px] pl-[13px] pr-[13px] rounded-[13px] border border-solid border-custom-rgba font-Wanted-Variable text-[15px] w-full shadow-form-shadow" }}
                 </div>
                 <div class="flex flex-col gap-1 w-full">
-                  <p class="font-Wanted-SemiBold text-Base text-gray-400">{{ editEventForm.end_time.label }}</p>
+                  <label for="{{ editEventForm.end_time.auto_id }}" class="font-Wanted-SemiBold text-Base text-gray-600 flex items-center">
+                    {{ editEventForm.end_time.label }}
+                    <span class="text-[#ff0707] ml-1">*</span>
+                  </label>
                   {{ editEventForm.end_time|attr:"class:end-time-input p-[12px] pl-[13px] pr-[13px] rounded-[13px] border border-solid border-custom-rgba font-Wanted-Variable text-[15px] w-full shadow-form-shadow" }}
                 </div>
-                <p id="time-error" class="text-[#FF0000] font-Wanted-SemiBold text-Base hidden">Invalid Time</p>
               </div>
             </div>
+            <p id="time-error" class="text-[#FF0707] font-Wanted-SemiBold text-Base hidden mt-1">Invalid Time</p>
+            
             <!-- Description (Quill Editor) -->
-            <div class="flex flex-col w-full items-start justify-center">
-              <p class="font-Wanted-SemiBold text-Base text-gray-400">{{ editEventForm.description.label }}</p>
+            <div class="flex flex-col w-full items-start justify-center mt-2">
+              <label for="quill-editor" class="font-Wanted-SemiBold text-Base text-gray-600 flex items-center">
+                {{ editEventForm.description.label }}
+                <span class="text-[#ff0707] ml-1">*</span>
+                <span class="ml-2 text-xs text-gray-400">(20-5000 characters)</span>
+              </label>
               <div class="section-intake flex flex-col gap-3 w-full items-center justify-center">
                 {# Hide the actual textarea; Quill will be initialized on this container #}
                 {{ editEventForm.description|attr:"class:description-textarea hidden" }}
                 <div id="quill-editor" class="w-full min-h-[300px] border-2 border-[#0909091c] rounded-2xl p-5 font-Wanted-Variable text-Medium mt-2">
                   {{ editEventForm.description.value|safe }}
                 </div>
-                <p id="body-error" class="text-[#FF0000] font-Wanted-SemiBold text-Base hidden"></p>
+                <p id="body-error" class="text-[#FF0707] font-Wanted-SemiBold text-Base hidden mt-1"></p>
               </div>
-            </div>
-            <!-- Ticketing -->
-            <div class="flex flex-col w-full items-start justify-center">
-              <p class="font-Wanted-SemiBold text-Base text-gray-400">{{ editEventForm.ticketing.label }}</p>
-              {{ editEventForm.ticketing|attr:"class:ticketing-input p-[12px] pl-[13px] pr-[13px] rounded-[13px] border border-solid border-custom-rgba font-Wanted-Variable text-[15px] w-full shadow-form-shadow" }}
             </div>
           </div>
         </div>
 
         <!-- LOCATION DETAILS -->
-        <div class="flex flex-col gap-4 w-full items-start">
-          <h6 class="flex justify-start font-Wanted-Medium text-Large">Experience Location</h6>
-          <div class="flex flex-col gap-2 w-full">
-            <div class="flex flex-row w-full justify-between items-center">
-              <p class="flex flex-col gap-1 font-Wanted-SemiBold text-Base text-gray-400">
-                Hide address from users?
-                <span class="font-Wanted-Variable text-XSmall">You can make this address public before the event</span>
-              </p>
+        <div class="flex flex-col gap-4 w-full items-start bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+          <h6 class="flex justify-start font-Wanted-Medium text-Large text-black border-b border-gray-100 pb-2 w-full">Experience Location</h6>
+          <div class="flex flex-col gap-4 w-full">
+            <div class="flex flex-row w-full justify-between items-center p-3 bg-gray-50 rounded-lg">
+              <div class="flex flex-col gap-1">
+                <p class="font-Wanted-SemiBold text-Base text-gray-600">
+                  Hide address from users?
+                </p>
+                <span class="font-Wanted-Variable text-XSmall text-gray-500">You can make this address public before the event</span>
+              </div>
               <label class="toggle-switch">
                 <input type="checkbox" id="{{ editEventForm.hide_address.auto_id }}" name="{{ editEventForm.hide_address.html_name }}" {% if editEventForm.hide_address.value %}checked{% endif %} />
                 <span class="slider"></span>
               </label>
             </div>
-            <div class="grid grid-cols-1 pre-sm:grid-cols-2 gap-3 w-full">
+            <div class="grid grid-cols-1 pre-sm:grid-cols-2 gap-4 w-full">
               <!-- Building Name -->
               <div class="flex flex-col w-full items-start justify-center">
-                <p class="font-Wanted-SemiBold text-Base text-gray-400">{{ editEventForm.building_name.label }}</p>
-                {{ editEventForm.building_name|attr:"class:building-input p-[12px] pl-[13px] pr-[13px] rounded-[13px] border border-solid border-custom-rgba font-Wanted-Variable text-[15px] w-full shadow-form-shadow" }}
+                <label for="{{ editEventForm.building_name.auto_id }}" class="font-Wanted-SemiBold text-Base text-gray-600">
+                  {{ editEventForm.building_name.label }}
+                </label>
+                {{ editEventForm.building_name|attr:"class:building-input p-[12px] pl-[13px] pr-[13px] rounded-[13px] border border-solid border-custom-rgba font-Wanted-Variable text-[15px] w-full shadow-form-shadow"|attr:"placeholder:Optional - e.g. Student Union"|attr:"maxlength:100" }}
+                <p id="building-error" class="text-[#FF0707] font-Wanted-SemiBold text-Base hidden mt-1"></p>
               </div>
               <!-- Street -->
               <div class="flex flex-col w-full items-start justify-center">
-                <p class="font-Wanted-SemiBold text-Base text-gray-400">{{ editEventForm.street.label }}</p>
-                {{ editEventForm.street|attr:"class:street-input p-[12px] pl-[13px] pr-[13px] rounded-[13px] border border-solid border-custom-rgba font-Wanted-Variable text-[15px] w-full shadow-form-shadow" }}
+                <label for="{{ editEventForm.street.auto_id }}" class="font-Wanted-SemiBold text-Base text-gray-600 flex items-center">
+                  {{ editEventForm.street.label }}
+                  <span class="text-[#ff0707] ml-1">*</span>
+                </label>
+                {{ editEventForm.street|attr:"class:street-input p-[12px] pl-[13px] pr-[13px] rounded-[13px] border border-solid border-custom-rgba font-Wanted-Variable text-[15px] w-full shadow-form-shadow"|attr:"placeholder:Street address"|attr:"maxlength:100" }}
+                <p id="street-error" class="text-[#FF0707] font-Wanted-SemiBold text-Base hidden mt-1"></p>
               </div>
               <!-- Apt/Suite/Unit -->
               <div class="flex flex-col w-full items-start justify-center">
-                <p class="font-Wanted-SemiBold text-Base text-gray-400">{{ editEventForm.apt_suite_unit.label }}</p>
-                {{ editEventForm.apt_suite_unit|attr:"class:apt-input p-[12px] pl-[13px] pr-[13px] rounded-[13px] border border-solid border-custom-rgba font-Wanted-Variable text-[15px] w-full shadow-form-shadow" }}
+                <label for="{{ editEventForm.apt_suite_unit.auto_id }}" class="font-Wanted-SemiBold text-Base text-gray-600">
+                  {{ editEventForm.apt_suite_unit.label }}
+                </label>
+                {{ editEventForm.apt_suite_unit|attr:"class:apt-input p-[12px] pl-[13px] pr-[13px] rounded-[13px] border border-solid border-custom-rgba font-Wanted-Variable text-[15px] w-full shadow-form-shadow"|attr:"placeholder:Optional"|attr:"maxlength:50" }}
+                <p id="apt-error" class="text-[#FF0707] font-Wanted-SemiBold text-Base hidden mt-1"></p>
               </div>
               <!-- City -->
               <div class="flex flex-col w-full items-start justify-center">
-                <p class="font-Wanted-SemiBold text-Base text-gray-400">{{ editEventForm.city.label }}</p>
-                {{ editEventForm.city|attr:"class:city-input p-[12px] pl-[13px] pr-[13px] rounded-[13px] border border-solid border-custom-rgba font-Wanted-Variable text-[15px] w-full shadow-form-shadow" }}
+                <label for="{{ editEventForm.city.auto_id }}" class="font-Wanted-SemiBold text-Base text-gray-600 flex items-center">
+                  {{ editEventForm.city.label }}
+                  <span class="text-[#ff0707] ml-1">*</span>
+                </label>
+                {{ editEventForm.city|attr:"class:city-input p-[12px] pl-[13px] pr-[13px] rounded-[13px] border border-solid border-custom-rgba font-Wanted-Variable text-[15px] w-full shadow-form-shadow"|attr:"placeholder:City or town" }}
+                <p id="city-error" class="text-[#FF0707] font-Wanted-SemiBold text-Base hidden mt-1"></p>
               </div>
               <!-- State -->
               <div class="flex flex-col w-full items-start justify-center">
-                <p class="font-Wanted-SemiBold text-Base text-gray-400">{{ editEventForm.state.label }}</p>
+                <label for="{{ editEventForm.state.auto_id }}" class="font-Wanted-SemiBold text-Base text-gray-600 flex items-center">
+                  {{ editEventForm.state.label }}
+                  <span class="text-[#ff0707] ml-1">*</span>
+                </label>
                 {{ editEventForm.state|attr:"class:state-input p-[12px] pl-[13px] pr-[13px] rounded-[13px] border border-solid border-custom-rgba font-Wanted-Variable text-[15px] w-full shadow-form-shadow" }}
-                <p id="state-error" class="text-[#FF0000] font-Wanted-SemiBold text-Base hidden">Please choose an option</p>
+                <p id="state-error" class="text-[#FF0707] font-Wanted-SemiBold text-Base hidden mt-1">Please choose an option</p>
               </div>
               <!-- ZIP Code -->
               <div class="flex flex-col w-full items-start justify-center">
-                <p class="font-Wanted-SemiBold text-Base text-gray-400">{{ editEventForm.zip_code.label }}</p>
-                {{ editEventForm.zip_code|attr:"class:zip-input p-[12px] pl-[13px] pr-[13px] rounded-[13px] border border-solid border-custom-rgba font-Wanted-Variable text-[15px] w-full shadow-form-shadow" }}
+                <label for="{{ editEventForm.zip_code.auto_id }}" class="font-Wanted-SemiBold text-Base text-gray-600 flex items-center">
+                  {{ editEventForm.zip_code.label }}
+                  <span class="text-[#ff0707] ml-1">*</span>
+                </label>
+                {{ editEventForm.zip_code|attr:"class:zip-input p-[12px] pl-[13px] pr-[13px] rounded-[13px] border border-solid border-custom-rgba font-Wanted-Variable text-[15px] w-full shadow-form-shadow"|attr:"placeholder:5-digit ZIP code"|attr:"pattern:[0-9]{5}" }}
+                <p id="zip-error" class="text-[#FF0707] font-Wanted-SemiBold text-Base hidden mt-1"></p>
               </div>
               <!-- Country -->
               <div class="flex flex-col w-full items-start justify-center">
-                <p class="font-Wanted-SemiBold text-Base text-gray-400">{{ editEventForm.country.label }}</p>
+                <label for="{{ editEventForm.country.auto_id }}" class="font-Wanted-SemiBold text-Base text-gray-600 flex items-center">
+                  {{ editEventForm.country.label }}
+                  <span class="text-[#ff0707] ml-1">*</span>
+                </label>
                 {{ editEventForm.country|attr:"class:country-input p-[12px] pl-[13px] pr-[13px] rounded-[13px] border border-solid border-custom-rgba font-Wanted-Variable text-[15px] w-full shadow-form-shadow" }}
+                <p id="country-error" class="text-[#FF0707] font-Wanted-SemiBold text-Base hidden mt-1"></p>
               </div>
             </div>
           </div>
         </div>
 
         <!-- CREW DISCOUNT OPTIONS -->
-
-        {% if event.ticketing == "Paid" %}
-        <div class="flex flex-col gap-4 w-full items-start">
-          <div class="w-full flex flex-row justify-between">
-            <h6 class="flex justify-start font-Wanted-Medium text-Large">Crew Discounts</h6>
-            <input class="hidden" id="toggleButtonID" name="{{ editEventForm.crew_discount.html_name }}" value="{{ editEventForm.crew_discount.auto_id }}">
-            <label class="toggle-switch">
-              <input type="checkbox" name="{{ editEventForm.crew_discount.html_name }}" id="id_crew_discount" {% if editEventForm.crew_discount.value %}checked{% endif %}>
-              <span class="slider"></span>
-            </label>
+        <div class="flex flex-col gap-4 w-full items-start bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+          <div class="w-full flex flex-row justify-between items-center border-b border-gray-100 pb-2">
+            <h6 class="flex justify-start font-Wanted-Medium text-Large text-black">Crew Discounts</h6>
+            <div class="flex items-center gap-2">
+              <span class="text-sm text-gray-500 font-Wanted-Variable">Enable</span>
+              <label class="toggle-switch">
+                <input type="checkbox" name="{{ editEventForm.crew_discount.html_name }}" id="id_crew_discount" {% if editEventForm.crew_discount.value %}checked{% endif %}>
+                <span class="slider"></span>
+              </label>
+            </div>
           </div>
-          <div id="crewInfoRow" class="w-full">
-            <div class="grid grid-cols-1 after-xsm:grid-cols-2 gap-2 w-full">
+          
+          <div class="w-full">
+            <p class="text-gray-600 font-Wanted-Variable text-sm mb-4">
+              Offer discounts to groups (crews) who purchase tickets together. This can help increase attendance and create a more vibrant atmosphere at your event.
+            </p>
+          </div>
+          
+          <div id="crewInfoRow" class="w-full transition-all duration-300" style="opacity: {% if editEventForm.crew_discount.value %}1{% else %}0{% endif %}; display: {% if editEventForm.crew_discount.value %}grid{% else %}none{% endif %}">
+            <div class="grid grid-cols-1 after-xsm:grid-cols-2 gap-4 w-full p-4 bg-gray-50 rounded-lg">
               <div class="flex flex-col w-full items-start justify-center">
-                <p class="font-Wanted-SemiBold text-Base text-gray-400">{{ editEventForm.minimum_crew_size.label }}</p>
-                <input type="number" id="crew-size-input" name="{{ editEventForm.minimum_crew_size.html_name }}" class="p-[12px] pl-[13px] pr-[13px] rounded-[13px] border border-solid border-custom-rgba font-Wanted-Variable text-[15px] w-full shadow-form-shadow" min="2" placeholder="Ex. 3" value="{{ editEventForm.minimum_crew_size.value|default_if_none:'' }}">
-                <p id="crew-size-error" class="text-[#FF0000] font-Wanted-SemiBold text-Base hidden"></p>
+                <label for="crew-size-input" class="font-Wanted-SemiBold text-Base text-gray-600 flex items-center">
+                  {{ editEventForm.minimum_crew_size.label }}
+                  <span class="text-[#ff0707] ml-1">*</span>
+                  <span class="ml-2 text-xs text-gray-400">(2-100)</span>
+                </label>
+                <input type="number" id="crew-size-input" name="{{ editEventForm.minimum_crew_size.html_name }}" class="p-[12px] pl-[13px] pr-[13px] rounded-[13px] border border-solid border-custom-rgba font-Wanted-Variable text-[15px] w-full shadow-form-shadow" min="2" max="100" placeholder="Minimum group size" value="{{ editEventForm.minimum_crew_size.value|default_if_none:'' }}">
+                <p id="crew-size-error" class="text-[#FF0707] font-Wanted-SemiBold text-Base hidden mt-1"></p>
               </div>
               <div class="flex flex-col w-full items-start justify-center">
-                <p class="font-Wanted-SemiBold text-Base text-gray-400">{{ editEventForm.crew_discount_percentage.label }}</p>
-                <input type="number" id="crew-percentage-input" name="{{ editEventForm.crew_discount_percentage.html_name }}" class="p-[12px] pl-[13px] pr-[13px] rounded-[13px] border border-solid border-custom-rgba font-Wanted-Variable text-[15px] w-full shadow-form-shadow" min="0" max="100" step="0.01" placeholder="Discount %" value="{{ editEventForm.crew_discount_percentage.value|default_if_none:'' }}">
-                <p id="discount-error" class="text-[#FF0000] font-Wanted-SemiBold text-Base hidden"></p>
+                <label for="crew-percentage-input" class="font-Wanted-SemiBold text-Base text-gray-600 flex items-center">
+                  {{ editEventForm.crew_discount_percentage.label }}
+                  <span class="text-[#ff0707] ml-1">*</span>
+                  <span class="ml-2 text-xs text-gray-400">(0.01-100%)</span>
+                </label>
+                <div class="relative w-full">
+                  <input type="number" id="crew-percentage-input" name="{{ editEventForm.crew_discount_percentage.html_name }}" class="p-[12px] pl-[13px] pr-[30px] rounded-[13px] border border-solid border-custom-rgba font-Wanted-Variable text-[15px] w-full shadow-form-shadow" min="0.01" max="100" step="0.01" placeholder="Discount percentage" value="{{ editEventForm.crew_discount_percentage.value|default_if_none:'' }}">
+                  <span class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500">%</span>
+                </div>
+                <p id="discount-error" class="text-[#FF0707] font-Wanted-SemiBold text-Base hidden mt-1"></p>
               </div>
             </div>
           </div>
         </div>
-        {% endif %}
 
         <!-- GUEST LIST OPTION -->
-        <div class="flex flex-col gap-4 w-full items-start">
-          <div class="w-full flex flex-row justify-between">
-            <h6 class="flex justify-start font-Wanted-Medium text-Large">Show Guest List</h6>
-            <input class="hidden" id="toggleButtonIDList" name="{{ editEventForm.show_guest_list.html_name }}" value="{{ editEventForm.show_guest_list.auto_id }}">
-            <label class="toggle-switch">
-              <input type="checkbox" name="{{ editEventForm.show_guest_list.html_name }}" id="{{ editEventForm.show_guest_list.auto_id }}" {% if editEventForm.show_guest_list.value %}checked{% endif %}>
-              <span class="slider"></span>
-            </label>
+        <div class="flex flex-col gap-4 w-full items-start bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+          <div class="w-full flex flex-row justify-between items-center border-b border-gray-100 pb-2">
+            <h6 class="flex justify-start font-Wanted-Medium text-Large text-black">Guest List Visibility</h6>
+            <div class="flex items-center gap-2">
+              <span class="text-sm text-gray-500 font-Wanted-Variable">Show</span>
+              <label class="toggle-switch">
+                <input type="checkbox" name="{{ editEventForm.show_guest_list.html_name }}" id="{{ editEventForm.show_guest_list.auto_id }}" {% if editEventForm.show_guest_list.value %}checked{% endif %}>
+                <span class="slider"></span>
+              </label>
+            </div>
           </div>
-          <p class="text-gray-500 font-Wanted-SemiBold text-Base">This controls the visibility of the guest list.</p>
+          <div class="flex flex-col gap-2 w-full">
+            <p class="text-gray-600 font-Wanted-Variable text-sm">When enabled, attendees can see who else is attending your event. This can help create excitement and encourage more sign-ups.</p>
+            <div class="bg-gray-50 p-3 rounded-lg mt-2 flex items-start gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <p class="text-sm text-gray-600">Guest privacy is important. Only names will be displayed, and guests can opt out of being shown on the list.</p>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -284,17 +398,39 @@ Edit Your Event — WAVE.
       </div>
     </div>
 
+    <!-- FORM FEEDBACK -->
+    <div id="form-feedback" class="w-full p-4 my-6 rounded-lg shadow-md hidden bg-opacity-90 max-w-3xl mx-auto"></div>
+    
     <!-- SUBMIT BUTTONS -->
-    <div class="w-full flex justify-center">
+    <div class="w-full flex justify-between items-center max-w-3xl mx-auto">
+      <div class="flex items-center gap-3">
+        <a href="{% url 'eventManagement:eventManagement' event.eventId %}" class="bg-white text-black px-5 py-3 rounded-xl border border-gray-300 hover:bg-gray-100 transition-colors duration-200 font-Wanted-Medium">
+          <span class="flex items-center">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+            </svg>
+            Back to Event
+          </span>
+        </a>
+        <span id="last-saved" class="text-sm text-gray-500 font-Wanted-Variable hidden"></span>
+      </div>
+      
       <!-- Not Valid Edit Button (shown when form is invalid) -->
       <div id="cannotSubmit">
-        <button class="bg-black text-white font-Wanted-Bold flex flex-row items-center p-6 px-10 rounded-2xl cursor-not-allowed" type="button" disabled>
-          Not Valid Edit
+        <button class="bg-gray-400 text-white font-Wanted-Bold flex flex-row items-center p-4 px-8 rounded-xl cursor-not-allowed" type="button" disabled>
+          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          Please Fix Errors
         </button>
       </div>
+      
       <!-- Save Changes Submit Button (shown when form is valid) -->
       <div id="submitBtn" style="display: none;">
-        <button class="go-live bg-gradient-to-r from-gradient-start to-gradient-end text-white font-Wanted-Bold flex flex-row items-center p-6 px-10 rounded-2xl" type="submit" name="eventAction" value="submit">
+        <button class="go-live bg-gradient-to-r from-gradient-start to-gradient-end text-white font-Wanted-Bold flex flex-row items-center p-4 px-8 rounded-xl transition-all duration-200 hover:shadow-lg" type="submit" name="eventAction" value="submit">
+          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path>
+          </svg>
           Save Changes
         </button>
       </div>
