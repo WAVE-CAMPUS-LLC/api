@@ -54,18 +54,24 @@ if ENVIORNMENT == "development":
     CSP_FONT_SRC = ("'self'", "*")
     CSP_IMG_SRC = ("'self'", "data:", "*")
     CSP_FRAME_SRC = ("'self'", "*")
-    CSP_CONNECT_SRC = ("'self'", "ws:", "wss:", "*")  # Allow WebSocket connections
+    CSP_CONNECT_SRC = ("'self'", "ws:", "wss:", "*")  
 
-    tmpPostgres = urlparse(os.getenv("DATABASE_URL"))
+    PGHOST=os.getenv("PGHOST")
+    PGDATABASE=os.getenv("PGDATABASE")
+    PGUSER=os.getenv("PGUSER")
+    PGPASSWORD=os.getenv("PGPASSWORD")
 
     DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.postgresql",
-            "NAME": tmpPostgres.path.replace("/", ""),
-            "USER": tmpPostgres.username,
-            "PASSWORD": tmpPostgres.password,
-            "HOST": tmpPostgres.hostname,
-            "PORT": 5432,
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': PGDATABASE,
+            'USER': PGUSER,
+            'PASSWORD': PGPASSWORD,
+            'HOST': PGHOST,
+            'PORT': 5432,
+            'OPTIONS': {
+                'sslmode': 'require',  # 👈 Fix for problem #2
+            },
         }
     }
     print("Development Environment")
@@ -279,6 +285,8 @@ MIDDLEWARE = [
     "silk.middleware.SilkyMiddleware",
     "coreApp.middleware.TimezoneMiddleware",  # Add this line
 ]
+
+SILKY_PYTHON_PROFILER = True
 
 ROOT_URLCONF = "wave_v1.urls"
 if DEBUG:
