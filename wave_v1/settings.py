@@ -60,18 +60,6 @@ if ENVIORNMENT == "development":
     PGDATABASE=os.getenv("PGDATABASE")
     PGUSER=os.getenv("PGUSER")
     PGPASSWORD=os.getenv("PGPASSWORD")
-    print('PGHOST', PGHOST)
-    print('PGDATABASE', PGDATABASE)
-    print('PGUSER', PGUSER)
-    print('PGPASSWORD', PGPASSWORD)
-    print('PGHOST', PGHOST)
-    print('PGDATABASE', PGDATABASE)
-    print('PGUSER', PGUSER)
-    print('PGPASSWORD', PGPASSWORD)
-    print('PGHOST', PGHOST)
-    print('PGDATABASE', PGDATABASE)
-    print('PGUSER', PGUSER)
-    print('PGPASSWORD', PGPASSWORD)
 
     DATABASES = {
         'default': {
