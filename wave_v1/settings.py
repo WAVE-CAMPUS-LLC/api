@@ -152,6 +152,7 @@ else:
     }
     print("Production Environment")
 
+print("Allowed Hosts:", ALLOWED_HOSTS)
 
 
 url = os.getenv("SUPABASE_URL")
