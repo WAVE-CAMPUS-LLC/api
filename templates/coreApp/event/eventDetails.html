@@ -37,6 +37,7 @@
 <script type="text/javascript" src="{% static "scripts/coreApp/eventDetails/RSVPhandler.js" %}" defer></script>
 <script type="text/javascript" src="{% static "scripts/coreApp/eventDetails/copyLink.js" %}" defer></script>
 <script type="text/javascript" src="{% static "scripts/coreApp/eventDetails/couponCode.js" %}" defer></script>
+<script type="text/javascript" src="{% static "scripts/coreApp/event/eventCarousel.js" %}" defer></script>
 {% endblock script %}
 
 
@@ -471,22 +472,77 @@
                     
                     {% if event.body_photo_one or event.body_photo_two or event.body_photo_three or event.body_photo_four or event.body_photo_five %}
                     <div id="eventPhotosVideos" class="attachment-body eventDetailsTabInformation hidden">
-                        <div class="eventPhotosVideos-body">
-                            <div id="slideshow-container" class="slideshow-container grid sm:grid-cols-1 pre-lg:grid-cols-2 lg:grid-cols-3">
+                        <div class="eventPhotosVideos-body w-full">
+                            <!-- Carousel container -->
+                            <div class="carousel-container relative w-full overflow-hidden rounded-xl shadow-md">
+                                <!-- Main carousel -->
+                                <div id="image-carousel" class="carousel-slides flex transition-transform duration-500 ease-in-out h-[300px] sm:h-[400px] md:h-[500px]">
+                                    {% if event.body_photo_one %}
+                                    <div class="carousel-slide min-w-full flex items-center justify-center bg-gray-100">
+                                        <img src="{{ event.body_photo_one.url }}" class="object-contain h-full max-h-full" alt="Event photo 1" />
+                                    </div>
+                                    {% endif %}
+                                    {% if event.body_photo_two %}
+                                    <div class="carousel-slide min-w-full flex items-center justify-center bg-gray-100">
+                                        <img src="{{ event.body_photo_two.url }}" class="object-contain h-full max-h-full" alt="Event photo 2" />
+                                    </div>
+                                    {% endif %}
+                                    {% if event.body_photo_three %}
+                                    <div class="carousel-slide min-w-full flex items-center justify-center bg-gray-100">
+                                        <img src="{{ event.body_photo_three.url }}" class="object-contain h-full max-h-full" alt="Event photo 3" />
+                                    </div>
+                                    {% endif %}
+                                    {% if event.body_photo_four %}
+                                    <div class="carousel-slide min-w-full flex items-center justify-center bg-gray-100">
+                                        <img src="{{ event.body_photo_four.url }}" class="object-contain h-full max-h-full" alt="Event photo 4" />
+                                    </div>
+                                    {% endif %}
+                                    {% if event.body_photo_five %}
+                                    <div class="carousel-slide min-w-full flex items-center justify-center bg-gray-100">
+                                        <img src="{{ event.body_photo_five.url }}" class="object-contain h-full max-h-full" alt="Event photo 5" />
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <!-- Navigation arrows -->
+                                <button id="prev-slide" class="carousel-control absolute left-2 top-1/2 transform -translate-y-1/2 bg-white/70 hover:bg-white/90 rounded-full p-2 shadow-md focus:outline-none transition-all duration-300">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-800" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                                    </svg>
+                                </button>
+                                <button id="next-slide" class="carousel-control absolute right-2 top-1/2 transform -translate-y-1/2 bg-white/70 hover:bg-white/90 rounded-full p-2 shadow-md focus:outline-none transition-all duration-300">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-800" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                    </svg>
+                                </button>
+                            </div>
+                            
+                            <!-- Thumbnail navigation -->
+                            <div class="carousel-thumbnails flex gap-2 mt-4 overflow-x-auto pb-2 justify-center">
                                 {% if event.body_photo_one %}
-                                <img src="{{ event.body_photo_one.url }}" class="rounded-xl w-full" />
+                                <div class="carousel-thumbnail cursor-pointer w-16 h-16 sm:w-20 sm:h-20 rounded-md overflow-hidden border-2 border-transparent hover:border-[#008d95] transition-all duration-300" data-index="0">
+                                    <img src="{{ event.body_photo_one.url }}" class="w-full h-full object-cover" alt="Thumbnail 1" />
+                                </div>
                                 {% endif %}
                                 {% if event.body_photo_two %}
-                                <img src="{{ event.body_photo_two.url }}" class="rounded-xl w-full" />
+                                <div class="carousel-thumbnail cursor-pointer w-16 h-16 sm:w-20 sm:h-20 rounded-md overflow-hidden border-2 border-transparent hover:border-[#008d95] transition-all duration-300" data-index="1">
+                                    <img src="{{ event.body_photo_two.url }}" class="w-full h-full object-cover" alt="Thumbnail 2" />
+                                </div>
                                 {% endif %}
                                 {% if event.body_photo_three %}
-                                <img src="{{ event.body_photo_three.url }}" class="rounded-xl w-full" />
+                                <div class="carousel-thumbnail cursor-pointer w-16 h-16 sm:w-20 sm:h-20 rounded-md overflow-hidden border-2 border-transparent hover:border-[#008d95] transition-all duration-300" data-index="2">
+                                    <img src="{{ event.body_photo_three.url }}" class="w-full h-full object-cover" alt="Thumbnail 3" />
+                                </div>
                                 {% endif %}
                                 {% if event.body_photo_four %}
-                                <img src="{{ event.body_photo_four.url }}" class="rounded-xl w-full" />
+                                <div class="carousel-thumbnail cursor-pointer w-16 h-16 sm:w-20 sm:h-20 rounded-md overflow-hidden border-2 border-transparent hover:border-[#008d95] transition-all duration-300" data-index="3">
+                                    <img src="{{ event.body_photo_four.url }}" class="w-full h-full object-cover" alt="Thumbnail 4" />
+                                </div>
                                 {% endif %}
-                                {% if event.body_photo_five %}   
-                                <img src="{{ event.body_photo_five.url }}" class="rounded-xl w-full" />
+                                {% if event.body_photo_five %}
+                                <div class="carousel-thumbnail cursor-pointer w-16 h-16 sm:w-20 sm:h-20 rounded-md overflow-hidden border-2 border-transparent hover:border-[#008d95] transition-all duration-300" data-index="4">
+                                    <img src="{{ event.body_photo_five.url }}" class="w-full h-full object-cover" alt="Thumbnail 5" />
+                                </div>
                                 {% endif %}
                             </div>
                         </div>
