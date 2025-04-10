@@ -54,7 +54,7 @@ if ENVIORNMENT == "development":
     CSP_FONT_SRC = ("'self'", "*")
     CSP_IMG_SRC = ("'self'", "data:", "*")
     CSP_FRAME_SRC = ("'self'", "*")
-    CSP_CONNECT_SRC = ("'self'", "ws:", "wss:", "*")  
+    CSP_CONNECT_SRC = ("'self'", "ws:", "wss:", "*")  # Allow WebSocket connections
 
     PGHOST=os.getenv("PGHOST")
     PGDATABASE=os.getenv("PGDATABASE")
@@ -215,6 +215,7 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt",
     "corsheaders",
     "hcaptcha",
+    
 ]
 
 # Redis and Channels configuration
@@ -281,7 +282,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "authenticationApp.middleware.RedirectAuthenticatedUsersMiddleware",
-    "django.middleware.gzip.GZipMiddleware",
+    'django.middleware.gzip.GZipMiddleware',
     "silk.middleware.SilkyMiddleware",
     "coreApp.middleware.TimezoneMiddleware",  # Add this line
 ]

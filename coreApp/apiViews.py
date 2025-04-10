@@ -7,6 +7,8 @@ from datetime import timedelta, date
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers, status
 from django.core.cache import cache
+import json
+
 import random
 import logging
 
@@ -52,17 +54,7 @@ def explore_events(request):
     if not all_events:
         all_events = Event.objects.filter(
             status="live", forAllDisplay=True, admin_status="active"
-        ).only(
-            "eventId",
-            "title",
-            "date",
-            "header_photo",
-            "state",
-            "city",
-            "ticketing",
-            "forAllDisplay",
-            "forCollegesDisplay",
-        )
+        ).only("eventId", "title", "date", "header_photo", "state", "city", "ticketing", "forAllDisplay", "forCollegesDisplay")
         cache.set("live_events", all_events, timeout=60 * 5)
 
     all_events_serialized = ExplorePageEventSerializer(all_events, many=True).data
