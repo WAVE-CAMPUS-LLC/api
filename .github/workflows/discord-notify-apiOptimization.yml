@@ -11,7 +11,7 @@ jobs:
     steps:
       - name: Send rich embed to Discord
         env:
-          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_API_OPTIMIZATION_WEBHOOK_URL }}
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_V1_API_OPTIMIZATION_WEBHOOK_URL }}
         run: |
           COMMITS=$(echo '${{ toJson(github.event.commits) }}' | jq -r '.[] | "- [`\(.id[0:7])`](\(.url)) by \(.author.name): \(.message)"')
           COMMIT_COUNT=$(echo "$COMMITS" | wc -l)
