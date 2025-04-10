@@ -1,0 +1,17 @@
+name: Notify Discord on Push to apiOptimizationMain
+
+on:
+  push:
+    branches:
+      - apiOptimizationMain
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send message to Discord
+        run: |
+          curl -H "Content-Type: application/json" \
+            -X POST \
+            -d '{"content": "🚀 New push to apiOptimizationMain!"}' \
+            ${{ secrets.DISCORD_API_OPTIMIZATION_WEBHOOK_URL }}
