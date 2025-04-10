@@ -79,10 +79,10 @@ def explore_events(request):
 @permission_classes([AllowAny])
 def event_details(request, eventId):
     # Fetch the event and related objects
-    cache_key = f"event_detail_{eventId}"
-    cached_data = cache.get(cache_key)
-    if cached_data:
-        return Response({"event": cached_data})
+    # cache_key = f"event_detail_{eventId}"
+    # cached_data = cache.get(cache_key)
+    # if cached_data:
+    #     return Response({"event": cached_data})
     
     event = (
         Event.objects.filter(eventId=eventId)
@@ -113,7 +113,7 @@ def event_details(request, eventId):
     
     # Serialize and cache the result
     event_data = EventDetailSerializer(event).data
-    cache.set(cache_key, event_data, timeout=60 * 50)  # Cache for 50 minutes
+    # cache.set(cache_key, event_data, timeout=60 * 50)  # Cache for 50 minutes
 
     # Prepare response data
     response_data = {
