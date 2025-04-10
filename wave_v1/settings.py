@@ -120,6 +120,7 @@ else:
                 "style": "{",
             },
         },
+        
         "handlers": {
             "console": {
                 "class": "logging.StreamHandler",
@@ -153,7 +154,6 @@ else:
     print("Production Environment")
 
 print("Allowed Hosts:", ALLOWED_HOSTS)
-
 
 url = os.getenv("SUPABASE_URL")
 key = os.getenv("SUPABASE_API_KEY")

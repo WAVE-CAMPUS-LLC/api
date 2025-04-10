@@ -8,17 +8,34 @@ on:
 jobs:
   notify:
     runs-on: ubuntu-latest
-    steps:
-      - name: Send rich embed to Discord
+    steps:      - name: Send rich embed to Discord
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_V1_API_OPTIMIZATION_WEBHOOK_URL }}
         run: |
-          COMMITS=$(echo '${{ toJson(github.event.commits) }}' | jq -r '.[] | "- [`\\(.id[0:7])`](\\(.url)) by \\(.author.name): \\(.message | gsub("`"; "\\\\`") | gsub("\\*"; "\\\\*") | gsub("\""; "\\\\\""))"')
-          COMMIT_COUNT=$(echo "$COMMITS" | wc -l)
-          COMMIT_LIST=$(echo "$COMMITS" | sed ':a;N;$!ba;s/\n/\\n/g')
+          # Check if webhook URL is set
+          if [ -z "$DISCORD_WEBHOOK_URL" ]; then
+            echo "::error::Discord webhook URL is not set. Please check your repository secrets."
+            exit 1
+          fi
+
+          # Handle empty commits array gracefully
+          if [[ $(echo '${{ toJson(github.event.commits) }}' | jq '. | length') -eq 0 ]]; then
+            echo "No commits in this push. Creating a simple notification."
+            COMMIT_LIST="No commit details available"
+            COMMIT_COUNT=0
+          else
+            COMMITS=$(echo '${{ toJson(github.event.commits) }}' | jq -r '.[] | "- [`\(.id[0:7])`](\(.url)) by \(.author.name): \(.message)"')
+            COMMIT_COUNT=$(echo "$COMMITS" | wc -l)
+            COMMIT_LIST=$(echo "$COMMITS" | sed ':a;N;$!ba;s/\n/\\n/g')
+          fi
+          
           REPO="${{ github.repository }}"
-          BRANCH="v1_apiOptimizationMain"
-          curl -H "Content-Type: application/json" \
+          BRANCH="apiOptimizationMain"
+          
+          echo "Sending notification for $COMMIT_COUNT commit(s) to Discord..."
+          
+          # Use -v flag for verbose output and capture response
+          RESPONSE=$(curl -v -H "Content-Type: application/json" \
             -X POST \
             -d "{
               \"embeds\": [{
@@ -30,4 +47,12 @@ jobs:
                 }
               }]
             }" \
-            $DISCORD_WEBHOOK_URL
+            $DISCORD_WEBHOOK_URL 2>&1)
+          
+          # Check if curl succeeded
+          if [ $? -ne 0 ]; then
+            echo "::error::Failed to send Discord notification. Response: $RESPONSE"
+            exit 1
+          else
+            echo "Discord notification sent successfully!"
+          fi
