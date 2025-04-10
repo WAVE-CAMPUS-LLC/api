@@ -1,0 +1,33 @@
+name: Notify Discord on Push to apiOptimizationMain
+
+on:
+  push:
+    branches:
+      - apiOptimizationMain
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send rich embed to Discord
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_API_OPTIMIZATION_WEBHOOK_URL }}
+        run: |
+          COMMITS=$(echo '${{ toJson(github.event.commits) }}' | jq -r '.[] | "- [`\(.id[0:7])`](\(.url)) by \(.author.name): \(.message)"')
+          COMMIT_COUNT=$(echo "$COMMITS" | wc -l)
+          COMMIT_LIST=$(echo "$COMMITS" | sed ':a;N;$!ba;s/\n/\\n/g')
+          REPO="${{ github.repository }}"
+          BRANCH="apiOptimizationMain"
+          curl -H "Content-Type: application/json" \
+            -X POST \
+            -d "{
+              \"embeds\": [{
+                \"title\": \"🚀 Push to $BRANCH\",
+                \"description\": \"**$COMMIT_COUNT commit(s)** pushed to \`$BRANCH\` in [$REPO](https://github.com/$REPO):\\n$COMMIT_LIST\",
+                \"color\": 5814783,
+                \"footer\": {
+                  \"text\": \"GitHub Actions • $(date -u +"%Y-%m-%d %H:%M:%S UTC")\"
+                }
+              }]
+            }" \
+            $DISCORD_WEBHOOK_URL
