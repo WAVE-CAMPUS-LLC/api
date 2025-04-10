@@ -155,7 +155,7 @@ else:
 url = os.getenv("SUPABASE_URL")
 key = os.getenv("SUPABASE_API_KEY")
 supabase = create_client(url, key)
-
+#testing pushes. 
 if not DEBUG:  # In production
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
