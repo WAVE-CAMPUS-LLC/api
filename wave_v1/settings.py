@@ -119,6 +119,7 @@ else:
                 "style": "{",
             },
         },
+        
         "handlers": {
             "console": {
                 "class": "logging.StreamHandler",
