@@ -98,6 +98,7 @@ else:
             },
         }
     }
+    # Comment to test notifications for discord. 
     # CORS Settings
     CORS_ALLOW_ALL_ORIGINS = False
     CORS_ALLOW_CREDENTIALS = False
