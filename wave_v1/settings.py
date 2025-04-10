@@ -144,7 +144,7 @@ else:
                 "level": "DEBUG",
                 "propagate": True,
             },
-            "django": {  # Django logger
+            "django": { 
                 "handlers": ["console", "file"],
                 "level": "INFO",
                 "propagate": True,
