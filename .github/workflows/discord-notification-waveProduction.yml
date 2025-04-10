@@ -17,7 +17,7 @@ jobs:
           COMMIT_COUNT=$(echo "$COMMITS" | wc -l)
           COMMIT_LIST=$(echo "$COMMITS" | sed ':a;N;$!ba;s/\n/\\n/g')
           REPO="${{ github.repository }}"
-          BRANCH="apiOptimizationMain"
+          BRANCH="waveProduction"
           curl -H "Content-Type: application/json" \
             -X POST \
             -d "{
