@@ -9,6 +9,7 @@ asttokens==3.0.0
 attrs==24.2.0
 autobahn==24.4.2
 Automat==24.8.1
+autopep8==2.3.2
 backcall==0.2.0
 beautifulsoup4==4.12.3
 billiard==4.2.0

@@ -212,12 +212,14 @@ class Event(models.Model):
     ]
 
     eventId = models.UUIDField(
-        primary_key=True, default=uuid.uuid4, editable=False, unique=True
+        primary_key=True, default=uuid.uuid4, editable=False, unique=True, db_index=True
     )
 
     stripeProductId = models.CharField(max_length=255, blank=True, null=True)
 
-    views = models.PositiveIntegerField(default=0, help_text="Number of unique views this event has received")
+    views = models.PositiveIntegerField(
+        default=0, help_text="Number of unique views this event has received"
+    )
 
     host = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="events"
@@ -241,6 +243,7 @@ class Event(models.Model):
         null=False,
         blank=False,
         default="",
+        db_index=True,
     )
 
     event_type = models.CharField(
@@ -253,19 +256,27 @@ class Event(models.Model):
     )
 
     date = models.DateField(
-        _("Date your experience"), null=False, blank=False, default=timezone.now
+        _("Date your experience"),
+        null=False,
+        blank=False,
+        default=timezone.now,
+        db_index=True,
     )
-    
+
     start_time = models.TimeField(
-        _("End time"), null=False, blank=False, default=timezone.now
+        _("End time"), null=False, blank=False, default=timezone.now, db_index=True
     )
-    
+
     end_time = models.TimeField(
-        _("Choose time"), null=False, blank=False, default=timezone.now
+        _("Choose time"), null=False, blank=False, default=timezone.now, db_index=True
     )
-    
+
     description = models.TextField(
-        _("Describe your event"), null=False, blank=False, default=""
+        _("Describe your event"),
+        null=False,
+        blank=False,
+        default="",
+        db_index=True,
     )
 
     ticketing = models.CharField(
@@ -275,10 +286,16 @@ class Event(models.Model):
         null=False,
         blank=False,
         default="",
+        db_index=True,
     )
 
     building_name = models.CharField(
-        _("Building Name"), max_length=250, null=True, blank=True, default=""
+        _("Building Name"),
+        max_length=250,
+        null=True,
+        blank=True,
+        default="",
+        db_index=True,
     )
 
     display_event_on_college = models.BooleanField(
@@ -286,6 +303,7 @@ class Event(models.Model):
         null=False,
         blank=False,
         default=False,
+        db_index=True,
     )
 
     country = models.CharField(
@@ -295,10 +313,16 @@ class Event(models.Model):
         blank=True,
         default="United States",
         choices=COUNTRY_CHOICES,
+        db_index=True,
     )
 
     street = models.CharField(
-        _("Street address"), max_length=500, null=False, blank=False, default=""
+        _("Street address"),
+        max_length=500,
+        null=False,
+        blank=False,
+        default="",
+        db_index=True,
     )
 
     apt_suite_unit = models.CharField(
@@ -307,10 +331,16 @@ class Event(models.Model):
         blank=True,
         null=True,
         default="",
+        db_index=True,
     )
 
     city = models.CharField(
-        _("City / town"), max_length=100, null=False, blank=False, default=""
+        _("City / town"),
+        max_length=100,
+        null=False,
+        blank=False,
+        default="",
+        db_index=True,
     )
     state = models.CharField(
         _("State"),
@@ -319,9 +349,10 @@ class Event(models.Model):
         blank=False,
         default="",
         choices=STATE_CHOICES,
+        db_index=True,
     )
     zip_code = models.CharField(
-        _("ZIP code"), max_length=5, null=False, blank=False, default=""
+        _("ZIP code"), max_length=5, null=False, blank=False, default="", db_index=True
     )
 
     hide_address = models.BooleanField(
@@ -334,6 +365,7 @@ class Event(models.Model):
         null=True,
         blank=False,
         max_length=500,
+        db_index=True,
     )
 
     body_photo_one = models.FileField(
@@ -342,6 +374,7 @@ class Event(models.Model):
         null=True,
         blank=True,
         max_length=500,
+        db_index=True,
     )
     body_photo_two = models.FileField(
         _("Additional photos (optional)"),
@@ -349,6 +382,7 @@ class Event(models.Model):
         null=True,
         blank=True,
         max_length=500,
+        db_index=True,
     )
     body_photo_three = models.FileField(
         _("Additional photos (optional)"),
@@ -356,6 +390,7 @@ class Event(models.Model):
         null=True,
         blank=True,
         max_length=500,
+        db_index=True,
     )
     body_photo_four = models.FileField(
         _("Additional photos (optional)"),
@@ -363,6 +398,7 @@ class Event(models.Model):
         null=True,
         blank=True,
         max_length=500,
+        db_index=True,
     )
     body_photo_five = models.FileField(
         _("Additional photos (optional)"),
@@ -370,6 +406,7 @@ class Event(models.Model):
         null=True,
         blank=True,
         max_length=500,
+        db_index=True,
     )
 
     AGE_CHOICES = (
