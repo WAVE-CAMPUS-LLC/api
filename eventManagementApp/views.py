@@ -586,7 +586,12 @@ def editEvent(request, eventId):
     if request.method == "POST":
         editEventForm = EditEventForm(request.POST, request.FILES, instance=event)
         if editEventForm.is_valid():
-            editEventForm.save()
+            event = editEventForm.save(commit=False)
+            event.forCollegesDisplay = Event.objects.get(eventId=eventId).forCollegesDisplay
+            event.forAllDisplay = Event.objects.get(eventId=eventId).forAllDisplay
+            event.save()
+            print('event.forCollegesDisplay', event.forCollegesDisplay)
+            print('event.forAllDisplay', event.forAllDisplay)
             messages.success(request, "Event updated successfully.")
         else:
             for field, errors in editEventForm.errors.items():

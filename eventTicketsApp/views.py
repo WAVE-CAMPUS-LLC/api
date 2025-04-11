@@ -245,6 +245,9 @@ def hostedCheckout(request):
                     "currency": "usd",
                     "product_data": {
                         "name": "Service Fee",
+                        "metadata": {
+                            "type": "service_fee"
+                        }
                     },
                     "unit_amount": fee_amount,
                 },
@@ -276,25 +279,26 @@ def hostedCheckout(request):
                     }
                 )
             else:
-                # Regular checkout with transfer to host's account
                 checkout_session = stripe.checkout.Session.create(
                     customer=request.user.customer_id if request.user.is_authenticated else None,
                     payment_method_types=["card"],
                     line_items=line_items,
                     mode="payment",
                     payment_intent_data={
-                        # This tells Stripe to deduct your service fee from the total
-                        "application_fee_amount": fee_amount,
-                        # The remaining funds are transferred to the host's connected account
+                        # This tells Stripe to transfer only the ticket amount to the host
+                        # The service fee stays with the platform
                         "transfer_data": {
                             "destination": host.connectAccountID,
+                            "amount": amount_in_cents,  # Only transfer the ticket amount, not the fee
                         },
                         # Add metadata to help with cart reconstruction
                         "metadata": {
                             'cart_data': json.dumps(cart),  # Store the entire cart in metadata
                             'event_id': str(event.eventId),
                             'event_title': event.title,
-                            'discount_percentage': str(discount_percentage) if has_discount else '0'
+                            'discount_percentage': str(discount_percentage) if has_discount else '0',
+                            'ticket_amount': str(ticket_amount_only),
+                            'fee_amount': str(fee_amount)
                         }
                     },
                     metadata={
