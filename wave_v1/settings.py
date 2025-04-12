@@ -76,7 +76,7 @@ if ENVIORNMENT == "development":
     }
     print("Development Environment")
 else:
-    ALLOWED_HOSTS = ["wavecampus.net","wave-v1-1.onrender.com"]
+    ALLOWED_HOSTS = ["wavecampus.net","wave-v1-1-s4ju.onrender.com"]
     CSRF_TRUSTED_ORIGINS = ["https://wave-v1-1-s4ju.onrender.com", "https://wavecampus.net"]
     DEBUG = False
     DEBUG_PROPAGATE_EXCEPTIONS = True
