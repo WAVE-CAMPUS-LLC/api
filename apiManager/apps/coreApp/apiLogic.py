@@ -56,7 +56,7 @@ async def get_event_details(eventId: str):
             event = Event.objects.get(eventId=eventId)
             header_photo_url = event.header_photo.url if event.header_photo else None
             return {
-                "eventId": str(event.eventId),  # Convert UUID to string
+                "eventId": str(event.eventId), 
                 "title": event.title,
                 "description": event.description,
                 "date": event.date,
@@ -67,15 +67,14 @@ async def get_event_details(eventId: str):
                 "city": event.city,
                 "state": event.state,
                 "zip_code": event.zip_code,
-                "hide_address": bool(event.hide_address),  # Ensure it's a boolean
-                "ticketing": str(event.ticketing),  # Ensure it's a string
-                "start_time": str(event.start_time),  # Convert to string if needed
-                "end_time": str(event.end_time),  # Convert to string if needed
+                "hide_address": bool(event.hide_address), 
+                "ticketing": str(event.ticketing), 
+                "start_time": str(event.start_time),  
+                "end_time": str(event.end_time),
             }
         except Event.DoesNotExist:
             return None
     
-    # Get the data and convert to Pydantic model
     event_data = await get_event_data(eventId)
     if not event_data:
         raise HTTPException(status_code=404, detail="Event not found")

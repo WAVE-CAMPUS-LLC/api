@@ -77,7 +77,7 @@ if ENVIORNMENT == "development":
     print("Development Environment")
 else:
     ALLOWED_HOSTS = ["wavecampus.net","wave-v1-1.onrender.com"]
-    CSRF_TRUSTED_ORIGINS = ["https://wave-v1-1.onrender.com", "https://wavecampus.net"]
+    CSRF_TRUSTED_ORIGINS = ["https://wave-v1-1-s4ju.onrender.com", "https://wavecampus.net"]
     DEBUG = False
     DEBUG_PROPAGATE_EXCEPTIONS = True
     DATABASES = {
@@ -98,16 +98,16 @@ else:
             },
         }
     }
-    # Comment to test notifications for discord. 
+    # Comment to test notifications for discord.  
     # CORS Settings
     CORS_ALLOW_ALL_ORIGINS = False
     CORS_ALLOW_CREDENTIALS = False
-    CORS_ALLOWED_ORIGINS = ["https://wave-v1-1.onrender.com", "https://wavecampus.net"]
-    CSP_DEFAULT_SRC = ("'self'", "https://wave-v1-1.onrender.com", "https://wavecampus.net")
-    CSP_SCRIPT_SRC = ("'self'", "https://wave-v1-1.onrender.com", "https://wavecampus.net")
-    CSP_STYLE_SRC = ("'self'", "https://wave-v1-1.onrender.com", "https://wavecampus.net")
-    CSP_FONT_SRC = ("'self'", "https://wave-v1-1.onrender.com", "https://wavecampus.net")
-    CSP_IMG_SRC = ("'self'", "https://wave-v1-1.onrender.com", "https://wavecampus.net")
+    CORS_ALLOWED_ORIGINS = ["https://wave-v1-1-s4ju.onrender.com", "https://wavecampus.net"]
+    CSP_DEFAULT_SRC = ("'self'", "https://wave-v1-1-s4ju.onrender.com", "https://wavecampus.net")
+    CSP_SCRIPT_SRC = ("'self'", "https://wave-v1-1-s4ju.onrender.com", "https://wavecampus.net")
+    CSP_STYLE_SRC = ("'self'", "https://wave-v1-1-s4ju.onrender.com", "https://wavecampus.net")
+    CSP_FONT_SRC = ("'self'", "https://wave-v1-1-s4ju.onrender.com", "https://wavecampus.net")
+    CSP_IMG_SRC = ("'self'", "https://wave-v1-1-s4ju.onrender.com", "https://wavecampus.net")
     CSP_FRAME_SRC = ("'self'",)
     # using cloudflare r2 for storage
     # default_storage._wrapped = SupabaseStorage()
@@ -167,7 +167,7 @@ if not DEBUG:  # In production
     CSRF_COOKIE_SAMESITE = "Lax"
     SESSION_COOKIE_SAMESITE = "Lax"
     CSRF_COOKIE_HTTPONLY = False  # False because we need to access it from JavaScript
-    CSRF_TRUSTED_ORIGINS = ["https://wave-v1-1.onrender.com", "https://wavecampus.net"]
+    CSRF_TRUSTED_ORIGINS = ["https://wave-v1-1-s4ju.onrender.com", "https://wavecampus.net"]
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
     SECURE_HSTS_SECONDS = 31536000
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
