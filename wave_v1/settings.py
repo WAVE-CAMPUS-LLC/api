@@ -76,8 +76,8 @@ if ENVIORNMENT == "development":
     }
     print("Development Environment")
 else:
-    ALLOWED_HOSTS = ["waveoncampus.com","wave-v1.onrender.com"]
-    CSRF_TRUSTED_ORIGINS = ["https://wave-v1.onrender.com", "https://waveoncampus.com"]
+    ALLOWED_HOSTS = ["wavecampus.net","wave-v1-1.onrender.com"]
+    CSRF_TRUSTED_ORIGINS = ["https://wave-v1-1.onrender.com", "https://wavecampus.net"]
     DEBUG = False
     DEBUG_PROPAGATE_EXCEPTIONS = True
     DATABASES = {
@@ -102,12 +102,12 @@ else:
     # CORS Settings
     CORS_ALLOW_ALL_ORIGINS = False
     CORS_ALLOW_CREDENTIALS = False
-    CORS_ALLOWED_ORIGINS = ["https://wave-v1.onrender.com", "https://waveoncampus.com"]
-    CSP_DEFAULT_SRC = ("'self'", "https://wave-v1.onrender.com", "https://waveoncampus.com")
-    CSP_SCRIPT_SRC = ("'self'", "https://wave-v1.onrender.com", "https://waveoncampus.com")
-    CSP_STYLE_SRC = ("'self'", "https://wave-v1.onrender.com", "https://waveoncampus.com")
-    CSP_FONT_SRC = ("'self'", "https://wave-v1.onrender.com", "https://waveoncampus.com")
-    CSP_IMG_SRC = ("'self'", "https://wave-v1.onrender.com", "https://waveoncampus.com")
+    CORS_ALLOWED_ORIGINS = ["https://wave-v1-1.onrender.com", "https://wavecampus.net"]
+    CSP_DEFAULT_SRC = ("'self'", "https://wave-v1-1.onrender.com", "https://wavecampus.net")
+    CSP_SCRIPT_SRC = ("'self'", "https://wave-v1-1.onrender.com", "https://wavecampus.net")
+    CSP_STYLE_SRC = ("'self'", "https://wave-v1-1.onrender.com", "https://wavecampus.net")
+    CSP_FONT_SRC = ("'self'", "https://wave-v1-1.onrender.com", "https://wavecampus.net")
+    CSP_IMG_SRC = ("'self'", "https://wave-v1-1.onrender.com", "https://wavecampus.net")
     CSP_FRAME_SRC = ("'self'",)
     # using cloudflare r2 for storage
     # default_storage._wrapped = SupabaseStorage()
@@ -167,7 +167,7 @@ if not DEBUG:  # In production
     CSRF_COOKIE_SAMESITE = "Lax"
     SESSION_COOKIE_SAMESITE = "Lax"
     CSRF_COOKIE_HTTPONLY = False  # False because we need to access it from JavaScript
-    CSRF_TRUSTED_ORIGINS = ["https://wave-v1.onrender.com", "https://waveoncampus.com"]
+    CSRF_TRUSTED_ORIGINS = ["https://wave-v1-1.onrender.com", "https://wavecampus.net"]
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
     SECURE_HSTS_SECONDS = 31536000
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
@@ -297,7 +297,7 @@ ROOT_URLCONF = "wave_v1.urls"
 if DEBUG:
     SITE_URL = "http://127.0.0.1:8000"
 else:
-    SITE_URL = "https://waveoncampus.com"
+    SITE_URL = "https://wavecampus.net"
 
 TEMPLATES = [
     {
@@ -338,7 +338,7 @@ EMAIL_HOST = os.getenv("EMAIL_HOST", "smtppro.zoho.com")
 EMAIL_PORT = int(os.getenv("EMAIL_PORT", 587))
 EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "True") == "True"
 EMAIL_USE_SSL = False
-EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "no-reply@waveoncampus.com")
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "no-reply@wavecampus.net")
 EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "dN/5Xw!+X3*JVv?")
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
