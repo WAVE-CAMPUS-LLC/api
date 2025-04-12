@@ -297,7 +297,7 @@ def hostedCheckout(request):
                             'event_id': str(event.eventId),
                             'event_title': event.title,
                             'discount_percentage': str(discount_percentage) if has_discount else '0',
-                            'ticket_amount': str(ticket_amount_only),
+                            'ticket_amount': str(amount_in_cents),
                             'fee_amount': str(fee_amount)
                         }
                     },
