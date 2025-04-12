@@ -92,6 +92,8 @@ def event_details(request, eventId):
             "zip_code",
             "hide_address",
             "ticketing",
+            "start_time",
+            "end_time",
         )
         .first()
     )
