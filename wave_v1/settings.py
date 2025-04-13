@@ -108,7 +108,7 @@ else:
         "default": {
             "ENGINE": "django.db.backends.postgresql",
             "NAME": "postgres",
-            "USER": "postgres.skgnsidivjplhlletkvb",
+            "USER": "postgres.zqwamcznyosnkrevxmhm",
             "PASSWORD": db_password,
             "HOST": "aws-0-us-east-1.pooler.supabase.com",
             "PORT": "6543",
@@ -139,7 +139,7 @@ else:
         # Test connection with the password
         conn = psycopg2.connect(
             dbname="postgres",
-            user="postgres.skgnsidivjplhlletkvb",
+            user="postgres.zqwamcznyosnkrevxmhm",
             password=db_password,
             host="aws-0-us-east-1.pooler.supabase.com",
             port="6543",
