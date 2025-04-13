@@ -21,12 +21,25 @@ from django.contrib.messages import constants as messages_constants
 from wave_v1.storage import SupabaseStorage
 from django.core.files.storage import default_storage
 import secrets  # Add this import if not already present
+import sys  # Added for better error handling
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] - %(message)s')
+logger = logging.getLogger('wave_settings')
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 from dotenv import load_dotenv
 
-load_dotenv()
+# Load environment variables - with better error handling
+try:
+    load_dotenv()
+    logger.info("Environment variables loaded successfully")
+except Exception as e:
+    logger.error(f"Failed to load environment variables: {e}")
+    sys.exit(1)  # Exit if environment variables can't be loaded
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
@@ -80,12 +93,23 @@ else:
     CSRF_TRUSTED_ORIGINS = ["https://wave-v1-1-s4ju.onrender.com", "https://wavecampus.net"]
     DEBUG = False
     DEBUG_PROPAGATE_EXCEPTIONS = True
+    
+    # Database credentials with more robust error handling
+    db_password = os.getenv("DB_PASSWORD")
+    if not db_password:
+        logger.critical("DB_PASSWORD environment variable is not set!")
+        # Log to a file for debugging purposes
+        with open('db_connection.log', 'a') as log_file:
+            log_file.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')} - DB_PASSWORD is missing or empty\n")
+        sys.exit(1)
+    
+    # Database configuration with connection retries
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql",
             "NAME": "postgres",
             "USER": "postgres.skgnsidivjplhlletkvb",
-            "PASSWORD": os.getenv("DB_PASSWORD"),
+            "PASSWORD": db_password,
             "HOST": "aws-0-us-east-1.pooler.supabase.com",
             "PORT": "6543",
             "OPTIONS": {
@@ -95,9 +119,42 @@ else:
                 "keepalives_idle": 30,
                 "keepalives_interval": 10,
                 "keepalives_count": 5,
+                "connect_timeout": 10,  # Connection timeout in seconds
             },
+            # Retry configuration for database connections
+            "CONN_MAX_AGE": 600,  # Connection lifetime in seconds
+            "CONN_HEALTH_CHECKS": True,  # Enable connection health checks
         }
     }
+    
+    # Verify database connection during startup
+    try:
+        import psycopg2
+        import urllib.parse
+        
+        # Log connection attempt
+        with open('db_connection.log', 'a') as log_file:
+            log_file.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')} - Testing database connection...\n")
+        
+        # Test connection with the password
+        conn = psycopg2.connect(
+            dbname="postgres",
+            user="postgres.skgnsidivjplhlletkvb",
+            password=db_password,
+            host="aws-0-us-east-1.pooler.supabase.com",
+            port="6543",
+            connect_timeout=5,
+            sslmode="require"
+        )
+        conn.close()
+        logger.info("Successfully connected to the database")
+        with open('db_connection.log', 'a') as log_file:
+            log_file.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')} - Database connection successful\n")
+    except Exception as e:
+        logger.critical(f"Failed to connect to the database: {e}")
+        with open('db_connection.log', 'a') as log_file:
+            log_file.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')} - Database connection failed: {e}\n")
+        # Continue execution but log the error
     # Comment to test notifications for discord.  
     # CORS Settings
     CORS_ALLOW_ALL_ORIGINS = False
