@@ -29,8 +29,8 @@ router = APIRouter()
 load_dotenv()
 SECRET_KEY = os.getenv("SECRET_KEY") 
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 15
-REFRESH_TOKEN_EXPIRE_DAYS = 7
+ACCESS_TOKEN_EXPIRE_DAYS = 183   # ~6 months to match Django settings
+REFRESH_TOKEN_EXPIRE_DAYS = 365  # 1 year to match Django settings
 
 
 @router.get("/ping")
@@ -73,11 +73,10 @@ async def login_api(request: Request, login_data: LoginRequest):
 
             # Serialize the user data
             user_serializer = CustomUserSerializer(authenticated_user)
-            
-            # Access token
+              # Access token
             access_payload = {
                 "sub": str(authenticated_user.id),
-                "exp": datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES),
+                "exp": datetime.utcnow() + timedelta(days=ACCESS_TOKEN_EXPIRE_DAYS),
                 "type": "access"
             }
             access_token = jwt.encode(access_payload, SECRET_KEY, algorithm=ALGORITHM)
