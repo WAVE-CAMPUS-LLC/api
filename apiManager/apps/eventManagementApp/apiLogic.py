@@ -157,26 +157,24 @@ async def getEvents(user_id: int = Depends(get_current_user)):
     API endpoint for getting events
     """
     try:
-        try:
-            user = CustomUser.objects.get(id=user_id)
-        except CustomUser.DoesNotExist:
-            return "Some"
-        # Check if user is None
-        if not user or user is None:
-            return JSONResponse(
-                content={"error": "Authentication required"},
-                status_code=status.HTTP_401_UNAUTHORIZED,
-            )
-            
+        @sync_to_async
+        def validate_user(user_id):
+            try:
+                user = CustomUser.objects.get(id=user_id)
+                # Check if user is None
+                if not user or user is None:
+                    return None
+                return user
+            except CustomUser.DoesNotExist:
+                return None
+                
         @sync_to_async
         def get_events(user_id):
             events_list = []
-            host_events = Event.objects.filter(host__user=user_id)
+            host_events = Event.objects.filter(host=user)
             if not host_events:
-                return JSONResponse(
-                content={"errors": str(e), "message": "Host has no events"},
-                status_code=status.HTTP_400_BAD_REQUEST,
-            )
+                # Return an empty list if no events found instead of JSONResponse
+                return []
             for event in host_events:
                 header_photo_url = event.header_photo.url if event.header_photo else None
 
@@ -191,28 +189,43 @@ async def getEvents(user_id: int = Depends(get_current_user)):
                 }
                 events_list.append(event_data)
             return events_list
+            
+        # Validate user asynchronously
+        user = await validate_user(user_id)
+        if not user:
+            return JSONResponse(
+                content={"error": "Authentication required"},
+                status_code=status.HTTP_401_UNAUTHORIZED,
+            )
 
         events_before_serializing = await get_events(user_id)
         events = [HostEventExplore(**event) for event in events_before_serializing]
         
-        return {"events": events}
-    except Exception as e:
-        # Check if it's a validation error from Pydantic
-        if "ValidationError" in str(type(e)):
-            return JSONResponse(
-                content={"errors": str(e), "message": "Failed to serialize event data."},
-                status_code=status.HTTP_400_BAD_REQUEST,
-            )
+        return {"events": events}    
     except HTTPException as http_ex:
         # Handle HTTP exceptions separately if needed
         return JSONResponse(
             content={"error": str(http_ex.detail)},
             status_code=http_ex.status_code,
         )
-
+    except CustomUser.DoesNotExist:
+        return JSONResponse(
+            content={"error": "User not found."},
+            status_code=status.HTTP_404_NOT_FOUND,
+        )
+       
     except Exception as e:
         traceback_str = traceback.format_exc()
         print(f"Get Events error: {str(e)}\n{traceback_str}")
+        
+        # Check if it's a validation error from Pydantic
+        if "ValidationError" in str(type(e)):
+            return JSONResponse(
+                content={"errors": str(e), "message": "Failed to serialize event data."},
+                status_code=status.HTTP_400_BAD_REQUEST,
+            )
+            
+        # Handle all other exceptions
         return JSONResponse(
             content={"error": f"An unexpected error occurred: {str(e)}"},
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
