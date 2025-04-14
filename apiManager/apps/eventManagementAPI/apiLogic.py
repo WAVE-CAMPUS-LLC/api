@@ -365,3 +365,124 @@ async def event_creation_fields(request: Request):
     FormClass = EventForm
     fields_info = get_form_fields(FormClass)
     return JSONResponse(content=fields_info, status_code=status.HTTP_200_OK)
+
+
+@router.post("/event/free/create")
+async def create_free_event(request: Request, user_id: int = Depends(get_current_user)):
+    """
+    API endpoint for creating a free event
+    """
+    try:
+        # Get form data (includes both text fields and files)
+        form_data = await request.form()
+
+        # Separate normal data and file data from the form
+        data = {}
+        files = {}
+        for key, value in form_data.multi_items():
+            if isinstance(value, UploadFile):
+                files[key] = value
+            else:
+                data[key] = value
+
+        # Wrap Django ORM calls and form processing in a synchronous function
+        @sync_to_async
+        def process_create_event():
+            # Get the current user's profile.
+            user = CustomUser.objects.get(id=user_id)
+            user_profile = UserProfile.objects.get(user=user)
+
+            # Determine whether the user is associated with a college
+            is_in_college = user_profile.college is not None            # Instantiate the Django form with submitted data, file uploads, instance and partial flag.
+            event_form = EventForm(data, files)
+            
+            if event_form.is_valid():
+                # Get or create a host profile for the user
+                host_profile, created = HostProfile.objects.get_or_create(user=user)
+                
+                # Create the new event
+                new_event = event_form.save(commit=False)
+                new_event.host = user  # Set the host to the current user
+                new_event.ticketing = "Free"  # This is a free event
+                new_event.status = "live"  # Set status to live
+                new_event.save()
+
+                # Create location serializer instance
+                location = LocationSerializer(
+                    building_name=new_event.building_name,
+                    street=new_event.street,
+                    apt_suite_unit=new_event.apt_suite_unit,
+                    city=new_event.city,
+                    state=new_event.state,
+                    zip_code=new_event.zip_code,
+                    country=new_event.country,
+                    hide_address=new_event.hide_address,
+                )
+
+                # Create host serializer instance
+                host = HostSerializer(
+                    id=str(host_profile.hostProfileId),
+                    name=f"{user.first_name} {user.last_name}",
+                )
+
+                # Process image URLs
+                header_photo_url = new_event.header_photo.url if new_event.header_photo else None
+                body_photo_one_url = new_event.body_photo_one.url if new_event.body_photo_one else None
+                body_photo_two_url = new_event.body_photo_two.url if new_event.body_photo_two else None
+                body_photo_three_url = new_event.body_photo_three.url if new_event.body_photo_three else None
+                body_photo_four_url = new_event.body_photo_four.url if new_event.body_photo_four else None
+                body_photo_five_url = new_event.body_photo_five.url if new_event.body_photo_five else None
+
+                # Create event response serializer instance
+                event_data = EventDetailSerializer(
+                    eventId=str(new_event.eventId),
+                    status=new_event.status,
+                    title=new_event.title,
+                    event_type=new_event.event_type,
+                    date=new_event.date,
+                    start_time=new_event.start_time,
+                    end_time=new_event.end_time,
+                    description=new_event.description,
+                    ticketing=new_event.ticketing,
+                    location=location,
+                    header_photo=header_photo_url,
+                    body_photo_one=body_photo_one_url,
+                    body_photo_two=body_photo_two_url,
+                    body_photo_three=body_photo_three_url,
+                    body_photo_four=body_photo_four_url,
+                    body_photo_five=body_photo_five_url,
+                    crew_discount=new_event.crew_discount,
+                    minimum_crew_size=new_event.minimum_crew_size,
+                    crew_discount_percentage=new_event.crew_discount_percentage,
+                    couponsActivated=new_event.couponsActivated,
+                    show_guest_list=new_event.show_guest_list,
+                    forAllDisplay=new_event.forAllDisplay,
+                    forCollegesDisplay=new_event.forCollegesDisplay
+                )                
+                
+                return {
+                    "message": "Event created successfully.",
+                    "event": event_data
+                }
+            else:
+                # Here we raise an error with the form errors so that we can return a 400 response.
+                raise ValueError(event_form.errors)
+                
+        # Execute the create event function
+        result = await process_create_event()
+        return JSONResponse(content=result, status_code=status.HTTP_200_OK)
+            
+    except ValueError as ve:
+        # Return any form validation errors
+        return JSONResponse(
+            content={"errors": str(ve), "message": "Failed to create event."},
+            status_code=status.HTTP_400_BAD_REQUEST,
+        )
+    except Exception as e:
+        # Log the exception details and return a server error
+        traceback_str = traceback.format_exc()
+        print(f"Create Free Event error: {str(e)}\n{traceback_str}")
+        return JSONResponse(
+            content={"error": f"An unexpected error occurred: {str(e)}"},
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
