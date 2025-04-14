@@ -55,3 +55,35 @@ class EditEventSerializer(BaseModel):
         json_encoders = {
             datetime: lambda v: v.isoformat()
         }
+        
+        
+        
+class EventDetailSerializer(BaseModel):
+    eventId: str
+    status: str
+    title: str
+    event_type: str
+    date: date
+    start_time: time
+    end_time: time
+    description: Optional[str] = None
+    ticketing: Optional[str] = None
+    location: LocationSerializer
+    header_photo: Optional[HttpUrl] = None
+    body_photo_one: Optional[HttpUrl] = None
+    body_photo_two: Optional[HttpUrl] = None
+    body_photo_three: Optional[HttpUrl] = None
+    body_photo_four: Optional[HttpUrl] = None
+    body_photo_five: Optional[HttpUrl] = None
+    crew_discount: Optional[bool] = None
+    minimum_crew_size: Optional[int] = None
+    crew_discount_percentage: Optional[float] = None
+    couponsActivated: Optional[bool] = None
+    show_guest_list: Optional[bool] = None
+    forAllDisplay: Optional[bool] = None
+    forCollegesDisplay: Optional[bool] = None
+    
+    class Config:
+        json_encoders = {
+            datetime: lambda v: v.isoformat()
+        }
