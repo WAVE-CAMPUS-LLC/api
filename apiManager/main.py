@@ -10,13 +10,13 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "wave_v1.settings")
 django.setup()
 
 
-from apiManager.apps.coreApp.apiLogic import router as core
-from apiManager.apps.accountManagementApp.apiLogic import router as account_router
-from apiManager.apps.eventManagementApp.apiLogic import router as event_router
-from apiManager.apps.authenticationApp.apiLogic import router as auth_router
-from apiManager.apps.collegeManagementApp.apiLogic import router as college_router
-# from apiManager.apps.eventTicketsApp.apiLogic import router as ticket_router
-# from apiManager.apps.socialApp.apiLogic import router as social_router
+from apiManager.apps.coreAPI.apiLogic import router as core
+from apiManager.apps.accountManagementAPI.apiLogic import router as account_router
+from apiManager.apps.eventManagementAPI.apiLogic import router as event_router
+from apiManager.apps.authenticationAPI.apiLogic import router as auth_router
+from apiManager.apps.collegeManagementAPI.apiLogic import router as college_router
+# from apiManager.apps.eventTicketsAPI.apiLogic import router as ticket_router
+# from apiManager.apps.socialAPI.apiLogic import router as social_router
 
 
 app = FastAPI(title="WAVE. API", version="1.0.0")

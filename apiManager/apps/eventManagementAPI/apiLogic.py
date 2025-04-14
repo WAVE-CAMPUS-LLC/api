@@ -8,6 +8,7 @@ from asgiref.sync import sync_to_async
 import traceback
 
 from apiManager.dependencies import get_current_user
+from apiManager.apps.authenticationAPI.utilities import get_form_fields
 from .serializers import HostEventExplore, EventDetailSerializer, EditEventSerializer, EditEventResponseSerializer, LocationSerializer, HostSerializer
 
 from jose import jwt
@@ -18,7 +19,7 @@ from django.shortcuts import get_object_or_404
 from eventManagementApp.models import Event, HostProfile
 from accountManagementApp.models import UserProfile
 from eventTicketsApp.models import RSVPTicket, PaidFreeTicket
-from eventManagementApp.forms import EditEventForm
+from eventManagementApp.forms import EditEventForm, EventForm
 from dotenv import load_dotenv
 import os
 
@@ -324,3 +325,43 @@ async def get_event_details(eventId: str, user_id: int = Depends(get_current_use
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
         
+
+@router.post("/event/{eventId}/deleteEvent")
+async def delete_event(eventId: str, user_id: int = Depends(get_current_user)):
+    """
+    API endpoint for deleting an event
+    """
+    try:
+        @sync_to_async
+        def delete_event(eventId):
+            # Get the event object or raise a 404 error if not found
+            event = get_object_or_404(Event, eventId=eventId)
+            event.delete()
+            return {"message": "Event deleted successfully."}
+        
+        result = await delete_event(eventId)
+        return JSONResponse(content=result, status_code=status.HTTP_200_OK)
+    
+    except HTTPException as http_ex:
+        # Handle HTTP exceptions separately if needed
+        return JSONResponse(
+            content={"error": str(http_ex.detail)},
+            status_code=http_ex.status_code,
+        )
+    
+    except Exception as e:
+        traceback_str = traceback.format_exc()
+        print(f"Delete Event error: {str(e)}\n{traceback_str}")
+        
+        # Handle all other exceptions
+        return JSONResponse(
+            content={"error": f"An unexpected error occurred: {str(e)}"},
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+        
+        
+@router.get("/event/fields")
+async def event_creation_fields(request: Request):
+    FormClass = EventForm
+    fields_info = get_form_fields(FormClass)
+    return JSONResponse(content=fields_info, status_code=status.HTTP_200_OK)
