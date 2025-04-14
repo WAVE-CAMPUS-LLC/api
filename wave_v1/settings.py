@@ -47,8 +47,8 @@ except Exception as e:
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", secrets.token_urlsafe(64))
 
 # SECURITY WARNING: don't run with debug turned on in production!
-ENVIORNMENT = os.getenv("ENVIORNMENT", "production")
-if ENVIORNMENT == "development":
+ENVIRONMENT = os.getenv("ENVIRONMENT", "production")
+if ENVIRONMENT == "development":
     ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
     CSRF_TRUSTED_ORIGINS = ["http://localhost:8000", "http://127.0.0.1:8000"]
     DEBUG = True
@@ -391,12 +391,11 @@ MESSAGE_TAGS = {
 
 # Email Configurations
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = os.getenv("EMAIL_HOST", "smtppro.zoho.com")
-EMAIL_PORT = int(os.getenv("EMAIL_PORT", 587))
-EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "True") == "True"
-EMAIL_USE_SSL = False
-EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "no-reply@wavecampus.net")
-EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "dN/5Xw!+X3*JVv?")
+EMAIL_HOST = "smtppro.zoho.com"
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = "no-reply@waveoncampus.com"
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 # Ensure the email content is properly formatted

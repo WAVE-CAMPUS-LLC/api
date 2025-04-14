@@ -10,6 +10,8 @@ from authenticationApp.models import CustomUser
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
 from adminDashboardApp.models import LoginHistoryModel
+from eventManagementApp.models import Event
+from accountManagementApp.models import UserProfile
 from fastapi import Depends
 from apiManager.dependencies import get_current_user
 
@@ -41,7 +43,7 @@ async def profileOverview(user_id: int = Depends(get_current_user)):
             return None
     
     profile_data = await get_profile_overview(user_id)
-    if not profile_data:
+    if profile_data is None:
         raise HTTPException(status_code=404, detail="Event not found")
     return profile_data
 
@@ -71,7 +73,7 @@ async def profile_detailed(user_id: int = Depends(get_current_user)):
             return None
     
     profile_data = await get_profile_detailed(user_id)
-    if not profile_data:
+    if profile_data is None:
         raise HTTPException(status_code=404, detail="Event not found")
     return profile_data
 
@@ -108,3 +110,34 @@ async def update_profile_detailed(
         raise HTTPException(status_code=404, detail="User not found")
     
     return {"message": "Profile updated successfully"}
+
+@router.get("/profile/favoriteEvents")
+async def favoriteEvents(user_id: int = Depends(get_current_user)):
+    """
+    API endpoint for getting profile overview.
+    Returns user profile data.
+    """
+    @sync_to_async
+    def get_fav_events(user_id):
+        try:
+            user = CustomUser.objects.get(id=user_id)
+            user_profile = UserProfile.objects.get(user=user)
+            events = user_profile.favorite_events.all()
+            event_data = [
+                {
+                    "eventId": event.eventId,
+                    "title": event.title,
+                    "date": event.date,
+                    "header_photo": event.header_photo.url if event.header_photo else None,
+                }
+                for event in events
+            ]
+            return event_data
+        except CustomUser.DoesNotExist or UserProfile.DoesNotExist:
+            return None
+    
+    events_data = await get_fav_events(user_id)
+    if events_data is None:
+        raise HTTPException(status_code=404, detail="Event not found")
+    return events_data
+

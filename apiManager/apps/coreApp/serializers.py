@@ -2,6 +2,12 @@ from pydantic import BaseModel, Field, HttpUrl
 from typing import Optional, List, Dict, Any
 from datetime import date, datetime, time
 
+class RSVPInformation(BaseModel):
+    first_name: str | None = None
+    last_name: str | None = None
+    email: str | None = None
+    display_on_guestlist: str | None = None
+
 
 class ExplorePageEvent(BaseModel):
     """

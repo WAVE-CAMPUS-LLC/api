@@ -800,6 +800,7 @@ def generateTicket(
     guestEmail=None,
     crewTicket=False,
     stripe_session_id=None,
+    from_api=False
 ): 
     ticket = Ticket(
         user=user if user and user.is_authenticated else None,
@@ -813,13 +814,16 @@ def generateTicket(
     
     # Get the ticket's main ID and build the activation URL.
     ticketMainId = ticket.mainId
-    activationLink = request.build_absolute_uri(
-        reverse("eventTickets:activateTicket", kwargs={"mainId": ticketMainId})
+    activationLink = (
+        (str(os.getenv("WEBSITE_DOMAIN")) + reverse("eventTickets:activateTicket", kwargs={"mainId": ticketMainId}))
+        if from_api else 
+        request.build_absolute_uri(reverse("eventTickets:activateTicket", kwargs={"mainId": ticketMainId})) 
     )
-    viewLink = request.build_absolute_uri(
-        reverse("eventTickets:viewTicket", kwargs={"mainId": ticketMainId})
+    viewLink = (
+        (str(os.getenv("WEBSITE_DOMAIN")) + reverse("eventTickets:viewTicket", kwargs={"mainId": ticketMainId}))
+        if from_api else
+        request.build_absolute_uri(reverse("eventTickets:viewTicket", kwargs={"mainId": ticketMainId}))
     )
-    
     # Use the activationLink as the data encoded in the QR code.
     qr_data = activationLink
 
@@ -848,8 +852,11 @@ def generateTicket(
             try:
                 # Get the buyer's name for the subject.
                 buyer_name = "Someone"
-                if request.user and request.user.is_authenticated:
-                    buyer_name = request.user.first_name or "Someone"
+                if not from_api:
+                    if request.user and request.user.is_authenticated:
+                        buyer_name = request.user.first_name or "Someone"
+                else:
+                    buyer_name = guestFirstName
                 
                 subject = (
                     f"{buyer_name} bought a ticket for you for {event.title}"
@@ -953,9 +960,16 @@ def generateTicket(
                         traceback.print_exc()
                 
                 # Add event to the user's purchased events if authenticated.
-                if request.user and request.user.is_authenticated and hasattr(request.user, 'user_profile'):
+                if not from_api:
+                    if request.user and request.user.is_authenticated and hasattr(request.user, 'user_profile'):
+                        try:
+                            request.user.user_profile.purchased_events.add(event)
+                            print(f"Added event {event.title} to user's purchased events")
+                        except Exception as e:
+                            print(f"Error adding event to user's purchased events: {e}")
+                elif user and user.user_profile:
                     try:
-                        request.user.user_profile.purchased_events.add(event)
+                        user.user_profile.purchased_events.add(event)
                         print(f"Added event {event.title} to user's purchased events")
                     except Exception as e:
                         print(f"Error adding event to user's purchased events: {e}")
