@@ -116,27 +116,32 @@ async def update_profile_detailed(
 @router.get("/getUserTickets")
 async def get_user_tickets(user_id: int = Depends(get_current_user)):
     """
-    API endpoint for getting event tickets.
-    Returns a list of tickets for a specific event. User must be a host of the event to use this API.
+    API endpoint for getting user tickets.
+    Returns a list of tickets belonging to the authenticated user.
     """
     @sync_to_async
-    def get_user_tickets(user_id):
-        try:
-            user = CustomUser.objects.get(id=user_id)
-            tickets = Ticket.objects.filter(user=user)
-            for ticket 
-            tickets_serialized = TicketSerializer(tickets, many=True).data
-            
-            return {"tickets": tickets_serialized}
-        except CustomUser.DoesNotExist:
-            return None
+    def get_user_tickets_async(user_id):
+        user = CustomUser.objects.get(id=user_id)
+        tickets = Ticket.objects.filter(user=user)
+        ticket_list = []
+        for ticket in tickets:
+            ticket_list.append({
+                "ticketId": str(ticket.ticketId),
+                "guestFirstName": ticket.guestFirstName,
+                "guestLastName": ticket.guestLastName,
+                "guestEmail": ticket.guestEmail,
+                "eventId": str(ticket.event.eventId),
+                "eventTitle": ticket.event.title,
+                "qrCodeImage": ticket.qrCodeImage.url if ticket.qrCodeImage else None,
+                "status": ticket.status,
+            })
+        
+        return ticket_list
+        
+    ticket_data = await get_user_tickets_async(user_id)
+    tickets = [TicketSerializer(**ticket) for ticket in ticket_data]
     
-    result = await get_user_tickets(user_id)
-    
-    if result is None:
-        raise HTTPException(status_code=404, detail="User not found")
-    
-    return result
+    return {"tickets": tickets}
 
 
 @router.get("/profile/favoriteEvents")
