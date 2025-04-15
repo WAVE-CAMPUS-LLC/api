@@ -1,10 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Request, Header
+from fastapi import APIRouter, Depends, HTTPException, status, Request, Header, UploadFile
 from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel
 from typing import Optional
 from asgiref.sync import sync_to_async
 import traceback
+import os
 
 from authenticationApp.models import CustomUser
 from django.contrib.auth import authenticate
@@ -67,7 +68,6 @@ async def profile_detailed(user_id: int = Depends(get_current_user)):
                 "last_name": user.last_name,
                 "username": user.username,
                 "email": user.email,
-                "phone_number": user.phone_number,
             }
             return user_data
         except CustomUser.DoesNotExist:
@@ -86,13 +86,14 @@ async def update_profile_detailed(
     first_name: Optional[str] = None,
     last_name: Optional[str] = None,
     email: Optional[str] = None,
+    profile_photo: Optional[UploadFile] = None,
 ):
     """
     API endpoint for updating detailed profile information.
-    Updates user profile data including email and phone number.
+    Updates user profile data including email, phone number, and profile photo.
     """
     @sync_to_async
-    def update_profile_detailed(user_id, first_name, last_name, email):
+    def update_profile_detailed(user_id, first_name, last_name, email, profile_photo):
         try:
             user = CustomUser.objects.get(id=user_id)
             if first_name:
@@ -102,11 +103,40 @@ async def update_profile_detailed(
             if email:
                 user.email = email
             user.save()
+            
+            # Handle profile photo upload if provided
+            if profile_photo:
+                # Get or create user profile
+                user_profile = user.user_profile
+                # Save the uploaded file to the profile_photo field
+                if user_profile.profile_photo:
+                    # Delete old photo if it exists to avoid storage buildup
+                    old_photo = user_profile.profile_photo
+                    if old_photo and os.path.exists(old_photo.path):
+                        os.remove(old_photo.path)
+                        
+                from django.core.files import File
+                from tempfile import NamedTemporaryFile
+                
+                # Save the uploaded file to a temporary file
+                temp_file = NamedTemporaryFile(delete=False)
+                try:
+                    temp_file.write(profile_photo.file.read())
+                    temp_file.close()
+                    
+                    # Save the file to the profile_photo field
+                    with open(temp_file.name, 'rb') as f:
+                        filename = profile_photo.filename
+                        user_profile.profile_photo.save(filename, File(f), save=True)
+                finally:
+                    # Clean up the temporary file
+                    os.unlink(temp_file.name)
+                    
             return True
         except CustomUser.DoesNotExist:
             return False
     
-    success = await update_profile_detailed(user_id, first_name, last_name, email)
+    success = await update_profile_detailed(user_id, first_name, last_name, email, profile_photo)
     if not success:
         raise HTTPException(status_code=404, detail="User not found")
     
