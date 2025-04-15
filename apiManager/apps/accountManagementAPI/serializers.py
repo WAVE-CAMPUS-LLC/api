@@ -13,3 +13,15 @@ class ProfileOverview(BaseModel):
     class Config:
         from_attributes = True
         populate_by_name = True
+        
+
+class TicketSerializer(BaseModel):
+    ticket_id: str
+    eventId: str
+    ticket_name: str
+    ticket_price: float
+    quantity: int
+    
+    class Config:
+        from_attributes = True
+        populate_by_name = True

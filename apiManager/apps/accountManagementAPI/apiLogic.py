@@ -11,11 +11,12 @@ from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
 from adminDashboardApp.models import LoginHistoryModel
 from eventManagementApp.models import Event
+from eventTicketsApp.models import Ticket
 from accountManagementApp.models import UserProfile
 from fastapi import Depends
 from apiManager.dependencies import get_current_user
 
-from .serializers import ProfileOverview
+from .serializers import TicketSerializer
 
 router = APIRouter()
 
@@ -110,6 +111,33 @@ async def update_profile_detailed(
         raise HTTPException(status_code=404, detail="User not found")
     
     return {"message": "Profile updated successfully"}
+
+
+@router.get("/getUserTickets")
+async def get_user_tickets(user_id: int = Depends(get_current_user)):
+    """
+    API endpoint for getting event tickets.
+    Returns a list of tickets for a specific event. User must be a host of the event to use this API.
+    """
+    @sync_to_async
+    def get_user_tickets(user_id):
+        try:
+            user = CustomUser.objects.get(id=user_id)
+            tickets = Ticket.objects.filter(user=user)
+            for ticket 
+            tickets_serialized = TicketSerializer(tickets, many=True).data
+            
+            return {"tickets": tickets_serialized}
+        except CustomUser.DoesNotExist:
+            return None
+    
+    result = await get_user_tickets(user_id)
+    
+    if result is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    return result
+
 
 @router.get("/profile/favoriteEvents")
 async def favoriteEvents(user_id: int = Depends(get_current_user)):
