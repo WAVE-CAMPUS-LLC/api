@@ -204,3 +204,113 @@ async def favoriteEvents(user_id: int = Depends(get_current_user)):
         raise HTTPException(status_code=404, detail="Event not found")
     return events_data
 
+
+@router.post("/profile/delete")
+async def delete_profile(user_id: int = Depends(get_current_user)):
+    """
+    API endpoint for deleting a user profile.
+    Deletes the user profile and associated data.
+    """
+    @sync_to_async
+    def delete_profile(user_id):
+        try:
+            user = CustomUser.objects.get(id=user_id)
+            user.delete()
+            return True
+        except CustomUser.DoesNotExist:
+            return False
+    
+    success = await delete_profile(user_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    return {"message": "Profile deleted successfully"}
+
+
+@router.get("/checkHost")
+async def check_host(user_id: int = Depends(get_current_user)):
+    
+    @sync_to_async
+    def check_user_is_host(user_id):
+        try:
+            user = CustomUser.objects.get(id=user_id)
+            is_host = user.groups.filter(name="Host").exists()
+            return {"is_host": is_host}
+        except CustomUser.DoesNotExist:
+            return None
+        
+    result = await check_user_is_host(user_id)
+    if result is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    return result
+
+
+@router.get("/getHostDashboardLink")
+async def get_host_dashboard_link(user_id: int = Depends(get_current_user)):
+    """
+    API endpoint for getting Stripe dashboard link for hosts.
+    Returns a link to the Stripe dashboard for the user's connected account.
+    """
+    @sync_to_async
+    def get_host_stripe_link(user_id):
+        try:
+            user = CustomUser.objects.get(id=user_id)
+            
+            # Check if stripe account ID exists
+            if not user.connectAccountID:
+                return {"error": "You aren't a host yet. Host your first event to get started."}, 400
+            
+            # Import stripe here to avoid loading it unnecessarily
+            import stripe
+            from django.conf import settings
+            stripe.api_key = settings.STRIPE_SECRET_KEY
+            
+            # Create the stripe login link
+            try:
+                stripe_login_link = stripe.Account.create_login_link(
+                    user.connectAccountID
+                )
+                return {"url": stripe_login_link.url}, 200
+            except Exception as e:
+                print(f"Stripe error: {str(e)}")
+                return {"error": f"Failed to get Stripe account link: {str(e)}"}, 400
+            
+        except CustomUser.DoesNotExist:
+            return None
+    
+    result, status_code = await get_host_stripe_link(user_id)
+    if result is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    if status_code != 200:
+        raise HTTPException(status_code=status_code, detail=result.get("error"))
+    
+    return result
+
+
+@router.get("/getUserCollege")
+async def get_user_college(user_id: int = Depends(get_current_user)):
+    """
+    API endpoint for getting user's college information.
+    Returns the college name and ID associated with the user.
+    """
+    @sync_to_async
+    def get_user_college(user_id):
+        try:
+            user = CustomUser.objects.get(id=user_id)
+            college = user.user_profile.college
+            if college:
+                return {
+                    "collegeId": str(college.collegeId),
+                    "collegeName": college.name,
+                }
+            else:
+                return None
+        except CustomUser.DoesNotExist:
+            return None
+    
+    college_data = await get_user_college(user_id)
+    if college_data is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    return college_data
