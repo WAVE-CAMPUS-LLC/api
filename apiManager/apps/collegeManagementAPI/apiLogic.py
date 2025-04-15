@@ -7,7 +7,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from adminDashboardApp.models import College
 
 # Serializers
-from .serializers import CollegeExplorePage
+from .serializers import CollegeExplorePage, CollegeDetails
 
 
 router = APIRouter()
@@ -51,4 +51,46 @@ async def explore_colleges():
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to fetch college data: {str(e)}",
+        )
+
+
+@router.get("/college/{collegeId}/details")
+async def get_college_details(collegeId: str):
+    try:
+        @sync_to_async
+        def get_college_details_data(collegeId):
+            try:
+                college = College.objects.get(collegeId=collegeId)
+                return {
+                    "collegeId": str(college.collegeId),
+                    "name": college.name,
+                    "address": college.address,
+                    "city": college.city,
+                    "state": college.state,
+                    "zip_code": college.zip_code,
+                    "campus_image": (
+                        college.campus_image.url if college.campus_image else None
+                    ),
+                    "motto": college.motto,
+                    "contact_website": college.contact_website,
+                    "email_domain": college.email_domain,
+                    "logo": college.logo.url if college.logo else None,
+                }
+            
+            except College.DoesNotExist:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="College not found",
+                )
+
+        college_details = await get_college_details_data(collegeId)
+        return {"collegeDetails": CollegeDetails(**college_details)}
+    
+    except Exception as e:
+        # Log the error for debugging
+        print(f"Error in get_college_details: {str(e)}")
+        # Return a more helpful error response
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to fetch college details: {str(e)}",
         )

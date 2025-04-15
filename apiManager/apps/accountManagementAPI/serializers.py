@@ -16,11 +16,14 @@ class ProfileOverview(BaseModel):
         
 
 class TicketSerializer(BaseModel):
-    ticket_id: str
+    ticketId: str
+    guestFirstName: str
+    guestLastName: str
+    guestEmail: str
     eventId: str
-    ticket_name: str
-    ticket_price: float
-    quantity: int
+    eventTitle: str
+    qrCodeImage: Optional[str] = None
+    status: str
     
     class Config:
         from_attributes = True

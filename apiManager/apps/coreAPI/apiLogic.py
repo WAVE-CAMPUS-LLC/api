@@ -92,6 +92,32 @@ async def get_event_details(eventId: str):
     
     return{"event": event}
 
+@router.get("/event/{eventId}/host_profile")
+async def get_event_host_profile(eventId: str):
+    """
+    API endpoint to retrieve the host profile for a specific event.
+    """
+    @sync_to_async
+    def get_host_profile(eventId):
+        try:
+            event = Event.objects.get(eventId=eventId)
+            host_profile = event.host.user_profile  # Assuming this is a ForeignKey to UserProfile
+            return {
+                "profile_photo": host_profile.profile_photo.url if host_profile.profile_photo else None,
+                "first_name": host_profile.user.first_name,
+                "last_name": host_profile.user.last_name,
+                "id": str(host_profile.user.id), 
+                "user_id": str(host_profile.user.user_id),
+                "username": host_profile.user.username,
+            }
+        except Event.DoesNotExist:
+            return None
+    
+    host_data = await get_host_profile(eventId)
+    if host_data is None:
+        raise HTTPException(status_code=404, detail="Event not found")
+    
+    return {"host_profile": host_data}
 
 @router.get("/event/{eventId}/guests")
 async def get_event_guests(eventId: str):
