@@ -124,10 +124,8 @@ async def get_user_tickets(user_id: int = Depends(get_current_user)):
         try:
             user = CustomUser.objects.get(id=user_id)
             tickets = Ticket.objects.filter(user=user)
-            for ticket 
-            tickets_serialized = TicketSerializer(tickets, many=True).data
             
-            return {"tickets": tickets_serialized}
+            return {"tickets": tickets}
         except CustomUser.DoesNotExist:
             return None
     
