@@ -220,7 +220,7 @@ class JoinCollegeRequest(BaseModel):
     email: str
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "email": "student@university.edu"
             }
@@ -428,4 +428,69 @@ async def verify_join_college(collegeId: str, verification: VerificationRequest)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to process verification: {str(e)}",
+        )
+        
+
+@router.post("/college/{collegeId}/leave")
+async def leave_college(collegeId: str):
+    """
+    Leave a college and remove membership.
+    
+    This endpoint:
+    1. Validates the college ID
+    2. Removes the user from the college membership
+    """
+    try:
+        @sync_to_async
+        def process_leave_request(collegeId):
+            try:
+                from django.shortcuts import get_object_or_404
+                from accountManagementApp.models import UserProfile
+                from collegeManagementApp.models import Membership, College
+                
+                # Get the college and user profile
+                college = get_object_or_404(College, collegeId=collegeId)
+                
+                from django.contrib.auth import get_user_model
+                User = get_user_model()
+                user = User.objects.first()  # Replace with proper auth logic
+                
+                user_profile = get_object_or_404(UserProfile, user=user)
+                
+                # Check if the user is a member of the college
+                if user_profile.college != college:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="You are not a member of this college."
+                    )
+                
+                # Remove membership and update user profile
+                Membership.objects.filter(user=user, college=college).delete()
+                user_profile.college = None  # or set to another college if needed
+                user_profile.save()
+                
+                return {
+                    "message": f"You have successfully left {college.name}",
+                    "college": {"id": str(college.collegeId), "name": college.name},
+                }
+            
+            except HTTPException as e:
+                raise e
+            except Exception as e:
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail=f"Failed to leave college: {str(e)}"
+                )
+        
+        # Process the leave request
+        result = await process_leave_request(collegeId)
+        return result
+        
+    except Exception as e:
+        # Log the error for debugging
+        print(f"Error in leave_college: {str(e)}")
+        # Return a more helpful error response
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to process leave request: {str(e)}",
         )

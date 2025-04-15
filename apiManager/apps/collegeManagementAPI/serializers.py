@@ -44,7 +44,7 @@ class VerificationRequest(BaseModel):
     code: str
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "code": "ABC123"
             }
