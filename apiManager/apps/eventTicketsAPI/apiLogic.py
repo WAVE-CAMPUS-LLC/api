@@ -9,6 +9,7 @@ import asyncio
 from decimal import Decimal
 from urllib.parse import urlencode
 from functools import partial
+import os
 
 from django.conf import settings
 from django.urls import reverse
@@ -209,15 +210,14 @@ async def process_checkout(
                 detail="Invalid amount"
             )
         
-        # Calculate service fee based on the discounted amount
-        percentage_fee = (total_amount * float(platform_settings.salesTaxPercentage)) / 100
-        fixed_fee = float(platform_settings.salesFeeAmount)
+        # Calculate service fee: 7% of subtotal + $0.99 flat fee
+        # This matches the calculation in the Django hostedCheckout implementation
         
         if amount_in_cents <= 0 and has_discount and discount_percentage >= 100:
             # For 100% discounts, apply a minimal service fee based on the original price
             fee_amount = max(99, int(original_amount_in_cents * 0.07) + 99)
         else:
-            fee_amount = int((percentage_fee + fixed_fee) * 100)  # Convert to cents
+            fee_amount = int(amount_in_cents * 0.07) + 99  # 7% of subtotal + $0.99 flat fee in cents
         
         print(f"Service fee: ${fee_amount/100} calculated on discounted amount: ${total_amount}")
 
@@ -307,8 +307,8 @@ async def process_checkout(
                 # and there's no transfer to the host's account
                 
                 # Get the success and cancel URLs
-                success_url = await sync_to_async(lambda: settings.SITE_URL + reverse('eventTickets:paymentSuccessful'))()
-                cancel_url = await sync_to_async(lambda: settings.SITE_URL + reverse('eventTickets:paymentFailed'))()
+                success_url = await sync_to_async(lambda: os.getenv("WEBSITE_DOMAIN") + reverse('eventTickets:paymentSuccessful'))()
+                cancel_url = await sync_to_async(lambda: os.getenv("WEBSITE_DOMAIN") + reverse('eventTickets:paymentFailed'))()
                 
                 checkout_session = stripe.checkout.Session.create(
                     customer=current_user.customer_id if current_user else None,
@@ -333,8 +333,8 @@ async def process_checkout(
                 
                 # Get the success and cancel URLs if not already defined
                 if not locals().get('success_url'):
-                    success_url = await sync_to_async(lambda: settings.SITE_URL + reverse('eventTickets:paymentSuccessful'))()
-                    cancel_url = await sync_to_async(lambda: settings.SITE_URL + reverse('eventTickets:paymentFailed'))()
+                    success_url = await sync_to_async(lambda: os.getenv("WEBSITE_DOMAIN") + reverse('eventTickets:paymentSuccessful'))()
+                    cancel_url = await sync_to_async(lambda: os.getenv("WEBSITE_DOMAIN") + reverse('eventTickets:paymentFailed'))()
                 
                 # Get the host's connect account ID in a sync context
                 connect_account_id = await sync_to_async(lambda: host.connectAccountID)()
@@ -347,9 +347,11 @@ async def process_checkout(
                     line_items=line_items,
                     mode="payment",
                     payment_intent_data={
-                        "application_fee_amount": fee_amount,
+                        # This tells Stripe to transfer only the ticket amount to the host
+                        # The service fee stays with the platform
                         "transfer_data": {
                             "destination": connect_account_id,
+                            "amount": amount_in_cents,  # Only transfer the ticket amount, not the fee
                         },
                         # Add metadata to help with cart reconstruction
                         "metadata": {
@@ -357,8 +359,8 @@ async def process_checkout(
                             'event_id': event_id_str,
                             'event_title': event_title,
                             'discount_percentage': str(discount_percentage) if has_discount else '0',
-                            'original_amount': str(original_amount),
-                            'discounted_amount': str(total_amount)
+                            'ticket_amount': str(amount_in_cents),
+                            'fee_amount': str(fee_amount)
                         }
                     },
                     metadata={
