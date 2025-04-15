@@ -134,3 +134,27 @@ class CollegeEventLink(models.Model):
         
     def __str__(self):
         return f'{self.college.name} - {self.event.title}'
+
+
+class VerificationCode(models.Model):
+    """
+    Model for storing college join verification codes.
+    Used as an alternative to session-based storage for FastAPI.
+    """
+    code = models.CharField(max_length=20)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    college = models.ForeignKey(College, on_delete=models.CASCADE)
+    email = models.EmailField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    used = models.BooleanField(default=False)
+
+    class Meta:
+        default_permissions = ()
+        
+    def __str__(self):
+        return f"Verification for {self.user.username} - {self.college.name}"
+        
+    def is_expired(self):
+        from django.utils import timezone
+        return timezone.now() > self.expires_at

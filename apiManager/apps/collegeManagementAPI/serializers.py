@@ -25,7 +25,6 @@ class CollegeDetails(BaseModel):
     """
     collegeId: str  
     name: str
-    description: Optional[str] = None
     address: Optional[str] = None
     city: str
     state: str
@@ -39,3 +38,14 @@ class CollegeDetails(BaseModel):
     
     class Config:
         from_attributes = True
+        
+        
+class VerificationRequest(BaseModel):
+    code: str
+    
+    class Config:
+        schema_extra = {
+            "example": {
+                "code": "ABC123"
+            }
+        }
