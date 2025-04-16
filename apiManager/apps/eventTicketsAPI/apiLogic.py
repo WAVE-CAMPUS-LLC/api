@@ -13,7 +13,7 @@ import os
 
 from django.conf import settings
 from django.urls import reverse
-from eventTicketsApp.models import Ticket, RSVPTicket, StripePlatformSettings
+from eventTicketsApp.models import Ticket, RSVPTicket, StripePlatformSettings, PaidFreeTicket
 from eventManagementApp.models import Event, CouponCode
 from authenticationApp.models import CustomUser
 from fastapi import Depends
@@ -403,3 +403,122 @@ async def process_checkout(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
         )
+        
+@router.get("/ticketDetails")
+async def ticket_details(request: Request):
+    
+    @sync_to_async
+    def get_ticket_details(ticket_id):
+        try:
+            ticket = Ticket.objects.get(ticketId=ticket_id)
+            event = ticket.event
+
+            return {
+                "ticketId": ticket.ticketId,
+                "event": {
+                    "eventId": event.eventId,
+                    "eventTitle": event.title,
+                    "eventLocation": {
+                        "street": event.street,
+                        "city": event.city,
+                        "state": event.state,
+                        "zip_code": event.zip_code,
+                        "building_name": event.building_name
+                    }
+                },
+                "status": ticket.status,
+                "firstName": ticket.user.first_name if ticket.user else ticket.guestFirstName,
+                "lastName": ticket.user.last_name if ticket.user else ticket.guestLastName,
+            }
+        except Ticket.DoesNotExist:
+            return None
+        except Exception as e:
+            return {"error": str(e)}
+    
+    ticket_id = request.query_params.get("ticketId")
+    result = await get_ticket_details(ticket_id)
+    if result is None:
+        return {"error": "Ticket not found"}
+    return result
+
+
+
+    
+    @sync_to_async
+    def activate_user_ticket(ticket_id):
+        try:
+            ticket = Ticket.objects.get(ticketId=ticket_id)
+            event = ticket.event
+            if ticket.status == "Scanned":
+                return {
+                        "valid": False,
+                        "message": "Ticket is already activated.",
+                        "ticketData": {
+                            "guestFirstName": (
+                                ticket.guestFirstName
+                                if ticket.guestFirstName
+                                else ticket.user.first_name
+                            ),
+                            "guestLastName": (
+                                ticket.guestLastName
+                                if ticket.guestLastName
+                                else ticket.user.last_name
+                            ),
+                            "userFirstName": (
+                                ticket.user.first_name if ticket.user else None
+                            ),
+                            "userLastName": (
+                                ticket.user.last_name if ticket.user else None
+                            ),
+                            "status": (ticket.status),
+                        },
+                    }
+            elif ticket.status == "Invalid":
+                return {
+                        "valid": False,
+                        "message": "Ticket is invalid.",
+                        "ticketData": {
+                            "guestFirstName": (
+                                ticket.guestFirstName
+                                if ticket.guestFirstName
+                                else ticket.user.first_name
+                            ),
+                            "guestLastName": (
+                                ticket.guestLastName
+                                if ticket.guestLastName
+                                else ticket.user.last_name
+                            ),
+                            "userFirstName": (
+                                ticket.user.first_name if ticket.user else None
+                            ),
+                            "userLastName": (
+                                ticket.user.last_name if ticket.user else None
+                            ),
+                            "status": (ticket.status),
+                        },
+                    }
+            ticket.status = "Scanned"
+            ticket.save()
+            return {"valid": True, "message": "Ticket is activated", "ticketData": {
+                "ticketId": ticket.ticketId,
+                "event": {
+                    "eventId": event.eventId,
+                    "eventTitle": event.title,
+                    "eventLocation": {
+                        "street": event.street,
+                        "city": event.city,
+                        "state": event.state,
+                        "zip_code": event.zip_code,
+                        "building_name": event.building_name
+                    }
+                },
+                "status": ticket.status
+            }}
+        except Ticket.DoesNotExist:
+            return {"valid": False, "message": "Ticket not found"}
+        except Exception as e:
+            return {"valid": False, "message": f"An error occurred: {e}"}
+        
+    ticket_id = request.query_params.get("ticketId")
+    result = await activate_user_ticket(ticket_id)
+    return result
