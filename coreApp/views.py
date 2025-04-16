@@ -32,8 +32,24 @@ from django.urls import reverse
 
 # Create your views here.
 def indexView(request):
-    pageName = "home"
-    return render(request, "coreApp/index.html", {"page": pageName})
+    pageName = "notHome"
+    
+    # Get weekly events (same approach as in exploreView)
+    today = now().date()
+    start_of_week = today - timedelta(days=today.weekday())
+    end_of_week = start_of_week + timedelta(days=6)
+
+    weekly_events = Event.objects.filter(
+        date__range=[start_of_week, end_of_week],
+        status="live",
+        forAllDisplay=True,
+        admin_status="active",
+    ).order_by("?")[:3]  # Get 3 random weekly events
+    
+    return render(request, "coreApp/index.html", {
+        "page": pageName,
+        "weekly_events": weekly_events
+    })
 
 
 def exploreView(request):
