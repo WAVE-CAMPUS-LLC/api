@@ -11,6 +11,9 @@ from apiManager.dependencies import get_current_user
 from apiManager.apps.authenticationAPI.utilities import get_form_fields
 from .serializers import HostEventExplore, EventDetailSerializer, EditEventSerializer, EditEventResponseSerializer, LocationSerializer, HostSerializer
 
+from eventTicketsApp.forms import PaidFreeTicketForm
+from eventManagementApp.forms import CouponCodeForm
+
 from jose import jwt
 from datetime import datetime, timedelta
 from authenticationApp.models import CustomUser
@@ -486,3 +489,17 @@ async def create_free_event(request: Request, user_id: int = Depends(get_current
             content={"error": f"An unexpected error occurred: {str(e)}"},
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
+        
+        
+@router.get("/event/paid/ticket/fields")
+async def paid_ticket_creation_fields(request: Request):
+    FormClass = PaidFreeTicketForm
+    fields_info = get_form_fields(FormClass)
+    return JSONResponse(content=fields_info, status_code=status.HTTP_200_OK)
+
+
+@router.get("/event/paid/coupon/fields")
+async def paid_coupon_creation_fields(request: Request):
+    FormClass = CouponCodeForm
+    fields_info = get_form_fields(FormClass)
+    return JSONResponse(content=fields_info, status_code=status.HTTP_200_OK)
