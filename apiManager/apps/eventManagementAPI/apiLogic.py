@@ -9,7 +9,14 @@ import traceback
 
 from apiManager.dependencies import get_current_user
 from apiManager.apps.authenticationAPI.utilities import get_form_fields
-from .serializers import HostEventExplore, EventDetailSerializer, EditEventSerializer, EditEventResponseSerializer, LocationSerializer, HostSerializer
+from .serializers import (
+    HostEventExplore,
+    EventDetailSerializer,
+    EditEventSerializer,
+    EditEventResponseSerializer,
+    LocationSerializer,
+    HostSerializer,
+)
 
 from eventTicketsApp.forms import PaidFreeTicketForm
 from eventManagementApp.forms import CouponCodeForm
@@ -28,8 +35,11 @@ import os
 
 router = APIRouter()
 
+
 @router.api_route("/event/{eventId}/editEvent", methods=["POST", "PATCH"])
-async def edit_event_endpoint(request: Request, eventId: str, user_id = Depends(get_current_user)):
+async def edit_event_endpoint(
+    request: Request, eventId: str, user_id=Depends(get_current_user)
+):
     """
     Edit an event, supporting both full updates (POST) and partial updates (PATCH).
     """
@@ -54,20 +64,22 @@ async def edit_event_endpoint(request: Request, eventId: str, user_id = Depends(
         def process_edit_event():
             # Retrieve the event or raise a 404
             event = get_object_or_404(Event, eventId=eventId)
-            
+
             # Get the current user's profile.
             # Depending on your get_current_user, `user` might be a user instance.
             user = CustomUser.objects.get(id=user_id)
             user_profile = UserProfile.objects.get(user=user)
-            
+
             # Get the host profile for the event host
             host_profile = HostProfile.objects.get(user=event.host)
-            
+
             # Determine whether the user is associated with a college
             is_in_college = user_profile.college is not None
 
             # Instantiate the Django form with submitted data, file uploads, instance and partial flag.
-            edit_event_form = EditEventForm(data, files, instance=event, partial=partial)
+            edit_event_form = EditEventForm(
+                data, files, instance=event, partial=partial
+            )
 
             if edit_event_form.is_valid():
                 updated_event = edit_event_form.save()
@@ -85,7 +97,9 @@ async def edit_event_endpoint(request: Request, eventId: str, user_id = Depends(
                     return results
 
                 rsvp_list_raw = RSVPTicket.objects.filter(event=updated_event).values()
-                paid_free_tickets_raw = PaidFreeTicket.objects.filter(event=updated_event).values()
+                paid_free_tickets_raw = PaidFreeTicket.objects.filter(
+                    event=updated_event
+                ).values()
 
                 rsvp_list = serialize_queryset(rsvp_list_raw)
                 paid_free_tickets = serialize_queryset(paid_free_tickets_raw)
@@ -101,13 +115,13 @@ async def edit_event_endpoint(request: Request, eventId: str, user_id = Depends(
                     country=updated_event.country,
                     hide_address=updated_event.hide_address,
                 )
-                
+
                 # Create host serializer instance
                 host = HostSerializer(
                     id=str(host_profile.hostProfileId),
                     name=f"{host_profile.user.first_name} {host_profile.user.last_name}",
                 )
-                
+
                 # Create event response serializer instance
                 event_data = EditEventResponseSerializer(
                     id=str(updated_event.eventId),
@@ -120,16 +134,15 @@ async def edit_event_endpoint(request: Request, eventId: str, user_id = Depends(
                     rsvpList=rsvp_list,
                     paidFreeTickets=paid_free_tickets,
                 )
-                
+
                 # Create the final response serializer
                 response = EditEventSerializer(
-                    message="Event updated successfully.",
-                    event=event_data
+                    message="Event updated successfully.", event=event_data
                 )
-                
+
                 # Return the serialized data with JSON-compatible values
                 # Use model_dump_json=True to handle datetime serialization
-                return response.model_dump(mode='json')
+                return response.model_dump(mode="json")
             else:
                 # Here we raise an error with the form errors so that we can return a 400 response.
                 raise ValueError(edit_event_form.errors)
@@ -152,15 +165,15 @@ async def edit_event_endpoint(request: Request, eventId: str, user_id = Depends(
             content={"error": f"An unexpected error occurred: {str(e)}"},
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
-        
-        
-        
+
+
 @router.get("/getEvents")
 async def get_events(user_id: int = Depends(get_current_user)):
     """
     API endpoint for getting events
     """
     try:
+
         @sync_to_async
         def validate_user(user_id):
             try:
@@ -171,6 +184,7 @@ async def get_events(user_id: int = Depends(get_current_user)):
                 return user
             except CustomUser.DoesNotExist:
                 return None
+
         @sync_to_async
         def get_events(user_id):
             try:
@@ -185,7 +199,9 @@ async def get_events(user_id: int = Depends(get_current_user)):
                         # Return an empty list if no events found instead of JSONResponse
                         return []
                     for event in host_events:
-                        header_photo_url = event.header_photo.url if event.header_photo else None
+                        header_photo_url = (
+                            event.header_photo.url if event.header_photo else None
+                        )
 
                         event_data = {
                             "eventId": str(event.eventId),
@@ -194,7 +210,7 @@ async def get_events(user_id: int = Depends(get_current_user)):
                             "date": event.date,
                             "city": event.city,
                             "state": event.state,
-                            "header_photo": header_photo_url
+                            "header_photo": header_photo_url,
                         }
                         events_list.append(event_data)
                 except HostProfile.DoesNotExist:
@@ -204,7 +220,7 @@ async def get_events(user_id: int = Depends(get_current_user)):
             except Exception as e:
                 print(f"Error in get_events: {str(e)}")
                 return []
-            
+
         # Validate user asynchronously
         user = await validate_user(user_id)
         if not user:
@@ -215,8 +231,8 @@ async def get_events(user_id: int = Depends(get_current_user)):
 
         events_before_serializing = await get_events(user_id)
         events = [HostEventExplore(**event) for event in events_before_serializing]
-        
-        return {"events": events}    
+
+        return {"events": events}
     except HTTPException as http_ex:
         # Handle HTTP exceptions separately if needed
         return JSONResponse(
@@ -228,40 +244,46 @@ async def get_events(user_id: int = Depends(get_current_user)):
             content={"error": "User not found."},
             status_code=status.HTTP_404_NOT_FOUND,
         )
-       
+
     except Exception as e:
         traceback_str = traceback.format_exc()
         print(f"Get Events error: {str(e)}\n{traceback_str}")
-        
+
         # Check if it's a validation error from Pydantic
         if "ValidationError" in str(type(e)):
             return JSONResponse(
-                content={"errors": str(e), "message": "Failed to serialize event data."},
+                content={
+                    "errors": str(e),
+                    "message": "Failed to serialize event data.",
+                },
                 status_code=status.HTTP_400_BAD_REQUEST,
             )
-            
+
         # Handle all other exceptions
         return JSONResponse(
             content={"error": f"An unexpected error occurred: {str(e)}"},
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
-        
-        
+
+
 @router.get("/getEvent/{eventId}")
 async def get_event_details(eventId: str, user_id: int = Depends(get_current_user)):
     """
     API endpoint for getting event details
     """
     try:
-        
+
         @sync_to_async
         def get_event(eventId):
             event = Event.objects.filter(eventId=eventId).first()
             if not event:
-                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event not found.")
-            return event        # Get the event details asynchronously
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND, detail="Event not found."
+                )
+            return event  # Get the event details asynchronously
+
         event = await get_event(eventId)
-        
+
         # Create location serializer
         location = LocationSerializer(
             building_name=event.building_name,
@@ -273,15 +295,21 @@ async def get_event_details(eventId: str, user_id: int = Depends(get_current_use
             country=event.country,
             hide_address=event.hide_address,
         )
-        
+
         # Process image URLs
         header_photo_url = event.header_photo.url if event.header_photo else None
         body_photo_one_url = event.body_photo_one.url if event.body_photo_one else None
         body_photo_two_url = event.body_photo_two.url if event.body_photo_two else None
-        body_photo_three_url = event.body_photo_three.url if event.body_photo_three else None
-        body_photo_four_url = event.body_photo_four.url if event.body_photo_four else None
-        body_photo_five_url = event.body_photo_five.url if event.body_photo_five else None
-        
+        body_photo_three_url = (
+            event.body_photo_three.url if event.body_photo_three else None
+        )
+        body_photo_four_url = (
+            event.body_photo_four.url if event.body_photo_four else None
+        )
+        body_photo_five_url = (
+            event.body_photo_five.url if event.body_photo_five else None
+        )
+
         # Serialize the event data with explicit keyword arguments using EventDetailSerializer
         event_data = EventDetailSerializer(
             eventId=str(event.eventId),
@@ -306,28 +334,28 @@ async def get_event_details(eventId: str, user_id: int = Depends(get_current_use
             couponsActivated=event.couponsActivated,
             show_guest_list=event.show_guest_list,
             forAllDisplay=event.forAllDisplay,
-            forCollegesDisplay=event.forCollegesDisplay
+            forCollegesDisplay=event.forCollegesDisplay,
         )
-        
+
         return {"event": event_data}
-    
+
     except HTTPException as http_ex:
         # Handle HTTP exceptions separately if needed
         return JSONResponse(
             content={"error": str(http_ex.detail)},
             status_code=http_ex.status_code,
         )
-    
+
     except Exception as e:
         traceback_str = traceback.format_exc()
         print(f"Get Event Details error: {str(e)}\n{traceback_str}")
-        
+
         # Handle all other exceptions
         return JSONResponse(
             content={"error": f"An unexpected error occurred: {str(e)}"},
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
-        
+
 
 @router.post("/event/{eventId}/deleteEvent")
 async def delete_event(eventId: str, user_id: int = Depends(get_current_user)):
@@ -335,34 +363,35 @@ async def delete_event(eventId: str, user_id: int = Depends(get_current_user)):
     API endpoint for deleting an event
     """
     try:
+
         @sync_to_async
         def delete_event(eventId):
             # Get the event object or raise a 404 error if not found
             event = get_object_or_404(Event, eventId=eventId)
             event.delete()
             return {"message": "Event deleted successfully."}
-        
+
         result = await delete_event(eventId)
         return JSONResponse(content=result, status_code=status.HTTP_200_OK)
-    
+
     except HTTPException as http_ex:
         # Handle HTTP exceptions separately if needed
         return JSONResponse(
             content={"error": str(http_ex.detail)},
             status_code=http_ex.status_code,
         )
-    
+
     except Exception as e:
         traceback_str = traceback.format_exc()
         print(f"Delete Event error: {str(e)}\n{traceback_str}")
-        
+
         # Handle all other exceptions
         return JSONResponse(
             content={"error": f"An unexpected error occurred: {str(e)}"},
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
-        
-        
+
+
 @router.get("/event/fields")
 async def event_creation_fields(request: Request):
     FormClass = EventForm
@@ -396,13 +425,15 @@ async def create_free_event(request: Request, user_id: int = Depends(get_current
             user_profile = UserProfile.objects.get(user=user)
 
             # Determine whether the user is associated with a college
-            is_in_college = user_profile.college is not None            # Instantiate the Django form with submitted data, file uploads, instance and partial flag.
+            is_in_college = (
+                user_profile.college is not None
+            )  # Instantiate the Django form with submitted data, file uploads, instance and partial flag.
             event_form = EventForm(data, files)
-            
+
             if event_form.is_valid():
                 # Get or create a host profile for the user
                 host_profile, created = HostProfile.objects.get_or_create(user=user)
-                
+
                 # Create the new event
                 new_event = event_form.save(commit=False)
                 new_event.host = user  # Set the host to the current user
@@ -429,12 +460,26 @@ async def create_free_event(request: Request, user_id: int = Depends(get_current
                 )
 
                 # Process image URLs
-                header_photo_url = new_event.header_photo.url if new_event.header_photo else None
-                body_photo_one_url = new_event.body_photo_one.url if new_event.body_photo_one else None
-                body_photo_two_url = new_event.body_photo_two.url if new_event.body_photo_two else None
-                body_photo_three_url = new_event.body_photo_three.url if new_event.body_photo_three else None
-                body_photo_four_url = new_event.body_photo_four.url if new_event.body_photo_four else None
-                body_photo_five_url = new_event.body_photo_five.url if new_event.body_photo_five else None
+                header_photo_url = (
+                    new_event.header_photo.url if new_event.header_photo else None
+                )
+                body_photo_one_url = (
+                    new_event.body_photo_one.url if new_event.body_photo_one else None
+                )
+                body_photo_two_url = (
+                    new_event.body_photo_two.url if new_event.body_photo_two else None
+                )
+                body_photo_three_url = (
+                    new_event.body_photo_three.url
+                    if new_event.body_photo_three
+                    else None
+                )
+                body_photo_four_url = (
+                    new_event.body_photo_four.url if new_event.body_photo_four else None
+                )
+                body_photo_five_url = (
+                    new_event.body_photo_five.url if new_event.body_photo_five else None
+                )
 
                 # Create event response serializer instance
                 event_data = EventDetailSerializer(
@@ -460,21 +505,18 @@ async def create_free_event(request: Request, user_id: int = Depends(get_current
                     couponsActivated=new_event.couponsActivated,
                     show_guest_list=new_event.show_guest_list,
                     forAllDisplay=new_event.forAllDisplay,
-                    forCollegesDisplay=new_event.forCollegesDisplay
-                )                
-                
-                return {
-                    "message": "Event created successfully.",
-                    "event": event_data
-                }
+                    forCollegesDisplay=new_event.forCollegesDisplay,
+                )
+
+                return {"message": "Event created successfully.", "event": event_data}
             else:
                 # Here we raise an error with the form errors so that we can return a 400 response.
                 raise ValueError(event_form.errors)
-                
+
         # Execute the create event function
         result = await process_create_event()
         return JSONResponse(content=result, status_code=status.HTTP_200_OK)
-            
+
     except ValueError as ve:
         # Return any form validation errors
         return JSONResponse(
@@ -489,8 +531,8 @@ async def create_free_event(request: Request, user_id: int = Depends(get_current
             content={"error": f"An unexpected error occurred: {str(e)}"},
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
-        
-        
+
+
 @router.get("/event/paid/ticket/fields")
 async def paid_ticket_creation_fields(request: Request):
     FormClass = PaidFreeTicketForm
@@ -520,22 +562,27 @@ async def get_event_coupons(eventId: str, request: Request):
                     coupon["couponCode"] = str(coupon["couponCode"])
                 coupons_list.append(coupon)
             return coupons_list
-            
+
         # Execute synchronous function asynchronously
         coupons = await get_event_coupons_sync(eventId)
     except Event.DoesNotExist:
-        return JSONResponse(content={"message": "Event not found."}, status_code=status.HTTP_404_NOT_FOUND)
+        return JSONResponse(
+            content={"message": "Event not found."},
+            status_code=status.HTTP_404_NOT_FOUND,
+        )
     except Exception as e:
         traceback_str = traceback.format_exc()
         print(f"Get Event Coupons error: {str(e)}\n{traceback_str}")
-        return JSONResponse(content={"error": f"An unexpected error occurred: {str(e)}"}, status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    
+        return JSONResponse(
+            content={"error": f"An unexpected error occurred: {str(e)}"},
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
 
     return JSONResponse(content=coupons, status_code=status.HTTP_200_OK)
 
 
 @router.post("/event/{eventId}/createCoupon")
-async def create_event_coupons(eventId:str, request: Request):
+async def create_event_coupons(eventId: str, request: Request):
     try:
         # Get form data (includes both text fields and files)
         form_data = await request.form()
@@ -590,4 +637,5 @@ async def create_event_coupons(eventId:str, request: Request):
         print(f"Create Event Coupons error: {str(e)}\n{traceback_str}")
         return JSONResponse(
             content={"error": f"An unexpected error occurred: {str(e)}"},
-            status_code=status.HTTP_
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
