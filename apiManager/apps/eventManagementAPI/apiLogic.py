@@ -19,7 +19,7 @@ from datetime import datetime, timedelta
 from authenticationApp.models import CustomUser
 from starlette.datastructures import UploadFile
 from django.shortcuts import get_object_or_404
-from eventManagementApp.models import Event, HostProfile
+from eventManagementApp.models import Event, HostProfile, CouponCode
 from accountManagementApp.models import UserProfile
 from eventTicketsApp.models import RSVPTicket, PaidFreeTicket
 from eventManagementApp.forms import EditEventForm, EventForm
@@ -503,3 +503,91 @@ async def paid_coupon_creation_fields(request: Request):
     FormClass = CouponCodeForm
     fields_info = get_form_fields(FormClass)
     return JSONResponse(content=fields_info, status_code=status.HTTP_200_OK)
+
+
+@router.get("/event/{eventId}/coupons")
+async def get_event_coupons(eventId: str, request: Request):
+    try:
+        # Wrap Django ORM calls in a synchronous function
+        @sync_to_async
+        def get_event_coupons_sync(event_id):
+            # Fetch the event object or raise a 404 error if not found
+            event = get_object_or_404(Event, eventId=event_id)
+            coupon_codes = CouponCode.objects.filter(event=event).values()
+            coupons_list = []
+            for coupon in coupon_codes:
+                if isinstance(coupon["couponCode"], UUID):
+                    coupon["couponCode"] = str(coupon["couponCode"])
+                coupons_list.append(coupon)
+            return coupons_list
+            
+        # Execute synchronous function asynchronously
+        coupons = await get_event_coupons_sync(eventId)
+    except Event.DoesNotExist:
+        return JSONResponse(content={"message": "Event not found."}, status_code=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        traceback_str = traceback.format_exc()
+        print(f"Get Event Coupons error: {str(e)}\n{traceback_str}")
+        return JSONResponse(content={"error": f"An unexpected error occurred: {str(e)}"}, status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+
+    return JSONResponse(content=coupons, status_code=status.HTTP_200_OK)
+
+
+@router.post("/event/{eventId}/createCoupon")
+async def create_event_coupons(eventId:str, request: Request):
+    try:
+        # Get form data (includes both text fields and files)
+        form_data = await request.form()
+
+        # Separate normal data and file data from the form
+        data = {}
+        files = {}
+        for key, value in form_data.multi_items():
+            if isinstance(value, UploadFile):
+                files[key] = value
+            else:
+                data[key] = value
+
+        # Wrap Django ORM calls and form processing in a synchronous function
+        @sync_to_async
+        def process_create_coupon(eventId, data):
+            # Fetch the event object or raise a 404 error if not found
+            event = get_object_or_404(Event, eventId=eventId)
+
+            # Instantiate the Django form with submitted data, file uploads, instance and partial flag.
+            coupon_form = CouponCodeForm(data)
+
+            if coupon_form.is_valid():
+                # Create the new coupon code
+                new_coupon = coupon_form.save(commit=False)
+                new_coupon.event = event  # Associate the coupon with the event
+                new_coupon.save()
+
+                return {
+                    "message": "Coupon created successfully.",
+                    "code": str(new_coupon.code),
+                    "eventId": str(event.eventId),
+                    "discountPercentage": new_coupon.discountPercentage,
+                }
+            else:
+                # Here we raise an error with the form errors so that we can return a 400 response.
+                raise ValueError(coupon_form.errors)
+
+        # Execute the create coupon function
+        result = await process_create_coupon(eventId, data)
+        return JSONResponse(content=result, status_code=status.HTTP_200_OK)
+
+    except ValueError as ve:
+        # Return any form validation errors
+        return JSONResponse(
+            content={"errors": str(ve), "message": "Failed to create coupon."},
+            status_code=status.HTTP_400_BAD_REQUEST,
+        )
+    except Exception as e:
+        # Log the exception details and return a server error
+        traceback_str = traceback.format_exc()
+        print(f"Create Event Coupons error: {str(e)}\n{traceback_str}")
+        return JSONResponse(
+            content={"error": f"An unexpected error occurred: {str(e)}"},
+            status_code=status.HTTP_
