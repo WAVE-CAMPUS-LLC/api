@@ -442,8 +442,8 @@ async def ticket_details(request: Request):
     return result
 
 
-
-    
+@router.post("/activateTicket")
+async def activate_ticket(request: Request):
     @sync_to_async
     def activate_user_ticket(ticket_id):
         try:
