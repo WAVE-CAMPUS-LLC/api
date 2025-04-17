@@ -53,6 +53,18 @@ async def get_events():
     
     return {"events": events}
 
+@router.get("/categories")
+async def get_categories():
+    """
+    API endpoint to retrieve all event categories from the EXPLORE_TYPE_CHOICES.
+    """
+    @sync_to_async
+    def get_categories_data():
+        # Return the categories from the Event model's EXPLORE_TYPE_CHOICES
+        return [{"value": value, "label": label} for value, label in Event.EXPLORE_TYPE_CHOICES]
+    
+    categories = await get_categories_data()
+    return {"categories": categories}
 
 @router.get("/event/{eventId}")
 async def get_event_details(eventId: str):
