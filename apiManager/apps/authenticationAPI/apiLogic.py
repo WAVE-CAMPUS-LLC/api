@@ -19,6 +19,7 @@ from .utilities import get_form_fields
 
 from jose import jwt
 from datetime import datetime, timedelta
+import secrets
 
 from dotenv import load_dotenv
 import os
@@ -73,20 +74,27 @@ async def login_api(request: Request, login_data: LoginRequest):
 
             # Serialize the user data
             user_serializer = CustomUserSerializer(authenticated_user)
-              # Access token
+              # Access token with additional claims for better security and debugging
             access_payload = {
                 "sub": str(authenticated_user.id),
                 "exp": datetime.utcnow() + timedelta(days=ACCESS_TOKEN_EXPIRE_DAYS),
-                "type": "access"
+                "iat": datetime.utcnow(),  # Issued at time
+                "type": "access",
+                "username": authenticated_user.username,
+                "jti": secrets.token_hex(16)  # Unique token ID for tracking
             }
+            print(f"[login_api] Generating access token for user {authenticated_user.id} with expiry in {ACCESS_TOKEN_EXPIRE_DAYS} days")
             access_token = jwt.encode(access_payload, SECRET_KEY, algorithm=ALGORITHM)
 
             # Refresh token
             refresh_payload = {
                 "sub": str(authenticated_user.id),
                 "exp": datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS),
-                "type": "refresh"
+                "iat": datetime.utcnow(),  # Issued at time
+                "type": "refresh",
+                "jti": secrets.token_hex(16)  # Unique token ID for tracking
             }
+            print(f"[login_api] Generating refresh token for user {authenticated_user.id} with expiry in {REFRESH_TOKEN_EXPIRE_DAYS} days")
             refresh_token = jwt.encode(refresh_payload, SECRET_KEY, algorithm=ALGORITHM)
             
             return {

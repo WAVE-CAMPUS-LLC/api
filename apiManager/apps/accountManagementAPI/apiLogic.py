@@ -28,6 +28,13 @@ async def profileOverview(user_id: int = Depends(get_current_user)):
     API endpoint for getting profile overview.
     Returns user profile data.
     """
+    # Log authentication status
+    if user_id is None:
+        print("[profileOverview] Authentication failed: No user_id provided")
+        raise HTTPException(status_code=401, detail="Authentication required", headers={"WWW-Authenticate": "Bearer"})
+    
+    print(f"[profileOverview] Processing request for user_id: {user_id}")
+    
     @sync_to_async
     def get_profile_overview(user_id):
         try:
@@ -40,14 +47,27 @@ async def profileOverview(user_id: int = Depends(get_current_user)):
                 "last_name": user.last_name,
                 "username": user.username,
             }
+            print(f"[profileOverview] Successfully retrieved profile data for user_id: {user_id}")
             return user_data
         except CustomUser.DoesNotExist:
+            print(f"[profileOverview] Error: User with id {user_id} does not exist")
+            return None
+        except Exception as e:
+            error_trace = traceback.format_exc()
+            print(f"[profileOverview] Unexpected error retrieving profile for user_id {user_id}: {str(e)}\n{error_trace}")
             return None
     
-    profile_data = await get_profile_overview(user_id)
-    if profile_data is None:
-        raise HTTPException(status_code=404, detail="Event not found")
-    return profile_data
+    try:
+        profile_data = await get_profile_overview(user_id)
+        if profile_data is None:
+            raise HTTPException(status_code=404, detail="User not found")
+        return profile_data
+    except Exception as e:
+        if not isinstance(e, HTTPException):
+            error_trace = traceback.format_exc()
+            print(f"[profileOverview] Unhandled exception: {str(e)}\n{error_trace}")
+            raise HTTPException(status_code=500, detail="Internal server error")
+        raise
 
 
 @router.get("/profile/detailed")

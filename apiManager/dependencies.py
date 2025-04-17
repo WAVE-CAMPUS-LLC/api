@@ -1,8 +1,10 @@
 from fastapi import Header, HTTPException, Depends
-from jose import JWTError, jwt
+from jose import JWTError, jwt, ExpiredSignatureError
 import secrets
 import os
+import traceback
 from typing import Optional
+from datetime import datetime
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -10,19 +12,71 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = "HS256"
 
 def get_current_user(authorization: Optional[str] = Header(default=None)):
+    """Validate the authorization token and return the user ID.
+    
+    Args:
+        authorization: The Authorization header containing the Bearer token
+        
+    Returns:
+        The user ID extracted from the token
+        
+    Raises:
+        HTTPException: If the token is invalid, expired, or missing
+    """
     if authorization is None:
+        print("[Authentication] No authorization header provided")
         return None  # User is not logged in
 
     if not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Invalid token format")
+        print("[Authentication] Invalid token format: Authorization header does not start with 'Bearer '")
+        raise HTTPException(status_code=401, detail="Invalid token format", headers={"WWW-Authenticate": "Bearer"})
 
     token = authorization.split(" ")[1]
+    print(f"[Authentication] Processing token: {token[:10]}...")
 
     try:
+        # Decode the token and extract the payload
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        
+        # Extract user_id from the subject claim
         user_id = payload.get("sub")
         if user_id is None:
-            raise HTTPException(status_code=401, detail="Token missing subject")
+            print("[Authentication] Token missing subject claim")
+            raise HTTPException(status_code=401, detail="Token missing subject claim", 
+                              headers={"WWW-Authenticate": "Bearer"})
+        
+        # Check token type
+        token_type = payload.get("type")
+        if token_type != "access":
+            print(f"[Authentication] Invalid token type: {token_type}")
+            raise HTTPException(status_code=401, detail="Invalid token type", 
+                              headers={"WWW-Authenticate": "Bearer"})
+        
+        # Check token expiration explicitly
+        exp = payload.get("exp")
+        if exp is None:
+            print("[Authentication] Token missing expiration claim")
+            raise HTTPException(status_code=401, detail="Token missing expiration", 
+                              headers={"WWW-Authenticate": "Bearer"})
+        
+        # Log successful authentication
+        print(f"[Authentication] Successfully authenticated user_id: {user_id}")
         return user_id
-    except JWTError:
-        raise HTTPException(status_code=401, detail="Invalid or expired token")
+        
+    except ExpiredSignatureError:
+        print("[Authentication] Token has expired")
+        raise HTTPException(status_code=401, 
+                          detail="Your session has expired. Please log in again.", 
+                          headers={"WWW-Authenticate": "Bearer", "authError": "true"})
+    except JWTError as e:
+        error_trace = traceback.format_exc()
+        print(f"[Authentication] JWT validation error: {str(e)}\n{error_trace}")
+        raise HTTPException(status_code=401, 
+                          detail="Invalid or expired token", 
+                          headers={"WWW-Authenticate": "Bearer"})
+    except Exception as e:
+        error_trace = traceback.format_exc()
+        print(f"[Authentication] Unexpected error during authentication: {str(e)}\n{error_trace}")
+        raise HTTPException(status_code=500, 
+                          detail="Internal server error during authentication", 
+                          headers={"WWW-Authenticate": "Bearer"})
