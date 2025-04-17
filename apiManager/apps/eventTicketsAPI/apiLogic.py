@@ -522,3 +522,210 @@ async def activate_ticket(request: Request):
     ticket_id = request.query_params.get("ticketId")
     result = await activate_user_ticket(ticket_id)
     return result
+
+
+# Pydantic models for the new endpoints
+class TicketTypeResponse(BaseModel):
+    """Pydantic model for ticket type response"""
+    ticket_id: str
+    ticket_name: str
+    ticket_price: float
+    ticket_description: str
+    ticket_quantity: int
+    ticket_sold: int
+    available_tickets: int
+    crew_discounted_price: Optional[float] = None
+
+
+class TicketTypesResponse(BaseModel):
+    """Pydantic model for ticket types response"""
+    event_id: str
+    event_title: str
+    ticket_types: List[TicketTypeResponse]
+
+
+class AttendeeResponse(BaseModel):
+    """Pydantic model for attendee response"""
+    ticket_id: str
+    first_name: str
+    last_name: str
+    email: str
+    ticket_type: str
+    purchase_date: str
+    status: str
+
+
+class AttendeesResponse(BaseModel):
+    """Pydantic model for attendees response"""
+    event_id: str
+    event_title: str
+    attendees_count: int
+    attendees: List[AttendeeResponse]
+
+
+@router.get("/getPaidTicketTypes", response_model=TicketTypesResponse, status_code=status.HTTP_200_OK)
+async def get_paid_ticket_types(
+    request: Request,
+):
+    """Get all available paid ticket types for a given paid event
+    
+    This endpoint returns all available paid ticket types for a specific event,
+    including details like price, description, and availability.
+    
+    Args:
+        request: The FastAPI request object
+        
+    Returns:
+        A JSON response with event details and ticket types
+    """
+    event_id = request.query_params.get("eventId")
+    if not event_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Event ID is required"
+        )
+    
+    @sync_to_async
+    def get_event_ticket_types(event_id):
+        try:
+            # Get the event
+            event = Event.objects.get(eventId=event_id)
+            
+            # Check if this is a paid event
+            if event.ticketing != "Paid":
+                return {
+                    "error": "This event does not have paid tickets"
+                }
+            
+            # Get all ticket types for this event
+            ticket_types = PaidFreeTicket.objects.filter(event=event)
+            
+            # Format the response
+            ticket_types_data = []
+            for ticket_type in ticket_types:
+                available = ticket_type.ticket_quantity - ticket_type.ticket_sold
+                ticket_types_data.append({
+                    "ticket_id": str(ticket_type.ticket_id),
+                    "ticket_name": ticket_type.ticket_name,
+                    "ticket_price": float(ticket_type.ticket_price) if ticket_type.ticket_price else 0.0,
+                    "ticket_description": ticket_type.ticket_description,
+                    "ticket_quantity": ticket_type.ticket_quantity,
+                    "ticket_sold": ticket_type.ticket_sold,
+                    "available_tickets": available,
+                    "crew_discounted_price": float(ticket_type.crew_discounted_price) if ticket_type.crew_discounted_price else None
+                })
+            
+            return {
+                "event_id": str(event.eventId),
+                "event_title": event.title,
+                "ticket_types": ticket_types_data
+            }
+            
+        except Event.DoesNotExist:
+            return {"error": "Event not found"}
+        except Exception as e:
+            import traceback
+            print(f"Unexpected error in get_paid_ticket_types: {e}")
+            print(traceback.format_exc())
+            return {"error": str(e)}
+    
+    result = await get_event_ticket_types(event_id)
+    
+    if "error" in result:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND if result["error"] == "Event not found" else status.HTTP_400_BAD_REQUEST,
+            detail=result["error"]
+        )
+    
+    return result
+
+
+@router.get("/getEventAttendees", response_model=AttendeesResponse, status_code=status.HTTP_200_OK)
+async def get_event_attendees(
+    request: Request
+):
+    """Get a list of users who have purchased a ticket for a specific event
+    
+    This endpoint returns a list of attendees for a specific event,
+    including their personal information and ticket details.
+    This endpoint is publicly accessible without authentication.
+    
+    Args:
+        request: The FastAPI request object
+        
+    Returns:
+        A JSON response with event details and attendees list
+    """
+    event_id = request.query_params.get("eventId")
+    if not event_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Event ID is required"
+        )
+    
+    @sync_to_async
+    def get_attendees_for_event(event_id):
+        try:
+            # Get the event
+            event = Event.objects.get(eventId=event_id)
+            
+            # Get all tickets for this event with their related ticket types
+            tickets = Ticket.objects.select_related('user', 'event').filter(event=event)
+            
+            # Format the response
+            attendees_data = []
+            for ticket in tickets:
+                # Get the ticket type name if available
+                ticket_type_name = "General Admission"  # Default value
+                
+                # Try to find the ticket type from the QR code data
+                if ticket.qrCodeData:
+                    try:
+                        qr_data = json.loads(ticket.qrCodeData)
+                        if 'ticketType' in qr_data:
+                            ticket_type_name = qr_data['ticketType']
+                    except json.JSONDecodeError:
+                        pass
+                
+                attendees_data.append({
+                    "ticket_id": str(ticket.ticketId),
+                    "first_name": ticket.user.first_name if ticket.user else ticket.guestFirstName,
+                    "last_name": ticket.user.last_name if ticket.user else ticket.guestLastName,
+                    "email": ticket.user.email if ticket.user else ticket.guestEmail,
+                    "ticket_type": ticket_type_name,
+                    "purchase_date": ticket.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+                    "status": ticket.status
+                })
+            
+            return {
+                "event_id": str(event.eventId),
+                "event_title": event.title,
+                "attendees_count": len(attendees_data),
+                "attendees": attendees_data
+            }
+            
+        except Event.DoesNotExist:
+            return {"error": "Event not found"}
+
+        except Exception as e:
+            import traceback
+            print(f"Unexpected error in get_event_attendees: {e}")
+            print(traceback.format_exc())
+            return {"error": str(e)}
+    
+    result = await get_attendees_for_event(event_id)
+    
+    if "error" in result:
+        error_message = result["error"]
+        if error_message == "Event not found":
+            status_code = status.HTTP_404_NOT_FOUND
+        else:
+            status_code = status.HTTP_400_BAD_REQUEST
+            
+        raise HTTPException(
+            status_code=status_code,
+            detail=error_message
+        )
+    
+    return result
+
