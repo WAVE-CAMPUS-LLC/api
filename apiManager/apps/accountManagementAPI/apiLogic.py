@@ -15,6 +15,7 @@ from typing import Optional, Dict, Any
 from asgiref.sync import sync_to_async
 import traceback
 import os
+from django.core.files.base import ContentFile
 
 from authenticationApp.models import CustomUser
 from authenticationApp.serializers import CustomUserSerializer
@@ -545,7 +546,30 @@ async def update_user_settings(
                 # Check for standard file upload
                 if files and "profile_photo" in files:
                     print("[update_settings_async] Standard file upload")
-                    form = UpdateProfilePhotoForm(form_data, files, instance=profile)
+                    
+                    # Create Django-compatible files dict
+                    django_files = {}
+                    upload_file = files["profile_photo"]
+                    
+                    # Read file content
+                    file_content = upload_file.file.read()
+                    
+                    # Import here to avoid circular imports
+                    from django.core.files.base import ContentFile
+                    
+                    # Create ContentFile object
+                    django_files["profile_photo"] = ContentFile(
+                        file_content,
+                        name=upload_file.filename
+                    )
+                    
+                    # Create and validate form with proper file data
+                    form = UpdateProfilePhotoForm(
+                        form_data, 
+                        django_files, 
+                        instance=profile
+                    )
+                    
                     if form.is_valid():
                         updated_profile = form.save()
                         serializer = UserProfileSerializer(updated_profile)
@@ -553,7 +577,10 @@ async def update_user_settings(
                             "message": "Profile picture updated successfully!",
                             "profile": serializer.data,
                         }
-                    print("[update_settings_async] Validation errors:", form.errors)
+                    print(
+                        "[update_settings_async] Validation errors:", 
+                        form.errors
+                    )
                     return {"errors": form.errors, "status_code": 400}
 
                 # Handle React Native style file upload (as JSON data)
