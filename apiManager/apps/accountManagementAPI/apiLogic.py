@@ -1,21 +1,25 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Request, Header, UploadFile
+from fastapi import APIRouter, Depends, HTTPException, status, Request, Header, UploadFile, Form
 from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, Dict, Any
 from asgiref.sync import sync_to_async
 import traceback
 import os
 
 from authenticationApp.models import CustomUser
+from authenticationApp.serializers import CustomUserSerializer
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
 from adminDashboardApp.models import LoginHistoryModel
 from eventManagementApp.models import Event
 from eventTicketsApp.models import Ticket
 from accountManagementApp.models import UserProfile
+from accountManagementApp.serializers import UserProfileSerializer
+from accountManagementApp.forms import UpdateProfilePhotoForm, UpdatePersonalInfo, UpdateContactInfo
 from fastapi import Depends
 from apiManager.dependencies import get_current_user
+from django.shortcuts import get_object_or_404
 
 from .serializers import TicketSerializer
 
@@ -67,7 +71,7 @@ async def profileOverview(user_id: int = Depends(get_current_user)):
             error_trace = traceback.format_exc()
             print(f"[profileOverview] Unhandled exception: {str(e)}\n{error_trace}")
             raise HTTPException(status_code=500, detail="Internal server error")
-        raise
+        raise e
 
 
 @router.get("/profile/detailed")
@@ -366,3 +370,137 @@ async def get_user_college(user_id: int = Depends(get_current_user)):
         raise HTTPException(status_code=404, detail="User not found")
     
     return college_data
+
+
+@router.get("/settings")
+async def get_user_settings(user_id: int = Depends(get_current_user)):
+    """
+    API endpoint for retrieving user settings and profile information.
+    Returns user profile data and settings.
+    """
+    @sync_to_async
+    def get_settings_async(user_id):
+        try:
+            user = CustomUser.objects.get(id=user_id)
+            profile = get_object_or_404(UserProfile, user=user)
+            
+            user_serializer = CustomUserSerializer(user)
+            profile_serializer = UserProfileSerializer(profile)
+            
+            return {
+                "user": user_serializer.data,
+                "profile": profile_serializer.data,
+            }
+        except CustomUser.DoesNotExist:
+            return None
+        except Exception as e:
+            error_trace = traceback.format_exc()
+            print(f"[get_user_settings] Unexpected error retrieving settings for user_id {user_id}: {str(e)}\n{error_trace}")
+            return None
+    
+    try:
+        settings_data = await get_settings_async(user_id)
+        if settings_data is None:
+            raise HTTPException(status_code=404, detail="User not found")
+        return settings_data
+    except Exception as e:
+        if not isinstance(e, HTTPException):
+            error_trace = traceback.format_exc()
+            print(f"[get_user_settings] Unhandled exception: {str(e)}\n{error_trace}")
+            raise HTTPException(status_code=500, detail="Internal server error")
+        raise e
+
+@router.post("/settings")
+async def update_user_settings(
+    request: Request,
+    user_id: int = Depends(get_current_user),
+    action: Optional[str] = Form(None),
+    profile_photo: Optional[UploadFile] = None,
+    first_name: Optional[str] = Form(None),
+    last_name: Optional[str] = Form(None),
+    email: Optional[str] = Form(None),
+    username: Optional[str] = Form(None),
+):
+    """
+    API endpoint for updating user settings and profile information.
+    Updates user profile data based on the action provided.
+    """
+    @sync_to_async
+    def update_settings_async(user_id, action, form_data, files=None):
+        try:
+            user = CustomUser.objects.get(id=user_id)
+            profile = get_object_or_404(UserProfile, user=user)
+            
+            if action == "updateProfilePicture":
+                if files and 'profile_photo' in files:
+                    form = UpdateProfilePhotoForm(form_data, files, instance=profile)
+                    if form.is_valid():
+                        updated_profile = form.save()
+                        serializer = UserProfileSerializer(updated_profile)
+                        return {
+                            "message": "Profile picture updated successfully!",
+                            "profile": serializer.data
+                        }
+                    return {"errors": form.errors, "status_code": 400}
+                    
+            elif action == "updatePersonalInfo":
+                form = UpdatePersonalInfo(form_data, instance=user)
+                if form.is_valid():
+                    updated_user = form.save()
+                    serializer = CustomUserSerializer(updated_user)
+                    return {
+                        "message": "Personal information updated successfully!",
+                        "user": serializer.data
+                    }
+                return {"errors": form.errors, "status_code": 400}
+                
+            elif action == "updateContactInfo":
+                form = UpdateContactInfo(form_data, instance=user)
+                if form.is_valid():
+                    updated_user = form.save()
+                    serializer = CustomUserSerializer(updated_user)
+                    return {
+                        "message": "Contact information updated successfully!",
+                        "user": serializer.data
+                    }
+                return {"errors": form.errors, "status_code": 400}
+                
+            else:
+                return {"error": "Invalid action.", "status_code": 400}
+                
+        except CustomUser.DoesNotExist:
+            return {"error": "User not found", "status_code": 404}
+        except Exception as e:
+            error_trace = traceback.format_exc()
+            print(f"[update_user_settings] Unexpected error updating settings for user_id {user_id}: {str(e)}\n{error_trace}")
+            return {"error": f"An error occurred: {str(e)}", "status_code": 500}
+    
+    try:
+        # Create form data dictionary from request parameters
+        form_data = {}
+        if first_name:
+            form_data["first_name"] = first_name
+        if last_name:
+            form_data["last_name"] = last_name
+        if email:
+            form_data["email"] = email
+        if username:
+            form_data["username"] = username
+            
+        # Create files dictionary if profile photo was uploaded
+        files = {}
+        if profile_photo:
+            files["profile_photo"] = profile_photo
+            
+        result = await update_settings_async(user_id, action, form_data, files)
+        if "status_code" in result:
+            status_code = result.pop("status_code")
+            raise HTTPException(status_code=status_code, detail=result)
+        
+        return result
+    except Exception as e:
+        if not isinstance(e, HTTPException):
+            error_trace = traceback.format_exc()
+            print(f"[update_user_settings] Unhandled exception: {str(e)}\n{error_trace}")
+            raise HTTPException(status_code=500, detail="Internal server error")
+        raise e
