@@ -419,14 +419,39 @@ async def update_user_settings(
     API endpoint for updating user settings and profile information.
     Updates user profile data based on the action provided.
     """
-    # Get form data from request directly instead of using FastAPI's form parameter extraction
-    form_data = await request.form()
+    # Check content type and handle accordingly
+    content_type = request.headers.get("content-type", "")
     
-    # Debug logging
-    print(f"[update_user_settings] Received form data: {dict(form_data)}")
+    # Initialize data dict
+    data = {}
+    files = {}
     
-    # Extract action from form data
-    action = form_data.get("action")
+    try:
+        if "application/json" in content_type:
+            # Handle JSON request
+            json_data = await request.json()
+            print(f"[update_user_settings] Received JSON data: {json_data}")
+            data = json_data
+        else:
+            # Handle form data request
+            form_data = await request.form()
+            print(f"[update_user_settings] Received form data: {dict(form_data)}")
+            
+            # Extract file uploads from form data
+            for key, value in form_data.items():
+                if hasattr(value, "filename"):
+                    # This is a file upload
+                    files[key] = value
+                else:
+                    # This is regular form data
+                    data[key] = value
+    except Exception as e:
+        error_trace = traceback.format_exc()
+        print(f"[update_user_settings] Error processing request data: {str(e)}\n{error_trace}")
+        raise HTTPException(status_code=400, detail={"error": f"Invalid request data: {str(e)}"})
+    
+    # Extract action from data
+    action = data.get("action")
     if not action:
         raise HTTPException(status_code=400, detail={"error": "Missing required parameter: action"})
         
