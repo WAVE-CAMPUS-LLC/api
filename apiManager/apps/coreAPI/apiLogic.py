@@ -205,18 +205,21 @@ async def rsvp(request: Request, eventId: str, user_id: Optional[int] = Depends(
         #     event.guest_list.remove(user)
         # else:
         #     RSVPTicket.objects.filter(event=event, email=form_data['email']).delete()
-        #     Ticket.objects.filter(event=event, guestEmail=form_data['email']).delete()            
-
-        if user:
+        #     Ticket.objects.filter(event=event, guestEmail=form_data['email']).delete()                if user:
             existing_rsvp = RSVPTicket.objects.filter(event=event, email=user.email).first()
             if existing_rsvp:
                 return {"message": "You have an RSVP to this event."}
+
+            # Check if display_on_guestlist is in form_data, default to False if not present
+            display_on_guestlist = False
+            if 'display_on_guestlist' in form_data:
+                display_on_guestlist = form_data['display_on_guestlist'] == 'true'
 
             form_data_final = {
                 "email": user.email,
                 "first_name": user.first_name,
                 "last_name": user.last_name,
-                "display_on_guestlist": form_data['display_on_guestlist'] == 'true',
+                "display_on_guestlist": display_on_guestlist,
             }
             
         else:
