@@ -17,6 +17,7 @@ class ExplorePageEvent(BaseModel):
     title: str
     date: date
     header_photo: Optional[HttpUrl] = None
+    event_type: str
     state: str
     city: str
     ticketing: str  # Changed from bool to str to match actual data

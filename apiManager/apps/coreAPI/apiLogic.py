@@ -39,6 +39,7 @@ async def get_events():
                 "title": event.title,
                 "date": event.date,
                 "header_photo": header_photo_url,
+                "event_type": event.event_type,
                 "state": event.state,
                 "city": event.city,
                 "ticketing": str(event.ticketing),  # Ensure it's a string
