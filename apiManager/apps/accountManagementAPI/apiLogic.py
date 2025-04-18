@@ -460,7 +460,6 @@ async def update_user_settings(
         try:
             user = CustomUser.objects.get(id=user_id)
             profile = get_object_or_404(UserProfile, user=user)
-            
             if action == "updateProfilePicture":
                 if files and 'profile_photo' in files:
                     form = UpdateProfilePhotoForm(form_data, files, instance=profile)
@@ -472,6 +471,13 @@ async def update_user_settings(
                             "profile": serializer.data
                         }
                     return {"errors": form.errors, "status_code": 400}
+                # Handle JSON-based profile photo metadata
+                elif 'profile_photo' in form_data and isinstance(form_data['profile_photo'], dict):
+                    # This is for JSON requests with profile_photo metadata
+                    return {
+                        "error": "Invalid profile photo upload. Please send the actual file using multipart/form-data.",
+                        "status_code": 400
+                    }
                     
             elif action == "updatePersonalInfo":
                 form = UpdatePersonalInfo(form_data, instance=user)
