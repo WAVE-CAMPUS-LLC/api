@@ -215,23 +215,34 @@ async def rsvp(request: Request, eventId: str, user_id: Optional[int] = Depends(
             if 'display_on_guestlist' in form_data:
                 display_on_guestlist = form_data['display_on_guestlist'] == 'true'
 
-            form_data_final = {
-                "email": user.email,
-                "first_name": user.first_name,
-                "last_name": user.last_name,
-                "display_on_guestlist": display_on_guestlist,
-            }
+                form_data_final = {
+                    "email": user.email,
+                    "first_name": user.first_name,
+                    "last_name": user.last_name,
+                    "display_on_guestlist": display_on_guestlist,
+                }
+            else:
+                # Check if required fields are present for non-authenticated users
+                required_fields = ['email', 'first_name', 'last_name']
+                missing_fields = [field for field in required_fields if field not in form_data]
             
-        else:
+            if missing_fields:
+                return {"error": f"Missing required fields: {', '.join(missing_fields)}"}
+                
             existing_rsvp = RSVPTicket.objects.filter(event=event, email=form_data['email']).first()
             if existing_rsvp:
                 return {"message": "You have an RSVP to this event."}
+
+            # Check if display_on_guestlist is in form_data, default to False if not present
+            display_on_guestlist = False
+            if 'display_on_guestlist' in form_data:
+                display_on_guestlist = form_data['display_on_guestlist'] == 'true'
 
             form_data_final = {
                 "email": form_data['email'],
                 "first_name": form_data['first_name'],
                 "last_name": form_data['last_name'],
-                "display_on_guestlist": False,
+                "display_on_guestlist": display_on_guestlist,
             }
             
         form = RSVPForm(form_data_final, user=user)
