@@ -414,17 +414,22 @@ async def get_user_settings(user_id: int = Depends(get_current_user)):
 async def update_user_settings(
     request: Request,
     user_id: int = Depends(get_current_user),
-    action: Optional[str] = Form(None),
-    profile_photo: Optional[UploadFile] = None,
-    first_name: Optional[str] = Form(None),
-    last_name: Optional[str] = Form(None),
-    email: Optional[str] = Form(None),
-    username: Optional[str] = Form(None),
 ):
     """
     API endpoint for updating user settings and profile information.
     Updates user profile data based on the action provided.
     """
+    # Get form data from request directly instead of using FastAPI's form parameter extraction
+    form_data = await request.form()
+    
+    # Debug logging
+    print(f"[update_user_settings] Received form data: {dict(form_data)}")
+    
+    # Extract action from form data
+    action = form_data.get("action")
+    if not action:
+        raise HTTPException(status_code=400, detail={"error": "Missing required parameter: action"})
+        
     @sync_to_async
     def update_settings_async(user_id, action, form_data, files=None):
         try:
