@@ -93,6 +93,40 @@ def hostedCheckout(request):
         
         if not ticket_items:
             return JsonResponse({"error": "No valid tickets in cart"}, status=400)
+            
+        # Validate ticket availability before proceeding
+        try:
+            for ticket_id, ticket_data in ticket_items.items():
+                # Get the PaidFreeTicket object
+                try:
+                    ticket_obj = PaidFreeTicket.objects.get(ticket_id=ticket_id)
+                    
+                    # Check if tickets are sold out
+                    if ticket_obj.ticket_quantity == 0:
+                        return JsonResponse({
+                            "error": f"Payment failed: '{ticket_obj.ticket_name}' tickets are sold out"
+                        }, status=400)
+                        
+                    # Check if requested quantity exceeds available tickets
+                    requested_quantity = int(ticket_data.get("quantity", 0))
+                    available_tickets = ticket_obj.ticket_quantity - ticket_obj.ticket_sold
+                    
+                    if requested_quantity > available_tickets:
+                        if available_tickets == 0:
+                            return JsonResponse({
+                                "error": f"Payment failed: '{ticket_obj.ticket_name}' tickets are sold out"
+                            }, status=400)
+                        else:
+                            return JsonResponse({
+                                "error": f"Payment failed: Only {available_tickets} '{ticket_obj.ticket_name}' tickets available"
+                            }, status=400)
+                            
+                except PaidFreeTicket.DoesNotExist:
+                    print(f"Ticket with ID {ticket_id} not found")
+                    return JsonResponse({"error": f"Ticket not found: {ticket_id}"}, status=404)
+        except Exception as e:
+            print(f"Error validating ticket availability: {e}")
+            return JsonResponse({"error": f"Error validating ticket availability: {str(e)}"}, status=400)
         
         # Calculate the total amount for tickets in dollars and convert to cents
         try:
@@ -193,7 +227,7 @@ def hostedCheckout(request):
                     continue
                     
                 ticket_price = Decimal(str(ticket["price"]))  # Convert to Decimal safely
-                ticket_quantity = int(ticket["quantity"])
+                ticket_quantity_in_cart = int(ticket["quantity"])
                 
                 # The price in the cart is already discounted if a coupon was applied
                 # No need to apply the discount again
@@ -230,7 +264,7 @@ def hostedCheckout(request):
                         },
                         "unit_amount": unit_amount,
                     },
-                    "quantity": ticket_quantity,
+                    "quantity": ticket_quantity_in_cart,
                 })
         except Exception as e:
             print(f"Error building line items: {e}")
@@ -545,6 +579,12 @@ def paymentSuccessful(request):
                 print(f"Crew with ID {crew_id} not found.")
                 continue
 
+            # Create a dictionary to batch tickets by recipient and event
+            crew_tickets_batch = {}
+            
+            # Get the number of crew members for updating ticket_sold count
+            crew_size = crew.members.count()
+            
             # Generate one ticket for each crew member
             for member in crew.members.all():
                 try:
@@ -557,6 +597,8 @@ def paymentSuccessful(request):
                         guestEmail=member.email if member else None,
                         crewTicket=(member != request.user),
                         stripe_session_id=session_id,
+                        batch_email=True,
+                        tickets_batch=crew_tickets_batch
                     )
                     ticket_count += 1
                     print(f"Generated crew ticket for {member.first_name} {member.last_name}")
@@ -569,6 +611,23 @@ def paymentSuccessful(request):
                     print(f"Error generating crew ticket: {e}")
                     import traceback
                     traceback.print_exc()
+            
+            # Send batch emails for all crew tickets
+            send_batch_ticket_email(request, crew_tickets_batch)
+            
+            # Update the ticket_sold count in the PaidFreeTicket model for crew purchases
+            try:
+                # Find the ticket type and increment its sold count by the crew size
+                ticket_type = PaidFreeTicket.objects.get(ticket_id=cart_key, event=event)
+                ticket_type.ticket_sold += crew_size
+                ticket_type.save()
+                print(f"Updated ticket_sold count for crew purchase of {ticket_type.ticket_name}: now {ticket_type.ticket_sold}")
+            except PaidFreeTicket.DoesNotExist:
+                print(f"Could not find ticket type with ID {cart_key} for crew purchase")
+            except Exception as e:
+                print(f"Error updating ticket_sold count for crew purchase: {e}")
+                import traceback
+                traceback.print_exc()
         else:
             # Regular ticket
             try:
@@ -602,6 +661,10 @@ def paymentSuccessful(request):
                 quantity = int(ticket_info.get("quantity", 1))
                 print(f"Generating {quantity} tickets for {first_name} {last_name}")
                 
+                # Create a dictionary to batch tickets by recipient and event
+                tickets_batch = {}
+                
+                # Generate all tickets first without sending emails
                 for i in range(quantity):
                     ticket = generateTicket(
                         request=request,
@@ -611,22 +674,29 @@ def paymentSuccessful(request):
                         guestLastName=last_name,
                         guestEmail=email,
                         stripe_session_id=session_id,
+                        batch_email=True,
+                        tickets_batch=tickets_batch
                     )
                     ticket_count += 1
                     print(f"Generated ticket #{i+1}/{quantity} for {first_name} {last_name}")
-                    
-                    # Update the ticket_sold count in the PaidFreeTicket model
-                    # The cart_key is the ticket ID (PaidFreeTicket.ticket_id)
-                    try:
-                        # Find the ticket type and increment its sold count
-                        ticket_type = PaidFreeTicket.objects.get(ticket_id=cart_key, event=event)
-                        ticket_type.ticket_sold += 1
-                        ticket_type.save()
-                        print(f"Updated ticket_sold count for {ticket_type.ticket_name}: now {ticket_type.ticket_sold}")
-                    except PaidFreeTicket.DoesNotExist:
-                        print(f"Could not find ticket type with ID {cart_key}")
-                    except Exception as e:
-                        print(f"Error updating ticket_sold count: {e}")
+                
+                # Send batch emails for all tickets
+                send_batch_ticket_email(request, tickets_batch)
+                
+                # Update the ticket_sold count in the PaidFreeTicket model
+                # The cart_key is the ticket ID (PaidFreeTicket.ticket_id)
+                try:
+                    # Find the ticket type and increment its sold count by the quantity purchased
+                    ticket_type = PaidFreeTicket.objects.get(ticket_id=cart_key, event=event)
+                    ticket_type.ticket_sold += quantity
+                    ticket_type.save()
+                    print(f"Updated ticket_sold count for {ticket_type.ticket_name}: now {ticket_type.ticket_sold} (added {quantity})")
+                except PaidFreeTicket.DoesNotExist:
+                    print(f"Could not find ticket type with ID {cart_key}")
+                except Exception as e:
+                    print(f"Error updating ticket_sold count: {e}")
+                    import traceback
+                    traceback.print_exc()
             except Exception as e:
                 print(f"Error generating regular ticket: {e}")
                 import traceback
@@ -800,6 +870,8 @@ def generateTicket(
     guestEmail=None,
     crewTicket=False,
     stripe_session_id=None,
+    batch_email=False,
+    tickets_batch=None
 ): 
     ticket = Ticket(
         user=user if user and user.is_authenticated else None,
@@ -831,7 +903,7 @@ def generateTicket(
         dark_color="#000000",
         light_color="#ffffff",
     )
-
+    
     try:
         # Generate the QR code with the activation URL.
         qr_code_image = maker.make_qr_code_image(
@@ -843,7 +915,18 @@ def generateTicket(
 
         ticket.save()
 
-        # Prepare email
+        # If we're batching emails, add this ticket to the batch and return without sending email
+        if batch_email and tickets_batch is not None:
+            # Add the ticket to the appropriate batch based on recipient email and event
+            recipient_email = guestEmail if guestEmail else user.email if user else None
+            if recipient_email:
+                key = (recipient_email, event.eventId, crewTicket)
+                if key not in tickets_batch:
+                    tickets_batch[key] = []
+                tickets_batch[key].append(ticket)
+            return ticket
+
+        # Prepare email for individual ticket (non-batched)
         if guestEmail or (user and user.email):
             try:
                 # Get the buyer's name for the subject.
@@ -971,6 +1054,128 @@ def generateTicket(
         traceback.print_exc()
     
     return ticket
+
+
+def send_batch_ticket_email(request, tickets_batch):
+    """Send a single email for multiple tickets of the same event to the same recipient"""
+    from django.core.mail import EmailMultiAlternatives
+    
+    for (recipient_email, event_id, is_crew_ticket), tickets in tickets_batch.items():
+        if not tickets:
+            continue
+            
+        try:
+            # Get the first ticket's event (all tickets in this batch have the same event)
+            event = tickets[0].event
+            
+            # Get the buyer's name for the subject
+            buyer_name = "Someone"
+            if request.user and request.user.is_authenticated:
+                buyer_name = request.user.first_name or "Someone"
+            
+            # Create subject based on number of tickets
+            if len(tickets) == 1:
+                subject = (
+                    f"{buyer_name} bought a ticket for you for {event.title}"
+                    if is_crew_ticket
+                    else f"Your Ticket for {event.title}"
+                )
+            else:
+                subject = (
+                    f"{buyer_name} bought {len(tickets)} tickets for you for {event.title}"
+                    if is_crew_ticket
+                    else f"Your {len(tickets)} Tickets for {event.title}"
+                )
+            
+            message = (
+                f"This ticket was bought by a crew member for you!\nYour {len(tickets)} QR codes are attached."
+                if is_crew_ticket
+                else f"Thank you for your purchase!\nYour {len(tickets)} QR codes are attached."
+            )
+            
+            # Create HTML content for multiple tickets
+            try:
+                # Build context with all tickets
+                context = {
+                    "event": event,
+                    "tickets": tickets,
+                    "ticket_count": len(tickets),
+                    "is_multiple": len(tickets) > 1
+                }
+                
+                # Add view links for each ticket
+                for ticket in tickets:
+                    ticket.view_link = request.build_absolute_uri(
+                        reverse("eventTickets:viewTicket", kwargs={"mainId": ticket.mainId})
+                    )
+                
+                # Try to use the primary email template for multiple tickets
+                try:
+                    html_content = render_to_string(
+                        "emailManagement/build_production/emails/eventTicketsApp/multipleTicketsEmail.html",
+                        context
+                    )
+                    print("Using primary multiple tickets email template")
+                except TemplateDoesNotExist:
+                    # Fallback to a simpler template
+                    try:
+                        html_content = render_to_string(
+                            "emails/multipleTicketsEmail.html",
+                            context
+                        )
+                        print("Using fallback multiple tickets email template")
+                    except TemplateDoesNotExist:
+                        # Last resort: create a simple inline HTML template
+                        ticket_links_html = ""
+                        for i, ticket in enumerate(tickets):
+                            ticket_links_html += f"<p>Ticket #{i+1}: <a href=\"{ticket.view_link}\">{ticket.view_link}</a></p>\n"
+                        
+                        html_content = f"""
+                        <html>
+                        <body>
+                            <h1>Your {'Multiple ' if len(tickets) > 1 else ''}Tickets for {event.title}</h1>
+                            <p>Thank you for your purchase!</p>
+                            <p>You have purchased {len(tickets)} tickets. Click the links below to view each ticket:</p>
+                            {ticket_links_html}
+                        </body>
+                        </html>
+                        """
+                        print("Using inline HTML multiple tickets email template")
+                
+                # Create email with multiple attachments
+                from_email = settings.DEFAULT_FROM_EMAIL
+                email = EmailMultiAlternatives(
+                    subject=subject,
+                    body=message,
+                    from_email=from_email,
+                    to=[recipient_email]
+                )
+                email.attach_alternative(html_content, "text/html")
+                
+                # Attach all QR codes
+                for i, ticket in enumerate(tickets):
+                    if ticket.qrCodeImage and hasattr(ticket.qrCodeImage, 'path'):
+                        try:
+                            qr_path = ticket.qrCodeImage.path
+                            if os.path.exists(qr_path):
+                                with open(qr_path, 'rb') as f:
+                                    email.attach(f"ticket-{i+1}-{ticket.ticketId}.png", f.read(), 'image/png')
+                        except Exception as e:
+                            print(f"Error attaching QR code for ticket {ticket.ticketId}: {e}")
+                
+                # Send the email
+                email.send(fail_silently=False)
+                print(f"Batch email with {len(tickets)} tickets sent successfully to {recipient_email}")
+                
+            except Exception as e:
+                print(f"Error rendering email template: {e}")
+                import traceback
+                traceback.print_exc()
+                
+        except Exception as e:
+            print(f"Error sending batch email to {recipient_email}: {e}")
+            import traceback
+            traceback.print_exc()
 
 def verifyTicket(request):
     if request.method == "POST":

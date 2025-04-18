@@ -24,7 +24,7 @@ class EventDetailSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Event
-        fields = ("eventId", "title", "description", "date", "header_photo", "country", "street", "apt_suite_unit", "city", "state", "zip_code", "hide_address", "ticketing")
+        fields = ("eventId", "title", "description", "date", "header_photo", "country", "street", "apt_suite_unit", "city", "state", "zip_code", "hide_address", "ticketing", "start_time", "end_time")
         
     def get_header_photo(self, obj):
         if obj.header_photo:

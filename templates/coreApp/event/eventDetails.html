@@ -333,24 +333,32 @@
                                                                 <div 
                                                                 id="crewCheckout{{ crew.crew_id }}"
                                                                 class="crewItem flex flex-row justify-between w-full items-center 
-                                                                        border-2 border-black rounded-xl p-3"
+                                                                        border-2 {% if crew.members.count > ticket.available_tickets %}border-gray-300 bg-gray-100{% else %}border-black{% endif %} rounded-xl p-3"
                                                                 >
-                                                                <p class="font-Wanted-Medium text-Medium text-black">
-                                                                    {{ crew.name }}
+                                                                <div class="flex flex-col">
+                                                                    <p class="font-Wanted-Medium text-Medium {% if crew.members.count > ticket.available_tickets %}text-gray-500{% else %}text-black{% endif %}">
+                                                                        {{ crew.name }} ({{ crew.members.count }} members)
+                                                                    </p>
                                                                     {% if crew.members.count < ticket.event.minimum_crew_size %}
                                                                     <p class="font-Wanted-Medium text-Medium text-gray-600">
                                                                         (Crew is not big enough to qualify for discount!)
                                                                     </p>
                                                                     {% endif %}
-                                                                </p>
-                                                            
+                                                                    
+                                                                    {% if crew.members.count > ticket.available_tickets %}
+                                                                    <p class="font-Wanted-Medium text-sm text-red-500">
+                                                                        Not enough tickets available for this crew
+                                                                    </p>
+                                                                    {% endif %}
+                                                                </div>
+                                                                
                                                                 <form method="POST">
                                                                     {% csrf_token %}
                                                                     <input type="hidden" name="eventAction" value="purchaseForCrew">
                                                                     <input type="hidden" name="crewId" value="{{ crew.crewId }}">
                                                                     <input type="hidden" name="ticketId" value="{{ ticket.ticket_id }}">
-                                                            
-                                                                    <button  role="button" name="eventAction" value="Add Crew Ticket" 
+                                                                
+                                                                    <button role="button" name="eventAction" value="Add Crew Ticket" 
                                                                     data-ticket-id="{{ ticket.ticket_id }}"
                                                                     data-ticket-name="{{ ticket.ticket_name }}"
                                                                     {% if crew.members.count < ticket.event.minimum_crew_size %}
@@ -365,8 +373,9 @@
                                                                     data-ticket-event-id="{{ ticket.event.eventId }}"
                                                                     data-stripe-price-id="{{ ticket.stripePriceId }}" 
                                                                     data-stripe-product-id="{{ ticket.event.stripeProductId }}" 
-                                                                    class="disabled:bg-red-600 disabled:cursor-default py-2 px-4 bg-gradient-to-br bg-gradient-start bg-gradient-end font-Wanted-Bold text-white rounded-xl cursor-pointer hover:bg-green hover:transition-all hover:duration-300 hover:ease-in-out crewCheckoutButton">
-                                                                    Add to Cart
+                                                                    {% if crew.members.count > ticket.available_tickets %}disabled title="Your crew has more people than tickets left"{% endif %}
+                                                                    class="{% if crew.members.count > ticket.available_tickets %}bg-gray-400 cursor-not-allowed{% else %}bg-gradient-to-br bg-gradient-start bg-gradient-end hover:bg-green hover:transition-all hover:duration-300 hover:ease-in-out cursor-pointer{% endif %} py-2 px-4 font-Wanted-Bold text-white rounded-xl crewCheckoutButton">
+                                                                    {% if crew.members.count > ticket.available_tickets %}Not Available{% else %}Add to Cart{% endif %}
                                                                     </button>
                                                                 </form>
                                                                 </div>
@@ -392,10 +401,23 @@
                                 
                                     <!-- Ticket Info Section -->
                                     <div class="jit-role-tab w-full sm:w-4/5">
+                                        {% if ticket.ticket_quantity == 0 or ticket.ticket_quantity <= ticket.ticket_sold %}
+                                        <!-- Non-clickable header for sold-out tickets -->
+                                        <div class="flex items-center justify-between py-4 px-5 rounded-3xl border border-transparent text-white font-Wanted-Bold text-xl flex-col sm:flex-row gap-2 bg-gray-500 cursor-not-allowed">
+                                            <div class="flex flex-row items-center gap-2">
+                                                <h3>{{ ticket.ticket_name }}</h3>
+                                            </div>
+                                            <p class="font-Wanted-Variable text-XSmall after-xsm:text-Small pre-sm:text-Medium">Sold Out</p>
+                                        </div>
+                                        {% else %}
+                                        <!-- Clickable header for available tickets -->
                                         <div role="button" class="jit-tab-header flex items-center justify-between font-Wanted-Bold text-xl py-4 px-5 rounded-3xl border border-transparent text-white font-Wanted-SemiBold flex-col sm:flex-row justify-center gap-2 text-Pre-Xl rounded-2xl bg-gradient-to-r from-gradient-start to-gradient-end cursor-pointer">
-                                            <h3>{{ ticket.ticket_name }}</h3>
+                                            <div class="flex flex-row items-center gap-2">
+                                                <h3>{{ ticket.ticket_name }}</h3>
+                                            </div>
                                             <p class="font-Wanted-Variable text-XSmall after-xsm:text-Small pre-sm:text-Medium">Tap to see more</p>
                                         </div>
+                                        {% endif %}
                                 
                                         <div class="jit-tab-body defaulted border-4 border-[#008d95] rounded-b-2xl mx-5 p-5 hidden">
                                             <div class="jtb-container flex flex-col gap-9">
@@ -409,13 +431,25 @@
                                                         </div>
                                 
                                                         <div class="addRemoveTickets flex flex-row gap-1 items-center">
+                                                            {% if ticket.ticket_quantity == 0 or ticket.ticket_quantity <= ticket.ticket_sold %}
+                                                            <div class="bg-red-100 border border-red-400 text-red-700 px-3 py-1 rounded-lg font-Wanted-Medium text-sm flex items-center gap-2">
+                                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                                                </svg>
+                                                                <span>Sold Out</span>
+                                                            </div>
+                                                            {% else %}
                                                             <button class="removeTicket border-none bg-none cursor-pointer" id="removeTicketButton" data-ticket-id="{{ ticket.ticket_id }}" data-ticket-name="{{ ticket.ticket_name }}" data-ticket-event-name="{{ ticket.event.title }}" data-ticket-price="{{ ticket.ticket_price }}" role="button" name="eventAction" value="Remove Ticket" data-stripe-price-id="{{ ticket.stripePriceId }}" data-stripe-product-id="{{ ticket.event.stripeProductId }}" data-ticket-event-id="{{ ticket.event.eventId }}">
                                                                 <img src="{% static "images/eventManagementApp/event/removeTicket.svg" %}" alt="-1 Ticket" />
                                                             </button>
                                                             <span class="currentTicketAmount w-12 h-7 font-Wanted-Variable flex justify-center items-center" id="currentTicketAmount" data-ticket-id="{{ ticket.ticket_id }}">0</span>
-                                                            <button class="addTicket border-none bg-none cursor-pointer" id="addTicketButton" name="eventAction" data-ticket-id="{{ ticket.ticket_id }}" data-ticket-name="{{ ticket.ticket_name }}" data-ticket-price="{{ ticket.ticket_price }}" value="Add Ticket" data-stripe-price-id="{{ ticket.stripePriceId }}" data-stripe-product-id="{{ ticket.event.stripeProductId }}" data-ticket-event-id="{{ ticket.event.eventId }}" data-ticket-event-name="{{ ticket.event.title }}">
+                                                            <button class="addTicket border-none bg-none cursor-pointer" id="addTicketButton" name="eventAction" data-ticket-id="{{ ticket.ticket_id }}" data-ticket-name="{{ ticket.ticket_name }}" data-ticket-price="{{ ticket.ticket_price }}" value="Add Ticket" data-stripe-price-id="{{ ticket.stripePriceId }}" data-stripe-product-id="{{ ticket.event.stripeProductId }}" data-ticket-event-id="{{ ticket.event.eventId }}" data-ticket-event-name="{{ ticket.event.title }}" data-available-tickets="{{ ticket.available_tickets }}" {% if ticket.ticket_quantity <= ticket.ticket_sold %}disabled{% endif %}>
                                                                 <img src="{% static "images/eventManagementApp/event/addTicket.svg" %}" alt="+1 Ticket" />
                                                             </button>
+                                                            <div class="ml-2 text-xs text-gray-500 font-Wanted-Medium">
+                                                                {{ ticket.available_tickets }} left
+                                                            </div>
+                                                            {% endif %}
                                                         </div>
                                                     </div>
                                 
@@ -460,6 +494,34 @@
                                                 <hr class="w-full border-customGray5" />
                                 
                                                 <p class="font-Wanted-Variable text-Semi-Medium">{{ ticket.ticket_description }}</p>
+                                                
+                                                <!-- Ticket availability information -->
+                                                <div class="ticket-availability mt-4 p-3 rounded-lg {% if ticket.ticket_quantity == 0 or ticket.ticket_quantity <= ticket.ticket_sold %}bg-red-50{% elif ticket.ticket_quantity <= 10 %}bg-amber-50{% else %}bg-green-50{% endif %}">
+                                                    <div class="flex items-center gap-2">
+                                                        {% if ticket.ticket_quantity == 0 or ticket.ticket_quantity <= ticket.ticket_sold %}
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor">
+                                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                                                        </svg>
+                                                        {% elif ticket.ticket_quantity <= 10 %}
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-amber-500" viewBox="0 0 20 20" fill="currentColor">
+                                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd" />
+                                                        </svg>
+                                                        {% else %}
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500" viewBox="0 0 20 20" fill="currentColor">
+                                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd" />
+                                                        </svg>
+                                                        {% endif %}
+                                                        <span class="font-Wanted-SemiBold {% if ticket.ticket_quantity == 0 or ticket.ticket_quantity <= ticket.ticket_sold %}text-red-700{% elif ticket.ticket_quantity <= 10 %}text-amber-700{% else %}text-green-700{% endif %}">
+                                                            {% if ticket.ticket_quantity == 0 or ticket.ticket_quantity <= ticket.ticket_sold %}
+                                                                This ticket type is sold out. Please check other ticket options or contact the event host.
+                                                            {% elif ticket.ticket_quantity <= 10 %}
+                                                                Limited Availability: Only {{ ticket.available_tickets }} tickets remaining!
+                                                            {% else %}
+                                                                Available: {{ ticket.available_tickets }} of {{ ticket.ticket_quantity }} tickets
+                                                            {% endif %}
+                                                        </span>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>

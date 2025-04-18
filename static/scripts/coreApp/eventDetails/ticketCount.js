@@ -241,14 +241,32 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Function to update the displayed quantity for a ticket in the UI
   function updateTicketAmountDisplay(ticketId) {
-    const ticketAmountSpan = document.querySelector(
+    const ticketAmountElements = document.querySelectorAll(
       `.currentTicketAmount[data-ticket-id="${ticketId}"]`
     );
-    if (ticketAmountSpan) {
-      ticketAmountSpan.textContent = cart[ticketId]
-        ? cart[ticketId].quantity
-        : 0;
-    }
+    const quantity = cart[ticketId] ? cart[ticketId].quantity : 0;
+
+    ticketAmountElements.forEach((element) => {
+      element.textContent = quantity;
+    });
+    
+    // Find the add ticket button for this ticket
+    const addButtons = document.querySelectorAll(
+      `.addTicket[data-ticket-id="${ticketId}"]`
+    );
+    
+    addButtons.forEach((button) => {
+      const availableTickets = parseInt(button.getAttribute("data-available-tickets"), 10);
+      
+      // Disable the button if the current quantity equals or exceeds available tickets
+      if (quantity >= availableTickets) {
+        button.setAttribute("disabled", "disabled");
+        button.classList.add("opacity-50", "cursor-not-allowed");
+      } else {
+        button.removeAttribute("disabled");
+        button.classList.remove("opacity-50", "cursor-not-allowed");
+      }
+    });
   }
 
   // Function to add a ticket to the cart
@@ -259,10 +277,12 @@ document.addEventListener("DOMContentLoaded", function () {
     stripePriceId,
     stripeProductId,
     eventId,
-    eventName
+    eventName,
+    availableTickets
   ) {
     // Ensure all values are of the correct type
     const parsedTicketPrice = parseFloat(ticketPrice);
+    const parsedAvailableTickets = parseInt(availableTickets, 10);
     
     if (isNaN(parsedTicketPrice) || parsedTicketPrice <= 0) {
       console.error("Invalid ticket price:", ticketPrice);
@@ -271,6 +291,27 @@ document.addEventListener("DOMContentLoaded", function () {
     
     if (!ticketId || !ticketName || !eventId) {
       console.error("Missing required ticket information");
+      return;
+    }
+
+    // Check if we already have this ticket in the cart
+    const currentQuantity = cart[ticketId] ? cart[ticketId].quantity : 0;
+    
+    // Check if adding one more would exceed available tickets
+    if (currentQuantity + 1 > parsedAvailableTickets) {
+      // Show notification to user
+      const notificationArea = document.getElementById("notificationArea");
+      if (notificationArea) {
+        notificationArea.textContent = `Sorry, only ${parsedAvailableTickets} tickets available for ${ticketName}`;
+        notificationArea.classList.remove("hidden");
+        notificationArea.classList.add("bg-red-500");
+        
+        // Hide the message after 3 seconds
+        setTimeout(function() {
+          notificationArea.classList.add("hidden");
+          notificationArea.classList.remove("bg-red-500");
+        }, 3000);
+      }
       return;
     }
     
@@ -465,6 +506,8 @@ document.addEventListener("DOMContentLoaded", function () {
       const stripeProductId = this.getAttribute("data-stripe-product-id");
       const eventId = this.getAttribute("data-ticket-event-id");
       const eventName = this.getAttribute("data-ticket-event-name");
+      const availableTickets = this.getAttribute("data-available-tickets");
+      
       addTicket(
         ticketId,
         ticketName,
@@ -472,7 +515,8 @@ document.addEventListener("DOMContentLoaded", function () {
         stripePriceId,
         stripeProductId,
         eventId,
-        eventName
+        eventName,
+        availableTickets
       );
     });
   });

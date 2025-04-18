@@ -5,7 +5,9 @@ $(document).ready(function() {
     // Show the default tab body by sliding down (no need for slideDown since it's already visible)
     $('.jit-role-tab.defaulted .jit-tab-body').slideDown();
 
-    $('.jit-tab-header').click(function() {
+    // Only attach click event to ticket headers that have the role="button" attribute
+    // This ensures sold-out tickets (which don't have this attribute) are not clickable
+    $('.jit-tab-header[role="button"]').click(function() {
         // Close all tab bodies except the one being clicked
         $('.jit-tab-body').not($(this).next('.jit-tab-body')).slideUp();
         // Toggle the visibility of the tab body associated with the clicked header

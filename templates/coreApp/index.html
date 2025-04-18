@@ -49,6 +49,68 @@ WAVE. — Explore a new wave of events. Tick them off your bucketlist!
         </div>
     </section>
 
+    <!-- Weekly Events Section -->
+    <section class="w-full py-16 xs:px-5 xsm:px-7 after-xsm:px-9 sm:px-11 md:px-16 lg:px-24 xl:px-36 2xl:px-44 3xl:px-52 bg-gradient-to-br from-gray-50 to-white flex flex-col gap-8">
+        <div class="flex justify-between items-center">
+            <h2 class="font-Wanted-Bold text-xl after-xsm:text-2xl xl:text-3xl animate-slideUp">Happening this week</h2>
+            <a href="{% url "core:explore" %}" class="text-[#008d95] underline font-Wanted-Variable text-Small after-xsm:text-Semi-Medium underline-offset-2">See More</a>
+        </div>
+
+        {% if weekly_events %}
+        <div id="weekly-events-carousel" class="w-full h-full relative overflow-hidden">
+            {% for event in weekly_events %}
+            <div class="weekly-event-slide w-full h-full min-w-full min-h-full relative flex justify-center items-center">
+                <a href="{% url "core:eventDetails" eventId=event.eventId %}" class="category-event-card hover:scale-95 transform transition duration-300 flex flex-col justify-center items-center cursor-pointer overflow-hidden w-full sm:w-4/5 md:w-3/4 lg:w-2/3 xl:w-1/2 shadow-lg">
+                    <div class="category-image w-full rounded-2xl shadow-custom-shadow-3">
+                        {% if event.header_photo %}
+                        <img src="{{event.header_photo.url}}" alt="" class="w-full h-[300px] md:h-[400px] rounded-2xl rounded-b-none object-cover">
+                        {% else %}
+                        <img src="{% static "/images/coreApp/boombox.png" %}" alt="" class="w-full h-[300px] md:h-[400px] rounded-2xl rounded-b-none object-cover">
+                        {% endif %}
+                    </div>
+                    <div class="category-event-name font-Wanted-SemiBold text-Base flex flex-col justify-center items-start gap-1 w-full border border-custom-rgba5 rounded-bl-2xl rounded-br-2xl shadow-custom-shadow-3 border-t-2 px-5 p-2 bg-white">
+                        <h2 id="eventTitle" class="whitespace-nowrap overflow-hidden text-ellipsis w-full text-left text-2xl">
+                            {% if event.title %}
+                            {{ event.title }}
+                            {% else %}
+                            Title not available
+                            {% endif %}
+                        </h2>
+                        <div class="eventSubInfo flex flex-col items-start gap-[1px] w-full font-Wanted-Variable text-customGray5">
+                            <p id="eventHost" class="flex flex-row justify-start">
+                                {% if event.host %}
+                                Hosted by @{{ event.host.username }}
+                                {% else %}
+                                Host not available
+                                {% endif %}
+                            </p>
+                            <p id="eventDate" class="w-full flex justify-start font-Wanted-Bold text-Medium">
+                                {% if event.date %}
+                                {{ event.date }}
+                                {% else %}
+                                Date not available
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Mobile Carousel Controls -->
+        <div class="flex justify-center items-center gap-2 mt-4 md:hidden">
+            <span class="carousel-dot active" data-index="0"></span>
+            {% if weekly_events.1 %}<span class="carousel-dot" data-index="1"></span>{% endif %}
+            {% if weekly_events.2 %}<span class="carousel-dot" data-index="2"></span>{% endif %}
+        </div>
+        {% else %}
+        <div class="flex justify-center items-center py-8">
+            <p class="font-Wanted-Variable text-gray-600">No events happening this week. Check back soon!</p>
+        </div>
+        {% endif %}
+    </section>
+
     <!-- Campus Section -->
     <section class="w-full min-h-screen py-28 bg-gradient-to-br from-[#f7f9fc] to-white xs:px-5 xsm:px-7 after-xsm:px-9 sm:px-11 md:px-16 lg:px-24 xl:px-36 2xl:px-44 3xl:px-52 flex justify-center items-center flex-col-reverse xs:flex-col-reverse xsm:flex-col-reverse after-xsm:flex-col-reverse xxsm:flex-col-reverse sm:flex-col-reverse md:flex-col-reverse pre-lg:flex-row gap-20">
         <div class="w-full pre-lg:w-1/2 transform hover:scale-[1.02] transition-all duration-500">
@@ -98,7 +160,95 @@ WAVE. — Explore a new wave of events. Tick them off your bucketlist!
     </div>
 </div>
 
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // Weekly events carousel functionality
+    let currentSlide = 0;
+    const slides = document.querySelectorAll('.weekly-event-slide');
+    const dots = document.querySelectorAll('.carousel-dot');
+    const totalSlides = slides.length;
+
+    function showSlide(index) {
+        slides.forEach((slide, i) => {
+            slide.style.display = i === index ? 'flex' : 'none';
+        });
+        
+        // Update dots for mobile
+        dots.forEach((dot, i) => {
+            dot.classList.toggle('active', i === index);
+        });
+    }
+
+    function nextSlide() {
+        currentSlide = (currentSlide + 1) % totalSlides;
+        showSlide(currentSlide);
+    }
+
+    // Initial display
+    showSlide(currentSlide);
+
+    // Auto slide every 6 seconds
+    const slideInterval = setInterval(nextSlide, 6000);
+
+    // Manual navigation with dots (for mobile)
+    dots.forEach(dot => {
+        dot.addEventListener('click', () => {
+            const slideIndex = parseInt(dot.dataset.index);
+            currentSlide = slideIndex;
+            showSlide(currentSlide);
+            clearInterval(slideInterval);
+        });
+    });
+    
+    // Add swipe functionality for mobile
+    let touchStartX = 0;
+    let touchEndX = 0;
+    
+    const carousel = document.getElementById('weekly-events-carousel');
+    if (carousel) {
+        carousel.addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+        }, {passive: true});
+        
+        carousel.addEventListener('touchend', (e) => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        }, {passive: true});
+    }
+    
+    function handleSwipe() {
+        if (touchEndX < touchStartX) {
+            // Swipe left - next slide
+            nextSlide();
+        } else if (touchEndX > touchStartX) {
+            // Swipe right - previous slide
+            currentSlide = (currentSlide === 0) ? totalSlides - 1 : currentSlide - 1;
+            showSlide(currentSlide);
+        }
+    }
+});
+</script>
+
+<script>
+function redirectToPage(url) {
+    window.location.href = url;
+}
+</script>
+
 <style>
+.carousel-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background-color: #ccc;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.carousel-dot.active {
+    background-color: #008d95;
+}
+
 @keyframes fadeIn {
     from { opacity: 0.5; }
     to { opacity: 1; }
