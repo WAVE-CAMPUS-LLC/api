@@ -165,10 +165,6 @@ async def update_profile_detailed(
 
 @router.get("/getUserTickets")
 async def get_user_tickets(user_id: int = Depends(get_current_user)):
-    """
-    API endpoint for getting user tickets.
-    Returns a list of tickets belonging to the authenticated user.
-    """
     @sync_to_async
     def get_user_tickets_async(user_id):
         user = CustomUser.objects.get(id=user_id)
@@ -182,6 +178,8 @@ async def get_user_tickets(user_id: int = Depends(get_current_user)):
                 "guestEmail": ticket.guestEmail,
                 "eventId": str(ticket.event.eventId),
                 "eventTitle": ticket.event.title,
+                "date": ticket.event.date,
+                "header_photo": ticket.event.header_photo.url if ticket.event.header_photo else None,
                 "qrCodeImage": ticket.qrCodeImage.url if ticket.qrCodeImage else None,
                 "status": ticket.status,
             })
@@ -192,6 +190,40 @@ async def get_user_tickets(user_id: int = Depends(get_current_user)):
     tickets = [TicketSerializer(**ticket) for ticket in ticket_data]
     
     return {"tickets": tickets}
+
+
+@router.get("/getUserTickets/{ticketId}/details")
+async def get_user_ticket_details(ticketId: str, user_id: int = Depends(get_current_user)):
+    """
+    API endpoint for getting user ticket details.
+    Returns details of a specific ticket belonging to the authenticated user.
+    """
+    @sync_to_async
+    def get_user_ticket_details_async(ticketId, user_id):
+        user = CustomUser.objects.get(id=user_id)
+        try:
+            ticket = Ticket.objects.get(ticketId=ticketId, user=user)
+            return {
+                "ticketId": str(ticket.ticketId),
+                "guestFirstName": ticket.guestFirstName,
+                "guestLastName": ticket.guestLastName,
+                "guestEmail": ticket.guestEmail,
+                "eventId": str(ticket.event.eventId),
+                "eventTitle": ticket.event.title,
+                "date": ticket.event.date,
+                "header_photo": ticket.event.header_photo.url if ticket.event.header_photo else None,
+                "qrCodeImage": ticket.qrCodeImage.url if ticket.qrCodeImage else None,
+                "status": ticket.status,
+            }
+        
+        except Ticket.DoesNotExist:
+            return None
+        
+    ticket_data = await get_user_ticket_details_async(ticketId, user_id)
+    if ticket_data is None:
+        raise HTTPException(status_code=404, detail="Ticket not found")
+    
+    return ticket_data
 
 
 @router.get("/profile/favoriteEvents")
