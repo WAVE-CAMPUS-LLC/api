@@ -504,7 +504,7 @@ async def update_user_settings(
             error_trace = traceback.format_exc()
             print(f"[update_user_settings] Unexpected error updating settings for user_id {user_id}: {str(e)}\n{error_trace}")
             return {"error": f"An error occurred: {str(e)}", "status_code": 500}
-      try:
+    try:
         # We already have the form data and files dictionaries from earlier parsing
         # No need to recreate them
         result = await update_settings_async(user_id, action, data, files)
