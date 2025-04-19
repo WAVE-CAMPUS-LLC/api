@@ -87,13 +87,45 @@ async def get_event_details(eventId: str):
         try:
             event = Event.objects.get(eventId=eventId)
             header_photo_url = event.header_photo.url if event.header_photo else None
+            body_photo_one_url = event.body_photo_one.url if event.body_photo_one else None
+            body_photo_two_url = event.body_photo_two.url if event.body_photo_two else None
+            body_photo_three_url = event.body_photo_three.url if event.body_photo_three else None
+            body_photo_four_url = event.body_photo_four.url if event.body_photo_four else None
+            body_photo_five_url = event.body_photo_five.url if event.body_photo_five else None
+            
+            # Get host profile information
+            host_profile = event.host.user_profile if hasattr(event.host, 'user_profile') else None
+            host_data = {
+                "id": str(event.host.id),
+                "username": event.host.username,
+                "first_name": event.host.first_name,
+                "last_name": event.host.last_name,
+                "profilePhoto": host_profile.profile_photo.url if host_profile and host_profile.profile_photo else None,
+                "isCampusManager": host_profile.is_campus_manager if host_profile and hasattr(host_profile, 'is_campus_manager') else False
+            }
+            
+            # Check for guest list
+            guest_list = []
+            if event.guest_list.exists():
+                guest_list = list(event.guest_list.all().values('id', 'username', 'first_name', 'last_name'))
+            
+            # Check for favorite status (default to False since we don't have user context here)
+            is_favorite = False
+            
+            # Check for RSVP requirement
+            rsvp_required = False  # Default value, adjust based on your model
+            
+            # Check for paid/free tickets
+            paid_free_tickets = []  # Default value, adjust based on your model
+            
+            # Collect all fields that actually exist in the Event model
             return {
                 "eventId": str(event.eventId), 
                 "title": event.title,
                 "description": event.description,
                 "date": event.date,
                 "header_photo": header_photo_url,
-                "country": event.country,
+                "building_name": event.building_name,
                 "street": event.street,
                 "apt_suite_unit": event.apt_suite_unit,
                 "city": event.city,
@@ -103,6 +135,24 @@ async def get_event_details(eventId: str):
                 "ticketing": str(event.ticketing), 
                 "start_time": str(event.start_time),  
                 "end_time": str(event.end_time),
+                "age_restriction": event.age_restriction,
+                "event_type": event.event_type,
+                "status": event.status,
+                "country": event.country,
+                "body_photo_one": body_photo_one_url,
+                "body_photo_two": body_photo_two_url,
+                "body_photo_three": body_photo_three_url,
+                "body_photo_four": body_photo_four_url,
+                "body_photo_five": body_photo_five_url,
+                "host": host_data,
+                "guestList": guest_list,
+                "isFavoriteEvent": is_favorite,
+                "rsvpFormRequired": rsvp_required,
+                "paidFreeTickets": paid_free_tickets,
+                "crew_discount": bool(event.crew_discount),
+                "crew_discount_percentage": event.crew_discount_percentage,
+                "minimum_crew_size": event.minimum_crew_size,
+                "coupons_activated": bool(event.couponsActivated)
             }
         except Event.DoesNotExist:
             print(f"[get_event_details API] Event not found with ID: {eventId}")
@@ -112,10 +162,56 @@ async def get_event_details(eventId: str):
     if event_data is None:
         raise HTTPException(status_code=404, detail="Event not found")
     
-    event = EventDetailsSerializer(**event_data)
+    # Transform the data to match the requested format
+    transformed_data = {
+        "id": event_data["eventId"],
+        "title": event_data["title"],
+        "description": event_data["description"],
+        "date": event_data["date"],
+        "startTime": event_data["start_time"],
+        "endTime": event_data["end_time"],
+        "ticketing": event_data["ticketing"],
+        "location": {
+            "buildingName": event_data["building_name"],
+            "street": event_data["street"],
+            "aptSuiteUnit": event_data["apt_suite_unit"],
+            "city": event_data["city"],
+            "state": event_data["state"],
+            "zipCode": event_data["zip_code"],
+            "hideAddress": event_data["hide_address"],
+            "country": event_data["country"],
+        },
+        "host": {
+            **event_data["host"],
+            "profilePhoto": event_data["host"]["profilePhoto"],
+            "isCampusManager": event_data["host"]["isCampusManager"],
+        },
+        "ageRestriction": event_data["age_restriction"],
+        "eventType": event_data["event_type"],
+        "status": event_data["status"],
+        "images": {
+            "header": event_data["header_photo"],
+            "bodyPhotos": [photo for photo in [
+                event_data["body_photo_one"],
+                event_data["body_photo_two"],
+                event_data["body_photo_three"],
+                event_data["body_photo_four"],
+                event_data["body_photo_five"],
+            ] if photo is not None],
+        },
+        "guestList": event_data["guestList"],
+        "isFavorite": event_data["isFavoriteEvent"],
+        "rsvpRequired": event_data["rsvpFormRequired"],
+        "paidFreeTickets": event_data["paidFreeTickets"],
+        "crewDiscount": event_data["crew_discount"],
+        "crewDiscountPercentage": event_data["crew_discount_percentage"],
+        "minimumCrewSize": event_data["minimum_crew_size"],
+        "couponsActivated": event_data["coupons_activated"],
+    }
+    
     print(f"[get_event_details API] Returning details for event: {event_data.get('title')}")
     
-    return{"event": event}
+    return{"event": transformed_data}
 
 @router.get("/event/{eventId}/host_profile")
 async def get_event_host_profile(eventId: str):
