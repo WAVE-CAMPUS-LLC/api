@@ -339,7 +339,11 @@ def paymentSuccessful(request):
         return HttpResponse("Error: session_id is missing or invalid.", status=400)
     
     # Check if tickets have already been generated for this session
+    print(f"[paymentSuccessful] Checking for tickets tied to session_id: {session_id}")
     existing_tickets = Ticket.objects.filter(stripe_session_id=session_id)
+    print(f"[paymentSuccessful] Found {existing_tickets.count()} existing tickets:")
+    for t in existing_tickets:
+        print(f" - Ticket ID: {t.id}, user: {t.user}, event: {t.event.title}")
     if existing_tickets.exists():
         ticket_count = existing_tickets.count()
         print(f"Found {ticket_count} existing tickets for session {session_id}. Preventing duplicate generation.")
