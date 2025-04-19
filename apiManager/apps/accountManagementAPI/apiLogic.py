@@ -227,6 +227,9 @@ async def get_user_tickets(user_id: int = Depends(get_current_user)):
                         ticket.qrCodeImage.url if ticket.qrCodeImage else None
                     ),
                     "status": ticket.status,
+                    "eventDate": ticket.event.date,
+                    "eventStartTime": ticket.event.start_time,
+                    "eventEndTime": ticket.event.end_time,
                 }
             )
 
