@@ -44,6 +44,7 @@ async def login_api(request: Request, login_data: LoginRequest):
     API endpoint for user authentication using email/username and password.
     Returns JWT tokens and user data upon successful authentication.
     """
+    print(f"[login_api] Function called with identifier: {login_data.identifier}")
     @sync_to_async
     def login_sync(identifier, password, client_ip):
         try:
@@ -74,7 +75,7 @@ async def login_api(request: Request, login_data: LoginRequest):
 
             # Serialize the user data
             user_serializer = CustomUserSerializer(authenticated_user)
-              # Access token with additional claims for better security and debugging
+            # Access token with additional claims for better security and debugging
             access_payload = {
                 "sub": str(authenticated_user.id),
                 "exp": datetime.utcnow() + timedelta(days=ACCESS_TOKEN_EXPIRE_DAYS),
@@ -120,8 +121,10 @@ async def login_api(request: Request, login_data: LoginRequest):
     )
     
     if error:
+        print(f"[login_api] Authentication failed with status code {status_code}: {error}")
         return JSONResponse(content=error, status_code=status_code)
     
+    print(f"[login_api] Authentication successful with status code {status_code}")
     return JSONResponse(content=result, status_code=status_code)
         
         
@@ -132,13 +135,16 @@ async def logout_api(request: Request, Authorization: str = Header(None)):
     API endpoint for user logout.
     Invalidates the refresh token and clears session data.
     """
+    print(f"[logout_api] Function called with Authorization header: {Authorization[:10]}..." if Authorization else "[logout_api] Function called without Authorization header")
     try:
         # Invalidate the refresh token (if applicable)
         # This can be done by removing it from the database or marking it as invalid
         # For simplicity, we'll just return a success message
 
+        response = {"message": "Logout successful"}
+        print(f"[logout_api] Logout successful, returning status code {status.HTTP_200_OK}")
         return JSONResponse(
-            content={"message": "Logout successful"}, status_code=status.HTTP_200_OK
+            content=response, status_code=status.HTTP_200_OK
         )
     except Exception as e:
         traceback_str = traceback.format_exc()
@@ -151,19 +157,23 @@ async def logout_api(request: Request, Authorization: str = Header(None)):
         
 @router.get("/join")
 async def get_join_form(request: Request):
+   print(f"[get_join_form] Function called with X-Platform: {request.headers.get('X-Platform')}")
    is_mobile = request.headers.get("X-Platform") == "mobile"
    FormClass = MobileUserJoinForm
    fields_info = get_form_fields(FormClass)
+   print(f"[get_join_form] Returning form fields, field count: {len(fields_info)}")
    return JSONResponse(content=fields_info, status_code=status.HTTP_200_OK)
 
 
 @router.post("/join")
 async def join_api(request: Request):
+    print("[join_api] Function called")
     try:
         # Get form data from request - this is async and fast
         form_data = await request.form()
         # Convert form data to dict
         form_dict = dict(form_data)
+        print(f"[join_api] Received form data with fields: {', '.join(form_dict.keys())}")
         
         # Run user creation in a background task to improve response time
         @sync_to_async
@@ -211,8 +221,10 @@ async def join_api(request: Request):
         errors, status_code = await validate_and_create_user(form_dict)
         
         if errors:
+            print(f"[join_api] Registration failed with errors: {errors}")
             return JSONResponse(content=errors, status_code=status_code)
         else:
+            print(f"[join_api] User registered successfully with status code {status_code}")
             return JSONResponse(content={"message": "User registered successfully"}, status_code=status_code)
     except Exception as e:
         traceback_str = traceback.format_exc()

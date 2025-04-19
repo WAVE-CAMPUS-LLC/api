@@ -41,6 +41,7 @@ router = APIRouter()
 async def edit_event_endpoint(
     request: Request, eventId: str, user_id=Depends(get_current_user)
 ):
+    print(f"[DEBUG - edit_event_endpoint] Function called with eventId: {eventId}")
     """
     Edit an event, supporting both full updates (POST) and partial updates (PATCH).
     """
@@ -150,6 +151,7 @@ async def edit_event_endpoint(
 
         # Await the synchronous process
         result = await process_edit_event()
+        print(f"[DEBUG - edit_event_endpoint] Success response: {result.get('message', 'No message')}")
         return JSONResponse(content=result, status_code=status.HTTP_200_OK)
 
     except ValueError as ve:
@@ -170,6 +172,7 @@ async def edit_event_endpoint(
 
 @router.get("/getEvents")
 async def get_events(user_id: int = Depends(get_current_user)):
+    print(f"[DEBUG - get_events] Function called with user_id: {user_id}")
     """
     API endpoint for getting events
     """
@@ -224,6 +227,7 @@ async def get_events(user_id: int = Depends(get_current_user)):
 
         # Validate user asynchronously
         user = await validate_user(user_id)
+        print(f"[DEBUG - get_events] User validated: {user is not None}")
         if not user:
             return JSONResponse(
                 content={"error": "Authentication required"},
@@ -232,6 +236,7 @@ async def get_events(user_id: int = Depends(get_current_user)):
 
         events_before_serializing = await get_events(user_id)
         events = [HostEventExplore(**event) for event in events_before_serializing]
+        print(f"[DEBUG - get_events] Returning {len(events)} events")
 
         return {"events": events}
     except HTTPException as http_ex:
@@ -269,6 +274,7 @@ async def get_events(user_id: int = Depends(get_current_user)):
 
 @router.get("/getEvent/{eventId}")
 async def get_event_details(eventId: str, user_id: int = Depends(get_current_user)):
+    print(f"[DEBUG - get_event_details] Function called with eventId: {eventId}, user_id: {user_id}")
     """
     API endpoint for getting event details
     """
@@ -284,6 +290,7 @@ async def get_event_details(eventId: str, user_id: int = Depends(get_current_use
             return event  # Get the event details asynchronously
 
         event = await get_event(eventId)
+        print(f"[DEBUG - get_event_details] Event found: {event.title if event else 'None'}")
 
         # Create location serializer
         location = LocationSerializer(
@@ -338,6 +345,7 @@ async def get_event_details(eventId: str, user_id: int = Depends(get_current_use
             forCollegesDisplay=event.forCollegesDisplay,
         )
 
+        print(f"[DEBUG - get_event_details] Returning event data for: {event_data.title}")
         return {"event": event_data}
 
     except HTTPException as http_ex:
@@ -360,6 +368,7 @@ async def get_event_details(eventId: str, user_id: int = Depends(get_current_use
 
 @router.post("/event/{eventId}/deleteEvent")
 async def delete_event(eventId: str, user_id: int = Depends(get_current_user)):
+    print(f"[DEBUG - delete_event] Function called with eventId: {eventId}, user_id: {user_id}")
     """
     API endpoint for deleting an event
     """
@@ -367,12 +376,14 @@ async def delete_event(eventId: str, user_id: int = Depends(get_current_user)):
 
         @sync_to_async
         def delete_event(eventId):
+            print(f"[DEBUG - delete_event] Attempting to delete event with ID: {eventId}")
             # Get the event object or raise a 404 error if not found
             event = get_object_or_404(Event, eventId=eventId)
             event.delete()
             return {"message": "Event deleted successfully."}
 
         result = await delete_event(eventId)
+        print(f"[DEBUG - delete_event] Event deletion result: {result}")
         return JSONResponse(content=result, status_code=status.HTTP_200_OK)
 
     except HTTPException as http_ex:
@@ -395,13 +406,16 @@ async def delete_event(eventId: str, user_id: int = Depends(get_current_user)):
 
 @router.get("/event/fields")
 async def event_creation_fields(request: Request):
+    print(f"[DEBUG - event_creation_fields] Function called")
     FormClass = EventForm
     fields_info = get_form_fields(FormClass)
+    print(f"[DEBUG - event_creation_fields] Returning form fields: {list(fields_info.keys())}")
     return JSONResponse(content=fields_info, status_code=status.HTTP_200_OK)
 
 
 @router.post("/event/free/create")
 async def create_free_event(request: Request, user_id: int = Depends(get_current_user)):
+    print(f"[DEBUG - create_free_event] Function called with user_id: {user_id}")
     """
     API endpoint for creating a free event
     """
@@ -412,6 +426,7 @@ async def create_free_event(request: Request, user_id: int = Depends(get_current
         # Separate normal data and file data from the form
         data = {}
         files = {}
+        print(f"[DEBUG - create_paid_event] Processing form data")
         for key, value in form_data.multi_items():
             if isinstance(value, UploadFile):
                 files[key] = value
@@ -536,6 +551,7 @@ async def create_free_event(request: Request, user_id: int = Depends(get_current
 
 @router.post("/event/free/paid")
 async def create_paid_event(request: Request, user_id: int = Depends(get_current_user)):
+    print(f"[DEBUG - create_paid_event] Function called with user_id: {user_id}")
     """
     API endpoint for creating a free event
     """
@@ -546,6 +562,7 @@ async def create_paid_event(request: Request, user_id: int = Depends(get_current
         # Separate normal data and file data from the form
         data = {}
         files = {}
+        print(f"[DEBUG - create_paid_event] Processing form data")
         for key, value in form_data.multi_items():
             if isinstance(value, UploadFile):
                 files[key] = value
@@ -670,13 +687,16 @@ async def create_paid_event(request: Request, user_id: int = Depends(get_current
 
 @router.get("/event/paid/ticket/fields")
 async def paid_ticket_creation_fields(request: Request):
+    print(f"[DEBUG - paid_ticket_creation_fields] Function called")
     FormClass = PaidFreeTicketForm
     fields_info = get_form_fields(FormClass)
+    print(f"[DEBUG - paid_ticket_creation_fields] Returning form fields: {list(fields_info.keys())}")
     return JSONResponse(content=fields_info, status_code=status.HTTP_200_OK)
 
 
 @router.post("/event/{eventId}/createPaidFreeTicket")
 async def create_paid_free_ticket(eventId: str, request: Request):
+    print(f"[DEBUG - create_paid_free_ticket] Function called with eventId: {eventId}")
     try:
         # Get form data (includes both text fields and files)
         form_data = await request.form()
@@ -684,6 +704,7 @@ async def create_paid_free_ticket(eventId: str, request: Request):
         # Separate normal data and file data from the form
         data = {}
         files = {}
+        print(f"[DEBUG - create_paid_event] Processing form data")
         for key, value in form_data.multi_items():
             if isinstance(value, UploadFile):
                 files[key] = value
@@ -717,6 +738,7 @@ async def create_paid_free_ticket(eventId: str, request: Request):
 
         # Execute the create ticket function
         result = await process_create_ticket(eventId, data)
+        print(f"[DEBUG - create_paid_free_ticket] Ticket created with code: {result.get('code', 'unknown')}")
         return JSONResponse(content=result, status_code=status.HTTP_200_OK)
 
     except ValueError as ve:
@@ -737,17 +759,21 @@ async def create_paid_free_ticket(eventId: str, request: Request):
 
 @router.get("/event/paid/coupon/fields")
 async def paid_coupon_creation_fields(request: Request):
+    print(f"[DEBUG - paid_coupon_creation_fields] Function called")
     FormClass = CouponCodeForm
     fields_info = get_form_fields(FormClass)
+    print(f"[DEBUG - paid_coupon_creation_fields] Returning form fields: {list(fields_info.keys())}")
     return JSONResponse(content=fields_info, status_code=status.HTTP_200_OK)
 
 
 @router.get("/event/{eventId}/coupons")
 async def get_event_coupons(eventId: str, request: Request):
+    print(f"[DEBUG - get_event_coupons] Function called with eventId: {eventId}")
     try:
         # Wrap Django ORM calls in a synchronous function
         @sync_to_async
         def get_event_coupons_sync(event_id):
+            print(f"[DEBUG - get_event_coupons] Fetching coupons for event: {event_id}")
             # Fetch the event object or raise a 404 error if not found
             event = get_object_or_404(Event, eventId=event_id)
             coupon_codes = CouponCode.objects.filter(event=event).values()
@@ -760,6 +786,7 @@ async def get_event_coupons(eventId: str, request: Request):
 
         # Execute synchronous function asynchronously
         coupons = await get_event_coupons_sync(eventId)
+        print(f"[DEBUG - get_event_coupons] Found {len(coupons)} coupons")
     except Event.DoesNotExist:
         return JSONResponse(
             content={"message": "Event not found."},
@@ -778,6 +805,7 @@ async def get_event_coupons(eventId: str, request: Request):
 
 @router.post("/event/{eventId}/createCoupon")
 async def create_event_coupons(eventId: str, request: Request):
+    print(f"[DEBUG - create_event_coupons] Function called with eventId: {eventId}")
     try:
         # Get form data (includes both text fields and files)
         form_data = await request.form()
@@ -785,6 +813,7 @@ async def create_event_coupons(eventId: str, request: Request):
         # Separate normal data and file data from the form
         data = {}
         files = {}
+        print(f"[DEBUG - create_paid_event] Processing form data")
         for key, value in form_data.multi_items():
             if isinstance(value, UploadFile):
                 files[key] = value
@@ -818,6 +847,7 @@ async def create_event_coupons(eventId: str, request: Request):
 
         # Execute the create coupon function
         result = await process_create_coupon(eventId, data)
+        print(f"[DEBUG - create_event_coupons] Coupon created with code: {result.get('code', 'unknown')}")
         return JSONResponse(content=result, status_code=status.HTTP_200_OK)
 
     except ValueError as ve:
@@ -838,10 +868,12 @@ async def create_event_coupons(eventId: str, request: Request):
 
 @router.get("/event/{eventId}/rsvp")
 async def get_event_rsvp_list(eventId: str, request: Request):
+    print(f"[DEBUG - get_event_rsvp_list] Function called with eventId: {eventId}")
     try:
         # Wrap Django ORM calls in a synchronous function
         @sync_to_async
         def get_event_rsvp_list_sync(event_id):
+            print(f"[DEBUG - get_event_rsvp_list] Fetching RSVP list for event: {event_id}")
             # Fetch the event object or raise a 404 error if not found
             event = get_object_or_404(Event, eventId=event_id)
             rsvp_list = RSVPTicket.objects.filter(event=event).values()
@@ -854,6 +886,7 @@ async def get_event_rsvp_list(eventId: str, request: Request):
 
         # Execute synchronous function asynchronously
         rsvp_list = await get_event_rsvp_list_sync(eventId)
+        print(f"[DEBUG - get_event_rsvp_list] Found {len(rsvp_list)} RSVP entries")
     except Event.DoesNotExist:
         return JSONResponse(
             content={"message": "Event not found."},
@@ -872,12 +905,14 @@ async def get_event_rsvp_list(eventId: str, request: Request):
 
 @router.post("/event/{eventId}/rsvp/delete")
 async def delete_event_rsvp(eventId: str, request: Request, user_id: int = Depends(get_current_user)):
+    print(f"[DEBUG - delete_event_rsvp] Function called with eventId: {eventId}, user_id: {user_id}")
     """
     API endpoint for a host to delete a user's RSVP ticket
     """
     try:
         # Get the request data
         data = await request.json()
+        print(f"[DEBUG - delete_purchased_ticket] Request data: {data}")
         
         # Check if ticket_id is provided
         ticket_id = data.get("ticket_id")
@@ -939,6 +974,7 @@ async def delete_event_rsvp(eventId: str, request: Request, user_id: int = Depen
         
         # Execute the delete function
         result = await delete_rsvp_ticket()
+        print(f"[DEBUG - delete_event_rsvp] Result: {result}")
         return JSONResponse(content=result, status_code=status.HTTP_200_OK)
         
     except HTTPException as http_ex:
@@ -961,6 +997,7 @@ async def delete_event_rsvp(eventId: str, request: Request, user_id: int = Depen
 
 @router.get("/event/{eventId}/purchasedTickets")
 async def get_purchased_tickets_for_event(eventId: str, user_id: int = Depends(get_current_user)):
+    print(f"[DEBUG - get_purchased_tickets_for_event] Function called with eventId: {eventId}, user_id: {user_id}")
     """
     API endpoint for getting purchased tickets for an event
     Only the host of the event can access this endpoint
@@ -969,6 +1006,7 @@ async def get_purchased_tickets_for_event(eventId: str, user_id: int = Depends(g
         # Wrap Django ORM calls in a synchronous function
         @sync_to_async
         def get_purchased_tickets_sync(event_id):
+            print(f"[DEBUG - get_purchased_tickets_for_event] Fetching purchased tickets for event: {event_id}")
             # Get the event object or raise a 404 error if not found
             event = get_object_or_404(Event, eventId=event_id)
             
@@ -990,6 +1028,7 @@ async def get_purchased_tickets_for_event(eventId: str, user_id: int = Depends(g
         
         # Execute synchronous function asynchronously
         purchased_tickets_data = await get_purchased_tickets_sync(eventId)
+        print(f"[DEBUG - get_purchased_tickets_for_event] Found {len(purchased_tickets_data)} purchased tickets")
         
         return JSONResponse(content={"purchasedTickets": purchased_tickets_data}, status_code=status.HTTP_200_OK)
         
@@ -1013,6 +1052,7 @@ async def get_purchased_tickets_for_event(eventId: str, user_id: int = Depends(g
 
 @router.post("/event/{eventId}/purchasedTickets/delete")
 async def delete_purchased_ticket(eventId: str, request: Request, user_id: int = Depends(get_current_user)):
+    print(f"[DEBUG - delete_purchased_ticket] Function called with eventId: {eventId}, user_id: {user_id}")
     """
     API endpoint for deleting a purchased ticket
     Only the host of the event can delete tickets
@@ -1020,6 +1060,7 @@ async def delete_purchased_ticket(eventId: str, request: Request, user_id: int =
     try:
         # Get the request data
         data = await request.json()
+        print(f"[DEBUG - delete_purchased_ticket] Request data: {data}")
         
         # Check if ticket_id is provided
         ticket_id = data.get("ticket_id")
@@ -1065,6 +1106,7 @@ async def delete_purchased_ticket(eventId: str, request: Request, user_id: int =
         
         # Execute the delete function
         result = await delete_purchased_ticket_sync()
+        print(f"[DEBUG - delete_purchased_ticket] Result: {result}")
         return JSONResponse(content=result, status_code=status.HTTP_200_OK)
         
     except HTTPException as http_ex:

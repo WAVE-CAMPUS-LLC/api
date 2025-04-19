@@ -46,6 +46,7 @@ async def profileOverview(user_id: int = Depends(get_current_user)):
     API endpoint for getting profile overview.
     Returns user profile data.
     """
+    print(f"[profileOverview] API called with user_id: {user_id}")
     # Log authentication status
     if user_id is None:
         print("[profileOverview] Authentication failed: No user_id provided")
@@ -54,8 +55,6 @@ async def profileOverview(user_id: int = Depends(get_current_user)):
             detail="Authentication required",
             headers={"WWW-Authenticate": "Bearer"},
         )
-
-    print(f"[profileOverview] Processing request for user_id: {user_id}")
 
     @sync_to_async
     def get_profile_overview(user_id):
@@ -73,9 +72,7 @@ async def profileOverview(user_id: int = Depends(get_current_user)):
                 "last_name": user.last_name,
                 "username": user.username,
             }
-            print(
-                f"[profileOverview] Successfully retrieved profile data for user_id: {user_id}"
-            )
+            print(f"[profileOverview] Successfully retrieved profile data for user_id: {user_id}")
             return user_data
         except CustomUser.DoesNotExist:
             print(f"[profileOverview] Error: User with id {user_id} does not exist")
@@ -106,6 +103,7 @@ async def profile_detailed(user_id: int = Depends(get_current_user)):
     API endpoint for getting detailed profile information.
     Returns user profile data including email and phone number.
     """
+    print(f"[profile_detailed] API called with user_id: {user_id}")
 
     @sync_to_async
     def get_profile_detailed(user_id):
@@ -130,7 +128,9 @@ async def profile_detailed(user_id: int = Depends(get_current_user)):
 
     profile_data = await get_profile_detailed(user_id)
     if profile_data is None:
+        print(f"[profile_detailed] Error: User not found for user_id: {user_id}")
         raise HTTPException(status_code=404, detail="Event not found")
+    print(f"[profile_detailed] Returning profile data: {profile_data}")
     return profile_data
 
 
@@ -147,10 +147,14 @@ async def update_profile_detailed(
     API endpoint for updating detailed profile information.
     Updates user profile data including email, phone number, and profile photo.
     """
+    print(f"[update_profile_detailed] API called with user_id: {user_id}")
+    print(f"[update_profile_detailed] Request parameters: first_name={first_name}, last_name={last_name}, email={email}")
+    print(f"[update_profile_detailed] Profile photo provided: {profile_photo is not None}")
 
     @sync_to_async
     def update_profile_detailed(user_id, first_name, last_name, email, profile_photo):
         try:
+            print(f"[update_profile_detailed] Updating user data for user_id: {user_id}")
             user = CustomUser.objects.get(id=user_id)
             if first_name:
                 user.first_name = first_name
@@ -159,6 +163,7 @@ async def update_profile_detailed(
             if email:
                 user.email = email
             user.save()
+            print(f"[update_profile_detailed] User data saved successfully")
 
             # Handle profile photo upload if provided
             if profile_photo:
@@ -196,17 +201,22 @@ async def update_profile_detailed(
         user_id, first_name, last_name, email, profile_photo
     )
     if not success:
+        print(f"[update_profile_detailed] Error: User not found for user_id: {user_id}")
         raise HTTPException(status_code=404, detail="User not found")
 
+    print(f"[update_profile_detailed] Profile updated successfully for user_id: {user_id}")
     return {"message": "Profile updated successfully"}
 
 
 @router.get("/getUserTickets")
 async def get_user_tickets(user_id: int = Depends(get_current_user)):
+    print(f"[get_user_tickets] API called with user_id: {user_id}")
     @sync_to_async
     def get_user_tickets_async(user_id):
+        print(f"[get_user_tickets_async] Retrieving tickets for user_id: {user_id}")
         user = CustomUser.objects.get(id=user_id)
         tickets = Ticket.objects.filter(user=user)
+        print(f"[get_user_tickets_async] Found {tickets.count()} tickets")
         ticket_list = []
         for ticket in tickets:
             # Create serializable event object
@@ -255,6 +265,7 @@ async def get_user_tickets(user_id: int = Depends(get_current_user)):
     ticket_data = await get_user_tickets_async(user_id)
     tickets = [TicketSerializer(**ticket) for ticket in ticket_data]
 
+    print(f"[get_user_tickets] Returning {len(tickets)} serialized tickets")
     return {"tickets": tickets}
 
 
@@ -266,12 +277,15 @@ async def get_user_ticket_details(
     API endpoint for getting user ticket details.
     Returns details of a specific ticket belonging to the authenticated user.
     """
+    print(f"[get_user_ticket_details] API called with ticketId: {ticketId}, user_id: {user_id}")
 
     @sync_to_async
     def get_user_ticket_details_async(ticketId, user_id):
+        print(f"[get_user_ticket_details_async] Retrieving ticket details for ticketId: {ticketId}, user_id: {user_id}")
         user = CustomUser.objects.get(id=user_id)
         try:
             ticket = Ticket.objects.get(ticketId=ticketId, user=user)
+            print(f"[get_user_ticket_details_async] Found ticket with ID: {ticketId}")
             return {
                 "ticketId": str(ticket.ticketId),
                 "guestFirstName": ticket.guestFirstName,
@@ -292,8 +306,10 @@ async def get_user_ticket_details(
 
     ticket_data = await get_user_ticket_details_async(ticketId, user_id)
     if ticket_data is None:
+        print(f"[get_user_ticket_details] Error: Ticket not found for ticketId: {ticketId}, user_id: {user_id}")
         raise HTTPException(status_code=404, detail="Ticket not found")
 
+    print(f"[get_user_ticket_details] Returning ticket data for ticketId: {ticketId}")
     return ticket_data
 
 
@@ -303,13 +319,16 @@ async def favoriteEvents(user_id: int = Depends(get_current_user)):
     API endpoint for getting profile overview.
     Returns user profile data.
     """
+    print(f"[favoriteEvents] API called with user_id: {user_id}")
 
     @sync_to_async
     def get_fav_events(user_id):
         try:
+            print(f"[get_fav_events] Retrieving favorite events for user_id: {user_id}")
             user = CustomUser.objects.get(id=user_id)
             user_profile = UserProfile.objects.get(user=user)
             events = user_profile.favorite_events.all()
+            print(f"[get_fav_events] Found {events.count()} favorite events")
             event_data = [
                 {
                     "eventId": event.eventId,
@@ -327,7 +346,9 @@ async def favoriteEvents(user_id: int = Depends(get_current_user)):
 
     events_data = await get_fav_events(user_id)
     if events_data is None:
+        print(f"[favoriteEvents] Error: User not found for user_id: {user_id}")
         raise HTTPException(status_code=404, detail="Event not found")
+    print(f"[favoriteEvents] Returning {len(events_data)} favorite events for user_id: {user_id}")
     return events_data
 
 
@@ -337,38 +358,48 @@ async def delete_profile(user_id: int = Depends(get_current_user)):
     API endpoint for deleting a user profile.
     Deletes the user profile and associated data.
     """
+    print(f"[delete_profile] API called with user_id: {user_id}")
 
     @sync_to_async
     def delete_profile(user_id):
         try:
+            print(f"[delete_profile] Deleting user with user_id: {user_id}")
             user = CustomUser.objects.get(id=user_id)
             user.delete()
+            print(f"[delete_profile] User deleted successfully")
             return True
         except CustomUser.DoesNotExist:
             return False
 
     success = await delete_profile(user_id)
     if not success:
+        print(f"[delete_profile] Error: User not found for user_id: {user_id}")
         raise HTTPException(status_code=404, detail="User not found")
 
+    print(f"[delete_profile] Profile deleted successfully for user_id: {user_id}")
     return {"message": "Profile deleted successfully"}
 
 
 @router.get("/checkHost")
 async def check_host(user_id: int = Depends(get_current_user)):
+    print(f"[check_host] API called with user_id: {user_id}")
 
     @sync_to_async
     def check_user_is_host(user_id):
         try:
+            print(f"[check_user_is_host] Checking if user_id: {user_id} is a host")
             user = CustomUser.objects.get(id=user_id)
             is_host = user.groups.filter(name="Host").exists()
+            print(f"[check_user_is_host] User is host: {is_host}")
             return {"is_host": is_host}
         except CustomUser.DoesNotExist:
             return None
 
     result = await check_user_is_host(user_id)
     if result is None:
+        print(f"[check_host] Error: User not found for user_id: {user_id}")
         raise HTTPException(status_code=404, detail="User not found")
+    print(f"[check_host] Returning host status for user_id: {user_id}: {result}")
     return result
 
 
@@ -378,14 +409,17 @@ async def get_host_dashboard_link(user_id: int = Depends(get_current_user)):
     API endpoint for getting Stripe dashboard link for hosts.
     Returns a link to the Stripe dashboard for the user's connected account.
     """
+    print(f"[get_host_dashboard_link] API called with user_id: {user_id}")
 
     @sync_to_async
     def get_host_stripe_link(user_id):
         try:
+            print(f"[get_host_stripe_link] Retrieving Stripe dashboard link for user_id: {user_id}")
             user = CustomUser.objects.get(id=user_id)
 
             # Check if stripe account ID exists
             if not user.connectAccountID:
+                print(f"[get_host_stripe_link] No connectAccountID found for user_id: {user_id}")
                 return {
                     "error": "You aren't a host yet. Host your first event to get started."
                 }, 400
@@ -411,11 +445,14 @@ async def get_host_dashboard_link(user_id: int = Depends(get_current_user)):
 
     result, status_code = await get_host_stripe_link(user_id)
     if result is None:
+        print(f"[get_host_dashboard_link] Error: User not found for user_id: {user_id}")
         raise HTTPException(status_code=404, detail="User not found")
 
     if status_code != 200:
+        print(f"[get_host_dashboard_link] Error: {result.get('error')} for user_id: {user_id}")
         raise HTTPException(status_code=status_code, detail=result.get("error"))
 
+    print(f"[get_host_dashboard_link] Returning dashboard link for user_id: {user_id}")
     return result
 
 
@@ -425,12 +462,15 @@ async def get_user_college(user_id: int = Depends(get_current_user)):
     API endpoint for getting user's college information.
     Returns the college name and ID associated with the user.
     """
+    print(f"[get_user_college] API called with user_id: {user_id}")
 
     @sync_to_async
     def get_user_college(user_id):
         try:
+            print(f"[get_user_college] Retrieving college info for user_id: {user_id}")
             user = CustomUser.objects.get(id=user_id)
             college = user.user_profile.college
+            print(f"[get_user_college] College found: {college is not None}")
             if college:
                 return {
                     "collegeId": str(college.collegeId),
@@ -443,8 +483,10 @@ async def get_user_college(user_id: int = Depends(get_current_user)):
 
     college_data = await get_user_college(user_id)
     if college_data is None:
+        print(f"[get_user_college] Error: User or college not found for user_id: {user_id}")
         raise HTTPException(status_code=404, detail="User not found")
 
+    print(f"[get_user_college] Returning college data for user_id: {user_id}: {college_data}")
     return college_data
 
 
@@ -454,15 +496,18 @@ async def get_user_settings(user_id: int = Depends(get_current_user)):
     API endpoint for retrieving user settings and profile information.
     Returns user profile data and settings.
     """
+    print(f"[get_user_settings] API called with user_id: {user_id}")
 
     @sync_to_async
     def get_settings_async(user_id):
         try:
+            print(f"[get_settings_async] Retrieving user settings for user_id: {user_id}")
             user = CustomUser.objects.get(id=user_id)
             profile = get_object_or_404(UserProfile, user=user)
 
             user_serializer = CustomUserSerializer(user)
             profile_serializer = UserProfileSerializer(profile)
+            print(f"[get_settings_async] User and profile data serialized successfully")
 
             return {
                 "user": user_serializer.data,
@@ -499,6 +544,7 @@ async def update_user_settings(
     API endpoint for updating user settings and profile information.
     Updates user profile data based on the action provided.
     """
+    print(f"[update_user_settings] API called with user_id: {user_id}")
     # Check content type and handle accordingly
     content_type = request.headers.get("content-type", "")
     print("[update_user_settings] Content type:", content_type)
@@ -555,8 +601,10 @@ async def update_user_settings(
     @sync_to_async
     def update_settings_async(user_id, action, form_data, files=None):
         try:
+            print(f"[update_settings_async] Processing settings update for user_id: {user_id}, action: {action}")
             user = CustomUser.objects.get(id=user_id)
             profile = get_object_or_404(UserProfile, user=user)
+            print(f"[update_settings_async] User and profile retrieved successfully")
 
             if action == "updateProfilePicture":
                 print("[update_settings_async] Action: updateProfilePicture")
@@ -593,6 +641,7 @@ async def update_user_settings(
                     if form.is_valid():
                         updated_profile = form.save()
                         serializer = UserProfileSerializer(updated_profile)
+                        print(f"[update_settings_async] Profile picture updated successfully")
                         return {
                             "message": "Profile picture updated successfully!",
                             "profile": serializer.data,
@@ -685,28 +734,35 @@ async def update_user_settings(
                     }
 
             elif action == "updatePersonalInfo":
+                print(f"[update_settings_async] Action: updatePersonalInfo")
                 form = UpdatePersonalInfo(form_data, instance=user)
                 if form.is_valid():
                     updated_user = form.save()
                     serializer = CustomUserSerializer(updated_user)
+                    print(f"[update_settings_async] Personal info updated successfully")
                     return {
                         "message": "Personal info updated!",
                         "user": serializer.data,
                     }
+                print(f"[update_settings_async] Form validation errors: {form.errors}")
                 return {"errors": form.errors, "status_code": 400}
 
             elif action == "updateContactInfo":
+                print(f"[update_settings_async] Action: updateContactInfo")
                 form = UpdateContactInfo(form_data, instance=user)
                 if form.is_valid():
                     updated_user = form.save()
                     serializer = CustomUserSerializer(updated_user)
+                    print(f"[update_settings_async] Contact info updated successfully")
                     return {
                         "message": "Contact info updated!",
                         "user": serializer.data,
                     }
+                print(f"[update_settings_async] Form validation errors: {form.errors}")
                 return {"errors": form.errors, "status_code": 400}
 
             else:
+                print(f"[update_settings_async] Invalid action: {action}")
                 return {"error": "Invalid action.", "status_code": 400}
 
         except CustomUser.DoesNotExist:
@@ -720,11 +776,15 @@ async def update_user_settings(
 
     try:
         # Process with form data and files from earlier parsing
+        print(f"[update_user_settings] Calling update_settings_async with action: {action}")
         result = await update_settings_async(user_id, action, data, files)
         if "status_code" in result:
             status_code = result.pop("status_code")
+            print(f"[update_user_settings] Error with status code {status_code}: {result}")
             raise HTTPException(status_code=status_code, detail=result)
 
+        print(f"[update_user_settings] Successfully processed action '{action}' for user_id: {user_id}")
+        print(f"[update_user_settings] Returning result: {result}")
         return result
     except Exception as e:
         if not isinstance(e, HTTPException):

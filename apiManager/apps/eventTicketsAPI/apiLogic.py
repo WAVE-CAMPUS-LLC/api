@@ -84,6 +84,7 @@ async def process_checkout(
     cart_data: CartData = Body(...),
     user_id: Optional[str] = Depends(get_current_user)
 ):
+    print(f"[process_checkout] Function called with user_id: {user_id}")
     """Process checkout for event tickets using Stripe
     
     This endpoint handles the creation of a Stripe checkout session for purchasing event tickets.
@@ -376,6 +377,8 @@ async def process_checkout(
                 )
             
             print(f"Checkout session created: {checkout_session.id}")
+            print(f"[process_checkout] Created checkout session with ID: {checkout_session.id}")
+            print(f"[process_checkout] Returning checkout URL for user: {user_id}")
             return {"sessionUrl": checkout_session.url}
         
         except stripe.error.StripeError as e:
@@ -406,6 +409,7 @@ async def process_checkout(
         
 @router.get("/ticketDetails")
 async def ticket_details(request: Request):
+    print(f"[ticket_details] Function called with ticket ID: {request.query_params.get('ticketId')}")
     
     @sync_to_async
     def get_ticket_details(ticket_id):
@@ -438,12 +442,15 @@ async def ticket_details(request: Request):
     ticket_id = request.query_params.get("ticketId")
     result = await get_ticket_details(ticket_id)
     if result is None:
+        print(f"[ticket_details] Ticket not found: {ticket_id}")
         return {"error": "Ticket not found"}
+    print(f"[ticket_details] Successfully retrieved ticket details for: {ticket_id}")
     return result
 
 
 @router.post("/activateTicket")
 async def activate_ticket(request: Request):
+    print(f"[activate_ticket] Function called with ticket ID: {request.query_params.get('ticketId')}")
     @sync_to_async
     def activate_user_ticket(ticket_id):
         try:
@@ -521,6 +528,7 @@ async def activate_ticket(request: Request):
         
     ticket_id = request.query_params.get("ticketId")
     result = await activate_user_ticket(ticket_id)
+    print(f"[activate_ticket] Result for ticket {ticket_id}: {result.get('message', 'No message')}")
     return result
 
 
@@ -567,6 +575,7 @@ class AttendeesResponse(BaseModel):
 async def get_paid_ticket_types(
     request: Request,
 ):
+    print(f"[get_paid_ticket_types] Function called with event ID: {request.query_params.get('eventId')}")
     """Get all available paid ticket types for a given paid event
     
     This endpoint returns all available paid ticket types for a specific event,
@@ -632,11 +641,14 @@ async def get_paid_ticket_types(
     result = await get_event_ticket_types(event_id)
     
     if "error" in result:
+        print(f"[get_paid_ticket_types] Error for event {event_id}: {result['error']}")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND if result["error"] == "Event not found" else status.HTTP_400_BAD_REQUEST,
             detail=result["error"]
         )
     
+    ticket_count = len(result.get('ticket_types', []))
+    print(f"[get_paid_ticket_types] Successfully retrieved {ticket_count} ticket types for event: {event_id}")
     return result
 
 
@@ -717,6 +729,7 @@ async def get_event_attendees(
     
     if "error" in result:
         error_message = result["error"]
+        print(f"[get_event_attendees] Error for event {event_id}: {error_message}")
         if error_message == "Event not found":
             status_code = status.HTTP_404_NOT_FOUND
         else:
@@ -727,5 +740,6 @@ async def get_event_attendees(
             detail=error_message
         )
     
+    print(f"[get_event_attendees] Successfully retrieved {result.get('attendees_count', 0)} attendees for event: {event_id}")
     return result
 
