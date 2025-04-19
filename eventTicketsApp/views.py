@@ -523,6 +523,11 @@ def paymentSuccessful(request):
             
         print(f"Processing cart item: {cart_key} = {ticket_info}")
         
+        # Check if ticket_info is a dictionary before trying to use .get()
+        if not isinstance(ticket_info, dict):
+            print(f"Warning: ticket_info for {cart_key} is not a dictionary: {type(ticket_info)}")
+            continue
+            
         event_id = ticket_info.get("eventId")
         if not event_id:
             print(f"No event ID found in cart item {cart_key}")

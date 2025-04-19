@@ -333,6 +333,7 @@ async def process_checkout(
                         'original_amount': str(original_amount),
                         'discounted_amount': str(total_amount)
                     }
+                    
                 )
             else:
                 # Regular checkout with transfer to host's account
