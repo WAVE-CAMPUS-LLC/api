@@ -162,56 +162,9 @@ async def get_event_details(eventId: str):
     if event_data is None:
         raise HTTPException(status_code=404, detail="Event not found")
     
-    # Transform the data to match the requested format
-    transformed_data = {
-        "id": event_data["eventId"],
-        "title": event_data["title"],
-        "description": event_data["description"],
-        "date": event_data["date"],
-        "startTime": event_data["start_time"],
-        "endTime": event_data["end_time"],
-        "ticketing": event_data["ticketing"],
-        "location": {
-            "buildingName": event_data["building_name"],
-            "street": event_data["street"],
-            "aptSuiteUnit": event_data["apt_suite_unit"],
-            "city": event_data["city"],
-            "state": event_data["state"],
-            "zipCode": event_data["zip_code"],
-            "hideAddress": event_data["hide_address"],
-            "country": event_data["country"],
-        },
-        "host": {
-            **event_data["host"],
-            "profilePhoto": event_data["host"]["profilePhoto"],
-            "isCampusManager": event_data["host"]["isCampusManager"],
-        },
-        "ageRestriction": event_data["age_restriction"],
-        "eventType": event_data["event_type"],
-        "status": event_data["status"],
-        "images": {
-            "header": event_data["header_photo"],
-            "bodyPhotos": [photo for photo in [
-                event_data["body_photo_one"],
-                event_data["body_photo_two"],
-                event_data["body_photo_three"],
-                event_data["body_photo_four"],
-                event_data["body_photo_five"],
-            ] if photo is not None],
-        },
-        "guestList": event_data["guestList"],
-        "isFavorite": event_data["isFavoriteEvent"],
-        "rsvpRequired": event_data["rsvpFormRequired"],
-        "paidFreeTickets": event_data["paidFreeTickets"],
-        "crewDiscount": event_data["crew_discount"],
-        "crewDiscountPercentage": event_data["crew_discount_percentage"],
-        "minimumCrewSize": event_data["minimum_crew_size"],
-        "couponsActivated": event_data["coupons_activated"],
-    }
-    
     print(f"[get_event_details API] Returning details for event: {event_data.get('title')}")
     
-    return{"event": transformed_data}
+    return{"event": event_data}
 
 @router.get("/event/{eventId}/host_profile")
 async def get_event_host_profile(eventId: str):
