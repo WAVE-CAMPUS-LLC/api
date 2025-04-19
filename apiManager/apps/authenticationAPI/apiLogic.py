@@ -184,14 +184,25 @@ async def join_api(request: Request):
             # Return errors if basic validation failed
             if errors:
                 return errors, status.HTTP_400_BAD_REQUEST
-            
-            # Use the form but with optimizations
+              # Use the form but with optimizations
             form = MobileUserJoinForm(form_data)
             if form.is_valid():
                 # Create user with optimized save
                 user = form.save(commit=False)
                 user.is_active = True
+                user.email_verified = True
+                user.is_staff = False
+                user.is_superuser = False
+                user.is_superadmin = False
                 user.save()
+                
+                # Assign "Member" and "Verified" groups to the user
+                from django.contrib.auth.models import Group
+                member_group, _ = Group.objects.get_or_create(name="Member")
+                verified_group, _ = Group.objects.get_or_create(name="Verified")
+                user.groups.add(member_group)
+                user.groups.add(verified_group)
+                
                 return None, status.HTTP_201_CREATED
             else:
                 return form.errors, status.HTTP_400_BAD_REQUEST
