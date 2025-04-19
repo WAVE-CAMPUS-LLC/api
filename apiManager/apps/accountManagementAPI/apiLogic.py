@@ -219,7 +219,25 @@ async def get_user_tickets(user_id: int = Depends(get_current_user)):
         print(f"[get_user_tickets_async] Found {tickets.count()} tickets")
         ticket_list = []
         for ticket in tickets:
-            # Create serializable event object
+            # Create serializable event object            # Default location dictionary with all required fields
+            default_location = {
+                "address": "",
+                "city": "",
+                "state": "",
+                "zip_code": "",
+                "country": ""
+            }
+            
+            # Get event location if available, otherwise use default
+            location_data = default_location
+            if hasattr(ticket.event, 'location') and ticket.event.location:
+                # If location is a dictionary, update default values with available ones
+                if isinstance(ticket.event.location, dict):
+                    location_data = {**default_location, **ticket.event.location}
+                # If location is a string or other object, put it in the address field
+                elif ticket.event.location:
+                    location_data["address"] = str(ticket.event.location)
+            
             event_obj = {
                 "eventId": str(ticket.event.eventId),
                 "title": ticket.event.title,
@@ -232,7 +250,7 @@ async def get_user_tickets(user_id: int = Depends(get_current_user)):
                     else None
                 ),
                 "description": ticket.event.description if hasattr(ticket.event, 'description') else None,
-                "location": ticket.event.location if hasattr(ticket.event, 'location') else None,
+                "location": location_data,
             }
             
             ticket_list.append(
