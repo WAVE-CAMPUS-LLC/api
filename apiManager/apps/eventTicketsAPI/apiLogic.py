@@ -18,6 +18,7 @@ from eventManagementApp.models import Event, CouponCode
 from authenticationApp.models import CustomUser
 from fastapi import Depends
 from apiManager.dependencies import get_current_user
+from eventTicketsApp.serializers import TicketSerializer
 
 
 router = APIRouter()
@@ -743,3 +744,71 @@ async def get_event_attendees(
     print(f"[get_event_attendees] Successfully retrieved {result.get('attendees_count', 0)} attendees for event: {event_id}")
     return result
 
+
+@router.get("/event/{eventId}/tickets", response_model=TicketTypesResponse, status_code=status.HTTP_200_OK)
+async def get_tickets(eventId: str, user_id: Optional[int] = Depends(get_current_user)):
+    """
+    API endpoint to retrieve the types of tickets available for a specific event.
+    
+    This endpoint returns all available ticket types for a specific event,
+    including details like price, description, and availability.
+    
+    Args:
+        eventId: The ID of the event to get ticket types for
+        user_id: The authenticated user ID (optional)
+        
+    Returns:
+        A JSON response with event details and ticket types
+    """
+    print(f"[get_tickets API] Function called with eventId: {eventId}")
+    
+    @sync_to_async
+    def get_event_ticket_types(event_id):
+        try:
+            # Get the event
+            event = Event.objects.get(eventId=event_id)
+            
+            # Get all ticket types for this event
+            ticket_types = PaidFreeTicket.objects.filter(event=event).select_related('event')
+            
+            # Format the response
+            ticket_types_data = []
+            for ticket_type in ticket_types:
+                available = ticket_type.ticket_quantity - ticket_type.ticket_sold
+                ticket_types_data.append({
+                    "ticket_id": str(ticket_type.ticket_id),
+                    "ticket_name": ticket_type.ticket_name,
+                    "ticket_price": float(ticket_type.ticket_price) if ticket_type.ticket_price else 0.0,
+                    "ticket_description": ticket_type.ticket_description,
+                    "ticket_quantity": ticket_type.ticket_quantity,
+                    "ticket_sold": ticket_type.ticket_sold,
+                    "available_tickets": available,
+                    "crew_discounted_price": float(ticket_type.crew_discounted_price) if ticket_type.crew_discounted_price else None
+                })
+            
+            return {
+                "event_id": str(event.eventId),
+                "event_title": event.title,
+                "ticket_types": ticket_types_data
+            }
+            
+        except Event.DoesNotExist:
+            return {"error": "Event not found"}
+        except Exception as e:
+            import traceback
+            print(f"Unexpected error in get_tickets: {e}")
+            print(traceback.format_exc())
+            return {"error": str(e)}
+    
+    result = await get_event_ticket_types(eventId)
+    
+    if "error" in result:
+        print(f"[get_tickets API] Error for event {eventId}: {result['error']}")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND if result["error"] == "Event not found" else status.HTTP_400_BAD_REQUEST,
+            detail=result["error"]
+        )
+    
+    ticket_count = len(result.get('ticket_types', []))
+    print(f"[get_tickets API] Successfully retrieved {ticket_count} ticket types for event: {eventId}")
+    return result
