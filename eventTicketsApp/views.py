@@ -417,15 +417,19 @@ def paymentSuccessful(request):
                                         print(f"Found event from metadata: {event.title}")
                                         
                                         # Try to find the original ticket
-                                        ticket = PaidFreeTicket.objects.get(ticket_id=original_ticket_id, event=event)
-                                        print(f"Found original ticket: {ticket.ticket_name}")
-                                        
-                                        cart[original_ticket_id] = {
-                                            "name": ticket.ticket_name,
-                                            "price": float(ticket.price),
-                                            "quantity": item.quantity,
-                                            "eventId": str(event.eventId)
-                                        }
+                                        # PaidFreeTicket uses ticket_id as primary key
+                                        try:
+                                            ticket = PaidFreeTicket.objects.get(ticket_id=original_ticket_id, event=event)
+                                            print(f"Found original ticket: {ticket.ticket_name}")
+                                            
+                                            cart[original_ticket_id] = {
+                                                "name": ticket.ticket_name,
+                                                "price": float(ticket.ticket_price),  # Use ticket_price instead of price
+                                                "quantity": item.quantity,
+                                                "eventId": str(event.eventId)
+                                            }
+                                        except Exception as e:
+                                            print(f"Error finding ticket with ticket_id={original_ticket_id}: {e}")
                                         continue
                                     except (Event.DoesNotExist, PaidFreeTicket.DoesNotExist) as e:
                                         print(f"Could not find original ticket/event: {e}")
@@ -516,9 +520,16 @@ def paymentSuccessful(request):
     
     # Loop over each cart item to generate tickets
     ticket_count = 0
+    
+    # Special handling for event_id if it's a direct key in the cart
+    event_id_from_cart = cart.get('event_id')
+    if event_id_from_cart and isinstance(event_id_from_cart, str):
+        print(f"Found event_id directly in cart: {event_id_from_cart}")
+    
     for cart_key, ticket_info in cart.items():
         # Skip non-ticket items
-        if cart_key == 'coupon_code' or cart_key == 'discount_percentage':
+        if cart_key in ['coupon_code', 'discount_percentage', 'event_id', 'coupon_id']:
+            print(f"Skipping non-ticket item: {cart_key}")
             continue
             
         print(f"Processing cart item: {cart_key} = {ticket_info}")
@@ -528,9 +539,10 @@ def paymentSuccessful(request):
             print(f"Warning: ticket_info for {cart_key} is not a dictionary: {type(ticket_info)}")
             continue
             
-        event_id = ticket_info.get("eventId")
+        # Get event_id from the ticket_info or use the one from the cart
+        event_id = ticket_info.get("eventId") or event_id_from_cart
         if not event_id:
-            print(f"No event ID found in cart item {cart_key}")
+            print(f"No event ID found in cart item {cart_key} or cart")
             continue
 
         try:
