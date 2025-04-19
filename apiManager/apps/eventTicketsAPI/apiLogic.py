@@ -373,13 +373,14 @@ async def process_checkout(
                         'original_amount': str(original_amount),
                         'discounted_amount': str(total_amount)
                     },
-                    success_url=f"{success_url}?session_id={{CHECKOUT_SESSION_ID}}&from_mobile=true",
+                    success_url=f"{success_url}?session_id={{CHECKOUT_SESSION_ID}}",
                     cancel_url=f"{cancel_url}?from_mobile=true",
                 )
             
             print(f"Checkout session created: {checkout_session.id}")
             print(f"[process_checkout] Created checkout session with ID: {checkout_session.id}")
             print(f"[process_checkout] Returning checkout URL for user: {user_id}")
+            print(f"[process_checkout] Checkout URL: {success_url}?session_id={{CHECKOUT_SESSION_ID}}")
             return {"sessionUrl": checkout_session.url}
         
         except stripe.error.StripeError as e:
