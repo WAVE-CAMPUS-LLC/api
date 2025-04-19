@@ -195,9 +195,8 @@ async def get_events(user_id: int = Depends(get_current_user)):
                 user_obj = CustomUser.objects.get(id=user_id)
                 # First, get the host profile for this user
                 try:
-                    host_profile = HostProfile.objects.get(user=user_obj)
                     # Then get the events where host is this host profile
-                    host_events = Event.objects.filter(host=host_profile)
+                    host_events = Event.objects.filter(host=user_obj)
                     if not host_events:
                         # Return an empty list if no events found instead of JSONResponse
                         return []
