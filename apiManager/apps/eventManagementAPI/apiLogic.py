@@ -778,9 +778,18 @@ async def get_event_coupons(eventId: str, request: Request):
             coupon_codes = CouponCode.objects.filter(event=event).values()
             coupons_list = []
             for coupon in coupon_codes:
-                if isinstance(coupon["couponCode"], UUID):
-                    coupon["couponCode"] = str(coupon["couponCode"])
-                coupons_list.append(coupon)
+                # Convert UUID to string if present
+                if isinstance(coupon.get("coupon_id"), UUID):
+                    coupon["coupon_id"] = str(coupon["coupon_id"])
+                # Create a standardized response format with datetime objects converted to ISO format strings
+                coupon_data = {
+                    "couponId": coupon["coupon_id"],
+                    "code": coupon["code"],
+                    "discountPercentage": coupon["discount_percentage"],
+                    "createdAt": coupon["created_at"].isoformat() if coupon["created_at"] else None,
+                    "updatedAt": coupon["updated_at"].isoformat() if coupon["updated_at"] else None
+                }
+                coupons_list.append(coupon_data)
             return coupons_list
 
         # Execute synchronous function asynchronously
