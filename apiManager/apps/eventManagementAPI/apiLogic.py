@@ -36,6 +36,26 @@ import os
 
 router = APIRouter()
 
+@router.get("/event/{eventId}/tickets")
+async def get_tickets(eventId: str, user_id: Optional[int] = Depends(get_current_user)):
+    """
+    API endpoint to retrieve tickets for a specific event.
+    """
+    print(f"[get_tickets API] Function called with eventId: {eventId}")
+    @sync_to_async
+    def get_tickets_data(eventId):
+        try:
+            event = Event.objects.get(eventId=eventId)
+            tickets = Ticket.objects.filter(event=event)
+            return [TicketSerializer(ticket).data for ticket in tickets]
+        except Event.DoesNotExist:
+            return None
+    tickets_data = await get_tickets_data(eventId)
+    print(f"[get_tickets API] Retrieved {len(tickets_data)} tickets for event {eventId}")
+    if tickets_data is None:
+        raise HTTPException(status_code=404, detail="Event not found")
+    return {"tickets": tickets_data}
+
 
 @router.api_route("/event/{eventId}/editEvent", methods=["POST", "PATCH"])
 async def edit_event_endpoint(
