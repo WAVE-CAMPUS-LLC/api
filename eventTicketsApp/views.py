@@ -371,7 +371,7 @@ def paymentSuccessful(request):
         print(f"Stripe session retrieved successfully: {session.id}")
         
         # Check if cart is empty but we have a valid session
-        if not cart or len(cart) == 0 or all(k in ['coupon_code', 'discount_percentage'] for k in cart.keys()):
+        if not cart or len(cart) == 0:
             print("Cart is empty or contains only coupon info. Attempting to reconstruct from Stripe session.")
             # Try to reconstruct cart from Stripe session
             try:
@@ -417,7 +417,7 @@ def paymentSuccessful(request):
                                         print(f"Found event from metadata: {event.title}")
                                         
                                         # Try to find the original ticket
-                                        ticket = PaidFreeTicket.objects.get(id=original_ticket_id, event=event)
+                                        ticket = PaidFreeTicket.objects.get(ticket_id=original_ticket_id, event=event)
                                         print(f"Found original ticket: {ticket.ticket_name}")
                                         
                                         cart[original_ticket_id] = {
