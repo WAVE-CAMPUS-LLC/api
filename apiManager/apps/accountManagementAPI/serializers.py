@@ -24,6 +24,10 @@ class TicketSerializer(BaseModel):
     eventTitle: str
     qrCodeImage: Optional[str] = None
     status: str
+    eventDate: date
+    eventStartTime: time
+    eventEndTime: time
+    
     
     class Config:
         from_attributes = True
