@@ -302,6 +302,10 @@ async def process_checkout(
             if user_id:
                 current_user = await get_user(user_id)
             
+            # Get event information needed for both checkout paths
+            event_title = await sync_to_async(lambda: event.title)()  
+            event_id_str = await sync_to_async(lambda: str(event.eventId))()  
+            
             # For 100% discounts, we need to handle the payment intent differently
             # since there's no ticket amount to transfer to the host
             if amount_in_cents <= 0 and has_discount and discount_percentage >= 100:
@@ -340,8 +344,6 @@ async def process_checkout(
                 
                 # Get the host's connect account ID in a sync context
                 connect_account_id = await sync_to_async(lambda: host.connectAccountID)()
-                event_title = await sync_to_async(lambda: event.title)()
-                event_id_str = await sync_to_async(lambda: str(event.eventId))()
                 
                 checkout_session = stripe.checkout.Session.create(
                     customer=current_user.customer_id if current_user else None,
