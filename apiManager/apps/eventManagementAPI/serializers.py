@@ -9,6 +9,7 @@ class HostEventExplore(BaseModel):
     header_photo: Optional[HttpUrl] = None
     state: str
     city: str
+    ticketing: str
     
     class Config:
         from_attributes = True

@@ -213,6 +213,7 @@ async def get_events(user_id: int = Depends(get_current_user)):
                             "city": event.city,
                             "state": event.state,
                             "header_photo": header_photo_url,
+                            "ticketing": event.ticketing,
                         }
                         events_list.append(event_data)
                 except HostProfile.DoesNotExist:
