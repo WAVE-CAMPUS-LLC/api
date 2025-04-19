@@ -23,7 +23,13 @@ class EventSerializer(BaseModel):
     end_time: time
     header_photo: Optional[str] = None
     description: Optional[str] = None
-    location: Optional[str] = None
+    location: Dict[str, str] = {
+        "address": str,
+        "city": str,
+        "state": str,
+        "zip_code": str,
+        "country": str
+    }
     
     class Config:
         from_attributes = True
