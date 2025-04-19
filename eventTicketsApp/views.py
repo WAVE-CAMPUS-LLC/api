@@ -139,9 +139,18 @@ def hostedCheckout(request):
             ticket = cart[ticket_keys[0]]
             print(f"Selected ticket for event lookup: {ticket}")
             
-            event_id = ticket.get("eventId")
-            if not event_id:
-                return JsonResponse({"error": "No event ID found in ticket"}, status=400)
+            try:
+                if not isinstance(ticket, dict):
+                    raise TypeError("Expected dict for ticket_info")
+
+                event_id = ticket.get("eventId") or event_id_from_cart
+                # rest of your ticket generation logic here...
+
+            except Exception as e:
+                print(f"[paymentSuccessful] ❌ Error processing cart_key '{cart_key}': {str(e)}")
+                print(f" - Value: {ticket}")
+                import traceback
+                traceback.print_exc()
                 
             event = Event.objects.get(eventId=event_id)
             host = CustomUser.objects.get(id=event.host.id)
@@ -559,15 +568,18 @@ def _generate_tickets_from_cart(request, cart, session_id, session):
             
         # Check if ticket_info is a dictionary before trying to use .get()
         if not isinstance(ticket_info, dict):
-            print(f"Warning: ticket_info for {cart_key} is not a dictionary: {type(ticket_info)}")
+            print(f"Warning: ticket_info for {cart_key} is not a dictionary: DEUBUGGY {type(ticket_info)}")
             continue
             
         # Get event_id from the ticket_info or use the one from the cart
-        event_id = ticket_info.get("eventId") or event_id_from_cart
+        try:
+            event_id = ticket_info.get("eventId") or event_id_from_cart
+        except Exception as e:
+            print(f"Error getting event ID: DEUBUGGY {e}")
+            continue
         if not event_id:
             print(f"No event ID found in cart item {cart_key} or cart")
             continue
-
         try:
             event = Event.objects.get(eventId=event_id)
         except Event.DoesNotExist:
@@ -1030,10 +1042,20 @@ def verifyTicket(request):
         try:
             data = json.loads(request.body)
             print(request.body)
-            ticketId = data.get("ticketId")
-            eventId = data.get("eventId")
-            status = data.get("status")
-
+            try:
+                ticketId = data.get("ticketId")                
+                eventId = data.get("eventId")
+                status = data.get("status")
+            except Exception as e:
+                print(f"Error parsing ticket data DEUBUGGY: {e}")
+                return JsonResponse(
+                    {
+                        "valid": False,
+                        "message": "Invalid ticket data",
+                    },
+                    status=400,
+                )
+            
             if not all([ticketId, eventId, status]):
                 return JsonResponse(
                     {"valid": False, "message": "Invalid ticket data"}, status=400
