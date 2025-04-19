@@ -13,6 +13,21 @@ class ProfileOverview(BaseModel):
     class Config:
         from_attributes = True
         populate_by_name = True
+
+
+class EventSerializer(BaseModel):
+    eventId: str
+    title: str
+    date: date
+    start_time: time
+    end_time: time
+    header_photo: Optional[str] = None
+    description: Optional[str] = None
+    location: Optional[str] = None
+    
+    class Config:
+        from_attributes = True
+        populate_by_name = True
         
 
 class TicketSerializer(BaseModel):
@@ -20,6 +35,7 @@ class TicketSerializer(BaseModel):
     guestFirstName: str
     guestLastName: str
     guestEmail: str
+    event: Optional[EventSerializer] = None
     eventId: str
     eventTitle: str
     qrCodeImage: Optional[str] = None

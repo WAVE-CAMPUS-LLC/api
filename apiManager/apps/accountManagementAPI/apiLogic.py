@@ -209,11 +209,28 @@ async def get_user_tickets(user_id: int = Depends(get_current_user)):
         tickets = Ticket.objects.filter(user=user)
         ticket_list = []
         for ticket in tickets:
+            # Create serializable event object
+            event_obj = {
+                "eventId": str(ticket.event.eventId),
+                "title": ticket.event.title,
+                "date": ticket.event.date,
+                "start_time": ticket.event.start_time,
+                "end_time": ticket.event.end_time,
+                "header_photo": (
+                    ticket.event.header_photo.url
+                    if ticket.event.header_photo
+                    else None
+                ),
+                "description": ticket.event.description if hasattr(ticket.event, 'description') else None,
+                "location": ticket.event.location if hasattr(ticket.event, 'location') else None,
+            }
+            
             ticket_list.append(
                 {
                     "ticketId": str(ticket.ticketId),
                     "guestFirstName": ticket.guestFirstName,
                     "guestLastName": ticket.guestLastName,
+                    "event": event_obj,  # Include the complete event object
                     "guestEmail": ticket.guestEmail,
                     "eventId": str(ticket.event.eventId),
                     "eventTitle": ticket.event.title,
