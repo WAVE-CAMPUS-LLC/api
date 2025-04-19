@@ -109,28 +109,10 @@ async def process_checkout(
             detail="Cart is empty"
         )
     
-    # Check if there's a valid coupon code in the cart
-    has_discount = False
-    discount_percentage = 0
-    
-    # Get the discount percentage directly from the cart if it exists
-    if 'discount_percentage' in cart:
-        discount_percentage = float(cart.get('discount_percentage'))
-        has_discount = True
-        print(f"Using discount percentage from cart: {discount_percentage}%")
-    elif 'coupon_code' in cart:
-        coupon_code_value = cart.get('coupon_code')
-        # We'll validate the coupon later, just note that there might be a discount
-    
-    # Filter out any non-ticket items (like coupon_code) for total calculation
-    ticket_items = {}
-    for k, v in cart.items():
-        if k == 'coupon_code' or k == 'discount_percentage':
-            continue
-        if isinstance(v, dict) and "price" in v and "quantity" in v:
-            ticket_items[k] = v
-        else:
-            print(f"Skipping non-ticket item: {k} = {v}")
+    # Extract ticket items and calculate total amount
+    ticket_items = {k: v for k, v in cart.items() 
+                   if k not in ['coupon_code', 'discount_percentage'] 
+                   and isinstance(v, dict) and "price" in v and "quantity" in v}
     
     print(f"Ticket items: {ticket_items}")
     
@@ -146,76 +128,59 @@ async def process_checkout(
         for item in ticket_items.values()
     )
     
-    # Get platform settings for fees using our helper function
-    platform_settings = await get_platform_settings()
-
-    # Get event and host info
+    # Get event info from the first ticket
     first_ticket_key = next(iter(ticket_items.keys()))
     first_ticket = ticket_items[first_ticket_key]
     event_id = first_ticket.get("eventId")
     
     try:
-        # Get event and host using our helper functions
+        # Get platform settings, event and host info
+        platform_settings = await get_platform_settings()
         event = await get_event(event_id)
         host_id = await get_host_id(event)
         host = await get_host(host_id)
         
-        # Check if there's a valid coupon code in the cart
-        valid_coupon_code = False
+        # Process discount (from direct percentage or coupon code)
+        discount_percentage = 0
+        has_discount = False
         
-        # Initialize coupon_code_value to None before checking
-        coupon_code_value = None
-        
-        # Get the coupon code from the cart if it exists
-        if 'coupon_code' in cart:
-            coupon_code_value = cart.get('coupon_code')
-        
-        # Get the discount percentage directly from the cart if it exists
+        # First check for direct discount percentage
         if 'discount_percentage' in cart:
             discount_percentage = float(cart.get('discount_percentage'))
-            valid_coupon_code = True
+            has_discount = True
             print(f"Using discount percentage from cart: {discount_percentage}%")
-        elif coupon_code_value:
-            # Try to get the coupon code object for this event using our helper function
+        # Then check for coupon code
+        elif 'coupon_code' in cart:
+            coupon_code_value = cart.get('coupon_code')
             coupon = await get_coupon(coupon_code_value, event)
             
             if coupon:
-                # Coupons no longer expire - all coupons are valid
-                valid_coupon_code = True
-                # We need to access the discount_percentage in a sync context
+                has_discount = True
                 discount_percentage = await sync_to_async(lambda: coupon.discount_percentage)()
                 print(f"Valid coupon applied: {coupon_code_value}, Discount: {discount_percentage}%")
-            else:
-                # Coupon doesn't exist or doesn't belong to this event
-                valid_coupon_code = False
-                print(f"Coupon not found: {coupon_code_value}")
         
-        # Store original amount for reference
+        # Store original amount and apply discount
         original_amount = total_amount
         original_amount_in_cents = int(original_amount * 100)
         
-        # Apply discount to the total amount if a valid coupon is present
-        if valid_coupon_code and discount_percentage > 0:
+        if has_discount and discount_percentage > 0:
             discount_amount = total_amount * (discount_percentage / 100)
             total_amount = total_amount - discount_amount
-            has_discount = True
             print(f"Applied {discount_percentage}% discount: Original: ${original_amount}, Discount: ${discount_amount}, New total: ${total_amount}")
         
         # Convert to cents after discount is applied
         amount_in_cents = int(total_amount * 100)
         
-        # Only reject zero-amount carts if there's no discount applied
-        # If there's a 100% discount, we should allow the checkout to proceed
-        if amount_in_cents <= 0 and not has_discount and discount_percentage < 100:
+        # Check for valid amount (allow zero for 100% discounts)
+        if amount_in_cents <= 0 and not (has_discount and discount_percentage >= 100):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Invalid amount"
             )
         
-        # Calculate service fee: 7% of subtotal + $0.99 flat fee
-        # This matches the calculation in the Django hostedCheckout implementation
-        
-        if amount_in_cents <= 0 and has_discount and discount_percentage >= 100:
+        # Calculate service fee
+        is_full_discount = amount_in_cents <= 0 and has_discount and discount_percentage >= 100
+        if is_full_discount:
             # For 100% discounts, apply a minimal service fee based on the original price
             fee_amount = max(99, int(original_amount_in_cents * 0.07) + 99)
         else:
@@ -229,44 +194,31 @@ async def process_checkout(
             # Calculate the discounted price for each ticket
             original_price = float(ticket["price"])
             
-            if valid_coupon_code and discount_percentage > 0:
+            # Apply discount if applicable
+            if has_discount and discount_percentage > 0:
                 discounted_price = original_price * (1 - discount_percentage / 100)
                 unit_amount = int(Decimal(discounted_price) * 100)
-                print(f"Discounted price for {ticket['name']}: Original: ${original_price}, Discounted: ${discounted_price}, Unit amount: {unit_amount}")
+                ticket_name = f"{ticket['name']} ({discount_percentage}% discount applied)"
             else:
                 unit_amount = int(Decimal(original_price) * 100)
-                print(f"Using original price for {ticket['name']}: ${original_price}, Unit amount: {unit_amount}")
-            
-            # For 100% discounts, we still want to show the ticket in the checkout
-            # but with a zero price
-            if unit_amount == 0 and has_discount and discount_percentage >= 100:
-                # Add a note to the ticket name to indicate it's free due to a coupon
-                ticket_name = f"{ticket['name']} (100% discount applied)"
-                # Store the original ticket info in metadata
-                metadata = {
-                    'original_ticket_name': ticket['name'],
-                    'original_ticket_id': key,
-                    'event_id': ticket.get('eventId'),
-                    'is_discounted': 'true',
-                    'discount_percentage': str(discount_percentage),
-                    'original_price': str(original_price)
-                }
-            else:
                 ticket_name = ticket["name"]
-                if valid_coupon_code and discount_percentage > 0:
-                    ticket_name = f"{ticket['name']} ({discount_percentage}% discount applied)"
-                
-                metadata = {
-                    'original_ticket_name': ticket['name'],
-                    'original_ticket_id': key,
-                    'event_id': ticket.get('eventId'),
-                    'original_price': str(original_price)
-                }
-                
-                if valid_coupon_code and discount_percentage > 0:
-                    metadata['is_discounted'] = 'true'
-                    metadata['discount_percentage'] = str(discount_percentage)
-                
+            
+            # For 100% discounts, update the ticket name
+            if unit_amount == 0 and is_full_discount:
+                ticket_name = f"{ticket['name']} (100% discount applied)"
+            
+            # Create metadata for the ticket
+            metadata = {
+                'original_ticket_name': ticket['name'],
+                'original_ticket_id': key,
+                'event_id': ticket.get('eventId'),
+                'original_price': str(original_price)
+            }
+            
+            if has_discount and discount_percentage > 0:
+                metadata['is_discounted'] = 'true'
+                metadata['discount_percentage'] = str(discount_percentage)
+            
             line_items.append({
                 "price_data": {
                     "currency": "usd",
@@ -278,11 +230,9 @@ async def process_checkout(
                 },
                 "quantity": ticket["quantity"],
             })
-
-        # For 100% discounts, we need to ensure there's at least one non-zero item
-        # (the service fee) to make Stripe checkout work
-        if not (amount_in_cents <= 0 and has_discount and discount_percentage >= 100):
-            # Regular service fee for non-100% discounted tickets
+        
+        # Add service fee for non-100% discounted tickets
+        if not is_full_discount:
             line_items.append({
                 "price_data": {
                     "currency": "usd",
@@ -297,93 +247,56 @@ async def process_checkout(
         try:
             print(f"Creating Stripe checkout session with {len(line_items)} line items")
             
-            # Get the current user if authenticated using our helper function
-            current_user = None
-            if user_id:
-                current_user = await get_user(user_id)
+            # Get the current user if authenticated
+            current_user = await get_user(user_id) if user_id else None
             
-            # Get event information needed for both checkout paths
+            # Get event information
             event_title = await sync_to_async(lambda: event.title)()  
             event_id_str = await sync_to_async(lambda: str(event.eventId))()  
             
-            # For 100% discounts, we need to handle the payment intent differently
-            # since there's no ticket amount to transfer to the host
-            if amount_in_cents <= 0 and has_discount and discount_percentage >= 100:
-                # For 100% discounted tickets, the service fee is the entire amount
-                # and there's no transfer to the host's account
-                
-                # Get the success and cancel URLs
-                success_url = await sync_to_async(lambda: os.getenv("WEBSITE_DOMAIN") + reverse('eventTickets:paymentSuccessful'))()
-                cancel_url = await sync_to_async(lambda: os.getenv("WEBSITE_DOMAIN") + reverse('eventTickets:paymentFailed'))()
-                
-                checkout_session = stripe.checkout.Session.create(
-                    customer=current_user.customer_id if current_user else None,
-                    payment_method_types=["card"],
-                    line_items=line_items,
-                    mode="payment",
-                    # No payment_intent_data with transfer since the entire amount is the service fee
-                    success_url=f"{success_url}?session_id={{CHECKOUT_SESSION_ID}}",
-                    cancel_url=f"{cancel_url}?from_mobile=true",
-                    metadata={
-                        'cart_data': json.dumps(cart),  # Store the entire cart in metadata
-                        'event_id': event_id_str,  # Using the already async-safe event ID
-                        'event_title': event_title,  # Using the already async-safe event title
-                        'is_discounted': 'true',
-                        'discount_percentage': str(discount_percentage),
-                        'original_amount': str(original_amount),
-                        'discounted_amount': str(total_amount)
-                    }
-                    
-                )
-            else:
-                # Regular checkout with transfer to host's account
-                
-                # Get the success and cancel URLs if not already defined
-                if not locals().get('success_url'):
-                    success_url = await sync_to_async(lambda: os.getenv("WEBSITE_DOMAIN") + reverse('eventTickets:paymentSuccessful'))()
-                    cancel_url = await sync_to_async(lambda: os.getenv("WEBSITE_DOMAIN") + reverse('eventTickets:paymentFailed'))()
-                
-                # Get the host's connect account ID in a sync context
+            # Get the success and cancel URLs
+            success_url = await sync_to_async(lambda: os.environ.get('WEBSITE_DOMAIN') + reverse('eventTickets:paymentSuccessful'))()
+            cancel_url = await sync_to_async(lambda: os.environ.get('WEBSITE_DOMAIN') + reverse('eventTickets:paymentFailed'))()
+            
+            # Common session parameters
+            session_params = {
+                "customer": current_user.customer_id if current_user else None,
+                "payment_method_types": ["card"],
+                "line_items": line_items,
+                "mode": "payment",
+                "success_url": f"{success_url}?session_id={{CHECKOUT_SESSION_ID}}",
+                "cancel_url": f"{cancel_url}",
+                "metadata": {
+                    'cart_data': json.dumps(cart),
+                    'event_id': event_id_str,
+                    'event_title': event_title,
+                    'discount_percentage': str(discount_percentage) if has_discount else '0',
+                    'original_amount': str(original_amount),
+                    'discounted_amount': str(total_amount)
+                }
+            }
+            
+            # Add payment_intent_data with transfer for regular checkouts
+            if not is_full_discount:
                 connect_account_id = await sync_to_async(lambda: host.connectAccountID)()
-                
-                checkout_session = stripe.checkout.Session.create(
-                    customer=current_user.customer_id if current_user else None,
-                    payment_method_types=["card"],
-                    line_items=line_items,
-                    mode="payment",
-                    payment_intent_data={
-                        # This tells Stripe to transfer only the ticket amount to the host
-                        # The service fee stays with the platform
-                        "transfer_data": {
-                            "destination": connect_account_id,
-                            "amount": amount_in_cents,  # Only transfer the ticket amount, not the fee
-                        },
-                        # Add metadata to help with cart reconstruction
-                        "metadata": {
-                            'cart_data': json.dumps(cart),  # Store the entire cart in metadata
-                            'event_id': event_id_str,
-                            'event_title': event_title,
-                            'discount_percentage': str(discount_percentage) if has_discount else '0',
-                            'ticket_amount': str(amount_in_cents),
-                            'fee_amount': str(fee_amount)
-                        }
+                session_params["payment_intent_data"] = {
+                    "transfer_data": {
+                        "destination": connect_account_id,
+                        "amount": amount_in_cents,
                     },
-                    metadata={
-                        'cart_data': json.dumps(cart),  # Store the entire cart in metadata
+                    "metadata": {
+                        'cart_data': json.dumps(cart),
                         'event_id': event_id_str,
                         'event_title': event_title,
                         'discount_percentage': str(discount_percentage) if has_discount else '0',
-                        'original_amount': str(original_amount),
-                        'discounted_amount': str(total_amount)
-                    },
-                    success_url=f"{success_url}?session_id={{CHECKOUT_SESSION_ID}}",
-                    cancel_url=f"{cancel_url}?from_mobile=true",
-                )
+                        'ticket_amount': str(amount_in_cents),
+                        'fee_amount': str(fee_amount)
+                    }
+                }
+            
+            checkout_session = stripe.checkout.Session.create(**session_params)
             
             print(f"Checkout session created: {checkout_session.id}")
-            print(f"[process_checkout] Created checkout session with ID: {checkout_session.id}")
-            print(f"[process_checkout] Returning checkout URL for user: {user_id}")
-            print(f"[process_checkout] Checkout URL: {success_url}?session_id={{CHECKOUT_SESSION_ID}}")
             return {"sessionUrl": checkout_session.url}
         
         except stripe.error.StripeError as e:
