@@ -322,7 +322,7 @@ async def process_checkout(
                     line_items=line_items,
                     mode="payment",
                     # No payment_intent_data with transfer since the entire amount is the service fee
-                    success_url=f"{success_url}?session_id={{CHECKOUT_SESSION_ID}}&from_mobile=true",
+                    success_url=f"{success_url}?session_id={{CHECKOUT_SESSION_ID}}",
                     cancel_url=f"{cancel_url}?from_mobile=true",
                     metadata={
                         'cart_data': json.dumps(cart),  # Store the entire cart in metadata
