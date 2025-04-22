@@ -406,6 +406,15 @@
                                                             <h6 class="priceType flex justify-start text-black font-Wanted-Bold text-Large">
                                                                 ${{ ticket.ticket_price }}
                                                             </h6>
+                                                            <!-- Service fee information for regular ticket -->
+                                                            <div class="service-fee-info mt-1">
+                                                                <p class="font-Wanted-Variable text-Small text-gray-500">
+                                                                    + ${{ ticket.ticket_price|calculate_service_fee|floatformat:2 }} service fee
+                                                                </p>
+                                                                <p class="font-Wanted-Variable text-Small text-gray-600 font-semibold">
+                                                                    Total: ${{ ticket.ticket_price|calculate_total_price|floatformat:2 }}
+                                                                </p>
+                                                            </div>
                                                         </div>
                                 
                                                         <div class="addRemoveTickets flex flex-row gap-1 items-center">
@@ -441,10 +450,28 @@
                                                                 <h6 class="priceType flex justify-start text-black font-Wanted-Bold text-Large">
                                                                     ${{ ticket.crew_discounted_price }}
                                                                 </h6>
+                                                                <!-- Service fee information for crew discounted price -->
+                                                                <div class="service-fee-info mt-1">
+                                                                    <p class="font-Wanted-Variable text-Small text-gray-500">
+                                                                        + ${{ ticket.crew_discounted_price|calculate_service_fee|floatformat:2 }} service fee
+                                                                    </p>
+                                                                    <p class="font-Wanted-Variable text-Small text-gray-600 font-semibold">
+                                                                        Total: ${{ ticket.crew_discounted_price|calculate_total_price|floatformat:2 }}
+                                                                    </p>
+                                                                </div>
                                                             {% else %}
                                                                 <h6 class="priceType flex justify-start text-black font-Wanted-Bold text-Large">
                                                                     ${{ ticket.ticket_price }}
                                                                 </h6>
+                                                                <!-- Service fee information for regular price as crew price -->
+                                                                <div class="service-fee-info mt-1">
+                                                                    <p class="font-Wanted-Variable text-Small text-gray-500">
+                                                                        + ${{ ticket.ticket_price|calculate_service_fee|floatformat:2 }} service fee
+                                                                    </p>
+                                                                    <p class="font-Wanted-Variable text-Small text-gray-600 font-semibold">
+                                                                        Total: ${{ ticket.ticket_price|calculate_total_price|floatformat:2 }}
+                                                                    </p>
+                                                                </div>
                                                             {% endif %}
                                                         </div>
 
