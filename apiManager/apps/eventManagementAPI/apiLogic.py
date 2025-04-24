@@ -34,6 +34,17 @@ from eventManagementApp.forms import EditEventForm, EventForm
 from dotenv import load_dotenv
 import os
 
+# fastapi → django adapter
+from django.core.files.uploadedfile import SimpleUploadedFile
+
+async def starlette_to_django(u: UploadFile) -> SimpleUploadedFile:
+    content = await u.read()           # get bytes from Starlette file
+    return SimpleUploadedFile(         # Django-friendly object
+        name=u.filename,
+        content=content,
+        content_type=u.content_type or 'application/octet-stream'
+    )
+
 router = APIRouter()
 
 @router.api_route("/event/{eventId}/editEvent", methods=["POST", "PATCH"])
@@ -428,7 +439,7 @@ async def create_free_event(request: Request, user_id: int = Depends(get_current
         print(f"[DEBUG - create_paid_event] Processing form data")
         for key, value in form_data.multi_items():
             if isinstance(value, UploadFile):
-                files[key] = value
+                files[key] = await starlette_to_django(value)   # 👈 wrap here
                 print(f"[DEBUG - create_paid_event] File uploaded: {key}")
             else:
                 data[key] = value
