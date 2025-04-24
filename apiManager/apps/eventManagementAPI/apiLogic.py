@@ -429,9 +429,10 @@ async def create_free_event(request: Request, user_id: int = Depends(get_current
         for key, value in form_data.multi_items():
             if isinstance(value, UploadFile):
                 files[key] = value
+                print(f"[DEBUG - create_paid_event] File uploaded: {key}")
             else:
                 data[key] = value
-
+                print(f"[DEBUG - create_paid_event] Text field: {key} = {value}")
         # Wrap Django ORM calls and form processing in a synchronous function
         @sync_to_async
         def process_create_event():
@@ -444,11 +445,12 @@ async def create_free_event(request: Request, user_id: int = Depends(get_current
                 user_profile.college is not None
             )  # Instantiate the Django form with submitted data, file uploads, instance and partial flag.
             event_form = EventForm(data, files)
-
+            print(f"[DEBUG - create_paid_event] Event form: {event_form}")
+            
             if event_form.is_valid():
+                print(f"[DEBUG - create_paid_event] Form is valid")
                 # Get or create a host profile for the user
                 host_profile, created = HostProfile.objects.get_or_create(user=user)
-
                 # Create the new event
                 new_event = event_form.save(commit=False)
                 new_event.host = user  # Set the host to the current user
@@ -533,6 +535,7 @@ async def create_free_event(request: Request, user_id: int = Depends(get_current
         return JSONResponse(content=result, status_code=status.HTTP_200_OK)
 
     except ValueError as ve:
+        print(f"[DEBUG - create_free_event] ValueError: {str(ve)}")
         # Return any form validation errors
         return JSONResponse(
             content={"errors": str(ve), "message": "Failed to create event."},
