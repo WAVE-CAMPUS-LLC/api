@@ -536,7 +536,9 @@ async def create_free_event(request: Request, user_id: int = Depends(get_current
                     forCollegesDisplay=new_event.forCollegesDisplay,
                 )
 
-                return {"message": "Event created successfully.", "event": event_data}
+                # Properly serialize the event_data to make it JSON serializable
+                serialized_event_data = event_data.model_dump(mode="json")
+                return {"message": "Event created successfully.", "event": serialized_event_data}
             else:
                 # Here we raise an error with the form errors so that we can return a 400 response.
                 raise ValueError(event_form.errors)
@@ -673,7 +675,9 @@ async def create_paid_event(request: Request, user_id: int = Depends(get_current
                     forCollegesDisplay=new_event.forCollegesDisplay,
                 )
 
-                return {"message": "Event created successfully.", "event": event_data}
+                # Properly serialize the event_data to make it JSON serializable
+                serialized_event_data = event_data.model_dump(mode="json")
+                return {"message": "Event created successfully.", "event": serialized_event_data}
             else:
                 # Here we raise an error with the form errors so that we can return a 400 response.
                 raise ValueError(event_form.errors)
