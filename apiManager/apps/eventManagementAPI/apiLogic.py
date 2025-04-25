@@ -601,6 +601,7 @@ async def create_paid_event(request: Request, user_id: int = Depends(get_current
 
                 # Verify the host has a Stripe Connect account set up
                 if not hasattr(user, 'connectAccountID') or not user.connectAccountID:
+                    print(f"[DEBUG - create_paid_event] User {user_id} has no Stripe Connect account set up")
                     return JSONResponse(
                         content={
                             "error": "You need to set up your Stripe account before creating a paid event.",
@@ -620,6 +621,7 @@ async def create_paid_event(request: Request, user_id: int = Depends(get_current
                             return_url=f"{settings.SITE_URL}/host/portal/",
                             type="account_onboarding",
                         )
+                        print(f"[DEBUG - create_paid_event] Stripe account link created: {account_link.url}")
                         
                         return JSONResponse(
                             content={
@@ -669,6 +671,7 @@ async def create_paid_event(request: Request, user_id: int = Depends(get_current
                         )
                     
                     new_event.save()
+                    print(f"[DEBUG - create_paid_event] Event created: {new_event}")
 
                     # Create location serializer instance
                     location = LocationSerializer(
@@ -740,6 +743,7 @@ async def create_paid_event(request: Request, user_id: int = Depends(get_current
 
                     # Properly serialize the event_data to make it JSON serializable
                     serialized_event_data = event_data.model_dump(mode="json")
+                    print(f"[DEBUG - create_paid_event] Serialized event data: {serialized_event_data}")
                     return {"message": "Paid event created successfully.", "event": serialized_event_data}
                 else:
                     # Here we raise an error with the form errors so that we can return a 400 response
