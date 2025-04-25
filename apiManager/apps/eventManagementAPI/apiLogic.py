@@ -1280,7 +1280,7 @@ async def delete_purchased_ticket(eventId: str, request: Request, user_id: int =
         )
 
 
-@router.post("/event/become_host")
+@router.post("/event/becomeHost")
 async def become_host(request: Request, user_id: int = Depends(get_current_user)):
     print(f"[DEBUG - become_host] Function called with user_id: {user_id}")
     """
