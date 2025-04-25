@@ -101,7 +101,6 @@ def eventCreationSelect(request):
     userAccount = get_object_or_404(CustomUser, username=request.user.username)
     completedConnectAccount = False
 
-    siteDomain = settings.SITE_URL
     link = request.build_absolute_uri(reverse("eventManagement:eventCreationSelect"))
 
     # Path 1: If no connectAccountID, search Stripe for an account by email

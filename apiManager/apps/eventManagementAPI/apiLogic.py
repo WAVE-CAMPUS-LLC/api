@@ -1,4 +1,7 @@
 from uuid import UUID
+import time
+import stripe
+from django.conf import settings
 from fastapi import APIRouter, Depends, HTTPException, status, Request, Header
 from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordRequestForm
@@ -436,14 +439,14 @@ async def create_free_event(request: Request, user_id: int = Depends(get_current
         # Separate normal data and file data from the form
         data = {}
         files = {}
-        print(f"[DEBUG - create_paid_event] Processing form data")
+        print(f"[DEBUG - create_free_event] Processing form data")
         for key, value in form_data.multi_items():
             if isinstance(value, UploadFile):
                 files[key] = await starlette_to_django(value)   # 👈 wrap here
-                print(f"[DEBUG - create_paid_event] File uploaded: {key}")
+                print(f"[DEBUG - create_free_event] File uploaded: {key}")
             else:
                 data[key] = value
-                print(f"[DEBUG - create_paid_event] Text field: {key} = {value}")
+                print(f"[DEBUG - create_free_event] Text field: {key} = {value}")
         # Wrap Django ORM calls and form processing in a synchronous function
         @sync_to_async
         def process_create_event():
@@ -456,10 +459,10 @@ async def create_free_event(request: Request, user_id: int = Depends(get_current
                 user_profile.college is not None
             )  # Instantiate the Django form with submitted data, file uploads, instance and partial flag.
             event_form = EventForm(data, files)
-            print(f"[DEBUG - create_paid_event] Event form: {event_form}")
+            print(f"[DEBUG - create_free_event] Event form: {event_form}")
             
             if event_form.is_valid():
-                print(f"[DEBUG - create_paid_event] Form is valid")
+                print(f"[DEBUG - create_free_event] Form is valid")
                 # Get or create a host profile for the user
                 host_profile, created = HostProfile.objects.get_or_create(user=user)
                 # Create the new event
@@ -564,11 +567,11 @@ async def create_free_event(request: Request, user_id: int = Depends(get_current
         )
 
 
-@router.post("/event/free/paid")
+@router.post("/event/paid/create")
 async def create_paid_event(request: Request, user_id: int = Depends(get_current_user)):
     print(f"[DEBUG - create_paid_event] Function called with user_id: {user_id}")
     """
-    API endpoint for creating a free event
+    API endpoint for creating a paid event
     """
     try:
         # Get form data (includes both text fields and files)
@@ -580,116 +583,189 @@ async def create_paid_event(request: Request, user_id: int = Depends(get_current
         print(f"[DEBUG - create_paid_event] Processing form data")
         for key, value in form_data.multi_items():
             if isinstance(value, UploadFile):
-                files[key] = value
+                files[key] = await starlette_to_django(value)
+                print(f"[DEBUG - create_paid_event] File uploaded: {key}")
             else:
                 data[key] = value
+                print(f"[DEBUG - create_paid_event] Text field: {key} = {value}")
 
         # Wrap Django ORM calls and form processing in a synchronous function
         @sync_to_async
         def process_create_event():
-            # Get the current user's profile.
-            user = CustomUser.objects.get(id=user_id)
-            user_profile = UserProfile.objects.get(user=user)
+            try:
+                # Get the current user's profile
+                user = CustomUser.objects.get(id=user_id)
+                user_profile = UserProfile.objects.get(user=user)
 
-            # Determine whether the user is associated with a college
-            is_in_college = (
-                user_profile.college is not None
-            )  # Instantiate the Django form with submitted data, file uploads, instance and partial flag.
-            event_form = EventForm(data, files)
+                # Verify the host has a Stripe Connect account set up
+                if not hasattr(user, 'connectAccountID') or not user.connectAccountID:
+                    return JSONResponse(
+                        content={
+                            "error": "You need to set up your Stripe account before creating a paid event.",
+                            "redirect": "/host/stripe-setup/"
+                        },
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                    )
+                
+                # Verify the Stripe account is complete and ready to accept payments
+                try:
+                    stripe_account = stripe.Account.retrieve(user.connectAccountID)
+                    if not stripe_account.get("payouts_enabled"):
+                        # Create an account link for the user to complete their setup
+                        account_link = stripe.AccountLink.create(
+                            account=user.connectAccountID,
+                            refresh_url=f'{settings.SITE_URL}/refresh/{user.connectAccountID}',
+                            return_url=f"{settings.SITE_URL}/host/portal/",
+                            type="account_onboarding",
+                        )
+                        
+                        return JSONResponse(
+                            content={
+                                "error": "Please complete your Stripe account setup before creating a paid event.",
+                                "stripeLink": account_link.url
+                            },
+                            status_code=status.HTTP_400_BAD_REQUEST,
+                        )
+                except stripe.error.StripeError as e:
+                    return JSONResponse(
+                        content={"error": f"An error occurred with Stripe: {str(e)}"},
+                        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    )
 
-            if event_form.is_valid():
-                # Get or create a host profile for the user
-                host_profile, created = HostProfile.objects.get_or_create(user=user)
+                # Determine whether the user is associated with a college
+                is_in_college = (user_profile.college is not None)
+                
+                # Instantiate the Django form with submitted data, file uploads, instance and partial flag
+                event_form = EventForm(data, files)
+                print(f"[DEBUG - create_paid_event] Event form: {event_form}")
+                
+                if event_form.is_valid():
+                    print(f"[DEBUG - create_paid_event] Form is valid")
+                    # Get or create a host profile for the user
+                    host_profile, created = HostProfile.objects.get_or_create(user=user)
+                    
+                    # Create the new event
+                    new_event = event_form.save(commit=False)
+                    new_event.host = user  # Set the host to the current user
+                    new_event.ticketing = "Paid"  # This is a paid event
+                    new_event.status = "live"  # Set status to live
+                    
+                    # Create a Stripe product for this event
+                    try:
+                        product = stripe.Product.create(
+                            name=new_event.title,
+                            description=new_event.description[:500],  # Limit description length
+                            metadata={
+                                "eventId": str(new_event.eventId)
+                            }
+                        )
+                        new_event.stripeProductId = product.id
+                    except stripe.error.StripeError as e:
+                        return JSONResponse(
+                            content={"error": f"An error occurred with Stripe: {str(e)}"},
+                            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                        )
+                    
+                    new_event.save()
 
-                # Create the new event
-                new_event = event_form.save(commit=False)
-                new_event.host = user  # Set the host to the current user
-                new_event.ticketing = "Paid"  # This is a free event
-                new_event.status = "live"  # Set status to live
-                new_event.save()
+                    # Create location serializer instance
+                    location = LocationSerializer(
+                        building_name=new_event.building_name,
+                        street=new_event.street,
+                        apt_suite_unit=new_event.apt_suite_unit,
+                        city=new_event.city,
+                        state=new_event.state,
+                        zip_code=new_event.zip_code,
+                        country=new_event.country,
+                        hide_address=new_event.hide_address,
+                    )
 
-                # Create location serializer instance
-                location = LocationSerializer(
-                    building_name=new_event.building_name,
-                    street=new_event.street,
-                    apt_suite_unit=new_event.apt_suite_unit,
-                    city=new_event.city,
-                    state=new_event.state,
-                    zip_code=new_event.zip_code,
-                    country=new_event.country,
-                    hide_address=new_event.hide_address,
-                )
+                    # Create host serializer instance
+                    host = HostSerializer(
+                        id=str(host_profile.hostProfileId),
+                        name=f"{user.first_name} {user.last_name}",
+                    )
 
-                # Create host serializer instance
-                host = HostSerializer(
-                    id=str(host_profile.hostProfileId),
-                    name=f"{user.first_name} {user.last_name}",
-                )
+                    # Process image URLs
+                    header_photo_url = (
+                        new_event.header_photo.url if new_event.header_photo else None
+                    )
+                    body_photo_one_url = (
+                        new_event.body_photo_one.url if new_event.body_photo_one else None
+                    )
+                    body_photo_two_url = (
+                        new_event.body_photo_two.url if new_event.body_photo_two else None
+                    )
+                    body_photo_three_url = (
+                        new_event.body_photo_three.url
+                        if new_event.body_photo_three
+                        else None
+                    )
+                    body_photo_four_url = (
+                        new_event.body_photo_four.url if new_event.body_photo_four else None
+                    )
+                    body_photo_five_url = (
+                        new_event.body_photo_five.url if new_event.body_photo_five else None
+                    )
 
-                # Process image URLs
-                header_photo_url = (
-                    new_event.header_photo.url if new_event.header_photo else None
-                )
-                body_photo_one_url = (
-                    new_event.body_photo_one.url if new_event.body_photo_one else None
-                )
-                body_photo_two_url = (
-                    new_event.body_photo_two.url if new_event.body_photo_two else None
-                )
-                body_photo_three_url = (
-                    new_event.body_photo_three.url
-                    if new_event.body_photo_three
-                    else None
-                )
-                body_photo_four_url = (
-                    new_event.body_photo_four.url if new_event.body_photo_four else None
-                )
-                body_photo_five_url = (
-                    new_event.body_photo_five.url if new_event.body_photo_five else None
-                )
+                    # Create event response serializer instance
+                    event_data = EventDetailSerializer(
+                        eventId=str(new_event.eventId),
+                        status=new_event.status,
+                        title=new_event.title,
+                        event_type=new_event.event_type,
+                        date=new_event.date,
+                        start_time=new_event.start_time,
+                        end_time=new_event.end_time,
+                        description=new_event.description,
+                        ticketing=new_event.ticketing,
+                        location=location,
+                        header_photo=header_photo_url,
+                        body_photo_one=body_photo_one_url,
+                        body_photo_two=body_photo_two_url,
+                        body_photo_three=body_photo_three_url,
+                        body_photo_four=body_photo_four_url,
+                        body_photo_five=body_photo_five_url,
+                        crew_discount=new_event.crew_discount,
+                        minimum_crew_size=new_event.minimum_crew_size,
+                        crew_discount_percentage=new_event.crew_discount_percentage,
+                        couponsActivated=new_event.couponsActivated,
+                        show_guest_list=new_event.show_guest_list,
+                        forAllDisplay=new_event.forAllDisplay,
+                        forCollegesDisplay=new_event.forCollegesDisplay,
+                        stripeProductId=new_event.stripeProductId,
+                    )
 
-                # Create event response serializer instance
-                event_data = EventDetailSerializer(
-                    eventId=str(new_event.eventId),
-                    status=new_event.status,
-                    title=new_event.title,
-                    event_type=new_event.event_type,
-                    date=new_event.date,
-                    start_time=new_event.start_time,
-                    end_time=new_event.end_time,
-                    description=new_event.description,
-                    ticketing=new_event.ticketing,
-                    location=location,
-                    header_photo=header_photo_url,
-                    body_photo_one=body_photo_one_url,
-                    body_photo_two=body_photo_two_url,
-                    body_photo_three=body_photo_three_url,
-                    body_photo_four=body_photo_four_url,
-                    body_photo_five=body_photo_five_url,
-                    crew_discount=new_event.crew_discount,
-                    minimum_crew_size=new_event.minimum_crew_size,
-                    crew_discount_percentage=new_event.crew_discount_percentage,
-                    couponsActivated=new_event.couponsActivated,
-                    show_guest_list=new_event.show_guest_list,
-                    forAllDisplay=new_event.forAllDisplay,
-                    forCollegesDisplay=new_event.forCollegesDisplay,
+                    # Properly serialize the event_data to make it JSON serializable
+                    serialized_event_data = event_data.model_dump(mode="json")
+                    return {"message": "Paid event created successfully.", "event": serialized_event_data}
+                else:
+                    # Here we raise an error with the form errors so that we can return a 400 response
+                    raise ValueError(event_form.errors)
+            except CustomUser.DoesNotExist:
+                return JSONResponse(
+                    content={"error": "User not found"},
+                    status_code=status.HTTP_404_NOT_FOUND
                 )
-
-                # Properly serialize the event_data to make it JSON serializable
-                serialized_event_data = event_data.model_dump(mode="json")
-                return {"message": "Event created successfully.", "event": serialized_event_data}
-            else:
-                # Here we raise an error with the form errors so that we can return a 400 response.
-                raise ValueError(event_form.errors)
+            except Exception as e:
+                traceback_str = traceback.format_exc()
+                print(f"Create Paid Event error: {str(e)}\n{traceback_str}")
+                return JSONResponse(
+                    content={"error": f"An unexpected error occurred: {str(e)}"},
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                )
 
         # Execute the create event function
         result = await process_create_event()
+        if isinstance(result, JSONResponse):
+            return result
         return JSONResponse(content=result, status_code=status.HTTP_200_OK)
 
     except ValueError as ve:
+        print(f"[DEBUG - create_paid_event] ValueError: {str(ve)}")
         # Return any form validation errors
         return JSONResponse(
-            content={"errors": str(ve), "message": "Failed to create paid event."},
+            content={"errors": str(ve), "message": "Failed to create event."},
             status_code=status.HTTP_400_BAD_REQUEST,
         )
     except Exception as e:
@@ -702,6 +778,56 @@ async def create_paid_event(request: Request, user_id: int = Depends(get_current
         )
 
 
+@router.get("/event/get_host_stripe_account_link")
+async def get_host_stripe_account_link(user_id: int = Depends(get_current_user)):
+    siteDomain = settings.SITE_URL
+    @sync_to_async
+    def process_create_event():
+        try:
+            userAccount = CustomUser.objects.get(id=user_id)
+            stripeConnectAccount = stripe.Account.retrieve(userAccount.connectAccountID)
+            if stripeConnectAccount.get("payouts_enabled"):
+                completedConnectAccount = True
+            time.sleep(2)
+
+            account_link = stripe.AccountLink.create(
+                account=userAccount.connectAccountID,
+                refresh_url=f'{siteDomain}/refresh/{userAccount.connectAccountID}',
+                return_url=f"{siteDomain}/host/portal/",
+                type="account_onboarding",
+            )
+                
+            if not completedConnectAccount:
+                return JSONResponse(
+                    content={
+                        "error": "Please complete your Stripe account setup.",
+                        "stripeLink": account_link
+                    },
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                )
+            else:
+                return JSONResponse(
+                    content={"success": "Stripe account setup completed."},
+                    status_code=status.HTTP_200_OK,
+                )
+        except stripe.error.StripeError as e:
+            return JSONResponse(
+                content={"error": f"An unexpected error occurred: {str(e)}"},
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+        except CustomUser.DoesNotExist:
+            return JSONResponse(
+                content={"error": "User not found"},
+                status_code=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            return JSONResponse(
+                content={"error": f"An unexpected error occurred: {str(e)}"},
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+    
+    return await process_create_event()
+    
 @router.get("/event/paid/ticket/fields")
 async def paid_ticket_creation_fields(request: Request):
     print(f"[DEBUG - paid_ticket_creation_fields] Function called")
@@ -1155,4 +1281,7 @@ async def delete_purchased_ticket(eventId: str, request: Request, user_id: int =
 
 # @router.post("/event/ticketing/{eventId}/update")
 # async def update_event_ticketing(eventId: str, request: Request, user_id: int = Depends(get_current_user)):
+    
+# @router.api_route("/event/host/becomeHost", methods=["POST"])
+# async def become_host(request: Request, user_id: int = Depends(get_current_user)):
     
