@@ -880,47 +880,77 @@ async def paid_ticket_creation_fields(request: Request):
 async def create_paid_free_ticket(eventId: str, request: Request):
     print(f"[DEBUG - create_paid_free_ticket] Function called with eventId: {eventId}")
     try:
-        # Get form data (includes both text fields and files)
-        form_data = await request.form()
-
-        # Separate normal data and file data from the form
-        data = {}
-        files = {}
-        print(f"[DEBUG - create_paid_event] Processing form data")
-        for key, value in form_data.multi_items():
-            if isinstance(value, UploadFile):
-                files[key] = value
-            else:
-                data[key] = value
-
+        # Get request data - could be form data or JSON
+        content_type = request.headers.get('content-type', '')
+        
+        if 'application/json' in content_type:
+            # Handle JSON data
+            data = await request.json()
+            print(f"[DEBUG - create_paid_free_ticket] Processing JSON data: {data}")
+        else:
+            # Handle form data
+            form_data = await request.form()
+            data = {}
+            files = {}
+            print(f"[DEBUG - create_paid_free_ticket] Processing form data")
+            for key, value in form_data.multi_items():
+                if isinstance(value, UploadFile):
+                    files[key] = value
+                else:
+                    data[key] = value
+        
+        print(f"[DEBUG - create_paid_free_ticket] Received data: {data}")
+        
         # Wrap Django ORM calls and form processing in a synchronous function
         @sync_to_async
         def process_create_ticket(eventId, data):
             # Fetch the event object or raise a 404 error if not found
             event = get_object_or_404(Event, eventId=eventId)
-
-            # Instantiate the Django form with submitted data, file uploads, instance and partial flag.
-            ticket_form = PaidFreeTicketForm(data)
-
+            
+            # Map frontend field names to model field names if needed
+            form_data = {}
+            field_mapping = {
+                'ticket_name': 'ticket_name',
+                'ticket_price': 'ticket_price',
+                'ticket_description': 'ticket_description',
+                'ticket_quantity': 'ticket_quantity',
+                # Add any other mappings that might be needed
+            }
+            
+            # Process the data to ensure field names match what the form expects
+            for frontend_key, model_key in field_mapping.items():
+                # Try different possible keys from the frontend
+                if frontend_key in data:
+                    form_data[model_key] = data[frontend_key]
+                elif model_key in data:
+                    form_data[model_key] = data[model_key]
+            
+            print(f"[DEBUG - create_paid_free_ticket] Processed form data: {form_data}")
+            
+            # Instantiate the Django form with processed data
+            ticket_form = PaidFreeTicketForm(form_data)
+            
             if ticket_form.is_valid():
-                # Create the new ticket code
+                print(f"[DEBUG - create_paid_free_ticket] Ticket form is valid")
+                # Create the new ticket
                 new_ticket = ticket_form.save(commit=False)
                 new_ticket.event = event  # Associate the ticket with the event
                 new_ticket.save()
-
+                
                 return {
                     "message": "Ticket created successfully.",
-                    "code": str(new_ticket.code),
+                    "code": str(new_ticket.ticket_id),  # Use ticket_id instead of code
                     "eventId": str(event.eventId),
-                    "ticketPrice": new_ticket.ticketPrice,
+                    "ticketPrice": str(new_ticket.ticket_price),  # Convert to string for JSON serialization
                 }
             else:
+                print(f"[DEBUG - create_paid_free_ticket] Ticket form is invalid: {ticket_form.errors}")
                 # Here we raise an error with the form errors so that we can return a 400 response.
                 raise ValueError(ticket_form.errors)
-
+        
         # Execute the create ticket function
         result = await process_create_ticket(eventId, data)
-        print(f"[DEBUG - create_paid_free_ticket] Ticket created with code: {result.get('code', 'unknown')}")
+        print(f"[DEBUG - create_paid_free_ticket] Ticket created with ID: {result.get('code', 'unknown')}")
         return JSONResponse(content=result, status_code=status.HTTP_200_OK)
 
     except ValueError as ve:
