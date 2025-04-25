@@ -1279,9 +1279,122 @@ async def delete_purchased_ticket(eventId: str, request: Request, user_id: int =
         )
 
 
-# @router.post("/event/ticketing/{eventId}/update")
-# async def update_event_ticketing(eventId: str, request: Request, user_id: int = Depends(get_current_user)):
+@router.post("/event/becomeHost")
+async def become_host(request: Request, user_id: int = Depends(get_current_user)):
+    print(f"[DEBUG - become_host] Function called with user_id: {user_id}")
+    """
+    API endpoint for becoming a host on the platform
+    """
+    try:
+        # Wrap Django ORM calls in a synchronous function
+        @sync_to_async
+        def process_become_host():
+            try:
+                # Get the current user
+                user = get_object_or_404(CustomUser, id=user_id)
+                completed_connect_account = False
+                
+                # Check if user is already a host
+                if user.groups.filter(name="Host").exists():
+                    return JSONResponse(
+                        content={"message": "You are already a host."},
+                        status_code=status.HTTP_200_OK
+                    )
+                
+                # Get site domain for Stripe redirect URLs
+                site_domain = settings.SITE_URL
+                redirect_link = f"{site_domain}/host/portal/"
+                
+                # Path 1: If no connectAccountID, search Stripe for an account by email
+                if not user.connectAccountID:
+                    # Search for existing accounts using list instead of search
+                    try:
+                        stripe_accounts = stripe.Account.list(limit=10)
+                        existing_account = None
+                        
+                        # Look for account with matching email
+                        for account in stripe_accounts.data:
+                            if account.get("email") == user.email:
+                                existing_account = account
+                                break
+                        
+                        if existing_account:
+                            # Delete old account if found
+                            stripe.Account.delete(existing_account.id)
+                        
+                        # Create a new Stripe Connect account
+                        stripe_connect_account = ConnectAccount.createConnectAccount(
+                            None, user
+                        )
+                        
+                        if stripe_connect_account:
+                            user.connectAccountID = stripe_connect_account.id
+                            user.connectAccountCreated = True
+                            completed_connect_account = True
+                        else:
+                            return JSONResponse(
+                                content={"error": "Failed to create Stripe Connect account"},
+                                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+                            )
+                    except stripe.error.StripeError as e:
+                        return JSONResponse(
+                            content={"error": f"Stripe error: {str(e)}"},
+                            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+                        )
+                
+                # Path 2: Now that we have a Connect account ID, generate the onboarding link
+                if user.connectAccountID:
+                    try:
+                        stripe_link_account = ConnectAccount.getStripeOnboardingLink(
+                            None, user.connectAccountID, site_domain, redirect_link
+                        )
+                    except stripe.error.StripeError as e:
+                        return JSONResponse(
+                            content={"error": f"Failed to generate onboarding link: {str(e)}"},
+                            status_code=status.HTTP_400_BAD_REQUEST
+                        )
+                else:
+                    return JSONResponse(
+                        content={"error": "Failed to create Stripe Connect account"},
+                        status_code=status.HTTP_400_BAD_REQUEST
+                    )
+                
+                # Assign "Host" role
+                event_host, created = Group.objects.get_or_create(name="Host")
+                user.groups.add(event_host)
+                
+                # Save the user with updated connectAccountID
+                user.save()
+                
+                return {
+                    "message": "Welcome to hosting on WAVE.",
+                    "stripe_onboarding_link": stripe_link_account,
+                    "connect_account_id": user.connectAccountID
+                }
+            except CustomUser.DoesNotExist:
+                return JSONResponse(
+                    content={"error": "User not found"},
+                    status_code=status.HTTP_404_NOT_FOUND
+                )
+            except Exception as e:
+                traceback_str = traceback.format_exc()
+                print(f"Become Host error: {str(e)}\n{traceback_str}")
+                return JSONResponse(
+                    content={"error": f"An unexpected error occurred: {str(e)}"},
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+        
+        # Execute the become host function
+        result = await process_become_host()
+        if isinstance(result, JSONResponse):
+            return result
+        return JSONResponse(content=result, status_code=status.HTTP_200_OK)
     
-# @router.api_route("/event/host/becomeHost", methods=["POST"])
-# async def become_host(request: Request, user_id: int = Depends(get_current_user)):
-    
+    except Exception as e:
+        # Log the exception details and return a server error
+        traceback_str = traceback.format_exc()
+        print(f"Become Host error: {str(e)}\n{traceback_str}")
+        return JSONResponse(
+            content={"error": f"An unexpected error occurred: {str(e)}"},
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
