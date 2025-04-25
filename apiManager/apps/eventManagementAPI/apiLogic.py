@@ -782,53 +782,86 @@ async def create_paid_event(request: Request, user_id: int = Depends(get_current
 
 @router.get("/event/get_host_stripe_account_link")
 async def get_host_stripe_account_link(user_id: int = Depends(get_current_user)):
-    siteDomain = settings.SITE_URL
+    """
+    API endpoint to check a host's Stripe account status and provide an onboarding link if needed.
+    Returns either a success message if the account is fully set up, or an onboarding link if setup is incomplete.
+    """
+    # Use the same domain as in become_host for consistency
+    site_domain = "https://waveoncampus.com"
+    
     @sync_to_async
-    def process_create_event():
+    def process_stripe_account_check():
         try:
-            userAccount = CustomUser.objects.get(id=user_id)
-            stripeConnectAccount = stripe.Account.retrieve(userAccount.connectAccountID)
-            if stripeConnectAccount.get("payouts_enabled"):
-                completedConnectAccount = True
-            time.sleep(2)
-
-            account_link = stripe.AccountLink.create(
-                account=userAccount.connectAccountID,
-                refresh_url=f'{siteDomain}/refresh/{userAccount.connectAccountID}',
-                return_url=f"{siteDomain}/host/portal/",
-                type="account_onboarding",
-            )
-                
-            if not completedConnectAccount:
+            # Get the user account with proper error handling
+            user = get_object_or_404(CustomUser, id=user_id)
+            
+            # Check if user has a Stripe Connect account ID
+            if not user.connectAccountID:
                 return JSONResponse(
                     content={
-                        "error": "Please complete your Stripe account setup.",
-                        "stripeLink": account_link
+                        "error": "You need to set up your Stripe account first.",
+                        "redirect": "/host/stripe-setup/"
                     },
-                    status_code=status.HTTP_400_BAD_REQUEST,
+                    status_code=status.HTTP_400_BAD_REQUEST
                 )
-            else:
+            
+            # Initialize account status flag
+            is_fully_onboarded = False
+            
+            # Check the Stripe account status
+            try:
+                # Retrieve the Stripe account details
+                stripe_account = stripe.Account.retrieve(user.connectAccountID)
+                is_fully_onboarded = stripe_account.get("payouts_enabled", False)
+                
+                # Create an account link for onboarding or updating account details
+                account_link = stripe.AccountLink.create(
+                    account=user.connectAccountID,
+                    refresh_url=f'{site_domain}/refresh/{user.connectAccountID}',
+                    return_url=f"{site_domain}/host/portal/",
+                    type="account_onboarding",
+                )
+                
+                # Return appropriate response based on account status
+                if not is_fully_onboarded:
+                    return JSONResponse(
+                        content={
+                            "error": "Please complete your Stripe account setup.",
+                            "stripeLink": account_link.url  # Include the URL, not the entire object
+                        },
+                        status_code=status.HTTP_200_OK  # Using 200 instead of 400 as this is an expected state
+                    )
+                else:
+                    return JSONResponse(
+                        content={
+                            "success": "Stripe account setup completed.",
+                            "updateLink": account_link.url  # Provide link for updating account details
+                        },
+                        status_code=status.HTTP_200_OK
+                    )
+            except stripe.error.StripeError as e:
+                # Log the specific Stripe error for debugging
+                print(f"Stripe error in get_host_stripe_account_link: {str(e)}")
                 return JSONResponse(
-                    content={"success": "Stripe account setup completed."},
-                    status_code=status.HTTP_200_OK,
+                    content={"error": f"Stripe error: {str(e)}"},
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
                 )
-        except stripe.error.StripeError as e:
-            return JSONResponse(
-                content={"error": f"An unexpected error occurred: {str(e)}"},
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
         except CustomUser.DoesNotExist:
             return JSONResponse(
                 content={"error": "User not found"},
                 status_code=status.HTTP_404_NOT_FOUND
             )
         except Exception as e:
+            # Include traceback for unexpected errors
+            traceback_str = traceback.format_exc()
+            print(f"Error in get_host_stripe_account_link: {str(e)}\n{traceback_str}")
             return JSONResponse(
                 content={"error": f"An unexpected error occurred: {str(e)}"},
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
     
-    return await process_create_event()
+    # Execute the function and return the result
+    return await process_stripe_account_check()
     
 @router.get("/event/paid/ticket/fields")
 async def paid_ticket_creation_fields(request: Request):
@@ -1296,7 +1329,7 @@ async def become_host(request: Request, user_id: int = Depends(get_current_user)
                 user = get_object_or_404(CustomUser, id=user_id)
                 
                 # Set up common variables for Stripe redirect URLs
-                site_domain = settings.SITE_URL
+                site_domain = "https://waveoncampus.com"
                 redirect_link = f"{site_domain}/host/portal/"
                 
                 # Check if the user has a Stripe Connect account
