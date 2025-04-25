@@ -2,6 +2,7 @@ from uuid import UUID
 import time
 import stripe
 from django.conf import settings
+from django.contrib.auth.models import Group
 from stripeManagementApp.customerSetup import ConnectAccount
 from fastapi import APIRouter, Depends, HTTPException, status, Request, Header
 from fastapi.responses import JSONResponse
@@ -1284,7 +1285,7 @@ async def delete_purchased_ticket(eventId: str, request: Request, user_id: int =
 async def become_host(request: Request, user_id: int = Depends(get_current_user)):
     print(f"[DEBUG - become_host] Function called with user_id: {user_id}")
     """
-    API endpoint for becoming a host on the platform
+    API endpoint for becoming a host on the platform and ensuring Stripe onboarding is complete
     """
     try:
         # Wrap Django ORM calls in a synchronous function
@@ -1293,76 +1294,112 @@ async def become_host(request: Request, user_id: int = Depends(get_current_user)
             try:
                 # Get the current user
                 user = get_object_or_404(CustomUser, id=user_id)
-                completed_connect_account = False
                 
-                # Check if user is already a host
-                if user.groups.filter(name="Host").exists():
-                    return JSONResponse(
-                        content={"message": "You are already a host."},
-                        status_code=status.HTTP_200_OK
-                    )
-                
-                # Get site domain for Stripe redirect URLs
+                # Set up common variables for Stripe redirect URLs
                 site_domain = settings.SITE_URL
                 redirect_link = f"{site_domain}/host/portal/"
                 
-                # Path 1: If no connectAccountID, search Stripe for an account by email
-                if not user.connectAccountID:
-                    # Search for existing accounts using list instead of search
+                # Check if the user has a Stripe Connect account
+                has_connect_account = bool(user.connectAccountID)
+                is_host = user.groups.filter(name="Host").exists()
+                is_fully_onboarded = False
+                
+                # If user has a Connect account, check if it's fully set up
+                if has_connect_account:
                     try:
-                        stripe_accounts = stripe.Account.list(limit=10)
-                        existing_account = None
-                        
-                        # Look for account with matching email
-                        for account in stripe_accounts.data:
-                            if account.get("email") == user.email:
-                                existing_account = account
-                                break
-                        
-                        if existing_account:
-                            # Delete old account if found
-                            stripe.Account.delete(existing_account.id)
-                        
-                        # Create a new Stripe Connect account
-                        stripe_connect_account = ConnectAccount.createConnectAccount(
-                            None, user
-                        )
-                        
-                        if stripe_connect_account:
-                            user.connectAccountID = stripe_connect_account.id
-                            user.connectAccountCreated = True
-                            completed_connect_account = True
-                        else:
-                            return JSONResponse(
-                                content={"error": "Failed to create Stripe Connect account"},
-                                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
-                            )
+                        stripe_account = stripe.Account.retrieve(user.connectAccountID)
+                        is_fully_onboarded = stripe_account.get("payouts_enabled", False)
                     except stripe.error.StripeError as e:
                         return JSONResponse(
                             content={"error": f"Stripe error: {str(e)}"},
                             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
                         )
                 
-                # Path 2: Now that we have a Connect account ID, generate the onboarding link
-                if user.connectAccountID:
+                # Case 1: User is a host and fully onboarded with Stripe
+                if is_host and is_fully_onboarded:
+                    return JSONResponse(
+                        content={"message": "You are already a host with a complete Stripe setup."},
+                        status_code=status.HTTP_200_OK
+                    )
+                
+                # Case 2: User is a host but not fully onboarded with Stripe
+                if is_host and has_connect_account and not is_fully_onboarded:
                     try:
                         stripe_link_account = ConnectAccount.getStripeOnboardingLink(
                             None, user.connectAccountID, site_domain, redirect_link
                         )
+                        return JSONResponse(
+                            content={
+                                "message": "Please complete your Stripe account setup.",
+                                "stripe_onboarding_link": stripe_link_account,
+                                "connect_account_id": user.connectAccountID
+                            },
+                            status_code=status.HTTP_200_OK
+                        )
                     except stripe.error.StripeError as e:
                         return JSONResponse(
                             content={"error": f"Failed to generate onboarding link: {str(e)}"},
-                            status_code=status.HTTP_400_BAD_REQUEST
+                            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
                         )
-                else:
+                
+                # Case 3: User is a host but has no Stripe account
+                if is_host and not has_connect_account:
                     return JSONResponse(
-                        content={"error": "Failed to create Stripe Connect account"},
-                        status_code=status.HTTP_400_BAD_REQUEST
+                        content={"message": "You are a host but missing Stripe setup. Please contact support."},
+                        status_code=status.HTTP_200_OK
                     )
                 
-                # Assign "Host" role
-                event_host, created = Group.objects.get_or_create(name="Host")
-                user.groups.add(event_host)
+                # Case 4: User is not a host and needs to be set up
+                # First check if they have an existing Stripe account by email
+                if not has_connect_account:
+                    try:
+                        # Look for existing account with matching email
+                        stripe_accounts = stripe.Account.list(limit=10)
+                        existing_account = None
+                        
+                        for account in stripe_accounts.data:
+                            if account.get("email") == user.email:
+                                existing_account = account
+                                break
+                        
+                        if existing_account:
+                            # Delete old account if found to avoid duplicates
+                            stripe.Account.delete(existing_account.id)
+                        
+                        # Create a new Stripe Connect account
+                        stripe_connect_account = ConnectAccount.createConnectAccount(None, user)
+                        
+                        if not stripe_connect_account:
+                            return JSONResponse(
+                                content={"error": "Failed to create Stripe Connect account"},
+                                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+                            )
+                            
+                        # Update user with new account ID
+                        user.connectAccountID = stripe_connect_account.id
+                        user.connectAccountCreated = True
+                        
+                    except stripe.error.StripeError as e:
+                        return JSONResponse(
+                            content={"error": f"Stripe error: {str(e)}"},
+                            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+                        )
+                
+                # Generate onboarding link
+                try:
+                    stripe_link_account = ConnectAccount.getStripeOnboardingLink(
+                        None, user.connectAccountID, site_domain, redirect_link
+                    )
+                except stripe.error.StripeError as e:
+                    return JSONResponse(
+                        content={"error": f"Failed to generate onboarding link: {str(e)}"},
+                        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+                    )
+                
+                # Assign "Host" role if not already assigned
+                if not is_host:
+                    event_host, created = Group.objects.get_or_create(name="Host")
+                    user.groups.add(event_host)
                 
                 # Save the user with updated connectAccountID
                 user.save()
@@ -1372,6 +1409,7 @@ async def become_host(request: Request, user_id: int = Depends(get_current_user)
                     "stripe_onboarding_link": stripe_link_account,
                     "connect_account_id": user.connectAccountID
                 }
+                
             except CustomUser.DoesNotExist:
                 return JSONResponse(
                     content={"error": "User not found"},
@@ -1399,3 +1437,5 @@ async def become_host(request: Request, user_id: int = Depends(get_current_user)
             content={"error": f"An unexpected error occurred: {str(e)}"},
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+        
+        
