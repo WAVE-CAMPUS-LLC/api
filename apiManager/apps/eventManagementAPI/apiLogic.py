@@ -2,6 +2,7 @@ from uuid import UUID
 import time
 import stripe
 from django.conf import settings
+from stripeManagementApp.customerSetup import ConnectAccount
 from fastapi import APIRouter, Depends, HTTPException, status, Request, Header
 from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordRequestForm
