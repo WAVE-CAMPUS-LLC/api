@@ -1064,7 +1064,36 @@ async def create_event_coupon(eventId: str, payload: dict):
                 detail=f"An unexpected error occurred: {str(e)}"
             )
         raise e
+    
+class DeleteCouponRequest(BaseModel):
+    couponId: str
 
+@router.post("/event/{eventId}/deleteCoupon")
+async def delete_coupon(eventId: str, deleteCouponRequest: DeleteCouponRequest):
+    @sync_to_async
+    def delete_coupon_sync(event_id, coupon_id):
+        event = get_object_or_404(Event, eventId=event_id)
+        coupon = get_object_or_404(CouponCode, coupon_id=coupon_id)
+        if coupon.event != event:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Coupon does not belong to this event"
+            )
+        coupon.delete()
+        return {"message": "Coupon deleted successfully"}
+
+    try:
+        result = await delete_coupon_sync(eventId, deleteCouponRequest.couponId)
+        return JSONResponse(content=result, status_code=status.HTTP_200_OK)
+    except Exception as e:
+        if not isinstance(e, HTTPException):
+            error_trace = traceback.format_exc()
+            print(f"Delete Event Coupon error: {str(e)}\n{error_trace}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"An unexpected error occurred: {str(e)}"
+            )
+        raise e
 
 @router.get("/event/{eventId}/rsvp")
 async def get_event_rsvp_list(eventId: str, request: Request):
