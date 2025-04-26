@@ -1023,68 +1023,47 @@ async def get_event_coupons(eventId: str, request: Request):
 
     return JSONResponse(content=coupons, status_code=status.HTTP_200_OK)
 
-
 @router.post("/event/{eventId}/createCoupon")
-async def create_event_coupons(eventId: str, request: Request):
-    print(f"[DEBUG - create_event_coupons] Function called with eventId: {eventId}")
+async def create_event_coupon(eventId: str, payload: dict):
+    """
+    Create a coupon for the given event. Body is JSON.
+    """
+    @sync_to_async
+    def create_coupon(eventId, payload):
+        event = get_object_or_404(Event, eventId=eventId)
+
+        coupon_form = CouponCodeForm(payload)
+
+        if not coupon_form.is_valid():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=coupon_form.errors.as_json(),
+            )
+
+        coupon = coupon_form.save(commit=False)
+        coupon.event = event
+        coupon.save()
+
+        return {
+            "message": "Coupon created successfully",
+            "coupon": {
+                "code": coupon.code,
+                "discount_percentage": coupon.discount_percentage,
+            },
+        }
+
     try:
-        # Get form data (includes both text fields and files)
-        form_data = await request.form()
-
-        # Separate normal data and file data from the form
-        data = {}
-        files = {}
-        print(f"[DEBUG - create_paid_event] Processing form data")
-        for key, value in form_data.multi_items():
-            if isinstance(value, UploadFile):
-                files[key] = value
-            else:
-                data[key] = value
-
-        # Wrap Django ORM calls and form processing in a synchronous function
-        @sync_to_async
-        def process_create_coupon(eventId, data):
-            # Fetch the event object or raise a 404 error if not found
-            event = get_object_or_404(Event, eventId=eventId)
-
-            # Instantiate the Django form with submitted data, file uploads, instance and partial flag.
-            coupon_form = CouponCodeForm(data)
-
-            if coupon_form.is_valid():
-                # Create the new coupon code
-                new_coupon = coupon_form.save(commit=False)
-                new_coupon.event = event  # Associate the coupon with the event
-                new_coupon.save()
-
-                return {
-                    "message": "Coupon created successfully.",
-                    "code": str(new_coupon.code),
-                    "eventId": str(event.eventId),
-                    "discountPercentage": new_coupon.discountPercentage,
-                }
-            else:
-                # Here we raise an error with the form errors so that we can return a 400 response.
-                raise ValueError(coupon_form.errors)
-
-        # Execute the create coupon function
-        result = await process_create_coupon(eventId, data)
-        print(f"[DEBUG - create_event_coupons] Coupon created with code: {result.get('code', 'unknown')}")
+        result = await create_coupon(eventId, payload)
         return JSONResponse(content=result, status_code=status.HTTP_200_OK)
-
-    except ValueError as ve:
-        # Return any form validation errors
-        return JSONResponse(
-            content={"errors": str(ve), "message": "Failed to create coupon."},
-            status_code=status.HTTP_400_BAD_REQUEST,
-        )
     except Exception as e:
-        # Log the exception details and return a server error
-        traceback_str = traceback.format_exc()
-        print(f"Create Event Coupons error: {str(e)}\n{traceback_str}")
-        return JSONResponse(
-            content={"error": f"An unexpected error occurred: {str(e)}"},
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        )
+        if not isinstance(e, HTTPException):
+            error_trace = traceback.format_exc()
+            print(f"Create Event Coupon error: {str(e)}\n{error_trace}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"An unexpected error occurred: {str(e)}"
+            )
+        raise e
 
 
 @router.get("/event/{eventId}/rsvp")
