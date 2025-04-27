@@ -35,7 +35,8 @@ from eventManagementApp.models import Event, HostProfile, CouponCode
 from accountManagementApp.models import UserProfile
 from eventTicketsApp.models import RSVPTicket, PaidFreeTicket, Ticket
 from eventTicketsApp.serializers import TicketSerializer
-from eventManagementApp.forms import EditEventForm, EventForm
+from eventManagementApp.forms import EventForm
+from eventManagementApp.serializers import EditEventModelSerializer
 from dotenv import load_dotenv
 import os
 
@@ -71,14 +72,17 @@ async def edit_event_endpoint(
         for key, value in form_data.multi_items():
             if isinstance(value, UploadFile):
                 print(f"[DEBUG - edit_event_endpoint] File uploaded: {key}")
-                files[key] = value
+                # Convert FastAPI UploadFile to Django file object
+                django_file = await starlette_to_django(value)
+                files[key] = django_file
             else:
                 print(f"[DEBUG - edit_event_endpoint] Text field: {key} = {value}")
                 data[key] = value
+                
         # Determine if this is a partial update (PATCH)
         partial = request.method.upper() == "PATCH"
 
-        # Wrap Django ORM calls and form processing in a synchronous function
+        # Wrap Django ORM calls and serializer processing in a synchronous function
         @sync_to_async
         def process_edit_event():
             # Retrieve the event or raise a 404
@@ -87,8 +91,7 @@ async def edit_event_endpoint(
             print(f"[DEBUG - process_edit_event] Incoming data: {data}")
             print(f"[DEBUG - process_edit_event] Incoming files: {files}")
 
-            # Get the current user's profile.
-            # Depending on your get_current_user, `user` might be a user instance.
+            # Get the current user's profile
             user = CustomUser.objects.get(id=user_id)
             user_profile = UserProfile.objects.get(user=user)
 
@@ -98,13 +101,19 @@ async def edit_event_endpoint(
             # Determine whether the user is associated with a college
             is_in_college = user_profile.college is not None
 
-            # Instantiate the Django form with submitted data, file uploads, instance and partial flag.
-            edit_event_form = EditEventForm(
-                data, files, instance=event, partial=partial
+            # Merge data and files for the serializer
+            combined_data = {**data}
+            combined_data.update(files)
+
+            # Use DRF ModelSerializer for proper partial update support
+            serializer = EditEventModelSerializer(
+                instance=event,
+                data=combined_data,
+                partial=partial
             )
 
-            if edit_event_form.is_valid():
-                updated_event = edit_event_form.save()
+            if serializer.is_valid():
+                updated_event = serializer.save()
 
                 # Retrieve updated related data
                 def serialize_queryset(queryset):
@@ -163,21 +172,32 @@ async def edit_event_endpoint(
                 )
 
                 # Return the serialized data with JSON-compatible values
-                # Use model_dump_json=True to handle datetime serialization
                 return response.model_dump(mode="json")
             else:
-                # Here we raise an error with the form errors so that we can return a 400 response.
-                raise ValueError(edit_event_form.errors)
+                # Return validation errors in a structured format
+                raise ValueError({"validation_errors": serializer.errors})
 
         # Await the synchronous process
         result = await process_edit_event()
         print(f"[DEBUG - edit_event_endpoint] Success response: {result.get('message', 'No message')}")
         return JSONResponse(content=result, status_code=status.HTTP_200_OK)
-
     except ValueError as ve:
-        # Return any form validation errors
+        # Return validation errors in a structured format
+        error_content = {"message": "Failed to update event."}
+        
+        # Check if this is our structured validation error
+        if str(ve).startswith('{"validation_errors"'):
+            try:
+                import json
+                error_dict = json.loads(str(ve).replace("'", "\""))
+                error_content.update(error_dict)
+            except:
+                error_content["errors"] = str(ve)
+        else:
+            error_content["errors"] = str(ve)
+            
         return JSONResponse(
-            content={"errors": str(ve), "message": "Failed to update event."},
+            content=error_content,
             status_code=status.HTTP_400_BAD_REQUEST,
         )
     except Exception as e:
