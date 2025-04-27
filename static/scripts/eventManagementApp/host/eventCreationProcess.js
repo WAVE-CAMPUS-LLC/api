@@ -90,7 +90,7 @@ $(document).ready(function () {
       },
     },
     ".building-input": {
-      required: false,
+      required: true,
       maxLength: 100,
       errorSelector: "#building-error",
       errorMessages: {

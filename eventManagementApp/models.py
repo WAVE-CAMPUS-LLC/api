@@ -292,8 +292,8 @@ class Event(models.Model):
     building_name = models.CharField(
         _("Building Name"),
         max_length=250,
-        null=True,
-        blank=True,
+        null=False,
+        blank=False,
         default="",
         db_index=True,
     )
