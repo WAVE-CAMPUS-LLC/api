@@ -83,7 +83,9 @@ async def edit_event_endpoint(
         def process_edit_event():
             # Retrieve the event or raise a 404
             event = get_object_or_404(Event, eventId=eventId)
-            print(f"[DEBUG - process_edit_event] Event found: {event}")
+            print(f"[DEBUG - process_edit_event] Event fields: {event.__dict__}")
+            print(f"[DEBUG - process_edit_event] Incoming data: {data}")
+            print(f"[DEBUG - process_edit_event] Incoming files: {files}")
 
             # Get the current user's profile.
             # Depending on your get_current_user, `user` might be a user instance.
