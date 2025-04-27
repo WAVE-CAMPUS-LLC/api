@@ -67,12 +67,14 @@ async def edit_event_endpoint(
         # Separate normal data and file data from the form
         data = {}
         files = {}
+        print(f"[DEBUG - edit_event_endpoint] Processing form data")
         for key, value in form_data.multi_items():
             if isinstance(value, UploadFile):
+                print(f"[DEBUG - edit_event_endpoint] File uploaded: {key}")
                 files[key] = value
             else:
+                print(f"[DEBUG - edit_event_endpoint] Text field: {key} = {value}")
                 data[key] = value
-
         # Determine if this is a partial update (PATCH)
         partial = request.method.upper() == "PATCH"
 
@@ -81,6 +83,7 @@ async def edit_event_endpoint(
         def process_edit_event():
             # Retrieve the event or raise a 404
             event = get_object_or_404(Event, eventId=eventId)
+            print(f"[DEBUG - process_edit_event] Event found: {event}")
 
             # Get the current user's profile.
             # Depending on your get_current_user, `user` might be a user instance.
