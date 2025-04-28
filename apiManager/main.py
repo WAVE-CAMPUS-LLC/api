@@ -17,6 +17,7 @@ from apiManager.apps.authenticationAPI.apiLogic import router as auth_router
 from apiManager.apps.collegeManagementAPI.apiLogic import router as college_router
 from apiManager.apps.eventTicketsAPI.apiLogic import router as ticket_router
 # from apiManager.apps.socialAPI.apiLogic import router as social_router
+from apiManager.apps.coreAPI.version_middleware import VersionCheckMiddleware
 
 
 app = FastAPI(title="WAVE. API", version="1.0.0")
@@ -27,6 +28,20 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+)
+
+# Add the Version Check middleware here
+app.add_middleware(
+    VersionCheckMiddleware,
+    minimum_ios_version="1.0.4",
+    minimum_android_version="1.0.4",
+    excluded_paths=[
+        "/waveYourCampusAPIFromOAK/auth",  # Allow auth endpoints
+        "/waveYourCampusAPIFromOAK/core/ping",  # Allow ping endpoint
+        "/docs",  # Allow documentation
+        "/redoc",  # Allow redoc
+        "/openapi.json"  # Allow OpenAPI schema
+    ]
 )
 
 

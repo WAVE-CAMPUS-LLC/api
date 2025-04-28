@@ -14,7 +14,7 @@ from .serializers import ExplorePageEvent, EventDetailsSerializer, RSVPInformati
 from apiManager.dependencies import get_current_user
 from authenticationApp.models import CustomUser
 from uuid import UUID
-
+from .version_middleware import VersionCheckMiddleware
 
 
 router = APIRouter()
