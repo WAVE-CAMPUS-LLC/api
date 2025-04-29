@@ -42,7 +42,7 @@ class VersionCheckMiddleware:
                 status_code=status.HTTP_426_UPGRADE_REQUIRED,
                 content={
                     "error": "Update Required",
-                    "message": "Please update to the latest version to continue using the apps.",
+                    "message": "Please update to the latest version to continue using the app.",
                     "appStoreUrl": "https://apps.apple.com/us/app/wave-oc/id6744196161",
                     "currentVersion": app_version,
                     "minimumVersion": self.minimum_versions.get(platform)
