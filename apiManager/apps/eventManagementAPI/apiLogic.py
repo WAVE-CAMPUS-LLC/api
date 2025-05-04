@@ -1048,6 +1048,44 @@ async def get_event_coupons(eventId: str, request: Request):
 
     return JSONResponse(content=coupons, status_code=status.HTTP_200_OK)
 
+
+@router.get("/event/{eventId}/paid/tickets")
+async def get_paid_event_tickets(eventId: str, request: Request):
+    print(f"[DEBUG - get_paid_event_tickets] Function called with eventId: {eventId}")
+    try:
+        # Wrap Django ORM calls in a synchronous function
+        @sync_to_async
+        def get_paid_event_tickets_sync(event_id):
+            print(f"[DEBUG - get_paid_event_tickets] Fetching tickets for event: {event_id}")
+            # Fetch the event object or raise a 404 error if not found
+            event = get_object_or_404(Event, eventId=event_id)
+            tickets = PaidFreeTicket.objects.filter(event=event).values()
+            tickets_list = []
+            for ticket in tickets:
+                if isinstance(ticket["ticket_id"], UUID):
+                    ticket["ticket_id"] = str(ticket["ticket_id"])
+                tickets_list.append(ticket)
+            return tickets_list
+
+        # Execute synchronous function asynchronously
+        tickets = await get_paid_event_tickets_sync(eventId)
+        print(f"[DEBUG - get_paid_event_tickets] Found {len(tickets)} tickets")
+    except Event.DoesNotExist:
+        return JSONResponse(
+            content={"message": "Event not found."},
+            status_code=status.HTTP_404_NOT_FOUND,
+        )
+    except Exception as e:
+        traceback_str = traceback.format_exc()
+        print(f"Get Paid Event Tickets error: {str(e)}\n{traceback_str}")
+        return JSONResponse(
+            content={"error": f"An unexpected error occurred: {str(e)}"},
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+    return JSONResponse(content=tickets, status_code=status.HTTP_200_OK)
+
+
 @router.post("/event/{eventId}/createCoupon")
 async def create_event_coupon(eventId: str, payload: dict):
     """
