@@ -260,6 +260,7 @@ async def rsvp(request: Request, eventId: str, user_id: Optional[int] = Depends(
     # Convert form data to dict
     form_data = dict(form_info)
     print(f"[rsvp API] Received form data: {form_data}")
+    
     @sync_to_async
     def rsvp_for_event(request, eventId, user_id, form_data):
         user = CustomUser.objects.filter(id=user_id).first() if user_id else None
@@ -270,14 +271,17 @@ async def rsvp(request: Request, eventId: str, user_id: Optional[int] = Depends(
         except Event.DoesNotExist:
             return {"error": "Event not found"}
         
-        # if user:
-        #     RSVPTicket.objects.filter(event=event, email=user.email).delete()
-        #     Ticket.objects.filter(event=event, guestEmail=user.email).delete()
-        #     event.guest_list.remove(user)
-        # else:
-        #     RSVPTicket.objects.filter(event=event, email=form_data['email']).delete()
-        #     Ticket.objects.filter(event=event, guestEmail=form_data['email']).delete()                if user:
-            existing_rsvp = RSVPTicket.objects.filter(event=event, email=user.email).first()
+        # Delete any existing RSVPs for this user/email
+        if user:
+            RSVPTicket.objects.filter(event=event, email=user.email).delete()
+            Ticket.objects.filter(event=event, guestEmail=user.email).delete()
+            event.guest_list.remove(user)
+        else:
+            if 'email' in form_data:
+                RSVPTicket.objects.filter(event=event, email=form_data['email']).delete()
+                Ticket.objects.filter(event=event, guestEmail=form_data['email']).delete()                
+        
+        # Check for existing RSVP and prepare form data            existing_rsvp = RSVPTicket.objects.filter(event=event, email=user.email).first()
             if existing_rsvp:
                 return {"message": "You have an RSVP to this event."}
 
@@ -286,16 +290,16 @@ async def rsvp(request: Request, eventId: str, user_id: Optional[int] = Depends(
             if 'display_on_guestlist' in form_data:
                 display_on_guestlist = form_data['display_on_guestlist'] == 'true'
 
-                form_data_final = {
-                    "email": user.email,
-                    "first_name": user.first_name,
-                    "last_name": user.last_name,
-                    "display_on_guestlist": display_on_guestlist,
-                }
-            else:
-                # Check if required fields are present for non-authenticated users
-                required_fields = ['email', 'first_name', 'last_name']
-                missing_fields = [field for field in required_fields if field not in form_data]
+            form_data_final = {
+                "email": user.email,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "display_on_guestlist": display_on_guestlist,
+            }
+        else:
+            # Check if required fields are present for non-authenticated users
+            required_fields = ['email', 'first_name', 'last_name']
+            missing_fields = [field for field in required_fields if field not in form_data]
             
             if missing_fields:
                 return {"error": f"Missing required fields: {', '.join(missing_fields)}"}
@@ -314,8 +318,7 @@ async def rsvp(request: Request, eventId: str, user_id: Optional[int] = Depends(
                 "first_name": form_data['first_name'],
                 "last_name": form_data['last_name'],
                 "display_on_guestlist": display_on_guestlist,
-            }
-            
+            }        # Process the RSVP form
         form = RSVPForm(form_data_final, user=user)
 
         if form.is_valid():
@@ -332,9 +335,9 @@ async def rsvp(request: Request, eventId: str, user_id: Optional[int] = Depends(
                 rsvp_ticket.email,
                 from_api=True
             )
-            if form_data_final['display_on_guestlist']:
+            if form_data_final['display_on_guestlist'] and user:
                 event.guest_list.add(user)
-            print(form_data_final['display_on_guestlist'])
+            print(f"Display on guest list: {form_data_final['display_on_guestlist']}")
             return {"message": "RSVP successful!"}
         else:
             return {"errors": form.errors}
