@@ -1189,7 +1189,7 @@ async def delete_coupon(eventId: str, deleteCouponRequest: DeleteCouponRequest):
         return {"message": "Coupon deleted successfully"}
 
     try:
-        result = await delete_coupon_sync(eventId, deleteCouponRequest.couponId)
+        result = await delete_coupon_sync(eventId, deleteCouponRequest.coupon_id)
         return JSONResponse(content=result, status_code=status.HTTP_200_OK)
     except Exception as e:
         if not isinstance(e, HTTPException):
