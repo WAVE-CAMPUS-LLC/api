@@ -1208,14 +1208,13 @@ async def get_event_rsvp_list(eventId: str, request: Request):
         # Wrap Django ORM calls in a synchronous function
         @sync_to_async
         def get_event_rsvp_list_sync(event_id):
-            print(f"[DEBUG - get_event_rsvp_list] Fetching RSVP list for event: {event_id}")
-            # Fetch the event object or raise a 404 error if not found
+            print(f"[DEBUG - get_event_rsvp_list] Fetching RSVP list for event: {event_id}")            # Fetch the event object or raise a 404 error if not found
             event = get_object_or_404(Event, eventId=event_id)
             rsvp_list = RSVPTicket.objects.filter(event=event).values()
             rsvp_list_data = []
             for rsvp in rsvp_list:
-                if isinstance(rsvp["ticketId"], UUID):
-                    rsvp["ticketId"] = str(rsvp["ticketId"])
+                if isinstance(rsvp["ticket_id"], UUID):
+                    rsvp["ticket_id"] = str(rsvp["ticket_id"])
                 rsvp_list_data.append(rsvp)
             return rsvp_list_data
 
