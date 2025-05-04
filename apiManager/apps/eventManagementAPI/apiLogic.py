@@ -1172,7 +1172,7 @@ async def create_event_coupon(eventId: str, payload: dict):
         raise e
     
 class DeleteCouponRequest(BaseModel):
-    couponId: str
+    coupon_id: str
 
 @router.post("/event/{eventId}/deleteCoupon")
 async def delete_coupon(eventId: str, deleteCouponRequest: DeleteCouponRequest):
