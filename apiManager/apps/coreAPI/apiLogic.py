@@ -255,7 +255,7 @@ async def rsvp(request: Request, eventId: str, user_id: Optional[int] = Depends(
     API endpoint for RSVPing to an event.
     """
     print(f"[rsvp API] Function called with eventId: {eventId}, user_id: {user_id}")
-     # Get form data from request - this is async and fast
+    # Get form data from request - this is async and fast
     form_info = await request.form()
     # Convert form data to dict
     form_data = dict(form_info)
@@ -276,12 +276,9 @@ async def rsvp(request: Request, eventId: str, user_id: Optional[int] = Depends(
             RSVPTicket.objects.filter(event=event, email=user.email).delete()
             Ticket.objects.filter(event=event, guestEmail=user.email).delete()
             event.guest_list.remove(user)
-        else:
-            if 'email' in form_data:
-                RSVPTicket.objects.filter(event=event, email=form_data['email']).delete()
-                Ticket.objects.filter(event=event, guestEmail=form_data['email']).delete()                
-        
-        # Check for existing RSVP and prepare form data            existing_rsvp = RSVPTicket.objects.filter(event=event, email=user.email).first()
+            
+            # Check for existing RSVP
+            existing_rsvp = RSVPTicket.objects.filter(event=event, email=user.email).first()
             if existing_rsvp:
                 return {"message": "You have an RSVP to this event."}
 
@@ -297,13 +294,20 @@ async def rsvp(request: Request, eventId: str, user_id: Optional[int] = Depends(
                 "display_on_guestlist": display_on_guestlist,
             }
         else:
-            # Check if required fields are present for non-authenticated users
+            # For non-authenticated users
+            # Check if required fields are present
             required_fields = ['email', 'first_name', 'last_name']
             missing_fields = [field for field in required_fields if field not in form_data]
             
             if missing_fields:
                 return {"error": f"Missing required fields: {', '.join(missing_fields)}"}
+            
+            # Delete any existing RSVPs for this email
+            if 'email' in form_data:
+                RSVPTicket.objects.filter(event=event, email=form_data['email']).delete()
+                Ticket.objects.filter(event=event, guestEmail=form_data['email']).delete()
                 
+            # Check for existing RSVP
             existing_rsvp = RSVPTicket.objects.filter(event=event, email=form_data['email']).first()
             if existing_rsvp:
                 return {"message": "You have an RSVP to this event."}
@@ -318,7 +322,9 @@ async def rsvp(request: Request, eventId: str, user_id: Optional[int] = Depends(
                 "first_name": form_data['first_name'],
                 "last_name": form_data['last_name'],
                 "display_on_guestlist": display_on_guestlist,
-            }        # Process the RSVP form
+            }
+            
+        # Process the RSVP form
         form = RSVPForm(form_data_final, user=user)
 
         if form.is_valid():
