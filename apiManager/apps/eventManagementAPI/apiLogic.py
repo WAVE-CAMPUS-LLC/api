@@ -1010,7 +1010,8 @@ async def get_event_coupons(eventId: str, request: Request):
         # Wrap Django ORM calls in a synchronous function
         @sync_to_async
         def get_event_coupons_sync(event_id):
-            print(f"[DEBUG - get_event_coupons] Fetching coupons for event: {event_id}")            # Fetch the event object or raise a 404 error if not found
+            print(f"[DEBUG - get_event_coupons] Fetching coupons for event: {event_id}")
+            # Fetch the event object or raise a 404 error if not found
             event = get_object_or_404(Event, eventId=event_id)
             coupon_codes = CouponCode.objects.filter(event=event).values()
             coupons_list = []
@@ -1053,7 +1054,8 @@ async def get_event_coupons(eventId: str, request: Request):
 async def get_paid_event_tickets(eventId: str, request: Request):
     print(f"[DEBUG - get_paid_event_tickets] Function called with eventId: {eventId}")
     try:
-        # Wrap Django ORM calls in a synchronous function        @sync_to_async
+        # Wrap Django ORM calls in a synchronous function
+        @sync_to_async
         def get_paid_event_tickets_sync(event_id):
             print(f"[DEBUG - get_paid_event_tickets] Fetching tickets for event: {event_id}")
             # Fetch the event object or raise a 404 error if not found
@@ -1061,10 +1063,12 @@ async def get_paid_event_tickets(eventId: str, request: Request):
             tickets = PaidFreeTicket.objects.filter(event=event).values()
             tickets_list = []
             for ticket in tickets:
-                # Convert all potential UUID fields to strings
+                # Convert all non-JSON serializable types to strings
                 for key, value in ticket.items():
                     if isinstance(value, UUID):
                         ticket[key] = str(value)
+                    elif isinstance(value, datetime):
+                        ticket[key] = value.isoformat()
                 tickets_list.append(ticket)
             return tickets_list
 
@@ -1206,7 +1210,7 @@ async def delete_coupon(eventId: str, deleteCouponRequest: DeleteCouponRequest):
 async def get_event_rsvp_list(eventId: str, request: Request):
     print(f"[DEBUG - get_event_rsvp_list] Function called with eventId: {eventId}")
     try:
-        # Wrap Django ORM calls in a synchronous function        
+        # Wrap Django ORM calls in a synchronous function         
         @sync_to_async
         def get_event_rsvp_list_sync(event_id):
             print(f"[DEBUG - get_event_rsvp_list] Fetching RSVP list for event: {event_id}")
@@ -1215,10 +1219,12 @@ async def get_event_rsvp_list(eventId: str, request: Request):
             rsvp_list = RSVPTicket.objects.filter(event=event).values()
             rsvp_list_data = []
             for rsvp in rsvp_list:
-                # Convert all potential UUID fields to strings
+                # Convert all non-JSON serializable types to strings
                 for key, value in rsvp.items():
                     if isinstance(value, UUID):
                         rsvp[key] = str(value)
+                    elif isinstance(value, datetime):
+                        rsvp[key] = value.isoformat()
                 rsvp_list_data.append(rsvp)
             return rsvp_list_data
 
@@ -1357,12 +1363,21 @@ async def get_purchased_tickets_for_event(eventId: str, user_id: int = Depends(g
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail="You don't have permission to access these tickets. Only the event host can view ticket information."
                 )
-            
-            # Get all purchased tickets for the event
+              # Get all purchased tickets for the event
             purchased_tickets = Ticket.objects.filter(event=event)
             
             # Serialize the tickets for the response
-            return TicketSerializer(purchased_tickets, many=True).data
+            ticket_data = TicketSerializer(purchased_tickets, many=True).data
+            
+            # Convert non-JSON serializable types to strings
+            for ticket in ticket_data:
+                for key, value in ticket.items():
+                    if isinstance(value, UUID):
+                        ticket[key] = str(value)
+                    elif isinstance(value, datetime):
+                        ticket[key] = value.isoformat()
+            
+            return ticket_data
         
         # Execute synchronous function asynchronously
         purchased_tickets_data = await get_purchased_tickets_sync(eventId)
