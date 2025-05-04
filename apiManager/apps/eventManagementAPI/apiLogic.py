@@ -1010,15 +1010,15 @@ async def get_event_coupons(eventId: str, request: Request):
         # Wrap Django ORM calls in a synchronous function
         @sync_to_async
         def get_event_coupons_sync(event_id):
-            print(f"[DEBUG - get_event_coupons] Fetching coupons for event: {event_id}")
-            # Fetch the event object or raise a 404 error if not found
+            print(f"[DEBUG - get_event_coupons] Fetching coupons for event: {event_id}")            # Fetch the event object or raise a 404 error if not found
             event = get_object_or_404(Event, eventId=event_id)
             coupon_codes = CouponCode.objects.filter(event=event).values()
             coupons_list = []
             for coupon in coupon_codes:
-                # Convert UUID to string if present
-                if isinstance(coupon.get("coupon_id"), UUID):
-                    coupon["coupon_id"] = str(coupon["coupon_id"])
+                # Convert all UUID fields to strings
+                for key, value in coupon.items():
+                    if isinstance(value, UUID):
+                        coupon[key] = str(value)
                 # Create a standardized response format with datetime objects converted to ISO format strings
                 coupon_data = {
                     "couponId": coupon["coupon_id"],
@@ -1053,8 +1053,7 @@ async def get_event_coupons(eventId: str, request: Request):
 async def get_paid_event_tickets(eventId: str, request: Request):
     print(f"[DEBUG - get_paid_event_tickets] Function called with eventId: {eventId}")
     try:
-        # Wrap Django ORM calls in a synchronous function
-        @sync_to_async
+        # Wrap Django ORM calls in a synchronous function        @sync_to_async
         def get_paid_event_tickets_sync(event_id):
             print(f"[DEBUG - get_paid_event_tickets] Fetching tickets for event: {event_id}")
             # Fetch the event object or raise a 404 error if not found
@@ -1062,8 +1061,10 @@ async def get_paid_event_tickets(eventId: str, request: Request):
             tickets = PaidFreeTicket.objects.filter(event=event).values()
             tickets_list = []
             for ticket in tickets:
-                if isinstance(ticket["ticket_id"], UUID):
-                    ticket["ticket_id"] = str(ticket["ticket_id"])
+                # Convert all potential UUID fields to strings
+                for key, value in ticket.items():
+                    if isinstance(value, UUID):
+                        ticket[key] = str(value)
                 tickets_list.append(ticket)
             return tickets_list
 
@@ -1205,16 +1206,19 @@ async def delete_coupon(eventId: str, deleteCouponRequest: DeleteCouponRequest):
 async def get_event_rsvp_list(eventId: str, request: Request):
     print(f"[DEBUG - get_event_rsvp_list] Function called with eventId: {eventId}")
     try:
-        # Wrap Django ORM calls in a synchronous function
+        # Wrap Django ORM calls in a synchronous function        
         @sync_to_async
         def get_event_rsvp_list_sync(event_id):
-            print(f"[DEBUG - get_event_rsvp_list] Fetching RSVP list for event: {event_id}")            # Fetch the event object or raise a 404 error if not found
+            print(f"[DEBUG - get_event_rsvp_list] Fetching RSVP list for event: {event_id}")
+            # Fetch the event object or raise a 404 error if not found
             event = get_object_or_404(Event, eventId=event_id)
             rsvp_list = RSVPTicket.objects.filter(event=event).values()
             rsvp_list_data = []
             for rsvp in rsvp_list:
-                if isinstance(rsvp["ticket_id"], UUID):
-                    rsvp["ticket_id"] = str(rsvp["ticket_id"])
+                # Convert all potential UUID fields to strings
+                for key, value in rsvp.items():
+                    if isinstance(value, UUID):
+                        rsvp[key] = str(value)
                 rsvp_list_data.append(rsvp)
             return rsvp_list_data
 
