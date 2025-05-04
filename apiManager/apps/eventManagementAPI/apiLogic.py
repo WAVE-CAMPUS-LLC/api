@@ -1086,6 +1086,49 @@ async def get_paid_event_tickets(eventId: str, request: Request):
     return JSONResponse(content=tickets, status_code=status.HTTP_200_OK)
 
 
+@router.post("/event/{eventId}/paid/ticket/delete")
+async def delete_paid_event_ticket(eventId: str, request: Request):
+    print(f"[DEBUG - delete_paid_event_ticket] Function called with eventId: {eventId}")
+    try:
+        # Get the request data
+        data = await request.json()
+        print(f"[DEBUG - delete_paid_event_ticket] Request data: {data}")
+        
+        # Check if ticket_id is provided
+        ticket_id = data.get("ticket_id")
+        if not ticket_id:
+            return JSONResponse(
+                content={"error": "Missing ticket ID."}, 
+                status_code=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Wrap Django ORM calls in a synchronous function
+        @sync_to_async
+        def delete_ticket_sync(event_id, ticket_id):
+            event = get_object_or_404(Event, eventId=event_id)
+            ticket = get_object_or_404(PaidFreeTicket, ticket_id=ticket_id, event=event)
+            ticket.delete()
+            return {"message": "Ticket deleted successfully"}
+
+        # Execute the delete function
+        result = await delete_ticket_sync(eventId, ticket_id)
+        print(f"[DEBUG - delete_paid_event_ticket] Result: {result}")
+        return JSONResponse(content=result, status_code=status.HTTP_200_OK)
+        
+    except Event.DoesNotExist:
+        return JSONResponse(
+            content={"message": "Event not found."},
+            status_code=status.HTTP_404_NOT_FOUND,
+        )
+    except Exception as e:
+        traceback_str = traceback.format_exc()
+        print(f"Delete Paid Event Ticket error: {str(e)}\n{traceback_str}")
+        return JSONResponse(
+            content={"error": f"An unexpected error occurred: {str(e)}"},
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
 @router.post("/event/{eventId}/createCoupon")
 async def create_event_coupon(eventId: str, payload: dict):
     """
@@ -1340,6 +1383,7 @@ async def get_purchased_tickets_for_event(eventId: str, user_id: int = Depends(g
             content={"error": f"An unexpected error occurred: {str(e)}"},
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
+
 
 
 @router.post("/event/{eventId}/purchasedTickets/delete")
