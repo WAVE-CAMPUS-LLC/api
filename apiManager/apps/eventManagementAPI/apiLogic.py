@@ -1,6 +1,7 @@
 from uuid import UUID
 import time
 import stripe
+import json
 from django.conf import settings
 from django.contrib.auth.models import Group
 from stripeManagementApp.customerSetup import ConnectAccount
@@ -1247,22 +1248,42 @@ async def get_event_rsvp_list(eventId: str, request: Request):
     return JSONResponse(content=rsvp_list, status_code=status.HTTP_200_OK)
 
 
-@router.post("/event/{eventId}/rsvp/delete")
-async def delete_event_rsvp(eventId: str, request: Request, user_id: int = Depends(get_current_user)):
+@router.api_route("/event/{eventId}/rsvp/delete", methods=["DELETE", "POST"])
+async def delete_event_rsvp(eventId: str, request: Request, ticket_id: Optional[str] = None, user_id: int = Depends(get_current_user)):
     print(f"[DEBUG - delete_event_rsvp] Function called with eventId: {eventId}, user_id: {user_id}")
     """
     API endpoint for a host to delete a user's RSVP ticket
     """
     try:
-        # Get the request data
-        data = await request.json()
-        print(f"[DEBUG - delete_purchased_ticket] Request data: {data}")
+        # Try to get ticket_id from multiple sources
+        # 1. Check if it was passed as a query parameter
+        if ticket_id is None:
+            ticket_id = request.query_params.get("ticket_id")
+            
+        # 2. Check if it was passed in form data
+        if ticket_id is None:
+            try:
+                form_data = await request.form()
+                ticket_id = form_data.get("ticket_id")
+            except Exception:
+                pass
+                
+        # 3. Check if it was passed as JSON in request body
+        if ticket_id is None:
+            try:
+                data = await request.json()
+                print(f"[DEBUG - delete_event_rsvp] Request data from JSON: {data}")
+                ticket_id = data.get("ticket_id")
+            except json.JSONDecodeError:
+                # No valid JSON in the request body
+                pass
         
-        # Check if ticket_id is provided
-        ticket_id = data.get("ticket_id")
+        print(f"[DEBUG - delete_event_rsvp] Ticket ID: {ticket_id}")
+        
+        # Check if ticket_id was found in any of the sources
         if not ticket_id:
             return JSONResponse(
-                content={"error": "Missing ticket ID."}, 
+                content={"error": "Missing ticket ID. Please provide it as a query parameter, form field, or in JSON body."}, 
                 status_code=status.HTTP_400_BAD_REQUEST
             )
         
