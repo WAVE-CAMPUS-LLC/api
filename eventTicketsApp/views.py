@@ -862,8 +862,7 @@ def generateTicket(
         stripe_session_id=stripe_session_id,
     )
     ticket.save()
-    
-    # Get the ticket's main ID and build the activation URL.
+      # Get the ticket's main ID and build the activation URL.
     ticketMainId = ticket.mainId
     activationLink = (
         (str(os.getenv("WEBSITE_DOMAIN")) + reverse("eventTickets:activateTicket", kwargs={"mainId": ticketMainId}))
@@ -875,8 +874,21 @@ def generateTicket(
         if from_api else
         request.build_absolute_uri(reverse("eventTickets:viewTicket", kwargs={"mainId": ticketMainId}))
     )
-    # Use the activationLink as the data encoded in the QR code.
-    qr_data = activationLink
+    # Use JSON data for the QR code with comprehensive ticket information
+    qr_data = json.dumps(
+        {
+            "ticketId": str(ticket.ticketId),
+            "eventId": str(event.eventId),
+            "status": ticket.status,
+            "guestFirstName": guestFirstName if guestFirstName else None,
+            "guestLastName": guestLastName if guestLastName else None,
+            "guestEmail": guestEmail if guestEmail else None,
+            "userFirstName": user.first_name if user else None,
+            "userLastName": user.last_name if user else None,
+            "userEmail": user.email if user else None,
+            "activationLink": activationLink,
+        }
+    )
 
     qr_code_options = QRCodeOptions(
         size=200,
