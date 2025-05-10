@@ -23,6 +23,37 @@ router = APIRouter()
 async def ping():
     return {"message": "Core API is running!"}
 
+@router.get("/events/preview")
+async def get_events_preview():
+    """
+    API endpoint to retrieve a preview of events for the explore page.
+    """
+    print("[get_events_preview API] Function called")
+    
+    @sync_to_async
+    def get_events_preview_data():
+        events_list = []
+        # Get 3 random events using order_by('?')
+        for event in Event.objects.order_by('?')[:3]:
+            header_photo_url = event.header_photo.url if event.header_photo else None
+            events_list.append({
+                "eventId": str(event.eventId),  # Convert UUID to string
+                "title": event.title,
+                "date": event.date,
+                "header_photo": header_photo_url,
+                "event_type": event.event_type,
+                "state": event.state,
+                "city": event.city,
+                "ticketing": str(event.ticketing),  # Ensure it's a string
+                "forAllDisplay": bool(event.forAllDisplay),  # Ensure it's a boolean
+                "forCollegesDisplay": bool(event.forCollegesDisplay),  # Ensure it's a boolean
+            })
+        return events_list
+    events_data = await get_events_preview_data()
+    events = [ExplorePageEvent(**event_data) for event_data in events_data]
+    response = {"events": events}
+    
+    return response
 
 @router.get("/events")
 async def get_events():
