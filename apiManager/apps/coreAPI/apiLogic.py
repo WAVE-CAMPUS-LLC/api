@@ -194,40 +194,83 @@ async def get_event_details(eventId: str):
             rsvp_required = False  # Default value, adjust based on your model
 
             # Check for paid/free tickets
-            paid_free_tickets = (
-                []
-            )  # Default value, adjust based on your model            # Sanitize HTML in the description to prevent XSS attacks
+            paid_free_tickets = []  # Default value, adjust based on your model
+
+            # Sanitize HTML in the description to prevent XSS attacks
             try:
-                sanitized_description = bleach.clean(
-                    event.description,
-                    tags=[
-                        "p",
-                        "br",
-                        "strong",
-                        "em",
-                        "u",
-                        "h1",
-                        "h2",
-                        "h3",
-                        "h4",
-                        "h5",
-                        "h6",
-                        "ol",
-                        "ul",
-                        "li",
-                        "b",
-                        "i",
-                    ],
-                    attributes={"*": ["class", "style"]},
-                    styles=[
+                # Import CSS sanitizer if it exists (in newer versions of bleach)
+                css_sanitizer = None
+                try:
+                    from bleach.css_sanitizer import CSSSanitizer
+
+                    allowed_css_properties = [
                         "color",
                         "font-weight",
                         "text-align",
                         "font-style",
                         "text-decoration",
-                    ],
-                    strip=True,
-                )
+                    ]
+                    css_sanitizer = CSSSanitizer(
+                        allowed_css_properties=allowed_css_properties
+                    )
+                except ImportError:
+                    print(
+                        "[get_event_details API] CSSSanitizer not available, using basic sanitization"
+                    )
+
+                # Clean the HTML with appropriate parameters
+                if css_sanitizer:
+                    sanitized_description = bleach.clean(
+                        event.description,
+                        tags=[
+                            "p",
+                            "br",
+                            "strong",
+                            "em",
+                            "u",
+                            "h1",
+                            "h2",
+                            "h3",
+                            "h4",
+                            "h5",
+                            "h6",
+                            "ol",
+                            "ul",
+                            "li",
+                            "b",
+                            "i",
+                        ],
+                        attributes={"*": ["class", "style"]},
+                        css_sanitizer=css_sanitizer,
+                        strip=True,
+                    )
+                else:
+                    # Fallback to basic sanitization without CSS sanitizer
+                    sanitized_description = bleach.clean(
+                        event.description,
+                        tags=[
+                            "p",
+                            "br",
+                            "strong",
+                            "em",
+                            "u",
+                            "h1",
+                            "h2",
+                            "h3",
+                            "h4",
+                            "h5",
+                            "h6",
+                            "ol",
+                            "ul",
+                            "li",
+                            "b",
+                            "i",
+                        ],
+                        attributes={
+                            "*": ["class"]
+                        },  # Allow class but not style without CSS sanitizer
+                        strip=True,
+                    )
             except Exception as e:
                 print(f"[get_event_details API] Error sanitizing description: {str(e)}")
                 # Fallback to a more basic sanitization if full sanitization fails
