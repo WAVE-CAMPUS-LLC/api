@@ -3,6 +3,7 @@ from asgiref.sync import sync_to_async
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordRequestForm
+import bleach
 
 # Django imports
 from coreApp.forms import RSVPForm
@@ -193,13 +194,50 @@ async def get_event_details(eventId: str):
             rsvp_required = False  # Default value, adjust based on your model
 
             # Check for paid/free tickets
-            paid_free_tickets = []  # Default value, adjust based on your model
+            paid_free_tickets = (
+                []
+            )  # Default value, adjust based on your model            # Sanitize HTML in the description to prevent XSS attacks
+            try:
+                sanitized_description = bleach.clean(
+                    event.description,
+                    tags=[
+                        "p",
+                        "br",
+                        "strong",
+                        "em",
+                        "u",
+                        "h1",
+                        "h2",
+                        "h3",
+                        "h4",
+                        "h5",
+                        "h6",
+                        "ol",
+                        "ul",
+                        "li",
+                        "b",
+                        "i",
+                    ],
+                    attributes={"*": ["class", "style"]},
+                    styles=[
+                        "color",
+                        "font-weight",
+                        "text-align",
+                        "font-style",
+                        "text-decoration",
+                    ],
+                    strip=True,
+                )
+            except Exception as e:
+                print(f"[get_event_details API] Error sanitizing description: {str(e)}")
+                # Fallback to a more basic sanitization if full sanitization fails
+                sanitized_description = bleach.clean(event.description, strip=True)
 
             # Collect all fields that actually exist in the Event model
             return {
                 "eventId": str(event.eventId),
                 "title": event.title,
-                "description": event.description,
+                "description": sanitized_description,
                 "date": event.date,
                 "header_photo": header_photo_url,
                 "building_name": event.building_name,
