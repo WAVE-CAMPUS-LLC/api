@@ -442,18 +442,22 @@ async def get_user_transactions(user_id: int = Depends(get_current_user)):
                     else:
                         print(f"[get_user_transactions] Error: Unable to create customer account for user_id: {user_id}")
                         return None
-            # Pass None for request if needed
+            # Use the same logic as in customerSetup.py: getCustomerTransactions
+            # Since we don't have a Django request object, pass None
             transactions = CustomerAccount.getCustomerTransactions(None, user.customer_id)
             print(f"[get_user_transactions] Found {len(transactions)} transactions for user_id: {user_id}")
             transaction_list = []
             for transaction in transactions:
+                # transaction is a dict, not an object
                 transaction_list.append(
                     {
-                        "transactionId": getattr(transaction, "id", None),
-                        "amount": getattr(transaction, "amount", None),
-                        "currency": getattr(transaction, "currency", None),
-                        "description": getattr(transaction, "description", None),
-                        "created_at": getattr(transaction, "created_at", None),
+                        "transactionId": transaction.get("id"),
+                        "amount": transaction.get("amount"),
+                        "currency": transaction.get("currency"),
+                        "description": transaction.get("description"),
+                        "created_at": transaction.get("created"),
+                        "receipt_url": transaction.get("receipt_url"),
+                        "status": transaction.get("status"),
                     }
                 )
             return transaction_list
