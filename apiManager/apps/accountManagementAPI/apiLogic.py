@@ -16,10 +16,12 @@ from asgiref.sync import sync_to_async
 import traceback
 import os
 from django.core.files.base import ContentFile
+from django.conf import settings
 
 from authenticationApp.models import CustomUser
 from authenticationApp.serializers import CustomUserSerializer
 from django.contrib.auth import authenticate
+from stripeManagementApp.customerSetup import CustomerAccount, ConnectAccount
 from rest_framework_simplejwt.tokens import RefreshToken
 from adminDashboardApp.models import LoginHistoryModel
 from eventManagementApp.models import Event
@@ -34,6 +36,9 @@ from accountManagementApp.forms import (
 from fastapi import Depends
 from apiManager.dependencies import get_current_user
 from django.shortcuts import get_object_or_404
+
+stripeKey = settings.STRIPE_PUBLISHABLE_KEY
+
 
 from .serializers import TicketSerializer
 
@@ -411,6 +416,57 @@ async def delete_profile(user_id: int = Depends(get_current_user)):
 
     print(f"[delete_profile] Profile deleted successfully for user_id: {user_id}")
     return {"message": "Profile deleted successfully"}
+
+
+@router.get("/getUserTransactions")
+async def get_user_transactions(user_id: int = Depends(get_current_user)):
+    print(f"[get_user_transactions] API called with user_id: {user_id}")
+
+    @sync_to_async
+    def get_user_transactions(user_id):
+        try:
+            user = CustomUser.objects.get(id=user_id)
+            if not user.customer_id:
+                existing_customer = CustomerAccount.searchCustomerAccount(user.email)
+                if existing_customer:
+                    user.customer_id = existing_customer.id
+                    user.save()
+                    print(f"[get_user_transactions] Customer ID updated for user_id: {user_id}")
+                else:
+                    # Pass None for request if needed
+                    new_customer = CustomerAccount.createCustomerAccount(None, user.email, user.first_name, user.last_name)
+                    if new_customer:
+                        user.customer_id = new_customer.id
+                        user.save()
+                        print(f"[get_user_transactions] New customer created for user_id: {user_id}")
+                    else:
+                        print(f"[get_user_transactions] Error: Unable to create customer account for user_id: {user_id}")
+                        return None
+            # Pass None for request if needed
+            transactions = CustomerAccount.getCustomerTransactions(None, user.customer_id)
+            print(f"[get_user_transactions] Found {len(transactions)} transactions for user_id: {user_id}")
+            transaction_list = []
+            for transaction in transactions:
+                transaction_list.append(
+                    {
+                        "transactionId": getattr(transaction, "id", None),
+                        "amount": getattr(transaction, "amount", None),
+                        "currency": getattr(transaction, "currency", None),
+                        "description": getattr(transaction, "description", None),
+                        "created_at": getattr(transaction, "created_at", None),
+                    }
+                )
+            return transaction_list
+        except CustomUser.DoesNotExist:
+            return None
+
+    transactions_data = await get_user_transactions(user_id)
+    if transactions_data is None:
+        print(f"[get_user_transactions] Error: User not found for user_id: {user_id}")
+        raise HTTPException(status_code=404, detail="User not found")
+    print(f"[get_user_transactions] Returning {len(transactions_data)} transactions for user_id: {user_id}")
+    return transactions_data
+
 
 
 @router.get("/checkHost")
