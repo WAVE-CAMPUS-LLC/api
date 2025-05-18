@@ -109,6 +109,17 @@ async def profile_detailed(user_id: int = Depends(get_current_user)):
     def get_profile_detailed(user_id):
         try:
             user = CustomUser.objects.get(id=user_id)
+            account_type = None
+            if user.is_staff:
+                account_type ="Staff"
+            elif user.is_superuser:
+                account_type = "Super User"
+            elif user.is_superadmin:
+                account_type = "Super Admin"
+            else:
+                account_type = "User"
+                
+                
             user_data = {
                 "id": user_id,
                 "user_id": str(user.user_id),
@@ -121,6 +132,10 @@ async def profile_detailed(user_id: int = Depends(get_current_user)):
                 "last_name": user.last_name,
                 "username": user.username,
                 "email": user.email,
+                "date_joined": user.date_joined,
+                "account_status": user.is_suspended,
+                "account_type": account_type,
+                "college": user.user_profile.college.name if user.user_profile.college else None,
             }
             return user_data
         except CustomUser.DoesNotExist:
