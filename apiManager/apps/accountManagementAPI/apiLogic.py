@@ -8,6 +8,7 @@ from fastapi import (
     Header,
     UploadFile,
     Form,
+    Body,
 )
 from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordRequestForm
@@ -576,6 +577,86 @@ async def get_user_payment_methods(user_id: int = Depends(get_current_user)):
         f"[get_user_payment_methods] Returning {len(payment_methods_data)} payment methods for user_id: {user_id}"
     )
     return payment_methods_data
+
+
+@router.post("/payment/deletePaymentMethod")
+async def delete_payment_method(
+    request: Request,
+    user_id: int = Depends(get_current_user),
+    paymentMethodId: str = Body(..., embed=True),
+):
+    """Delete a payment method for the current user."""
+    user = CustomUser.objects.get(id=user_id)
+    if paymentMethodId:
+        CustomerAccount.removePaymentMethod(None, paymentMethodId)
+        return {"success": True, "message": "Payment method deleted successfully."}
+    else:
+        raise HTTPException(status_code=400, detail="Invalid payment method ID.")
+
+
+@router.post("/payment/setDefaultPaymentMethod")
+async def set_default_payment_method(
+    request: Request,
+    user_id: int = Depends(get_current_user),
+    paymentMethodId: str = Body(..., embed=True),
+):
+    """Set a default payment method for the current user."""
+    user = CustomUser.objects.get(id=user_id)
+    if paymentMethodId:
+        success = CustomerAccount.setDefaultPaymentMethod(
+            user.customer_id, paymentMethodId
+        )
+        if success:
+            return {
+                "success": True,
+                "message": "Default payment method set successfully.",
+            }
+        else:
+            raise HTTPException(
+                status_code=400, detail="Failed to set default payment method."
+            )
+    else:
+        raise HTTPException(status_code=400, detail="Invalid payment method ID.")
+
+
+@router.post("/payment/addPayoutMethodToProfile")
+async def add_payout_method_to_profile(
+    request: Request, user_id: int = Depends(get_current_user)
+):
+    """Add a payout (bank) method to the user's profile."""
+    user = CustomUser.objects.get(id=user_id)
+    bank = CustomerAccount.setupBankAccount(None, user.customer_id)
+    if bank:
+        return {"success": True, "message": "Bank account added successfully."}
+    else:
+        raise HTTPException(status_code=400, detail="Failed to add bank account.")
+
+
+@router.post("/payment/requestInstantPayout")
+async def request_instant_payout(
+    request: Request, user_id: int = Depends(get_current_user)
+):
+    """Request an instant payout for the user if eligible."""
+    user = CustomUser.objects.get(id=user_id)
+    from stripeManagementApp.getEarnings import GetEarnings
+
+    accountBalance = GetEarnings.getStripeAccountBalance(user.connectAccountID)
+    if not accountBalance:
+        raise HTTPException(
+            status_code=400, detail="Could not retrieve account balance."
+        )
+    available_balance = accountBalance.get("available", 0)
+    if available_balance < 1:
+        raise HTTPException(
+            status_code=400, detail="Insufficient balance for a payout."
+        )
+    payout = GetEarnings.requestPayout(
+        user.connectAccountID, int(available_balance * 100)
+    )
+    if payout:
+        return {"success": True, "message": "Payout requested successfully."}
+    else:
+        raise HTTPException(status_code=400, detail="Failed to process payout.")
 
 
 @router.get("/checkHost")
