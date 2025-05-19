@@ -586,7 +586,12 @@ async def delete_payment_method(
     paymentMethodId: str = Body(..., embed=True),
 ):
     """Delete a payment method for the current user."""
-    user = CustomUser.objects.get(id=user_id)
+
+    @sync_to_async
+    def get_user(user_id):
+        return CustomUser.objects.get(id=user_id)
+
+    user = await get_user(user_id)
     if paymentMethodId:
         CustomerAccount.removePaymentMethod(None, paymentMethodId)
         return {"success": True, "message": "Payment method deleted successfully."}
@@ -601,7 +606,12 @@ async def set_default_payment_method(
     paymentMethodId: str = Body(..., embed=True),
 ):
     """Set a default payment method for the current user."""
-    user = CustomUser.objects.get(id=user_id)
+
+    @sync_to_async
+    def get_user(user_id):
+        return CustomUser.objects.get(id=user_id)
+
+    user = await get_user(user_id)
     if paymentMethodId:
         success = CustomerAccount.setDefaultPaymentMethod(
             user.customer_id, paymentMethodId
@@ -624,7 +634,12 @@ async def add_payout_method_to_profile(
     request: Request, user_id: int = Depends(get_current_user)
 ):
     """Add a payout (bank) method to the user's profile."""
-    user = CustomUser.objects.get(id=user_id)
+
+    @sync_to_async
+    def get_user(user_id):
+        return CustomUser.objects.get(id=user_id)
+
+    user = await get_user(user_id)
     bank = CustomerAccount.setupBankAccount(None, user.customer_id)
     if bank:
         return {"success": True, "message": "Bank account added successfully."}
@@ -637,7 +652,12 @@ async def request_instant_payout(
     request: Request, user_id: int = Depends(get_current_user)
 ):
     """Request an instant payout for the user if eligible."""
-    user = CustomUser.objects.get(id=user_id)
+
+    @sync_to_async
+    def get_user(user_id):
+        return CustomUser.objects.get(id=user_id)
+
+    user = await get_user(user_id)
     from stripeManagementApp.getEarnings import GetEarnings
 
     accountBalance = GetEarnings.getStripeAccountBalance(user.connectAccountID)
