@@ -1665,14 +1665,20 @@ async def become_host(request: Request, user_id: int = Depends(get_current_user)
 @router.get("/event/{eventId}/analytics")
 async def get_event_analytics(eventId: str, user_id: int = Depends(get_current_user)):
     """
-    API endpoint for retrieving event analytics data.
-    Returns comprehensive analytics including engagement metrics, conversion rates, and customer data.
+    API endpoint for retrieving comprehensive event analytics data.
+    Returns detailed analytics including performance metrics, audience insights, revenue data, and more.
     """
     print(f"[get_event_analytics] API called with eventId: {eventId}, user_id: {user_id}")
 
     @sync_to_async
     def get_analytics_data(event_id, requesting_user_id):
         try:
+            from django.db.models import Q, Count, Sum, Avg
+            from django.db.models.functions import TruncHour, TruncDay
+            from collections import defaultdict
+            from datetime import datetime, timedelta
+            from django.utils import timezone
+            
             # Get the event and verify the user is the host
             event = get_object_or_404(Event, eventId=event_id)
             requesting_user = get_object_or_404(CustomUser, id=requesting_user_id)
@@ -1684,52 +1690,207 @@ async def get_event_analytics(eventId: str, user_id: int = Depends(get_current_u
                     detail="You don't have permission to access analytics for this event. Only the event host can view analytics."
                 )
 
-            # Calculate engagement metrics
+            # ===========================================
+            # 1. PERFORMANCE METRICS
+            # ===========================================
+            
+            # Total Views
+            total_views = event.views
+            
+            # Total Favorites
+            total_favorites = UserProfile.objects.filter(favorite_events=event).count()
+            
+            # Total Shares
+            total_shares = SharedEvent.objects.filter(event=event).count()
+            
+            # Total Go With Requests
+            total_go_with_requests = GoWithRequest.objects.filter(event=event).count()
+            
+            # Unique Visitors from EventView model
+            unique_visitors = EventView.objects.filter(event=event).count()
+            
+            # Return Visitors (users who have viewed multiple events from the same host)
+            return_visitors = 0
+            if total_views > 0:
+                # Users who have viewed other events by this host
+                host_events = Event.objects.filter(host=event.host).exclude(eventId=event.eventId)
+                viewed_users = EventView.objects.filter(event=event, user__isnull=False).values_list('user_id', flat=True)
+                return_visitors = EventView.objects.filter(
+                    event__in=host_events, 
+                    user_id__in=viewed_users
+                ).values('user_id').distinct().count()
 
-            # 1. Get total shares for this event
-            event_shares = SharedEvent.objects.filter(event=event).count()
+            # ===========================================
+            # 2. TICKET PERFORMANCE & REVENUE
+            # ===========================================
+            
+            # Get all tickets for this event
+            tickets = Ticket.objects.filter(event=event).select_related('user')
+            total_tickets_sold = tickets.count()
+            unique_purchasers = tickets.values('user', 'guestEmail').distinct().count()
+            
+            # Calculate total revenue and average order value
+            total_revenue = 0
+            average_order_value = 0
+            ticket_type_performance = []
+            
+            if event.ticketing == "Paid":
+                # Get ticket types for this event
+                ticket_types = PaidFreeTicket.objects.filter(event=event)
+                
+                for ticket_type in ticket_types:
+                    tickets_sold = ticket_type.ticket_sold
+                    price = float(ticket_type.ticket_price) if ticket_type.ticket_price else 0
+                    revenue = price * tickets_sold
+                    total_revenue += revenue
+                    
+                    # Ticket type performance breakdown
+                    ticket_type_performance.append({
+                        'ticket_name': ticket_type.ticket_name,
+                        'ticket_price': price,
+                        'tickets_available': ticket_type.ticket_quantity,
+                        'tickets_sold': tickets_sold,
+                        'revenue': revenue,
+                        'sell_through_rate': round((tickets_sold / ticket_type.ticket_quantity) * 100, 1) if ticket_type.ticket_quantity > 0 else 0
+                    })
+                
+                # Calculate average order value
+                if unique_purchasers > 0:
+                    average_order_value = round(total_revenue / unique_purchasers, 2)
+            
+            # Conversion rate
+            conversion_rate = 0
+            if total_views > 0:
+                conversion_rate = round(min((unique_purchasers / total_views) * 100, 100), 1)
 
-            # 2. Get total favorites for this event
-            event_favorites = UserProfile.objects.filter(favorite_events=event).count()
+            # ===========================================
+            # 3. AUDIENCE ANALYTICS
+            # ===========================================
+            
+            # Login status distribution
+            logged_in_users = tickets.filter(user__isnull=False).count()
+            guest_users = tickets.filter(user__isnull=True).count()
+            
+            # Attendance distribution
+            scanned_tickets = tickets.filter(status="Scanned").count()
+            not_attended = total_tickets_sold - scanned_tickets
+            
+            # Geographic distribution (by user cities)
+            geographic_distribution = []
+            try:
+                # Get cities from ticket holders
+                user_cities = UserProfile.objects.filter(
+                    user__in=tickets.filter(user__isnull=False).values('user')
+                ).exclude(city__isnull=True).exclude(city='').values('city').annotate(
+                    count=Count('city')
+                ).order_by('-count')[:10]  # Top 10 cities
+                
+                for city_data in user_cities:
+                    geographic_distribution.append({
+                        'city': city_data['city'],
+                        'count': city_data['count']
+                    })
+            except Exception as e:
+                print(f"Error calculating geographic distribution: {e}")
 
-            # 3. Get total go-with requests for this event
-            event_go_with = GoWithRequest.objects.filter(event=event).count()
-
-            # 4. Calculate view-to-ticket conversion rate
-            unique_purchasers = Ticket.objects.filter(event=event).values('user', 'guestEmail').distinct().count()
-
-            if event.views > 0:
-                # Calculate conversion rate but cap it at 100%
-                conversion_rate = (unique_purchasers / event.views) * 100
-                ticket_conversion_rate = round(min(conversion_rate, 100), 1)
-            else:
-                ticket_conversion_rate = 0
-
-            # 5. Calculate login status distribution (logged in vs guest users)
-            login_status_distribution = {
-                'Logged-in Users': Ticket.objects.filter(event=event, user__isnull=False).count(),
-                'Guest Users': Ticket.objects.filter(event=event, user__isnull=True).count()
+            # Demographics (Note: Limited data due to UserProfile changes)
+            # Age and Gender distribution would be limited due to removed fields
+            age_distribution = {
+                'message': 'Age data not available due to privacy updates'
+            }
+            gender_distribution = {
+                'message': 'Gender data not available due to privacy updates'
             }
 
-            # 6. Calculate attendance data (scanned vs not scanned tickets)
-            total_tickets = Ticket.objects.filter(event=event).count()
-            scanned_tickets = Ticket.objects.filter(event=event, status="Scanned").count()
-            not_scanned_tickets = total_tickets - scanned_tickets
+            # ===========================================
+            # 4. PAGE ANALYTICS
+            # ===========================================
+            
+            # Calculate average time on page and bounce rate
+            event_views = EventView.objects.filter(event=event).order_by('timestamp')
+            
+            # For bounce rate, we consider users who only viewed this event page
+            # and no other pages (simplified metric)
+            bounce_rate = 0
+            avg_time_on_page = 0
+            
+            try:
+                # Calculate basic page metrics
+                if event_views.exists():
+                    # Simplified bounce rate: users with only one view session
+                    single_view_users = event_views.values('user', 'session_key').annotate(
+                        view_count=Count('id')
+                    ).filter(view_count=1).count()
+                    
+                    total_view_sessions = event_views.values('user', 'session_key').distinct().count()
+                    if total_view_sessions > 0:
+                        bounce_rate = round((single_view_users / total_view_sessions) * 100, 1)
+                
+                # Simplified average time (placeholder - would need session tracking for accuracy)
+                avg_time_on_page = "Not available - requires session tracking implementation"
+                
+            except Exception as e:
+                print(f"Error calculating page analytics: {e}")
 
-            attendance_distribution = {
-                'Attended': scanned_tickets,
-                'Did Not Attend': not_scanned_tickets
+            # ===========================================
+            # 5. TEMPORAL ANALYTICS
+            # ===========================================
+            
+            # Hourly page views (last 24 hours from event views)
+            hourly_views = []
+            try:
+                # Get views from the last 7 days, grouped by hour
+                last_week = timezone.now() - timedelta(days=7)
+                hourly_data = event_views.filter(
+                    timestamp__gte=last_week
+                ).extra(
+                    select={'hour': 'EXTRACT(hour FROM timestamp)'}
+                ).values('hour').annotate(
+                    view_count=Count('id')
+                ).order_by('hour')
+                
+                # Fill in missing hours with 0 views
+                hours_dict = {hour['hour']: hour['view_count'] for hour in hourly_data}
+                for hour in range(24):
+                    hourly_views.append({
+                        'hour': f"{hour:02d}:00",
+                        'views': hours_dict.get(hour, 0)
+                    })
+                    
+            except Exception as e:
+                print(f"Error calculating hourly views: {e}")
+                hourly_views = [{'hour': f"{h:02d}:00", 'views': 0} for h in range(24)]
+
+            # ===========================================
+            # 6. SOCIAL MEDIA & ENGAGEMENT
+            # ===========================================
+            
+            # Social media shares breakdown (could be expanded with platform-specific data)
+            social_media_shares = {
+                'total_shares': total_shares,
+                'platforms': {
+                    'general': total_shares  # Placeholder - could be expanded with platform-specific tracking
+                }
             }
 
-            # 7. Get customer data for the Customers section
-            # Fetch all tickets for this event
-            tickets = Ticket.objects.filter(event=event).select_related('user').order_by('-created_at')
-
-            # Prepare customer data list
+            # ===========================================
+            # 7. CUSTOMER DATA
+            # ===========================================
+            
+            # Enhanced customer data
             customers = []
-            for ticket in tickets:
-                # Get ticket type information
-                ticket_type = "General Admission"  # Default value
+            for ticket in tickets.order_by('-created_at'):
+                # Determine ticket type
+                ticket_type = "General Admission"  # Default
+                try:
+                    if event.ticketing == "Paid":
+                        # Try to determine ticket type from available ticket types
+                        # This is a simplified approach - in practice, you'd want to track this relationship
+                        first_ticket_type = PaidFreeTicket.objects.filter(event=event).first()
+                        if first_ticket_type:
+                            ticket_type = first_ticket_type.ticket_name
+                except Exception:
+                    pass
 
                 customer = {
                     'first_name': ticket.user.first_name if ticket.user else ticket.guestFirstName,
@@ -1737,38 +1898,100 @@ async def get_event_analytics(eventId: str, user_id: int = Depends(get_current_u
                     'email': ticket.user.email if ticket.user else ticket.guestEmail,
                     'ticket_type': ticket_type,
                     'purchase_date': ticket.created_at.isoformat() if ticket.created_at else None,
+                    'status': ticket.status,
+                    'user_type': 'Registered' if ticket.user else 'Guest'
                 }
                 customers.append(customer)
 
-            # Prepare analytics data
+            # ===========================================
+            # 8. COMPREHENSIVE RESPONSE STRUCTURE
+            # ===========================================
+            
             analytics_data = {
                 "event": {
                     "eventId": str(event.eventId),
                     "title": event.title,
-                    "date": event.date,
-                    "views": event.views,
+                    "date": event.date.isoformat() if event.date else None,
+                    "ticketing_type": event.ticketing,
+                    "status": event.status,
                 },
+                "performance_metrics": {
+                    "total_views": total_views,
+                    "unique_visitors": unique_visitors,
+                    "return_visitors": return_visitors,
+                    "total_favorites": total_favorites,
+                    "total_shares": total_shares,
+                    "total_go_with_requests": total_go_with_requests,
+                    "conversion_rate": conversion_rate,
+                },
+                "revenue_analytics": {
+                    "total_revenue": round(total_revenue, 2),
+                    "average_order_value": average_order_value,
+                    "total_tickets_sold": total_tickets_sold,
+                    "unique_purchasers": unique_purchasers,
+                },
+                "ticket_performance": {
+                    "ticket_types": ticket_type_performance,
+                    "sales_by_category": {
+                        "paid_tickets": total_tickets_sold if event.ticketing == "Paid" else 0,
+                        "free_tickets": total_tickets_sold if event.ticketing == "Free" else 0,
+                    }
+                },
+                "audience_analytics": {
+                    "login_status_distribution": {
+                        "logged_in_users": logged_in_users,
+                        "guest_users": guest_users
+                    },
+                    "attendance_distribution": {
+                        "attended": scanned_tickets,
+                        "did_not_attend": not_attended
+                    },
+                    "geographic_distribution": geographic_distribution,
+                    "age_distribution": age_distribution,
+                    "gender_distribution": gender_distribution,
+                },
+                "page_analytics": {
+                    "avg_time_on_page": avg_time_on_page,
+                    "bounce_rate": bounce_rate,
+                    "unique_visitors": unique_visitors,
+                    "return_visitors": return_visitors,
+                },
+                "temporal_analytics": {
+                    "hourly_page_views": hourly_views,
+                },
+                "social_engagement": {
+                    "social_media_shares": social_media_shares,
+                    "total_engagement": total_favorites + total_shares + total_go_with_requests,
+                },
+                "customers": customers,
+                
+                # Legacy fields for backward compatibility
                 "engagement": {
-                    "event_shares": event_shares,
-                    "event_favorites": event_favorites,
-                    "event_go_with": event_go_with,
+                    "event_shares": total_shares,
+                    "event_favorites": total_favorites,
+                    "event_go_with": total_go_with_requests,
                 },
                 "conversion": {
-                    "ticket_conversion_rate": ticket_conversion_rate,
+                    "ticket_conversion_rate": conversion_rate,
                     "total_unique_purchasers": unique_purchasers,
                 },
                 "distribution": {
-                    "login_status": login_status_distribution,
-                    "attendance": attendance_distribution,
+                    "login_status": {
+                        'Logged-in Users': logged_in_users,
+                        'Guest Users': guest_users
+                    },
+                    "attendance": {
+                        'Attended': scanned_tickets,
+                        'Did Not Attend': not_attended
+                    },
                 },
                 "tickets": {
-                    "total_tickets_count": total_tickets,
+                    "total_tickets_count": total_tickets_sold,
                     "scanned_tickets_count": scanned_tickets,
                 },
-                "customers": customers,
             }
 
-            print(f"[get_analytics_data] Successfully retrieved analytics for event: {event.title}")
+            print(f"[get_analytics_data] Successfully retrieved comprehensive analytics for event: {event.title}")
             return analytics_data
 
         except Event.DoesNotExist:
@@ -1779,11 +2002,13 @@ async def get_event_analytics(eventId: str, user_id: int = Depends(get_current_u
             raise HTTPException(status_code=404, detail="User not found")
         except Exception as e:
             print(f"[get_analytics_data] Error retrieving analytics: {str(e)}")
+            import traceback
+            print(traceback.format_exc())
             raise HTTPException(status_code=500, detail=f"Error retrieving analytics: {str(e)}")
 
     try:
         analytics_data = await get_analytics_data(eventId, user_id)
-        print(f"[get_event_analytics] Returning analytics for event: {analytics_data['event']['title']}")
+        print(f"[get_event_analytics] Returning comprehensive analytics for event: {analytics_data['event']['title']}")
         return analytics_data
 
     except HTTPException as http_ex:
