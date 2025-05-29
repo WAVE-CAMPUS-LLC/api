@@ -32,9 +32,11 @@ from datetime import datetime, timedelta
 from authenticationApp.models import CustomUser
 from starlette.datastructures import UploadFile
 from django.shortcuts import get_object_or_404
-from eventManagementApp.models import Event, HostProfile, CouponCode
+from eventManagementApp.models import Event, HostProfile, CouponCode, SharedEvent
 from accountManagementApp.models import UserProfile
 from eventTicketsApp.models import RSVPTicket, PaidFreeTicket, Ticket
+from socialApp.models import GoWithRequest
+from coreApp.models import EventView
 from eventTicketsApp.serializers import TicketSerializer
 from eventManagementApp.forms import EventForm
 from eventManagementApp.serializers import EditEventModelSerializer
@@ -1658,5 +1660,326 @@ async def become_host(request: Request, user_id: int = Depends(get_current_user)
             content={"error": f"An unexpected error occurred: {str(e)}"},
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
-        
-        
+
+
+@router.get("/event/{eventId}/analytics")
+async def get_event_analytics(eventId: str, user_id: int = Depends(get_current_user)):
+    """
+    API endpoint for retrieving event analytics data.
+    Returns comprehensive analytics including engagement metrics, conversion rates, and customer data.
+    """
+    print(f"[get_event_analytics] API called with eventId: {eventId}, user_id: {user_id}")
+
+    @sync_to_async
+    def get_analytics_data(event_id, requesting_user_id):
+        try:
+            # Get the event and verify the user is the host
+            event = get_object_or_404(Event, eventId=event_id)
+            requesting_user = get_object_or_404(CustomUser, id=requesting_user_id)
+            
+            # Check if the requesting user is the host of the event
+            if event.host != requesting_user:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="You don't have permission to access analytics for this event. Only the event host can view analytics."
+                )
+
+            # Calculate engagement metrics
+
+            # 1. Get total shares for this event
+            event_shares = SharedEvent.objects.filter(event=event).count()
+
+            # 2. Get total favorites for this event
+            event_favorites = UserProfile.objects.filter(favorite_events=event).count()
+
+            # 3. Get total go-with requests for this event
+            event_go_with = GoWithRequest.objects.filter(event=event).count()
+
+            # 4. Calculate view-to-ticket conversion rate
+            unique_purchasers = Ticket.objects.filter(event=event).values('user', 'guestEmail').distinct().count()
+
+            if event.views > 0:
+                # Calculate conversion rate but cap it at 100%
+                conversion_rate = (unique_purchasers / event.views) * 100
+                ticket_conversion_rate = round(min(conversion_rate, 100), 1)
+            else:
+                ticket_conversion_rate = 0
+
+            # 5. Calculate login status distribution (logged in vs guest users)
+            login_status_distribution = {
+                'Logged-in Users': Ticket.objects.filter(event=event, user__isnull=False).count(),
+                'Guest Users': Ticket.objects.filter(event=event, user__isnull=True).count()
+            }
+
+            # 6. Calculate attendance data (scanned vs not scanned tickets)
+            total_tickets = Ticket.objects.filter(event=event).count()
+            scanned_tickets = Ticket.objects.filter(event=event, status="Scanned").count()
+            not_scanned_tickets = total_tickets - scanned_tickets
+
+            attendance_distribution = {
+                'Attended': scanned_tickets,
+                'Did Not Attend': not_scanned_tickets
+            }
+
+            # 7. Get customer data for the Customers section
+            # Fetch all tickets for this event
+            tickets = Ticket.objects.filter(event=event).select_related('user').order_by('-created_at')
+
+            # Prepare customer data list
+            customers = []
+            for ticket in tickets:
+                # Get ticket type information
+                ticket_type = "General Admission"  # Default value
+
+                customer = {
+                    'first_name': ticket.user.first_name if ticket.user else ticket.guestFirstName,
+                    'last_name': ticket.user.last_name if ticket.user else ticket.guestLastName,
+                    'email': ticket.user.email if ticket.user else ticket.guestEmail,
+                    'ticket_type': ticket_type,
+                    'purchase_date': ticket.created_at.isoformat() if ticket.created_at else None,
+                }
+                customers.append(customer)
+
+            # Prepare analytics data
+            analytics_data = {
+                "event": {
+                    "eventId": str(event.eventId),
+                    "title": event.title,
+                    "date": event.date,
+                    "views": event.views,
+                },
+                "engagement": {
+                    "event_shares": event_shares,
+                    "event_favorites": event_favorites,
+                    "event_go_with": event_go_with,
+                },
+                "conversion": {
+                    "ticket_conversion_rate": ticket_conversion_rate,
+                    "total_unique_purchasers": unique_purchasers,
+                },
+                "distribution": {
+                    "login_status": login_status_distribution,
+                    "attendance": attendance_distribution,
+                },
+                "tickets": {
+                    "total_tickets_count": total_tickets,
+                    "scanned_tickets_count": scanned_tickets,
+                },
+                "customers": customers,
+            }
+
+            print(f"[get_analytics_data] Successfully retrieved analytics for event: {event.title}")
+            return analytics_data
+
+        except Event.DoesNotExist:
+            print(f"[get_analytics_data] Event not found with ID: {event_id}")
+            raise HTTPException(status_code=404, detail="Event not found")
+        except CustomUser.DoesNotExist:
+            print(f"[get_analytics_data] User not found with ID: {requesting_user_id}")
+            raise HTTPException(status_code=404, detail="User not found")
+        except Exception as e:
+            print(f"[get_analytics_data] Error retrieving analytics: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"Error retrieving analytics: {str(e)}")
+
+    try:
+        analytics_data = await get_analytics_data(eventId, user_id)
+        print(f"[get_event_analytics] Returning analytics for event: {analytics_data['event']['title']}")
+        return analytics_data
+
+    except HTTPException as http_ex:
+        print(f"[get_event_analytics] HTTPException: {http_ex.detail}")
+        raise http_ex
+    except Exception as e:
+        print(f"[get_event_analytics] Unexpected error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"An unexpected error occurred: {str(e)}")
+
+
+@router.get("/analytics")
+async def get_host_recent_events_analytics(user_id: int = Depends(get_current_user)):
+    """
+    API endpoint for retrieving comprehensive analytics data for the most recent 30 events hosted by a user.
+    Returns aggregated analytics across the user's most recent events including totals, averages, and event-specific data.
+    Events are sorted by scheduled date (upcoming events first, then most recent past events).
+    Limited to 30 events for optimal performance.
+    """
+    print(f"[get_host_recent_events_analytics] API called with user_id: {user_id}")
+
+    @sync_to_async
+    def get_recent_events_analytics_data(requesting_user_id):
+        try:
+            # Get the user and verify they exist
+            requesting_user = get_object_or_404(CustomUser, id=requesting_user_id)
+            
+            # Check if the user is a host
+            is_host = requesting_user.groups.filter(name="Host").exists()
+            if not is_host:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="You don't have permission to access host analytics. Only hosts can view this data."
+                )            # Get the most recent 30 events hosted by this user, sorted by scheduled time
+            # (upcoming events first, then most recent past events)
+            all_events = Event.objects.filter(host=requesting_user).order_by('-date')[:30]
+            
+            if not all_events.exists():
+                return {
+                    "summary": {
+                        "total_events": 0,
+                        "total_views": 0,
+                        "total_tickets_sold": 0,
+                        "total_revenue": 0,
+                        "average_conversion_rate": 0,
+                        "total_shares": 0,
+                        "total_favorites": 0,
+                        "total_go_with_requests": 0,
+                    },
+                    "events": [],
+                    "trends": {
+                        "monthly_events": {},
+                        "monthly_tickets": {},
+                        "monthly_revenue": {},
+                    }
+                }
+
+            # Initialize aggregated data
+            total_views = 0
+            total_tickets_sold = 0
+            total_revenue = 0
+            total_shares = 0
+            total_favorites = 0
+            total_go_with_requests = 0
+            conversion_rates = []
+            events_analytics = []
+            monthly_data = {}
+
+            # Process each event
+            for event in all_events:
+                # Calculate analytics for this event
+                event_shares = SharedEvent.objects.filter(event=event).count()
+                event_favorites = UserProfile.objects.filter(favorite_events=event).count()
+                event_go_with = GoWithRequest.objects.filter(event=event).count()
+                
+                # Get tickets for this event
+                event_tickets = Ticket.objects.filter(event=event)
+                event_ticket_count = event_tickets.count()
+                unique_purchasers = event_tickets.values('user', 'guestEmail').distinct().count()
+                
+                # Calculate conversion rate for this event
+                event_conversion_rate = 0
+                if event.views > 0:
+                    event_conversion_rate = round(min((unique_purchasers / event.views) * 100, 100), 1)
+                
+                # Calculate revenue for this event (assuming ticket price is stored)
+                event_revenue = 0
+                for ticket in event_tickets:
+                    # If ticket has a price field, add it to revenue
+                    if hasattr(ticket, 'price') and ticket.price:
+                        event_revenue += float(ticket.price)
+                
+                # Calculate attendance data
+                scanned_tickets = event_tickets.filter(status="Scanned").count()
+                attendance_rate = round((scanned_tickets / event_ticket_count * 100), 1) if event_ticket_count > 0 else 0
+                
+                # Prepare event-specific analytics
+                event_analytics = {
+                    "eventId": str(event.eventId),
+                    "title": event.title,
+                    "date": event.date.isoformat() if event.date else None,
+                    "created_at": event.created_at.isoformat() if event.created_at else None,
+                    "views": event.views,
+                    "tickets_sold": event_ticket_count,
+                    "unique_purchasers": unique_purchasers,
+                    "revenue": event_revenue,
+                    "conversion_rate": event_conversion_rate,
+                    "attendance_rate": attendance_rate,
+                    "engagement": {
+                        "shares": event_shares,
+                        "favorites": event_favorites,
+                        "go_with_requests": event_go_with,
+                    },
+                    "distribution": {
+                        "attended": scanned_tickets,
+                        "did_not_attend": event_ticket_count - scanned_tickets,
+                        "logged_in_users": event_tickets.filter(user__isnull=False).count(),
+                        "guest_users": event_tickets.filter(user__isnull=True).count(),
+                    }
+                }
+                events_analytics.append(event_analytics)
+                
+                # Add to totals
+                total_views += event.views
+                total_tickets_sold += event_ticket_count
+                total_revenue += event_revenue
+                total_shares += event_shares
+                total_favorites += event_favorites
+                total_go_with_requests += event_go_with
+                
+                if event_conversion_rate > 0:
+                    conversion_rates.append(event_conversion_rate)
+                
+                # Track monthly data for trends
+                if event.date:
+                    month_key = event.date.strftime("%Y-%m")
+                    if month_key not in monthly_data:
+                        monthly_data[month_key] = {"events": 0, "tickets": 0, "revenue": 0}
+                    monthly_data[month_key]["events"] += 1
+                    monthly_data[month_key]["tickets"] += event_ticket_count
+                    monthly_data[month_key]["revenue"] += event_revenue
+
+            # Calculate averages
+            total_events = all_events.count()
+            average_conversion_rate = round(sum(conversion_rates) / len(conversion_rates), 1) if conversion_rates else 0
+            average_views_per_event = round(total_views / total_events, 1) if total_events > 0 else 0
+            average_tickets_per_event = round(total_tickets_sold / total_events, 1) if total_events > 0 else 0
+            average_revenue_per_event = round(total_revenue / total_events, 2) if total_events > 0 else 0
+
+            # Prepare comprehensive analytics response
+            analytics_data = {
+                "summary": {
+                    "total_events": total_events,
+                    "total_views": total_views,
+                    "total_tickets_sold": total_tickets_sold,
+                    "total_unique_purchasers": unique_purchasers,
+                    "total_revenue": round(total_revenue, 2),
+                    "average_conversion_rate": average_conversion_rate,
+                    "average_views_per_event": average_views_per_event,
+                    "average_tickets_per_event": average_tickets_per_event,
+                    "average_revenue_per_event": average_revenue_per_event,
+                    "total_shares": total_shares,
+                    "total_favorites": total_favorites,
+                    "total_go_with_requests": total_go_with_requests,
+                },
+                "events": events_analytics,
+                "trends": {
+                    "monthly_events": {month: data["events"] for month, data in monthly_data.items()},
+                    "monthly_tickets": {month: data["tickets"] for month, data in monthly_data.items()},
+                    "monthly_revenue": {month: round(data["revenue"], 2) for month, data in monthly_data.items()},
+                },
+                "host_info": {
+                    "host_id": str(requesting_user.id),
+                    "username": requesting_user.username,
+                    "first_name": requesting_user.first_name,
+                    "last_name": requesting_user.last_name,                    "total_events_hosted": total_events,
+                }
+            }
+
+            print(f"[get_recent_events_analytics_data] Successfully retrieved analytics for {total_events} recent events for host: {requesting_user.username}")
+            return analytics_data
+
+        except CustomUser.DoesNotExist:
+            print(f"[get_recent_events_analytics_data] User not found with ID: {requesting_user_id}")
+            raise HTTPException(status_code=404, detail="User not found")
+        except Exception as e:
+            print(f"[get_recent_events_analytics_data] Error retrieving analytics: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"Error retrieving analytics: {str(e)}")
+
+    try:
+        analytics_data = await get_recent_events_analytics_data(user_id)
+        print(f"[get_host_recent_events_analytics] Returning analytics for {analytics_data['summary']['total_events']} events")
+        return analytics_data
+    except HTTPException as http_ex:
+        print(f"[get_host_recent_events_analytics] HTTPException: {http_ex.detail}")
+        raise http_ex
+    except Exception as e:
+        print(f"[get_host_recent_events_analytics] Unexpected error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"An unexpected error occurred: {str(e)}")
+
