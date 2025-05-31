@@ -36,6 +36,8 @@ from apiManager.middleware.adminAccess import (
 from django.shortcuts import get_object_or_404
 from .serializers import UserResponse, UserUpdateRequest
 
+from eventManagementApp.models import Event
+
 
 router = APIRouter()
 
@@ -228,3 +230,56 @@ async def unsuspend_user(
         raise HTTPException(
             status_code=500, detail=f"Error removing suspension: {str(e)}"
         )
+
+
+# Event Management Admin API
+@router.get("/admin/get/events")
+async def get_events(current_user: CustomUser = Depends(require_admin_role)):
+    """
+    Get list of events - requires Admin or Super Admin role.
+    """
+    print(f"[get_events] API called with user_id: {current_user.id}")
+
+    try:
+        events = await sync_to_async(list)(Event.objects.all())
+        return events
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching events: {str(e)}")
+
+
+@router.get("/admin/get/event/{event_id}")
+async def get_event_detail(
+    event_id: int, current_user: CustomUser = Depends(require_admin_role)
+):
+    """
+    Get detailed event information - requires Admin or Super Admin role.
+    """
+    print(
+        f"[get_event_detail] API called for event_id: {event_id} by {current_user.id}"
+    )
+
+    try:
+        event = await sync_to_async(get_object_or_404)(Event, id=event_id)
+        return event
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching event: {str(e)}")
+
+
+@router.post("/admin/delete/event/{event_id}")
+async def delete_event(
+    event_id: int, current_user: CustomUser = Depends(require_admin_role)
+):
+    """
+    Delete an event - requires Admin or Super Admin role.
+    """
+    print(f"[delete_event] API called for event_id: {event_id} by {current_user.id}")
+
+    try:
+        event = await sync_to_async(get_object_or_404)(Event, id=event_id)
+        await sync_to_async(event.delete)()
+
+        return {"message": f"Event {event.title} has been deleted"}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error deleting event: {str(e)}")
