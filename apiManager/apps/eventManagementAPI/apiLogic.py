@@ -1914,7 +1914,7 @@ async def get_event_analytics(eventId: str, user_id: int = Depends(get_current_u
                     "date": event.date.isoformat() if event.date else None,
                     "ticketing_type": event.ticketing,
                     "status": event.status,
-                    "header_photo": event.header_photo,
+                    "header_photo": str(event.header_photo.url),
                 },
                 "performance_metrics": {
                     "total_views": total_views,
