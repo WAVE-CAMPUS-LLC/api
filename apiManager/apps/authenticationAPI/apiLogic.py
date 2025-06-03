@@ -53,9 +53,9 @@ async def ping():
 @router.post("/check-admin-url")
 async def check_admin_url(payload: AdminURLCheckRequest):
     if(payload.urlKey):
-        print(f"[check_admin_url] function called with: ${payload.urlKey}")
+        print(f"[check_admin_url] function called with: {payload.urlKey}")
     elif(payload):
-        print(f"[check_admin_url] function called incorrect body: ${payload}")
+        print(f"[check_admin_url] function called incorrect body: {payload}")
     else:
         print(f"[check_admin_url] function called no body")
         
@@ -67,9 +67,9 @@ async def check_admin_url(payload: AdminURLCheckRequest):
 @router.post("/check-admin-key")
 async def check_admin_key(payload: AdminKeyCheckRequest):
     if(payload.adminKey):
-        print(f"[check_admin_key] function called with: ${payload.adminKey}")
+        print(f"[check_admin_key] function called with: {payload.adminKey}")
     elif(payload):
-        print(f"[check_admin_key] function called incorrect body: ${payload}")
+        print(f"[check_admin_key] function called incorrect body: {payload}")
     else:
         print(f"[check_admin_key] function called no body")
     if payload.adminKey == SECRET_ADMIN_KEY:
@@ -80,9 +80,9 @@ async def check_admin_key(payload: AdminKeyCheckRequest):
 @router.post("/check-admin-user")
 async def check_admin_user(payload: AdminUserCheckRequest):
     if(payload.userEmail):
-        print(f"[check_admin_user] function called with: ${payload.userEmail}")
+        print(f"[check_admin_user] function called with: {payload.userEmail}")
     elif(payload):
-        print(f"[check_admin_user] function called incorrect body: ${payload}")
+        print(f"[check_admin_user] function called incorrect body: {payload}")
     else:
         print(f"[check_admin_user] function called no body")
     # add others users here too
