@@ -32,11 +32,45 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_DAYS = 183   # ~6 months to match Django settings
 REFRESH_TOKEN_EXPIRE_DAYS = 365  # 1 year to match Django settings
+SECRET_ADMIN_URL = os.getenv("SECRET_ADMIN_URL")
+SECRET_ADMIN_KEY = os.getenv("SECRET_ADMIN_KEY")
+# add others users here too
+ALLOWED_USER_ONE = os.getenv("ALLOWED_USER_ONE")
 
+class AdminURLCheckRequest(BaseModel):
+    urlKey: str
 
+class AdminKeyCheckRequest(BaseModel):
+    adminKey: str
+    
+class AdminUserCheckRequest(BaseModel):
+    userEmail: str
+    
 @router.get("/ping")
 async def ping():
     return {"message": "Authentication API is running!"}
+
+@router.post("/check-admin-url")
+async def check_admin_url(payload: AdminURLCheckRequest):
+    if payload.urlKey == SECRET_ADMIN_URL:
+        return JSONResponse(content={"match": True})
+    else:
+        return JSONResponse(content={"match": False}, status_code=401)
+
+@router.post("/check-admin-key")
+async def check_admin_key(payload: AdminKeyCheckRequest):
+    if payload.adminKey == SECRET_ADMIN_KEY:
+        return JSONResponse(content={"match": True})
+    else:
+        return JSONResponse(content={"match": False}, status_code=401)
+
+@router.post("/check-admin-user")
+async def check_admin_user(payload: AdminUserCheckRequest):
+    # add others users here too
+    if payload.userEmail == ALLOWED_USER_ONE:
+        return JSONResponse(content={"match": True})
+    else:
+        return JSONResponse(content={"match": False}, status_code=401)
 
 @router.post("/login")
 async def login_api(request: Request, login_data: LoginRequest):
