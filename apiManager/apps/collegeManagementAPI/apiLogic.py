@@ -44,11 +44,15 @@ async def explore_colleges():
             return college_list
 
         college_data = await get_colleges()
-        print(f"[DEBUG - explore_colleges] Retrieved {len(college_data)} colleges from database")
+        print(
+            f"[DEBUG - explore_colleges] Retrieved {len(college_data)} colleges from database"
+        )
         colleges = [CollegeExplorePage(**college) for college in college_data]
 
         response = {"colleges": colleges}
-        print(f"[DEBUG - explore_colleges] Returning response with {len(colleges)} colleges")
+        print(
+            f"[DEBUG - explore_colleges] Returning response with {len(colleges)} colleges"
+        )
         return response
     except Exception as e:
         # Log the error for debugging
@@ -92,7 +96,9 @@ async def get_college_details(collegeId: str):
                 )
 
         college_details = await get_college_details_data(collegeId)
-        print(f"[DEBUG - get_college_details] Retrieved details for college: {college_details['name']}")
+        print(
+            f"[DEBUG - get_college_details] Retrieved details for college: {college_details['name']}"
+        )
         response = {"collegeDetails": CollegeDetails(**college_details)}
         print(f"[DEBUG - get_college_details] Returning college details response")
         return response
@@ -131,6 +137,9 @@ async def get_college_events(collegeId: str):
                         "header_photo": (
                             event.header_photo.url if event.header_photo else None
                         ),
+                        "event_type": event.event_type,
+                        "state": event.state,
+                        "city": event.city,
                     }
                     for event in events
                 ]
@@ -142,7 +151,9 @@ async def get_college_events(collegeId: str):
                 )
 
         college_events = await get_college_events_data(collegeId)
-        print(f"[DEBUG - get_college_events] Retrieved {len(college_events)} events for college")
+        print(
+            f"[DEBUG - get_college_events] Retrieved {len(college_events)} events for college"
+        )
         response = {"events": college_events}
         print(f"[DEBUG - get_college_events] Returning events response")
         return response
@@ -159,7 +170,9 @@ async def get_college_events(collegeId: str):
 
 @router.get("/college/{collegeId}/members")
 async def get_college_members(collegeId: str, page: int = 1, limit: int = 20):
-    print(f"[DEBUG - get_college_members] Function called with collegeId: {collegeId}, page: {page}, limit: {limit}")
+    print(
+        f"[DEBUG - get_college_members] Function called with collegeId: {collegeId}, page: {page}, limit: {limit}"
+    )
     try:
 
         @sync_to_async
@@ -227,7 +240,9 @@ async def get_college_members(collegeId: str, page: int = 1, limit: int = 20):
                 )
 
         member_data, pagination = await get_college_members_data(collegeId, page, limit)
-        print(f"[DEBUG - get_college_members] Retrieved {len(member_data)} members, page {pagination['current_page']} of {pagination['pages']}")
+        print(
+            f"[DEBUG - get_college_members] Retrieved {len(member_data)} members, page {pagination['current_page']} of {pagination['pages']}"
+        )
         response = {"members": member_data, "pagination": pagination}
         print(f"[DEBUG - get_college_members] Returning members response")
         return response
@@ -260,7 +275,9 @@ async def join_college(collegeId: str, join_request: JoinCollegeRequest):
     2. Sends a verification code to the provided email
     3. Stores verification data in database
     """
-    print(f"[DEBUG - join_college] Function called with collegeId: {collegeId}, email: {join_request.email}")
+    print(
+        f"[DEBUG - join_college] Function called with collegeId: {collegeId}, email: {join_request.email}"
+    )
     try:
 
         @sync_to_async
@@ -349,7 +366,9 @@ async def join_college(collegeId: str, join_request: JoinCollegeRequest):
 
         # Process the request
         result = await process_join_request(collegeId, join_request.email)
-        print(f"[DEBUG - join_college] Verification email sent to: {join_request.email}")
+        print(
+            f"[DEBUG - join_college] Verification email sent to: {join_request.email}"
+        )
         print(f"[DEBUG - join_college] Returning result: {result['message']}")
         return result
 
@@ -373,7 +392,9 @@ async def verify_join_college(collegeId: str, verification: VerificationRequest)
     2. Updates user profile with college association
     3. Creates membership record linking user to college
     """
-    print(f"[DEBUG - verify_join_college] Function called with collegeId: {collegeId}, code: {verification.code}")
+    print(
+        f"[DEBUG - verify_join_college] Function called with collegeId: {collegeId}, code: {verification.code}"
+    )
     try:
 
         @sync_to_async
