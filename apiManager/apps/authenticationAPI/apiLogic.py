@@ -34,8 +34,7 @@ ACCESS_TOKEN_EXPIRE_DAYS = 183   # ~6 months to match Django settings
 REFRESH_TOKEN_EXPIRE_DAYS = 365  # 1 year to match Django settings
 SECRET_ADMIN_URL = os.getenv("SECRET_ADMIN_URL")
 SECRET_ADMIN_KEY = os.getenv("SECRET_ADMIN_KEY")
-# add others users here too
-ALLOWED_USER_ONE = os.getenv("ALLOWED_USER_ONE")
+SECRET_ADMIN_USER = os.getenv("SECRET_ADMIN_USER")
 
 class AdminURLCheckRequest(BaseModel):
     urlKey: str
@@ -52,6 +51,13 @@ async def ping():
 
 @router.post("/check-admin-url")
 async def check_admin_url(payload: AdminURLCheckRequest):
+    if(payload.urlKey):
+        print(f"[check_admin_url] function called with: {payload.urlKey}")
+    elif(payload):
+        print(f"[check_admin_url] function called incorrect body: {payload}")
+    else:
+        print(f"[check_admin_url] function called no body")
+        
     if payload.urlKey == SECRET_ADMIN_URL:
         return JSONResponse(content={"match": True})
     else:
@@ -59,6 +65,12 @@ async def check_admin_url(payload: AdminURLCheckRequest):
 
 @router.post("/check-admin-key")
 async def check_admin_key(payload: AdminKeyCheckRequest):
+    if(payload.adminKey):
+        print(f"[check_admin_key] function called with: {payload.adminKey}")
+    elif(payload):
+        print(f"[check_admin_key] function called incorrect body: {payload}")
+    else:
+        print(f"[check_admin_key] function called no body")
     if payload.adminKey == SECRET_ADMIN_KEY:
         return JSONResponse(content={"match": True})
     else:
@@ -66,8 +78,13 @@ async def check_admin_key(payload: AdminKeyCheckRequest):
 
 @router.post("/check-admin-user")
 async def check_admin_user(payload: AdminUserCheckRequest):
-    # add others users here too
-    if payload.userEmail == ALLOWED_USER_ONE:
+    if(payload.userEmail):
+        print(f"[check_admin_user] function called with: {payload.userEmail}")
+    elif(payload):
+        print(f"[check_admin_user] function called incorrect body: {payload}")
+    else:
+        print(f"[check_admin_user] function called no body")
+    if payload.userEmail == SECRET_ADMIN_USER:
         return JSONResponse(content={"match": True})
     else:
         return JSONResponse(content={"match": False}, status_code=401)
