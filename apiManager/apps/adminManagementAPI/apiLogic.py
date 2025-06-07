@@ -591,6 +591,7 @@ async def get_event_detail(
         }
 
     except Exception as e:
+        print(f"Error fetching event: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error fetching event: {str(e)}")
 
 
