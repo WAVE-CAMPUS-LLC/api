@@ -89,20 +89,28 @@ async def admin_dashboard(current_user: CustomUser = Depends(require_admin_role)
 @router.get("/users", response_model=List[UserResponse])
 async def get_users(
     skip: int = 0,
-    limit: int = 100,
+    limit: int = 0,  # 0 means no limit (return all users)
     current_user: CustomUser = Depends(require_admin_role),
 ):
     """
     Get list of users - requires Admin or Super Admin role.
+    If limit is 0, returns all users. Otherwise uses pagination.
     """
     print(f"[get_users] API called with user_id: {current_user.id}")
 
     try:
-        # Get users with pagination
-        users_queryset = CustomUser.objects.select_related(
-            "user_profile"
-        ).prefetch_related("groups")[skip : skip + limit]
+        # Get users with optional pagination - if limit is 0, get all users
+        if limit == 0:
+            users_queryset = CustomUser.objects.select_related(
+                "user_profile"
+            ).prefetch_related("groups")
+        else:
+            users_queryset = CustomUser.objects.select_related(
+                "user_profile"
+            ).prefetch_related("groups")[skip : skip + limit]
+
         users = await sync_to_async(list)(users_queryset)
+        print(f"[get_users] Retrieved {len(users)} users from database")
 
         # Convert to response format
         user_responses = []
@@ -141,6 +149,7 @@ async def get_users(
                 )
             )
 
+        print(f"[get_users] Returning {len(user_responses)} users in response")
         return user_responses
 
     except Exception as e:
