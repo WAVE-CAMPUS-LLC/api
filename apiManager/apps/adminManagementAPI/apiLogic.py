@@ -1,5 +1,6 @@
 from datetime import datetime
 from uuid import UUID
+from django.http import Http404
 from fastapi import (
     APIRouter,
     Depends,
@@ -467,118 +468,68 @@ async def get_events(current_user: CustomUser = Depends(require_admin_role)):
 
 @router.get("/eventDetails/{event_id}")
 async def get_event_detail(
-    event_id: UUID, current_user: CustomUser = Depends(require_admin_role)
+    event_id: UUID,
+    current_user: CustomUser = Depends(require_admin_role)
 ):
     """
     Get detailed event information - requires Admin or Super Admin role.
     """
-    print(
-        f"[get_event_detail] API called for event_id: {event_id} by {current_user.id}"
-    )
+    print(f"[get_event_detail] API called for event_id: {event_id} by {current_user.id}")
 
     try:
-        event = await sync_to_async(get_object_or_404)(Event, eventId=event_id)
+        # Safely fetch event using thread-safe ORM access
+        event = await sync_to_async(get_object_or_404, thread_sensitive=True)(Event, eventId=event_id)
 
-        # Get file URLs safely
+        # File URLs
         header_photo_url = event.header_photo.url if event.header_photo else None
         body_photo_one_url = event.body_photo_one.url if event.body_photo_one else None
         body_photo_two_url = event.body_photo_two.url if event.body_photo_two else None
-        body_photo_three_url = (
-            event.body_photo_three.url if event.body_photo_three else None
-        )
-        body_photo_four_url = (
-            event.body_photo_four.url if event.body_photo_four else None
-        )
-        body_photo_five_url = (
-            event.body_photo_five.url if event.body_photo_five else None
-        )
+        body_photo_three_url = event.body_photo_three.url if event.body_photo_three else None
+        body_photo_four_url = event.body_photo_four.url if event.body_photo_four else None
+        body_photo_five_url = event.body_photo_five.url if event.body_photo_five else None
 
-        # Get ticket information
+        # RSVP tickets
         rsvp_tickets = await sync_to_async(list)(
             event.rsvp_tickets.all().values(
-                "ticket_id",
-                "email",
-                "first_name",
-                "last_name",
-                "display_on_guestlist",
-                "created_at",
+                "ticket_id", "email", "first_name", "last_name",
+                "display_on_guestlist", "created_at"
             )
         )
-
-        # Convert ticket_id to string and format dates for RSVP tickets
         for ticket in rsvp_tickets:
             ticket["ticket_id"] = str(ticket["ticket_id"])
-            ticket["created_at"] = (
-                ticket["created_at"].isoformat() if ticket["created_at"] else None
-            )
+            ticket["created_at"] = ticket["created_at"].isoformat() if ticket["created_at"] else None
 
-        # Get ticket types/offerings (PaidFreeTicket objects)
+        # Ticket types / offerings
         ticket_types = await sync_to_async(list)(
             event.tickets.all().values(
-                "ticket_id",
-                "ticket_name",
-                "ticket_price",
-                "ticket_description",
-                "ticket_quantity",
-                "ticket_sold",
-                "crew_discounted_price",
-                "stripePriceId",
+                "ticket_id", "ticket_name", "ticket_price", "ticket_description",
+                "ticket_quantity", "ticket_sold", "crew_discounted_price", "stripePriceId"
             )
         )
-
-        # Convert fields to appropriate types for ticket types
         for ticket_type in ticket_types:
             ticket_type["ticket_id"] = str(ticket_type["ticket_id"])
-            ticket_type["ticket_price"] = (
-                float(ticket_type["ticket_price"])
-                if ticket_type["ticket_price"]
-                else None
-            )
-            ticket_type["crew_discounted_price"] = (
-                float(ticket_type["crew_discounted_price"])
-                if ticket_type["crew_discounted_price"]
-                else None
-            )
-            ticket_type["available_tickets"] = ticket_type["ticket_quantity"] - (
-                ticket_type["ticket_sold"] or 0
-            )
+            ticket_type["ticket_price"] = float(ticket_type["ticket_price"]) if ticket_type["ticket_price"] else None
+            ticket_type["crew_discounted_price"] = float(ticket_type["crew_discounted_price"]) if ticket_type["crew_discounted_price"] else None
+            ticket_type["available_tickets"] = ticket_type["ticket_quantity"] - (ticket_type["ticket_sold"] or 0)
 
-        # Get purchased tickets
+        # Purchased tickets
         purchased_tickets = await sync_to_async(list)(
             event.ticket_set.all().values(
-                "ticketId",
-                "user__username",
-                "user__email",
-                "user__first_name",
-                "user__last_name",
-                "guestFirstName",
-                "guestLastName",
-                "guestEmail",
-                "status",
-                "created_at",
-                "stripe_session_id",
+                "ticketId", "user__username", "user__email", "user__first_name", "user__last_name",
+                "guestFirstName", "guestLastName", "guestEmail", "status", "created_at", "stripe_session_id"
             )
         )
-
-        # Format purchased tickets
         for ticket in purchased_tickets:
             ticket["ticketId"] = str(ticket["ticketId"])
-            ticket["created_at"] = (
-                ticket["created_at"].isoformat() if ticket["created_at"] else None
-            )
-            # Organize user information
-            ticket["user"] = (
-                {
-                    "username": ticket.pop("user__username", None),
-                    "email": ticket.pop("user__email", None),
-                    "first_name": ticket.pop("user__first_name", None),
-                    "last_name": ticket.pop("user__last_name", None),
-                }
-                if ticket.get("user__username")
-                else None
-            )
+            ticket["created_at"] = ticket["created_at"].isoformat() if ticket["created_at"] else None
+            ticket["user"] = {
+                "username": ticket.pop("user__username", None),
+                "email": ticket.pop("user__email", None),
+                "first_name": ticket.pop("user__first_name", None),
+                "last_name": ticket.pop("user__last_name", None),
+            } if ticket.get("user__username") else None
 
-        # Return all fields from the Event model plus ticket information
+        # Final response
         return {
             "eventId": str(event.eventId),
             "stripeProductId": event.stripeProductId,
@@ -617,18 +568,13 @@ async def get_event_detail(
             "age_restriction": event.age_restriction,
             "crew_discount": event.crew_discount,
             "minimum_crew_size": event.minimum_crew_size,
-            "crew_discount_percentage": (
-                float(event.crew_discount_percentage)
-                if event.crew_discount_percentage
-                else None
-            ),
+            "crew_discount_percentage": float(event.crew_discount_percentage) if event.crew_discount_percentage else None,
             "couponsActivated": event.couponsActivated,
             "show_guest_list": event.show_guest_list,
             "forAllDisplay": event.forAllDisplay,
             "forCollegesDisplay": event.forCollegesDisplay,
             "created_at": event.created_at.isoformat() if event.created_at else None,
             "updated_at": event.updated_at.isoformat() if event.updated_at else None,
-            # Ticket information
             "tickets": {
                 "rsvp_tickets": rsvp_tickets,
                 "ticket_types": ticket_types,
@@ -637,20 +583,17 @@ async def get_event_detail(
                     "total_rsvps": len(rsvp_tickets),
                     "total_ticket_types": len(ticket_types),
                     "total_purchased_tickets": len(purchased_tickets),
-                    "total_tickets_sold": sum(
-                        tt.get("ticket_sold", 0) or 0 for tt in ticket_types
-                    ),
-                    "total_tickets_available": sum(
-                        tt.get("available_tickets", 0) for tt in ticket_types
-                    ),
-                },
-            },
+                    "total_tickets_sold": sum(tt.get("ticket_sold", 0) or 0 for tt in ticket_types),
+                    "total_tickets_available": sum(tt.get("available_tickets", 0) for tt in ticket_types)
+                }
+            }
         }
 
+    except Http404:
+        raise HTTPException(status_code=404, detail="Event not found.")
     except Exception as e:
-        print(f"Error fetching event: {str(e)}")
+        print(f"[ERROR get_event_detail] {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error fetching event: {str(e)}")
-
 
 @router.post("/delete/event/{event_id}")
 async def delete_event(
