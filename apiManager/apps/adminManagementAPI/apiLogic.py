@@ -471,76 +471,19 @@ async def get_event_detail(
     event_id: UUID,
     current_user: CustomUser = Depends(require_admin_role)
 ):
-    """
-    Get detailed event information - requires Admin or Super Admin role.
-    """
-    print(f"[get_event_detail] API called for event_id: {event_id} by {current_user.id}")
-
     try:
-        # Safely fetch event using thread-safe ORM access
+        # Safely print user ID
+        user_id = await sync_to_async(lambda: current_user.id, thread_sensitive=True)()
+        print(f"[get_event_detail] API called for event_id: {event_id} by {user_id}")
+
+        # Fetch event safely
         event = await sync_to_async(get_object_or_404, thread_sensitive=True)(Event, eventId=event_id)
 
-        # File URLs
-        header_photo_url = event.header_photo.url if event.header_photo else None
-        body_photo_one_url = event.body_photo_one.url if event.body_photo_one else None
-        body_photo_two_url = event.body_photo_two.url if event.body_photo_two else None
-        body_photo_three_url = event.body_photo_three.url if event.body_photo_three else None
-        body_photo_four_url = event.body_photo_four.url if event.body_photo_four else None
-        body_photo_five_url = event.body_photo_five.url if event.body_photo_five else None
-
-        # RSVP tickets
-        rsvp_tickets = await sync_to_async(list)(
-            event.rsvp_tickets.all().values(
-                "ticket_id", "email", "first_name", "last_name",
-                "display_on_guestlist", "created_at"
-            )
-        )
-        for ticket in rsvp_tickets:
-            ticket["ticket_id"] = str(ticket["ticket_id"])
-            ticket["created_at"] = ticket["created_at"].isoformat() if ticket["created_at"] else None
-
-        # Ticket types / offerings
-        ticket_types = await sync_to_async(list)(
-            event.tickets.all().values(
-                "ticket_id", "ticket_name", "ticket_price", "ticket_description",
-                "ticket_quantity", "ticket_sold", "crew_discounted_price", "stripePriceId"
-            )
-        )
-        for ticket_type in ticket_types:
-            ticket_type["ticket_id"] = str(ticket_type["ticket_id"])
-            ticket_type["ticket_price"] = float(ticket_type["ticket_price"]) if ticket_type["ticket_price"] else None
-            ticket_type["crew_discounted_price"] = float(ticket_type["crew_discounted_price"]) if ticket_type["crew_discounted_price"] else None
-            ticket_type["available_tickets"] = ticket_type["ticket_quantity"] - (ticket_type["ticket_sold"] or 0)
-
-        # Purchased tickets
-        purchased_tickets = await sync_to_async(list)(
-            event.ticket_set.all().values(
-                "ticketId", "user__username", "user__email", "user__first_name", "user__last_name",
-                "guestFirstName", "guestLastName", "guestEmail", "status", "created_at", "stripe_session_id"
-            )
-        )
-        for ticket in purchased_tickets:
-            ticket["ticketId"] = str(ticket["ticketId"])
-            ticket["created_at"] = ticket["created_at"].isoformat() if ticket["created_at"] else None
-            ticket["user"] = {
-                "username": ticket.pop("user__username", None),
-                "email": ticket.pop("user__email", None),
-                "first_name": ticket.pop("user__first_name", None),
-                "last_name": ticket.pop("user__last_name", None),
-            } if ticket.get("user__username") else None
-
-        # Final response
-        return {
+        # Extract event fields safely
+        event_fields = await sync_to_async(lambda: {
             "eventId": str(event.eventId),
             "stripeProductId": event.stripeProductId,
             "views": event.views,
-            "host": {
-                "id": event.host.id,
-                "username": event.host.username,
-                "email": event.host.email,
-                "first_name": event.host.first_name,
-                "last_name": event.host.last_name,
-            },
             "status": event.status,
             "admin_status": event.admin_status,
             "title": event.title,
@@ -559,12 +502,12 @@ async def get_event_detail(
             "state": event.state,
             "zip_code": event.zip_code,
             "hide_address": event.hide_address,
-            "header_photo": header_photo_url,
-            "body_photo_one": body_photo_one_url,
-            "body_photo_two": body_photo_two_url,
-            "body_photo_three": body_photo_three_url,
-            "body_photo_four": body_photo_four_url,
-            "body_photo_five": body_photo_five_url,
+            "header_photo": event.header_photo.url if event.header_photo else None,
+            "body_photo_one": event.body_photo_one.url if event.body_photo_one else None,
+            "body_photo_two": event.body_photo_two.url if event.body_photo_two else None,
+            "body_photo_three": event.body_photo_three.url if event.body_photo_three else None,
+            "body_photo_four": event.body_photo_four.url if event.body_photo_four else None,
+            "body_photo_five": event.body_photo_five.url if event.body_photo_five else None,
             "age_restriction": event.age_restriction,
             "crew_discount": event.crew_discount,
             "minimum_crew_size": event.minimum_crew_size,
@@ -575,6 +518,62 @@ async def get_event_detail(
             "forCollegesDisplay": event.forCollegesDisplay,
             "created_at": event.created_at.isoformat() if event.created_at else None,
             "updated_at": event.updated_at.isoformat() if event.updated_at else None,
+        }, thread_sensitive=True)()
+
+        # Extract host fields safely
+        host_fields = await sync_to_async(lambda: {
+            "id": event.host.id,
+            "username": event.host.username,
+            "email": event.host.email,
+            "first_name": event.host.first_name,
+            "last_name": event.host.last_name,
+        }, thread_sensitive=True)()
+
+        # RSVP tickets
+        rsvp_tickets = await sync_to_async(list)(
+            event.rsvp_tickets.all().values(
+                "ticket_id", "email", "first_name", "last_name",
+                "display_on_guestlist", "created_at"
+            )
+        )
+        for ticket in rsvp_tickets:
+            ticket["ticket_id"] = str(ticket["ticket_id"])
+            ticket["created_at"] = ticket["created_at"].isoformat() if ticket["created_at"] else None
+
+        # Ticket types
+        ticket_types = await sync_to_async(list)(
+            event.tickets.all().values(
+                "ticket_id", "ticket_name", "ticket_price", "ticket_description",
+                "ticket_quantity", "ticket_sold", "crew_discounted_price", "stripePriceId"
+            )
+        )
+        for tt in ticket_types:
+            tt["ticket_id"] = str(tt["ticket_id"])
+            tt["ticket_price"] = float(tt["ticket_price"]) if tt["ticket_price"] else None
+            tt["crew_discounted_price"] = float(tt["crew_discounted_price"]) if tt["crew_discounted_price"] else None
+            tt["available_tickets"] = tt["ticket_quantity"] - (tt["ticket_sold"] or 0)
+
+        # Purchased tickets
+        purchased_tickets = await sync_to_async(list)(
+            event.ticket_set.all().values(
+                "ticketId", "user__username", "user__email", "user__first_name", "user__last_name",
+                "guestFirstName", "guestLastName", "guestEmail", "status", "created_at", "stripe_session_id"
+            )
+        )
+        for pt in purchased_tickets:
+            pt["ticketId"] = str(pt["ticketId"])
+            pt["created_at"] = pt["created_at"].isoformat() if pt["created_at"] else None
+            pt["user"] = {
+                "username": pt.pop("user__username", None),
+                "email": pt.pop("user__email", None),
+                "first_name": pt.pop("user__first_name", None),
+                "last_name": pt.pop("user__last_name", None),
+            } if pt.get("user__username") else None
+
+        # Assemble final response
+        return {
+            **event_fields,
+            "host": host_fields,
             "tickets": {
                 "rsvp_tickets": rsvp_tickets,
                 "ticket_types": ticket_types,
