@@ -34,9 +34,17 @@ from apiManager.middleware.adminAccess import (
     require_permissions,
 )
 from django.shortcuts import get_object_or_404
-from .serializers import UserResponse, UserUpdateRequest
+from .serializers import (
+    UserResponse,
+    UserUpdateRequest,
+    EventWithTickets,
+    FriendInfo,
+    UserProfileInfo,
+)
 
 from eventManagementApp.models import Event
+from eventTicketsApp.models import Ticket, RSVPTicket
+from accountManagementApp.models import UserProfile
 
 
 router = APIRouter()
@@ -161,27 +169,159 @@ async def get_user_detail(
     user_id: int, current_user: CustomUser = Depends(require_admin_role)
 ):
     """
-    Get detailed user information - requires Admin or Super Admin role.
+    Get detailed user information including tickets, friends, and profile - requires Admin or Super Admin role.
     """
     print(f"[get_user_detail] API called for user_id: {user_id} by {current_user.id}")
 
-    try:
-        user = await sync_to_async(get_object_or_404)(CustomUser, id=user_id)
-        groups = await sync_to_async(list)(user.groups.values_list("name", flat=True))
-
-        # Get profile photo URL if it exists
-        profile_photo_url = None
+    @sync_to_async
+    def get_user_complete_data(user_id):
         try:
-            if (
-                hasattr(user, "user_profile")
-                and user.user_profile
-                and user.user_profile.profile_photo
-            ):
-                profile_photo_url = user.user_profile.profile_photo.url
-        except Exception as e:
-            print(
-                f"[get_user_detail] Warning: Could not get profile photo for user {user.id}: {str(e)}"
+            # Get user with related data
+            user = (
+                CustomUser.objects.select_related("user_profile")
+                .prefetch_related("groups")
+                .get(id=user_id)
             )
+
+            # Get user groups
+            groups = list(user.groups.values_list("name", flat=True))
+
+            # Get profile photo URL if it exists
+            profile_photo_url = None
+            user_profile_info = None
+            try:
+                if hasattr(user, "user_profile") and user.user_profile:
+                    user_profile = user.user_profile
+                    if user_profile.profile_photo:
+                        profile_photo_url = user_profile.profile_photo.url
+
+                    # Get user profile information
+                    college_name = None
+                    if user_profile.college:
+                        college_name = user_profile.college.name
+
+                    user_profile_info = {
+                        "college": college_name,
+                        "is_campus_manager": user_profile.is_campus_manager,
+                        "profile_photo": profile_photo_url,
+                        "was_host": user_profile.was_host,
+                    }
+            except Exception as e:
+                print(
+                    f"[get_user_detail] Warning: Could not get profile info for user {user.id}: {str(e)}"
+                )
+
+            # Get events user has tickets to
+            events_with_tickets = []
+            try:
+                # Get RSVP tickets
+                rsvp_tickets = RSVPTicket.objects.filter(
+                    email=user.email
+                ).select_related("event")
+                for rsvp in rsvp_tickets:
+                    event = rsvp.event
+                    events_with_tickets.append(
+                        {
+                            "eventId": str(event.eventId),
+                            "title": event.title,
+                            "date": event.date,
+                            "header_photo": (
+                                event.header_photo.url if event.header_photo else None
+                            ),
+                            "event_type": event.event_type,
+                            "city": event.city,
+                            "state": event.state,
+                            "ticket_type": "rsvp",
+                            "ticket_status": "confirmed",
+                        }
+                    )
+
+                # Get paid tickets
+                paid_tickets = Ticket.objects.filter(user=user).select_related("event")
+                for ticket in paid_tickets:
+                    event = ticket.event
+                    events_with_tickets.append(
+                        {
+                            "eventId": str(event.eventId),
+                            "title": event.title,
+                            "date": event.date,
+                            "header_photo": (
+                                event.header_photo.url if event.header_photo else None
+                            ),
+                            "event_type": event.event_type,
+                            "city": event.city,
+                            "state": event.state,
+                            "ticket_type": "paid",
+                            "ticket_status": ticket.status,
+                        }
+                    )
+            except Exception as e:
+                print(
+                    f"[get_user_detail] Warning: Could not get tickets for user {user.id}: {str(e)}"
+                )
+
+            # Get friends
+            friends_list = []
+            try:
+                if hasattr(user, "user_profile") and user.user_profile:
+                    friends = user.user_profile.friends.all().select_related(
+                        "user_profile"
+                    )
+                    for friend_profile in friends:
+                        friend_user = friend_profile.user
+                        friend_photo_url = None
+                        if friend_profile.profile_photo:
+                            friend_photo_url = friend_profile.profile_photo.url
+
+                        friends_list.append(
+                            {
+                                "id": friend_user.id,
+                                "username": friend_user.username,
+                                "first_name": friend_user.first_name,
+                                "last_name": friend_user.last_name,
+                                "profile_photo": friend_photo_url,
+                            }
+                        )
+            except Exception as e:
+                print(
+                    f"[get_user_detail] Warning: Could not get friends for user {user.id}: {str(e)}"
+                )
+
+            return {
+                "user": user,
+                "groups": groups,
+                "profile_photo_url": profile_photo_url,
+                "user_profile_info": user_profile_info,
+                "events_with_tickets": events_with_tickets,
+                "friends_list": friends_list,
+            }
+
+        except CustomUser.DoesNotExist:
+            return None
+
+    try:
+        user_data = await get_user_complete_data(user_id)
+        if user_data is None:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        user = user_data["user"]
+
+        # Convert events to Pydantic models
+        events_models = [
+            EventWithTickets(**event) for event in user_data["events_with_tickets"]
+        ]
+
+        # Convert friends to Pydantic models
+        friends_models = [FriendInfo(**friend) for friend in user_data["friends_list"]]
+
+        # Convert user profile to Pydantic model
+        user_profile_model = None
+        if user_data["user_profile_info"]:
+            user_profile_model = UserProfileInfo(**user_data["user_profile_info"])
+
+        print(
+            f"[get_user_detail] Returning details for user {user.username} with {len(events_models)} events and {len(friends_models)} friends"
+        )
 
         return UserResponse(
             id=user.id,
@@ -192,9 +332,12 @@ async def get_user_detail(
             is_active=user.is_active,
             is_staff=user.is_staff,
             is_suspended=user.is_suspended,
-            groups=groups,
+            groups=user_data["groups"],
             date_joined=user.date_joined,
-            profile_photo=profile_photo_url,
+            profile_photo=user_data["profile_photo_url"],
+            events_with_tickets=events_models,
+            friends=friends_models,
+            user_profile=user_profile_model,
         )
 
     except Exception as e:
