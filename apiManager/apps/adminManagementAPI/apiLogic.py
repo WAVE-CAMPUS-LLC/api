@@ -264,9 +264,7 @@ async def get_user_detail(
             friends_list = []
             try:
                 if hasattr(user, "user_profile") and user.user_profile:
-                    friends = user.user_profile.friends.all().select_related(
-                        "user_profile"
-                    )
+                    friends = user.user_profile.friends.all().select_related("user")
                     for friend_profile in friends:
                         friend_user = friend_profile.user
                         friend_photo_url = None
