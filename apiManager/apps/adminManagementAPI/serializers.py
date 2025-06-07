@@ -14,6 +14,7 @@ class UserResponse(BaseModel):
     is_suspended: bool
     groups: List[str]
     date_joined: datetime
+    profile_photo: Optional[str] = None
 
     class Config:
         from_attributes = True

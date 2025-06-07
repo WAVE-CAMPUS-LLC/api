@@ -99,9 +99,9 @@ async def get_users(
 
     try:
         # Get users with pagination
-        users_queryset = CustomUser.objects.select_related().prefetch_related("groups")[
-            skip : skip + limit
-        ]
+        users_queryset = CustomUser.objects.select_related(
+            "user_profile"
+        ).prefetch_related("groups")[skip : skip + limit]
         users = await sync_to_async(list)(users_queryset)
 
         # Convert to response format
@@ -110,6 +110,21 @@ async def get_users(
             groups = await sync_to_async(list)(
                 user.groups.values_list("name", flat=True)
             )
+
+            # Get profile photo URL if it exists
+            profile_photo_url = None
+            try:
+                if (
+                    hasattr(user, "user_profile")
+                    and user.user_profile
+                    and user.user_profile.profile_photo
+                ):
+                    profile_photo_url = user.user_profile.profile_photo.url
+            except Exception as e:
+                print(
+                    f"[get_users] Warning: Could not get profile photo for user {user.id}: {str(e)}"
+                )
+
             user_responses.append(
                 UserResponse(
                     id=user.id,
@@ -122,6 +137,7 @@ async def get_users(
                     is_suspended=user.is_suspended,
                     groups=groups,
                     date_joined=user.date_joined,
+                    profile_photo=profile_photo_url,
                 )
             )
 
@@ -144,6 +160,20 @@ async def get_user_detail(
         user = await sync_to_async(get_object_or_404)(CustomUser, id=user_id)
         groups = await sync_to_async(list)(user.groups.values_list("name", flat=True))
 
+        # Get profile photo URL if it exists
+        profile_photo_url = None
+        try:
+            if (
+                hasattr(user, "user_profile")
+                and user.user_profile
+                and user.user_profile.profile_photo
+            ):
+                profile_photo_url = user.user_profile.profile_photo.url
+        except Exception as e:
+            print(
+                f"[get_user_detail] Warning: Could not get profile photo for user {user.id}: {str(e)}"
+            )
+
         return UserResponse(
             id=user.id,
             username=user.username,
@@ -155,6 +185,7 @@ async def get_user_detail(
             is_suspended=user.is_suspended,
             groups=groups,
             date_joined=user.date_joined,
+            profile_photo=profile_photo_url,
         )
 
     except Exception as e:
