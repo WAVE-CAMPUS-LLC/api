@@ -1,4 +1,5 @@
 from datetime import datetime
+from uuid import UUID
 from fastapi import (
     APIRouter,
     Depends,
@@ -466,7 +467,7 @@ async def get_events(current_user: CustomUser = Depends(require_admin_role)):
 
 @router.get("/eventDetails/{event_id}")
 async def get_event_detail(
-    event_id: int, current_user: CustomUser = Depends(require_admin_role)
+    event_id: UUID, current_user: CustomUser = Depends(require_admin_role)
 ):
     """
     Get detailed event information - requires Admin or Super Admin role.
@@ -476,7 +477,7 @@ async def get_event_detail(
     )
 
     try:
-        event = await sync_to_async(get_object_or_404)(Event, event_id=event_id)
+        event = await sync_to_async(get_object_or_404)(Event, eventId=event_id)
 
         # Get file URLs safely
         header_photo_url = event.header_photo.url if event.header_photo else None
