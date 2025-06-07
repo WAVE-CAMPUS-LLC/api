@@ -205,9 +205,12 @@ async def update_profile_detailed(
                 # Save the uploaded file to the profile_photo field
                 if user_profile.profile_photo:
                     # Delete old photo if it exists to avoid storage buildup
-                    old_photo = user_profile.profile_photo
-                    if old_photo and os.path.exists(old_photo.path):
-                        os.remove(old_photo.path)
+                    try:
+                        user_profile.profile_photo.delete(save=False)
+                    except Exception as e:
+                        print(
+                            f"[update_profile_detailed] Warning: Could not delete old profile photo: {str(e)}"
+                        )
 
                 from django.core.files import File
                 from tempfile import NamedTemporaryFile
