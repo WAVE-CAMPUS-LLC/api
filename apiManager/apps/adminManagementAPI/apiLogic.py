@@ -94,35 +94,31 @@ async def admin_dashboard(current_user: CustomUser = Depends(require_admin_role)
         )
 
 
-@router.get("/users")
+@router.get("/users", response_model=List[UserResponse])
 async def get_users(
     skip: int = 0,
-    limit: int = 30,  # Default to 30 users per page
+    limit: int = 0,  # 0 means no limit (return all users)
     current_user: CustomUser = Depends(require_admin_role),
 ):
     """
-    Get paginated list of users - requires Admin or Super Admin role.
-    Returns 30 users by default with pagination metadata.
+    Get list of users - requires Admin or Super Admin role.
+    If limit is 0, returns all users. Otherwise uses pagination.
     """
-    print(
-        f"[get_users] API called with user_id: {current_user.id}, skip: {skip}, limit: {limit}"
-    )
+    print(f"[get_users] API called with user_id: {current_user.id}")
 
     try:
-        # Get total count for pagination metadata
-        total_count = await sync_to_async(CustomUser.objects.count)()
-
-        # Get users with pagination
-        users_queryset = (
-            CustomUser.objects.select_related("user_profile")
-            .prefetch_related("groups")
-            .order_by("-date_joined")[skip : skip + limit]
-        )
+        # Get users with optional pagination - if limit is 0, get all users
+        if limit == 0:
+            users_queryset = CustomUser.objects.select_related(
+                "user_profile"
+            ).prefetch_related("groups")
+        else:
+            users_queryset = CustomUser.objects.select_related(
+                "user_profile"
+            ).prefetch_related("groups")[skip : skip + limit]
 
         users = await sync_to_async(list)(users_queryset)
-        print(
-            f"[get_users] Retrieved {len(users)} users from database (total: {total_count})"
-        )
+        print(f"[get_users] Retrieved {len(users)} users from database")
 
         # Convert to response format
         user_responses = []
@@ -161,22 +157,8 @@ async def get_users(
                 )
             )
 
-        # Calculate pagination metadata
-        has_more = (skip + limit) < total_count
-        next_skip = skip + limit if has_more else None
-
         print(f"[get_users] Returning {len(user_responses)} users in response")
-
-        return {
-            "users": user_responses,
-            "pagination": {
-                "total_count": total_count,
-                "current_page": (skip // limit) + 1,
-                "per_page": limit,
-                "has_more": has_more,
-                "next_skip": next_skip,
-            },
-        }
+        return user_responses
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching users: {str(e)}")
