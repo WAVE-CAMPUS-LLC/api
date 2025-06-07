@@ -380,13 +380,27 @@ async def delete_user(
     print(f"[delete_user] API called for user_id: {user_id} by {current_user.id}")
 
     try:
+        # Check if user exists first
+        user_exists = await sync_to_async(
+            CustomUser.objects.filter(id=user_id).exists
+        )()
+        if not user_exists:
+            print(f"[delete_user] User with ID {user_id} does not exist")
+            raise HTTPException(
+                status_code=404, detail=f"User with ID {user_id} not found"
+            )
+
         user = await sync_to_async(get_object_or_404)(CustomUser, id=user_id)
+        username = user.username  # Store username before deletion
         await sync_to_async(user.delete)()
 
-        return {"message": f"User {user.username} has been deleted"}
+        print(f"[delete_user] Successfully deleted user {username} (ID: {user_id})")
+        return {"message": f"User {username} has been deleted"}
+    except HTTPException:
+        # Re-raise HTTP exceptions (like 404)
+        raise
     except Exception as e:
-        if "does not exist" in str(e).lower():
-            raise HTTPException(status_code=404, detail="User not found")
+        print(f"[delete_user] Error deleting user {user_id}: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error deleting user: {str(e)}")
 
 
