@@ -43,6 +43,7 @@ from .serializers import (
 )
 
 from eventManagementApp.models import Event
+from eventTicketsApp.models import RSVPTicket, PaidFreeTicket, Ticket
 from eventTicketsApp.models import Ticket, RSVPTicket
 from accountManagementApp.models import UserProfile
 
@@ -50,7 +51,7 @@ from accountManagementApp.models import UserProfile
 router = APIRouter()
 
 
-# Pydantic models for request/response
+# USERS
 
 
 @router.get("/dashboard")
@@ -428,40 +429,170 @@ async def unsuspend_user(
 
 
 # Event Management Admin API
-@router.get("/admin/get/events")
+@router.get("/events/getAll")
 async def get_events(current_user: CustomUser = Depends(require_admin_role)):
     """
-    Get list of events - requires Admin or Super Admin role.
+    Get list of events with only name and header_photo URL.
     """
     print(f"[get_events] API called with user_id: {current_user.id}")
-
     try:
-        events = await sync_to_async(list)(Event.objects.all())
-        return events
+        events_qs = Event.objects.only("title", "header_photo", "eventId")
+        events = await sync_to_async(list)(events_qs)
+
+        event_list = []
+        for event in events:
+            try:
+                header_photo_url = event.header_photo.url if event.header_photo else None
+            except Exception as e:
+                print(f"[get_events] Warning: header_photo error for event {event.eventId}: {e}")
+                header_photo_url = None
+
+            event_list.append({
+                "title": event.title,
+                "header_photo": header_photo_url,
+                "eventId": event.eventId
+            })
+
+        return event_list
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching events: {str(e)}")
 
 
-@router.get("/admin/get/event/{event_id}")
+@router.get("/eventDetails/{event_id}")
 async def get_event_detail(
     event_id: int, current_user: CustomUser = Depends(require_admin_role)
 ):
     """
     Get detailed event information - requires Admin or Super Admin role.
-    """
-    print(
-        f"[get_event_detail] API called for event_id: {event_id} by {current_user.id}"
-    )
+    """    
+    print(f"[get_event_detail] API called for event_id: {event_id} by {current_user.id}")
 
     try:
-        event = await sync_to_async(get_object_or_404)(Event, id=event_id)
-        return event
+        event = await sync_to_async(get_object_or_404)(Event, event_id=event_id)
+        
+        # Get file URLs safely
+        header_photo_url = event.header_photo.url if event.header_photo else None
+        body_photo_one_url = event.body_photo_one.url if event.body_photo_one else None
+        body_photo_two_url = event.body_photo_two.url if event.body_photo_two else None
+        body_photo_three_url = event.body_photo_three.url if event.body_photo_three else None
+        body_photo_four_url = event.body_photo_four.url if event.body_photo_four else None
+        body_photo_five_url = event.body_photo_five.url if event.body_photo_five else None
+        
+        # Get ticket information
+        rsvp_tickets = await sync_to_async(list)(
+            event.rsvp_tickets.all().values(
+                "ticket_id", "email", "first_name", "last_name", 
+                "display_on_guestlist", "created_at"
+            )
+        )
+        
+        # Convert ticket_id to string and format dates for RSVP tickets
+        for ticket in rsvp_tickets:
+            ticket["ticket_id"] = str(ticket["ticket_id"])
+            ticket["created_at"] = ticket["created_at"].isoformat() if ticket["created_at"] else None
+        
+        # Get ticket types/offerings (PaidFreeTicket objects)
+        ticket_types = await sync_to_async(list)(
+            event.tickets.all().values(
+                "ticket_id", "ticket_name", "ticket_price", "ticket_description",
+                "ticket_quantity", "ticket_sold", "crew_discounted_price", "stripePriceId"
+            )
+        )
+        
+        # Convert fields to appropriate types for ticket types
+        for ticket_type in ticket_types:
+            ticket_type["ticket_id"] = str(ticket_type["ticket_id"])
+            ticket_type["ticket_price"] = float(ticket_type["ticket_price"]) if ticket_type["ticket_price"] else None
+            ticket_type["crew_discounted_price"] = float(ticket_type["crew_discounted_price"]) if ticket_type["crew_discounted_price"] else None
+            ticket_type["available_tickets"] = ticket_type["ticket_quantity"] - (ticket_type["ticket_sold"] or 0)
+        
+        # Get purchased tickets
+        purchased_tickets = await sync_to_async(list)(
+            event.ticket_set.all().values(
+                "ticketId", "user__username", "user__email", "user__first_name", "user__last_name",
+                "guestFirstName", "guestLastName", "guestEmail", "status", "created_at", "stripe_session_id"
+            )
+        )
+        
+        # Format purchased tickets
+        for ticket in purchased_tickets:
+            ticket["ticketId"] = str(ticket["ticketId"])
+            ticket["created_at"] = ticket["created_at"].isoformat() if ticket["created_at"] else None
+            # Organize user information
+            ticket["user"] = {
+                "username": ticket.pop("user__username", None),
+                "email": ticket.pop("user__email", None),
+                "first_name": ticket.pop("user__first_name", None),
+                "last_name": ticket.pop("user__last_name", None),
+            } if ticket.get("user__username") else None
+
+        # Return all fields from the Event model plus ticket information
+        return {
+            "eventId": str(event.eventId),
+            "stripeProductId": event.stripeProductId,
+            "views": event.views,
+            "host": {
+                "id": event.host.id,
+                "username": event.host.username,
+                "email": event.host.email,
+                "first_name": event.host.first_name,
+                "last_name": event.host.last_name,
+            },
+            "status": event.status,
+            "admin_status": event.admin_status,
+            "title": event.title,
+            "event_type": event.event_type,
+            "date": event.date.isoformat() if event.date else None,
+            "start_time": event.start_time.isoformat() if event.start_time else None,
+            "end_time": event.end_time.isoformat() if event.end_time else None,
+            "description": event.description,
+            "ticketing": event.ticketing,
+            "building_name": event.building_name,
+            "display_event_on_college": event.display_event_on_college,
+            "country": event.country,
+            "street": event.street,
+            "apt_suite_unit": event.apt_suite_unit,
+            "city": event.city,
+            "state": event.state,
+            "zip_code": event.zip_code,
+            "hide_address": event.hide_address,
+            "header_photo": header_photo_url,
+            "body_photo_one": body_photo_one_url,
+            "body_photo_two": body_photo_two_url,
+            "body_photo_three": body_photo_three_url,
+            "body_photo_four": body_photo_four_url,
+            "body_photo_five": body_photo_five_url,
+            "age_restriction": event.age_restriction,
+            "crew_discount": event.crew_discount,
+            "minimum_crew_size": event.minimum_crew_size,
+            "crew_discount_percentage": float(event.crew_discount_percentage) if event.crew_discount_percentage else None,
+            "couponsActivated": event.couponsActivated,
+            "show_guest_list": event.show_guest_list,
+            "forAllDisplay": event.forAllDisplay,
+            "forCollegesDisplay": event.forCollegesDisplay,
+            "created_at": event.created_at.isoformat() if event.created_at else None,
+            "updated_at": event.updated_at.isoformat() if event.updated_at else None,
+            # Ticket information
+            "tickets": {
+                "rsvp_tickets": rsvp_tickets,
+                "ticket_types": ticket_types,
+                "purchased_tickets": purchased_tickets,
+                "ticket_stats": {
+                    "total_rsvps": len(rsvp_tickets),
+                    "total_ticket_types": len(ticket_types),
+                    "total_purchased_tickets": len(purchased_tickets),
+                    "total_tickets_sold": sum(tt.get("ticket_sold", 0) or 0 for tt in ticket_types),
+                    "total_tickets_available": sum(tt.get("available_tickets", 0) for tt in ticket_types)
+                }
+            }
+        }
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching event: {str(e)}")
 
 
-@router.post("/admin/delete/event/{event_id}")
+@router.post("/delete/event/{event_id}")
 async def delete_event(
     event_id: int, current_user: CustomUser = Depends(require_admin_role)
 ):
@@ -471,7 +602,7 @@ async def delete_event(
     print(f"[delete_event] API called for event_id: {event_id} by {current_user.id}")
 
     try:
-        event = await sync_to_async(get_object_or_404)(Event, id=event_id)
+        event = await sync_to_async(get_object_or_404)(Event, event_id=event_id)
         await sync_to_async(event.delete)()
 
         return {"message": f"Event {event.title} has been deleted"}
