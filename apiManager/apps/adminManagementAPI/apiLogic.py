@@ -46,14 +46,13 @@ from eventManagementApp.models import Event
 from eventTicketsApp.models import RSVPTicket, PaidFreeTicket, Ticket
 from eventTicketsApp.models import Ticket, RSVPTicket
 from accountManagementApp.models import UserProfile
+from adminDashboardApp.models import College
 
 
 router = APIRouter()
 
 
 # USERS
-
-
 @router.get("/dashboard")
 async def admin_dashboard(current_user: CustomUser = Depends(require_admin_role)):
     """
@@ -442,16 +441,22 @@ async def get_events(current_user: CustomUser = Depends(require_admin_role)):
         event_list = []
         for event in events:
             try:
-                header_photo_url = event.header_photo.url if event.header_photo else None
+                header_photo_url = (
+                    event.header_photo.url if event.header_photo else None
+                )
             except Exception as e:
-                print(f"[get_events] Warning: header_photo error for event {event.eventId}: {e}")
+                print(
+                    f"[get_events] Warning: header_photo error for event {event.eventId}: {e}"
+                )
                 header_photo_url = None
 
-            event_list.append({
-                "title": event.title,
-                "header_photo": header_photo_url,
-                "eventId": event.eventId
-            })
+            event_list.append(
+                {
+                    "title": event.title,
+                    "header_photo": header_photo_url,
+                    "eventId": event.eventId,
+                }
+            )
 
         return event_list
 
@@ -465,67 +470,112 @@ async def get_event_detail(
 ):
     """
     Get detailed event information - requires Admin or Super Admin role.
-    """    
-    print(f"[get_event_detail] API called for event_id: {event_id} by {current_user.id}")
+    """
+    print(
+        f"[get_event_detail] API called for event_id: {event_id} by {current_user.id}"
+    )
 
     try:
         event = await sync_to_async(get_object_or_404)(Event, event_id=event_id)
-        
+
         # Get file URLs safely
         header_photo_url = event.header_photo.url if event.header_photo else None
         body_photo_one_url = event.body_photo_one.url if event.body_photo_one else None
         body_photo_two_url = event.body_photo_two.url if event.body_photo_two else None
-        body_photo_three_url = event.body_photo_three.url if event.body_photo_three else None
-        body_photo_four_url = event.body_photo_four.url if event.body_photo_four else None
-        body_photo_five_url = event.body_photo_five.url if event.body_photo_five else None
-        
+        body_photo_three_url = (
+            event.body_photo_three.url if event.body_photo_three else None
+        )
+        body_photo_four_url = (
+            event.body_photo_four.url if event.body_photo_four else None
+        )
+        body_photo_five_url = (
+            event.body_photo_five.url if event.body_photo_five else None
+        )
+
         # Get ticket information
         rsvp_tickets = await sync_to_async(list)(
             event.rsvp_tickets.all().values(
-                "ticket_id", "email", "first_name", "last_name", 
-                "display_on_guestlist", "created_at"
+                "ticket_id",
+                "email",
+                "first_name",
+                "last_name",
+                "display_on_guestlist",
+                "created_at",
             )
         )
-        
+
         # Convert ticket_id to string and format dates for RSVP tickets
         for ticket in rsvp_tickets:
             ticket["ticket_id"] = str(ticket["ticket_id"])
-            ticket["created_at"] = ticket["created_at"].isoformat() if ticket["created_at"] else None
-        
+            ticket["created_at"] = (
+                ticket["created_at"].isoformat() if ticket["created_at"] else None
+            )
+
         # Get ticket types/offerings (PaidFreeTicket objects)
         ticket_types = await sync_to_async(list)(
             event.tickets.all().values(
-                "ticket_id", "ticket_name", "ticket_price", "ticket_description",
-                "ticket_quantity", "ticket_sold", "crew_discounted_price", "stripePriceId"
+                "ticket_id",
+                "ticket_name",
+                "ticket_price",
+                "ticket_description",
+                "ticket_quantity",
+                "ticket_sold",
+                "crew_discounted_price",
+                "stripePriceId",
             )
         )
-        
+
         # Convert fields to appropriate types for ticket types
         for ticket_type in ticket_types:
             ticket_type["ticket_id"] = str(ticket_type["ticket_id"])
-            ticket_type["ticket_price"] = float(ticket_type["ticket_price"]) if ticket_type["ticket_price"] else None
-            ticket_type["crew_discounted_price"] = float(ticket_type["crew_discounted_price"]) if ticket_type["crew_discounted_price"] else None
-            ticket_type["available_tickets"] = ticket_type["ticket_quantity"] - (ticket_type["ticket_sold"] or 0)
-        
+            ticket_type["ticket_price"] = (
+                float(ticket_type["ticket_price"])
+                if ticket_type["ticket_price"]
+                else None
+            )
+            ticket_type["crew_discounted_price"] = (
+                float(ticket_type["crew_discounted_price"])
+                if ticket_type["crew_discounted_price"]
+                else None
+            )
+            ticket_type["available_tickets"] = ticket_type["ticket_quantity"] - (
+                ticket_type["ticket_sold"] or 0
+            )
+
         # Get purchased tickets
         purchased_tickets = await sync_to_async(list)(
             event.ticket_set.all().values(
-                "ticketId", "user__username", "user__email", "user__first_name", "user__last_name",
-                "guestFirstName", "guestLastName", "guestEmail", "status", "created_at", "stripe_session_id"
+                "ticketId",
+                "user__username",
+                "user__email",
+                "user__first_name",
+                "user__last_name",
+                "guestFirstName",
+                "guestLastName",
+                "guestEmail",
+                "status",
+                "created_at",
+                "stripe_session_id",
             )
         )
-        
+
         # Format purchased tickets
         for ticket in purchased_tickets:
             ticket["ticketId"] = str(ticket["ticketId"])
-            ticket["created_at"] = ticket["created_at"].isoformat() if ticket["created_at"] else None
+            ticket["created_at"] = (
+                ticket["created_at"].isoformat() if ticket["created_at"] else None
+            )
             # Organize user information
-            ticket["user"] = {
-                "username": ticket.pop("user__username", None),
-                "email": ticket.pop("user__email", None),
-                "first_name": ticket.pop("user__first_name", None),
-                "last_name": ticket.pop("user__last_name", None),
-            } if ticket.get("user__username") else None
+            ticket["user"] = (
+                {
+                    "username": ticket.pop("user__username", None),
+                    "email": ticket.pop("user__email", None),
+                    "first_name": ticket.pop("user__first_name", None),
+                    "last_name": ticket.pop("user__last_name", None),
+                }
+                if ticket.get("user__username")
+                else None
+            )
 
         # Return all fields from the Event model plus ticket information
         return {
@@ -566,7 +616,11 @@ async def get_event_detail(
             "age_restriction": event.age_restriction,
             "crew_discount": event.crew_discount,
             "minimum_crew_size": event.minimum_crew_size,
-            "crew_discount_percentage": float(event.crew_discount_percentage) if event.crew_discount_percentage else None,
+            "crew_discount_percentage": (
+                float(event.crew_discount_percentage)
+                if event.crew_discount_percentage
+                else None
+            ),
             "couponsActivated": event.couponsActivated,
             "show_guest_list": event.show_guest_list,
             "forAllDisplay": event.forAllDisplay,
@@ -582,10 +636,14 @@ async def get_event_detail(
                     "total_rsvps": len(rsvp_tickets),
                     "total_ticket_types": len(ticket_types),
                     "total_purchased_tickets": len(purchased_tickets),
-                    "total_tickets_sold": sum(tt.get("ticket_sold", 0) or 0 for tt in ticket_types),
-                    "total_tickets_available": sum(tt.get("available_tickets", 0) for tt in ticket_types)
-                }
-            }
+                    "total_tickets_sold": sum(
+                        tt.get("ticket_sold", 0) or 0 for tt in ticket_types
+                    ),
+                    "total_tickets_available": sum(
+                        tt.get("available_tickets", 0) for tt in ticket_types
+                    ),
+                },
+            },
         }
 
     except Exception as e:
@@ -609,3 +667,83 @@ async def delete_event(
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error deleting event: {str(e)}")
+
+
+# COLLEGE MANAGEMENT ADMIN API
+@router.get("/colleges/getAll")
+async def get_colleges(current_user: CustomUser = Depends(require_admin_role)):
+    """
+    Get list of colleges with optimized database queries.
+    """
+    print(f"[get_colleges] API called with user_id: {current_user.id}")
+
+    @sync_to_async
+    def get_colleges_data():
+        """
+        Optimized database query to fetch all college data in a single query.
+        """
+        try:
+            # Use select_related to fetch the creator user in a single JOIN query
+            # Order by name for consistent results
+            colleges_qs = College.objects.select_related("created_by").order_by("name")
+
+            college_list = []
+            for college in colleges_qs:
+                # Safely get file URLs with error handling
+                logo_url = None
+                campus_image_url = None
+
+                try:
+                    logo_url = college.logo.url if college.logo else None
+                except Exception as e:
+                    print(
+                        f"[get_colleges] Warning: logo error for college {college.name}: {e}"
+                    )
+
+                try:
+                    campus_image_url = (
+                        college.campus_image.url if college.campus_image else None
+                    )
+                except Exception as e:
+                    print(
+                        f"[get_colleges] Warning: campus_image error for college {college.name}: {e}"
+                    )
+
+                # Safely get creator username
+                created_by_username = None
+                try:
+                    created_by_username = (
+                        college.created_by.username if college.created_by else None
+                    )
+                except Exception as e:
+                    print(
+                        f"[get_colleges] Warning: created_by error for college {college.name}: {e}"
+                    )
+
+                college_list.append(
+                    {
+                        "name": college.name,
+                        "logo": logo_url,
+                        "id": college.collegeId,
+                        "city": college.city,
+                        "state": college.state,
+                        "campus_image": campus_image_url,
+                    }
+                )
+
+            print(f"[get_colleges] Successfully processed {len(college_list)} colleges")
+            return college_list
+
+        except Exception as e:
+            print(f"[get_colleges] Database error: {str(e)}")
+            raise e
+
+    try:
+        college_list = await get_colleges_data()
+        return college_list
+
+    except Exception as e:
+        print(f"[get_colleges] Error in get_colleges: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error fetching colleges: {str(e)}"
+        )
