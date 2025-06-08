@@ -596,7 +596,7 @@ async def get_event_detail(
 
 @router.post("/delete/event/{event_id}")
 async def delete_event(
-    event_id: int, current_user: CustomUser = Depends(require_admin_role)
+    event_id: UUID, current_user: CustomUser = Depends(require_admin_role)
 ):
     """
     Delete an event - requires Admin or Super Admin role.
@@ -610,6 +610,7 @@ async def delete_event(
         return {"message": f"Event {event.title} has been deleted"}
 
     except Exception as e:
+        print(f"Error with deletion {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error deleting event: {str(e)}")
 
 
