@@ -21,6 +21,7 @@ import traceback
 import os
 from django.core.files.base import ContentFile
 from django.conf import settings
+from django.db.models import Count
 
 from authenticationApp.models import CustomUser
 from authenticationApp.serializers import CustomUserSerializer
@@ -49,6 +50,7 @@ from eventTicketsApp.models import RSVPTicket, PaidFreeTicket, Ticket
 from eventTicketsApp.models import Ticket, RSVPTicket
 from accountManagementApp.models import UserProfile
 from adminDashboardApp.models import College
+from collegeManagementApp.models import Membership, CollegeEventLink
 
 
 router = APIRouter()
@@ -468,8 +470,7 @@ async def get_events(current_user: CustomUser = Depends(require_admin_role)):
 
 @router.get("/eventDetails/{event_id}")
 async def get_event_detail(
-    event_id: UUID,
-    current_user: CustomUser = Depends(require_admin_role)
+    event_id: UUID, current_user: CustomUser = Depends(require_admin_role)
 ):
     try:
         # Safely print user ID
@@ -477,98 +478,159 @@ async def get_event_detail(
         print(f"[get_event_detail] API called for event_id: {event_id} by {user_id}")
 
         # Fetch event safely
-        event = await sync_to_async(get_object_or_404, thread_sensitive=True)(Event, eventId=event_id)
+        event = await sync_to_async(get_object_or_404, thread_sensitive=True)(
+            Event, eventId=event_id
+        )
 
         # Extract event fields safely
-        event_fields = await sync_to_async(lambda: {
-            "eventId": str(event.eventId),
-            "stripeProductId": event.stripeProductId,
-            "views": event.views,
-            "status": event.status,
-            "admin_status": event.admin_status,
-            "title": event.title,
-            "event_type": event.event_type,
-            "date": event.date.isoformat() if event.date else None,
-            "start_time": event.start_time.isoformat() if event.start_time else None,
-            "end_time": event.end_time.isoformat() if event.end_time else None,
-            "description": event.description,
-            "ticketing": event.ticketing,
-            "building_name": event.building_name,
-            "display_event_on_college": event.display_event_on_college,
-            "country": event.country,
-            "street": event.street,
-            "apt_suite_unit": event.apt_suite_unit,
-            "city": event.city,
-            "state": event.state,
-            "zip_code": event.zip_code,
-            "hide_address": event.hide_address,
-            "header_photo": event.header_photo.url if event.header_photo else None,
-            "body_photo_one": event.body_photo_one.url if event.body_photo_one else None,
-            "body_photo_two": event.body_photo_two.url if event.body_photo_two else None,
-            "body_photo_three": event.body_photo_three.url if event.body_photo_three else None,
-            "body_photo_four": event.body_photo_four.url if event.body_photo_four else None,
-            "body_photo_five": event.body_photo_five.url if event.body_photo_five else None,
-            "age_restriction": event.age_restriction,
-            "crew_discount": event.crew_discount,
-            "minimum_crew_size": event.minimum_crew_size,
-            "crew_discount_percentage": float(event.crew_discount_percentage) if event.crew_discount_percentage else None,
-            "couponsActivated": event.couponsActivated,
-            "show_guest_list": event.show_guest_list,
-            "forAllDisplay": event.forAllDisplay,
-            "forCollegesDisplay": event.forCollegesDisplay,
-            "created_at": event.created_at.isoformat() if event.created_at else None,
-            "updated_at": event.updated_at.isoformat() if event.updated_at else None,
-        }, thread_sensitive=True)()
+        event_fields = await sync_to_async(
+            lambda: {
+                "eventId": str(event.eventId),
+                "stripeProductId": event.stripeProductId,
+                "views": event.views,
+                "status": event.status,
+                "admin_status": event.admin_status,
+                "title": event.title,
+                "event_type": event.event_type,
+                "date": event.date.isoformat() if event.date else None,
+                "start_time": (
+                    event.start_time.isoformat() if event.start_time else None
+                ),
+                "end_time": event.end_time.isoformat() if event.end_time else None,
+                "description": event.description,
+                "ticketing": event.ticketing,
+                "building_name": event.building_name,
+                "display_event_on_college": event.display_event_on_college,
+                "country": event.country,
+                "street": event.street,
+                "apt_suite_unit": event.apt_suite_unit,
+                "city": event.city,
+                "state": event.state,
+                "zip_code": event.zip_code,
+                "hide_address": event.hide_address,
+                "header_photo": event.header_photo.url if event.header_photo else None,
+                "body_photo_one": (
+                    event.body_photo_one.url if event.body_photo_one else None
+                ),
+                "body_photo_two": (
+                    event.body_photo_two.url if event.body_photo_two else None
+                ),
+                "body_photo_three": (
+                    event.body_photo_three.url if event.body_photo_three else None
+                ),
+                "body_photo_four": (
+                    event.body_photo_four.url if event.body_photo_four else None
+                ),
+                "body_photo_five": (
+                    event.body_photo_five.url if event.body_photo_five else None
+                ),
+                "age_restriction": event.age_restriction,
+                "crew_discount": event.crew_discount,
+                "minimum_crew_size": event.minimum_crew_size,
+                "crew_discount_percentage": (
+                    float(event.crew_discount_percentage)
+                    if event.crew_discount_percentage
+                    else None
+                ),
+                "couponsActivated": event.couponsActivated,
+                "show_guest_list": event.show_guest_list,
+                "forAllDisplay": event.forAllDisplay,
+                "forCollegesDisplay": event.forCollegesDisplay,
+                "created_at": (
+                    event.created_at.isoformat() if event.created_at else None
+                ),
+                "updated_at": (
+                    event.updated_at.isoformat() if event.updated_at else None
+                ),
+            },
+            thread_sensitive=True,
+        )()
 
         # Extract host fields safely
-        host_fields = await sync_to_async(lambda: {
-            "id": event.host.id,
-            "username": event.host.username,
-            "email": event.host.email,
-            "first_name": event.host.first_name,
-            "last_name": event.host.last_name,
-        }, thread_sensitive=True)()
+        host_fields = await sync_to_async(
+            lambda: {
+                "id": event.host.id,
+                "username": event.host.username,
+                "email": event.host.email,
+                "first_name": event.host.first_name,
+                "last_name": event.host.last_name,
+            },
+            thread_sensitive=True,
+        )()
 
         # RSVP tickets
         rsvp_tickets = await sync_to_async(list)(
             event.rsvp_tickets.all().values(
-                "ticket_id", "email", "first_name", "last_name",
-                "display_on_guestlist", "created_at"
+                "ticket_id",
+                "email",
+                "first_name",
+                "last_name",
+                "display_on_guestlist",
+                "created_at",
             )
         )
         for ticket in rsvp_tickets:
             ticket["ticket_id"] = str(ticket["ticket_id"])
-            ticket["created_at"] = ticket["created_at"].isoformat() if ticket["created_at"] else None
+            ticket["created_at"] = (
+                ticket["created_at"].isoformat() if ticket["created_at"] else None
+            )
 
         # Ticket types
         ticket_types = await sync_to_async(list)(
             event.tickets.all().values(
-                "ticket_id", "ticket_name", "ticket_price", "ticket_description",
-                "ticket_quantity", "ticket_sold", "crew_discounted_price", "stripePriceId"
+                "ticket_id",
+                "ticket_name",
+                "ticket_price",
+                "ticket_description",
+                "ticket_quantity",
+                "ticket_sold",
+                "crew_discounted_price",
+                "stripePriceId",
             )
         )
         for tt in ticket_types:
             tt["ticket_id"] = str(tt["ticket_id"])
-            tt["ticket_price"] = float(tt["ticket_price"]) if tt["ticket_price"] else None
-            tt["crew_discounted_price"] = float(tt["crew_discounted_price"]) if tt["crew_discounted_price"] else None
+            tt["ticket_price"] = (
+                float(tt["ticket_price"]) if tt["ticket_price"] else None
+            )
+            tt["crew_discounted_price"] = (
+                float(tt["crew_discounted_price"])
+                if tt["crew_discounted_price"]
+                else None
+            )
             tt["available_tickets"] = tt["ticket_quantity"] - (tt["ticket_sold"] or 0)
 
         # Purchased tickets
         purchased_tickets = await sync_to_async(list)(
             event.ticket_set.all().values(
-                "ticketId", "user__username", "user__email", "user__first_name", "user__last_name",
-                "guestFirstName", "guestLastName", "guestEmail", "status", "created_at", "stripe_session_id"
+                "ticketId",
+                "user__username",
+                "user__email",
+                "user__first_name",
+                "user__last_name",
+                "guestFirstName",
+                "guestLastName",
+                "guestEmail",
+                "status",
+                "created_at",
+                "stripe_session_id",
             )
         )
         for pt in purchased_tickets:
             pt["ticketId"] = str(pt["ticketId"])
-            pt["created_at"] = pt["created_at"].isoformat() if pt["created_at"] else None
-            pt["user"] = {
-                "username": pt.pop("user__username", None),
-                "email": pt.pop("user__email", None),
-                "first_name": pt.pop("user__first_name", None),
-                "last_name": pt.pop("user__last_name", None),
-            } if pt.get("user__username") else None
+            pt["created_at"] = (
+                pt["created_at"].isoformat() if pt["created_at"] else None
+            )
+            pt["user"] = (
+                {
+                    "username": pt.pop("user__username", None),
+                    "email": pt.pop("user__email", None),
+                    "first_name": pt.pop("user__first_name", None),
+                    "last_name": pt.pop("user__last_name", None),
+                }
+                if pt.get("user__username")
+                else None
+            )
 
         # Assemble final response
         return {
@@ -582,10 +644,14 @@ async def get_event_detail(
                     "total_rsvps": len(rsvp_tickets),
                     "total_ticket_types": len(ticket_types),
                     "total_purchased_tickets": len(purchased_tickets),
-                    "total_tickets_sold": sum(tt.get("ticket_sold", 0) or 0 for tt in ticket_types),
-                    "total_tickets_available": sum(tt.get("available_tickets", 0) for tt in ticket_types)
-                }
-            }
+                    "total_tickets_sold": sum(
+                        tt.get("ticket_sold", 0) or 0 for tt in ticket_types
+                    ),
+                    "total_tickets_available": sum(
+                        tt.get("available_tickets", 0) for tt in ticket_types
+                    ),
+                },
+            },
         }
 
     except Http404:
@@ -593,6 +659,7 @@ async def get_event_detail(
     except Exception as e:
         print(f"[ERROR get_event_detail] {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error fetching event: {str(e)}")
+
 
 @router.post("/delete/event/{event_id}")
 async def delete_event(
@@ -625,12 +692,18 @@ async def get_colleges(current_user: CustomUser = Depends(require_admin_role)):
     @sync_to_async
     def get_colleges_data():
         """
-        Optimized database query to fetch all college data in a single query.
+        Optimized database query to fetch all college data with student and event counts.
         """
         try:
-            # Use select_related to fetch the creator user in a single JOIN query
-            # Order by name for consistent results
-            colleges_qs = College.objects.select_related("created_by").order_by("name")
+            # Use select_related and annotate to get all data in efficient queries
+            colleges_qs = (
+                College.objects.select_related("created_by")
+                .annotate(
+                    student_count=Count("membership", distinct=True),
+                    event_count=Count("college_events", distinct=True),
+                )
+                .order_by("name")
+            )
 
             college_list = []
             for college in colleges_qs:
@@ -673,6 +746,19 @@ async def get_colleges(current_user: CustomUser = Depends(require_admin_role)):
                         "city": college.city,
                         "state": college.state,
                         "campus_image": campus_image_url,
+                        "student_count": college.student_count,
+                        "event_count": college.event_count,
+                        "created_by": created_by_username,
+                        "created_at": (
+                            college.created_at.isoformat()
+                            if college.created_at
+                            else None
+                        ),
+                        "updated_at": (
+                            college.updated_at.isoformat()
+                            if college.updated_at
+                            else None
+                        ),
                     }
                 )
 
