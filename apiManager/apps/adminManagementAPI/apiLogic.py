@@ -604,7 +604,7 @@ async def delete_event(
     print(f"[delete_event] API called for event_id: {event_id} by {current_user.id}")
 
     try:
-        event = await sync_to_async(get_object_or_404)(Event, event_id=event_id)
+        event = await sync_to_async(get_object_or_404)(Event, eventId=event_id)
         await sync_to_async(event.delete)()
 
         return {"message": f"Event {event.title} has been deleted"}
