@@ -749,16 +749,12 @@ async def get_colleges(current_user: CustomUser = Depends(require_admin_role)):
                         "student_count": college.student_count,
                         "event_count": college.event_count,
                         "created_by": created_by_username,
-                        "created_at": (
-                            college.created_at.isoformat()
-                            if college.created_at
-                            else None
-                        ),
-                        "updated_at": (
-                            college.updated_at.isoformat()
-                            if college.updated_at
-                            else None
-                        ),
+                        "address": college.address,
+                        "zip_code": college.zip_code,
+                        "country": college.country,
+                        "motto": college.motto,
+                        "email_domain": college.email_domain,
+                        "contact_website": college.contact_website,
                     }
                 )
 
