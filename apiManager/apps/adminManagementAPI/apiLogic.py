@@ -882,7 +882,7 @@ async def create_college(
         )
 
 
-@router.post("/colleges/{collge_id}/delete")
+@router.post("/colleges/{college_id}/delete")
 async def delete_college(
     college_id: UUID, current_user: CustomUser = Depends(require_admin_role)
 ):
