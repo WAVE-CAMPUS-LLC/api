@@ -780,3 +780,55 @@ async def get_colleges(current_user: CustomUser = Depends(require_admin_role)):
 @router.get("/colleges/create/form/fields")
 async def get_college_create_form_fields():
     return get_form_fields(CollegeForm)
+
+
+@router.post("/colleges/create")
+async def create_college(
+    request: Request, current_user: CustomUser = Depends(require_admin_role)
+):
+    """
+    Create a new college - requires Admin or Super Admin role.
+    """
+    print(f"[create_college] Function called by user_id: {current_user.id}")
+    try:
+        # Get form data from request
+        form_data = await request.form()
+        form_dict = dict(form_data)
+        print(
+            f"[create_college] Received form data with fields: {', '.join(form_dict.keys())}"
+        )
+
+        @sync_to_async
+        def validate_and_create_college(form_data, created_by_user):
+            # Create and validate the form
+            form = CollegeForm(form_data)
+            if form.is_valid():
+                # Save the college with the current user as creator
+                college = form.save(commit=False)
+                college.created_by = created_by_user
+                college.save()
+                return None, status.HTTP_201_CREATED
+            else:
+                return form.errors, status.HTTP_400_BAD_REQUEST
+
+        # Run validation and college creation
+        errors, status_code = await validate_and_create_college(form_dict, current_user)
+
+        if errors:
+            print(f"[create_college] College creation failed with errors: {errors}")
+            return JSONResponse(content=errors, status_code=status_code)
+        else:
+            print(
+                f"[create_college] College created successfully with status code {status_code}"
+            )
+            return JSONResponse(
+                content={"message": "College created successfully"},
+                status_code=status_code,
+            )
+    except Exception as e:
+        traceback_str = traceback.format_exc()
+        print(f"[create_college] College creation error: {str(e)}\n{traceback_str}")
+        return JSONResponse(
+            content={"error": f"An unexpected error occurred: {str(e)}"},
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
