@@ -51,7 +51,8 @@ from eventTicketsApp.models import Ticket, RSVPTicket
 from accountManagementApp.models import UserProfile
 from adminDashboardApp.models import College
 from collegeManagementApp.models import Membership, CollegeEventLink
-
+from adminDashboardApp.forms import CollegeForm
+from apiManager.utilities import get_form_fields
 
 router = APIRouter()
 
@@ -774,3 +775,8 @@ async def get_colleges(current_user: CustomUser = Depends(require_admin_role)):
         raise HTTPException(
             status_code=500, detail=f"Error fetching colleges: {str(e)}"
         )
+
+
+@router.get("/colleges/create/form/fields")
+async def get_college_create_form_fields():
+    return get_form_fields(CollegeForm)
