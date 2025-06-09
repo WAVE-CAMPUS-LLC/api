@@ -743,7 +743,7 @@ async def get_colleges(current_user: CustomUser = Depends(require_admin_role)):
                     {
                         "name": college.name,
                         "logo": logo_url,
-                        "id": college.collegeId,
+                        "college_id": str(college.collegeId),
                         "city": college.city,
                         "state": college.state,
                         "campus_image": campus_image_url,
