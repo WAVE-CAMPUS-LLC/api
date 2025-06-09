@@ -880,3 +880,25 @@ async def create_college(
             content={"error": f"An unexpected error occurred: {str(e)}"},
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
+
+
+@router.post("/colleges/{collge_id}/delete")
+async def delete_college(
+    college_id: UUID, current_user: CustomUser = Depends(require_admin_role)
+):
+    """
+    Delete a college - requires Admin or Super Admin role.
+    """
+    print(
+        f"[delete_college] API called for college_id: {college_id} by {current_user.id}"
+    )
+
+    try:
+        college = await sync_to_async(get_object_or_404)(College, collegeId=college_id)
+        await sync_to_async(college.delete)()
+
+        return {"message": f"College {college.name} has been deleted"}
+
+    except Exception as e:
+        print(f"Error with deletion {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error deleting college: {str(e)}")
