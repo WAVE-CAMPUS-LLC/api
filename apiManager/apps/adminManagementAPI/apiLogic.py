@@ -793,26 +793,74 @@ async def create_college(
     try:
         # Get form data from request
         form_data = await request.form()
-        form_dict = dict(form_data)
+        form_dict = {}
+        file_dict = {}
+
+        # Separate regular form fields from file uploads
+        for key, value in form_data.items():
+            # Check if this is an UploadFile by checking for filename and read methods
+            if hasattr(value, "filename") and hasattr(
+                value, "read"
+            ):  # This is an UploadFile
+                if value.filename:  # Only process if a file was actually uploaded
+                    print(
+                        f"[create_college] Processing file upload: {key} = {value.filename}"
+                    )
+                    # Convert UploadFile to Django-compatible file
+                    file_content = await value.read()
+                    django_file = ContentFile(file_content, name=value.filename)
+                    file_dict[key] = django_file
+                    # Reset file position for potential re-reading
+                    await value.seek(0)
+                else:
+                    # Empty file upload, skip it
+                    print(
+                        f"[create_college] Skipping empty file upload for field: {key}"
+                    )
+            else:
+                form_dict[key] = value
+
         print(
             f"[create_college] Received form data with fields: {', '.join(form_dict.keys())}"
         )
+        if file_dict:
+            print(
+                f"[create_college] Received file uploads: {', '.join(file_dict.keys())}"
+            )
 
         @sync_to_async
-        def validate_and_create_college(form_data, created_by_user):
-            # Create and validate the form
-            form = CollegeForm(form_data)
+        def validate_and_create_college(form_data, file_data, created_by_user):
+            print(f"[create_college] Form data keys: {list(form_data.keys())}")
+            print(f"[create_college] File data keys: {list(file_data.keys())}")
+
+            # Create and validate the form with both regular data and files
+            form = CollegeForm(form_data, file_data)
+
             if form.is_valid():
                 # Save the college with the current user as creator
                 college = form.save(commit=False)
                 college.created_by = created_by_user
                 college.save()
+
+                # Log successful file attachments
+                if college.logo:
+                    print(
+                        f"[create_college] Logo saved successfully: {college.logo.name}"
+                    )
+                if college.campus_image:
+                    print(
+                        f"[create_college] Campus image saved successfully: {college.campus_image.name}"
+                    )
+
                 return None, status.HTTP_201_CREATED
             else:
+                print(f"[create_college] Form validation errors: {form.errors}")
                 return form.errors, status.HTTP_400_BAD_REQUEST
 
         # Run validation and college creation
-        errors, status_code = await validate_and_create_college(form_dict, current_user)
+        errors, status_code = await validate_and_create_college(
+            form_dict, file_dict, current_user
+        )
 
         if errors:
             print(f"[create_college] College creation failed with errors: {errors}")
