@@ -1232,6 +1232,136 @@ async def delete_college(
         raise HTTPException(status_code=500, detail=f"Error deleting college: {str(e)}")
 
 
+@router.get("/colleges/{college_id}/info")
+async def get_college_info(
+    college_id: UUID, current_user: CustomUser = Depends(require_admin_role)
+):
+    """
+    Get detailed college information - requires Admin or Super Admin role.
+    """
+    print(
+        f"[get_college_info] API called for college_id: {college_id} by {current_user.id}"
+    )
+
+    @database_sync_to_async
+    def get_college_details(college_id):
+        try:
+            # Get college with related data
+            college = get_object_or_404(College, collegeId=college_id)
+
+            # Get member count
+            member_count = UserProfile.objects.filter(college=college).count()
+
+            # Get event count through CollegeEventLink
+            event_count = 0
+            try:
+                event_count = CollegeEventLink.objects.filter(college=college).count()
+            except Exception as e:
+                print(
+                    f"[get_college_info] Warning: Could not get event count: {str(e)}"
+                )
+
+            # Get event count from hosted events as well
+            hosted_events_count = Event.objects.filter(
+                display_event_on_college=True, host__user_profile__college=college
+            ).count()
+
+            total_events = event_count + hosted_events_count
+
+            # Safely get file URLs
+            logo_url = None
+            campus_image_url = None
+
+            try:
+                logo_url = college.logo.url if college.logo else None
+            except Exception as e:
+                print(
+                    f"[get_college_info] Warning: logo error for college {college.name}: {e}"
+                )
+
+            try:
+                campus_image_url = (
+                    college.campus_image.url if college.campus_image else None
+                )
+            except Exception as e:
+                print(
+                    f"[get_college_info] Warning: campus_image error for college {college.name}: {e}"
+                )
+
+            # Safely get creator information
+            created_by_info = None
+            if college.created_by:
+                try:
+                    created_by_info = {
+                        "id": college.created_by.id,
+                        "username": college.created_by.username,
+                        "first_name": college.created_by.first_name,
+                        "last_name": college.created_by.last_name,
+                        "email": college.created_by.email,
+                    }
+                except Exception as e:
+                    print(
+                        f"[get_college_info] Warning: created_by error for college {college.name}: {e}"
+                    )
+
+            # Build comprehensive college data
+            college_data = {
+                "collegeId": str(college.collegeId),
+                "name": college.name,
+                "address": college.address,
+                "city": college.city,
+                "state": college.state,
+                "zip_code": college.zip_code,
+                "country": college.country,
+                "motto": college.motto,
+                "email_domain": college.email_domain,
+                "contact_website": college.contact_website,
+                "logo": logo_url,
+                "campus_image": campus_image_url,
+                "created_by": created_by_info,
+                "created_at": (
+                    college.created_at.isoformat() if college.created_at else None
+                ),
+                "updated_at": (
+                    college.updated_at.isoformat() if college.updated_at else None
+                ),
+                "stats": {
+                    "member_count": member_count,
+                    "event_count": total_events,
+                    "linked_events": event_count,
+                    "hosted_events": hosted_events_count,
+                },
+            }
+
+            print(
+                f"[get_college_info] Successfully retrieved info for college: {college.name}"
+            )
+            return college_data
+
+        except College.DoesNotExist:
+            print(f"[get_college_info] College not found with ID: {college_id}")
+            return None
+        except Exception as e:
+            print(f"[get_college_info] Database error: {str(e)}")
+            raise e
+
+    try:
+        college_info = await get_college_details(college_id)
+        if college_info is None:
+            raise HTTPException(status_code=404, detail="College not found")
+
+        print(f"[get_college_info] Returning info for college: {college_info['name']}")
+        return college_info
+
+    except Exception as e:
+        if isinstance(e, HTTPException):
+            raise e
+        print(f"[get_college_info] Error in get_college_info: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error fetching college info: {str(e)}"
+        )
+
+
 @router.get("/colleges/{college_id}/edit/form/fields")
 async def get_college_edit_form_fields():
     return get_form_fields(EditCollegeForm)
