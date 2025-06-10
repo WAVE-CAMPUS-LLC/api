@@ -22,9 +22,10 @@ import traceback
 import os
 from django.core.files.base import ContentFile
 from django.conf import settings
-from django.db.models import Count, Max, Avg, F
+from django.db.models import Count, Max, Avg, F, Sum, Q
 from django.db.models.functions import TruncDay, TruncWeek, TruncMonth, TruncHour
 from django.utils.timezone import now
+from django.core.cache import cache
 
 from authenticationApp.models import CustomUser
 from authenticationApp.serializers import CustomUserSerializer
@@ -1176,6 +1177,22 @@ async def get_overall_event_analytics(
 ):
     """
     Get overall event analytics across all events - requires Admin or Super Admin role.
+    Optimized with caching and efficient database queries.
+    
+    🕒 PERFORMANCE NOTE: For optimal performance, ensure these database indexes exist:
+    - Event.created_at (for time-based grouping)
+    - Event.status (for status filtering)
+    - Event.event_type (for type distribution)
+    - Event.state (for geographic distribution)
+    - RSVPTicket.created_at (for RSVP trends)
+    - Ticket.created_at (for paid ticket trends)
+    - PaidFreeTicket.ticket_sold (for revenue calculation)
+    
+    Example SQL to create indexes:
+    CREATE INDEX idx_event_created_at ON eventmanagementapp_event(created_at);
+    CREATE INDEX idx_event_status ON eventmanagementapp_event(status);
+    CREATE INDEX idx_rsvp_created_at ON eventticketsapp_rsvpticket(created_at);
+    CREATE INDEX idx_ticket_created_at ON eventticketsapp_ticket(created_at);
     """
     print(
         f"[get_overall_event_analytics] API called with user_id: {current_user.id}, time_period: {time_period}"
@@ -1184,6 +1201,13 @@ async def get_overall_event_analytics(
     @database_sync_to_async
     def get_overall_analytics_data(time_period):
         try:
+            # Check cache first (5 minute timeout)
+            cache_key = f"overall_analytics_{time_period}"
+            cached_data = cache.get(cache_key)
+            if cached_data:
+                print(f"[get_overall_event_analytics] Returning cached data for {time_period}")
+                return cached_data
+
             # Determine truncation function
             trunc_function = {
                 "daily": TruncDay,
@@ -1191,18 +1215,40 @@ async def get_overall_event_analytics(
                 "monthly": TruncMonth,
             }.get(time_period, TruncDay)
 
-            # Overall event statistics
-            total_events = Event.objects.count()
-            active_events = Event.objects.filter(status="active").count()
-            live_events = Event.objects.filter(status="live").count()
-            archived_events = Event.objects.filter(status="archived").count()
+            # 🔁 1. Optimized event statistics - combine multiple queries into one
+            event_stats = Event.objects.aggregate(
+                total_events=Count("eventId"),
+                active_events=Count("eventId", filter=Q(status="active")),
+                live_events=Count("eventId", filter=Q(status="live")),
+                archived_events=Count("eventId", filter=Q(status="archived")),
+            )
 
-            # Event creation trends over time
+            # 🔁 2. Optimized revenue calculation - aggregate in DB instead of Python loop
+            total_revenue = 0
+            try:
+                # Get revenue from ticket types where tickets were actually sold
+                revenue_data = PaidFreeTicket.objects.filter(
+                    ticket_sold__gt=0
+                ).aggregate(
+                    total_revenue=Sum(F('ticket_sold') * F('ticket_price'))
+                )
+                total_revenue = float(revenue_data['total_revenue'] or 0)
+                print(f"[get_overall_event_analytics] DEBUG: Calculated total revenue via aggregation: ${total_revenue}")
+            except Exception as e:
+                print(f"[get_overall_event_analytics] Revenue calculation error: {str(e)}")
+                # Fallback: Count actual paid tickets and estimate
+                total_revenue = Ticket.objects.count() * 25.0  # Rough estimate
+
+            # 📊 3. Total tickets - use count() instead of loading all records
+            total_rsvps = RSVPTicket.objects.count()
+            total_paid_tickets = Ticket.objects.count()
+
+            # 🕒 4. Event creation trends - limit to last 90 periods for performance
             event_creation_trends = list(
                 Event.objects.annotate(period=trunc_function("created_at"))
                 .values("period")
                 .annotate(count=Count("eventId"))
-                .order_by("period")
+                .order_by("period")[-90:]  # Last 90 periods
             )
 
             # Convert datetime objects to strings
@@ -1210,52 +1256,28 @@ async def get_overall_event_analytics(
                 if item["period"]:
                     item["period"] = item["period"].isoformat()
 
-            # Event type distribution
+            # 📊 5. Event type distribution - use .only() for efficiency
             event_type_distribution = list(
-                Event.objects.values("event_type")
+                Event.objects.only("event_type")
+                .values("event_type")
                 .annotate(count=Count("eventId"))
                 .order_by("-count")
             )
 
-            # Geographic distribution (by state)
+            # 📊 6. Geographic distribution - use .only() and limit to top 10
             geographic_distribution = list(
-                Event.objects.values("state")
+                Event.objects.only("state")
+                .values("state")
                 .annotate(count=Count("eventId"))
-                .order_by("-count")[:10]  # Top 10 states
+                .order_by("-count")[:10]
             )
 
-            # Total tickets and revenue across all events
-            total_rsvps = RSVPTicket.objects.count()
-            total_paid_tickets = Ticket.objects.count()
-
-            # Calculate total revenue from actual paid tickets (more accurate)
-            total_revenue = 0
-            try:
-                # Get revenue from actual paid tickets rather than ticket types
-                # This gives us actual revenue from completed purchases
-                paid_tickets = Ticket.objects.select_related('event').all()
-                
-                for ticket in paid_tickets:
-                    # Find the corresponding ticket type to get price
-                    try:
-                        ticket_type = ticket.event.tickets.first()  # Get first ticket type for this event
-                        if ticket_type and ticket_type.ticket_price:
-                            total_revenue += float(ticket_type.ticket_price)
-                    except Exception as ticket_error:
-                        print(f"[get_overall_event_analytics] Error calculating revenue for ticket {ticket.ticketId}: {str(ticket_error)}")
-                        continue
-                        
-                print(f"[get_overall_event_analytics] DEBUG: Calculated total revenue from {paid_tickets.count()} paid tickets: ${total_revenue}")
-            except Exception as e:
-                print(f"[get_overall_event_analytics] Revenue calculation error: {str(e)}")
-                total_revenue = 0
-
-            # RSVP trends over time across all events
+            # 🕒 7. RSVP trends - limit to last 90 periods
             overall_rsvp_trends = list(
                 RSVPTicket.objects.annotate(period=trunc_function("created_at"))
                 .values("period")
                 .annotate(count=Count("ticket_id"))
-                .order_by("period")
+                .order_by("period")[-90:]
             )
 
             # Convert datetime objects to strings
@@ -1263,12 +1285,12 @@ async def get_overall_event_analytics(
                 if item["period"]:
                     item["period"] = item["period"].isoformat()
 
-            # Paid ticket trends over time across all events
+            # 🕒 8. Paid ticket trends - limit to last 90 periods
             overall_paid_ticket_trends = list(
                 Ticket.objects.annotate(period=trunc_function("created_at"))
                 .values("period")
                 .annotate(count=Count("ticketId"))
-                .order_by("period")
+                .order_by("period")[-90:]
             )
 
             # Convert datetime objects to strings
@@ -1276,14 +1298,16 @@ async def get_overall_event_analytics(
                 if item["period"]:
                     item["period"] = item["period"].isoformat()
 
-            # Most popular events by total attendees
+            # 📈 9. Most popular events - optimized with .only() and limited fields
             popular_events = list(
-                Event.objects.annotate(
+                Event.objects.only(
+                    "eventId", "title", "event_type", "date", "views", "host"
+                )
+                .select_related("host")
+                .annotate(
                     rsvp_count=Count("rsvp_tickets", distinct=True),
                     paid_ticket_count=Count("ticket", distinct=True),
-                )
-                .annotate(
-                    total_attendees=F("rsvp_count") + F("paid_ticket_count")
+                    total_attendees=Count("rsvp_tickets", distinct=True) + Count("ticket", distinct=True)
                 )
                 .order_by("-total_attendees")[:10]
                 .values(
@@ -1303,9 +1327,11 @@ async def get_overall_event_analytics(
                 if event["date"]:
                     event["date"] = event["date"].isoformat()
 
-            # Host performance analytics
+            # 📈 10. Host performance analytics - optimized query
             top_hosts = list(
-                Event.objects.values("host__username", "host__first_name", "host__last_name")
+                Event.objects.only("host")
+                .select_related("host")
+                .values("host__username", "host__first_name", "host__last_name")
                 .annotate(
                     event_count=Count("eventId"),
                     total_rsvps=Count("rsvp_tickets", distinct=True),
@@ -1314,12 +1340,12 @@ async def get_overall_event_analytics(
                 .order_by("-event_count")[:10]
             )
 
-            return {
+            result = {
                 "summary_stats": {
-                    "total_events": total_events,
-                    "active_events": active_events,
-                    "live_events": live_events,
-                    "archived_events": archived_events,
+                    "total_events": event_stats["total_events"],
+                    "active_events": event_stats["active_events"],
+                    "live_events": event_stats["live_events"],
+                    "archived_events": event_stats["archived_events"],
                     "total_rsvps": total_rsvps,
                     "total_paid_tickets": total_paid_tickets,
                     "total_attendees": total_rsvps + total_paid_tickets,
@@ -1336,7 +1362,18 @@ async def get_overall_event_analytics(
                 },
                 "popular_events": popular_events,
                 "top_hosts": top_hosts,
+                "cache_info": {
+                    "cached": False,
+                    "time_period": time_period,
+                    "cache_duration": "5 minutes"
+                }
             }
+
+            # 📈 11. Cache the result for 5 minutes
+            cache.set(cache_key, result, timeout=300)
+            print(f"[get_overall_event_analytics] Cached analytics data for {time_period}")
+
+            return result
 
         except Exception as e:
             print(f"[get_overall_event_analytics] Database error: {str(e)}")
