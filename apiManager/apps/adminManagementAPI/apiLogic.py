@@ -936,7 +936,7 @@ async def get_all_events(current_user: CustomUser = Depends(require_admin_role))
 
     try:
         events_qs = Event.objects.only(
-            "eventId", "host", "title", "date"
+            "eventId", "host", "title", "date", "header_photo"
         )
         events = await database_sync_to_async(list)(events_qs)
         events_info = []
@@ -947,6 +947,7 @@ async def get_all_events(current_user: CustomUser = Depends(require_admin_role))
                     "host": event.host,
                     "title": event.title,
                     "date": event.date,
+                    "header_photo_url": event.header_photo.url if event.header_photo else None
                 }
             )
         return events_info
