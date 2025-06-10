@@ -1697,6 +1697,117 @@ async def get_college_members(
         )
 
 
+@router.post("/colleges/{college_id}/members/{user_id}/remove")
+async def remove_college_member(
+    college_id: UUID,
+    user_id: int,
+    current_user: CustomUser = Depends(require_admin_role),
+):
+    """
+    Remove a member from a college - requires Admin or Super Admin role.
+    """
+    print(
+        f"[remove_college_member] API called for college_id: {college_id}, user_id: {user_id} by {current_user.id}"
+    )
+
+    @database_sync_to_async
+    def remove_member_from_college(college_id, user_id):
+        try:
+            # First verify the college exists
+            college = get_object_or_404(College, collegeId=college_id)
+            print(f"[remove_college_member] Found college: {college.name}")
+
+            # Verify the user exists
+            user = get_object_or_404(CustomUser, id=user_id)
+            print(f"[remove_college_member] Found user: {user.username}")
+
+            # Track what was removed
+            removed_items = []
+
+            # Remove college association from UserProfile
+            try:
+                if hasattr(user, "user_profile") and user.user_profile:
+                    user_profile = user.user_profile
+                    if user_profile.college == college:
+                        user_profile.college = None
+                        user_profile.save()
+                        removed_items.append("user_profile_college_association")
+                        print(
+                            f"[remove_college_member] Removed college association from user profile"
+                        )
+            except Exception as e:
+                print(
+                    f"[remove_college_member] Warning: Could not remove user profile college association: {str(e)}"
+                )
+
+            # Remove Membership records
+            try:
+                deleted_memberships = Membership.objects.filter(
+                    user=user, college=college
+                ).delete()
+                if deleted_memberships[0] > 0:
+                    removed_items.append(f"membership_records_{deleted_memberships[0]}")
+                    print(
+                        f"[remove_college_member] Removed {deleted_memberships[0]} membership record(s)"
+                    )
+            except Exception as e:
+                print(
+                    f"[remove_college_member] Warning: Could not remove membership records: {str(e)}"
+                )
+
+            if not removed_items:
+                return {
+                    "success": False,
+                    "message": f"User {user.username} was not a member of {college.name}",
+                    "removed_items": [],
+                }
+
+            return {
+                "success": True,
+                "message": f"Successfully removed {user.username} from {college.name}",
+                "removed_items": removed_items,
+                "user": {
+                    "id": user.id,
+                    "username": user.username,
+                    "first_name": user.first_name,
+                    "last_name": user.last_name,
+                },
+                "college": {
+                    "id": str(college.collegeId),
+                    "name": college.name,
+                },
+            }
+
+        except College.DoesNotExist:
+            print(f"[remove_college_member] College not found with ID: {college_id}")
+            return {"success": False, "message": "College not found"}
+        except CustomUser.DoesNotExist:
+            print(f"[remove_college_member] User not found with ID: {user_id}")
+            return {"success": False, "message": "User not found"}
+        except Exception as e:
+            print(f"[remove_college_member] Database error: {str(e)}")
+            raise e
+
+    try:
+        result = await remove_member_from_college(college_id, user_id)
+
+        if not result["success"]:
+            raise HTTPException(status_code=404, detail=result["message"])
+
+        print(
+            f"[remove_college_member] Successfully removed member: {result['message']}"
+        )
+        return result
+
+    except Exception as e:
+        if isinstance(e, HTTPException):
+            raise e
+        print(f"[remove_college_member] Error in remove_college_member: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error removing college member: {str(e)}"
+        )
+
+
 @router.get("/colleges/{college_id}/events")
 async def get_college_events(
     college_id: UUID, current_user: CustomUser = Depends(require_admin_role)
