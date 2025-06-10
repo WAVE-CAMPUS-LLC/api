@@ -689,38 +689,6 @@ async def delete_event(
         raise HTTPException(status_code=500, detail=f"Error deleting event: {str(e)}")
 
 
-# USER ANALYTICS ADMIN API
-@router.get("/userAnalytics/getAll")
-async def get_all_users(current_user: CustomUser = Depends(require_admin_role)):
-    """
-    Get list of user analytics with optimized database queries.
-    """
-    print(f"[get_user_analytics] API called with user_id: {current_user.id}")
-
-    try:
-        users_qs = CustomUser.objects.only(
-            "username", "first_name", "last_name", "user_id"
-        )
-        users = await database_sync_to_async(list)(users_qs)
-        user_info = []
-        for user in users:
-            user_info.append(
-                {
-                    "username": user.username,
-                    "first_name": user.first_name,
-                    "last_name": user.last_name,
-                    "user_id": user.user_id,
-                }
-            )
-        return user_info
-
-    except Exception as e:
-        print(f"[get_user_analytics] Error in get_user_analytics: {str(e)}")
-        raise HTTPException(
-            status_code=500, detail=f"Error fetching user analytics: {str(e)}"
-        )
-
-
 @router.get("/userAnalytics/signups")
 async def get_user_signups(
     period: str = Query("daily", description="Time period: daily, weekly, or monthly"),
@@ -959,52 +927,364 @@ async def get_user_logins(
             status_code=500, detail=f"Error fetching login analytics: {str(e)}"
         )
 
+@router.get("/eventAnalytics/getAll")
+async def get_all_events(current_user: CustomUser = Depends(require_admin_role)):
+    """
+    Get list of events
+    """
+    print(f"[get_all_events] API called with user_id: {current_user.id}")
 
-@router.get("/userAnalytics/demographics")
-async def get_user_demographics(
-    group_by: str = Query(
-        "home_state",
-        description="Group by field: gender, home_state, graduation_year, major, status",
+    try:
+        events_qs = Event.objects.only(
+            "eventId", "host", "title", "date"
+        )
+        events = await database_sync_to_async(list)(events_qs)
+        events_info = []
+        for event in events:
+            events_info.append(
+                {
+                    "eventId": event.eventId,
+                    "host": event.host,
+                    "title": event.title,
+                    "date": event.date,
+                }
+            )
+        return events_info
+
+    except Exception as e:
+        print(f"[get_all_events] Error in get_all_events: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error fetching get_all_events: {str(e)}"
+        )
+
+@router.get("/eventAnalytics/specific/{event_id}")
+async def get_event_specific_analytics(
+    event_id: UUID,
+    time_period: str = Query(
+        "daily", description="Time period: daily, weekly, or monthly"
     ),
     current_user: CustomUser = Depends(require_admin_role),
 ):
     """
-    Get user demographics analytics grouped by specified field - requires Admin or Super Admin role.
+    Get detailed analytics for a specific event - requires Admin or Super Admin role.
     """
     print(
-        f"[get_user_demographics] API called with user_id: {current_user.id}, group_by: {group_by}"
+        f"[get_event_specific_analytics] API called with user_id: {current_user.id}, event_id: {event_id}, time_period: {time_period}"
     )
 
     @database_sync_to_async
-    def get_demographic_data(group_by):
-        valid_fields = ["gender", "home_state", "graduation_year", "major", "status"]
-        if group_by not in valid_fields:
-            raise ValueError(f"Invalid group_by field. Must be one of: {valid_fields}")
+    def get_event_analytics_data(event_id, time_period):
+        try:
+            # Verify event exists
+            event = get_object_or_404(Event, eventId=event_id)
+            
+            # Determine truncation function
+            trunc_function = {
+                "daily": TruncDay,
+                "weekly": TruncWeek,
+                "monthly": TruncMonth,
+            }.get(time_period, TruncDay)
 
-        demographics = (
-            UserProfile.objects.values(group_by)
-            .annotate(count=Count("id"))
-            .order_by(group_by)
-        )
+            # Basic event information
+            event_info = {
+                "eventId": str(event.eventId),
+                "title": event.title,
+                "event_type": event.event_type,
+                "date": event.date.isoformat() if event.date else None,
+                "status": event.status,
+                "admin_status": event.admin_status,
+                "views": event.views,
+                "host": {
+                    "username": event.host.username,
+                    "first_name": event.host.first_name,
+                    "last_name": event.host.last_name,
+                },
+                "location": {
+                    "city": event.city,
+                    "state": event.state,
+                    "country": event.country,
+                },
+            }
 
-        labels = [demo[group_by] or "Unknown" for demo in demographics]
-        counts = [demo["count"] for demo in demographics]
+            # RSVP analytics over time
+            rsvp_trends = list(
+                RSVPTicket.objects.filter(event=event)
+                .annotate(period=trunc_function("created_at"))
+                .values("period")
+                .annotate(count=Count("id"))
+                .order_by("period")
+            )
 
-        return {"labels": labels, "counts": counts}
+            # Convert datetime objects to strings
+            for item in rsvp_trends:
+                if item["period"]:
+                    item["period"] = item["period"].isoformat()
+
+            # Paid ticket analytics over time
+            paid_ticket_trends = list(
+                Ticket.objects.filter(event=event)
+                .annotate(period=trunc_function("created_at"))
+                .values("period")
+                .annotate(count=Count("id"))
+                .order_by("period")
+            )
+
+            # Convert datetime objects to strings
+            for item in paid_ticket_trends:
+                if item["period"]:
+                    item["period"] = item["period"].isoformat()
+
+            # Ticket type breakdown
+            ticket_types = list(
+                event.tickets.all().values(
+                    "ticket_name", "ticket_quantity", "ticket_sold", "ticket_price"
+                )
+            )
+
+            # Revenue calculation
+            total_revenue = 0
+            for ticket_type in ticket_types:
+                sold = ticket_type.get("ticket_sold", 0) or 0
+                price = ticket_type.get("ticket_price", 0) or 0
+                total_revenue += sold * float(price)
+
+            # RSVP summary
+            total_rsvps = RSVPTicket.objects.filter(event=event).count()
+            total_paid_tickets = Ticket.objects.filter(event=event).count()
+
+            # Guest list visibility analytics
+            rsvps_on_guestlist = RSVPTicket.objects.filter(
+                event=event, display_on_guestlist=True
+            ).count()
+
+            return {
+                "event_info": event_info,
+                "summary_stats": {
+                    "total_rsvps": total_rsvps,
+                    "total_paid_tickets": total_paid_tickets,
+                    "total_attendees": total_rsvps + total_paid_tickets,
+                    "total_revenue": total_revenue,
+                    "rsvps_on_guestlist": rsvps_on_guestlist,
+                    "ticket_types_count": len(ticket_types),
+                },
+                "trends": {
+                    "rsvp_trends": rsvp_trends,
+                    "paid_ticket_trends": paid_ticket_trends,
+                },
+                "ticket_breakdown": ticket_types,
+            }
+
+        except Event.DoesNotExist:
+            return None
+        except Exception as e:
+            print(f"[get_event_specific_analytics] Database error: {str(e)}")
+            raise e
 
     try:
-        result = await get_demographic_data(group_by)
+        if time_period not in ["daily", "weekly", "monthly"]:
+            raise HTTPException(status_code=400, detail="Invalid time period")
+
+        result = await get_event_analytics_data(event_id, time_period)
+        if result is None:
+            raise HTTPException(status_code=404, detail="Event not found")
+
         print(
-            f"[get_user_demographics] Returning {len(result['labels'])} demographic groups"
+            f"[get_event_specific_analytics] Returning analytics for event: {result['event_info']['title']}"
         )
         return result
 
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        print(f"[get_user_demographics] Error: {str(e)}")
+        print(f"[get_event_specific_analytics] Error: {str(e)}")
         raise HTTPException(
-            status_code=500, detail=f"Error fetching demographic analytics: {str(e)}"
+            status_code=500, detail=f"Error fetching event analytics: {str(e)}"
+        )
+
+
+@router.get("/eventAnalytics/overall")
+async def get_overall_event_analytics(
+    time_period: str = Query(
+        "daily", description="Time period: daily, weekly, or monthly"
+    ),
+    current_user: CustomUser = Depends(require_admin_role),
+):
+    """
+    Get overall event analytics across all events - requires Admin or Super Admin role.
+    """
+    print(
+        f"[get_overall_event_analytics] API called with user_id: {current_user.id}, time_period: {time_period}"
+    )
+
+    @database_sync_to_async
+    def get_overall_analytics_data(time_period):
+        try:
+            # Determine truncation function
+            trunc_function = {
+                "daily": TruncDay,
+                "weekly": TruncWeek,
+                "monthly": TruncMonth,
+            }.get(time_period, TruncDay)
+
+            # Overall event statistics
+            total_events = Event.objects.count()
+            active_events = Event.objects.filter(status="active").count()
+            live_events = Event.objects.filter(status="live").count()
+            archived_events = Event.objects.filter(status="archived").count()
+
+            # Event creation trends over time
+            event_creation_trends = list(
+                Event.objects.annotate(period=trunc_function("created_at"))
+                .values("period")
+                .annotate(count=Count("id"))
+                .order_by("period")
+            )
+
+            # Convert datetime objects to strings
+            for item in event_creation_trends:
+                if item["period"]:
+                    item["period"] = item["period"].isoformat()
+
+            # Event type distribution
+            event_type_distribution = list(
+                Event.objects.values("event_type")
+                .annotate(count=Count("id"))
+                .order_by("-count")
+            )
+
+            # Geographic distribution (by state)
+            geographic_distribution = list(
+                Event.objects.values("state")
+                .annotate(count=Count("id"))
+                .order_by("-count")[:10]  # Top 10 states
+            )
+
+            # Total tickets and revenue across all events
+            total_rsvps = RSVPTicket.objects.count()
+            total_paid_tickets = Ticket.objects.count()
+
+            # Calculate total revenue from all paid tickets
+            total_revenue = 0
+            try:
+                from eventTicketsApp.models import PaidFreeTicket
+                # Get all ticket types and calculate revenue
+                all_ticket_types = PaidFreeTicket.objects.all()
+                for ticket_type in all_ticket_types:
+                    sold = ticket_type.ticket_sold or 0
+                    price = ticket_type.ticket_price or 0
+                    total_revenue += sold * float(price)
+            except Exception as e:
+                print(f"[get_overall_event_analytics] Revenue calculation error: {str(e)}")
+                total_revenue = 0
+
+            # RSVP trends over time across all events
+            overall_rsvp_trends = list(
+                RSVPTicket.objects.annotate(period=trunc_function("created_at"))
+                .values("period")
+                .annotate(count=Count("id"))
+                .order_by("period")
+            )
+
+            # Convert datetime objects to strings
+            for item in overall_rsvp_trends:
+                if item["period"]:
+                    item["period"] = item["period"].isoformat()
+
+            # Paid ticket trends over time across all events
+            overall_paid_ticket_trends = list(
+                Ticket.objects.annotate(period=trunc_function("created_at"))
+                .values("period")
+                .annotate(count=Count("id"))
+                .order_by("period")
+            )
+
+            # Convert datetime objects to strings
+            for item in overall_paid_ticket_trends:
+                if item["period"]:
+                    item["period"] = item["period"].isoformat()
+
+            # Most popular events by total attendees
+            popular_events = list(
+                Event.objects.annotate(
+                    rsvp_count=Count("rsvp_tickets", distinct=True),
+                    paid_ticket_count=Count("ticket_set", distinct=True),
+                )
+                .annotate(
+                    total_attendees=F("rsvp_count") + F("paid_ticket_count")
+                )
+                .order_by("-total_attendees")[:10]
+                .values(
+                    "eventId",
+                    "title",
+                    "event_type",
+                    "date",
+                    "total_attendees",
+                    "views",
+                    "host__username",
+                )
+            )
+
+            # Convert UUIDs and dates to strings
+            for event in popular_events:
+                event["eventId"] = str(event["eventId"])
+                if event["date"]:
+                    event["date"] = event["date"].isoformat()
+
+            # Host performance analytics
+            top_hosts = list(
+                Event.objects.values("host__username", "host__first_name", "host__last_name")
+                .annotate(
+                    event_count=Count("id"),
+                    total_rsvps=Count("rsvp_tickets", distinct=True),
+                    total_paid_tickets=Count("ticket_set", distinct=True),
+                )
+                .order_by("-event_count")[:10]
+            )
+
+            return {
+                "summary_stats": {
+                    "total_events": total_events,
+                    "active_events": active_events,
+                    "live_events": live_events,
+                    "archived_events": archived_events,
+                    "total_rsvps": total_rsvps,
+                    "total_paid_tickets": total_paid_tickets,
+                    "total_attendees": total_rsvps + total_paid_tickets,
+                    "total_revenue": total_revenue,
+                },
+                "trends": {
+                    "event_creation_trends": event_creation_trends,
+                    "rsvp_trends": overall_rsvp_trends,
+                    "paid_ticket_trends": overall_paid_ticket_trends,
+                },
+                "distributions": {
+                    "event_type_distribution": event_type_distribution,
+                    "geographic_distribution": geographic_distribution,
+                },
+                "popular_events": popular_events,
+                "top_hosts": top_hosts,
+            }
+
+        except Exception as e:
+            print(f"[get_overall_event_analytics] Database error: {str(e)}")
+            raise e
+
+    try:
+        if time_period not in ["daily", "weekly", "monthly"]:
+            raise HTTPException(status_code=400, detail="Invalid time period")
+
+        result = await get_overall_analytics_data(time_period)
+        print(
+            f"[get_overall_event_analytics] Returning overall analytics with {result['summary_stats']['total_events']} total events"
+        )
+        return result
+
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        print(f"[get_overall_event_analytics] Error: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error fetching overall event analytics: {str(e)}"
         )
 
 
