@@ -115,7 +115,7 @@ async def custom_logic_endpoint(
     """
     This endpoint gets the authenticated user and allows for custom role logic.
     """
-    from asgiref.sync import sync_to_async
+    from channels.db import database_sync_to_async
 
     # Get user's groups
     user_groups = await sync_to_async(list)(

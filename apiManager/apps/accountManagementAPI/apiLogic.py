@@ -14,7 +14,7 @@ from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel
 from typing import Optional, Dict, Any
-from asgiref.sync import sync_to_async
+from channels.db import database_sync_to_async
 import traceback
 import os
 from django.core.files.base import ContentFile
@@ -63,7 +63,7 @@ async def profileOverview(user_id: int = Depends(get_current_user)):
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    @sync_to_async
+    @database_sync_to_async
     def get_profile_overview(user_id):
         try:
             user = CustomUser.objects.get(id=user_id)
@@ -114,7 +114,7 @@ async def profile_detailed(user_id: int = Depends(get_current_user)):
     """
     print(f"[profile_detailed] API called with user_id: {user_id}")
 
-    @sync_to_async
+    @database_sync_to_async
     def get_profile_detailed(user_id):
         try:
             user = CustomUser.objects.get(id=user_id)
@@ -182,7 +182,7 @@ async def update_profile_detailed(
         f"[update_profile_detailed] Profile photo provided: {profile_photo is not None}"
     )
 
-    @sync_to_async
+    @database_sync_to_async
     def update_profile_detailed(user_id, first_name, last_name, email, profile_photo):
         try:
             print(
@@ -250,7 +250,7 @@ async def update_profile_detailed(
 async def get_user_tickets(user_id: int = Depends(get_current_user)):
     print(f"[get_user_tickets] API called with user_id: {user_id}")
 
-    @sync_to_async
+    @database_sync_to_async
     def get_user_tickets_async(user_id):
         print(f"[get_user_tickets_async] Retrieving tickets for user_id: {user_id}")
         user = CustomUser.objects.get(id=user_id)
@@ -340,7 +340,7 @@ async def get_user_ticket_details(
         f"[get_user_ticket_details] API called with ticketId: {ticketId}, user_id: {user_id}"
     )
 
-    @sync_to_async
+    @database_sync_to_async
     def get_user_ticket_details_async(ticketId, user_id):
         print(
             f"[get_user_ticket_details_async] Retrieving ticket details for ticketId: {ticketId}, user_id: {user_id}"
@@ -386,7 +386,7 @@ async def favoriteEvents(user_id: int = Depends(get_current_user)):
     """
     print(f"[favoriteEvents] API called with user_id: {user_id}")
 
-    @sync_to_async
+    @database_sync_to_async
     def get_fav_events(user_id):
         try:
             print(f"[get_fav_events] Retrieving favorite events for user_id: {user_id}")
@@ -427,7 +427,7 @@ async def delete_profile(user_id: int = Depends(get_current_user)):
     """
     print(f"[delete_profile] API called with user_id: {user_id}")
 
-    @sync_to_async
+    @database_sync_to_async
     def delete_profile(user_id):
         try:
             print(f"[delete_profile] Deleting user with user_id: {user_id}")
@@ -451,7 +451,7 @@ async def delete_profile(user_id: int = Depends(get_current_user)):
 async def get_user_transactions(user_id: int = Depends(get_current_user)):
     print(f"[get_user_transactions] API called with user_id: {user_id}")
 
-    @sync_to_async
+    @database_sync_to_async
     def get_user_transactions(user_id):
         try:
             user = CustomUser.objects.get(id=user_id)
@@ -519,7 +519,7 @@ async def get_user_transactions(user_id: int = Depends(get_current_user)):
 async def get_user_payment_methods(user_id: int = Depends(get_current_user)):
     print(f"[get_user_payment_methods] API called with user_id: {user_id}")
 
-    @sync_to_async
+    @database_sync_to_async
     def get_user_payment_methods_sync(user_id):
         try:
             user = CustomUser.objects.get(id=user_id)
@@ -590,7 +590,7 @@ async def delete_payment_method(
 ):
     """Delete a payment method for the current user."""
 
-    @sync_to_async
+    @database_sync_to_async
     def get_user(user_id):
         return CustomUser.objects.get(id=user_id)
 
@@ -610,7 +610,7 @@ async def set_default_payment_method(
 ):
     """Set a default payment method for the current user."""
 
-    @sync_to_async
+    @database_sync_to_async
     def get_user(user_id):
         return CustomUser.objects.get(id=user_id)
 
@@ -638,7 +638,7 @@ async def add_payout_method_to_profile(
 ):
     """Add a payout (bank) method to the user's profile."""
 
-    @sync_to_async
+    @database_sync_to_async
     def get_user(user_id):
         return CustomUser.objects.get(id=user_id)
 
@@ -656,7 +656,7 @@ async def request_instant_payout(
 ):
     """Request an instant payout for the user if eligible."""
 
-    @sync_to_async
+    @database_sync_to_async
     def get_user(user_id):
         return CustomUser.objects.get(id=user_id)
 
@@ -686,7 +686,7 @@ async def request_instant_payout(
 async def check_host(user_id: int = Depends(get_current_user)):
     print(f"[check_host] API called with user_id: {user_id}")
 
-    @sync_to_async
+    @database_sync_to_async
     def check_user_is_host(user_id):
         try:
             print(f"[check_user_is_host] Checking if user_id: {user_id} is a host")
@@ -713,7 +713,7 @@ async def get_host_dashboard_link(user_id: int = Depends(get_current_user)):
     """
     print(f"[get_host_dashboard_link] API called with user_id: {user_id}")
 
-    @sync_to_async
+    @database_sync_to_async
     def get_host_stripe_link(user_id):
         try:
             print(
@@ -772,7 +772,7 @@ async def get_user_college(user_id: int = Depends(get_current_user)):
     """
     print(f"[get_user_college] API called with user_id: {user_id}")
 
-    @sync_to_async
+    @database_sync_to_async
     def get_user_college(user_id):
         try:
             print(f"[get_user_college] Retrieving college info for user_id: {user_id}")
@@ -810,7 +810,7 @@ async def get_user_settings(user_id: int = Depends(get_current_user)):
     """
     print(f"[get_user_settings] API called with user_id: {user_id}")
 
-    @sync_to_async
+    @database_sync_to_async
     def get_settings_async(user_id):
         try:
             print(
@@ -912,7 +912,7 @@ async def update_user_settings(
             status_code=400, detail={"error": "Missing required parameter: action"}
         )
 
-    @sync_to_async
+    @database_sync_to_async
     def update_settings_async(user_id, action, form_data, files=None):
         try:
             print(

@@ -17,7 +17,7 @@ from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel
 from typing import Optional, Dict, Any, List
-from asgiref.sync import sync_to_async
+from channels.db import database_sync_to_async
 import traceback
 import os
 from django.core.files.base import ContentFile
@@ -183,7 +183,7 @@ async def get_user_detail(
     """
     print(f"[get_user_detail] API called for user_id: {user_id} by {current_user.id}")
 
-    @sync_to_async
+    @database_sync_to_async
     def get_user_complete_data(user_id):
         try:
             # Get user with related data
@@ -686,6 +686,7 @@ async def delete_event(
         print(f"Error with deletion {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error deleting event: {str(e)}")
 
+
 # USER ANALYTICS ADMIN API
 @router.get("/userAnalytics/getAll")
 async def get_all_users(current_user: CustomUser = Depends(require_admin_role)):
@@ -695,16 +696,20 @@ async def get_all_users(current_user: CustomUser = Depends(require_admin_role)):
     print(f"[get_user_analytics] API called with user_id: {current_user.id}")
 
     try:
-        users_qs = CustomUser.objects.only("username", "first_name", "last_name", "user_id")
+        users_qs = CustomUser.objects.only(
+            "username", "first_name", "last_name", "user_id"
+        )
         users = await sync_to_async(list)(users_qs)
-        user_info = [] 
+        user_info = []
         for user in users:
-            user_info.append({
-                "username": user.username,
-                "first_name": user.first_name,
-                "last_name": user.last_name,
-                "user_id": user.user_id,
-            })
+            user_info.append(
+                {
+                    "username": user.username,
+                    "first_name": user.first_name,
+                    "last_name": user.last_name,
+                    "user_id": user.user_id,
+                }
+            )
         return user_info
 
     except Exception as e:
@@ -717,14 +722,16 @@ async def get_all_users(current_user: CustomUser = Depends(require_admin_role)):
 @router.get("/userAnalytics/signups")
 async def get_user_signups(
     period: str = Query("daily", description="Time period: daily, weekly, or monthly"),
-    current_user: CustomUser = Depends(require_admin_role)
+    current_user: CustomUser = Depends(require_admin_role),
 ):
     """
     Get user signup analytics grouped by time period - requires Admin or Super Admin role.
     """
-    print(f"[get_user_signups] API called with user_id: {current_user.id}, period: {period}")
+    print(
+        f"[get_user_signups] API called with user_id: {current_user.id}, period: {period}"
+    )
 
-    @sync_to_async
+    @database_sync_to_async
     def get_signup_data(period):
         if period == "monthly":
             # Get signups grouped by month and count the number of signups per month
@@ -783,27 +790,37 @@ async def get_user_signups(
 
 @router.get("/userAnalytics/logins")
 async def get_user_logins(
-    trend: str = Query("general", description="Trend type: general, user_activity, time_trends, ip_insights, security, retention"),
-    time_frame: str = Query("hourly", description="Time frame for time_trends: hourly, daily, monthly"),
-    current_user: CustomUser = Depends(require_admin_role)
+    trend: str = Query(
+        "general",
+        description="Trend type: general, user_activity, time_trends, ip_insights, security, retention",
+    ),
+    time_frame: str = Query(
+        "hourly", description="Time frame for time_trends: hourly, daily, monthly"
+    ),
+    current_user: CustomUser = Depends(require_admin_role),
 ):
     """
     Get user login analytics with various trend types - requires Admin or Super Admin role.
     """
-    print(f"[get_user_logins] API called with user_id: {current_user.id}, trend: {trend}")
+    print(
+        f"[get_user_logins] API called with user_id: {current_user.id}, trend: {trend}"
+    )
 
-    @sync_to_async
+    @database_sync_to_async
     def get_login_data(trend_type, time_frame):
         if trend_type == "general":
             data = {
                 "total_logins": LoginHistoryModel.objects.count(),
-                "unique_users": LoginHistoryModel.objects.values("user").distinct().count(),
+                "unique_users": LoginHistoryModel.objects.values("user")
+                .distinct()
+                .count(),
                 "active_sessions": LoginHistoryModel.objects.filter(
                     logout_time__isnull=True
                 ).count(),
                 "average_session_duration": LoginHistoryModel.objects.aggregate(
                     avg_duration=Avg(
-                        F("session_duration_minutes") + F("session_duration_seconds") / 60
+                        F("session_duration_minutes")
+                        + F("session_duration_seconds") / 60
                     )
                 )["avg_duration"]
                 or 0,
@@ -824,12 +841,14 @@ async def get_user_logins(
             }.get(time_frame, TruncHour)
 
             data = list(
-                LoginHistoryModel.objects.annotate(time_period=trunc_function("login_time"))
+                LoginHistoryModel.objects.annotate(
+                    time_period=trunc_function("login_time")
+                )
                 .values("time_period")
                 .annotate(count=Count("id"))
                 .order_by("time_period")
             )
-            
+
             # Convert datetime objects to strings for JSON serialization
             for item in data:
                 if item["time_period"]:
@@ -887,7 +906,9 @@ async def get_user_logins(
 
             # Get unique users for the last 7 days
             last_7_days = (
-                LoginHistoryModel.objects.filter(login_time__gte=today - timedelta(days=7))
+                LoginHistoryModel.objects.filter(
+                    login_time__gte=today - timedelta(days=7)
+                )
                 .values("user")
                 .distinct()
                 .count()
@@ -895,7 +916,9 @@ async def get_user_logins(
 
             # Get unique users for the last 30 days
             last_30_days = (
-                LoginHistoryModel.objects.filter(login_time__gte=today - timedelta(days=30))
+                LoginHistoryModel.objects.filter(
+                    login_time__gte=today - timedelta(days=30)
+                )
                 .values("user")
                 .distinct()
                 .count()
@@ -912,7 +935,14 @@ async def get_user_logins(
         return data
 
     try:
-        if trend not in ["general", "user_activity", "time_trends", "ip_insights", "security", "retention"]:
+        if trend not in [
+            "general",
+            "user_activity",
+            "time_trends",
+            "ip_insights",
+            "security",
+            "retention",
+        ]:
             raise HTTPException(status_code=400, detail="Invalid trend type")
 
         result = await get_login_data(trend, time_frame)
@@ -930,15 +960,20 @@ async def get_user_logins(
 
 @router.get("/userAnalytics/demographics")
 async def get_user_demographics(
-    group_by: str = Query("home_state", description="Group by field: gender, home_state, graduation_year, major, status"),
-    current_user: CustomUser = Depends(require_admin_role)
+    group_by: str = Query(
+        "home_state",
+        description="Group by field: gender, home_state, graduation_year, major, status",
+    ),
+    current_user: CustomUser = Depends(require_admin_role),
 ):
     """
     Get user demographics analytics grouped by specified field - requires Admin or Super Admin role.
     """
-    print(f"[get_user_demographics] API called with user_id: {current_user.id}, group_by: {group_by}")
+    print(
+        f"[get_user_demographics] API called with user_id: {current_user.id}, group_by: {group_by}"
+    )
 
-    @sync_to_async
+    @database_sync_to_async
     def get_demographic_data(group_by):
         valid_fields = ["gender", "home_state", "graduation_year", "major", "status"]
         if group_by not in valid_fields:
@@ -957,7 +992,9 @@ async def get_user_demographics(
 
     try:
         result = await get_demographic_data(group_by)
-        print(f"[get_user_demographics] Returning {len(result['labels'])} demographic groups")
+        print(
+            f"[get_user_demographics] Returning {len(result['labels'])} demographic groups"
+        )
         return result
 
     except ValueError as e:
@@ -977,7 +1014,7 @@ async def get_colleges(current_user: CustomUser = Depends(require_admin_role)):
     """
     print(f"[get_colleges] API called with user_id: {current_user.id}")
 
-    @sync_to_async
+    @database_sync_to_async
     def get_colleges_data():
         """
         Optimized database query to fetch all college data with student and event counts.
@@ -1115,7 +1152,7 @@ async def create_college(
                 f"[create_college] Received file uploads: {', '.join(file_dict.keys())}"
             )
 
-        @sync_to_async
+        @database_sync_to_async
         def validate_and_create_college(form_data, file_data, created_by_user):
             print(f"[create_college] Form data keys: {list(form_data.keys())}")
             print(f"[create_college] File data keys: {list(file_data.keys())}")
@@ -1244,7 +1281,7 @@ async def edit_college(
                 f"[edit_college] Received file uploads: {', '.join(file_dict.keys())}"
             )
 
-        @sync_to_async
+        @database_sync_to_async
         def validate_and_update_college(college_id, form_data, file_data):
             print(f"[edit_college] Form data keys: {list(form_data.keys())}")
             print(f"[edit_college] File data keys: {list(file_data.keys())}")
@@ -1390,7 +1427,7 @@ async def get_college_members(
         f"[get_college_members] API called for college_id: {college_id} by {current_user.id}"
     )
 
-    @sync_to_async
+    @database_sync_to_async
     def get_members_data(college_id):
         try:
             # First verify the college exists
@@ -1530,7 +1567,7 @@ async def get_college_events(
         f"[get_college_events] API called for college_id: {college_id} by {current_user.id}"
     )
 
-    @sync_to_async
+    @database_sync_to_async
     def get_events_data(college_id):
         try:
             # First verify the college exists

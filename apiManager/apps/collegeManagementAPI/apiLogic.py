@@ -1,4 +1,4 @@
-from asgiref.sync import sync_to_async
+from channels.db import database_sync_to_async
 from fastapi import APIRouter, Depends, HTTPException, status, Request, Body
 from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordRequestForm
@@ -25,7 +25,7 @@ async def explore_colleges():
     print("[DEBUG - explore_colleges] Function called")
     try:
 
-        @sync_to_async
+        @database_sync_to_async
         def get_colleges():
             college_list = []
             for college in College.objects.all():
@@ -69,7 +69,7 @@ async def get_college_details(collegeId: str):
     print(f"[DEBUG - get_college_details] Function called with collegeId: {collegeId}")
     try:
 
-        @sync_to_async
+        @database_sync_to_async
         def get_college_details_data(collegeId):
             try:
                 college = College.objects.get(collegeId=collegeId)
@@ -118,7 +118,7 @@ async def get_college_events(collegeId: str):
     print(f"[DEBUG - get_college_events] Function called with collegeId: {collegeId}")
     try:
 
-        @sync_to_async
+        @database_sync_to_async
         def get_college_events_data(collegeId):
             try:
                 college = College.objects.get(collegeId=collegeId)
@@ -175,7 +175,7 @@ async def get_college_members(collegeId: str, page: int = 1, limit: int = 20):
     )
     try:
 
-        @sync_to_async
+        @database_sync_to_async
         def get_college_members_data(collegeId, page, limit):
             try:
                 college = College.objects.get(collegeId=collegeId)
@@ -280,7 +280,7 @@ async def join_college(collegeId: str, join_request: JoinCollegeRequest):
     )
     try:
 
-        @sync_to_async
+        @database_sync_to_async
         def process_join_request(collegeId, email):
             try:
                 from django.shortcuts import get_object_or_404
@@ -397,7 +397,7 @@ async def verify_join_college(collegeId: str, verification: VerificationRequest)
     )
     try:
 
-        @sync_to_async
+        @database_sync_to_async
         def process_verification(collegeId, code):
             try:
                 from django.shortcuts import get_object_or_404
@@ -498,7 +498,7 @@ async def leave_college(collegeId: str):
     print(f"[DEBUG - leave_college] Function called with collegeId: {collegeId}")
     try:
 
-        @sync_to_async
+        @database_sync_to_async
         def process_leave_request(collegeId):
             try:
                 from django.shortcuts import get_object_or_404

@@ -3,7 +3,7 @@ from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel
 from typing import Optional
-from asgiref.sync import sync_to_async
+from channels.db import database_sync_to_async
 import traceback
 
 from authenticationApp.models import CustomUser
@@ -105,7 +105,7 @@ async def login_api(request: Request, login_data: LoginRequest):
     """
     print(f"[login_api] Function called with identifier: {login_data.identifier}")
 
-    @sync_to_async
+    @database_sync_to_async
     def login_sync(identifier, password, client_ip):
         try:
             if not identifier or not password:
@@ -268,7 +268,7 @@ async def join_api(request: Request):
         )
 
         # Run user creation in a background task to improve response time
-        @sync_to_async
+        @database_sync_to_async
         def validate_and_create_user(form_data):
             # Minimal validation for required fields to speed things up
             errors = {}

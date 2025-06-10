@@ -1,7 +1,7 @@
 from functools import wraps
 from fastapi import HTTPException, Depends
 from typing import List, Optional, Callable, Any
-from asgiref.sync import sync_to_async
+from channels.db import database_sync_to_async
 from django.contrib.auth.models import Group
 from django.shortcuts import get_object_or_404
 

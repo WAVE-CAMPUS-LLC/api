@@ -134,7 +134,7 @@ from apiManager.middleware.adminAccess import get_user_with_roles
 
 @router.get("/custom-access")
 async def custom_access(current_user: CustomUser = Depends(get_user_with_roles)):
-    from asgiref.sync import sync_to_async
+    from channels.db import database_sync_to_async
 
     # Get user's roles
     user_groups = await sync_to_async(list)(current_user.groups.values_list('name', flat=True))

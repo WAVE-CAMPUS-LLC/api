@@ -1,5 +1,6 @@
 from typing import Optional
-from asgiref.sync import sync_to_async
+from channels.db import database_sync_to_async
+from channels.db import database_sync_to_async
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordRequestForm
@@ -35,7 +36,7 @@ async def get_events_preview():
     """
     print("[get_events_preview API] Function called")
 
-    @sync_to_async
+    @database_sync_to_async
     def get_events_preview_data():
         events_list = []
         # Get 3 random events using order_by('?')
@@ -73,7 +74,7 @@ async def get_events():
     """
     print("[get_events API] Function called")
 
-    @sync_to_async
+    @database_sync_to_async
     def get_events_data():
         events_list = []
         for event in Event.objects.all():
@@ -113,7 +114,7 @@ async def get_categories():
     """
     print("[get_categories API] Function called")
 
-    @sync_to_async
+    @database_sync_to_async
     def get_categories_data():
         # Return the categories from the Event model's EXPLORE_TYPE_CHOICES
         categories = [
@@ -136,7 +137,7 @@ async def get_event_details(eventId: str):
     """
     print(f"[get_event_details API] Function called with eventId: {eventId}")
 
-    @sync_to_async
+    @database_sync_to_async
     def get_event_data(eventId):
         try:
             event = Event.objects.get(eventId=eventId)
@@ -334,7 +335,7 @@ async def get_event_host_profile(eventId: str):
     """
     print(f"[get_event_host_profile API] Function called with eventId: {eventId}")
 
-    @sync_to_async
+    @database_sync_to_async
     def get_host_profile(eventId):
         try:
             event = Event.objects.get(eventId=eventId)
@@ -374,7 +375,7 @@ async def get_event_guests(eventId: str):
     """
     print(f"[get_event_guests API] Function called with eventId: {eventId}")
 
-    @sync_to_async
+    @database_sync_to_async
     def get_guests_data(eventId):
         try:
             event = Event.objects.get(eventId=eventId)
@@ -408,7 +409,7 @@ async def toggleFavorite(eventId: str, user_id: int = Depends(get_current_user))
         f"[toggleFavorite API] Function called with eventId: {eventId}, user_id: {user_id}"
     )
 
-    @sync_to_async
+    @database_sync_to_async
     def toggle_fav_event(eventId, user_id):
         try:
             user = CustomUser.objects.get(id=user_id)
@@ -455,7 +456,7 @@ async def rsvp(
     form_data = dict(form_info)
     print(f"[rsvp API] Received form data: {form_data}")
 
-    @sync_to_async
+    @database_sync_to_async
     def rsvp_for_event(request, eventId, user_id, form_data):
         user = CustomUser.objects.filter(id=user_id).first() if user_id else None
         form_data_final = None

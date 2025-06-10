@@ -10,7 +10,7 @@ from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel
 from typing import Optional
-from asgiref.sync import sync_to_async
+from channels.db import database_sync_to_async
 import traceback
 
 from apiManager.dependencies import get_current_user
@@ -89,7 +89,7 @@ async def edit_event_endpoint(
         partial = request.method.upper() == "PATCH"
 
         # Wrap Django ORM calls and serializer processing in a synchronous function
-        @sync_to_async
+        @database_sync_to_async
         def process_edit_event():
             # Retrieve the event or raise a 404
             event = get_object_or_404(Event, eventId=eventId)
@@ -225,7 +225,7 @@ async def get_events(user_id: int = Depends(get_current_user)):
     """
     try:
 
-        @sync_to_async
+        @database_sync_to_async
         def validate_user(user_id):
             try:
                 user = CustomUser.objects.get(id=user_id)
@@ -236,7 +236,7 @@ async def get_events(user_id: int = Depends(get_current_user)):
             except CustomUser.DoesNotExist:
                 return None
 
-        @sync_to_async
+        @database_sync_to_async
         def get_events(user_id):
             try:
                 events_list = []
@@ -329,7 +329,7 @@ async def get_event_details(eventId: str, user_id: int = Depends(get_current_use
     """
     try:
 
-        @sync_to_async
+        @database_sync_to_async
         def get_event(eventId):
             event = Event.objects.filter(eventId=eventId).first()
             if not event:
@@ -429,7 +429,7 @@ async def delete_event(eventId: str, user_id: int = Depends(get_current_user)):
     """
     try:
 
-        @sync_to_async
+        @database_sync_to_async
         def delete_event(eventId):
             print(
                 f"[DEBUG - delete_event] Attempting to delete event with ID: {eventId}"
@@ -495,7 +495,7 @@ async def create_free_event(request: Request, user_id: int = Depends(get_current
                 print(f"[DEBUG - create_free_event] Text field: {key} = {value}")
 
         # Wrap Django ORM calls and form processing in a synchronous function
-        @sync_to_async
+        @database_sync_to_async
         def process_create_event():
             # Get the current user's profile.
             user = CustomUser.objects.get(id=user_id)
@@ -640,7 +640,7 @@ async def create_paid_event(request: Request, user_id: int = Depends(get_current
                 print(f"[DEBUG - create_paid_event] Text field: {key} = {value}")
 
         # Wrap Django ORM calls and form processing in a synchronous function
-        @sync_to_async
+        @database_sync_to_async
         def process_create_event():
             try:
                 # Get the current user's profile
@@ -860,7 +860,7 @@ async def get_host_stripe_account_link(user_id: int = Depends(get_current_user))
     # Use the same domain as in become_host for consistency
     site_domain = "https://waveoncampus.com"
 
-    @sync_to_async
+    @database_sync_to_async
     def process_stripe_account_check():
         try:
             # Get the user account with proper error handling
@@ -972,7 +972,7 @@ async def create_paid_free_ticket(eventId: str, request: Request):
         print(f"[DEBUG - create_paid_free_ticket] Received data: {data}")
 
         # Wrap Django ORM calls and form processing in a synchronous function
-        @sync_to_async
+        @database_sync_to_async
         def process_create_ticket(eventId, data):
             # Fetch the event object or raise a 404 error if not found
             event = get_object_or_404(Event, eventId=eventId)
@@ -1061,7 +1061,7 @@ async def get_event_coupons(eventId: str, request: Request):
     print(f"[DEBUG - get_event_coupons] Function called with eventId: {eventId}")
     try:
         # Wrap Django ORM calls in a synchronous function
-        @sync_to_async
+        @database_sync_to_async
         def get_event_coupons_sync(event_id):
             print(f"[DEBUG - get_event_coupons] Fetching coupons for event: {event_id}")
             # Fetch the event object or raise a 404 error if not found
@@ -1116,7 +1116,7 @@ async def get_paid_event_tickets(eventId: str, request: Request):
     print(f"[DEBUG - get_paid_event_tickets] Function called with eventId: {eventId}")
     try:
         # Wrap Django ORM calls in a synchronous function
-        @sync_to_async
+        @database_sync_to_async
         def get_paid_event_tickets_sync(event_id):
             print(
                 f"[DEBUG - get_paid_event_tickets] Fetching tickets for event: {event_id}"
@@ -1171,7 +1171,7 @@ async def delete_paid_event_ticket(eventId: str, request: Request):
             )
 
         # Wrap Django ORM calls in a synchronous function
-        @sync_to_async
+        @database_sync_to_async
         def delete_ticket_sync(event_id, ticket_id):
             event = get_object_or_404(Event, eventId=event_id)
             ticket = get_object_or_404(PaidFreeTicket, ticket_id=ticket_id, event=event)
@@ -1203,7 +1203,7 @@ async def create_event_coupon(eventId: str, payload: dict):
     Create a coupon for the given event. Body is JSON.
     """
 
-    @sync_to_async
+    @database_sync_to_async
     def create_coupon(eventId, payload):
         event = get_object_or_404(Event, eventId=eventId)
 
@@ -1247,7 +1247,7 @@ class DeleteCouponRequest(BaseModel):
 
 @router.post("/event/{eventId}/deleteCoupon")
 async def delete_coupon(eventId: str, deleteCouponRequest: DeleteCouponRequest):
-    @sync_to_async
+    @database_sync_to_async
     def delete_coupon_sync(event_id, coupon_id):
         event = get_object_or_404(Event, eventId=event_id)
         coupon = get_object_or_404(CouponCode, coupon_id=coupon_id)
@@ -1278,7 +1278,7 @@ async def get_event_rsvp_list(eventId: str, request: Request):
     print(f"[DEBUG - get_event_rsvp_list] Function called with eventId: {eventId}")
     try:
         # Wrap Django ORM calls in a synchronous function
-        @sync_to_async
+        @database_sync_to_async
         def get_event_rsvp_list_sync(event_id):
             print(
                 f"[DEBUG - get_event_rsvp_list] Fetching RSVP list for event: {event_id}"
@@ -1365,7 +1365,7 @@ async def delete_event_rsvp(
             )
 
         # Wrap Django ORM calls in a synchronous function
-        @sync_to_async
+        @database_sync_to_async
         def delete_rsvp_ticket():
             # Get the event object or raise a 404 error if not found
             event = get_object_or_404(Event, eventId=eventId)
@@ -1450,7 +1450,7 @@ async def get_purchased_tickets_for_event(
     """
     try:
         # Wrap Django ORM calls in a synchronous function
-        @sync_to_async
+        @database_sync_to_async
         def get_purchased_tickets_sync(event_id):
             print(
                 f"[DEBUG - get_purchased_tickets_for_event] Fetching purchased tickets for event: {event_id}"
@@ -1537,7 +1537,7 @@ async def delete_purchased_ticket(
             )
 
         # Wrap Django ORM calls in a synchronous function
-        @sync_to_async
+        @database_sync_to_async
         def delete_purchased_ticket_sync():
             # Get the event object or raise a 404 error if not found
             event = get_object_or_404(Event, eventId=eventId)
@@ -1598,7 +1598,7 @@ async def become_host(request: Request, user_id: int = Depends(get_current_user)
     """
     try:
         # Wrap Django ORM calls in a synchronous function
-        @sync_to_async
+        @database_sync_to_async
         def process_become_host():
             try:
                 # Get the current user
@@ -1772,7 +1772,7 @@ async def get_event_analytics(eventId: str, user_id: int = Depends(get_current_u
         f"[get_event_analytics] API called with eventId: {eventId}, user_id: {user_id}"
     )
 
-    @sync_to_async
+    @database_sync_to_async
     def get_analytics_data(event_id, requesting_user_id):
         try:
             from django.db.models import Q, Count, Sum, Avg
@@ -2189,7 +2189,7 @@ async def get_host_recent_events_analytics(user_id: int = Depends(get_current_us
     """
     print(f"[get_host_recent_events_analytics] API called with user_id: {user_id}")
 
-    @sync_to_async
+    @database_sync_to_async
     def get_recent_events_analytics_data(requesting_user_id):
         try:
             # Get the user and verify they exist
