@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from uuid import UUID
 from django.http import Http404
 from fastapi import (
@@ -11,6 +11,7 @@ from fastapi import (
     UploadFile,
     Form,
     Body,
+    Query,
 )
 from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordRequestForm
@@ -21,7 +22,9 @@ import traceback
 import os
 from django.core.files.base import ContentFile
 from django.conf import settings
-from django.db.models import Count
+from django.db.models import Count, Max, Avg, F
+from django.db.models.functions import TruncDay, TruncWeek, TruncMonth, TruncHour
+from django.utils.timezone import now
 
 from authenticationApp.models import CustomUser
 from authenticationApp.serializers import CustomUserSerializer
@@ -49,6 +52,8 @@ from eventManagementApp.models import Event
 from eventTicketsApp.models import RSVPTicket, PaidFreeTicket, Ticket
 from eventTicketsApp.models import Ticket, RSVPTicket
 from accountManagementApp.models import UserProfile
+from adminDashboardApp.models import College, LoginHistoryModel
+
 from adminDashboardApp.models import College
 from collegeManagementApp.models import Membership, CollegeEventLink
 from adminDashboardApp.forms import CollegeForm, EditCollegeForm
@@ -680,6 +685,288 @@ async def delete_event(
     except Exception as e:
         print(f"Error with deletion {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error deleting event: {str(e)}")
+
+# USER ANALYTICS ADMIN API
+@router.get("/userAnalytics/getAll")
+async def get_all_users(current_user: CustomUser = Depends(require_admin_role)):
+    """
+    Get list of user analytics with optimized database queries.
+    """
+    print(f"[get_user_analytics] API called with user_id: {current_user.id}")
+
+    try:
+        users_qs = CustomUser.objects.only("username", "first_name", "last_name", "user_id")
+        users = await sync_to_async(list)(users_qs)
+        user_info = [] 
+        for user in users:
+            user_info.append({
+                "username": user.username,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "user_id": user.user_id,
+            })
+        return user_info
+
+    except Exception as e:
+        print(f"[get_user_analytics] Error in get_user_analytics: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error fetching user analytics: {str(e)}"
+        )
+
+
+@router.get("/userAnalytics/signups")
+async def get_user_signups(
+    period: str = Query("daily", description="Time period: daily, weekly, or monthly"),
+    current_user: CustomUser = Depends(require_admin_role)
+):
+    """
+    Get user signup analytics grouped by time period - requires Admin or Super Admin role.
+    """
+    print(f"[get_user_signups] API called with user_id: {current_user.id}, period: {period}")
+
+    @sync_to_async
+    def get_signup_data(period):
+        if period == "monthly":
+            # Get signups grouped by month and count the number of signups per month
+            signups = (
+                CustomUser.objects.annotate(month=TruncMonth("date_joined"))
+                .values("month")
+                .annotate(count=Count("id"))
+                .order_by("month")
+            )
+
+            # Prepare data for the chart
+            labels = [
+                signup["month"].strftime("%B %Y") for signup in signups
+            ]  # Format month as "January 2024"
+            counts = [signup["count"] for signup in signups]
+
+        elif period == "weekly":
+            # Get signups grouped by week
+            signups = (
+                CustomUser.objects.annotate(week=TruncWeek("date_joined"))
+                .values("week")
+                .annotate(count=Count("id"))
+                .order_by("week")
+            )
+
+            labels = [
+                f"Week of {signup['week'].strftime('%d %b %Y')}" for signup in signups
+            ]
+            counts = [signup["count"] for signup in signups]
+
+        else:  # Daily
+            # Get daily signups
+            signups = (
+                CustomUser.objects.annotate(day=TruncDay("date_joined"))
+                .values("day")
+                .annotate(count=Count("id"))
+                .order_by("day")
+            )
+
+            labels = [signup["day"].strftime("%Y-%m-%d") for signup in signups]
+            counts = [signup["count"] for signup in signups]
+
+        return {"labels": labels, "counts": counts}
+
+    try:
+        result = await get_signup_data(period)
+        print(f"[get_user_signups] Returning {len(result['labels'])} data points")
+        return result
+
+    except Exception as e:
+        print(f"[get_user_signups] Error: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error fetching signup analytics: {str(e)}"
+        )
+
+
+@router.get("/userAnalytics/logins")
+async def get_user_logins(
+    trend: str = Query("general", description="Trend type: general, user_activity, time_trends, ip_insights, security, retention"),
+    time_frame: str = Query("hourly", description="Time frame for time_trends: hourly, daily, monthly"),
+    current_user: CustomUser = Depends(require_admin_role)
+):
+    """
+    Get user login analytics with various trend types - requires Admin or Super Admin role.
+    """
+    print(f"[get_user_logins] API called with user_id: {current_user.id}, trend: {trend}")
+
+    @sync_to_async
+    def get_login_data(trend_type, time_frame):
+        if trend_type == "general":
+            data = {
+                "total_logins": LoginHistoryModel.objects.count(),
+                "unique_users": LoginHistoryModel.objects.values("user").distinct().count(),
+                "active_sessions": LoginHistoryModel.objects.filter(
+                    logout_time__isnull=True
+                ).count(),
+                "average_session_duration": LoginHistoryModel.objects.aggregate(
+                    avg_duration=Avg(
+                        F("session_duration_minutes") + F("session_duration_seconds") / 60
+                    )
+                )["avg_duration"]
+                or 0,
+            }
+
+        elif trend_type == "user_activity":
+            data = list(
+                LoginHistoryModel.objects.values("user__username")
+                .annotate(count=Count("id"))
+                .order_by("-count")[:10]  # Top 10 users
+            )
+
+        elif trend_type == "time_trends":
+            trunc_function = {
+                "hourly": TruncHour,
+                "daily": TruncDay,
+                "monthly": TruncMonth,
+            }.get(time_frame, TruncHour)
+
+            data = list(
+                LoginHistoryModel.objects.annotate(time_period=trunc_function("login_time"))
+                .values("time_period")
+                .annotate(count=Count("id"))
+                .order_by("time_period")
+            )
+            
+            # Convert datetime objects to strings for JSON serialization
+            for item in data:
+                if item["time_period"]:
+                    item["time_period"] = item["time_period"].isoformat()
+
+        elif trend_type == "ip_insights":
+            data = list(
+                LoginHistoryModel.objects.values("ip_address")
+                .annotate(count=Count("id"))
+                .order_by("-count")[:10]  # Top 10 IP addresses
+            )
+
+        elif trend_type == "security":
+            data = {}
+
+            # Track failed login attempts for users who are not in any group
+            data["failed_login_attempts"] = LoginHistoryModel.objects.filter(
+                user__groups__isnull=True  # Users who are not in any group
+            ).count()
+
+            # Track active sessions with users not in any group
+            data["active_sessions_with_no_groups"] = LoginHistoryModel.objects.filter(
+                logout_time__isnull=True,  # Active sessions
+                user__groups__isnull=True,  # Users not in any group
+            ).count()
+
+            # Track failed login attempts for users in each group
+            group_data = (
+                LoginHistoryModel.objects.filter(
+                    role__isnull=True  # You can keep role filtering or remove this as per your logic
+                )
+                .values("user__groups__name")
+                .annotate(failed_attempts=Count("id"))
+                .order_by("-failed_attempts")
+            )
+
+            # Convert queryset to list
+            data["failed_login_attempts_by_group"] = list(group_data)
+
+            # Track active sessions grouped by the groups
+            active_sessions_by_group = (
+                LoginHistoryModel.objects.filter(
+                    logout_time__isnull=True  # Active sessions
+                )
+                .values("user__groups__name")
+                .annotate(active_sessions=Count("id"))
+                .order_by("-active_sessions")
+            )
+
+            # Convert queryset to list
+            data["active_sessions_by_group"] = list(active_sessions_by_group)
+
+        elif trend_type == "retention":
+            today = now()
+
+            # Get unique users for the last 7 days
+            last_7_days = (
+                LoginHistoryModel.objects.filter(login_time__gte=today - timedelta(days=7))
+                .values("user")
+                .distinct()
+                .count()
+            )  # Count distinct users
+
+            # Get unique users for the last 30 days
+            last_30_days = (
+                LoginHistoryModel.objects.filter(login_time__gte=today - timedelta(days=30))
+                .values("user")
+                .distinct()
+                .count()
+            )  # Count distinct users
+
+            data = {
+                "last_7_days": last_7_days,
+                "last_30_days": last_30_days,
+            }
+
+        else:
+            raise ValueError(f"Invalid trend type: {trend_type}")
+
+        return data
+
+    try:
+        if trend not in ["general", "user_activity", "time_trends", "ip_insights", "security", "retention"]:
+            raise HTTPException(status_code=400, detail="Invalid trend type")
+
+        result = await get_login_data(trend, time_frame)
+        print(f"[get_user_logins] Returning login analytics for trend: {trend}")
+        return result
+
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        print(f"[get_user_logins] Error: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error fetching login analytics: {str(e)}"
+        )
+
+
+@router.get("/userAnalytics/demographics")
+async def get_user_demographics(
+    group_by: str = Query("home_state", description="Group by field: gender, home_state, graduation_year, major, status"),
+    current_user: CustomUser = Depends(require_admin_role)
+):
+    """
+    Get user demographics analytics grouped by specified field - requires Admin or Super Admin role.
+    """
+    print(f"[get_user_demographics] API called with user_id: {current_user.id}, group_by: {group_by}")
+
+    @sync_to_async
+    def get_demographic_data(group_by):
+        valid_fields = ["gender", "home_state", "graduation_year", "major", "status"]
+        if group_by not in valid_fields:
+            raise ValueError(f"Invalid group_by field. Must be one of: {valid_fields}")
+
+        demographics = (
+            UserProfile.objects.values(group_by)
+            .annotate(count=Count("id"))
+            .order_by(group_by)
+        )
+
+        labels = [demo[group_by] or "Unknown" for demo in demographics]
+        counts = [demo["count"] for demo in demographics]
+
+        return {"labels": labels, "counts": counts}
+
+    try:
+        result = await get_demographic_data(group_by)
+        print(f"[get_user_demographics] Returning {len(result['labels'])} demographic groups")
+        return result
+
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        print(f"[get_user_demographics] Error: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error fetching demographic analytics: {str(e)}"
+        )
 
 
 # COLLEGE MANAGEMENT ADMIN API
