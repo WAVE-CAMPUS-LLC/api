@@ -1262,9 +1262,22 @@ async def get_college_info(
                 )
 
             # Get event count from hosted events as well
-            hosted_events_count = Event.objects.filter(
-                display_event_on_college=True, host__user_profile__college=college
-            ).count()
+            hosted_events_count = 0
+            try:
+                # Get user profiles for this college first
+                college_user_profiles = UserProfile.objects.filter(college=college)
+                college_users = [
+                    profile.user for profile in college_user_profiles if profile.user
+                ]
+
+                if college_users:
+                    hosted_events_count = Event.objects.filter(
+                        display_event_on_college=True, host__in=college_users
+                    ).count()
+            except Exception as e:
+                print(
+                    f"[get_college_info] Warning: Could not get hosted events count: {str(e)}"
+                )
 
             total_events = event_count + hosted_events_count
 
