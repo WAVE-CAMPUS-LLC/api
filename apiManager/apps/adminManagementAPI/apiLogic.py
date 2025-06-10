@@ -1018,6 +1018,7 @@ async def get_event_specific_analytics(
                 "eventId": str(event.eventId),
                 "title": event.title,
                 "event_type": event.event_type,
+                "ticketing": event.ticketing,
                 "date": event.date.isoformat() if event.date else None,
                 "status": event.status,
                 "admin_status": event.admin_status,
@@ -1034,73 +1035,102 @@ async def get_event_specific_analytics(
                 },
             }
 
-            # RSVP analytics over time
-            rsvp_trends = list(
-                RSVPTicket.objects.filter(event=event)
-                .annotate(period=trunc_function("created_at"))
-                .values("period")
-                .annotate(count=Count("id"))
-                .order_by("period")
-            )
+            # Determine event ticketing type
+            is_free_event = event.ticketing == "Free"
+            is_paid_event = event.ticketing == "Paid"
 
-            # Convert datetime objects to strings
-            for item in rsvp_trends:
-                if item["period"]:
-                    item["period"] = item["period"].isoformat()
-
-            # Paid ticket analytics over time
-            paid_ticket_trends = list(
-                Ticket.objects.filter(event=event)
-                .annotate(period=trunc_function("created_at"))
-                .values("period")
-                .annotate(count=Count("id"))
-                .order_by("period")
-            )
-
-            # Convert datetime objects to strings
-            for item in paid_ticket_trends:
-                if item["period"]:
-                    item["period"] = item["period"].isoformat()
-
-            # Ticket type breakdown
-            ticket_types = list(
-                event.tickets.all().values(
-                    "ticket_name", "ticket_quantity", "ticket_sold", "ticket_price"
-                )
-            )
-
-            # Revenue calculation
+            # Initialize analytics data
+            rsvp_trends = []
+            paid_ticket_trends = []
+            total_rsvps = 0
+            total_paid_tickets = 0
+            rsvps_on_guestlist = 0
+            ticket_types = []
             total_revenue = 0
-            for ticket_type in ticket_types:
-                sold = ticket_type.get("ticket_sold", 0) or 0
-                price = ticket_type.get("ticket_price", 0) or 0
-                total_revenue += sold * float(price)
 
-            # RSVP summary
-            total_rsvps = RSVPTicket.objects.filter(event=event).count()
-            total_paid_tickets = Ticket.objects.filter(event=event).count()
+            # RSVP analytics (only for free events)
+            if is_free_event:
+                rsvp_trends = list(
+                    RSVPTicket.objects.filter(event=event)
+                    .annotate(period=trunc_function("created_at"))
+                    .values("period")
+                    .annotate(count=Count("ticket_id"))
+                    .order_by("period")
+                )
 
-            # Guest list visibility analytics
-            rsvps_on_guestlist = RSVPTicket.objects.filter(
-                event=event, display_on_guestlist=True
-            ).count()
+                # Convert datetime objects to strings
+                for item in rsvp_trends:
+                    if item["period"]:
+                        item["period"] = item["period"].isoformat()
 
-            return {
+                # RSVP summary
+                total_rsvps = RSVPTicket.objects.filter(event=event).count()
+
+                # Guest list visibility analytics
+                rsvps_on_guestlist = RSVPTicket.objects.filter(
+                    event=event, display_on_guestlist=True
+                ).count()
+
+            # Paid ticket analytics (only for paid events)
+            if is_paid_event:
+                paid_ticket_trends = list(
+                    Ticket.objects.filter(event=event)
+                    .annotate(period=trunc_function("created_at"))
+                    .values("period")
+                    .annotate(count=Count("ticketId"))
+                    .order_by("period")
+                )
+
+                # Convert datetime objects to strings
+                for item in paid_ticket_trends:
+                    if item["period"]:
+                        item["period"] = item["period"].isoformat()
+
+                # Ticket type breakdown
+                ticket_types = list(
+                    event.tickets.all().values(
+                        "ticket_name", "ticket_quantity", "ticket_sold", "ticket_price"
+                    )
+                )
+
+                # Revenue calculation
+                for ticket_type in ticket_types:
+                    sold = ticket_type.get("ticket_sold", 0) or 0
+                    price = ticket_type.get("ticket_price", 0) or 0
+                    total_revenue += sold * float(price)
+
+                # Paid tickets summary
+                total_paid_tickets = Ticket.objects.filter(event=event).count()
+
+            # Build response based on event type
+            response_data = {
                 "event_info": event_info,
                 "summary_stats": {
-                    "total_rsvps": total_rsvps,
-                    "total_paid_tickets": total_paid_tickets,
+                    "ticketing_type": event.ticketing,
                     "total_attendees": total_rsvps + total_paid_tickets,
-                    "total_revenue": total_revenue,
-                    "rsvps_on_guestlist": rsvps_on_guestlist,
-                    "ticket_types_count": len(ticket_types),
                 },
-                "trends": {
-                    "rsvp_trends": rsvp_trends,
-                    "paid_ticket_trends": paid_ticket_trends,
-                },
-                "ticket_breakdown": ticket_types,
+                "trends": {},
             }
+
+            # Add RSVP-specific data for free events
+            if is_free_event:
+                response_data["summary_stats"].update({
+                    "total_rsvps": total_rsvps,
+                    "rsvps_on_guestlist": rsvps_on_guestlist,
+                })
+                response_data["trends"]["rsvp_trends"] = rsvp_trends
+
+            # Add paid ticket-specific data for paid events
+            if is_paid_event:
+                response_data["summary_stats"].update({
+                    "total_paid_tickets": total_paid_tickets,
+                    "total_revenue": total_revenue,
+                    "ticket_types_count": len(ticket_types),
+                })
+                response_data["trends"]["paid_ticket_trends"] = paid_ticket_trends
+                response_data["ticket_breakdown"] = ticket_types
+
+            return response_data
 
         except Event.DoesNotExist:
             return None
@@ -1164,7 +1194,7 @@ async def get_overall_event_analytics(
             event_creation_trends = list(
                 Event.objects.annotate(period=trunc_function("created_at"))
                 .values("period")
-                .annotate(count=Count("id"))
+                .annotate(count=Count("eventId"))
                 .order_by("period")
             )
 
@@ -1176,14 +1206,14 @@ async def get_overall_event_analytics(
             # Event type distribution
             event_type_distribution = list(
                 Event.objects.values("event_type")
-                .annotate(count=Count("id"))
+                .annotate(count=Count("eventId"))
                 .order_by("-count")
             )
 
             # Geographic distribution (by state)
             geographic_distribution = list(
                 Event.objects.values("state")
-                .annotate(count=Count("id"))
+                .annotate(count=Count("eventId"))
                 .order_by("-count")[:10]  # Top 10 states
             )
 
@@ -1209,7 +1239,7 @@ async def get_overall_event_analytics(
             overall_rsvp_trends = list(
                 RSVPTicket.objects.annotate(period=trunc_function("created_at"))
                 .values("period")
-                .annotate(count=Count("id"))
+                .annotate(count=Count("ticket_id"))
                 .order_by("period")
             )
 
@@ -1222,7 +1252,7 @@ async def get_overall_event_analytics(
             overall_paid_ticket_trends = list(
                 Ticket.objects.annotate(period=trunc_function("created_at"))
                 .values("period")
-                .annotate(count=Count("id"))
+                .annotate(count=Count("ticketId"))
                 .order_by("period")
             )
 
@@ -1262,7 +1292,7 @@ async def get_overall_event_analytics(
             top_hosts = list(
                 Event.objects.values("host__username", "host__first_name", "host__last_name")
                 .annotate(
-                    event_count=Count("id"),
+                    event_count=Count("eventId"),
                     total_rsvps=Count("rsvp_tickets", distinct=True),
                     total_paid_tickets=Count("ticket_set", distinct=True),
                 )
