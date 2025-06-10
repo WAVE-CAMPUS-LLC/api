@@ -9,6 +9,7 @@ from django.db.models.signals import post_save
 from datetime import timedelta
 from django.dispatch import receiver
 from django.conf import settings
+from django.db.models import Index
 from adminDashboardApp.models import College
 from socialApp.models import Crew
 
@@ -231,6 +232,7 @@ class Event(models.Model):
         default="incomplete",
         null=False,
         blank=False,
+        db_index=True,
     )
 
     admin_status = models.CharField(
@@ -253,6 +255,7 @@ class Event(models.Model):
         null=False,
         blank=False,
         default="",
+        db_index=True,
     )
 
     date = models.DateField(
@@ -483,7 +486,7 @@ class Event(models.Model):
         default=False,
     )
 
-    created_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now=True, db_index=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
@@ -491,6 +494,15 @@ class Event(models.Model):
 
     class Meta:
         default_permissions = ()
+        indexes = [
+            # Composite indexes for analytics queries
+            Index(fields=["status", "created_at"], name="event_status_created_idx"),
+            Index(fields=["event_type", "created_at"], name="event_type_created_idx"),
+            Index(fields=["state", "status"], name="event_state_status_idx"),
+            Index(fields=["host", "created_at"], name="event_host_created_idx"),
+            # Time-based indexes for trend analysis
+            Index(fields=["created_at", "status"], name="event_created_status_idx"),
+        ]
 
     def save(self, *args, **kwargs):
         # Ensure forCollegesDisplay can only be true if user has a college

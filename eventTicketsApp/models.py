@@ -6,6 +6,7 @@ from django.db.models.signals import post_save
 from datetime import timedelta
 from django.dispatch import receiver
 from django.conf import settings
+from django.db.models import Index
 import json
 
 
@@ -32,7 +33,7 @@ class Ticket(models.Model):
     qrCodeData = models.TextField(blank=True, null=True)
     qrCodeImage = models.FileField(upload_to='qr_codes/', blank=True, null=True)
     status = models.CharField(max_length=10, choices=TICKET_STATUS_CHOICES, default="Valid")
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     stripe_session_id = models.CharField(max_length=100, blank=True, null=True)
     
     def __str__(self):
@@ -42,6 +43,11 @@ class Ticket(models.Model):
     
     class Meta:
         default_permissions = ()
+        indexes = [
+            # Composite indexes for analytics queries
+            Index(fields=["event", "created_at"], name="ticket_event_created_idx"),
+            Index(fields=["created_at", "status"], name="ticket_created_status_idx"),
+        ]
     
     def save(self, *args, **kwargs):
         if not self.qrCodeData:
@@ -96,11 +102,16 @@ class RSVPTicket(models.Model):
     display_on_guestlist = models.BooleanField(
         _("Be displayed on guest list?"), default=False
     )
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     ticket_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     
     class Meta:
         default_permissions = ()
+        indexes = [
+            # Composite indexes for analytics queries
+            Index(fields=["event", "created_at"], name="rsvp_event_created_idx"),
+            Index(fields=["created_at", "display_on_guestlist"], name="rsvp_created_display_idx"),
+        ]
 
     def __str__(self):
         return f"{self.first_name} {self.last_name} RSVP'd for {self.event.title}"
@@ -130,7 +141,7 @@ class PaidFreeTicket(models.Model):
         _("How many tickets should be made available?"), default=1
     )
     ticket_sold = models.PositiveIntegerField(
-        _("Tickets Sold"), default=0, null=True, blank=True
+        _("Tickets Sold"), default=0, null=True, blank=True, db_index=True
     )
     crew_discounted_price = models.DecimalField(
         _("Discounted Price for Crews"), max_digits=10, decimal_places=2, null=True, blank=True
@@ -140,6 +151,11 @@ class PaidFreeTicket(models.Model):
     class Meta:
         unique_together = ("event", "ticket_name")
         default_permissions = ()
+        indexes = [
+            # Composite indexes for analytics queries
+            Index(fields=["event", "ticket_sold"], name="paidfree_event_sold_idx"),
+            Index(fields=["ticket_sold", "ticket_price"], name="paidfree_sold_price_idx"),
+        ]
         
 
     def __str__(self):
