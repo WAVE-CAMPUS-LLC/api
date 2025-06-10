@@ -930,32 +930,59 @@ async def get_user_logins(
 @router.get("/eventAnalytics/getAll")
 async def get_all_events(current_user: CustomUser = Depends(require_admin_role)):
     """
-    Get list of events
+    Get list of events with basic analytics data
     """
     print(f"[get_all_events] API called with user_id: {current_user.id}")
 
-    try:
-        events_qs = Event.objects.only(
-            "eventId", "host", "title", "date", "header_photo"
-        )
-        events = await database_sync_to_async(list)(events_qs)
-        events_info = []
-        for event in events:
-            events_info.append(
-                {
-                    "eventId": event.eventId,
-                    "host": event.host,
-                    "title": event.title,
-                    "date": event.date,
-                    "header_photo_url": event.header_photo.url if event.header_photo else None
-                }
+    @database_sync_to_async
+    def get_events_data():
+        """
+        Fetch events data with proper sync database operations
+        """
+        try:
+            events_qs = Event.objects.select_related("host").only(
+                "eventId", "title", "date", "header_photo", "host__username", "host__first_name", "host__last_name"
             )
+            events = list(events_qs)
+            events_info = []
+            
+            for event in events:
+                # Safely get header photo URL
+                header_photo_url = None
+                try:
+                    header_photo_url = event.header_photo.url if event.header_photo else None
+                except Exception as e:
+                    print(f"[get_all_events] Warning: header_photo error for event {event.eventId}: {e}")
+
+                events_info.append(
+                    {
+                        "eventId": str(event.eventId),
+                        "host": {
+                            "username": event.host.username,
+                            "first_name": event.host.first_name,
+                            "last_name": event.host.last_name,
+                        },
+                        "title": event.title,
+                        "date": event.date.isoformat() if event.date else None,
+                        "header_photo_url": header_photo_url
+                    }
+                )
+            
+            print(f"[get_all_events] Successfully processed {len(events_info)} events")
+            return events_info
+            
+        except Exception as e:
+            print(f"[get_all_events] Database error: {str(e)}")
+            raise e
+
+    try:
+        events_info = await get_events_data()
         return events_info
 
     except Exception as e:
         print(f"[get_all_events] Error in get_all_events: {str(e)}")
         raise HTTPException(
-            status_code=500, detail=f"Error fetching get_all_events: {str(e)}"
+            status_code=500, detail=f"Error fetching events: {str(e)}"
         )
 
 @router.get("/eventAnalytics/specific/{event_id}")
