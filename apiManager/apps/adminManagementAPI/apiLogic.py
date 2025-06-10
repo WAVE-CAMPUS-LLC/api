@@ -1755,6 +1755,9 @@ async def get_college_events(
                         "event_type": event.event_type,
                         "date": event.date.isoformat() if event.date else None,
                         "header_photo": header_photo_url,
+                        "created_at": (
+                            event.created_at.isoformat() if event.created_at else None
+                        ),
                     }
                     events_list.append(event_data)
 
