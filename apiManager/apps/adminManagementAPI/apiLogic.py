@@ -1319,12 +1319,6 @@ async def get_college_info(
                 "logo": logo_url,
                 "campus_image": campus_image_url,
                 "created_by": created_by_info,
-                "created_at": (
-                    college.created_at.isoformat() if college.created_at else None
-                ),
-                "updated_at": (
-                    college.updated_at.isoformat() if college.updated_at else None
-                ),
                 "stats": {
                     "member_count": member_count,
                     "event_count": total_events,
