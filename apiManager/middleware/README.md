@@ -137,7 +137,7 @@ async def custom_access(current_user: CustomUser = Depends(get_user_with_roles))
     from channels.db import database_sync_to_async
 
     # Get user's roles
-    user_groups = await sync_to_async(list)(current_user.groups.values_list('name', flat=True))
+    user_groups = await database_sync_to_async(list)(current_user.groups.values_list('name', flat=True))
 
     # Custom logic
     if "Super Admin" in user_groups:
@@ -199,7 +199,7 @@ The middleware returns appropriate HTTP status codes:
 @router.get("/users")
 async def get_users(current_user_id: str = Depends(get_current_user)):
     # Manual role checking
-    user = await sync_to_async(get_object_or_404)(CustomUser, id=current_user_id)
+    user = await database_sync_to_async(get_object_or_404)(CustomUser, id=current_user_id)
     if not user.groups.filter(name__in=["Admin", "Super Admin"]).exists():
         raise HTTPException(status_code=403, detail="Access denied")
 
@@ -255,7 +255,7 @@ async def get_users(current_user: CustomUser = Depends(require_admin_role)):
     @router.get("/dashboard")
     async def dashboard(current_user: CustomUser = Depends(require_admin_role)):
         # User is already loaded with groups, no need to fetch again
-        user_groups = await sync_to_async(list)(current_user.groups.values_list('name', flat=True))
+        user_groups = await database_sync_to_async(list)(current_user.groups.values_list('name', flat=True))
         return {"user": current_user.username, "roles": user_groups}
     ```
 

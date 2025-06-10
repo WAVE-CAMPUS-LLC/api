@@ -27,8 +27,8 @@ async def check_user_roles(user_id: str, required_roles: List[str]) -> CustomUse
         raise HTTPException(status_code=401, detail="Authentication required")
 
     try:
-        user = await sync_to_async(get_object_or_404)(CustomUser, id=user_id)
-        user_groups = await sync_to_async(list)(
+        user = await database_sync_to_async(get_object_or_404)(CustomUser, id=user_id)
+        user_groups = await database_sync_to_async(list)(
             user.groups.values_list("name", flat=True)
         )
 
@@ -71,17 +71,17 @@ async def check_user_permissions(
         raise HTTPException(status_code=401, detail="Authentication required")
 
     try:
-        user = await sync_to_async(get_object_or_404)(CustomUser, id=user_id)
+        user = await database_sync_to_async(get_object_or_404)(CustomUser, id=user_id)
 
         # Check if user has any of the required permissions
         has_permission = False
         for permission in required_permissions:
-            if await sync_to_async(user.has_perm)(permission):
+            if await database_sync_to_async(user.has_perm)(permission):
                 has_permission = True
                 break
 
         if not has_permission:
-            user_permissions = await sync_to_async(list)(
+            user_permissions = await database_sync_to_async(list)(
                 user.user_permissions.values_list("codename", flat=True)
             )
             raise HTTPException(
@@ -178,9 +178,11 @@ async def get_user_with_roles(
         raise HTTPException(status_code=401, detail="Authentication required")
 
     try:
-        user = await sync_to_async(get_object_or_404)(CustomUser, id=current_user_id)
+        user = await database_sync_to_async(get_object_or_404)(
+            CustomUser, id=current_user_id
+        )
         # Prefetch groups for efficiency
-        await sync_to_async(user.groups.prefetch_related)()
+        await database_sync_to_async(user.groups.prefetch_related)()
         return user
     except CustomUser.DoesNotExist:
         raise HTTPException(status_code=401, detail="Invalid user")

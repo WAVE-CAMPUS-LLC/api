@@ -72,16 +72,16 @@ async def admin_dashboard(current_user: CustomUser = Depends(require_admin_role)
 
     try:
         # Get current user info
-        user_groups = await sync_to_async(list)(
+        user_groups = await database_sync_to_async(list)(
             current_user.groups.values_list("name", flat=True)
         )
 
         # Get dashboard stats
-        total_users = await sync_to_async(CustomUser.objects.count)()
-        active_users = await sync_to_async(
+        total_users = await database_sync_to_async(CustomUser.objects.count)()
+        active_users = await database_sync_to_async(
             CustomUser.objects.filter(is_active=True).count
         )()
-        suspended_users = await sync_to_async(
+        suspended_users = await database_sync_to_async(
             CustomUser.objects.filter(is_suspended=True).count
         )()
 
@@ -127,13 +127,13 @@ async def get_users(
                 "user_profile"
             ).prefetch_related("groups")[skip : skip + limit]
 
-        users = await sync_to_async(list)(users_queryset)
+        users = await database_sync_to_async(list)(users_queryset)
         print(f"[get_users] Retrieved {len(users)} users from database")
 
         # Convert to response format
         user_responses = []
         for user in users:
-            groups = await sync_to_async(list)(
+            groups = await database_sync_to_async(list)(
                 user.groups.values_list("name", flat=True)
             )
 
@@ -364,13 +364,13 @@ async def suspend_user(
     print(f"[suspend_user] API called for user_id: {user_id} by {current_user.id}")
 
     try:
-        user = await sync_to_async(get_object_or_404)(CustomUser, id=user_id)
+        user = await database_sync_to_async(get_object_or_404)(CustomUser, id=user_id)
 
         # Don't allow suspending yourself
         if user.id == current_user.id:
             raise HTTPException(status_code=400, detail="You cannot suspend yourself")
 
-        await sync_to_async(user.suspend)()
+        await database_sync_to_async(user.suspend)()
 
         return {"message": f"User {user.username} has been suspended"}
 
@@ -391,7 +391,7 @@ async def delete_user(
 
     try:
         # Check if user exists first
-        user_exists = await sync_to_async(
+        user_exists = await database_sync_to_async(
             CustomUser.objects.filter(id=user_id).exists
         )()
         if not user_exists:
@@ -400,9 +400,9 @@ async def delete_user(
                 status_code=404, detail=f"User with ID {user_id} not found"
             )
 
-        user = await sync_to_async(get_object_or_404)(CustomUser, id=user_id)
+        user = await database_sync_to_async(get_object_or_404)(CustomUser, id=user_id)
         username = user.username  # Store username before deletion
-        await sync_to_async(user.delete)()
+        await database_sync_to_async(user.delete)()
 
         print(f"[delete_user] Successfully deleted user {username} (ID: {user_id})")
         return {"message": f"User {username} has been deleted"}
@@ -424,8 +424,8 @@ async def unsuspend_user(
     print(f"[unsuspend_user] API called for user_id: {user_id} by {current_user.id}")
 
     try:
-        user = await sync_to_async(get_object_or_404)(CustomUser, id=user_id)
-        await sync_to_async(user.remove_suspension_OR_ban)()
+        user = await database_sync_to_async(get_object_or_404)(CustomUser, id=user_id)
+        await database_sync_to_async(user.remove_suspension_OR_ban)()
 
         return {"message": f"User {user.username} suspension has been removed"}
 
@@ -446,7 +446,7 @@ async def get_events(current_user: CustomUser = Depends(require_admin_role)):
     print(f"[get_events] API called with user_id: {current_user.id}")
     try:
         events_qs = Event.objects.only("title", "header_photo", "eventId")
-        events = await sync_to_async(list)(events_qs)
+        events = await database_sync_to_async(list)(events_qs)
 
         event_list = []
         for event in events:
@@ -480,16 +480,18 @@ async def get_event_detail(
 ):
     try:
         # Safely print user ID
-        user_id = await sync_to_async(lambda: current_user.id, thread_sensitive=True)()
+        user_id = await database_sync_to_async(
+            lambda: current_user.id, thread_sensitive=True
+        )()
         print(f"[get_event_detail] API called for event_id: {event_id} by {user_id}")
 
         # Fetch event safely
-        event = await sync_to_async(get_object_or_404, thread_sensitive=True)(
+        event = await database_sync_to_async(get_object_or_404, thread_sensitive=True)(
             Event, eventId=event_id
         )
 
         # Extract event fields safely
-        event_fields = await sync_to_async(
+        event_fields = await database_sync_to_async(
             lambda: {
                 "eventId": str(event.eventId),
                 "stripeProductId": event.stripeProductId,
@@ -553,7 +555,7 @@ async def get_event_detail(
         )()
 
         # Extract host fields safely
-        host_fields = await sync_to_async(
+        host_fields = await database_sync_to_async(
             lambda: {
                 "id": event.host.id,
                 "username": event.host.username,
@@ -565,7 +567,7 @@ async def get_event_detail(
         )()
 
         # RSVP tickets
-        rsvp_tickets = await sync_to_async(list)(
+        rsvp_tickets = await database_sync_to_async(list)(
             event.rsvp_tickets.all().values(
                 "ticket_id",
                 "email",
@@ -582,7 +584,7 @@ async def get_event_detail(
             )
 
         # Ticket types
-        ticket_types = await sync_to_async(list)(
+        ticket_types = await database_sync_to_async(list)(
             event.tickets.all().values(
                 "ticket_id",
                 "ticket_name",
@@ -607,7 +609,7 @@ async def get_event_detail(
             tt["available_tickets"] = tt["ticket_quantity"] - (tt["ticket_sold"] or 0)
 
         # Purchased tickets
-        purchased_tickets = await sync_to_async(list)(
+        purchased_tickets = await database_sync_to_async(list)(
             event.ticket_set.all().values(
                 "ticketId",
                 "user__username",
@@ -677,8 +679,8 @@ async def delete_event(
     print(f"[delete_event] API called for event_id: {event_id} by {current_user.id}")
 
     try:
-        event = await sync_to_async(get_object_or_404)(Event, eventId=event_id)
-        await sync_to_async(event.delete)()
+        event = await database_sync_to_async(get_object_or_404)(Event, eventId=event_id)
+        await database_sync_to_async(event.delete)()
 
         return {"message": f"Event {event.title} has been deleted"}
 
@@ -699,7 +701,7 @@ async def get_all_users(current_user: CustomUser = Depends(require_admin_role)):
         users_qs = CustomUser.objects.only(
             "username", "first_name", "last_name", "user_id"
         )
-        users = await sync_to_async(list)(users_qs)
+        users = await database_sync_to_async(list)(users_qs)
         user_info = []
         for user in users:
             user_info.append(
@@ -1218,8 +1220,10 @@ async def delete_college(
     )
 
     try:
-        college = await sync_to_async(get_object_or_404)(College, collegeId=college_id)
-        await sync_to_async(college.delete)()
+        college = await database_sync_to_async(get_object_or_404)(
+            College, collegeId=college_id
+        )
+        await database_sync_to_async(college.delete)()
 
         return {"message": f"College {college.name} has been deleted"}
 

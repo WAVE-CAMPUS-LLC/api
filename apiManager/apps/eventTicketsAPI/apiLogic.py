@@ -32,32 +32,34 @@ router = APIRouter()
 # Helper functions for async Django ORM operations
 async def get_event(event_id):
     """Get an event by ID asynchronously"""
-    return await sync_to_async(Event.objects.get)(eventId=event_id)
+    return await database_sync_to_async(Event.objects.get)(eventId=event_id)
 
 
 async def get_host_id(event):
     """Get the host ID from an event asynchronously"""
     # We need to use a lambda to access the related field in a sync context
-    return await sync_to_async(lambda: event.host.id)()
+    return await database_sync_to_async(lambda: event.host.id)()
 
 
 async def get_host(host_id):
     """Get a host by ID asynchronously"""
-    return await sync_to_async(CustomUser.objects.get)(id=host_id)
+    return await database_sync_to_async(CustomUser.objects.get)(id=host_id)
 
 
 async def get_platform_settings():
     """Get platform settings asynchronously"""
-    settings = await sync_to_async(StripePlatformSettings.objects.first)()
+    settings = await database_sync_to_async(StripePlatformSettings.objects.first)()
     if not settings:
-        settings = await sync_to_async(StripePlatformSettings.objects.create)()
+        settings = await database_sync_to_async(StripePlatformSettings.objects.create)()
     return settings
 
 
 async def get_coupon(code, event):
     """Get a coupon by code and event asynchronously"""
     try:
-        return await sync_to_async(CouponCode.objects.get)(code=code, event=event)
+        return await database_sync_to_async(CouponCode.objects.get)(
+            code=code, event=event
+        )
     except CouponCode.DoesNotExist:
         return None
 
@@ -65,7 +67,7 @@ async def get_coupon(code, event):
 async def get_user(user_id):
     """Get a user by ID asynchronously"""
     try:
-        return await sync_to_async(CustomUser.objects.get)(id=user_id)
+        return await database_sync_to_async(CustomUser.objects.get)(id=user_id)
     except CustomUser.DoesNotExist:
         return None
 
@@ -174,7 +176,7 @@ async def process_checkout(
 
             if coupon:
                 has_discount = True
-                discount_percentage = await sync_to_async(
+                discount_percentage = await database_sync_to_async(
                     lambda: coupon.discount_percentage
                 )()
                 print(
@@ -283,15 +285,15 @@ async def process_checkout(
             current_user = await get_user(user_id) if user_id else None
 
             # Get event information
-            event_title = await sync_to_async(lambda: event.title)()
-            event_id_str = await sync_to_async(lambda: str(event.eventId))()
+            event_title = await database_sync_to_async(lambda: event.title)()
+            event_id_str = await database_sync_to_async(lambda: str(event.eventId))()
 
             # Get the success and cancel URLs
-            success_url = await sync_to_async(
+            success_url = await database_sync_to_async(
                 lambda: os.environ.get("WEBSITE_DOMAIN")
                 + reverse("eventTickets:paymentSuccessful")
             )()
-            cancel_url = await sync_to_async(
+            cancel_url = await database_sync_to_async(
                 lambda: os.environ.get("WEBSITE_DOMAIN")
                 + reverse("eventTickets:paymentFailed")
             )()
@@ -318,7 +320,7 @@ async def process_checkout(
 
             # Add payment_intent_data with transfer for regular checkouts
             if not is_full_discount:
-                connect_account_id = await sync_to_async(
+                connect_account_id = await database_sync_to_async(
                     lambda: host.connectAccountID
                 )()
                 session_params["payment_intent_data"] = {
