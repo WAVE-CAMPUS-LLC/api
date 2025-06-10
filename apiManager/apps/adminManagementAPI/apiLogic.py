@@ -51,7 +51,7 @@ from eventTicketsApp.models import Ticket, RSVPTicket
 from accountManagementApp.models import UserProfile
 from adminDashboardApp.models import College
 from collegeManagementApp.models import Membership, CollegeEventLink
-from adminDashboardApp.forms import CollegeForm
+from adminDashboardApp.forms import CollegeForm, EditCollegeForm
 from apiManager.utilities import get_form_fields
 
 router = APIRouter()
@@ -902,3 +902,191 @@ async def delete_college(
     except Exception as e:
         print(f"Error with deletion {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error deleting college: {str(e)}")
+
+
+@router.get("/colleges/{college_id}/edit/form/fields")
+async def get_college_edit_form_fields():
+    return get_form_fields(EditCollegeForm)
+
+
+@router.post("/colleges/{college_id}/edit")
+async def edit_college(
+    college_id: UUID,
+    request: Request,
+    current_user: CustomUser = Depends(require_admin_role),
+):
+    """
+    Edit a college - requires Admin or Super Admin role.
+    """
+    print(
+        f"[edit_college] API called for college_id: {college_id} by {current_user.id}"
+    )
+    try:
+        # Get form data from request
+        form_data = await request.form()
+        form_dict = {}
+        file_dict = {}
+
+        # Separate regular form fields from file uploads
+        for key, value in form_data.items():
+            # Check if this is an UploadFile by checking for filename and read methods
+            if hasattr(value, "filename") and hasattr(
+                value, "read"
+            ):  # This is an UploadFile
+                if value.filename:  # Only process if a file was actually uploaded
+                    print(
+                        f"[edit_college] Processing file upload: {key} = {value.filename}"
+                    )
+                    # Convert UploadFile to Django-compatible file
+                    file_content = await value.read()
+                    django_file = ContentFile(file_content, name=value.filename)
+                    file_dict[key] = django_file
+                    # Reset file position for potential re-reading
+                    await value.seek(0)
+                else:
+                    # Empty file upload, skip it
+                    print(f"[edit_college] Skipping empty file upload for field: {key}")
+            else:
+                form_dict[key] = value
+
+        print(
+            f"[edit_college] Received form data with fields: {', '.join(form_dict.keys())}"
+        )
+        if file_dict:
+            print(
+                f"[edit_college] Received file uploads: {', '.join(file_dict.keys())}"
+            )
+
+        @sync_to_async
+        def validate_and_update_college(college_id, form_data, file_data):
+            print(f"[edit_college] Form data keys: {list(form_data.keys())}")
+            print(f"[edit_college] File data keys: {list(file_data.keys())}")
+
+            try:
+                # Get the existing college instance
+                college = get_object_or_404(College, collegeId=college_id)
+                print(f"[edit_college] Found college: {college.name}")
+
+                # Track what fields are being updated
+                updated_fields = []
+                changes_made = False
+
+                # Check and update text fields only if they have changed
+                text_fields = [
+                    "name",
+                    "address",
+                    "city",
+                    "state",
+                    "zip_code",
+                    "country",
+                    "motto",
+                    "email_domain",
+                    "contact_website",
+                ]
+                for field in text_fields:
+                    if field in form_data and form_data[field]:
+                        new_value = form_data[field].strip()
+                        current_value = getattr(college, field, "") or ""
+                        if new_value != current_value:
+                            setattr(college, field, new_value)
+                            updated_fields.append(field)
+                            changes_made = True
+                            print(
+                                f"[edit_college] Updating {field}: '{current_value}' -> '{new_value}'"
+                            )
+
+                # Handle file uploads separately to avoid overwriting existing files
+                files_updated = []
+
+                # Handle logo upload
+                if "logo" in file_data:
+                    old_logo = college.logo.name if college.logo else "None"
+                    college.logo = file_data["logo"]
+                    files_updated.append("logo")
+                    changes_made = True
+                    print(
+                        f"[edit_college] Updating logo: '{old_logo}' -> '{file_data['logo'].name}'"
+                    )
+                elif "logo" in form_data:
+                    # Check if form indicates logo should be cleared
+                    if not form_data["logo"] or form_data["logo"] == "":
+                        if college.logo:
+                            print(
+                                f"[edit_college] Logo field present but empty - keeping existing logo"
+                            )
+
+                # Handle campus_image upload
+                if "campus_image" in file_data:
+                    old_image = (
+                        college.campus_image.name if college.campus_image else "None"
+                    )
+                    college.campus_image = file_data["campus_image"]
+                    files_updated.append("campus_image")
+                    changes_made = True
+                    print(
+                        f"[edit_college] Updating campus_image: '{old_image}' -> '{file_data['campus_image'].name}'"
+                    )
+                elif "campus_image" in form_data:
+                    # Check if form indicates campus_image should be cleared
+                    if not form_data["campus_image"] or form_data["campus_image"] == "":
+                        print(
+                            f"[edit_college] Campus image field present but empty - keeping existing image"
+                        )
+
+                # Only save if there are actual changes
+                if changes_made:
+                    college.save()
+                    print(
+                        f"[edit_college] College updated successfully. Fields changed: {updated_fields + files_updated}"
+                    )
+
+                    # Log file updates specifically
+                    if files_updated:
+                        if "logo" in files_updated and college.logo:
+                            print(
+                                f"[edit_college] Logo saved successfully: {college.logo.name}"
+                            )
+                        if "campus_image" in files_updated and college.campus_image:
+                            print(
+                                f"[edit_college] Campus image saved successfully: {college.campus_image.name}"
+                            )
+
+                    return None, status.HTTP_200_OK
+                else:
+                    print(f"[edit_college] No changes detected - college not updated")
+                    return {
+                        "message": "No changes were made to the college"
+                    }, status.HTTP_200_OK
+
+            except College.DoesNotExist:
+                print(f"[edit_college] College not found with ID: {college_id}")
+                return {"error": "College not found"}, status.HTTP_404_NOT_FOUND
+            except Exception as e:
+                print(f"[edit_college] Database error: {str(e)}")
+                return {
+                    "error": f"Database error: {str(e)}"
+                }, status.HTTP_500_INTERNAL_SERVER_ERROR
+
+        # Run validation and college update
+        errors, status_code = await validate_and_update_college(
+            college_id, form_dict, file_dict
+        )
+
+        if errors:
+            print(f"[edit_college] College update failed with errors: {errors}")
+            return JSONResponse(content=errors, status_code=status_code)
+        else:
+            print(
+                f"[edit_college] College updated successfully with status code {status_code}"
+            )
+            return JSONResponse(
+                content={"message": "College updated successfully"},
+                status_code=status_code,
+            )
+    except Exception as e:
+        traceback_str = traceback.format_exc()
+        print(f"[edit_college] College update error: {str(e)}\n{traceback_str}")
+        return JSONResponse(
+            content={"error": f"An unexpected error occurred: {str(e)}"},
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
