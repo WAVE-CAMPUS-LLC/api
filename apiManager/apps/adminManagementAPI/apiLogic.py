@@ -610,7 +610,7 @@ async def get_event_detail(
 
         # Purchased tickets
         purchased_tickets = await database_sync_to_async(list)(
-            event.ticket_set.all().values(
+            event.ticket.all().values(
                 "ticketId",
                 "user__username",
                 "user__email",
@@ -1006,12 +1006,19 @@ async def get_event_specific_analytics(
             # Verify event exists
             event = get_object_or_404(Event, eventId=event_id)
             
+            # Debug: Confirm time period being used
+            print(f"[get_event_specific_analytics] DEBUG: Using time_period '{time_period}' for event analytics")
+            
             # Determine truncation function
             trunc_function = {
                 "daily": TruncDay,
                 "weekly": TruncWeek,
                 "monthly": TruncMonth,
             }.get(time_period, TruncDay)
+            
+            if time_period not in ["daily", "weekly", "monthly"]:
+                print(f"[get_event_specific_analytics] WARNING: Invalid time_period '{time_period}', defaulting to daily")
+                trunc_function = TruncDay
 
             # Basic event information
             event_info = {
@@ -1221,16 +1228,24 @@ async def get_overall_event_analytics(
             total_rsvps = RSVPTicket.objects.count()
             total_paid_tickets = Ticket.objects.count()
 
-            # Calculate total revenue from all paid tickets
+            # Calculate total revenue from actual paid tickets (more accurate)
             total_revenue = 0
             try:
-                from eventTicketsApp.models import PaidFreeTicket
-                # Get all ticket types and calculate revenue
-                all_ticket_types = PaidFreeTicket.objects.all()
-                for ticket_type in all_ticket_types:
-                    sold = ticket_type.ticket_sold or 0
-                    price = ticket_type.ticket_price or 0
-                    total_revenue += sold * float(price)
+                # Get revenue from actual paid tickets rather than ticket types
+                # This gives us actual revenue from completed purchases
+                paid_tickets = Ticket.objects.select_related('event').all()
+                
+                for ticket in paid_tickets:
+                    # Find the corresponding ticket type to get price
+                    try:
+                        ticket_type = ticket.event.tickets.first()  # Get first ticket type for this event
+                        if ticket_type and ticket_type.ticket_price:
+                            total_revenue += float(ticket_type.ticket_price)
+                    except Exception as ticket_error:
+                        print(f"[get_overall_event_analytics] Error calculating revenue for ticket {ticket.ticketId}: {str(ticket_error)}")
+                        continue
+                        
+                print(f"[get_overall_event_analytics] DEBUG: Calculated total revenue from {paid_tickets.count()} paid tickets: ${total_revenue}")
             except Exception as e:
                 print(f"[get_overall_event_analytics] Revenue calculation error: {str(e)}")
                 total_revenue = 0
@@ -1265,7 +1280,7 @@ async def get_overall_event_analytics(
             popular_events = list(
                 Event.objects.annotate(
                     rsvp_count=Count("rsvp_tickets", distinct=True),
-                    paid_ticket_count=Count("ticket_set", distinct=True),
+                    paid_ticket_count=Count("ticket", distinct=True),
                 )
                 .annotate(
                     total_attendees=F("rsvp_count") + F("paid_ticket_count")
@@ -1294,7 +1309,7 @@ async def get_overall_event_analytics(
                 .annotate(
                     event_count=Count("eventId"),
                     total_rsvps=Count("rsvp_tickets", distinct=True),
-                    total_paid_tickets=Count("ticket_set", distinct=True),
+                    total_paid_tickets=Count("ticket", distinct=True),
                 )
                 .order_by("-event_count")[:10]
             )
