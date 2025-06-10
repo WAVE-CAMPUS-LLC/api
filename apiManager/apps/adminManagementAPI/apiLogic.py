@@ -1377,3 +1377,288 @@ async def edit_college(
             content={"error": f"An unexpected error occurred: {str(e)}"},
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
+
+
+@router.get("/colleges/{college_id}/members")
+async def get_college_members(
+    college_id: UUID, current_user: CustomUser = Depends(require_admin_role)
+):
+    """
+    Get members of a college - requires Admin or Super Admin role.
+    """
+    print(
+        f"[get_college_members] API called for college_id: {college_id} by {current_user.id}"
+    )
+
+    @sync_to_async
+    def get_members_data(college_id):
+        try:
+            # First verify the college exists
+            college = get_object_or_404(College, collegeId=college_id)
+            print(f"[get_college_members] Found college: {college.name}")
+
+            # Get all user profiles associated with this college
+            user_profiles = UserProfile.objects.filter(college=college).select_related(
+                "user"
+            )
+
+            # Also get direct memberships if they exist
+            memberships = Membership.objects.filter(college=college).select_related(
+                "user"
+            )
+
+            # Combine users from both sources and avoid duplicates
+            member_users = set()
+
+            # Add users from profiles
+            for profile in user_profiles:
+                if profile.user:
+                    member_users.add(profile.user)
+
+            # Add users from memberships
+            for membership in memberships:
+                if membership.user:
+                    member_users.add(membership.user)
+
+            print(
+                f"[get_college_members] Found {len(member_users)} members for college {college.name}"
+            )
+
+            # Build member data
+            members_list = []
+            for user in member_users:
+                try:
+                    # Get user groups
+                    user_groups = list(user.groups.values_list("name", flat=True))
+
+                    # Get profile photo if it exists
+                    profile_photo_url = None
+                    try:
+                        if (
+                            hasattr(user, "user_profile")
+                            and user.user_profile
+                            and user.user_profile.profile_photo
+                        ):
+                            profile_photo_url = user.user_profile.profile_photo.url
+                    except Exception as e:
+                        print(
+                            f"[get_college_members] Warning: Could not get profile photo for user {user.id}: {str(e)}"
+                        )
+
+                    # Check if user is campus manager for this college
+                    is_campus_manager = False
+                    try:
+                        if hasattr(user, "user_profile") and user.user_profile:
+                            is_campus_manager = user.user_profile.is_campus_manager
+                    except Exception as e:
+                        print(
+                            f"[get_college_members] Warning: Could not check campus manager status for user {user.id}: {str(e)}"
+                        )
+
+                    member_data = {
+                        "id": user.id,
+                        "user_id": str(user.user_id),
+                        "username": user.username,
+                        "email": user.email,
+                        "first_name": user.first_name,
+                        "last_name": user.last_name,
+                        "is_active": user.is_active,
+                        "is_suspended": user.is_suspended,
+                        "is_campus_manager": is_campus_manager,
+                        "groups": user_groups,
+                        "date_joined": (
+                            user.date_joined.isoformat() if user.date_joined else None
+                        ),
+                        "profile_photo": profile_photo_url,
+                    }
+                    members_list.append(member_data)
+
+                except Exception as e:
+                    print(
+                        f"[get_college_members] Warning: Error processing member {user.id}: {str(e)}"
+                    )
+                    continue
+
+            # Sort members by date joined (newest first)
+            members_list.sort(key=lambda x: x["date_joined"] or "", reverse=True)
+
+            return {
+                "college": {
+                    "id": str(college.collegeId),
+                    "name": college.name,
+                    "city": college.city,
+                    "state": college.state,
+                },
+                "members": members_list,
+                "total_members": len(members_list),
+            }
+
+        except College.DoesNotExist:
+            print(f"[get_college_members] College not found with ID: {college_id}")
+            return None
+        except Exception as e:
+            print(f"[get_college_members] Database error: {str(e)}")
+            raise e
+
+    try:
+        members_data = await get_members_data(college_id)
+        if members_data is None:
+            raise HTTPException(status_code=404, detail="College not found")
+
+        print(
+            f"[get_college_members] Returning {members_data['total_members']} members for college {members_data['college']['name']}"
+        )
+        return members_data
+
+    except Exception as e:
+        if isinstance(e, HTTPException):
+            raise e
+        print(f"[get_college_members] Error in get_college_members: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error fetching college members: {str(e)}"
+        )
+
+
+@router.get("/colleges/{college_id}/events")
+async def get_college_events(
+    college_id: UUID, current_user: CustomUser = Depends(require_admin_role)
+):
+    """
+    Get all events associated with a college - requires Admin or Super Admin role.
+    """
+    print(
+        f"[get_college_events] API called for college_id: {college_id} by {current_user.id}"
+    )
+
+    @sync_to_async
+    def get_events_data(college_id):
+        try:
+            # First verify the college exists
+            college = get_object_or_404(College, collegeId=college_id)
+            print(f"[get_college_events] Found college: {college.name}")
+
+            # Get events in multiple ways:
+            # 1. Events that are set to display on this college
+            # 2. Events hosted by users from this college
+            # 3. Events linked to this college through CollegeEventLink
+
+            events_set = set()
+
+            # Method 1: Events with display_event_on_college = True and hosted by users from this college
+            college_hosted_events = Event.objects.filter(
+                display_event_on_college=True, host__user_profile__college=college
+            )
+
+            for event in college_hosted_events:
+                events_set.add(event)
+
+            # Method 2: Events linked through CollegeEventLink
+            try:
+                college_event_links = CollegeEventLink.objects.filter(
+                    college=college
+                ).select_related("event")
+                for link in college_event_links:
+                    if link.event:
+                        events_set.add(link.event)
+            except Exception as e:
+                print(
+                    f"[get_college_events] Warning: Could not fetch CollegeEventLink: {str(e)}"
+                )
+
+            print(
+                f"[get_college_events] Found {len(events_set)} events for college {college.name}"
+            )
+
+            # Build events data
+            events_list = []
+            for event in events_set:
+                try:
+                    # Get event photos safely
+                    header_photo_url = None
+                    try:
+                        header_photo_url = (
+                            event.header_photo.url if event.header_photo else None
+                        )
+                    except Exception as e:
+                        print(
+                            f"[get_college_events] Warning: Could not get header photo for event {event.eventId}: {str(e)}"
+                        )
+
+                    event_data = {
+                        "eventId": str(event.eventId),
+                        "title": event.title,
+                        "event_type": event.event_type,
+                        "date": event.date.isoformat() if event.date else None,
+                        "header_photo": header_photo_url,
+                    }
+                    events_list.append(event_data)
+
+                except Exception as e:
+                    print(
+                        f"[get_college_events] Warning: Error processing event {event.eventId}: {str(e)}"
+                    )
+                    continue
+
+            # Sort events by date (upcoming events first, then by creation date)
+            events_list.sort(
+                key=lambda x: (
+                    x["date"] or "9999-12-31",  # Put events without dates at the end
+                    x["created_at"] or "",
+                ),
+                reverse=False,
+            )
+
+            return {
+                "college": {
+                    "id": str(college.collegeId),
+                    "name": college.name,
+                    "city": college.city,
+                    "state": college.state,
+                },
+                "events": events_list,
+                "total_events": len(events_list),
+                "event_stats": {
+                    "total_events": len(events_list),
+                    "upcoming_events": len(
+                        [
+                            e
+                            for e in events_list
+                            if e["date"]
+                            and e["date"] >= datetime.now().date().isoformat()
+                        ]
+                    ),
+                    "past_events": len(
+                        [
+                            e
+                            for e in events_list
+                            if e["date"]
+                            and e["date"] < datetime.now().date().isoformat()
+                        ]
+                    ),
+                },
+            }
+
+        except College.DoesNotExist:
+            print(f"[get_college_events] College not found with ID: {college_id}")
+            return None
+        except Exception as e:
+            print(f"[get_college_events] Database error: {str(e)}")
+            raise e
+
+    try:
+        events_data = await get_events_data(college_id)
+        if events_data is None:
+            raise HTTPException(status_code=404, detail="College not found")
+
+        print(
+            f"[get_college_events] Returning {events_data['total_events']} events for college {events_data['college']['name']}"
+        )
+        return events_data
+
+    except Exception as e:
+        if isinstance(e, HTTPException):
+            raise e
+        print(f"[get_college_events] Error in get_college_events: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error fetching college events: {str(e)}"
+        )
