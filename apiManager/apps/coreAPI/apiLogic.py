@@ -561,7 +561,7 @@ async def rsvp(
 
 
 @router.get("/user/{user_id}")
-async def get_user_details(user_id: UUID):
+async def get_user_details(user_id: int, caller_user_id: Optional[int] = Depends(get_current_user)):
     """
     API endpoint to retrieve comprehensive information about a specific user.
     """
@@ -571,7 +571,7 @@ async def get_user_details(user_id: UUID):
     def get_user_data(user_id):
         try:
             # Get user with related profile in a single query
-            user = CustomUser.objects.select_related('user_profile').get(user_id=user_id)
+            user = CustomUser.objects.select_related('user_profile').get(id=user_id)
             user_profile = user.user_profile
 
             # Get profile photo URL
@@ -687,7 +687,7 @@ async def get_user_details(user_id: UUID):
 
 
 @router.get("/crew/{crew_id}")
-async def get_crew_details(crew_id: UUID):
+async def get_crew_details(crew_id: UUID, user_id: Optional[int] = Depends(get_current_user)):
     """
     API endpoint to retrieve comprehensive information about a specific crew.
     """
@@ -783,3 +783,40 @@ async def get_crew_details(crew_id: UUID):
 
     return {"crew_details": crew_data}
 
+
+@router.get("/user/test/friends")
+async def get_user_friends(user_id: Optional[int] = Depends(get_current_user)):
+    """
+    API endpoint to retrieve friends of a specific user.
+    """
+    print(f"[get_user_friends API] Function called with user_id: {user_id}")
+
+    @database_sync_to_async
+    def get_user_friends_data(user_id):
+        try:
+            user = CustomUser.objects.select_related('user_profile').get(id=user_id)
+            friends = user.user_profile.friends.all().select_related('user')[:20]
+            friends_data = []
+            for friend in friends:
+                friend_data = {
+                    "user_id": str(friend.user.user_id),
+                    "username": friend.user.username,
+                    "first_name": friend.user.first_name,
+                    "last_name": friend.user.last_name,
+                    "profile_photo": friend.profile_photo.url if friend.profile_photo else None,
+                }
+                friends_data.append(friend_data)
+            return friends_data
+        except CustomUser.DoesNotExist:
+            print(f"[get_user_friends API] User not found with ID: {user_id}")
+            return None
+        except Exception as e:
+            print(f"[get_user_friends API] Error retrieving user friends: {str(e)}")
+            return None
+    
+    friends_data = await get_user_friends_data(user_id)
+    if friends_data is None:
+        raise HTTPException(status_code=404, detail="Friends not found")
+
+    print(f"[get_user_friends API] Returning friends for user: {user_id}")
+    return {"friends": friends_data}
