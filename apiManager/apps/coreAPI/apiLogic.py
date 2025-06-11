@@ -561,7 +561,7 @@ async def rsvp(
 
 
 @router.get("/user/{user_id}")
-async def get_user_details(user_id: int, caller_user_id: Optional[int] = Depends(get_current_user)):
+async def get_user_details(user_id: UUID, caller_user_id: Optional[int] = Depends(get_current_user)):
     """
     API endpoint to retrieve comprehensive information about a specific user.
     """
@@ -571,7 +571,7 @@ async def get_user_details(user_id: int, caller_user_id: Optional[int] = Depends
     def get_user_data(user_id):
         try:
             # Get user with related profile in a single query
-            user = CustomUser.objects.select_related('user_profile').get(id=user_id)
+            user = CustomUser.objects.select_related('user_profile').get(user_id=user_id)
             user_profile = user.user_profile
 
             # Get profile photo URL
