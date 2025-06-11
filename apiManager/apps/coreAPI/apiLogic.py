@@ -570,13 +570,6 @@ async def get_user_details(user_id: UUID, caller_user_id: Optional[int] = Depend
     @database_sync_to_async
     def get_user_data(user_id):
         try:
-            # Debug: Check if any users exist with similar UUIDs
-            print(f"[DEBUG] Looking for user with user_id: {user_id}")
-            all_users = CustomUser.objects.all()[:5]  # Get first 5 users for debugging
-            print(f"[DEBUG] Sample user_ids in database:")
-            for u in all_users:
-                print(f"  - {u.user_id} (username: {u.username})")
-            
             # Get user with related profile in a single query
             user = CustomUser.objects.select_related('user_profile').get(user_id=user_id)
             user_profile = user.user_profile
@@ -599,7 +592,7 @@ async def get_user_details(user_id: UUID, caller_user_id: Optional[int] = Depend
             college_data = None
             if user_profile.college:
                 college_data = {
-                    "id": user_profile.college.id,
+                    "id": str(user_profile.college.collegeId),
                     "name": user_profile.college.name,
                     "state": user_profile.college.state,
                     "city": user_profile.college.city,
@@ -676,7 +669,7 @@ async def get_user_details(user_id: UUID, caller_user_id: Optional[int] = Depend
                 },
             }
         except CustomUser.DoesNotExist:
-            print(f"[get_user_details API] User not found with ID: {user_id}")
+            print(f"[get_user_details API] User not found with UUID: {user_id}")
             return None
         except Exception as e:
             print(f"[get_user_details API] Error retrieving user data: {str(e)}")
