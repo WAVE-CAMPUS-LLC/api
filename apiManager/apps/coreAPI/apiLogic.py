@@ -11,6 +11,7 @@ from eventManagementApp.models import Event
 from accountManagementApp.models import UserProfile
 from eventTicketsApp.models import RSVPTicket, Ticket
 from eventTicketsApp.views import generateTicket
+from socialApp.models import Crew, CrewMember
 
 # API Manager imports
 from .serializers import ExplorePageEvent, EventDetailsSerializer, RSVPInformation
@@ -557,3 +558,228 @@ async def rsvp(
     result = await rsvp_for_event(request, eventId, user_id, form_data)
     print(f"[rsvp API] Returning result: {result}")
     return result
+
+
+@router.get("/user/{user_id}")
+async def get_user_details(user_id: UUID):
+    """
+    API endpoint to retrieve comprehensive information about a specific user.
+    """
+    print(f"[get_user_details API] Function called with user_id: {user_id}")
+
+    @database_sync_to_async
+    def get_user_data(user_id):
+        try:
+            # Get user with related profile in a single query
+            user = CustomUser.objects.select_related('user_profile').get(user_id=user_id)
+            user_profile = user.user_profile
+
+            # Get profile photo URL
+            profile_photo_url = (
+                user_profile.profile_photo.url
+                if user_profile.profile_photo
+                else None
+            )
+
+            # Get profile QR code URL
+            profile_qr_code_url = (
+                user_profile.profile_qr_code.url
+                if user_profile.profile_qr_code
+                else None
+            )
+
+            # Get college information
+            college_data = None
+            if user_profile.college:
+                college_data = {
+                    "id": user_profile.college.id,
+                    "name": user_profile.college.name,
+                    "state": user_profile.college.state,
+                    "city": user_profile.college.city,
+                }
+
+            # Get user's groups
+            groups = list(user_profile.group.all().values("id", "name"))
+
+            friend_amount = user_profile.friends.count()
+
+            # Get user's crews
+            crew_memberships = []
+            for crew_member in CrewMember.objects.filter(user=user).select_related('crew', 'crew__created_by')[:20]:
+                crew_memberships.append({
+                    "crewId": str(crew_member.crew.crewId),
+                    "name": crew_member.crew.name,
+                })
+
+            # Get user's favorite events (limit for performance)
+            favorite_events = []
+            for event in user_profile.favorite_events.all()[:20]:
+                favorite_events.append({
+                    "eventId": str(event.eventId),
+                    "title": event.title,
+                    "date": event.date,
+                    "header_photo": event.header_photo.url if event.header_photo else None,
+                    "event_host": {
+                        "username": event.host.username,
+                    },
+                })
+
+            # Get user's purchased events (limit for performance)
+            purchased_events = []
+            for event in user_profile.purchased_events.all()[:20]:
+                purchased_events.append({
+                    "eventId": str(event.eventId),
+                    "title": event.title,
+                    "date": event.date,
+                    "header_photo": event.header_photo.url if event.header_photo else None,
+                    "event_host": {
+                        "username": event.host.username,
+                    },
+                })
+
+            # Get user's hosted events (if they are a host)
+            hosted_events = []
+            for event in Event.objects.filter(host=user)[:20]:
+                hosted_events.append({
+                    "eventId": str(event.eventId),
+                    "title": event.title,
+                    "date": event.date,
+                    "header_photo": event.header_photo.url if event.header_photo else None,
+                })
+
+            return {
+                "user": {
+                    "username": user.username,
+                    "email": user.email,
+                    "first_name": user.first_name,
+                    "last_name": user.last_name,
+                    "date_joined": user.date_joined,
+                    "email_verified": user.email_verified,
+                },
+                "profile": {
+                    "profile_photo": profile_photo_url,
+                    "profile_qr_code": profile_qr_code_url,
+                    "college": college_data,
+                    "groups": groups,
+                    "friend_amount": friend_amount,
+                    "crew_memberships": crew_memberships,
+                    "favorite_events": favorite_events,
+                    "purchased_events": purchased_events,
+                    "hosted_events": hosted_events,
+                },
+            }
+        except CustomUser.DoesNotExist:
+            print(f"[get_user_details API] User not found with ID: {user_id}")
+            return None
+        except Exception as e:
+            print(f"[get_user_details API] Error retrieving user data: {str(e)}")
+            return None
+
+    user_data = await get_user_data(user_id)
+    if user_data is None:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    print(
+        f"[get_user_details API] Returning details for user: {user_data['user']['username']}"
+    )
+
+    return {"user_details": user_data}
+
+
+@router.get("/crew/{crew_id}")
+async def get_crew_details(crew_id: UUID):
+    """
+    API endpoint to retrieve comprehensive information about a specific crew.
+    """
+    print(f"[get_crew_details API] Function called with crew_id: {crew_id}")
+
+    @database_sync_to_async
+    def get_crew_data(crew_id):
+        try:
+            # Get crew with related data in optimized queries
+            crew = Crew.objects.select_related('created_by', 'created_by__user_profile').get(crewId=crew_id)
+
+            # Get crew creator profile information
+            creator_profile = crew.created_by.user_profile if hasattr(crew.created_by, 'user_profile') else None
+            creator_data = {
+                "user_id": str(crew.created_by.user_id),
+                "username": crew.created_by.username,
+                "first_name": crew.created_by.first_name,
+                "last_name": crew.created_by.last_name,
+                "profile_photo": (
+                    creator_profile.profile_photo.url
+                    if creator_profile and creator_profile.profile_photo
+                    else None
+                ),
+            }
+
+            # Get all crew members with their profiles
+            crew_members = []
+            for crew_member in CrewMember.objects.filter(crew=crew).select_related('user', 'user__user_profile'):
+                member_profile = crew_member.user.user_profile if hasattr(crew_member.user, 'user_profile') else None
+                crew_members.append({
+                    "user": {
+                        "user_id": str(crew_member.user.user_id),
+                        "username": crew_member.user.username,
+                        "first_name": crew_member.user.first_name,
+                        "last_name": crew_member.user.last_name,
+                    },
+                    "profile": {
+                        "profile_photo": (
+                            member_profile.profile_photo.url
+                            if member_profile and member_profile.profile_photo
+                            else None
+                        ),
+                    },
+                    "membership_details": {
+                        "joined_at": crew_member.joined_at,
+                        "is_admin": crew_member.is_admin,
+                    },
+                })
+
+            # Get shared events for this crew (limit for performance)
+            from eventManagementApp.models import SharedEvent
+            shared_events = []
+            for shared_event in SharedEvent.objects.filter(crew=crew).select_related('event', 'sender')[:20]:
+                shared_events.append({
+                    "event": {
+                        "eventId": str(shared_event.event.eventId),
+                        "title": shared_event.event.title,
+                        "date": shared_event.event.date,
+                        "header_photo": shared_event.event.header_photo.url if shared_event.event.header_photo else None,
+                    },
+                    "sender": {
+                        "username": shared_event.sender.username,
+                        "first_name": shared_event.sender.first_name,
+                        "last_name": shared_event.sender.last_name,
+                    },
+                    "shared_at": shared_event.shared_at,
+                })
+
+            return {
+                "crewId": str(crew.crewId),
+                "name": crew.name,
+                "bio": crew.bio,
+                "created_at": crew.created_at,
+                "created_by": creator_data,
+                "members": crew_members,
+                "member_count": len(crew_members),
+                "shared_events": shared_events,
+            }
+        except Crew.DoesNotExist:
+            print(f"[get_crew_details API] Crew not found with ID: {crew_id}")
+            return None
+        except Exception as e:
+            print(f"[get_crew_details API] Error retrieving crew data: {str(e)}")
+            return None
+
+    crew_data = await get_crew_data(crew_id)
+    if crew_data is None:
+        raise HTTPException(status_code=404, detail="Crew not found")
+
+    print(
+        f"[get_crew_details API] Returning details for crew: {crew_data['name']}"
+    )
+
+    return {"crew_details": crew_data}
+
