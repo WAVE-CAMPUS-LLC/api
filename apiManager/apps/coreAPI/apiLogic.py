@@ -560,19 +560,28 @@ async def rsvp(
     return result
 
 
-@router.get("/user/{user_id}")
-async def get_user_details(user_id: UUID, caller_user_id: Optional[int] = Depends(get_current_user)):
+@router.get("/user/{username}")
+async def get_user_details(username: str, caller_user_id: Optional[int] = Depends(get_current_user)):
     """
-    API endpoint to retrieve comprehensive information about a specific user.
+    API endpoint to retrieve comprehensive information about a specific user by username.
     """
-    print(f"[get_user_details API] Function called with user_id: {user_id}")
+    print(f"[get_user_details API] Function called with username: {username}")
 
     @database_sync_to_async
-    def get_user_data(user_id):
+    def get_user_data(username, caller_user_id):
         try:
             # Get user with related profile in a single query
-            user = CustomUser.objects.select_related('user_profile').get(user_id=user_id)
+            user = CustomUser.objects.select_related('user_profile').get(username=username)
             user_profile = user.user_profile
+
+            # Determine if the calling user is viewing their own profile
+            is_own_profile = False
+            if caller_user_id:
+                try:
+                    calling_user = CustomUser.objects.get(id=caller_user_id)
+                    is_own_profile = calling_user.username == username
+                except CustomUser.DoesNotExist:
+                    is_own_profile = False
 
             # Get profile photo URL
             profile_photo_url = (
@@ -667,15 +676,16 @@ async def get_user_details(user_id: UUID, caller_user_id: Optional[int] = Depend
                     "purchased_events": purchased_events,
                     "hosted_events": hosted_events,
                 },
+                "is_own_profile": is_own_profile,
             }
         except CustomUser.DoesNotExist:
-            print(f"[get_user_details API] User not found with UUID: {user_id}")
+            print(f"[get_user_details API] User not found with username: {username}")
             return None
         except Exception as e:
             print(f"[get_user_details API] Error retrieving user data: {str(e)}")
             return None
 
-    user_data = await get_user_data(user_id)
+    user_data = await get_user_data(username, caller_user_id)
     if user_data is None:
         raise HTTPException(status_code=404, detail="User not found")
 
