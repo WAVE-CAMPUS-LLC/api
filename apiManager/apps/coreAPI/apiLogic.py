@@ -687,7 +687,7 @@ async def get_user_details(username: str, caller_user_id: Optional[int] = Depend
 
     user_data = await get_user_data(username, caller_user_id)
     if user_data is None:
-        raise HTTPException(status_code=404, detail="User not found")
+        return {"error": "User not found"}
 
     print(
         f"[get_user_details API] Returning details for user: {user_data['user']['username']}"
