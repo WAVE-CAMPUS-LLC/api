@@ -1,7 +1,7 @@
 import datetime
 from datetime import timedelta, date
 from django.db import models
-from django.contrib.postgres.indexes import GinIndex
+from django.contrib.postgres.indexes import GinIndex, OpClass
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, Group
 from django.utils import timezone
 from django.contrib.auth.models import Group
@@ -106,9 +106,17 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         default_permissions = ()
 
         indexes = [
-            GinIndex(fields=["username"]),
-            GinIndex(fields=["first_name"]),
-            GinIndex(fields=["last_name"]),
+            GinIndex(
+                [OpClass("username", name="gin_trgm_ops")], name="username_gin_trgm_idx"
+            ),
+            GinIndex(
+                [OpClass("first_name", name="gin_trgm_ops")],
+                name="first_name_gin_trgm_idx",
+            ),
+            GinIndex(
+                [OpClass("last_name", name="gin_trgm_ops")],
+                name="last_name_gin_trgm_idx",
+            ),
         ]
 
         verbose_name = "Member Account"

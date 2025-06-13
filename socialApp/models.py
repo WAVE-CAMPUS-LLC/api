@@ -3,7 +3,7 @@ import uuid
 from django.db import models
 from django.utils.translation import gettext as _
 from django.contrib.auth import get_user_model
-from django.contrib.postgres.indexes import GinIndex
+from django.contrib.postgres.indexes import GinIndex, OpClass
 from django.conf import settings
 
 
@@ -85,8 +85,14 @@ class Crew(models.Model):
         default_permissions = ()
         app_label = "socialApp"
         indexes = [
-            GinIndex(fields=["name"]),
-            GinIndex(fields=["crewId"]),
+            GinIndex(
+                [OpClass("name", name="gin_trgm_ops")],
+                name="name_gin_trgm_idx",
+            ),
+            GinIndex(
+                [OpClass("crewId", name="gin_trgm_ops")],
+                name="crewId_gin_trgm_idx",
+            ),
         ]
 
     def __str__(self):

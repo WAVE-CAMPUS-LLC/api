@@ -5,7 +5,7 @@ import requests
 import os
 import json
 from io import BytesIO
-from django.contrib.postgres.indexes import GinIndex
+from django.contrib.postgres.indexes import GinIndex, OpClass
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from PIL import Image
 from django.db import models
@@ -132,8 +132,14 @@ class UserProfile(models.Model):
         verbose_name = "User Profile"
         verbose_name_plural = "User Profiles"
         indexes = [
-            GinIndex(fields=["profile_qr_code"]),
-            GinIndex(fields=["profile_photo"]),
+            GinIndex(
+                [OpClass("profile_qr_code", name="gin_trgm_ops")],
+                name="profile_qr_code_gin_trgm_idx",
+            ),
+            GinIndex(
+                [OpClass("profile_photo", name="gin_trgm_ops")],
+                name="profile_photo_gin_trgm_idx",
+            ),
         ]
 
     def __str__(self):
