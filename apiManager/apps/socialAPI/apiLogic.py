@@ -300,7 +300,10 @@ async def get_crew_details(
 
 # My Pass Tab
 @router.get("/myPass")
-async def get_my_pass(caller_user_id: Optional[int] = Depends(get_current_user)):
+async def get_my_pass(
+    caller_user_id: Optional[int] = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
     @database_sync_to_async
     def get_my_pass_data(user_id):
         try:
@@ -326,21 +329,28 @@ async def get_my_pass(caller_user_id: Optional[int] = Depends(get_current_user))
                 None,
             )  # Return tuple with data and None for error
         except CustomUser.DoesNotExist:
-            print(f"[get_my_pass API] User not found with ID: {caller_user_id}")
+            print(
+                f"[get_my_pass API] User not found with ID: {caller_user_id} (Platform: {platform})"
+            )
             return None, "User not found"
         except Exception as e:
-            print(f"[get_my_pass API] Error retrieving user data: {str(e)}")
+            print(
+                f"[get_my_pass API] Error retrieving user data: {str(e)} (Platform: {platform})"
+            )
             return None, f"Error retrieving user data: {str(e)}"
 
     my_pass_data, error_message = await get_my_pass_data(caller_user_id)
     if my_pass_data is None:
-        notification_sent = await notify_by_bot(f"[get_my_pass API] {error_message}")
+        notification_sent = await notify_by_bot(
+            f"[get_my_pass API] {error_message} (Platform: {platform})"
+        )
         if notification_sent is None:
             print("[get_my_pass API] Could not send notification: BOT_API_KEY not set")
         raise HTTPException(status_code=404, detail=error_message)
 
     notification_sent = await notify_by_bot(
-        f"[get_my_pass API] User found with ID: {caller_user_id}", level="INFO"
+        f"**[get_my_pass API]** \n\n User found with ID: {caller_user_id} \n(Platform: {platform})",
+        level="INFO",
     )
     if notification_sent is None:
         print("[get_my_pass API] Could not send notification: BOT_API_KEY not set")
