@@ -28,7 +28,11 @@ def get_device_info(user_agent_str: str) -> Dict[str, str]:
     # Get detailed device information
     browser = f"{user_agent.browser.family} {user_agent.browser.version_string}"
     ops = f"{user_agent.os.family} {user_agent.os.version_string}"
-    device = f"{user_agent.device.family} {user_agent.device.brand} {user_agent.device.model}"
+    device_family = user_agent.device.family or "Unknown Device"
+    device_brand = user_agent.device.brand or "Generic"
+    device_model = user_agent.device.model or "Generic Model"
+
+    device = f"{device_family} {device_brand} {device_model}"
 
     # Combine all device info
     device_info = f"{device_type} - {browser} - {ops} - {device}"
