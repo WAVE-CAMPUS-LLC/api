@@ -48,9 +48,9 @@ async def get_user_details(
 
             # Determine if the calling user is viewing their own profile
             is_own_profile = False
-            if caller_user_id:
+            if caller_id:
                 try:
-                    calling_user = CustomUser.objects.get(id=caller_user_id)
+                    calling_user = CustomUser.objects.get(id=caller_id)
                     is_own_profile = calling_user.username == username
                 except CustomUser.DoesNotExist:
                     is_own_profile = False
@@ -401,7 +401,31 @@ async def search(
                 "crewId", "name"
             )[:10]
 
-            return list(user_qs), list(crew_qs), None
+            # Convert UUIDs to strings
+            users = [
+                {
+                    "user_id": str(user.user_id),
+                    "username": user.username,
+                    "first_name": user.first_name,
+                    "last_name": user.last_name,
+                    "profile_photo": (
+                        user.user_profile.profile_photo.url
+                        if user.user_profile.profile_photo
+                        else None
+                    ),
+                }
+                for user in user_qs
+            ]
+
+            crews = [
+                {
+                    "crew_id": str(crew.crewId),
+                    "name": crew.name,
+                }
+                for crew in crew_qs
+            ]
+
+            return users, crews, None
         except Exception as e:
             print(f"[search API] Error searching users: {str(e)}")
             return None, None, str(e)
