@@ -184,7 +184,7 @@ async def get_user_details(
     if user_data is None:
         notification_sent = await notify_by_bot(
             f"**[API: get_user_details API]** \n\n {error_message} \n\n Platform: {platform} \n\n User ID: {caller_user_id} \n\n Username: {username}",
-            platform,
+            platform or "Unknown",
             "ERROR",
             device_info,
         )
@@ -193,30 +193,6 @@ async def get_user_details(
                 "[get_user_details API] Could not send notification: BOT_API_KEY not set"
             )
         raise HTTPException(status_code=404, detail=error_message)
-    if platform is None:
-        platform = "Unknown"
-
-    if platform == "Unknown" and error_message is not None:
-        notification_sent = await notify_by_bot(
-            f"**[API: get_user_details API]** \n\n {error_message} \n\n Platform: {platform} \n\n User ID: {caller_user_id} \n\n Username: {username}",
-            platform,
-            "ERROR",
-            device_info,
-        )
-        if notification_sent is None:
-            print(
-                "[get_user_details API] Could not send notification: BOT_API_KEY not set"
-            )
-
-    if platform == "Unknown" and error_message is None:
-        notification_sent = await notify_by_bot(
-            f"**[API: get_user_details API]** \n\n {error_message} \n\n Platform: {platform} \n\n User ID: {caller_user_id} \n\n Username: {username}",
-            platform,
-            "ERROR",
-            device_info,
-        )
-    if notification_sent is None:
-        print("[get_user_details API] Could not send notification: BOT_API_KEY not set")
 
     print(
         f"[get_user_details API] Returning details for user: {user_data['user']['username']}"
@@ -350,7 +326,7 @@ async def get_crew_details(
     if crew_data is None:
         notification_sent = await notify_by_bot(
             f"**[API: get_crew_details API]** \n\n {error_message} \n\n Platform: {platform} \n\n User ID: {caller_user_id} \n\n Crew ID: {crew_id}",
-            platform,
+            platform or "Unknown",
             "ERROR",
             device_info,
         )
@@ -359,39 +335,9 @@ async def get_crew_details(
                 "[get_crew_details API] Could not send notification: BOT_API_KEY not set"
             )
         raise HTTPException(status_code=404, detail=error_message)
-    if platform is None:
-        platform = "Unknown"
 
-    if platform == "Unknown" and error_message is not None:
-        notification_sent = await notify_by_bot(
-            f"**[API: get_crew_details API]** \n\n {error_message} \n\n Platform: {platform} \n\n User ID: {caller_user_id} \n\n Crew ID: {crew_id}",
-            platform,
-            "ERROR",
-            device_info,
-        )
-        if notification_sent is None:
-            print(
-                "[get_crew_details API] Could not send notification: BOT_API_KEY not set"
-            )
+    print(f"[get_crew_details API] Returning details for crew: {crew_data['name']}")
 
-    if platform == "Unknown" and error_message is None:
-        notification_sent = await notify_by_bot(
-            f"**[API: get_crew_details API]** \n\n {error_message} \n\n Platform: {platform} \n\n User ID: {caller_user_id} \n\n Crew ID: {crew_id}",
-            platform,
-            "ERROR",
-            device_info,
-        )
-        if notification_sent is None:
-            print(
-                "[get_crew_details API] Could not send notification: BOT_API_KEY not set"
-            )
-
-    if notification_sent is None:
-        print("[get_crew_details API] Could not send notification: BOT_API_KEY not set")
-
-    print(
-        f"[get_crew_details API] Returning details for crew: {crew_data['name']} \n\n Platform: {platform} \n\n User ID: {caller_user_id} \n\n Crew ID: {crew_id}"
-    )
     return {"crew_details": crew_data}
 
 
@@ -444,8 +390,8 @@ async def get_my_pass(
     my_pass_data, error_message = await get_my_pass_data(caller_user_id)
     if my_pass_data is None:
         notification_sent = await notify_by_bot(
-            f"**[API: get_my_pass API]** \n\n {error_message}",
-            platform,
+            f"**[API: get_my_pass API]** \n\n {error_message} \n\n Platform: {platform} \n\n User ID: {caller_user_id}",
+            platform or "Unknown",
             "ERROR",
             device_info,
         )
@@ -525,8 +471,8 @@ async def search(
     users, crews, error_message = await search_users(query)
     if users is None or crews is None:
         notification_sent = await notify_by_bot(
-            f"**[API: search API]** \n\n {error_message}",
-            platform,
+            f"**[API: search API]** \n\n {error_message} \n\n Platform: {platform} \n\n Query: {query}",
+            platform or "Unknown",
             "ERROR",
             device_info,
         )
