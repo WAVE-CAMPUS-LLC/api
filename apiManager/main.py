@@ -15,7 +15,7 @@ from apiManager.apps.authenticationAPI.apiLogic import router as auth_router
 from apiManager.apps.collegeManagementAPI.apiLogic import router as college_router
 from apiManager.apps.eventTicketsAPI.apiLogic import router as ticket_router
 from apiManager.apps.adminManagementAPI.apiLogic import router as admin_router
-
+from apiManager.apps.socialAPI.apiLogic import router as social_router
 from apiManager.apps.coreAPI.version_middleware import VersionCheckMiddleware
 
 app = FastAPI(title="WAVE. API", version="1.0.0")
@@ -67,4 +67,7 @@ app.include_router(
 )
 app.include_router(
     admin_router, prefix="/waveYourCampusAPIFromOAK/admin", tags=["Admin"]
+)
+app.include_router(
+    social_router, prefix="/waveYourCampusAPIFromOAK/social", tags=["Social"]
 )
