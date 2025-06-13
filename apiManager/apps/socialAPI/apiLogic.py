@@ -359,13 +359,4 @@ async def get_my_pass(
             print("[get_my_pass API] Could not send notification: BOT_API_KEY not set")
         raise HTTPException(status_code=404, detail=error_message)
 
-    notification_sent = await notify_by_bot(
-        f"**[API: get_my_pass API]** \n\n User found with ID: {caller_user_id}",
-        platform,
-        "INFO",
-        device_info,
-    )
-    if notification_sent is None:
-        print("[get_my_pass API] Could not send notification: BOT_API_KEY not set")
-
     return {"my_pass_data": my_pass_data}
