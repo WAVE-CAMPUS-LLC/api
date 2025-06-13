@@ -48,9 +48,9 @@ async def get_user_details(
 
             # Determine if the calling user is viewing their own profile
             is_own_profile = False
-            if caller_id:
+            if caller_user_id:
                 try:
-                    calling_user = CustomUser.objects.get(id=caller_id)
+                    calling_user = CustomUser.objects.get(id=caller_user_id)
                     is_own_profile = calling_user.username == username
                 except CustomUser.DoesNotExist:
                     is_own_profile = False
