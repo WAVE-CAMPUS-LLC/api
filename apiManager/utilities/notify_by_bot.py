@@ -7,7 +7,9 @@ api_url = "https://walle-6okl.onrender.com/api"
 DISCORD_BOT_API_KEY = os.getenv("BOT_API_KEY")
 
 
-async def notify_by_bot(message: str, level: str = "ERROR") -> Optional[bool]:
+async def notify_by_bot(
+    message: str, platform: str, level: str = "ERROR", device_info: str = None
+) -> Optional[bool]:
     """
     Send a notification to the Discord bot.
 
@@ -26,11 +28,20 @@ async def notify_by_bot(message: str, level: str = "ERROR") -> Optional[bool]:
         print("[notify_by_bot] Error: Message cannot be empty")
         return False
 
+    if not platform:
+        print("[notify_by_bot] Error: Platform cannot be empty")
+        return False
+
     try:
         async with httpx.AsyncClient() as client:
             response = await client.post(
                 f"{api_url}/log/error",
-                json={"message": message, "level": level},
+                json={
+                    "message": message,
+                    "level": level,
+                    "platform": platform,
+                    "device_info": device_info,
+                },
                 headers={"X-API-Key": DISCORD_BOT_API_KEY},
                 timeout=5,  # Increased timeout for better reliability
             )
