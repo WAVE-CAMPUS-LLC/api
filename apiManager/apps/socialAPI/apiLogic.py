@@ -5,6 +5,7 @@ from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordRequestForm
 import bleach
 
+from apiManager.utilities.notify_by_bot import notify_by_bot
 
 from eventManagementApp.models import Event
 from accountManagementApp.models import UserProfile
@@ -15,6 +16,8 @@ from eventTicketsApp.views import generateTicket
 from apiManager.dependencies import get_current_user
 from authenticationApp.models import CustomUser
 from uuid import UUID
+
+from .serializers import MyPassSerializer
 
 
 router = APIRouter()
@@ -293,3 +296,49 @@ async def get_crew_details(
     print(f"[get_crew_details API] Returning details for crew: {crew_data['name']}")
 
     return {"crew_details": crew_data}
+
+
+# My Pass Tab
+@router.get("/myPass")
+async def get_my_pass(caller_user_id: Optional[int] = Depends(get_current_user)):
+    @database_sync_to_async
+    def get_my_pass_data(user_id):
+        try:
+            user = CustomUser.objects.get(id=caller_user_id)
+            user_profile = user.user_profile
+
+            return MyPassSerializer(
+                user_id=str(user.user_id),
+                username=user.username,
+                profile_photo=(
+                    user_profile.profile_photo.url
+                    if user_profile.profile_photo
+                    else None
+                ),
+                qr_code=(
+                    user_profile.profile_qr_code.url
+                    if user_profile.profile_qr_code
+                    else None
+                ),
+            )
+        except CustomUser.DoesNotExist:
+            print(f"[get_my_pass API] User not found with ID: {caller_user_id}")
+            await notify_by_bot(
+                f"[get_my_pass API] User not found with ID: {caller_user_id}"
+            )
+            return HTTPException(status_code=404, detail="User not found")
+        except Exception as e:
+            print(f"[get_my_pass API] Error retrieving user data: {str(e)}")
+            await notify_by_bot(
+                f"[get_my_pass API] Error retrieving user data: {str(e)}"
+            )
+            return HTTPException(status_code=500, detail="Internal server error")
+
+    my_pass_data = await get_my_pass_data(caller_user_id)
+    if my_pass_data is None:
+        await notify_by_bot(
+            f"[get_my_pass API] User not found with ID: {caller_user_id}"
+        )
+        raise HTTPException(status_code=404, detail="User not found")
+
+    return {"my_pass_data": my_pass_data}
