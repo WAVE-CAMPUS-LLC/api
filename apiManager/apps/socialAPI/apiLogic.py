@@ -170,13 +170,15 @@ async def get_user_details(
                     "hosted_events": hosted_events,
                 },
                 "is_own_profile": is_own_profile,
-            }
+            }, None
         except CustomUser.DoesNotExist:
-            print(f"[get_user_details API] User not found with username: {username}")
-            return None
+            error_message = f"User not found with username: {username}"
+            print(f"[get_user_details API] {error_message}")
+            return None, error_message
         except Exception as e:
-            print(f"[get_user_details API] Error retrieving user data: {str(e)}")
-            return None
+            error_message = f"Error retrieving user data: {str(e)}"
+            print(f"[get_user_details API] {error_message}")
+            return None, error_message
 
     user_data, error_message = await get_user_data(username, caller_user_id)
     if user_data is None:
