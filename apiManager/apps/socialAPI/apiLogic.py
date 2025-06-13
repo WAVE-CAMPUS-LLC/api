@@ -8,6 +8,7 @@ import os
 from user_agents import parse as parse_user_agent
 
 from apiManager.utilities.notify_by_bot import notify_by_bot
+from apiManager.utilities.device_info import get_device_info
 
 from eventManagementApp.models import Event
 from accountManagementApp.models import UserProfile
@@ -308,22 +309,8 @@ async def get_my_pass(
     platform: Optional[str] = None,
 ):
     user_agent_str = request.headers.get("user-agent", "")
-    user_agent = parse_user_agent(user_agent_str)
-    device_type = (
-        "iOS"
-        if user_agent.is_mobile and user_agent.os.family == "iOS"
-        else (
-            "Android"
-            if user_agent.is_mobile and user_agent.os.family == "Android"
-            else "Web" if user_agent.is_pc else "Unknown"
-        )
-    )
-
-    browser = f"{user_agent.browser.family} {user_agent.browser.version_string}"
-    ops = f"{user_agent.os.family} {user_agent.os.version_string}"
-    device = f"{user_agent.device.family} {user_agent.device.brand} {user_agent.device.model}"
-
-    device_info = f"{device_type} - {browser} - {ops} - {device}"
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
 
     @database_sync_to_async
     def get_my_pass_data(caller_user_id):
@@ -363,15 +350,20 @@ async def get_my_pass(
     my_pass_data, error_message = await get_my_pass_data(caller_user_id)
     if my_pass_data is None:
         notification_sent = await notify_by_bot(
-            f"**[API: get_my_pass API]** \n\n {error_message} \nPlatform: {platform} \nDevice: {device_info}"
+            f"**[API: get_my_pass API]** \n\n {error_message}",
+            platform,
+            "ERROR",
+            device_info,
         )
         if notification_sent is None:
             print("[get_my_pass API] Could not send notification: BOT_API_KEY not set")
         raise HTTPException(status_code=404, detail=error_message)
 
     notification_sent = await notify_by_bot(
-        f"**[API: get_my_pass API]** \n\n User found with ID: {caller_user_id} \nPlatform: {platform} \nDevice: {device_info}",
-        level="INFO",
+        f"**[API: get_my_pass API]** \n\n User found with ID: {caller_user_id}",
+        platform,
+        "INFO",
+        device_info,
     )
     if notification_sent is None:
         print("[get_my_pass API] Could not send notification: BOT_API_KEY not set")
