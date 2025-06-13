@@ -86,12 +86,7 @@ class Crew(models.Model):
         app_label = "socialApp"
         indexes = [
             GinIndex(
-                [OpClass("name", name="gin_trgm_ops")],
-                name="name_gin_trgm_idx",
-            ),
-            GinIndex(
-                [OpClass("crewId", name="gin_trgm_ops")],
-                name="crewId_gin_trgm_idx",
+                fields=["name"], name="name_gin_trgm_idx", opclasses=["gin_trgm_ops"]
             ),
         ]
 

@@ -63,7 +63,7 @@ def get_college_choices():
             colleges = json.load(f)
     except (IOError, json.JSONDecodeError) as e:
         print(f"Error reading JSON file: {e}")
-        # If the file can’t be read or the JSON is invalid, return an empty list.
+        # If the file can't be read or the JSON is invalid, return an empty list.
         return []
 
     # Create a tuple (value, label) for each college entry.
@@ -133,12 +133,14 @@ class UserProfile(models.Model):
         verbose_name_plural = "User Profiles"
         indexes = [
             GinIndex(
-                [OpClass("profile_qr_code", name="gin_trgm_ops")],
+                fields=["profile_qr_code"],
                 name="profile_qr_code_gin_trgm_idx",
+                opclasses=["gin_trgm_ops"],
             ),
             GinIndex(
-                [OpClass("profile_photo", name="gin_trgm_ops")],
+                fields=["profile_photo"],
                 name="profile_photo_gin_trgm_idx",
+                opclasses=["gin_trgm_ops"],
             ),
         ]
 

@@ -107,15 +107,19 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
         indexes = [
             GinIndex(
-                [OpClass("username", name="gin_trgm_ops")], name="username_gin_trgm_idx"
+                fields=["username"],
+                name="username_gin_trgm_idx",
+                opclasses=["gin_trgm_ops"],
             ),
             GinIndex(
-                [OpClass("first_name", name="gin_trgm_ops")],
+                fields=["first_name"],
                 name="first_name_gin_trgm_idx",
+                opclasses=["gin_trgm_ops"],
             ),
             GinIndex(
-                [OpClass("last_name", name="gin_trgm_ops")],
+                fields=["last_name"],
                 name="last_name_gin_trgm_idx",
+                opclasses=["gin_trgm_ops"],
             ),
         ]
 
