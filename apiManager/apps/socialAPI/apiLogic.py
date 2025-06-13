@@ -30,12 +30,19 @@ router = APIRouter()
 
 @router.get("/user/{username}")
 async def get_user_details(
-    username: str, caller_user_id: Optional[int] = Depends(get_current_user)
+    request: Request,
+    username: str,
+    caller_user_id: Optional[int] = Depends(get_current_user),
+    platform: Optional[str] = None,
 ):
     """
     API endpoint to retrieve comprehensive information about a specific user by username.
     """
     print(f"[get_user_details API] Function called with username: {username}")
+
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
 
     @database_sync_to_async
     def get_user_data(username, caller_user_id):
@@ -171,9 +178,43 @@ async def get_user_details(
             print(f"[get_user_details API] Error retrieving user data: {str(e)}")
             return None
 
-    user_data = await get_user_data(username, caller_user_id)
+    user_data, error_message = await get_user_data(username, caller_user_id)
     if user_data is None:
-        return {"error": "User not found"}
+        notification_sent = await notify_by_bot(
+            f"**[API: get_user_details API]** \n\n {error_message} \n\n Platform: {platform} \n\n User ID: {caller_user_id} \n\n Username: {username}",
+            platform,
+            "ERROR",
+            device_info,
+        )
+        if notification_sent is None:
+            print(
+                "[get_user_details API] Could not send notification: BOT_API_KEY not set"
+            )
+        raise HTTPException(status_code=404, detail=error_message)
+    if platform is None:
+        platform = "Unknown"
+
+    if platform == "Unknown" and error_message is not None:
+        notification_sent = await notify_by_bot(
+            f"**[API: get_user_details API]** \n\n {error_message} \n\n Platform: {platform} \n\n User ID: {caller_user_id} \n\n Username: {username}",
+            platform,
+            "ERROR",
+            device_info,
+        )
+        if notification_sent is None:
+            print(
+                "[get_user_details API] Could not send notification: BOT_API_KEY not set"
+            )
+
+    if platform == "Unknown" and error_message is None:
+        notification_sent = await notify_by_bot(
+            f"**[API: get_user_details API]** \n\n {error_message} \n\n Platform: {platform} \n\n User ID: {caller_user_id} \n\n Username: {username}",
+            platform,
+            "ERROR",
+            device_info,
+        )
+    if notification_sent is None:
+        print("[get_user_details API] Could not send notification: BOT_API_KEY not set")
 
     print(
         f"[get_user_details API] Returning details for user: {user_data['user']['username']}"
