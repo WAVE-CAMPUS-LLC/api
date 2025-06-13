@@ -1,11 +1,13 @@
 from typing import Optional
 from channels.db import database_sync_to_async
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status, Query
 from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordRequestForm
 import bleach
 import os
 from user_agents import parse as parse_user_agent
+from django.db.models import Q, Prefetch
+
 
 from apiManager.utilities.notify_by_bot import notify_by_bot
 from apiManager.utilities.device_info import get_device_info
@@ -20,7 +22,7 @@ from apiManager.dependencies import get_current_user
 from authenticationApp.models import CustomUser
 from uuid import UUID
 
-from .serializers import MyPassSerializer
+from .serializers import MyPassSerializer, SearchResult
 
 
 router = APIRouter()
@@ -360,3 +362,60 @@ async def get_my_pass(
         raise HTTPException(status_code=404, detail=error_message)
 
     return {"my_pass_data": my_pass_data}
+
+
+@router.get("/search", response_model=SearchResult)
+async def search(
+    request: Request,
+    query: str = Query(
+        ...,
+        description="Search query",
+        min_length=1,
+    ),
+    platform: Optional[str] = None,
+):
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    @database_sync_to_async
+    def search_users(query):
+        try:
+            user_qs = (
+                CustomUser.objects.filter(
+                    Q(username__icontains=query)
+                    | Q(first_name__icontains=query)
+                    | Q(last_name__icontains=query)
+                )
+                .select_related("user_profile")
+                .only(
+                    "user_id",
+                    "username",
+                    "first_name",
+                    "last_name",
+                    "user_profile__profile_photo",
+                )[:10]
+            )
+
+            crew_qs = Crew.objects.filter(Q(name__icontains=query)).only(
+                "crewId", "name"
+            )[:10]
+
+            return list(user_qs), list(crew_qs), None
+        except Exception as e:
+            print(f"[search API] Error searching users: {str(e)}")
+            return None, None, str(e)
+
+    users, crews, error_message = await search_users(query)
+    if users is None or crews is None:
+        notification_sent = await notify_by_bot(
+            f"**[API: search API]** \n\n {error_message}",
+            platform,
+            "ERROR",
+            device_info,
+        )
+        if notification_sent is None:
+            print("[search API] Could not send notification: BOT_API_KEY not set")
+        raise HTTPException(status_code=500, detail="Error searching users")
+
+    return {"users": users, "crews": crews}

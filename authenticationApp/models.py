@@ -1,6 +1,7 @@
 import datetime
 from datetime import timedelta, date
 from django.db import models
+from django.contrib.postgres.indexes import GinIndex
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, Group
 from django.utils import timezone
 from django.contrib.auth.models import Group
@@ -27,6 +28,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         blank=False,
         null=False,
         help_text=(_("First Name")),
+        db_index=True,
     )
     last_name = models.CharField(
         _("Last Name"),
@@ -34,6 +36,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         blank=False,
         null=False,
         help_text=(_("Last Name")),
+        db_index=True,
     )
     email = models.EmailField(
         _("Email"), unique=True, blank=False, null=False, help_text=(_("Email"))
@@ -45,6 +48,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         null=False,
         unique=True,
         help_text=(_("Username")),
+        db_index=True,
     )
 
     date_joined = models.DateField(auto_now_add=True)
@@ -100,6 +104,12 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
     class Meta:
         default_permissions = ()
+
+        indexes = [
+            GinIndex(fields=["username"]),
+            GinIndex(fields=["first_name"]),
+            GinIndex(fields=["last_name"]),
+        ]
 
         verbose_name = "Member Account"
         verbose_name_plural = "Member Accounts"

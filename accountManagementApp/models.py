@@ -5,6 +5,7 @@ import requests
 import os
 import json
 from io import BytesIO
+from django.contrib.postgres.indexes import GinIndex
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from PIL import Image
 from django.db import models
@@ -43,8 +44,9 @@ class EventTypePreferences(models.Model):
 
 def profile_picture_path(instance, filename):
     # Generate a unique path for each profile picture
-    ext = filename.split('.')[-1]
-    return f'wave/profile-pictures/{instance.user.id}/{uuid.uuid4()}.{ext}'
+    ext = filename.split(".")[-1]
+    return f"wave/profile-pictures/{instance.user.id}/{uuid.uuid4()}.{ext}"
+
 
 def get_college_choices():
     """
@@ -52,11 +54,12 @@ def get_college_choices():
     tuples in the form (college_name, college_name). This can be used as choices for a model field.
     """
     # Determine the path to the JSON file.
-    json_file_path = f'{os.path.join(BASE_DIR, "wave_v1")}/world_universities_and_domains.json'
+    json_file_path = (
+        f'{os.path.join(BASE_DIR, "wave_v1")}/world_universities_and_domains.json'
+    )
 
-    
     try:
-        with open(json_file_path, 'r', encoding='utf-8') as f:
+        with open(json_file_path, "r", encoding="utf-8") as f:
             colleges = json.load(f)
     except (IOError, json.JSONDecodeError) as e:
         print(f"Error reading JSON file: {e}")
@@ -65,9 +68,9 @@ def get_college_choices():
 
     # Create a tuple (value, label) for each college entry.
     college_choices = [
-        (college['name'], college['name'])
+        (college["name"], college["name"])
         for college in colleges
-        if college.get('alpha_two_code') == 'US'
+        if college.get("alpha_two_code") == "US"
     ]
     college_choices.sort(key=lambda choice: choice[0].lower())
     college_choices = college_choices[1:]
@@ -77,7 +80,7 @@ def get_college_choices():
 
 class UserProfile(models.Model):
     COLLEGE_OPTIONS = get_college_choices()
-    
+
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -89,18 +92,19 @@ class UserProfile(models.Model):
     college = models.ForeignKey(
         College, null=True, blank=True, on_delete=models.SET_NULL
     )
-    friends = models.ManyToManyField("self", symmetrical=True, blank=True, db_index=True)
+    friends = models.ManyToManyField(
+        "self", symmetrical=True, blank=True, db_index=True
+    )
     is_campus_manager = models.BooleanField(default=False)
 
-    
     profile_photo = models.FileField(
-        upload_to='profile/profile-pictures/',
+        upload_to="profile/profile-pictures/",
         null=True,
         blank=True,
-        help_text="Profile picture for the user"
+        help_text="Profile picture for the user",
+        db_index=True,
     )
 
-    
     was_host = models.BooleanField(default=False)
 
     # Invited Events
@@ -112,13 +116,13 @@ class UserProfile(models.Model):
     )
 
     profile_qr_code = models.FileField(
-        upload_to="profile/qr_code/", null=True, blank=True
+        upload_to="profile/qr_code/", null=True, blank=True, db_index=True
     )
-    
+
     favorite_events = models.ManyToManyField(
         Event, related_name="favorited_by", blank=True, null=True
     )
-    
+
     purchased_events = models.ManyToManyField(
         Event, related_name="purchased_by", blank=True, null=True
     )
@@ -127,13 +131,19 @@ class UserProfile(models.Model):
         default_permissions = ()
         verbose_name = "User Profile"
         verbose_name_plural = "User Profiles"
+        indexes = [
+            GinIndex(fields=["profile_qr_code"]),
+            GinIndex(fields=["profile_photo"]),
+        ]
 
     def __str__(self):
         return self.user.username
 
     def generate_qr_code(self):
-        part_url = reverse("social:publicProfile", kwargs={"username": self.user.username})
-        
+        part_url = reverse(
+            "social:publicProfile", kwargs={"username": self.user.username}
+        )
+
         url = f"{settings.SITE_URL}{part_url}"
         qr = qrcode.make(url)
 
@@ -217,7 +227,12 @@ class UserProfile(models.Model):
         return crew.created_by == self.user
 
     def get_all_crews(self):
-        return [member.crew for member in CrewMember.objects.filter(user=self.user).select_related('crew')]
+        return [
+            member.crew
+            for member in CrewMember.objects.filter(user=self.user).select_related(
+                "crew"
+            )
+        ]
 
     def get_shared_events(self):
         return SharedEvent.objects.filter(receiver=self.user)

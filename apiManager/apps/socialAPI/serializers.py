@@ -9,3 +9,21 @@ class MyPassSerializer(BaseModel):
     username: str
     profile_photo: Optional[str] = None
     qr_code: Optional[str] = None
+
+
+class UserSearchResult(BaseModel):
+    user_id: str
+    username: str
+    first_name: str
+    last_name: str
+    profile_photo: Optional[str] = None
+
+
+class CrewSearchResult(BaseModel):
+    crew_id: str
+    name: str
+
+
+class SearchResult(BaseModel):
+    users: List[UserSearchResult]
+    crews: List[CrewSearchResult]
