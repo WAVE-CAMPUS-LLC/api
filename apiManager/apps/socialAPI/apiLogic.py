@@ -307,20 +307,24 @@ async def get_my_pass(caller_user_id: Optional[int] = Depends(get_current_user))
             user = CustomUser.objects.get(id=caller_user_id)
             user_profile = user.user_profile
 
-            return MyPassSerializer(
-                user_id=str(user.user_id),
-                username=user.username,
-                profile_photo=(
-                    user_profile.profile_photo.url
-                    if user_profile.profile_photo
-                    else None
+            return (
+                MyPassSerializer(
+                    id=str(user.id),
+                    user_id=str(user.user_id),
+                    username=user.username,
+                    profile_photo=(
+                        user_profile.profile_photo.url
+                        if user_profile.profile_photo
+                        else None
+                    ),
+                    qr_code=(
+                        user_profile.profile_qr_code.url
+                        if user_profile.profile_qr_code
+                        else None
+                    ),
                 ),
-                qr_code=(
-                    user_profile.profile_qr_code.url
-                    if user_profile.profile_qr_code
-                    else None
-                ),
-            )
+                None,
+            )  # Return tuple with data and None for error
         except CustomUser.DoesNotExist:
             print(f"[get_my_pass API] User not found with ID: {caller_user_id}")
             return None, "User not found"
@@ -330,8 +334,15 @@ async def get_my_pass(caller_user_id: Optional[int] = Depends(get_current_user))
 
     my_pass_data, error_message = await get_my_pass_data(caller_user_id)
     if my_pass_data is None:
-        await notify_by_bot(f"[get_my_pass API] {error_message}")
+        notification_sent = await notify_by_bot(f"[get_my_pass API] {error_message}")
+        if notification_sent is None:
+            print("[get_my_pass API] Could not send notification: BOT_API_KEY not set")
         raise HTTPException(status_code=404, detail=error_message)
 
-    await notify_by_bot(f"[get_my_pass API] User found with ID: {caller_user_id}")
+    notification_sent = await notify_by_bot(
+        f"[get_my_pass API] User found with ID: {caller_user_id}", level="INFO"
+    )
+    if notification_sent is None:
+        print("[get_my_pass API] Could not send notification: BOT_API_KEY not set")
+
     return {"my_pass_data": my_pass_data}
