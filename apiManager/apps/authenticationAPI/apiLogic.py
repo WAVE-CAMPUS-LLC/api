@@ -14,7 +14,7 @@ from adminDashboardApp.models import LoginHistoryModel
 from authenticationApp.forms import MobileUserJoinForm
 
 from .serializers import LoginRequest, JoinRequest
-from apiManager.utilities import get_form_fields
+from apiManager.utilities.form_fields import get_form_fields
 
 
 from jose import jwt

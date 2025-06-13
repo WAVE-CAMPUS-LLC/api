@@ -14,7 +14,7 @@ from channels.db import database_sync_to_async
 import traceback
 
 from apiManager.dependencies import get_current_user
-from apiManager.utilities import get_form_fields
+from apiManager.utilities.form_fields import get_form_fields
 from .serializers import (
     HostEventExplore,
     EventDetailSerializer,

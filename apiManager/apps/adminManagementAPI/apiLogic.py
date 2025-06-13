@@ -59,7 +59,7 @@ from adminDashboardApp.models import College, LoginHistoryModel
 from adminDashboardApp.models import College
 from collegeManagementApp.models import Membership, CollegeEventLink
 from adminDashboardApp.forms import CollegeForm, EditCollegeForm
-from apiManager.utilities import get_form_fields
+from apiManager.utilities.form_fields import get_form_fields
 
 router = APIRouter()
 
@@ -929,6 +929,7 @@ async def get_user_logins(
             status_code=500, detail=f"Error fetching login analytics: {str(e)}"
         )
 
+
 @router.get("/eventAnalytics/getAll")
 async def get_all_events(current_user: CustomUser = Depends(require_admin_role)):
     """
@@ -943,18 +944,28 @@ async def get_all_events(current_user: CustomUser = Depends(require_admin_role))
         """
         try:
             events_qs = Event.objects.select_related("host").only(
-                "eventId", "title", "date", "header_photo", "host__username", "host__first_name", "host__last_name"
+                "eventId",
+                "title",
+                "date",
+                "header_photo",
+                "host__username",
+                "host__first_name",
+                "host__last_name",
             )
             events = list(events_qs)
             events_info = []
-            
+
             for event in events:
                 # Safely get header photo URL
                 header_photo_url = None
                 try:
-                    header_photo_url = event.header_photo.url if event.header_photo else None
+                    header_photo_url = (
+                        event.header_photo.url if event.header_photo else None
+                    )
                 except Exception as e:
-                    print(f"[get_all_events] Warning: header_photo error for event {event.eventId}: {e}")
+                    print(
+                        f"[get_all_events] Warning: header_photo error for event {event.eventId}: {e}"
+                    )
 
                 events_info.append(
                     {
@@ -966,13 +977,13 @@ async def get_all_events(current_user: CustomUser = Depends(require_admin_role))
                         },
                         "title": event.title,
                         "date": event.date.isoformat() if event.date else None,
-                        "header_photo_url": header_photo_url
+                        "header_photo_url": header_photo_url,
                     }
                 )
-            
+
             print(f"[get_all_events] Successfully processed {len(events_info)} events")
             return events_info
-            
+
         except Exception as e:
             print(f"[get_all_events] Database error: {str(e)}")
             raise e
@@ -983,9 +994,8 @@ async def get_all_events(current_user: CustomUser = Depends(require_admin_role))
 
     except Exception as e:
         print(f"[get_all_events] Error in get_all_events: {str(e)}")
-        raise HTTPException(
-            status_code=500, detail=f"Error fetching events: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error fetching events: {str(e)}")
+
 
 @router.get("/eventAnalytics/specific/{event_id}")
 async def get_event_specific_analytics(
@@ -1007,19 +1017,23 @@ async def get_event_specific_analytics(
         try:
             # Verify event exists
             event = get_object_or_404(Event, eventId=event_id)
-            
+
             # Debug: Confirm time period being used
-            print(f"[get_event_specific_analytics] DEBUG: Using time_period '{time_period}' for event analytics")
-            
+            print(
+                f"[get_event_specific_analytics] DEBUG: Using time_period '{time_period}' for event analytics"
+            )
+
             # Determine truncation function
             trunc_function = {
                 "daily": TruncDay,
                 "weekly": TruncWeek,
                 "monthly": TruncMonth,
             }.get(time_period, TruncDay)
-            
+
             if time_period not in ["daily", "weekly", "monthly"]:
-                print(f"[get_event_specific_analytics] WARNING: Invalid time_period '{time_period}', defaulting to daily")
+                print(
+                    f"[get_event_specific_analytics] WARNING: Invalid time_period '{time_period}', defaulting to daily"
+                )
                 trunc_function = TruncDay
 
             # Basic event information
@@ -1123,19 +1137,23 @@ async def get_event_specific_analytics(
 
             # Add RSVP-specific data for free events
             if is_free_event:
-                response_data["summary_stats"].update({
-                    "total_rsvps": total_rsvps,
-                    "rsvps_on_guestlist": rsvps_on_guestlist,
-                })
+                response_data["summary_stats"].update(
+                    {
+                        "total_rsvps": total_rsvps,
+                        "rsvps_on_guestlist": rsvps_on_guestlist,
+                    }
+                )
                 response_data["trends"]["rsvp_trends"] = rsvp_trends
 
             # Add paid ticket-specific data for paid events
             if is_paid_event:
-                response_data["summary_stats"].update({
-                    "total_paid_tickets": total_paid_tickets,
-                    "total_revenue": total_revenue,
-                    "ticket_types_count": len(ticket_types),
-                })
+                response_data["summary_stats"].update(
+                    {
+                        "total_paid_tickets": total_paid_tickets,
+                        "total_revenue": total_revenue,
+                        "ticket_types_count": len(ticket_types),
+                    }
+                )
                 response_data["trends"]["paid_ticket_trends"] = paid_ticket_trends
                 response_data["ticket_breakdown"] = ticket_types
 
@@ -1179,7 +1197,7 @@ async def get_overall_event_analytics(
     """
     Get overall event analytics across all events - requires Admin or Super Admin role.
     Optimized with caching and efficient database queries.
-    
+
     🚀 PERFORMANCE OPTIMIZATIONS IMPLEMENTED:
     - Database indexes on all queried fields
     - Efficient QuerySet slicing with SQL LIMIT
@@ -1187,13 +1205,13 @@ async def get_overall_event_analytics(
     - Minimal field selection with .only()
     - Batched aggregation queries
     - Proper ORDER BY with LIMIT instead of Python slicing
-    
+
     🔮 FUTURE OPTIMIZATIONS (can be added if needed):
     - Celery background tasks for pre-computation
     - Database connection pooling
     - Read replicas for analytics queries
     - Materialized views for complex aggregations
-    
+
     🕒 PERFORMANCE NOTE: For optimal performance, ensure these database indexes exist:
     - Event.created_at (for time-based grouping)
     - Event.status (for status filtering)
@@ -1202,7 +1220,7 @@ async def get_overall_event_analytics(
     - RSVPTicket.created_at (for RSVP trends)
     - Ticket.created_at (for paid ticket trends)
     - PaidFreeTicket.ticket_sold (for revenue calculation)
-    
+
     Example SQL to create indexes:
     CREATE INDEX idx_event_created_at ON eventmanagementapp_event(created_at);
     CREATE INDEX idx_event_status ON eventmanagementapp_event(status);
@@ -1229,7 +1247,9 @@ async def get_overall_event_analytics(
             cache_key = f"overall_analytics_{time_period}"
             cached_data = cache.get(cache_key)
             if cached_data:
-                print(f"[get_overall_event_analytics] Returning cached data for {time_period}")
+                print(
+                    f"[get_overall_event_analytics] Returning cached data for {time_period}"
+                )
                 # Update cache info to show it was cached
                 cached_data["cache_info"]["cached"] = True
                 return cached_data
@@ -1259,13 +1279,15 @@ async def get_overall_event_analytics(
                 # Get revenue from ticket types where tickets were actually sold
                 revenue_data = PaidFreeTicket.objects.filter(
                     ticket_sold__gt=0
-                ).aggregate(
-                    total_revenue=Sum(F('ticket_sold') * F('ticket_price'))
+                ).aggregate(total_revenue=Sum(F("ticket_sold") * F("ticket_price")))
+                total_revenue = float(revenue_data["total_revenue"] or 0)
+                print(
+                    f"[get_overall_event_analytics] DEBUG: Calculated total revenue via aggregation: ${total_revenue}"
                 )
-                total_revenue = float(revenue_data['total_revenue'] or 0)
-                print(f"[get_overall_event_analytics] DEBUG: Calculated total revenue via aggregation: ${total_revenue}")
             except Exception as e:
-                print(f"[get_overall_event_analytics] Revenue calculation error: {str(e)}")
+                print(
+                    f"[get_overall_event_analytics] Revenue calculation error: {str(e)}"
+                )
                 # Fallback: Count actual paid tickets and estimate
                 total_revenue = Ticket.objects.count() * 25.0  # Rough estimate
 
@@ -1343,7 +1365,8 @@ async def get_overall_event_analytics(
                 .annotate(
                     rsvp_count=Count("rsvp_tickets", distinct=True),
                     paid_ticket_count=Count("ticket", distinct=True),
-                    total_attendees=Count("rsvp_tickets", distinct=True) + Count("ticket", distinct=True)
+                    total_attendees=Count("rsvp_tickets", distinct=True)
+                    + Count("ticket", distinct=True),
                 )
                 .order_by("-total_attendees")[:10]
                 .values(
@@ -1402,22 +1425,24 @@ async def get_overall_event_analytics(
                     "cached": False,
                     "time_period": time_period,
                     "cache_duration": "5 minutes",
-                    "query_time_seconds": round(time.time() - start_time, 3)
-                }
+                    "query_time_seconds": round(time.time() - start_time, 3),
+                },
             }
 
             # 📈 11. Smart caching strategy
             # Cache full result for 5 minutes
             cache.set(cache_key, result, timeout=300)
-            
+
             # Cache static data (event stats, distributions) for 15 minutes
             static_data = {
                 "summary_stats": result["summary_stats"],
-                "distributions": result["distributions"]
+                "distributions": result["distributions"],
             }
             cache.set(static_cache_key, static_data, timeout=900)  # 15 minutes
-            
-            print(f"[get_overall_event_analytics] Cached analytics data for {time_period} (full: 5min, static: 15min)")
+
+            print(
+                f"[get_overall_event_analytics] Cached analytics data for {time_period} (full: 5min, static: 15min)"
+            )
 
             return result
 
