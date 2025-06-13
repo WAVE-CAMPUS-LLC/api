@@ -323,22 +323,15 @@ async def get_my_pass(caller_user_id: Optional[int] = Depends(get_current_user))
             )
         except CustomUser.DoesNotExist:
             print(f"[get_my_pass API] User not found with ID: {caller_user_id}")
-            await notify_by_bot(
-                f"[get_my_pass API] User not found with ID: {caller_user_id}"
-            )
-            return HTTPException(status_code=404, detail="User not found")
+            return None, "User not found"
         except Exception as e:
             print(f"[get_my_pass API] Error retrieving user data: {str(e)}")
-            await notify_by_bot(
-                f"[get_my_pass API] Error retrieving user data: {str(e)}"
-            )
-            return HTTPException(status_code=500, detail="Internal server error")
+            return None, f"Error retrieving user data: {str(e)}"
 
-    my_pass_data = await get_my_pass_data(caller_user_id)
+    my_pass_data, error_message = await get_my_pass_data(caller_user_id)
     if my_pass_data is None:
-        await notify_by_bot(
-            f"[get_my_pass API] User not found with ID: {caller_user_id}"
-        )
-        raise HTTPException(status_code=404, detail="User not found")
+        await notify_by_bot(f"[get_my_pass API] {error_message}")
+        raise HTTPException(status_code=404, detail=error_message)
 
+    await notify_by_bot(f"[get_my_pass API] User found with ID: {caller_user_id}")
     return {"my_pass_data": my_pass_data}
