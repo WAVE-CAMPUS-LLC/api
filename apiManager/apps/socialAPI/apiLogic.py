@@ -360,7 +360,7 @@ async def get_crew_details(
                 "shared_events": shared_events,
                 "user_is_member": user_is_member,
                 "user_is_admin": user_is_admin,
-            }
+            }, None
         except Crew.DoesNotExist:
             error_message = f"Crew not found with ID: {crew_id}"
             print(f"[get_crew_details API] Crew not found with ID: {crew_id}")
