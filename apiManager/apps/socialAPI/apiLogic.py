@@ -22,7 +22,7 @@ from apiManager.dependencies import get_current_user
 from authenticationApp.models import CustomUser
 from uuid import UUID
 
-from .serializers import MyPassSerializer, SearchResult
+from .serializers import MyPassSerializer, SearchResult, UserFriends, UserCrewsResponse
 
 
 router = APIRouter()
@@ -481,3 +481,142 @@ async def search(
         raise HTTPException(status_code=500, detail="Error searching users")
 
     return {"users": users, "crews": crews}
+
+
+@router.get("/get_user_friends", response_model=UserFriends)
+async def get_user_friends(
+    request: Request,
+    caller_user_id: Optional[int] = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    @database_sync_to_async
+    def get_user_friends_data(caller_user_id):
+        try:
+            user = CustomUser.objects.get(id=caller_user_id)
+            user_profile = user.user_profile
+            friends = user_profile.friends.all()
+            friends_data = [
+                {
+                    "user_id": str(friend.user_id),
+                    "username": friend.username,
+                    "first_name": friend.first_name,
+                    "last_name": friend.last_name,
+                    "profile_photo": (
+                        friend.user_profile.profile_photo.url
+                        if friend.user_profile.profile_photo
+                        else None
+                    ),
+                }
+                for friend in friends
+            ]
+            return friends_data, None
+        except CustomUser.DoesNotExist:
+            print(f"[get_user_friends API] User not found with ID: {caller_user_id}")
+            return None, "User not found"
+        except Exception as e:
+            print(f"[get_user_friends API] Error retrieving user friends: {str(e)}")
+            return None, f"Error retrieving user friends: {str(e)}"
+
+    friends_data, error_message = await get_user_friends_data(caller_user_id)
+    if friends_data is None:
+        notification_sent = await notify_by_bot(
+            f"**[API: get_user_friends API]** \n\n {error_message} \n\n Platform: {platform} \n\n User ID: {caller_user_id}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        if notification_sent is None:
+            print(
+                "[get_user_friends API] Could not send notification: BOT_API_KEY not set"
+            )
+        raise HTTPException(status_code=500, detail=error_message)
+
+    return {"user_friends": friends_data}
+
+
+@router.get("/get_user_crews", response_model=UserCrewsResponse)
+async def get_user_crews(
+    request: Request,
+    caller_user_id: Optional[int] = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
+    """
+    API endpoint to retrieve all crews a user is in, including 3 random profile pictures of other members.
+    """
+    print(f"[get_user_crews API] Function called for user ID: {caller_user_id}")
+
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    @database_sync_to_async
+    def get_user_crews_data(caller_user_id):
+        try:
+            user = CustomUser.objects.get(id=caller_user_id)
+
+            # Get all crews the user is a member of
+            crew_memberships = CrewMember.objects.filter(user=user).select_related(
+                "crew", "crew__created_by"
+            )
+
+            crews_data = []
+            for membership in crew_memberships:
+                crew = membership.crew
+
+                # Get 3 random members (excluding the current user)
+                random_members = (
+                    CrewMember.objects.filter(crew=crew)
+                    .exclude(user=user)
+                    .select_related("user", "user__user_profile")
+                    .order_by("?")[:3]
+                )
+
+                # Get member profile pictures
+                member_photos = []
+                for member in random_members:
+                    if (
+                        hasattr(member.user, "user_profile")
+                        and member.user.user_profile.profile_photo
+                    ):
+                        member_photos.append(member.user.user_profile.profile_photo.url)
+
+                crews_data.append(
+                    {
+                        "crewId": str(crew.crewId),
+                        "name": crew.name,
+                        "bio": crew.bio,
+                        "created_at": crew.created_at,
+                        "member_photos": member_photos,
+                        "is_admin": membership.is_admin,
+                    }
+                )
+
+            return crews_data, None
+        except CustomUser.DoesNotExist:
+            error_message = f"User not found with ID: {caller_user_id}"
+            print(f"[get_user_crews API] {error_message}")
+            return None, error_message
+        except Exception as e:
+            error_message = f"Error retrieving user crews: {str(e)}"
+            print(f"[get_user_crews API] {error_message}")
+            return None, error_message
+
+    crews_data, error_message = await get_user_crews_data(caller_user_id)
+    if crews_data is None:
+        notification_sent = await notify_by_bot(
+            f"**[API: get_user_crews API]** \n\n {error_message} \n\n Platform: {platform} \n\n User ID: {caller_user_id}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        if notification_sent is None:
+            print(
+                "[get_user_crews API] Could not send notification: BOT_API_KEY not set"
+            )
+        raise HTTPException(status_code=500, detail=error_message)
+
+    return {"user_crews": crews_data}
