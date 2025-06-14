@@ -14,7 +14,7 @@ from apiManager.utilities.device_info import get_device_info
 
 from eventManagementApp.models import Event
 from accountManagementApp.models import UserProfile
-from socialApp.models import Crew, CrewMember
+from socialApp.models import Crew, CrewMember, FriendRequest
 from eventTicketsApp.views import generateTicket
 
 
@@ -620,3 +620,122 @@ async def get_user_crews(
         raise HTTPException(status_code=500, detail=error_message)
 
     return {"user_crews": crews_data}
+
+
+
+@router.post("/send-friend-request/{receiver_username}")
+async def send_friend_request(
+    request: Request,
+    receiver_username: str,
+    caller_user_id: Optional[int] = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
+    """
+    API endpoint to send a friend request to another user.
+    """
+    print(f"[send_friend_request API] Function called with receiver_username: {receiver_username}")
+
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    @database_sync_to_async
+    def send_friend_request_logic(sender_user_id, receiver_username):
+        try:
+            # Get sender user
+            sender_user = CustomUser.objects.get(id=sender_user_id)
+            
+            # Check if trying to send request to self
+            if receiver_username == sender_user.username:
+                return None, "You cannot send a friend request to yourself.", None
+            
+            # Get receiver user profile
+            try:
+                receiver_user_profile = UserProfile.objects.select_related('user').get(
+                    user__username=receiver_username
+                )
+                receiver_user = receiver_user_profile.user
+            except UserProfile.DoesNotExist:
+                return None, "User not found.", None
+            
+            # Check if already friends
+            if sender_user.user_profile.is_friends_with(receiver_user):
+                return None, "You are already friends with this user.", None
+            
+            # Check for any active (pending/accepted) requests
+            active_request = FriendRequest.objects.filter(
+                Q(sender=sender_user, receiver=receiver_user) | 
+                Q(sender=receiver_user, receiver=sender_user),
+                status__in=['pending', 'accepted']
+            ).first()
+            
+            if active_request:
+                if active_request.status == 'pending':
+                    if active_request.sender == sender_user:
+                        return None, "You have already sent a friend request to this user.", active_request
+                    else:
+                        return None, f"{receiver_username} has already sent you a friend request. Check your notifications to respond.", active_request
+                else:  # status is 'accepted'
+                    return None, "You are already friends with this user.", active_request
+            
+            # Check for canceled/declined requests to reuse
+            old_request = FriendRequest.objects.filter(
+                sender=sender_user,
+                receiver=receiver_user,
+                status__in=['canceled', 'declined']
+            ).first()
+            
+            if old_request:
+                # Reuse the old request
+                old_request.status = 'pending'
+                old_request.save()
+                friend_request = old_request
+            else:
+                # Create new friend request
+                try:
+                    friend_request = FriendRequest.objects.create(
+                        sender=sender_user,
+                        receiver=receiver_user,
+                        status="pending"
+                    )
+                except Exception as create_error:
+                    error_message = f"Error creating friend request: {str(create_error)}"
+                    print(f"[send_friend_request API] {error_message}")
+                    return None, error_message, None
+            
+            return {
+                "status": friend_request.status,
+                "created_at": friend_request.created_at,
+            }, "Friend request sent successfully.", None
+            
+        except CustomUser.DoesNotExist:
+            error_message = f"Sender user not found with ID: {sender_user_id}"
+            print(f"[send_friend_request API] {error_message}")
+            return None, error_message, None
+        except Exception as e:
+            error_message = f"Error sending friend request: {str(e)}"
+            print(f"[send_friend_request API] {error_message}")
+            return None, error_message, None
+
+    friend_request_data, success_message, error_message = await send_friend_request_logic(
+        caller_user_id, receiver_username
+    )
+    
+    if friend_request_data is None:
+        notification_sent = await notify_by_bot(
+            f"**[API: send_friend_request API]** \n\n {success_message} \n\n Platform: {platform} \n\n User ID: {caller_user_id} \n\n Receiver Username: {receiver_username}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        if notification_sent is None:
+            print(
+                "[send_friend_request API] Could not send notification: BOT_API_KEY not set"
+            )
+        raise HTTPException(status_code=400, detail=success_message)
+
+    print(f"[send_friend_request API] {success_message}")
+    return {
+        "message": success_message,
+        "friend_request": friend_request_data
+    }
