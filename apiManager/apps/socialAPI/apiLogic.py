@@ -1081,3 +1081,118 @@ async def decline_friend_request(
 
     print(f"[decline_friend_request API] {success_message}")
     return {"message": success_message, "friend_request": friend_request_data}
+
+
+@router.post("/remove-friend/{friend_username}")
+async def remove_friend(
+    request: Request,
+    friend_username: str,
+    caller_user_id: Optional[int] = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
+    """
+    API endpoint to remove a user from the caller's friends list.
+    """
+    print(
+        f"[remove_friend API] Function called with friend_username: {friend_username}"
+    )
+
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    @database_sync_to_async
+    def remove_friend_logic(caller_user_id, friend_username):
+        try:
+            # Get caller user
+            caller_user = CustomUser.objects.get(id=caller_user_id)
+
+            # Check if trying to remove self
+            if friend_username == caller_user.username:
+                return None, "You cannot remove yourself as a friend.", None
+
+            # Get friend user profile
+            try:
+                friend_user_profile = UserProfile.objects.select_related("user").get(
+                    user__username=friend_username
+                )
+                friend_user = friend_user_profile.user
+            except UserProfile.DoesNotExist:
+                return None, "User not found.", None
+
+            # Check if they are actually friends
+            if not caller_user.user_profile.is_friends_with(friend_user):
+                return None, "You are not friends with this user.", None
+
+            # Remove friendship from both users' friend lists
+            caller_user.user_profile.friends.remove(friend_user_profile)
+            friend_user_profile.friends.remove(caller_user.user_profile)
+
+            # Update any accepted friend request to "removed" status (optional - for tracking)
+            friend_request = FriendRequest.objects.filter(
+                Q(sender=caller_user, receiver=friend_user) | 
+                Q(sender=friend_user, receiver=caller_user),
+                status="accepted"
+            ).first()
+
+            friendship_removed_at = None
+            if friend_request:
+                # Optional: You can track when friendship was removed
+                # For now, we'll just update the timestamp
+                friend_request.save()  # This will update the updated_at field
+                friendship_removed_at = friend_request.updated_at
+
+            return (
+                {
+                    "friendship_removed": True,
+                    "removed_at": friendship_removed_at,
+                    "friend_username": friend_username,
+                },
+                "Friend removed successfully.",
+                None,
+            )
+
+        except CustomUser.DoesNotExist:
+            error_message = f"Caller user not found with ID: {caller_user_id}"
+            print(f"[remove_friend API] {error_message}")
+            return None, error_message, None
+        except Exception as e:
+            error_message = f"Error removing friend: {str(e)}"
+            print(f"[remove_friend API] {error_message}")
+            return None, error_message, None
+
+    try:
+        friend_removal_data, success_message, error_message = (
+            await remove_friend_logic(caller_user_id, friend_username)
+        )
+
+        if friend_removal_data is None:
+            notification_sent = await notify_by_bot(
+                f"**[API: remove_friend API]** \n\n {success_message or error_message} \n\n Platform: {platform} \n\n User ID: {caller_user_id} \n\n Friend Username: {friend_username}",
+                platform or "Unknown",
+                "ERROR",
+                device_info,
+            )
+            if notification_sent is None:
+                print(
+                    "[remove_friend API] Could not send notification: BOT_API_KEY not set"
+                )
+            raise HTTPException(status_code=400, detail=success_message or error_message)
+
+        print(f"[remove_friend API] {success_message}")
+        return {"message": success_message, "friend_removal": friend_removal_data}
+    
+    except Exception as e:
+        error_message = f"Error in remove_friend API: {str(e)}"
+        print(f"[remove_friend API] {error_message}")
+        notification_sent = await notify_by_bot(
+            f"**[API: remove_friend API]** \n\n {error_message} \n\n Platform: {platform} \n\n User ID: {caller_user_id} \n\n Friend Username: {friend_username}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        if notification_sent is None:
+            print(
+                "[remove_friend API] Could not send notification: BOT_API_KEY not set"
+            )
+        raise HTTPException(status_code=500, detail=error_message)
