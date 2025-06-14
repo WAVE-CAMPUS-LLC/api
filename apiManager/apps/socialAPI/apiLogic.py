@@ -16,7 +16,7 @@ from eventManagementApp.models import Event
 from accountManagementApp.models import UserProfile
 from socialApp.models import Crew, CrewMember, FriendRequest
 from eventTicketsApp.views import generateTicket
-from algorithms.suggested_friends import get_suggested_friends
+from apiManager.algorithms.suggested_friends import get_suggested_friends
 
 
 from apiManager.dependencies import get_current_user
