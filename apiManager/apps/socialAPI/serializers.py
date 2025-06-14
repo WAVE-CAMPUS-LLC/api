@@ -29,12 +29,16 @@ class SearchResult(BaseModel):
     crews: List[CrewSearchResult]
 
 
-class UserFriends(BaseModel):
+class UserFriend(BaseModel):
     user_id: str
     username: str
     first_name: str
     last_name: str
     profile_photo: Optional[str] = None
+
+
+class UserFriends(BaseModel):
+    user_friends: List[UserFriend]
 
 
 class UserCrew(BaseModel):

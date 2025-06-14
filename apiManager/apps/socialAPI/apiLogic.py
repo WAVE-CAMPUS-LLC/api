@@ -519,8 +519,25 @@ async def get_user_friends(
             print(f"[get_user_friends API] Error retrieving user friends: {str(e)}")
             return None, f"Error retrieving user friends: {str(e)}"
 
-    friends_data, error_message = await get_user_friends_data(caller_user_id)
-    if friends_data is None:
+    try:
+        friends_data, error_message = await get_user_friends_data(caller_user_id)
+        if friends_data is None:
+            notification_sent = await notify_by_bot(
+                f"**[API: get_user_friends API]** \n\n {error_message} \n\n Platform: {platform} \n\n User ID: {caller_user_id}",
+                platform or "Unknown",
+                "ERROR",
+                device_info,
+            )
+            if notification_sent is None:
+                print(
+                    "[get_user_friends API] Could not send notification: BOT_API_KEY not set"
+                )
+            raise HTTPException(status_code=500, detail=error_message)
+
+        return {"user_friends": friends_data}
+    except Exception as e:
+        error_message = f"Error in get_user_friends API: {str(e)}"
+        print(f"[get_user_friends API] {error_message}")
         notification_sent = await notify_by_bot(
             f"**[API: get_user_friends API]** \n\n {error_message} \n\n Platform: {platform} \n\n User ID: {caller_user_id}",
             platform or "Unknown",
@@ -532,8 +549,6 @@ async def get_user_friends(
                 "[get_user_friends API] Could not send notification: BOT_API_KEY not set"
             )
         raise HTTPException(status_code=500, detail=error_message)
-
-    return {"user_friends": friends_data}
 
 
 @router.get("/get_user_crews", response_model=UserCrewsResponse)
