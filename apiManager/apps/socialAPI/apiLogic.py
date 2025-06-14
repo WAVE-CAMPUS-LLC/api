@@ -1280,3 +1280,181 @@ async def get_suggested_friends_endpoint(
         f"[get_suggested_friends API] Returning {len(suggested_friends_data)} suggested friends"
     )
     return {"suggested_friends": suggested_friends_data}
+
+
+@router.get("/get-sent-friend-requests")
+async def get_sent_friend_requests(
+    request: Request,
+    caller_user_id: Optional[int] = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
+    """
+    API endpoint to get all friend requests sent by the current user.
+    Returns friend requests with status pending, declined, or canceled.
+    """
+    print(
+        f"[get_sent_friend_requests API] Function called for user ID: {caller_user_id}"
+    )
+
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    @database_sync_to_async
+    def get_sent_friend_requests_data(caller_user_id):
+        try:
+            user = CustomUser.objects.get(id=caller_user_id)
+
+            # Get sent friend requests
+            sent_requests = (
+                FriendRequest.objects.filter(
+                    sender=user, status__in=["pending", "declined", "canceled"]
+                )
+                .select_related("receiver", "receiver__user_profile")
+                .order_by("-created_at")
+            )
+
+            # Format sent requests
+            sent_requests_data = []
+            for request in sent_requests:
+                receiver_profile = request.receiver.user_profile
+                sent_requests_data.append(
+                    {
+                        "request_id": str(request.requestId),
+                        "status": request.status,
+                        "created_at": request.created_at,
+                        "updated_at": request.updated_at,
+                        "user": {
+                            "user_id": str(request.receiver.user_id),
+                            "username": request.receiver.username,
+                            "first_name": request.receiver.first_name,
+                            "last_name": request.receiver.last_name,
+                            "profile_photo": (
+                                receiver_profile.profile_photo.url
+                                if receiver_profile.profile_photo
+                                else None
+                            ),
+                        },
+                    }
+                )
+
+            return sent_requests_data, None
+
+        except CustomUser.DoesNotExist:
+            error_message = f"User not found with ID: {caller_user_id}"
+            print(f"[get_sent_friend_requests API] {error_message}")
+            return None, error_message
+        except Exception as e:
+            error_message = f"Error getting sent friend requests: {str(e)}"
+            print(f"[get_sent_friend_requests API] {error_message}")
+            return None, error_message
+
+    sent_requests_data, error_message = await get_sent_friend_requests_data(
+        caller_user_id
+    )
+    if sent_requests_data is None:
+        notification_sent = await notify_by_bot(
+            f"**[API: get_sent_friend_requests API]** \n\n {error_message} \n\n Platform: {platform} \n\n User ID: {caller_user_id}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        if notification_sent is None:
+            print(
+                "[get_sent_friend_requests API] Could not send notification: BOT_API_KEY not set"
+            )
+        raise HTTPException(status_code=500, detail=error_message)
+
+    print(
+        f"[get_sent_friend_requests API] Returning {len(sent_requests_data)} sent friend requests"
+    )
+    return {"sent_requests": sent_requests_data}
+
+
+@router.get("/get-received-friend-requests")
+async def get_received_friend_requests(
+    request: Request,
+    caller_user_id: Optional[int] = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
+    """
+    API endpoint to get all friend requests received by the current user.
+    Returns friend requests with status pending, declined, or canceled.
+    """
+    print(
+        f"[get_received_friend_requests API] Function called for user ID: {caller_user_id}"
+    )
+
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    @database_sync_to_async
+    def get_received_friend_requests_data(caller_user_id):
+        try:
+            user = CustomUser.objects.get(id=caller_user_id)
+
+            # Get received friend requests
+            received_requests = (
+                FriendRequest.objects.filter(
+                    receiver=user, status__in=["pending", "declined", "canceled"]
+                )
+                .select_related("sender", "sender__user_profile")
+                .order_by("-created_at")
+            )
+
+            # Format received requests
+            received_requests_data = []
+            for request in received_requests:
+                sender_profile = request.sender.user_profile
+                received_requests_data.append(
+                    {
+                        "request_id": str(request.requestId),
+                        "status": request.status,
+                        "created_at": request.created_at,
+                        "updated_at": request.updated_at,
+                        "user": {
+                            "user_id": str(request.sender.user_id),
+                            "username": request.sender.username,
+                            "first_name": request.sender.first_name,
+                            "last_name": request.sender.last_name,
+                            "profile_photo": (
+                                sender_profile.profile_photo.url
+                                if sender_profile.profile_photo
+                                else None
+                            ),
+                        },
+                    }
+                )
+
+            return received_requests_data, None
+
+        except CustomUser.DoesNotExist:
+            error_message = f"User not found with ID: {caller_user_id}"
+            print(f"[get_received_friend_requests API] {error_message}")
+            return None, error_message
+        except Exception as e:
+            error_message = f"Error getting received friend requests: {str(e)}"
+            print(f"[get_received_friend_requests API] {error_message}")
+            return None, error_message
+
+    received_requests_data, error_message = await get_received_friend_requests_data(
+        caller_user_id
+    )
+    if received_requests_data is None:
+        notification_sent = await notify_by_bot(
+            f"**[API: get_received_friend_requests API]** \n\n {error_message} \n\n Platform: {platform} \n\n User ID: {caller_user_id}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        if notification_sent is None:
+            print(
+                "[get_received_friend_requests API] Could not send notification: BOT_API_KEY not set"
+            )
+        raise HTTPException(status_code=500, detail=error_message)
+
+    print(
+        f"[get_received_friend_requests API] Returning {len(received_requests_data)} received friend requests"
+    )
+    return {"received_requests": received_requests_data}
