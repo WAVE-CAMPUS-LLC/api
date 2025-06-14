@@ -255,7 +255,7 @@ async def get_crew_details(
     device_info = device_data["device_info"]
 
     @database_sync_to_async
-    def get_crew_data(crew_id):
+    def get_crew_data(crew_id, caller_user_id):
         try:
             # Get crew with related data in optimized queries
             crew = Crew.objects.select_related(
@@ -282,6 +282,9 @@ async def get_crew_details(
 
             # Get all crew members with their profiles
             crew_members = []
+            user_is_member = False
+            user_is_admin = False
+            
             for crew_member in CrewMember.objects.filter(crew=crew).select_related(
                 "user", "user__user_profile"
             ):
@@ -290,6 +293,12 @@ async def get_crew_details(
                     if hasattr(crew_member.user, "user_profile")
                     else None
                 )
+                
+                # Check if the caller is this crew member
+                if caller_user_id and crew_member.user.id == caller_user_id:
+                    user_is_member = True
+                    user_is_admin = crew_member.is_admin
+                
                 crew_members.append(
                     {
                         "user": {
@@ -349,6 +358,8 @@ async def get_crew_details(
                 "members": crew_members,
                 "member_count": len(crew_members),
                 "shared_events": shared_events,
+                "user_is_member": user_is_member,
+                "user_is_admin": user_is_admin,
             }
         except Crew.DoesNotExist:
             error_message = f"Crew not found with ID: {crew_id}"
@@ -359,7 +370,7 @@ async def get_crew_details(
             print(f"[get_crew_details API] Error retrieving crew data: {str(e)}")
             return None, error_message
 
-    crew_data, error_message = await get_crew_data(crew_id)
+    crew_data, error_message = await get_crew_data(crew_id, caller_user_id)
     if crew_data is None:
         notification_sent = await notify_by_bot(
             f"**[API: get_crew_details API]** \n\n {error_message} \n\n Platform: {platform} \n\n User ID: {caller_user_id} \n\n Crew ID: {crew_id}",
