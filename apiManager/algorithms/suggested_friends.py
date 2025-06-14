@@ -77,13 +77,13 @@ def get_suggested_friends(user: CustomUser, max_suggestions: int = 10):
 
     shared_interests_users = (
         UserProfile.objects.filter(
-            Q(group__in=user_groups) | Q(user__crewmember__crew__in=user_crews)
+            Q(group__in=user_groups) | Q(user__member_of_crews__crew__in=user_crews)
         )
         .exclude(Q(user_id=user.id) | Q(friends__in=user_friends))
         .annotate(
             # Weight by number of shared interests (1-5 scale)
             interest_weight=ExpressionWrapper(
-                Count("group") + Count("user__crewmember__crew") / 5.0,
+                Count("group") + Count("user__member_of_crews__crew") / 5.0,
                 output_field=FloatField(),
             )
         )
