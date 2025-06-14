@@ -16,6 +16,7 @@ from eventManagementApp.models import Event
 from accountManagementApp.models import UserProfile
 from socialApp.models import Crew, CrewMember, FriendRequest
 from eventTicketsApp.views import generateTicket
+from algorithms.suggested_friends import get_suggested_friends
 
 
 from apiManager.dependencies import get_current_user
@@ -154,17 +155,21 @@ async def get_user_details(
             if caller_user_id and not is_own_profile:
                 try:
                     calling_user = CustomUser.objects.get(id=caller_user_id)
-                    
+
                     # Check if they are already friends
                     if calling_user.user_profile.is_friends_with(user):
                         friend_request_status = "friends"
                     else:
                         # Check for existing friend request
-                        friend_request = FriendRequest.objects.filter(
-                            Q(sender=calling_user, receiver=user) | 
-                            Q(sender=user, receiver=calling_user)
-                        ).order_by('-created_at').first()
-                        
+                        friend_request = (
+                            FriendRequest.objects.filter(
+                                Q(sender=calling_user, receiver=user)
+                                | Q(sender=user, receiver=calling_user)
+                            )
+                            .order_by("-created_at")
+                            .first()
+                        )
+
                         if friend_request:
                             if friend_request.status == "pending":
                                 # Check who sent the request
@@ -839,9 +844,7 @@ async def cancel_friend_request(
 
             # Find the pending friend request sent by the caller
             friend_request = FriendRequest.objects.filter(
-                sender=sender_user,
-                receiver=receiver_user,
-                status="pending"
+                sender=sender_user, receiver=receiver_user, status="pending"
             ).first()
 
             if not friend_request:
@@ -933,9 +936,7 @@ async def accept_friend_request(
 
             # Find the pending friend request sent by the sender to the receiver
             friend_request = FriendRequest.objects.filter(
-                sender=sender_user,
-                receiver=receiver_user,
-                status="pending"
+                sender=sender_user, receiver=receiver_user, status="pending"
             ).first()
 
             if not friend_request:
@@ -1032,9 +1033,7 @@ async def decline_friend_request(
 
             # Find the pending friend request sent by the sender to the receiver
             friend_request = FriendRequest.objects.filter(
-                sender=sender_user,
-                receiver=receiver_user,
-                status="pending"
+                sender=sender_user, receiver=receiver_user, status="pending"
             ).first()
 
             if not friend_request:
@@ -1130,9 +1129,9 @@ async def remove_friend(
 
             # Update any accepted friend request to "removed" status (optional - for tracking)
             friend_request = FriendRequest.objects.filter(
-                Q(sender=caller_user, receiver=friend_user) | 
-                Q(sender=friend_user, receiver=caller_user),
-                status="accepted"
+                Q(sender=caller_user, receiver=friend_user)
+                | Q(sender=friend_user, receiver=caller_user),
+                status="accepted",
             ).first()
 
             friendship_removed_at = None
@@ -1162,8 +1161,8 @@ async def remove_friend(
             return None, error_message, None
 
     try:
-        friend_removal_data, success_message, error_message = (
-            await remove_friend_logic(caller_user_id, friend_username)
+        friend_removal_data, success_message, error_message = await remove_friend_logic(
+            caller_user_id, friend_username
         )
 
         if friend_removal_data is None:
@@ -1177,11 +1176,13 @@ async def remove_friend(
                 print(
                     "[remove_friend API] Could not send notification: BOT_API_KEY not set"
                 )
-            raise HTTPException(status_code=400, detail=success_message or error_message)
+            raise HTTPException(
+                status_code=400, detail=success_message or error_message
+            )
 
         print(f"[remove_friend API] {success_message}")
         return {"message": success_message, "friend_removal": friend_removal_data}
-    
+
     except Exception as e:
         error_message = f"Error in remove_friend API: {str(e)}"
         print(f"[remove_friend API] {error_message}")
@@ -1196,3 +1197,75 @@ async def remove_friend(
                 "[remove_friend API] Could not send notification: BOT_API_KEY not set"
             )
         raise HTTPException(status_code=500, detail=error_message)
+
+
+@router.get("/suggested-friends")
+async def get_suggested_friends_endpoint(
+    request: Request,
+    caller_user_id: Optional[int] = Depends(get_current_user),
+    platform: Optional[str] = None,
+    max_suggestions: int = Query(10, ge=1, le=50),
+):
+    """
+    API endpoint to get suggested friends for the current user.
+    Suggestions are based on mutual friends and shared events.
+    """
+    print(f"[get_suggested_friends API] Function called for user ID: {caller_user_id}")
+
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    @database_sync_to_async
+    def get_suggested_friends_data(caller_user_id, max_suggestions):
+        try:
+            user = CustomUser.objects.get(id=caller_user_id)
+            suggested_users = get_suggested_friends(user, max_suggestions)
+
+            suggested_friends_data = []
+            for suggested_user in suggested_users:
+                user_profile = suggested_user.user_profile
+                suggested_friends_data.append(
+                    {
+                        "user_id": str(suggested_user.user_id),
+                        "username": suggested_user.username,
+                        "first_name": suggested_user.first_name,
+                        "last_name": suggested_user.last_name,
+                        "profile_photo": (
+                            user_profile.profile_photo.url
+                            if user_profile.profile_photo
+                            else None
+                        ),
+                    }
+                )
+
+            return suggested_friends_data, None
+        except CustomUser.DoesNotExist:
+            error_message = f"User not found with ID: {caller_user_id}"
+            print(f"[get_suggested_friends API] {error_message}")
+            return None, error_message
+        except Exception as e:
+            error_message = f"Error getting suggested friends: {str(e)}"
+            print(f"[get_suggested_friends API] {error_message}")
+            return None, error_message
+
+    suggested_friends_data, error_message = await get_suggested_friends_data(
+        caller_user_id, max_suggestions
+    )
+    if suggested_friends_data is None:
+        notification_sent = await notify_by_bot(
+            f"**[API: get_suggested_friends API]** \n\n {error_message} \n\n Platform: {platform} \n\n User ID: {caller_user_id}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        if notification_sent is None:
+            print(
+                "[get_suggested_friends API] Could not send notification: BOT_API_KEY not set"
+            )
+        raise HTTPException(status_code=500, detail=error_message)
+
+    print(
+        f"[get_suggested_friends API] Returning {len(suggested_friends_data)} suggested friends"
+    )
+    return {"suggested_friends": suggested_friends_data}
