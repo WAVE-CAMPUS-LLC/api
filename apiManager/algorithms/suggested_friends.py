@@ -39,7 +39,7 @@ def get_suggested_friends(user: CustomUser, max_suggestions: int = 10):
     # Get friends of friends with mutual friend count
     friends_of_friends = (
         UserProfile.objects.filter(friends__in=user_friends)
-        .exclude(Q(user=user) | Q(friends__in=user_friends))
+        .exclude(Q(user_id=user.id) | Q(friends__in=user_friends))
         .annotate(
             mutual_count=Count("friends"),
             # Weight by number of mutual friends (1-5 scale)
@@ -54,7 +54,7 @@ def get_suggested_friends(user: CustomUser, max_suggestions: int = 10):
     recent_date = timezone.now() - timedelta(days=30)  # Last 30 days
     ticket_users = (
         CustomUser.objects.filter(ticket__event__in=user_events)
-        .exclude(Q(user=user) | Q(user_profile__in=user_friends))
+        .exclude(Q(id=user.id) | Q(user_profile__in=user_friends))
         .annotate(
             # Weight by event recency (1-5 scale)
             event_weight=ExpressionWrapper(
@@ -71,13 +71,15 @@ def get_suggested_friends(user: CustomUser, max_suggestions: int = 10):
 
     # Get users with shared interests (groups and crews)
     user_groups = user_profile.group.all()
-    user_crews = CrewMember.objects.filter(user=user).values_list("crew", flat=True)
+    user_crews = CrewMember.objects.filter(user_id=user.id).values_list(
+        "crew", flat=True
+    )
 
     shared_interests_users = (
         UserProfile.objects.filter(
             Q(group__in=user_groups) | Q(user__crewmember__crew__in=user_crews)
         )
-        .exclude(Q(user=user) | Q(friends__in=user_friends))
+        .exclude(Q(user_id=user.id) | Q(friends__in=user_friends))
         .annotate(
             # Weight by number of shared interests (1-5 scale)
             interest_weight=ExpressionWrapper(
@@ -91,7 +93,7 @@ def get_suggested_friends(user: CustomUser, max_suggestions: int = 10):
     # Get users from same college
     college_users = (
         UserProfile.objects.filter(college=user_college)
-        .exclude(Q(user=user) | Q(friends__in=user_friends))
+        .exclude(Q(user_id=user.id) | Q(friends__in=user_friends))
         .annotate(
             # College weight is fixed at 3.0
             college_weight=Value(3.0, output_field=FloatField())
