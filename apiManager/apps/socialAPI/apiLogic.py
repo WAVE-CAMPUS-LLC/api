@@ -149,6 +149,37 @@ async def get_user_details(
                     }
                 )
 
+            # Check friend request status between users
+            friend_request_status = "not_yet_sent"
+            if caller_user_id and not is_own_profile:
+                try:
+                    calling_user = CustomUser.objects.get(id=caller_user_id)
+                    
+                    # Check if they are already friends
+                    if calling_user.user_profile.is_friends_with(user):
+                        friend_request_status = "friends"
+                    else:
+                        # Check for existing friend request
+                        friend_request = FriendRequest.objects.filter(
+                            Q(sender=calling_user, receiver=user) | 
+                            Q(sender=user, receiver=calling_user)
+                        ).order_by('-created_at').first()
+                        
+                        if friend_request:
+                            if friend_request.status == "pending":
+                                # Check who sent the request
+                                if friend_request.sender == calling_user:
+                                    friend_request_status = "sent_pending"
+                                else:
+                                    friend_request_status = "received_pending"
+                            elif friend_request.status == "declined":
+                                friend_request_status = "declined"
+                            elif friend_request.status == "canceled":
+                                friend_request_status = "canceled"
+                except CustomUser.DoesNotExist:
+                    # Calling user doesn't exist, keep default status
+                    pass
+
             return {
                 "user": {
                     "username": user.username,
@@ -170,6 +201,7 @@ async def get_user_details(
                     "hosted_events": hosted_events,
                 },
                 "is_own_profile": is_own_profile,
+                "friend_request_status": friend_request_status,
             }, None
         except CustomUser.DoesNotExist:
             error_message = f"User not found with username: {username}"
