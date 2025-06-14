@@ -783,3 +783,286 @@ async def send_friend_request(
 
     print(f"[send_friend_request API] {success_message}")
     return {"message": success_message, "friend_request": friend_request_data}
+
+
+@router.post("/cancel-friend-request/{receiver_username}")
+async def cancel_friend_request(
+    request: Request,
+    receiver_username: str,
+    caller_user_id: Optional[int] = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
+    """
+    API endpoint to cancel a friend request sent to another user.
+    """
+    print(
+        f"[cancel_friend_request API] Function called with receiver_username: {receiver_username}"
+    )
+
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    @database_sync_to_async
+    def cancel_friend_request_logic(sender_user_id, receiver_username):
+        try:
+            # Get sender user
+            sender_user = CustomUser.objects.get(id=sender_user_id)
+
+            # Check if trying to cancel request to self
+            if receiver_username == sender_user.username:
+                return None, "You cannot cancel a friend request to yourself.", None
+
+            # Get receiver user profile
+            try:
+                receiver_user_profile = UserProfile.objects.select_related("user").get(
+                    user__username=receiver_username
+                )
+                receiver_user = receiver_user_profile.user
+            except UserProfile.DoesNotExist:
+                return None, "User not found.", None
+
+            # Find the pending friend request sent by the caller
+            friend_request = FriendRequest.objects.filter(
+                sender=sender_user,
+                receiver=receiver_user,
+                status="pending"
+            ).first()
+
+            if not friend_request:
+                return None, "No pending friend request found to cancel.", None
+
+            # Update the request status to canceled
+            friend_request.status = "canceled"
+            friend_request.save()
+
+            return (
+                {
+                    "status": friend_request.status,
+                    "canceled_at": friend_request.updated_at,
+                },
+                "Friend request canceled successfully.",
+                None,
+            )
+
+        except CustomUser.DoesNotExist:
+            error_message = f"Sender user not found with ID: {sender_user_id}"
+            print(f"[cancel_friend_request API] {error_message}")
+            return None, error_message, None
+        except Exception as e:
+            error_message = f"Error canceling friend request: {str(e)}"
+            print(f"[cancel_friend_request API] {error_message}")
+            return None, error_message, None
+
+    friend_request_data, success_message, error_message = (
+        await cancel_friend_request_logic(caller_user_id, receiver_username)
+    )
+
+    if friend_request_data is None:
+        notification_sent = await notify_by_bot(
+            f"**[API: cancel_friend_request API]** \n\n {success_message or error_message} \n\n Platform: {platform} \n\n User ID: {caller_user_id} \n\n Receiver Username: {receiver_username}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        if notification_sent is None:
+            print(
+                "[cancel_friend_request API] Could not send notification: BOT_API_KEY not set"
+            )
+        raise HTTPException(status_code=400, detail=success_message or error_message)
+
+    print(f"[cancel_friend_request API] {success_message}")
+    return {"message": success_message, "friend_request": friend_request_data}
+
+
+@router.post("/accept-friend-request/{sender_username}")
+async def accept_friend_request(
+    request: Request,
+    sender_username: str,
+    caller_user_id: Optional[int] = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
+    """
+    API endpoint to accept a friend request received from another user.
+    """
+    print(
+        f"[accept_friend_request API] Function called with sender_username: {sender_username}"
+    )
+
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    @database_sync_to_async
+    def accept_friend_request_logic(receiver_user_id, sender_username):
+        try:
+            # Get receiver user (the one accepting the request)
+            receiver_user = CustomUser.objects.get(id=receiver_user_id)
+
+            # Check if trying to accept request from self
+            if sender_username == receiver_user.username:
+                return None, "You cannot accept a friend request from yourself.", None
+
+            # Get sender user profile
+            try:
+                sender_user_profile = UserProfile.objects.select_related("user").get(
+                    user__username=sender_username
+                )
+                sender_user = sender_user_profile.user
+            except UserProfile.DoesNotExist:
+                return None, "User not found.", None
+
+            # Check if already friends
+            if receiver_user.user_profile.is_friends_with(sender_user):
+                return None, "You are already friends with this user.", None
+
+            # Find the pending friend request sent by the sender to the receiver
+            friend_request = FriendRequest.objects.filter(
+                sender=sender_user,
+                receiver=receiver_user,
+                status="pending"
+            ).first()
+
+            if not friend_request:
+                return None, "No pending friend request found to accept.", None
+
+            # Update the request status to accepted
+            friend_request.status = "accepted"
+            friend_request.save()
+
+            # Add both users to each other's friends list
+            receiver_user.user_profile.friends.add(sender_user_profile)
+            sender_user_profile.friends.add(receiver_user.user_profile)
+
+            return (
+                {
+                    "status": friend_request.status,
+                    "accepted_at": friend_request.updated_at,
+                    "friendship_established": True,
+                },
+                "Friend request accepted successfully.",
+                None,
+            )
+
+        except CustomUser.DoesNotExist:
+            error_message = f"Receiver user not found with ID: {receiver_user_id}"
+            print(f"[accept_friend_request API] {error_message}")
+            return None, error_message, None
+        except Exception as e:
+            error_message = f"Error accepting friend request: {str(e)}"
+            print(f"[accept_friend_request API] {error_message}")
+            return None, error_message, None
+
+    friend_request_data, success_message, error_message = (
+        await accept_friend_request_logic(caller_user_id, sender_username)
+    )
+
+    if friend_request_data is None:
+        notification_sent = await notify_by_bot(
+            f"**[API: accept_friend_request API]** \n\n {success_message or error_message} \n\n Platform: {platform} \n\n User ID: {caller_user_id} \n\n Sender Username: {sender_username}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        if notification_sent is None:
+            print(
+                "[accept_friend_request API] Could not send notification: BOT_API_KEY not set"
+            )
+        raise HTTPException(status_code=400, detail=success_message or error_message)
+
+    print(f"[accept_friend_request API] {success_message}")
+    return {"message": success_message, "friend_request": friend_request_data}
+
+
+@router.post("/decline-friend-request/{sender_username}")
+async def decline_friend_request(
+    request: Request,
+    sender_username: str,
+    caller_user_id: Optional[int] = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
+    """
+    API endpoint to decline a friend request received from another user.
+    """
+    print(
+        f"[decline_friend_request API] Function called with sender_username: {sender_username}"
+    )
+
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    @database_sync_to_async
+    def decline_friend_request_logic(receiver_user_id, sender_username):
+        try:
+            # Get receiver user (the one declining the request)
+            receiver_user = CustomUser.objects.get(id=receiver_user_id)
+
+            # Check if trying to decline request from self
+            if sender_username == receiver_user.username:
+                return None, "You cannot decline a friend request from yourself.", None
+
+            # Get sender user profile
+            try:
+                sender_user_profile = UserProfile.objects.select_related("user").get(
+                    user__username=sender_username
+                )
+                sender_user = sender_user_profile.user
+            except UserProfile.DoesNotExist:
+                return None, "User not found.", None
+
+            # Check if already friends
+            if receiver_user.user_profile.is_friends_with(sender_user):
+                return None, "You are already friends with this user.", None
+
+            # Find the pending friend request sent by the sender to the receiver
+            friend_request = FriendRequest.objects.filter(
+                sender=sender_user,
+                receiver=receiver_user,
+                status="pending"
+            ).first()
+
+            if not friend_request:
+                return None, "No pending friend request found to decline.", None
+
+            # Update the request status to declined
+            friend_request.status = "declined"
+            friend_request.save()
+
+            return (
+                {
+                    "status": friend_request.status,
+                    "declined_at": friend_request.updated_at,
+                },
+                "Friend request declined successfully.",
+                None,
+            )
+
+        except CustomUser.DoesNotExist:
+            error_message = f"Receiver user not found with ID: {receiver_user_id}"
+            print(f"[decline_friend_request API] {error_message}")
+            return None, error_message, None
+        except Exception as e:
+            error_message = f"Error declining friend request: {str(e)}"
+            print(f"[decline_friend_request API] {error_message}")
+            return None, error_message, None
+
+    friend_request_data, success_message, error_message = (
+        await decline_friend_request_logic(caller_user_id, sender_username)
+    )
+
+    if friend_request_data is None:
+        notification_sent = await notify_by_bot(
+            f"**[API: decline_friend_request API]** \n\n {success_message or error_message} \n\n Platform: {platform} \n\n User ID: {caller_user_id} \n\n Sender Username: {sender_username}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        if notification_sent is None:
+            print(
+                "[decline_friend_request API] Could not send notification: BOT_API_KEY not set"
+            )
+        raise HTTPException(status_code=400, detail=success_message or error_message)
+
+    print(f"[decline_friend_request API] {success_message}")
+    return {"message": success_message, "friend_request": friend_request_data}
