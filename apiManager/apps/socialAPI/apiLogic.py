@@ -285,7 +285,7 @@ async def get_crew_details(
             crew_members = []
             user_is_member = False
             user_is_admin = False
-            
+
             for crew_member in CrewMember.objects.filter(crew=crew).select_related(
                 "user", "user__user_profile"
             ):
@@ -294,12 +294,12 @@ async def get_crew_details(
                     if hasattr(crew_member.user, "user_profile")
                     else None
                 )
-                
+
                 # Check if the caller is this crew member
                 if caller_user_id and crew_member.user.id == caller_user_id:
                     user_is_member = True
                     user_is_admin = crew_member.is_admin
-                
+
                 crew_members.append(
                     {
                         "user": {
@@ -758,15 +758,21 @@ async def send_friend_request(
                         # Data inconsistency: accepted request but no friendship
                         # Fix the friendship relationship
                         try:
-                            sender_user.user_profile.friends.add(receiver_user.user_profile)
-                            receiver_user.user_profile.friends.add(sender_user.user_profile)
+                            sender_user.user_profile.friends.add(
+                                receiver_user.user_profile
+                            )
+                            receiver_user.user_profile.friends.add(
+                                sender_user.user_profile
+                            )
                             return (
                                 None,
                                 "You are already friends with this user.",
                                 active_request,
                             )
                         except Exception as e:
-                            print(f"[send_friend_request API] Error fixing friendship relationship: {str(e)}")
+                            print(
+                                f"[send_friend_request API] Error fixing friendship relationship: {str(e)}"
+                            )
                             # If fixing fails, allow new request (treat as if no accepted request exists)
                             pass
 
