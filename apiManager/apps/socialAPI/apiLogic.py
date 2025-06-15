@@ -8,6 +8,7 @@ import os
 from user_agents import parse as parse_user_agent
 from django.db.models import Q, Prefetch
 from django.db import transaction
+from django.utils import timezone
 
 
 from apiManager.utilities.notify_by_bot import notify_by_bot
@@ -178,10 +179,9 @@ async def get_user_details(
                                     friend_request_status = "sent_pending"
                                 else:
                                     friend_request_status = "received_pending"
-                            elif friend_request.status == "declined":
-                                friend_request_status = "declined"
                             elif friend_request.status == "canceled":
                                 friend_request_status = "canceled"
+                            # Note: declined requests are deleted, so they won't appear here
                 except CustomUser.DoesNotExist:
                     # Calling user doesn't exist, keep default status
                     pass
@@ -776,11 +776,11 @@ async def send_friend_request(
                             # If fixing fails, allow new request (treat as if no accepted request exists)
                             pass
 
-            # Check for canceled/declined requests to reuse
+            # Check for canceled requests to reuse (declined requests are deleted)
             old_request = FriendRequest.objects.filter(
                 sender=sender_user,
                 receiver=receiver_user,
-                status__in=["canceled", "declined"],
+                status="canceled",
             ).first()
 
             if old_request:
@@ -877,12 +877,28 @@ async def cancel_friend_request(
             except UserProfile.DoesNotExist:
                 return None, "User not found.", None
 
+            # Check if users are already friends
+            if sender_user.user_profile.is_friends_with(receiver_user):
+                return None, "You are already friends with this user. No request to cancel.", None
+
             # Find the pending friend request sent by the caller
             friend_request = FriendRequest.objects.filter(
                 sender=sender_user, receiver=receiver_user, status="pending"
             ).first()
 
             if not friend_request:
+                # Check if there's a non-pending request to provide better feedback
+                existing_request = FriendRequest.objects.filter(
+                    sender=sender_user, receiver=receiver_user
+                ).exclude(status="pending").first()
+                
+                if existing_request:
+                    if existing_request.status == "accepted":
+                        return None, "This friend request was already accepted. You are now friends.", None
+                    elif existing_request.status == "canceled":
+                        return None, "This friend request was already canceled.", None
+                    # Note: declined requests are deleted, so they won't appear here
+                
                 return None, "No pending friend request found to cancel.", None
 
             # Update the request status to canceled
@@ -975,10 +991,27 @@ async def accept_friend_request(
             ).first()
 
             if not friend_request:
+                # Check if there's a non-pending request to provide better feedback
+                existing_request = FriendRequest.objects.filter(
+                    sender=sender_user, receiver=receiver_user
+                ).exclude(status="pending").first()
+                
+                if existing_request:
+                    if existing_request.status == "accepted":
+                        return None, "This friend request was already accepted. You are now friends.", None
+                    elif existing_request.status == "canceled":
+                        return None, "This friend request was canceled by the sender.", None
+                    # Note: declined requests are deleted, so they won't appear here
+                
                 return None, "No pending friend request found to accept.", None
 
             # Use transaction to ensure data consistency
             with transaction.atomic():
+                # Double-check that they're not already friends within the transaction
+                # (in case another concurrent request was processed)
+                if receiver_user.user_profile.is_friends_with(sender_user):
+                    return None, "You are already friends with this user.", None
+                
                 # Update the request status to accepted
                 friend_request.status = "accepted"
                 friend_request.save()
@@ -1074,16 +1107,35 @@ async def decline_friend_request(
             ).first()
 
             if not friend_request:
+                # Check if there's a non-pending request to provide better feedback
+                existing_request = FriendRequest.objects.filter(
+                    sender=sender_user, receiver=receiver_user
+                ).exclude(status="pending").first()
+                
+                if existing_request:
+                    if existing_request.status == "accepted":
+                        return None, "This friend request was already accepted. You are now friends.", None
+                    elif existing_request.status == "canceled":
+                        return None, "This friend request was already canceled.", None
+                    # Note: declined requests are deleted, so they won't appear here
+                
                 return None, "No pending friend request found to decline.", None
 
-            # Update the request status to declined
-            friend_request.status = "declined"
-            friend_request.save()
+            # Store request info before deletion
+            request_info = {
+                "request_id": str(friend_request.requestId),
+                "sender_username": sender_user.username,
+                "declined_at": timezone.now(),
+            }
+            
+            # Delete the friend request (declining means removing it completely)
+            friend_request.delete()
 
             return (
                 {
-                    "status": friend_request.status,
-                    "declined_at": friend_request.updated_at,
+                    "status": "declined_and_deleted",
+                    "declined_at": request_info["declined_at"],
+                    "request_id": request_info["request_id"],
                 },
                 "Friend request declined successfully.",
                 None,
@@ -1160,29 +1212,39 @@ async def remove_friend(
             if not caller_user.user_profile.is_friends_with(friend_user):
                 return None, "You are not friends with this user.", None
 
-            # Remove friendship from both users' friend lists
-            caller_user.user_profile.friends.remove(friend_user_profile)
-            friend_user_profile.friends.remove(caller_user.user_profile)
+            # Use transaction to ensure data consistency
+            with transaction.atomic():
+                # Remove friendship from both users' friend lists
+                caller_user.user_profile.friends.remove(friend_user_profile)
+                friend_user_profile.friends.remove(caller_user.user_profile)
 
-            # Update any accepted friend request to "removed" status (optional - for tracking)
-            friend_request = FriendRequest.objects.filter(
-                Q(sender=caller_user, receiver=friend_user)
-                | Q(sender=friend_user, receiver=caller_user),
-                status="accepted",
-            ).first()
+                # Find and delete any accepted friend request
+                friend_request = FriendRequest.objects.filter(
+                    Q(sender=caller_user, receiver=friend_user)
+                    | Q(sender=friend_user, receiver=caller_user),
+                    status="accepted",
+                ).first()
 
-            friendship_removed_at = None
-            if friend_request:
-                # Optional: You can track when friendship was removed
-                # For now, we'll just update the timestamp
-                friend_request.save()  # This will update the updated_at field
-                friendship_removed_at = friend_request.updated_at
+                request_info = None
+                if friend_request:
+                    # Store request info before deletion
+                    request_info = {
+                        "request_id": str(friend_request.requestId),
+                        "original_sender": friend_request.sender.username,
+                        "original_receiver": friend_request.receiver.username,
+                    }
+                    # Delete the friend request (removing friendship means removing the request too)
+                    friend_request.delete()
+
+            friendship_removed_at = timezone.now()
 
             return (
                 {
                     "friendship_removed": True,
                     "removed_at": friendship_removed_at,
                     "friend_username": friend_username,
+                    "friend_request_deleted": request_info is not None,
+                    "deleted_request_info": request_info,
                 },
                 "Friend removed successfully.",
                 None,
@@ -1316,7 +1378,7 @@ async def get_sent_friend_requests(
 ):
     """
     API endpoint to get all friend requests sent by the current user.
-    Returns friend requests with status pending, declined, or canceled.
+    Returns friend requests with status pending or canceled (declined requests are deleted).
     """
     print(
         f"[get_sent_friend_requests API] Function called for user ID: {caller_user_id}"
@@ -1331,10 +1393,10 @@ async def get_sent_friend_requests(
         try:
             user = CustomUser.objects.get(id=caller_user_id)
 
-            # Get sent friend requests
+            # Get sent friend requests (declined requests are deleted, so only pending and canceled)
             sent_requests = (
                 FriendRequest.objects.filter(
-                    sender=user, status__in=["pending", "declined", "canceled"]
+                    sender=user, status__in=["pending", "canceled"]
                 )
                 .select_related("receiver", "receiver__user_profile")
                 .order_by("-created_at")
@@ -1405,7 +1467,7 @@ async def get_received_friend_requests(
 ):
     """
     API endpoint to get all friend requests received by the current user.
-    Returns friend requests with status pending, declined, or canceled.
+    Returns friend requests with status pending or canceled (declined requests are deleted).
     """
     print(
         f"[get_received_friend_requests API] Function called for user ID: {caller_user_id}"
@@ -1420,10 +1482,10 @@ async def get_received_friend_requests(
         try:
             user = CustomUser.objects.get(id=caller_user_id)
 
-            # Get received friend requests
+            # Get received friend requests (declined requests are deleted, so only pending and canceled)
             received_requests = (
                 FriendRequest.objects.filter(
-                    receiver=user, status__in=["pending", "declined", "canceled"]
+                    receiver=user, status__in=["pending", "canceled"]
                 )
                 .select_related("sender", "sender__user_profile")
                 .order_by("-created_at")
