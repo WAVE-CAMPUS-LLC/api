@@ -1,6 +1,0 @@
-{% for message in messages %}
-    <div class="message {% if message.sender == request.user %}sender{% else %}receiver{% endif %}">
-        <p><strong>{{ message.sender.username }}:</strong> {{ message.message }}</p>
-        <span>{{ message.sent_at }}</span>
-    </div>
-{% endfor %}
