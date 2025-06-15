@@ -1764,3 +1764,339 @@ async def get_received_crew_invites(
         f"[get_received_crew_invites API] Returning {len(received_invites_data)} received crew invites"
     )
     return {"received_crew_invites": received_invites_data}
+
+
+@router.post("/accept-crew-invite/{request_id}")
+async def accept_crew_invite(
+    request: Request,
+    request_id: UUID,
+    caller_user_id: Optional[int] = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
+    """
+    API endpoint to accept a crew invite received from another user.
+    """
+    print(f"[accept_crew_invite API] Function called with request_id: {request_id}")
+
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    @database_sync_to_async
+    def accept_crew_invite_logic(receiver_user_id, request_id):
+        try:
+            # Get receiver user (the one accepting the request)
+            receiver_user = CustomUser.objects.get(id=receiver_user_id)
+
+            # Find the pending crew invite
+            crew_invite = (
+                CrewRequest.objects.filter(
+                    requestId=request_id, receiver=receiver_user, status="pending"
+                )
+                .select_related("crew", "sender")
+                .first()
+            )
+
+            if not crew_invite:
+                # Check if there's a non-pending invite to provide better feedback
+                existing_invite = (
+                    CrewRequest.objects.filter(
+                        requestId=request_id, receiver=receiver_user
+                    )
+                    .exclude(status="pending")
+                    .first()
+                )
+
+                if existing_invite:
+                    if existing_invite.status == "accepted":
+                        return None, "This crew invite was already accepted.", None
+                    elif existing_invite.status == "declined":
+                        return None, "This crew invite was already declined.", None
+                    elif existing_invite.status == "canceled":
+                        return (
+                            None,
+                            "This crew invite was canceled by the sender.",
+                            None,
+                        )
+
+                return None, "No pending crew invite found to accept.", None
+
+            # Use transaction to ensure data consistency
+            with transaction.atomic():
+                # Check if user is already a member of the crew
+                if CrewMember.objects.filter(
+                    user=receiver_user, crew=crew_invite.crew
+                ).exists():
+                    return None, "You are already a member of this crew.", None
+
+                # Update the invite status to accepted
+                crew_invite.status = "accepted"
+                crew_invite.save()
+
+                # Create crew membership
+                CrewMember.objects.create(
+                    user=receiver_user,
+                    crew=crew_invite.crew,
+                    is_admin=False,  # New members are not admins by default
+                )
+
+            return (
+                {
+                    "status": crew_invite.status,
+                    "accepted_at": crew_invite.updated_at,
+                    "crew": {
+                        "crew_id": str(crew_invite.crew.crewId),
+                        "name": crew_invite.crew.name,
+                    },
+                    "membership_established": True,
+                },
+                "Crew invite accepted successfully.",
+                None,
+            )
+
+        except CustomUser.DoesNotExist:
+            error_message = f"Receiver user not found with ID: {receiver_user_id}"
+            print(f"[accept_crew_invite API] {error_message}")
+            return None, error_message, None
+        except Exception as e:
+            error_message = f"Error accepting crew invite: {str(e)}"
+            print(f"[accept_crew_invite API] {error_message}")
+            return None, error_message, None
+
+    invite_data, success_message, error_message = await accept_crew_invite_logic(
+        caller_user_id, request_id
+    )
+
+    if invite_data is None:
+        notification_sent = await notify_by_bot(
+            f"**[API: accept_crew_invite API]** \n\n {success_message or error_message} \n\n Platform: {platform} \n\n User ID: {caller_user_id} \n\n Request ID: {request_id}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        if notification_sent is None:
+            print(
+                "[accept_crew_invite API] Could not send notification: BOT_API_KEY not set"
+            )
+        raise HTTPException(status_code=400, detail=success_message or error_message)
+
+    print(f"[accept_crew_invite API] {success_message}")
+    return {"message": success_message, "crew_invite": invite_data}
+
+
+@router.post("/decline-crew-invite/{request_id}")
+async def decline_crew_invite(
+    request: Request,
+    request_id: UUID,
+    caller_user_id: Optional[int] = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
+    """
+    API endpoint to decline a crew invite received from another user.
+    """
+    print(f"[decline_crew_invite API] Function called with request_id: {request_id}")
+
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    @database_sync_to_async
+    def decline_crew_invite_logic(receiver_user_id, request_id):
+        try:
+            # Get receiver user (the one declining the request)
+            receiver_user = CustomUser.objects.get(id=receiver_user_id)
+
+            # Find the pending crew invite
+            crew_invite = (
+                CrewRequest.objects.filter(
+                    requestId=request_id, receiver=receiver_user, status="pending"
+                )
+                .select_related("crew", "sender")
+                .first()
+            )
+
+            if not crew_invite:
+                # Check if there's a non-pending invite to provide better feedback
+                existing_invite = (
+                    CrewRequest.objects.filter(
+                        requestId=request_id, receiver=receiver_user
+                    )
+                    .exclude(status="pending")
+                    .first()
+                )
+
+                if existing_invite:
+                    if existing_invite.status == "accepted":
+                        return None, "This crew invite was already accepted.", None
+                    elif existing_invite.status == "declined":
+                        return None, "This crew invite was already declined.", None
+                    elif existing_invite.status == "canceled":
+                        return (
+                            None,
+                            "This crew invite was canceled by the sender.",
+                            None,
+                        )
+
+                return None, "No pending crew invite found to decline.", None
+
+            # Store invite info before updating
+            invite_info = {
+                "request_id": str(crew_invite.requestId),
+                "crew_id": str(crew_invite.crew.crewId),
+                "crew_name": crew_invite.crew.name,
+                "sender_username": crew_invite.sender.username,
+                "declined_at": timezone.now(),
+            }
+
+            # Update the invite status to declined
+            crew_invite.status = "declined"
+            crew_invite.save()
+
+            return (
+                {
+                    "status": crew_invite.status,
+                    "declined_at": invite_info["declined_at"],
+                    "crew": {
+                        "crew_id": invite_info["crew_id"],
+                        "name": invite_info["crew_name"],
+                    },
+                    "sender": {"username": invite_info["sender_username"]},
+                },
+                "Crew invite declined successfully.",
+                None,
+            )
+
+        except CustomUser.DoesNotExist:
+            error_message = f"Receiver user not found with ID: {receiver_user_id}"
+            print(f"[decline_crew_invite API] {error_message}")
+            return None, error_message, None
+        except Exception as e:
+            error_message = f"Error declining crew invite: {str(e)}"
+            print(f"[decline_crew_invite API] {error_message}")
+            return None, error_message, None
+
+    invite_data, success_message, error_message = await decline_crew_invite_logic(
+        caller_user_id, request_id
+    )
+
+    if invite_data is None:
+        notification_sent = await notify_by_bot(
+            f"**[API: decline_crew_invite API]** \n\n {success_message or error_message} \n\n Platform: {platform} \n\n User ID: {caller_user_id} \n\n Request ID: {request_id}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        if notification_sent is None:
+            print(
+                "[decline_crew_invite API] Could not send notification: BOT_API_KEY not set"
+            )
+        raise HTTPException(status_code=400, detail=success_message or error_message)
+
+    print(f"[decline_crew_invite API] {success_message}")
+    return {"message": success_message, "crew_invite": invite_data}
+
+
+@router.post("/cancel-crew-invite/{request_id}")
+async def cancel_crew_invite(
+    request: Request,
+    request_id: UUID,
+    caller_user_id: Optional[int] = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
+    """
+    API endpoint to cancel a crew invite sent to another user.
+    """
+    print(f"[cancel_crew_invite API] Function called with request_id: {request_id}")
+
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    @database_sync_to_async
+    def cancel_crew_invite_logic(sender_user_id, request_id):
+        try:
+            # Get sender user
+            sender_user = CustomUser.objects.get(id=sender_user_id)
+
+            # Find the pending crew invite
+            crew_invite = (
+                CrewRequest.objects.filter(
+                    requestId=request_id, sender=sender_user, status="pending"
+                )
+                .select_related("crew", "receiver")
+                .first()
+            )
+
+            if not crew_invite:
+                # Check if there's a non-pending invite to provide better feedback
+                existing_invite = (
+                    CrewRequest.objects.filter(requestId=request_id, sender=sender_user)
+                    .exclude(status="pending")
+                    .first()
+                )
+
+                if existing_invite:
+                    if existing_invite.status == "accepted":
+                        return None, "This crew invite was already accepted.", None
+                    elif existing_invite.status == "declined":
+                        return None, "This crew invite was already declined.", None
+                    elif existing_invite.status == "canceled":
+                        return None, "This crew invite was already canceled.", None
+
+                return None, "No pending crew invite found to cancel.", None
+
+            # Store invite info before updating
+            invite_info = {
+                "request_id": str(crew_invite.requestId),
+                "crew_id": str(crew_invite.crew.crewId),
+                "crew_name": crew_invite.crew.name,
+                "receiver_username": crew_invite.receiver.username,
+                "canceled_at": timezone.now(),
+            }
+
+            # Update the invite status to canceled
+            crew_invite.status = "canceled"
+            crew_invite.save()
+
+            return (
+                {
+                    "status": crew_invite.status,
+                    "canceled_at": invite_info["canceled_at"],
+                    "crew": {
+                        "crew_id": invite_info["crew_id"],
+                        "name": invite_info["crew_name"],
+                    },
+                    "receiver": {"username": invite_info["receiver_username"]},
+                },
+                "Crew invite canceled successfully.",
+                None,
+            )
+
+        except CustomUser.DoesNotExist:
+            error_message = f"Sender user not found with ID: {sender_user_id}"
+            print(f"[cancel_crew_invite API] {error_message}")
+            return None, error_message, None
+        except Exception as e:
+            error_message = f"Error canceling crew invite: {str(e)}"
+            print(f"[cancel_crew_invite API] {error_message}")
+            return None, error_message, None
+
+    invite_data, success_message, error_message = await cancel_crew_invite_logic(
+        caller_user_id, request_id
+    )
+
+    if invite_data is None:
+        notification_sent = await notify_by_bot(
+            f"**[API: cancel_crew_invite API]** \n\n {success_message or error_message} \n\n Platform: {platform} \n\n User ID: {caller_user_id} \n\n Request ID: {request_id}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        if notification_sent is None:
+            print(
+                "[cancel_crew_invite API] Could not send notification: BOT_API_KEY not set"
+            )
+        raise HTTPException(status_code=400, detail=success_message or error_message)
+
+    print(f"[cancel_crew_invite API] {success_message}")
+    return {"message": success_message, "crew_invite": invite_data}
