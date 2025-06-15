@@ -179,6 +179,10 @@ async def get_user_details(
                                     friend_request_status = "sent_pending"
                                 else:
                                     friend_request_status = "received_pending"
+                            elif friend_request.status == "accepted":
+                                # Data inconsistency: accepted request but no friendship
+                                # This should not happen with proper transaction handling
+                                friend_request_status = "friends"
                             elif friend_request.status == "canceled":
                                 friend_request_status = "canceled"
                             # Note: declined requests are deleted, so they won't appear here

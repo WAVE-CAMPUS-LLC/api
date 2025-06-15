@@ -181,7 +181,7 @@ class UserProfile(models.Model):
     def is_friends_with(self, other_user):
         return self.friends.filter(
             user=other_user
-        ).exists() and not self.has_pending_request(other_user)
+        ).exists()
 
     def has_pending_request(self, other_user):
         return (
