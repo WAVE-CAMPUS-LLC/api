@@ -16,7 +16,7 @@ from apiManager.utilities.device_info import get_device_info
 
 from eventManagementApp.models import Event
 from accountManagementApp.models import UserProfile
-from socialApp.models import Crew, CrewMember, FriendRequest
+from socialApp.models import Crew, CrewMember, FriendRequest, CrewRequest
 from eventTicketsApp.views import generateTicket
 from apiManager.algorithms.suggested_friends import get_suggested_friends
 
