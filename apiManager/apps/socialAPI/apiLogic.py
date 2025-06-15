@@ -879,7 +879,11 @@ async def cancel_friend_request(
 
             # Check if users are already friends
             if sender_user.user_profile.is_friends_with(receiver_user):
-                return None, "You are already friends with this user. No request to cancel.", None
+                return (
+                    None,
+                    "You are already friends with this user. No request to cancel.",
+                    None,
+                )
 
             # Find the pending friend request sent by the caller
             friend_request = FriendRequest.objects.filter(
@@ -888,17 +892,25 @@ async def cancel_friend_request(
 
             if not friend_request:
                 # Check if there's a non-pending request to provide better feedback
-                existing_request = FriendRequest.objects.filter(
-                    sender=sender_user, receiver=receiver_user
-                ).exclude(status="pending").first()
-                
+                existing_request = (
+                    FriendRequest.objects.filter(
+                        sender=sender_user, receiver=receiver_user
+                    )
+                    .exclude(status="pending")
+                    .first()
+                )
+
                 if existing_request:
                     if existing_request.status == "accepted":
-                        return None, "This friend request was already accepted. You are now friends.", None
+                        return (
+                            None,
+                            "This friend request was already accepted. You are now friends.",
+                            None,
+                        )
                     elif existing_request.status == "canceled":
                         return None, "This friend request was already canceled.", None
                     # Note: declined requests are deleted, so they won't appear here
-                
+
                 return None, "No pending friend request found to cancel.", None
 
             # Update the request status to canceled
@@ -992,17 +1004,29 @@ async def accept_friend_request(
 
             if not friend_request:
                 # Check if there's a non-pending request to provide better feedback
-                existing_request = FriendRequest.objects.filter(
-                    sender=sender_user, receiver=receiver_user
-                ).exclude(status="pending").first()
-                
+                existing_request = (
+                    FriendRequest.objects.filter(
+                        sender=sender_user, receiver=receiver_user
+                    )
+                    .exclude(status="pending")
+                    .first()
+                )
+
                 if existing_request:
                     if existing_request.status == "accepted":
-                        return None, "This friend request was already accepted. You are now friends.", None
+                        return (
+                            None,
+                            "This friend request was already accepted. You are now friends.",
+                            None,
+                        )
                     elif existing_request.status == "canceled":
-                        return None, "This friend request was canceled by the sender.", None
+                        return (
+                            None,
+                            "This friend request was canceled by the sender.",
+                            None,
+                        )
                     # Note: declined requests are deleted, so they won't appear here
-                
+
                 return None, "No pending friend request found to accept.", None
 
             # Use transaction to ensure data consistency
@@ -1011,7 +1035,7 @@ async def accept_friend_request(
                 # (in case another concurrent request was processed)
                 if receiver_user.user_profile.is_friends_with(sender_user):
                     return None, "You are already friends with this user.", None
-                
+
                 # Update the request status to accepted
                 friend_request.status = "accepted"
                 friend_request.save()
@@ -1108,17 +1132,25 @@ async def decline_friend_request(
 
             if not friend_request:
                 # Check if there's a non-pending request to provide better feedback
-                existing_request = FriendRequest.objects.filter(
-                    sender=sender_user, receiver=receiver_user
-                ).exclude(status="pending").first()
-                
+                existing_request = (
+                    FriendRequest.objects.filter(
+                        sender=sender_user, receiver=receiver_user
+                    )
+                    .exclude(status="pending")
+                    .first()
+                )
+
                 if existing_request:
                     if existing_request.status == "accepted":
-                        return None, "This friend request was already accepted. You are now friends.", None
+                        return (
+                            None,
+                            "This friend request was already accepted. You are now friends.",
+                            None,
+                        )
                     elif existing_request.status == "canceled":
                         return None, "This friend request was already canceled.", None
                     # Note: declined requests are deleted, so they won't appear here
-                
+
                 return None, "No pending friend request found to decline.", None
 
             # Store request info before deletion
@@ -1127,7 +1159,7 @@ async def decline_friend_request(
                 "sender_username": sender_user.username,
                 "declined_at": timezone.now(),
             }
-            
+
             # Delete the friend request (declining means removing it completely)
             friend_request.delete()
 
@@ -1546,3 +1578,185 @@ async def get_received_friend_requests(
         f"[get_received_friend_requests API] Returning {len(received_requests_data)} received friend requests"
     )
     return {"received_requests": received_requests_data}
+
+
+@router.get("/get-sent-crew-invites")
+async def get_sent_crew_invites(
+    request: Request,
+    caller_user_id: Optional[int] = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
+    """
+    API endpoint to get all crew invites sent by the current user.
+    Returns crew invites with status pending or declined (accepted invites are converted to crew memberships).
+    """
+    print(f"[get_sent_crew_invites API] Function called for user ID: {caller_user_id}")
+
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    @database_sync_to_async
+    def get_sent_crew_invites_data(caller_user_id):
+        try:
+            user = CustomUser.objects.get(id=caller_user_id)
+
+            # Get sent crew invites (accepted invites are converted to crew memberships, so only pending and declined)
+            sent_invites = (
+                CrewRequest.objects.filter(
+                    sender=user, status__in=["pending", "declined"]
+                )
+                .select_related("receiver", "receiver__user_profile", "crew")
+                .order_by("-created_at")
+            )
+
+            # Format sent invites
+            sent_invites_data = []
+            for invite in sent_invites:
+                receiver_profile = invite.receiver.user_profile
+                sent_invites_data.append(
+                    {
+                        "request_id": str(invite.requestId),
+                        "status": invite.status,
+                        "created_at": invite.created_at,
+                        "updated_at": invite.updated_at,
+                        "crew": {
+                            "crew_id": str(invite.crew.crewId),
+                            "name": invite.crew.name,
+                        },
+                        "receiver": {
+                            "user_id": str(invite.receiver.user_id),
+                            "username": invite.receiver.username,
+                            "first_name": invite.receiver.first_name,
+                            "last_name": invite.receiver.last_name,
+                            "profile_photo": (
+                                receiver_profile.profile_photo.url
+                                if receiver_profile.profile_photo
+                                else None
+                            ),
+                        },
+                    }
+                )
+
+            return sent_invites_data, None
+
+        except CustomUser.DoesNotExist:
+            error_message = f"User not found with ID: {caller_user_id}"
+            print(f"[get_sent_crew_invites API] {error_message}")
+            return None, error_message
+        except Exception as e:
+            error_message = f"Error getting sent crew invites: {str(e)}"
+            print(f"[get_sent_crew_invites API] {error_message}")
+            return None, error_message
+
+    sent_invites_data, error_message = await get_sent_crew_invites_data(caller_user_id)
+    if sent_invites_data is None:
+        notification_sent = await notify_by_bot(
+            f"**[API: get_sent_crew_invites API]** \n\n {error_message} \n\n Platform: {platform} \n\n User ID: {caller_user_id}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        if notification_sent is None:
+            print(
+                "[get_sent_crew_invites API] Could not send notification: BOT_API_KEY not set"
+            )
+        raise HTTPException(status_code=500, detail=error_message)
+
+    print(
+        f"[get_sent_crew_invites API] Returning {len(sent_invites_data)} sent crew invites"
+    )
+    return {"sent_crew_invites": sent_invites_data}
+
+
+@router.get("/get-received-crew-invites")
+async def get_received_crew_invites(
+    request: Request,
+    caller_user_id: Optional[int] = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
+    """
+    API endpoint to get all crew invites received by the current user.
+    Returns crew invites with status pending or declined (accepted invites are converted to crew memberships).
+    """
+    print(
+        f"[get_received_crew_invites API] Function called for user ID: {caller_user_id}"
+    )
+
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    @database_sync_to_async
+    def get_received_crew_invites_data(caller_user_id):
+        try:
+            user = CustomUser.objects.get(id=caller_user_id)
+
+            # Get received crew invites (accepted invites are converted to crew memberships, so only pending and declined)
+            received_invites = (
+                CrewRequest.objects.filter(
+                    receiver=user, status__in=["pending", "declined"]
+                )
+                .select_related("sender", "sender__user_profile", "crew")
+                .order_by("-created_at")
+            )
+
+            # Format received invites
+            received_invites_data = []
+            for invite in received_invites:
+                sender_profile = invite.sender.user_profile
+                received_invites_data.append(
+                    {
+                        "request_id": str(invite.requestId),
+                        "status": invite.status,
+                        "created_at": invite.created_at,
+                        "updated_at": invite.updated_at,
+                        "crew": {
+                            "crew_id": str(invite.crew.crewId),
+                            "name": invite.crew.name,
+                        },
+                        "sender": {
+                            "user_id": str(invite.sender.user_id),
+                            "username": invite.sender.username,
+                            "first_name": invite.sender.first_name,
+                            "last_name": invite.sender.last_name,
+                            "profile_photo": (
+                                sender_profile.profile_photo.url
+                                if sender_profile.profile_photo
+                                else None
+                            ),
+                        },
+                    }
+                )
+
+            return received_invites_data, None
+
+        except CustomUser.DoesNotExist:
+            error_message = f"User not found with ID: {caller_user_id}"
+            print(f"[get_received_crew_invites API] {error_message}")
+            return None, error_message
+        except Exception as e:
+            error_message = f"Error getting received crew invites: {str(e)}"
+            print(f"[get_received_crew_invites API] {error_message}")
+            return None, error_message
+
+    received_invites_data, error_message = await get_received_crew_invites_data(
+        caller_user_id
+    )
+    if received_invites_data is None:
+        notification_sent = await notify_by_bot(
+            f"**[API: get_received_crew_invites API]** \n\n {error_message} \n\n Platform: {platform} \n\n User ID: {caller_user_id}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        if notification_sent is None:
+            print(
+                "[get_received_crew_invites API] Could not send notification: BOT_API_KEY not set"
+            )
+        raise HTTPException(status_code=500, detail=error_message)
+
+    print(
+        f"[get_received_crew_invites API] Returning {len(received_invites_data)} received crew invites"
+    )
+    return {"received_crew_invites": received_invites_data}
