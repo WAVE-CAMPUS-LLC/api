@@ -7,6 +7,7 @@ import bleach
 import os
 from user_agents import parse as parse_user_agent
 from django.db.models import Q, Prefetch
+from django.db import transaction
 
 
 from apiManager.utilities.notify_by_bot import notify_by_bot
@@ -746,11 +747,28 @@ async def send_friend_request(
                             active_request,
                         )
                 else:  # status is 'accepted'
-                    return (
-                        None,
-                        "You are already friends with this user.",
-                        active_request,
-                    )
+                    # Double-check if friendship actually exists
+                    if sender_user.user_profile.is_friends_with(receiver_user):
+                        return (
+                            None,
+                            "You are already friends with this user.",
+                            active_request,
+                        )
+                    else:
+                        # Data inconsistency: accepted request but no friendship
+                        # Fix the friendship relationship
+                        try:
+                            sender_user.user_profile.friends.add(receiver_user.user_profile)
+                            receiver_user.user_profile.friends.add(sender_user.user_profile)
+                            return (
+                                None,
+                                "You are already friends with this user.",
+                                active_request,
+                            )
+                        except Exception as e:
+                            print(f"[send_friend_request API] Error fixing friendship relationship: {str(e)}")
+                            # If fixing fails, allow new request (treat as if no accepted request exists)
+                            pass
 
             # Check for canceled/declined requests to reuse
             old_request = FriendRequest.objects.filter(
@@ -953,13 +971,15 @@ async def accept_friend_request(
             if not friend_request:
                 return None, "No pending friend request found to accept.", None
 
-            # Update the request status to accepted
-            friend_request.status = "accepted"
-            friend_request.save()
+            # Use transaction to ensure data consistency
+            with transaction.atomic():
+                # Update the request status to accepted
+                friend_request.status = "accepted"
+                friend_request.save()
 
-            # Add both users to each other's friends list
-            receiver_user.user_profile.friends.add(sender_user_profile)
-            sender_user_profile.friends.add(receiver_user.user_profile)
+                # Add both users to each other's friends list
+                receiver_user.user_profile.friends.add(sender_user_profile)
+                sender_user_profile.friends.add(receiver_user.user_profile)
 
             return (
                 {
