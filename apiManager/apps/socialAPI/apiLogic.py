@@ -2117,6 +2117,12 @@ async def get_whats_happening(
 ):
     """
     API endpoint to get what's happening for a user.
+    Returns activities from friends including:
+    - Friend connections
+    - Crew memberships
+    - Event tickets
+    - Go-with requests
+    - Crew invites
     """
     print(
         f"[get_whats_happening API] Function called with caller_user_id: {caller_user_id}"
@@ -2144,6 +2150,7 @@ async def get_whats_happening(
 
             activities_data = []
             for activity in activities:
+                # Base activity data
                 activity_data = {
                     "activity_id": str(activity.activityId),
                     "activity_type": activity.activity_type,
@@ -2161,6 +2168,29 @@ async def get_whats_happening(
                     },
                     "content": activity.content,
                 }
+
+                # Add activity-specific formatting
+                if activity.activity_type == "friend_accepted":
+                    activity_data["message"] = (
+                        f"{activity.user.first_name} connected with {activity.content['friend_name']}"
+                    )
+                elif activity.activity_type == "crew_joined":
+                    activity_data["message"] = (
+                        f"{activity.user.first_name} joined {activity.content['crew']}"
+                    )
+                elif activity.activity_type == "ticket_purchased":
+                    activity_data["message"] = (
+                        f"{activity.user.first_name} got tickets to {activity.content['event_title']}"
+                    )
+                elif activity.activity_type == "go_with_accepted":
+                    activity_data["message"] = (
+                        f"{activity.user.first_name} is going with {activity.content['other_user']['name']} to {activity.content['event_title']}"
+                    )
+                elif activity.activity_type == "crew_invite_accepted":
+                    activity_data["message"] = (
+                        f"{activity.user.first_name} joined {activity.content['crew']} (invited by {activity.content['invited_by']['name']})"
+                    )
+
                 activities_data.append(activity_data)
 
             return activities_data, None

@@ -238,11 +238,12 @@ def go_with_request_post_save(sender, instance, created, **kwargs):
 @receiver(post_save, sender=FriendRequest)
 def record_friend_activity(sender, instance, created, **kwargs):
     if instance.status == "accepted":
+        # Record activity for the sender
         SocialActivity.objects.create(
             user=instance.sender,
             activity_type="friend_accepted",
             content={
-                "friend_request": instance.requestId,
+                "friend_request": str(instance.requestId),
                 "friend_username": instance.receiver.username,
                 "friend_name": f"{instance.receiver.first_name} {instance.receiver.last_name}",
                 "friend_photo": (
@@ -253,10 +254,12 @@ def record_friend_activity(sender, instance, created, **kwargs):
             },
         )
 
+        # Record activity for the receiver
         SocialActivity.objects.create(
             user=instance.receiver,
             activity_type="friend_accepted",
             content={
+                "friend_request": str(instance.requestId),
                 "friend_username": instance.sender.username,
                 "friend_name": f"{instance.sender.first_name} {instance.sender.last_name}",
                 "friend_photo": (
@@ -276,8 +279,13 @@ def record_crew_activity(sender, instance, created, **kwargs):
             activity_type="crew_joined",
             content={
                 "crew": instance.crew.name,
-                "crew_id": instance.crew.crewId,
+                "crew_id": str(instance.crew.crewId),
                 "joined_at": instance.joined_at.isoformat(),
+                "crew_photo": (
+                    instance.crew.crew_photo.url
+                    if hasattr(instance.crew, "crew_photo")
+                    else None
+                ),
             },
         )
 
@@ -295,6 +303,73 @@ def record_ticket_activity(sender, instance, created, **kwargs):
                 "event_photo": (
                     instance.event.header_photo.url
                     if instance.event.header_photo
+                    else None
+                ),
+                "ticket_type": instance.ticket_type,
+                "quantity": instance.quantity,
+            },
+        )
+
+
+@receiver(post_save, sender=GoWithRequest)
+def record_go_with_activity(sender, instance, created, **kwargs):
+    if instance.status in ["accepted", "Accepted"]:
+        # Record activity for both users
+        for user in [instance.sender.user, instance.receiver.user]:
+            SocialActivity.objects.create(
+                user=user,
+                activity_type="go_with_accepted",
+                content={
+                    "event_id": str(instance.event.eventId),
+                    "event_title": instance.event.title,
+                    "event_date": instance.event.date.isoformat(),
+                    "event_photo": (
+                        instance.event.header_photo.url
+                        if instance.event.header_photo
+                        else None
+                    ),
+                    "other_user": {
+                        "username": (
+                            instance.receiver.user.username
+                            if user == instance.sender.user
+                            else instance.sender.user.username
+                        ),
+                        "name": (
+                            f"{instance.receiver.user.first_name} {instance.receiver.user.last_name}"
+                            if user == instance.sender.user
+                            else f"{instance.sender.user.first_name} {instance.sender.user.last_name}"
+                        ),
+                        "photo": (
+                            instance.receiver.profile_photo.url
+                            if user == instance.sender.user
+                            else instance.sender.profile_photo.url
+                        ),
+                    },
+                },
+            )
+
+
+@receiver(post_save, sender=CrewRequest)
+def record_crew_invite_activity(sender, instance, created, **kwargs):
+    if instance.status == "accepted":
+        SocialActivity.objects.create(
+            user=instance.receiver,
+            activity_type="crew_invite_accepted",
+            content={
+                "crew": instance.crew.name,
+                "crew_id": str(instance.crew.crewId),
+                "invited_by": {
+                    "username": instance.sender.username,
+                    "name": f"{instance.sender.first_name} {instance.sender.last_name}",
+                    "photo": (
+                        instance.sender.user_profile.profile_photo.url
+                        if hasattr(instance.sender, "user_profile")
+                        else None
+                    ),
+                },
+                "crew_photo": (
+                    instance.crew.crew_photo.url
+                    if hasattr(instance.crew, "crew_photo")
                     else None
                 ),
             },

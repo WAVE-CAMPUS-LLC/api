@@ -231,6 +231,10 @@ class SocialActivity(models.Model):
         ("crew_joined", "Crew Joined"),
         ("event_going", "Event Going"),
         ("campus_joined", "Campus Joined"),
+        ("ticket_purchased", "Ticket Purchased"),
+        ("event_rsvp", "Event RSVP"),
+        ("go_with_accepted", "Go With Accepted"),
+        ("crew_invite_accepted", "Crew Invite Accepted"),
     ]
 
     activityId = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
