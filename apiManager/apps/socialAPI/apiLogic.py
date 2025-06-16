@@ -2132,14 +2132,17 @@ async def get_whats_happening(
             user = CustomUser.objects.get(id=caller_user_id)
             user_profile = user.user_profile
 
-            friends = user_profile.friends.all()
-            friend_ids = [friend.user.id for friend in friends]
+            # Get friend user IDs correctly
+            friend_ids = [friend.user.id for friend in user_profile.friends.all()]
 
-            activities = SocialActivity.objects.filter(user_id__in=friends).order_by(
-                "-created_at"
-            )[:limit]
+            # Get activities from friends
+            activities = (
+                SocialActivity.objects.filter(user_id__in=friend_ids)
+                .select_related("user", "user__user_profile")
+                .order_by("-created_at")[:limit]
+            )
 
-            activity_data = []
+            activities_data = []
             for activity in activities:
                 activity_data = {
                     "activity_id": str(activity.activityId),
@@ -2158,10 +2161,9 @@ async def get_whats_happening(
                     },
                     "content": activity.content,
                 }
+                activities_data.append(activity_data)
 
-                activity_data.append(activity_data)
-
-            return activity_data
+            return activities_data, None
 
         except CustomUser.DoesNotExist:
             error_message = f"User not found with ID: {caller_user_id}"
@@ -2172,8 +2174,8 @@ async def get_whats_happening(
             print(f"[get_whats_happening API] {error_message}")
             return None, error_message
 
-    activities, error_message = await get_activities(caller_user_id, limit)
-    if activities is None:
+    activities_data, error_message = await get_activities(caller_user_id, limit)
+    if activities_data is None:
         notification_sent = await notify_by_bot(
             f"**[API: get_whats_happening API]** \n\n {error_message} \n\n Platform: {platform} \n\n User ID: {caller_user_id} \n\n Limit: {limit}",
             platform or "Unknown",
@@ -2186,5 +2188,5 @@ async def get_whats_happening(
             )
         raise HTTPException(status_code=400, detail=error_message)
 
-    print(f"[get_whats_happening API] {success_message}")
-    return {"activities": activities}
+    print(f"[get_whats_happening API] Returning {len(activities_data)} activities")
+    return {"activities": activities_data}
