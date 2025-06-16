@@ -2138,12 +2138,22 @@ async def get_whats_happening(
             user = CustomUser.objects.get(id=caller_user_id)
             user_profile = user.user_profile
 
-            # Get friend user IDs correctly
+            # Get friend user IDs
             friend_ids = [friend.user.id for friend in user_profile.friends.all()]
 
-            # Get activities from friends
+            # Get activities where either:
+            # 1. The activity is performed by a friend
+            # 2. The activity involves a friend (in the content)
             activities = (
-                SocialActivity.objects.filter(user_id__in=friend_ids)
+                SocialActivity.objects.filter(
+                    Q(user_id__in=friend_ids)  # Activities by friends
+                    | Q(
+                        content__friend_username__in=[
+                            friend.user.username
+                            for friend in user_profile.friends.all()
+                        ]
+                    )  # Activities involving friends
+                )
                 .select_related("user", "user__user_profile")
                 .order_by("-created_at")[:limit]
             )
@@ -2171,21 +2181,52 @@ async def get_whats_happening(
 
                 # Add activity-specific formatting
                 if activity.activity_type == "friend_accepted":
-                    activity_data["message"] = (
-                        f"{activity.user.first_name} connected with {activity.content['friend_name']}"
-                    )
+                    # If the activity is by a friend connecting with someone else
+                    if activity.user.id in friend_ids:
+                        activity_data["message"] = (
+                            f"{activity.user.first_name} connected with {activity.content['friend_name']}"
+                        )
+                    # If the activity is by someone else connecting with your friend
+                    else:
+                        activity_data["message"] = (
+                            f"{activity.user.first_name} connected with {activity.content['friend_name']}"
+                        )
                 elif activity.activity_type == "crew_joined":
                     activity_data["message"] = (
                         f"{activity.user.first_name} joined {activity.content['crew']}"
                     )
                 elif activity.activity_type == "ticket_purchased":
-                    activity_data["message"] = (
-                        f"{activity.user.first_name} got tickets to {activity.content['event_title']}"
-                    )
+                    # Format the message with ticket details
+                    ticket_info = []
+                    if activity.content.get("quantity") > 1:
+                        ticket_info.append(f"{activity.content['quantity']} tickets")
+                    if activity.content.get("ticket_type"):
+                        ticket_info.append(f"({activity.content['ticket_type']})")
+                    if activity.content.get("price"):
+                        ticket_info.append(f"for ${activity.content['price']} each")
+
+                    event_info = []
+                    if activity.content.get("venue"):
+                        event_info.append(f"at {activity.content['venue']}")
+                    if activity.content.get("event_time"):
+                        event_info.append(f"at {activity.content['event_time']}")
+
+                    message = f"{activity.user.first_name} got {' '.join(ticket_info)} to {activity.content['event_title']}"
+                    if event_info:
+                        message += f" {' '.join(event_info)}"
+
+                    activity_data["message"] = message
                 elif activity.activity_type == "go_with_accepted":
-                    activity_data["message"] = (
-                        f"{activity.user.first_name} is going with {activity.content['other_user']['name']} to {activity.content['event_title']}"
-                    )
+                    # If the activity is by a friend going with someone else
+                    if activity.user.id in friend_ids:
+                        activity_data["message"] = (
+                            f"{activity.user.first_name} is going with {activity.content['other_user']['name']} to {activity.content['event_title']}"
+                        )
+                    # If the activity is by someone else going with your friend
+                    else:
+                        activity_data["message"] = (
+                            f"{activity.content['other_user']['name']} is going with {activity.user.first_name} to {activity.content['event_title']}"
+                        )
                 elif activity.activity_type == "crew_invite_accepted":
                     activity_data["message"] = (
                         f"{activity.user.first_name} joined {activity.content['crew']} (invited by {activity.content['invited_by']['name']})"

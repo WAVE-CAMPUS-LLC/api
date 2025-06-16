@@ -307,6 +307,13 @@ def record_ticket_activity(sender, instance, created, **kwargs):
                 ),
                 "ticket_type": instance.ticket_type,
                 "quantity": instance.quantity,
+                "venue": instance.event.venue.name if instance.event.venue else None,
+                "event_time": (
+                    instance.event.time.strftime("%I:%M %p")
+                    if instance.event.time
+                    else None
+                ),
+                "price": str(instance.price) if instance.price else None,
             },
         )
 
