@@ -3,13 +3,21 @@ from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
-from .models import FriendRequest, CrewRequest, GoWithRequest
+from .models import (
+    FriendRequest,
+    CrewRequest,
+    GoWithRequest,
+    SocialActivity,
+    CrewMember,
+)
+from eventTicketsApp.models import Ticket
+
 
 @receiver(post_save, sender=FriendRequest)
 def friend_request_post_save(sender, instance, created, **kwargs):
     """Send real-time notifications when a friend request is created or updated."""
     channel_layer = get_channel_layer()
-    
+
     # Determine the action and prepare data
     if created:
         action = "send"
@@ -26,7 +34,7 @@ def friend_request_post_save(sender, instance, created, **kwargs):
     else:
         # No notification for other status changes
         return
-    
+
     # Send to the receiver for new requests
     if created or instance.status == "canceled":
         # For new requests, notify the receiver
@@ -43,12 +51,16 @@ def friend_request_post_save(sender, instance, created, **kwargs):
                         "sender_first_name": instance.sender.first_name,
                         "sender_last_name": instance.sender.last_name,
                         "created_at": instance.created_at.strftime("%Y-%m-%d %H:%M:%S"),
-                        "profile_picture": instance.sender.user_profile.profile_photo.url if hasattr(instance.sender, 'user_profile') else "",
+                        "profile_picture": (
+                            instance.sender.user_profile.profile_photo.url
+                            if hasattr(instance.sender, "user_profile")
+                            else ""
+                        ),
                     },
                 },
-            }
+            },
         )
-    
+
     # For status updates, notify the sender
     if not created:
         user_channel = f"user_{instance.sender.id}"
@@ -66,18 +78,21 @@ def friend_request_post_save(sender, instance, created, **kwargs):
                         "status": instance.status,
                     },
                 },
-            }
+            },
         )
+
 
 @receiver(post_save, sender=CrewRequest)
 def crew_request_post_save(sender, instance, created, **kwargs):
     """Send real-time notifications when a crew request is created or updated."""
     channel_layer = get_channel_layer()
-    
+
     # Determine the action and prepare data
     if created:
         action = "sendCrew"
-        message = f"{instance.sender.username} invited you to join {instance.crew.name}!"
+        message = (
+            f"{instance.sender.username} invited you to join {instance.crew.name}!"
+        )
     elif instance.status == "accepted":
         action = "acceptCrewRequest"
         message = f"{instance.receiver.username} accepted your crew invitation!"
@@ -87,7 +102,7 @@ def crew_request_post_save(sender, instance, created, **kwargs):
     else:
         # No notification for other status changes
         return
-    
+
     # Send to the receiver for new requests
     if created:
         # For new requests, notify the receiver
@@ -108,9 +123,9 @@ def crew_request_post_save(sender, instance, created, **kwargs):
                         },
                     },
                 },
-            }
+            },
         )
-    
+
     # For status updates, notify the sender
     if not created:
         user_channel = f"user_{instance.sender.id}"
@@ -131,14 +146,15 @@ def crew_request_post_save(sender, instance, created, **kwargs):
                         "status": instance.status,
                     },
                 },
-            }
+            },
         )
+
 
 @receiver(post_save, sender=GoWithRequest)
 def go_with_request_post_save(sender, instance, created, **kwargs):
     """Send real-time notifications when a go-with request is created or updated."""
     channel_layer = get_channel_layer()
-    
+
     # Determine the action and prepare data
     if created:
         action = "sendGoWith"
@@ -155,7 +171,7 @@ def go_with_request_post_save(sender, instance, created, **kwargs):
     else:
         # No notification for other status changes
         return
-    
+
     # Send to the receiver for new requests
     if created or instance.status == "cancelled" or instance.status == "Cancelled":
         # For new or cancelled requests, notify the receiver
@@ -182,11 +198,11 @@ def go_with_request_post_save(sender, instance, created, **kwargs):
                             },
                         },
                     },
-                }
+                },
             )
         except Exception as e:
             print(f"Error sending go-with notification to receiver: {e}")
-    
+
     # For status updates, notify the sender
     if not created:
         try:
@@ -213,7 +229,73 @@ def go_with_request_post_save(sender, instance, created, **kwargs):
                             "status": instance.status,
                         },
                     },
-                }
+                },
             )
         except Exception as e:
             print(f"Error sending go-with notification to sender: {e}")
+
+
+@receiver(post_save, sender=FriendRequest)
+def record_friend_activity(sender, instance, created, **kwargs):
+    if instance.status == "accepted":
+        SocialActivity.objects.create(
+            user=instance.sender,
+            activity_type="friend_accepted",
+            content={
+                "friend_request": instance.requestId,
+                "friend_username": instance.receiver.username,
+                "friend_name": f"{instance.receiver.first_name} {instance.receiver.last_name}",
+                "friend_photo": (
+                    instance.receiver.user_profile.profile_photo.url
+                    if hasattr(instance.receiver, "user_profile")
+                    else None
+                ),
+            },
+        )
+
+        SocialActivity.objects.create(
+            user=instance.receiver,
+            activity_type="friend_accepted",
+            content={
+                "friend_username": instance.sender.username,
+                "friend_name": f"{instance.sender.first_name} {instance.sender.last_name}",
+                "friend_photo": (
+                    instance.sender.user_profile.profile_photo.url
+                    if hasattr(instance.sender, "user_profile")
+                    else None
+                ),
+            },
+        )
+
+
+@receiver(post_save, sender=CrewMember)
+def record_crew_activity(sender, instance, created, **kwargs):
+    if created:
+        SocialActivity.objects.create(
+            user=instance.user,
+            activity_type="crew_joined",
+            content={
+                "crew": instance.crew.name,
+                "crew_id": instance.crew.crewId,
+                "joined_at": instance.joined_at.isoformat(),
+            },
+        )
+
+
+@receiver(post_save, sender=Ticket)
+def record_ticket_activity(sender, instance, created, **kwargs):
+    if created:
+        SocialActivity.objects.create(
+            user=instance.user,
+            activity_type="ticket_purchased",
+            content={
+                "event_id": str(instance.event.eventId),
+                "event_title": instance.event.title,
+                "event_date": instance.event.date.isoformat(),
+                "event_photo": (
+                    instance.event.header_photo.url
+                    if instance.event.header_photo
+                    else None
+                ),
+            },
+        )

@@ -16,7 +16,13 @@ from apiManager.utilities.device_info import get_device_info
 
 from eventManagementApp.models import Event
 from accountManagementApp.models import UserProfile
-from socialApp.models import Crew, CrewMember, FriendRequest, CrewRequest
+from socialApp.models import (
+    Crew,
+    CrewMember,
+    FriendRequest,
+    CrewRequest,
+    SocialActivity,
+)
 from eventTicketsApp.views import generateTicket
 from apiManager.algorithms.suggested_friends import get_suggested_friends
 
@@ -2100,3 +2106,85 @@ async def cancel_crew_invite(
 
     print(f"[cancel_crew_invite API] {success_message}")
     return {"message": success_message, "crew_invite": invite_data}
+
+
+@router.get("/whats-happening")
+async def get_whats_happening(
+    request: Request,
+    caller_user_id: Optional[int] = Depends(get_current_user),
+    platform: Optional[str] = None,
+    limit: int = Query(20, ge=1, le=50),
+):
+    """
+    API endpoint to get what's happening for a user.
+    """
+    print(
+        f"[get_whats_happening API] Function called with caller_user_id: {caller_user_id}"
+    )
+
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    @database_sync_to_async
+    def get_activities(caller_user_id, limit):
+        try:
+            user = CustomUser.objects.get(id=caller_user_id)
+            user_profile = user.user_profile
+
+            friends = user_profile.friends.all()
+            friend_ids = [friend.user.id for friend in friends]
+
+            activities = SocialActivity.objects.filter(user_id__in=friends).order_by(
+                "-created_at"
+            )[:limit]
+
+            activity_data = []
+            for activity in activities:
+                activity_data = {
+                    "activity_id": str(activity.activityId),
+                    "activity_type": activity.activity_type,
+                    "created_at": activity.created_at,
+                    "user": {
+                        "user_id": str(activity.user.user_id),
+                        "username": activity.user.username,
+                        "first_name": activity.user.first_name,
+                        "last_name": activity.user.last_name,
+                        "profile_photo": (
+                            activity.user.user_profile.profile_photo.url
+                            if activity.user.user_profile.profile_photo
+                            else None
+                        ),
+                    },
+                    "content": activity.content,
+                }
+
+                activity_data.append(activity_data)
+
+            return activity_data
+
+        except CustomUser.DoesNotExist:
+            error_message = f"User not found with ID: {caller_user_id}"
+            print(f"[get_whats_happening API] {error_message}")
+            return None, error_message
+        except Exception as e:
+            error_message = f"Error getting activities: {str(e)}"
+            print(f"[get_whats_happening API] {error_message}")
+            return None, error_message
+
+    activities, error_message = await get_activities(caller_user_id, limit)
+    if activities is None:
+        notification_sent = await notify_by_bot(
+            f"**[API: get_whats_happening API]** \n\n {error_message} \n\n Platform: {platform} \n\n User ID: {caller_user_id} \n\n Limit: {limit}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        if notification_sent is None:
+            print(
+                "[get_whats_happening API] Could not send notification: BOT_API_KEY not set"
+            )
+        raise HTTPException(status_code=400, detail=error_message)
+
+    print(f"[get_whats_happening API] {success_message}")
+    return {"activities": activities}

@@ -222,3 +222,33 @@ class GoWithRequest(models.Model):
         self.status = "cancelled"
         self.save()
         return self
+
+
+class SocialActivity(models.Model):
+    ACTIVITY_TYPES = [
+        ("friend_request", "Friend Request"),
+        ("friend_accepted", "Friend Accepted"),
+        ("crew_joined", "Crew Joined"),
+        ("event_going", "Event Going"),
+        ("campus_joined", "Campus Joined"),
+    ]
+
+    activityId = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="social_activities",
+    )
+    activity_type = models.CharField(max_length=20, choices=ACTIVITY_TYPES)
+    content = models.JSONField()  # Store activity-specific data
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["user", "activity_type", "created_at"]),
+        ]
+        app_label = "socialApp"
+
+    def __str__(self):
+        return f"{self.user.username} - {self.activity_type} at {self.created_at}"
