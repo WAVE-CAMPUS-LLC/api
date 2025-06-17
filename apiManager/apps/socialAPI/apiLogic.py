@@ -296,19 +296,35 @@ async def get_crew_details(
             user_is_member = False
             user_is_admin = False
 
-            for crew_member in CrewMember.objects.filter(crew=crew).select_related(
+            # FIRST: Check if the caller is the crew creator
+            if caller_user_id and crew.created_by.id == caller_user_id:
+                user_is_member = True
+                user_is_admin = True  # Creator is always admin
+                print(f"[get_crew_details] User {caller_user_id} is the crew creator")
+
+            # Get all crew member records
+            crew_member_records = CrewMember.objects.filter(crew=crew).select_related(
                 "user", "user__user_profile"
-            ):
+            )
+            
+            print(f"[get_crew_details] Found {crew_member_records.count()} crew members")
+            print(f"[get_crew_details] Checking membership for user_id: {caller_user_id}")
+
+            for crew_member in crew_member_records:
                 member_profile = (
                     crew_member.user.user_profile
                     if hasattr(crew_member.user, "user_profile")
                     else None
                 )
 
-                # Check if the caller is this crew member
-                if caller_user_id and crew_member.user.id == caller_user_id:
+                # DEBUG: Log member IDs for comparison
+                print(f"[get_crew_details] Comparing caller_user_id={caller_user_id} with member_user_id={crew_member.user.id}")
+
+                # Check if the caller is this crew member - ensure both are integers
+                if caller_user_id and int(crew_member.user.id) == int(caller_user_id):
                     user_is_member = True
                     user_is_admin = crew_member.is_admin
+                    print(f"[get_crew_details] User {caller_user_id} found as crew member with admin={crew_member.is_admin}")
 
                 crew_members.append(
                     {
@@ -331,6 +347,27 @@ async def get_crew_details(
                         },
                     }
                 )
+
+            # Final debug log
+            print(f"[get_crew_details] Final membership status: user_is_member={user_is_member}, user_is_admin={user_is_admin}")
+
+            # Also check if caller should be included but is missing from CrewMember records
+            if caller_user_id and not user_is_member:
+                # Check for potential data inconsistency
+                direct_membership_check = CrewMember.objects.filter(
+                    crew=crew, user_id=caller_user_id
+                ).exists()
+                print(f"[get_crew_details] Direct membership check result: {direct_membership_check}")
+                
+                if direct_membership_check:
+                    print(f"[get_crew_details] WARNING: Found membership in direct check but missed in iteration!")
+                    user_is_member = True
+                    # Get the admin status
+                    try:
+                        member_record = CrewMember.objects.get(crew=crew, user_id=caller_user_id)
+                        user_is_admin = member_record.is_admin
+                    except CrewMember.DoesNotExist:
+                        pass
 
             # Get shared events for this crew (limit for performance)
             from eventManagementApp.models import SharedEvent
