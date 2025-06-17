@@ -100,9 +100,14 @@ class CheckoutResponse(BaseModel):
 async def process_checkout(
     request: Request,
     cart_data: CartData = Body(...),
-    user_id: Optional[str] = Depends(get_current_user),
+    user_id: Optional[int] = Depends(get_current_user),
 ):
-    print(f"[process_checkout] Function called with user_id: {user_id}")
+    print(f"[DEBUG] ========== PROCESS CHECKOUT START ==========")
+    print(f"[DEBUG] Function called with user_id: {user_id}")
+    print(f"[DEBUG] Request method: {request.method}")
+    print(f"[DEBUG] Request URL: {request.url}")
+    print(f"[DEBUG] Request headers: {dict(request.headers)}")
+    
     """Process checkout for event tickets using Stripe
     
     This endpoint handles the creation of a Stripe checkout session for purchasing event tickets.
@@ -118,14 +123,21 @@ async def process_checkout(
     """
     # Extract cart from the request body
     cart = cart_data.cart
-    print("Received cart data in process checkout: ", cart)
+    print(f"[DEBUG] Raw cart_data received: {cart_data}")
+    print(f"[DEBUG] Extracted cart: {cart}")
+    print(f"[DEBUG] Cart type: {type(cart)}")
+    print(f"[DEBUG] Cart keys: {list(cart.keys()) if cart else 'None'}")
 
     if not cart:
+        print(f"[DEBUG] ERROR: Cart is empty")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Cart is empty"
         )
 
+    print(f"[DEBUG] Cart validation passed - cart has {len(cart)} items")
+
     # Extract ticket items and calculate total amount
+    print(f"[DEBUG] Starting ticket item extraction...")
     ticket_items = {
         k: v
         for k, v in cart.items()
@@ -135,95 +147,227 @@ async def process_checkout(
         and "quantity" in v
     }
 
-    print(f"Ticket items: {ticket_items}")
+    print(f"[DEBUG] Extracted ticket items: {ticket_items}")
+    print(f"[DEBUG] Number of ticket items found: {len(ticket_items)}")
+    print(f"[DEBUG] Special cart items: {[k for k in cart.keys() if k in ['coupon_code', 'discount_percentage']]}")
 
     if not ticket_items:
+        print(f"[DEBUG] ERROR: No valid tickets found in cart")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="No valid tickets in cart"
         )
 
+    # Validate ticket items
+    print(f"[DEBUG] Starting ticket validation...")
+    event_ids = set()
+    for key, item in ticket_items.items():
+        print(f"[DEBUG] Validating ticket {key}: {item}")
+        
+        # Validate price and quantity
+        try:
+            price = float(item.get("price", 0))
+            quantity = int(item.get("quantity", 0))
+            
+            print(f"[DEBUG] Ticket {key} - Price: {price}, Quantity: {quantity}")
+            
+            if price < 0:
+                print(f"[DEBUG] ERROR: Negative price for ticket {key}: {price}")
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST, 
+                    detail=f"Invalid price for ticket {key}: price cannot be negative"
+                )
+            if quantity <= 0:
+                print(f"[DEBUG] ERROR: Invalid quantity for ticket {key}: {quantity}")
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST, 
+                    detail=f"Invalid quantity for ticket {key}: quantity must be greater than 0"
+                )
+        except (ValueError, TypeError) as e:
+            print(f"[DEBUG] ERROR: Invalid price/quantity format for ticket {key}: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, 
+                detail=f"Invalid price or quantity format for ticket {key}"
+            )
+        
+        # Collect event IDs to ensure all tickets are from the same event
+        event_id = item.get("eventId")
+        print(f"[DEBUG] Ticket {key} eventId: {event_id}")
+        
+        if not event_id:
+            print(f"[DEBUG] ERROR: Missing eventId for ticket {key}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, 
+                detail=f"Missing eventId for ticket {key}"
+            )
+        event_ids.add(event_id)
+
+    print(f"[DEBUG] All event IDs found: {event_ids}")
+    
+    # Ensure all tickets are from the same event
+    if len(event_ids) > 1:
+        print(f"[DEBUG] ERROR: Multiple events found in cart: {event_ids}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, 
+            detail="All tickets must be from the same event"
+        )
+    
+    print(f"[DEBUG] Ticket validation passed - all tickets are from event: {list(event_ids)[0]}")
+
     # Calculate the total amount for tickets (without discount)
+    print(f"[DEBUG] Starting total amount calculation...")
     total_amount = sum(
         float(item.get("price", 0)) * int(item.get("quantity", 0))
         for item in ticket_items.values()
     )
+    print(f"[DEBUG] Total amount calculated: ${total_amount}")
 
     # Get event info from the first ticket
     first_ticket_key = next(iter(ticket_items.keys()))
     first_ticket = ticket_items[first_ticket_key]
     event_id = first_ticket.get("eventId")
+    print(f"[DEBUG] Using event ID: {event_id} from first ticket: {first_ticket_key}")
 
     try:
+        print(f"[DEBUG] Starting database operations...")
+        
         # Get platform settings, event and host info
+        print(f"[DEBUG] Fetching platform settings...")
         platform_settings = await get_platform_settings()
+        print(f"[DEBUG] Platform settings retrieved: {platform_settings}")
+        
+        print(f"[DEBUG] Fetching event with ID: {event_id}")
         event = await get_event(event_id)
+        print(f"[DEBUG] Event retrieved: {event}")
+        
+        print(f"[DEBUG] Fetching host ID for event...")
         host_id = await get_host_id(event)
+        print(f"[DEBUG] Host ID: {host_id}")
+        
+        print(f"[DEBUG] Fetching host details...")
         host = await get_host(host_id)
+        print(f"[DEBUG] Host retrieved: {host}")
+
+        # Validate Stripe configuration
+        print(f"[DEBUG] Validating Stripe configuration...")
+        connect_account_id = await database_sync_to_async(
+            lambda: host.connectAccountID
+        )()
+        print(f"[DEBUG] Connect account ID: {connect_account_id}")
+        
+        if not connect_account_id:
+            print(f"[DEBUG] ERROR: Host has no connect account ID configured")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, 
+                detail="Event host has not configured payment processing"
+            )
+        
+        print(f"[DEBUG] Stripe configuration validated successfully")
 
         # Process discount (from direct percentage or coupon code)
+        print(f"[DEBUG] Starting discount processing...")
         discount_percentage = 0
         has_discount = False
+        coupon_code_value = None
 
         # First check for direct discount percentage
         if "discount_percentage" in cart:
-            discount_percentage = float(cart.get("discount_percentage"))
-            has_discount = True
-            print(f"Using discount percentage from cart: {discount_percentage}%")
+            print(f"[DEBUG] Found direct discount percentage in cart")
+            try:
+                discount_percentage = float(cart.get("discount_percentage"))
+                print(f"[DEBUG] Parsed discount percentage: {discount_percentage}")
+                
+                if discount_percentage < 0 or discount_percentage > 100:
+                    print(f"[DEBUG] ERROR: Invalid discount percentage range: {discount_percentage}")
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST, 
+                        detail="Discount percentage must be between 0 and 100"
+                    )
+                has_discount = True
+                print(f"[DEBUG] Using discount percentage from cart: {discount_percentage}%")
+                
+            except (ValueError, TypeError) as e:
+                print(f"[DEBUG] ERROR: Invalid discount percentage format: {e}")
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST, 
+                    detail="Invalid discount percentage format"
+                )
         # Then check for coupon code
         elif "coupon_code" in cart:
+            print(f"[DEBUG] Found coupon code in cart")
             coupon_code_value = cart.get("coupon_code")
-            coupon = await get_coupon(coupon_code_value, event)
+            print(f"[DEBUG] Coupon code value: {coupon_code_value}")
+            
+            if coupon_code_value:
+                print(f"[DEBUG] Validating coupon code: {coupon_code_value}")
+                coupon = await get_coupon(coupon_code_value, event)
+                print(f"[DEBUG] Coupon lookup result: {coupon}")
 
-            if coupon:
-                has_discount = True
-                discount_percentage = await database_sync_to_async(
-                    lambda: coupon.discount_percentage
-                )()
-                print(
-                    f"Valid coupon applied: {coupon_code_value}, Discount: {discount_percentage}%"
-                )
+                if coupon:
+                    has_discount = True
+                    discount_percentage = await database_sync_to_async(
+                        lambda: coupon.discount_percentage
+                    )()
+                    print(f"[DEBUG] Valid coupon applied: {coupon_code_value}, Discount: {discount_percentage}%")
+                else:
+                    print(f"[DEBUG] ERROR: Invalid coupon code: {coupon_code_value}")
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST, 
+                        detail="Invalid coupon code"
+                    )
+        
+        print(f"[DEBUG] Discount processing complete - Has discount: {has_discount}, Percentage: {discount_percentage}%")
 
         # Store original amount and apply discount
+        print(f"[DEBUG] Starting amount calculations...")
         original_amount = total_amount
         original_amount_in_cents = int(original_amount * 100)
+        print(f"[DEBUG] Original amount: ${original_amount} (${original_amount_in_cents} cents)")
 
         if has_discount and discount_percentage > 0:
             discount_amount = total_amount * (discount_percentage / 100)
             total_amount = total_amount - discount_amount
-            print(
-                f"Applied {discount_percentage}% discount: Original: ${original_amount}, Discount: ${discount_amount}, New total: ${total_amount}"
-            )
+            print(f"[DEBUG] Applied {discount_percentage}% discount: Original: ${original_amount}, Discount: ${discount_amount}, New total: ${total_amount}")
+        else:
+            print(f"[DEBUG] No discount applied - using original amount: ${total_amount}")
 
         # Convert to cents after discount is applied
         amount_in_cents = int(total_amount * 100)
+        print(f"[DEBUG] Final amount in cents: {amount_in_cents}")
 
         # Check for valid amount (allow zero for 100% discounts)
-        if amount_in_cents <= 0 and not (has_discount and discount_percentage >= 100):
+        if amount_in_cents < 0:
+            print(f"[DEBUG] ERROR: Negative amount calculated: {amount_in_cents}")
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid amount"
+                status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid amount calculation"
             )
 
         # Calculate service fee
+        print(f"[DEBUG] Starting service fee calculation...")
         is_full_discount = (
             amount_in_cents <= 0 and has_discount and discount_percentage >= 100
         )
+        print(f"[DEBUG] Is full discount: {is_full_discount}")
+        
         if is_full_discount:
             # For 100% discounts, apply a minimal service fee based on the original price
             fee_amount = max(99, int(original_amount_in_cents * 0.07) + 99)
+            print(f"[DEBUG] Full discount fee calculation: max(99, {int(original_amount_in_cents * 0.07)} + 99) = {fee_amount}")
         else:
-            fee_amount = (
-                int(amount_in_cents * 0.07) + 99
-            )  # 7% of subtotal + $0.99 flat fee in cents
+            # 7% of discounted subtotal + $0.99 flat fee in cents
+            fee_amount = int(amount_in_cents * 0.07) + 99
+            print(f"[DEBUG] Regular fee calculation: {int(amount_in_cents * 0.07)} + 99 = {fee_amount}")
 
-        print(
-            f"Service fee: ${fee_amount/100} calculated on discounted amount: ${total_amount}"
-        )
+        print(f"[DEBUG] Service fee: ${fee_amount/100} calculated for {'100% discount' if is_full_discount else f'${total_amount} discounted amount'}")
 
         # Build Stripe line items
+        print(f"[DEBUG] Building Stripe line items...")
         line_items = []
         for key, ticket in ticket_items.items():
+            print(f"[DEBUG] Processing ticket {key}: {ticket}")
+            
             # Calculate the discounted price for each ticket
             original_price = float(ticket["price"])
+            print(f"[DEBUG] Original price for {key}: ${original_price}")
 
             # Apply discount if applicable
             if has_discount and discount_percentage > 0:
@@ -232,13 +376,16 @@ async def process_checkout(
                 ticket_name = (
                     f"{ticket['name']} ({discount_percentage}% discount applied)"
                 )
+                print(f"[DEBUG] Discounted price for {key}: ${discounted_price} ({unit_amount} cents)")
             else:
                 unit_amount = int(Decimal(original_price) * 100)
                 ticket_name = ticket["name"]
+                print(f"[DEBUG] No discount for {key}: ${original_price} ({unit_amount} cents)")
 
             # For 100% discounts, update the ticket name
             if unit_amount == 0 and is_full_discount:
                 ticket_name = f"{ticket['name']} (100% discount applied)"
+                print(f"[DEBUG] Updated ticket name for 100% discount: {ticket_name}")
 
             # Create metadata for the ticket
             metadata = {
@@ -251,6 +398,10 @@ async def process_checkout(
             if has_discount and discount_percentage > 0:
                 metadata["is_discounted"] = "true"
                 metadata["discount_percentage"] = str(discount_percentage)
+                if coupon_code_value:
+                    metadata["coupon_code"] = coupon_code_value
+
+            print(f"[DEBUG] Ticket metadata for {key}: {metadata}")
 
             line_items.append(
                 {
@@ -262,33 +413,46 @@ async def process_checkout(
                     "quantity": ticket["quantity"],
                 }
             )
+            print(f"[DEBUG] Added line item for {key}: {ticket_name} x{ticket['quantity']} at ${unit_amount/100} each")
 
-        # Add service fee for non-100% discounted tickets
-        if not is_full_discount:
-            line_items.append(
-                {
-                    "price_data": {
-                        "currency": "usd",
-                        "product_data": {
-                            "name": "Service Fee",
-                        },
-                        "unit_amount": fee_amount,
+        # Add service fee as a separate line item
+        print(f"[DEBUG] Adding service fee line item...")
+        line_items.append(
+            {
+                "price_data": {
+                    "currency": "usd",
+                    "product_data": {
+                        "name": "Service Fee",
+                        "metadata": {
+                            "fee_type": "service_fee",
+                            "is_full_discount": str(is_full_discount),
+                        }
                     },
-                    "quantity": 1,
-                }
-            )
+                    "unit_amount": fee_amount,
+                },
+                "quantity": 1,
+            }
+        )
+        print(f"[DEBUG] Service fee line item added: ${fee_amount/100}")
+        print(f"[DEBUG] Total line items: {len(line_items)}")
 
         try:
-            print(f"Creating Stripe checkout session with {len(line_items)} line items")
+            print(f"[DEBUG] Creating Stripe checkout session with {len(line_items)} line items")
 
             # Get the current user if authenticated
+            print(f"[DEBUG] Getting current user for user_id: {user_id}")
             current_user = await get_user(user_id) if user_id else None
+            print(f"[DEBUG] Current user: {current_user}")
 
             # Get event information
+            print(f"[DEBUG] Getting event information...")
             event_title = await database_sync_to_async(lambda: event.title)()
             event_id_str = await database_sync_to_async(lambda: str(event.eventId))()
+            print(f"[DEBUG] Event title: {event_title}")
+            print(f"[DEBUG] Event ID string: {event_id_str}")
 
             # Get the success and cancel URLs
+            print(f"[DEBUG] Building payment URLs...")
             success_url = await database_sync_to_async(
                 lambda: os.environ.get("WEBSITE_DOMAIN")
                 + reverse("eventTickets:paymentSuccessful")
@@ -297,10 +461,24 @@ async def process_checkout(
                 lambda: os.environ.get("WEBSITE_DOMAIN")
                 + reverse("eventTickets:paymentFailed")
             )()
+            print(f"[DEBUG] Success URL: {success_url}")
+            print(f"[DEBUG] Cancel URL: {cancel_url}")
+
+            # Validate URLs
+            if not success_url or not cancel_url:
+                print(f"[DEBUG] ERROR: Payment URLs not configured properly")
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="Payment URLs not configured properly"
+                )
 
             # Common session parameters
+            print(f"[DEBUG] Building session parameters...")
+            customer_id = (current_user.customer_id if current_user and hasattr(current_user, 'customer_id') else None)
+            print(f"[DEBUG] Customer ID: {customer_id}")
+            
             session_params = {
-                "customer": current_user.customer_id if current_user else None,
+                "customer": customer_id,
                 "payment_method_types": ["card"],
                 "line_items": line_items,
                 "mode": "payment",
@@ -315,57 +493,81 @@ async def process_checkout(
                     ),
                     "original_amount": str(original_amount),
                     "discounted_amount": str(total_amount),
+                    "user_id": str(user_id) if user_id else "guest",
                 },
             }
+            print(f"[DEBUG] Session metadata: {session_params['metadata']}")
 
-            # Add payment_intent_data with transfer for regular checkouts
-            if not is_full_discount:
-                connect_account_id = await database_sync_to_async(
-                    lambda: host.connectAccountID
-                )()
-                session_params["payment_intent_data"] = {
-                    "transfer_data": {
-                        "destination": connect_account_id,
-                        "amount": amount_in_cents,
-                    },
-                    "metadata": {
-                        "cart_data": json.dumps(cart),
-                        "event_id": event_id_str,
-                        "event_title": event_title,
-                        "discount_percentage": (
-                            str(discount_percentage) if has_discount else "0"
-                        ),
-                        "ticket_amount": str(amount_in_cents),
-                        "fee_amount": str(fee_amount),
-                    },
-                }
+            # Add payment_intent_data with transfer for all checkouts (including 100% discount for service fee)
+            print(f"[DEBUG] Setting up payment intent data...")
+            total_transfer_amount = amount_in_cents if not is_full_discount else 0
+            print(f"[DEBUG] Transfer amount: {total_transfer_amount} cents to {connect_account_id}")
+            
+            session_params["payment_intent_data"] = {
+                "transfer_data": {
+                    "destination": connect_account_id,
+                    "amount": total_transfer_amount,
+                },
+                "metadata": {
+                    "cart_data": json.dumps(cart),
+                    "event_id": event_id_str,
+                    "event_title": event_title,
+                    "discount_percentage": (
+                        str(discount_percentage) if has_discount else "0"
+                    ),
+                    "ticket_amount": str(amount_in_cents),
+                    "fee_amount": str(fee_amount),
+                    "is_full_discount": str(is_full_discount),
+                },
+            }
+            print(f"[DEBUG] Payment intent metadata: {session_params['payment_intent_data']['metadata']}")
 
+            print(f"[DEBUG] Creating Stripe checkout session...")
             checkout_session = stripe.checkout.Session.create(**session_params)
 
-            print(f"Checkout session created: {checkout_session.id}")
+            print(f"[DEBUG] Checkout session created successfully: {checkout_session.id}")
+            print(f"[DEBUG] Session URL: {checkout_session.url}")
+            print(f"[DEBUG] ========== PROCESS CHECKOUT SUCCESS ==========")
             return {"sessionUrl": checkout_session.url}
 
         except stripe.error.StripeError as e:
-            print(f"Stripe error: {e}")
+            print(f"[DEBUG] ERROR: Stripe error occurred: {e}")
+            print(f"[DEBUG] Stripe error type: {type(e)}")
+            print(f"[DEBUG] ========== PROCESS CHECKOUT STRIPE ERROR ==========")
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Stripe error: {str(e)}",
+                detail=f"Payment processing error: {str(e)}",
             )
 
     except Event.DoesNotExist:
+        print(f"[DEBUG] ERROR: Event not found with ID: {event_id}")
+        print(f"[DEBUG] ========== PROCESS CHECKOUT EVENT ERROR ==========")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Event not found"
         )
     except CustomUser.DoesNotExist:
+        print(f"[DEBUG] ERROR: Host not found")
+        print(f"[DEBUG] ========== PROCESS CHECKOUT HOST ERROR ==========")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Host not found"
         )
+    except HTTPException as e:
+        # Re-raise HTTP exceptions without modification
+        print(f"[DEBUG] ERROR: HTTP Exception: {e.status_code} - {e.detail}")
+        print(f"[DEBUG] ========== PROCESS CHECKOUT HTTP ERROR ==========")
+        raise
     except Exception as e:
         import traceback
 
-        print(f"Unexpected error in process_checkout: {e}")
+        print(f"[DEBUG] ERROR: Unexpected error in process_checkout: {e}")
+        print(f"[DEBUG] ERROR: Exception type: {type(e)}")
+        print(f"[DEBUG] ERROR: Full traceback:")
         print(traceback.format_exc())
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        print(f"[DEBUG] ========== PROCESS CHECKOUT UNEXPECTED ERROR ==========")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+            detail="An unexpected error occurred during checkout"
+        )
 
 
 @router.get("/ticketDetails")
