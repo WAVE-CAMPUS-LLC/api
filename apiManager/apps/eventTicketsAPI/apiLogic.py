@@ -454,8 +454,8 @@ async def process_checkout(
 
             # Get the success and cancel URLs
             print(f"[DEBUG] Building payment URLs...")
-            success_url = "https://waveoncampus.com/paymentSuccessful"
-            cancel_url = "https://waveoncampus.com/paymentFailed"
+            success_url = "https://waveoncampus.com/checkout/paymentSuccessful"
+            cancel_url = "https://waveoncampus.com/checkout/paymentFailed"
 
             # Validate URLs
             if not success_url or not cancel_url:
