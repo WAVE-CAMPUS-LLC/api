@@ -442,6 +442,49 @@ async def toggleFavorite(eventId: str, user_id: int = Depends(get_current_user))
     return {"message": "Profile updated successfully"}
 
 
+@router.get("/event/{eventId}/isFavorite")
+async def check_event_favorite(eventId: str, user_id: int = Depends(get_current_user)):
+    """
+    API endpoint to check if a specific event is in the user's favorites.
+    """
+    print(
+        f"[check_event_favorite API] Function called with eventId: {eventId}, user_id: {user_id}"
+    )
+
+    @database_sync_to_async
+    def check_favorite_status(eventId, user_id):
+        try:
+            user = CustomUser.objects.get(id=user_id)
+            event = Event.objects.get(eventId=eventId)
+            user_profile = UserProfile.objects.get(user=user)
+
+            is_favorite = event in user_profile.favorite_events.all()
+            print(
+                f"[check_event_favorite API] Event {event.title} favorite status for user {user.username}: {is_favorite}"
+            )
+            return is_favorite
+        except CustomUser.DoesNotExist:
+            print(f"[check_event_favorite API] User not found with ID: {user_id}")
+            return None
+        except Event.DoesNotExist:
+            print(f"[check_event_favorite API] Event not found with ID: {eventId}")
+            return None
+        except UserProfile.DoesNotExist:
+            print(
+                f"[check_event_favorite API] User profile not found for user ID: {user_id}"
+            )
+            return None
+
+    favorite_status = await check_favorite_status(eventId, user_id)
+
+    if favorite_status is None:
+        raise HTTPException(
+            status_code=404, detail="User, event, or user profile not found"
+        )
+
+    return {"isFavorite": favorite_status}
+
+
 @router.post("/event/{eventId}/rsvp")
 async def rsvp(
     request: Request, eventId: str, user_id: Optional[int] = Depends(get_current_user)
