@@ -446,6 +446,7 @@ async def toggleFavorite(eventId: str, user_id: int = Depends(get_current_user))
 async def check_event_favorite(eventId: str, user_id: int = Depends(get_current_user)):
     """
     API endpoint to check if a specific event is in the user's favorites.
+    Returns event data if favorited, otherwise returns isFavorite: false.
     """
     print(
         f"[check_event_favorite API] Function called with eventId: {eventId}, user_id: {user_id}"
@@ -462,7 +463,15 @@ async def check_event_favorite(eventId: str, user_id: int = Depends(get_current_
             print(
                 f"[check_event_favorite API] Event {event.title} favorite status for user {user.username}: {is_favorite}"
             )
-            return is_favorite
+
+            if is_favorite:
+                return {
+                    "isFavorite": True,
+                }
+            else:
+                # Return just the boolean when not favorited
+                return {"isFavorite": False}
+
         except CustomUser.DoesNotExist:
             print(f"[check_event_favorite API] User not found with ID: {user_id}")
             return None
@@ -482,7 +491,7 @@ async def check_event_favorite(eventId: str, user_id: int = Depends(get_current_
             status_code=404, detail="User, event, or user profile not found"
         )
 
-    return {"isFavorite": favorite_status}
+    return favorite_status
 
 
 @router.post("/event/{eventId}/rsvp")
