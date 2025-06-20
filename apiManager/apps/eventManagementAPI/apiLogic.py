@@ -63,12 +63,20 @@ router = APIRouter()
 
 @router.api_route("/event/{eventId}/editEvent", methods=["POST", "PATCH"])
 async def edit_event_endpoint(
-    request: Request, eventId: str, user_id=Depends(get_current_user)
+    request: Request, 
+    eventId: str, 
+    user_id=Depends(get_current_user),
+    platform: Optional[str] = None,
 ):
     print(f"[DEBUG - edit_event_endpoint] Function called with eventId: {eventId}")
     """
     Edit an event, supporting both full updates (POST) and partial updates (PATCH).
     """
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
     try:
         # Get form data (includes both text fields and files)
         form_data = await request.form()
@@ -213,6 +221,12 @@ async def edit_event_endpoint(
         # Log the exception details and return a server error
         traceback_str = traceback.format_exc()
         print(f"Edit event error: {str(e)}\n{traceback_str}")
+        await notify_by_bot(
+            f"**[API: edit_event_endpoint]** \n\n Error editing event: eventId={eventId}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
         return JSONResponse(
             content={"error": f"An unexpected error occurred: {str(e)}"},
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -477,39 +491,141 @@ async def delete_event(
 
 
 @router.get("/event/fields")
-async def event_creation_fields(request: Request):
-    print(f"[DEBUG - event_creation_fields] Function called")
-    FormClass = EventForm
-    fields_info = get_form_fields(FormClass)
-    print(
-        f"[DEBUG - event_creation_fields] Returning form fields: {list(fields_info.keys())}"
-    )
-    return JSONResponse(content=fields_info, status_code=status.HTTP_200_OK)
+async def event_creation_fields(
+    request: Request,
+    platform: Optional[str] = None,
+):
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    try:
+        return {
+            "fields": [
+                {
+                    "name": "title",
+                    "type": "text",
+                    "label": "Event Title",
+                    "required": True,
+                    "placeholder": "Enter event title",
+                },
+                {
+                    "name": "description",
+                    "type": "textarea",
+                    "label": "Description",
+                    "required": True,
+                    "placeholder": "Enter event description",
+                },
+                {
+                    "name": "date",
+                    "type": "date",
+                    "label": "Event Date",
+                    "required": True,
+                },
+                {
+                    "name": "start_time",
+                    "type": "time",
+                    "label": "Start Time",
+                    "required": False,
+                },
+                {
+                    "name": "end_time",
+                    "type": "time",
+                    "label": "End Time",
+                    "required": False,
+                },
+                {
+                    "name": "event_type",
+                    "type": "select",
+                    "label": "Event Type",
+                    "required": True,
+                    "options": [
+                        {"value": "party", "label": "Party"},
+                        {"value": "concert", "label": "Concert"},
+                        {"value": "sports", "label": "Sports"},
+                        {"value": "academic", "label": "Academic"},
+                        {"value": "other", "label": "Other"},
+                    ],
+                },
+                {
+                    "name": "ticketing",
+                    "type": "select",
+                    "label": "Ticketing",
+                    "required": True,
+                    "options": [
+                        {"value": "free", "label": "Free"},
+                        {"value": "paid", "label": "Paid"},
+                    ],
+                },
+                {
+                    "name": "building_name",
+                    "type": "text",
+                    "label": "Building Name",
+                    "required": False,
+                    "placeholder": "Enter building name",
+                },
+                {
+                    "name": "street",
+                    "type": "text",
+                    "label": "Street Address",
+                    "required": False,
+                    "placeholder": "Enter street address",
+                },
+                {
+                    "name": "city",
+                    "type": "text",
+                    "label": "City",
+                    "required": False,
+                    "placeholder": "Enter city",
+                },
+                {
+                    "name": "state",
+                    "type": "text",
+                    "label": "State",
+                    "required": False,
+                    "placeholder": "Enter state",
+                },
+                {
+                    "name": "zip_code",
+                    "type": "text",
+                    "label": "ZIP Code",
+                    "required": False,
+                    "placeholder": "Enter ZIP code",
+                },
+                {
+                    "name": "header_photo",
+                    "type": "file",
+                    "label": "Header Photo",
+                    "required": False,
+                    "accept": "image/*",
+                },
+            ]
+        }
+    except Exception as e:
+        await notify_by_bot(
+            f"**[API: event_creation_fields]** \n\n Error fetching form fields: error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        raise HTTPException(status_code=500, detail=f"Error fetching form fields: {str(e)}")
 
 
 @router.post("/event/free/create")
-async def create_free_event(request: Request, user_id: int = Depends(get_current_user)):
-    print(f"[DEBUG - create_free_event] Function called with user_id: {user_id}")
-    """
-    API endpoint for creating a free event
-    """
+async def create_free_event(
+    request: Request, 
+    user_id: int = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
     try:
-        # Get form data (includes both text fields and files)
         form_data = await request.form()
 
-        # Separate normal data and file data from the form
-        data = {}
-        files = {}
-        print(f"[DEBUG - create_free_event] Processing form data")
-        for key, value in form_data.multi_items():
-            if isinstance(value, UploadFile):
-                files[key] = await starlette_to_django(value)  # 👈 wrap here
-                print(f"[DEBUG - create_free_event] File uploaded: {key}")
-            else:
-                data[key] = value
-                print(f"[DEBUG - create_free_event] Text field: {key} = {value}")
-
-        # Wrap Django ORM calls and form processing in a synchronous function
         @database_sync_to_async
         def process_create_event():
             # Get the current user's profile.
@@ -626,35 +742,29 @@ async def create_free_event(request: Request, user_id: int = Depends(get_current
         # Log the exception details and return a server error
         traceback_str = traceback.format_exc()
         print(f"Create Free Event error: {str(e)}\n{traceback_str}")
-        return JSONResponse(
-            content={"error": f"An unexpected error occurred: {str(e)}"},
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        await notify_by_bot(
+            f"**[API: create_free_event]** \n\n Error creating free event: error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
         )
+        raise HTTPException(status_code=500, detail=f"Error creating free event: {str(e)}")
 
 
 @router.post("/event/paid/create")
-async def create_paid_event(request: Request, user_id: int = Depends(get_current_user)):
-    print(f"[DEBUG - create_paid_event] Function called with user_id: {user_id}")
-    """
-    API endpoint for creating a paid event
-    """
+async def create_paid_event(
+    request: Request, 
+    user_id: int = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
     try:
-        # Get form data (includes both text fields and files)
         form_data = await request.form()
 
-        # Separate normal data and file data from the form
-        data = {}
-        files = {}
-        print(f"[DEBUG - create_paid_event] Processing form data")
-        for key, value in form_data.multi_items():
-            if isinstance(value, UploadFile):
-                files[key] = await starlette_to_django(value)
-                print(f"[DEBUG - create_paid_event] File uploaded: {key}")
-            else:
-                data[key] = value
-                print(f"[DEBUG - create_paid_event] Text field: {key} = {value}")
-
-        # Wrap Django ORM calls and form processing in a synchronous function
         @database_sync_to_async
         def process_create_event():
             try:
@@ -860,20 +970,25 @@ async def create_paid_event(request: Request, user_id: int = Depends(get_current
         # Log the exception details and return a server error
         traceback_str = traceback.format_exc()
         print(f"Create Paid Event error: {str(e)}\n{traceback_str}")
-        return JSONResponse(
-            content={"error": f"An unexpected error occurred: {str(e)}"},
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        await notify_by_bot(
+            f"**[API: create_paid_event]** \n\n Error creating paid event: error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
         )
+        raise HTTPException(status_code=500, detail=f"Error creating paid event: {str(e)}")
 
 
 @router.get("/event/get_host_stripe_account_link")
-async def get_host_stripe_account_link(user_id: int = Depends(get_current_user)):
-    """
-    API endpoint to check a host's Stripe account status and provide an onboarding link if needed.
-    Returns either a success message if the account is fully set up, or an onboarding link if setup is incomplete.
-    """
-    # Use the same domain as in become_host for consistency
-    site_domain = "https://waveoncampus.com"
+async def get_host_stripe_account_link(
+    request: Request,
+    user_id: int = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
 
     @database_sync_to_async
     def process_stripe_account_check():
@@ -903,8 +1018,8 @@ async def get_host_stripe_account_link(user_id: int = Depends(get_current_user))
                 # Create an account link for onboarding or updating account details
                 account_link = stripe.AccountLink.create(
                     account=user.connectAccountID,
-                    refresh_url=f"{site_domain}/refresh/{user.connectAccountID}",
-                    return_url=f"{site_domain}/host/portal/",
+                    refresh_url=f"{settings.SITE_URL}/refresh/{user.connectAccountID}",
+                    return_url=f"{settings.SITE_URL}/host/portal/",
                     type="account_onboarding",
                 )
 
@@ -951,42 +1066,73 @@ async def get_host_stripe_account_link(user_id: int = Depends(get_current_user))
 
 
 @router.get("/event/paid/ticket/fields")
-async def paid_ticket_creation_fields(request: Request):
-    print(f"[DEBUG - paid_ticket_creation_fields] Function called")
-    FormClass = PaidFreeTicketForm
-    fields_info = get_form_fields(FormClass)
-    print(
-        f"[DEBUG - paid_ticket_creation_fields] Returning form fields: {list(fields_info.keys())}"
-    )
-    return JSONResponse(content=fields_info, status_code=status.HTTP_200_OK)
+async def paid_ticket_creation_fields(
+    request: Request,
+    platform: Optional[str] = None,
+):
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    try:
+        return {
+            "fields": [
+                {
+                    "name": "ticket_name",
+                    "type": "text",
+                    "label": "Ticket Name",
+                    "required": True,
+                    "placeholder": "Enter ticket name",
+                },
+                {
+                    "name": "ticket_price",
+                    "type": "number",
+                    "label": "Ticket Price",
+                    "required": True,
+                    "placeholder": "Enter ticket price",
+                },
+                {
+                    "name": "ticket_description",
+                    "type": "textarea",
+                    "label": "Description",
+                    "required": False,
+                    "placeholder": "Enter ticket description",
+                },
+                {
+                    "name": "ticket_quantity",
+                    "type": "number",
+                    "label": "Quantity Available",
+                    "required": True,
+                    "placeholder": "Enter quantity available",
+                },
+            ]
+        }
+    except Exception as e:
+        await notify_by_bot(
+            f"**[API: paid_ticket_creation_fields]** \n\n Error fetching form fields: error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        raise HTTPException(status_code=500, detail=f"Error fetching form fields: {str(e)}")
 
 
 @router.post("/event/{eventId}/createPaidFreeTicket")
-async def create_paid_free_ticket(eventId: str, request: Request):
-    print(f"[DEBUG - create_paid_free_ticket] Function called with eventId: {eventId}")
+async def create_paid_free_ticket(
+    eventId: str, 
+    request: Request,
+    platform: Optional[str] = None,
+):
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
     try:
-        # Get request data - could be form data or JSON
-        content_type = request.headers.get("content-type", "")
+        form_data = await request.form()
+        data = dict(form_data)
 
-        if "application/json" in content_type:
-            # Handle JSON data
-            data = await request.json()
-            print(f"[DEBUG - create_paid_free_ticket] Processing JSON data: {data}")
-        else:
-            # Handle form data
-            form_data = await request.form()
-            data = {}
-            files = {}
-            print(f"[DEBUG - create_paid_free_ticket] Processing form data")
-            for key, value in form_data.multi_items():
-                if isinstance(value, UploadFile):
-                    files[key] = value
-                else:
-                    data[key] = value
-
-        print(f"[DEBUG - create_paid_free_ticket] Received data: {data}")
-
-        # Wrap Django ORM calls and form processing in a synchronous function
         @database_sync_to_async
         def process_create_ticket(eventId, data):
             # Fetch the event object or raise a 404 error if not found
@@ -1054,138 +1200,160 @@ async def create_paid_free_ticket(eventId: str, request: Request):
         # Log the exception details and return a server error
         traceback_str = traceback.format_exc()
         print(f"Create Event Tickets error: {str(e)}\n{traceback_str}")
-        return JSONResponse(
-            content={"error": f"An unexpected error occurred: {str(e)}"},
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        await notify_by_bot(
+            f"**[API: create_paid_free_ticket]** \n\n Error creating ticket: eventId={eventId}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
         )
+        raise HTTPException(status_code=500, detail=f"Error creating ticket: {str(e)}")
 
 
 @router.get("/event/paid/coupon/fields")
-async def paid_coupon_creation_fields(request: Request):
-    print(f"[DEBUG - paid_coupon_creation_fields] Function called")
-    FormClass = CouponCodeForm
-    fields_info = get_form_fields(FormClass)
-    print(
-        f"[DEBUG - paid_coupon_creation_fields] Returning form fields: {list(fields_info.keys())}"
-    )
-    return JSONResponse(content=fields_info, status_code=status.HTTP_200_OK)
+async def paid_coupon_creation_fields(
+    request: Request,
+    platform: Optional[str] = None,
+):
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    try:
+        return {
+            "fields": [
+                {
+                    "name": "coupon_code",
+                    "type": "text",
+                    "label": "Coupon Code",
+                    "required": True,
+                    "placeholder": "Enter coupon code",
+                },
+                {
+                    "name": "discount_percentage",
+                    "type": "number",
+                    "label": "Discount Percentage",
+                    "required": True,
+                    "placeholder": "Enter discount percentage",
+                },
+                {
+                    "name": "max_uses",
+                    "type": "number",
+                    "label": "Maximum Uses",
+                    "required": False,
+                    "placeholder": "Enter maximum uses",
+                },
+            ]
+        }
+    except Exception as e:
+        await notify_by_bot(
+            f"**[API: paid_coupon_creation_fields]** \n\n Error fetching form fields: error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        raise HTTPException(status_code=500, detail=f"Error fetching form fields: {str(e)}")
 
 
 @router.get("/event/{eventId}/coupons")
-async def get_event_coupons(eventId: str, request: Request):
-    print(f"[DEBUG - get_event_coupons] Function called with eventId: {eventId}")
-    try:
-        # Wrap Django ORM calls in a synchronous function
-        @database_sync_to_async
-        def get_event_coupons_sync(event_id):
-            print(f"[DEBUG - get_event_coupons] Fetching coupons for event: {event_id}")
-            # Fetch the event object or raise a 404 error if not found
-            event = get_object_or_404(Event, eventId=event_id)
-            coupon_codes = CouponCode.objects.filter(event=event).values()
-            coupons_list = []
-            for coupon in coupon_codes:
-                # Convert all UUID fields to strings
-                for key, value in coupon.items():
-                    if isinstance(value, UUID):
-                        coupon[key] = str(value)
-                # Create a standardized response format with datetime objects converted to ISO format strings
-                coupon_data = {
-                    "couponId": coupon["coupon_id"],
-                    "code": coupon["code"],
-                    "discountPercentage": coupon["discount_percentage"],
-                    "createdAt": (
-                        coupon["created_at"].isoformat()
-                        if coupon["created_at"]
-                        else None
-                    ),
-                    "updatedAt": (
-                        coupon["updated_at"].isoformat()
-                        if coupon["updated_at"]
-                        else None
-                    ),
-                }
-                coupons_list.append(coupon_data)
-            return coupons_list
+async def get_event_coupons(
+    eventId: str, 
+    request: Request,
+    platform: Optional[str] = None,
+):
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
 
-        # Execute synchronous function asynchronously
-        coupons = await get_event_coupons_sync(eventId)
-        print(f"[DEBUG - get_event_coupons] Found {len(coupons)} coupons")
-    except Event.DoesNotExist:
-        return JSONResponse(
-            content={"message": "Event not found."},
-            status_code=status.HTTP_404_NOT_FOUND,
-        )
-    except Exception as e:
-        traceback_str = traceback.format_exc()
-        print(f"Get Event Coupons error: {str(e)}\n{traceback_str}")
-        return JSONResponse(
-            content={"error": f"An unexpected error occurred: {str(e)}"},
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        )
+    @database_sync_to_async
+    def get_event_coupons_sync(event_id):
+        print(f"[DEBUG - get_event_coupons] Fetching coupons for event: {event_id}")
+        # Fetch the event object or raise a 404 error if not found
+        event = get_object_or_404(Event, eventId=event_id)
+        coupon_codes = CouponCode.objects.filter(event=event).values()
+        coupons_list = []
+        for coupon in coupon_codes:
+            # Convert all UUID fields to strings
+            for key, value in coupon.items():
+                if isinstance(value, UUID):
+                    coupon[key] = str(value)
+            # Create a standardized response format with datetime objects converted to ISO format strings
+            coupon_data = {
+                "couponId": coupon["coupon_id"],
+                "code": coupon["code"],
+                "discountPercentage": coupon["discount_percentage"],
+                "createdAt": (
+                    coupon["created_at"].isoformat()
+                    if coupon["created_at"]
+                    else None
+                ),
+                "updatedAt": (
+                    coupon["updated_at"].isoformat()
+                    if coupon["updated_at"]
+                    else None
+                ),
+            }
+            coupons_list.append(coupon_data)
+        return coupons_list
 
+    # Execute synchronous function asynchronously
+    coupons = await get_event_coupons_sync(eventId)
+    print(f"[DEBUG - get_event_coupons] Found {len(coupons)} coupons")
     return JSONResponse(content=coupons, status_code=status.HTTP_200_OK)
 
 
 @router.get("/event/{eventId}/paid/tickets")
-async def get_paid_event_tickets(eventId: str, request: Request):
-    print(f"[DEBUG - get_paid_event_tickets] Function called with eventId: {eventId}")
-    try:
-        # Wrap Django ORM calls in a synchronous function
-        @database_sync_to_async
-        def get_paid_event_tickets_sync(event_id):
-            print(
-                f"[DEBUG - get_paid_event_tickets] Fetching tickets for event: {event_id}"
-            )
-            # Fetch the event object or raise a 404 error if not found
-            event = get_object_or_404(Event, eventId=event_id)
-            tickets = PaidFreeTicket.objects.filter(event=event).values()
-            tickets_list = []
-            for ticket in tickets:
-                # Convert all non-JSON serializable types to strings
-                for key, value in ticket.items():
-                    if isinstance(value, UUID):
-                        ticket[key] = str(value)
-                    elif isinstance(value, datetime):
-                        ticket[key] = value.isoformat()
-                tickets_list.append(ticket)
-            return tickets_list
+async def get_paid_event_tickets(
+    eventId: str, 
+    request: Request,
+    platform: Optional[str] = None,
+):
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
 
-        # Execute synchronous function asynchronously
-        tickets = await get_paid_event_tickets_sync(eventId)
-        print(f"[DEBUG - get_paid_event_tickets] Found {len(tickets)} tickets")
-    except Event.DoesNotExist:
-        return JSONResponse(
-            content={"message": "Event not found."},
-            status_code=status.HTTP_404_NOT_FOUND,
+    @database_sync_to_async
+    def get_paid_event_tickets_sync(event_id):
+        print(
+            f"[DEBUG - get_paid_event_tickets] Fetching tickets for event: {event_id}"
         )
-    except Exception as e:
-        traceback_str = traceback.format_exc()
-        print(f"Get Paid Event Tickets error: {str(e)}\n{traceback_str}")
-        return JSONResponse(
-            content={"error": f"An unexpected error occurred: {str(e)}"},
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        )
+        # Fetch the event object or raise a 404 error if not found
+        event = get_object_or_404(Event, eventId=event_id)
+        tickets = PaidFreeTicket.objects.filter(event=event).values()
+        tickets_list = []
+        for ticket in tickets:
+            # Convert all non-JSON serializable types to strings
+            for key, value in ticket.items():
+                if isinstance(value, UUID):
+                    ticket[key] = str(value)
+                elif isinstance(value, datetime):
+                    ticket[key] = value.isoformat()
+            tickets_list.append(ticket)
+        return tickets_list
 
+    # Execute synchronous function asynchronously
+    tickets = await get_paid_event_tickets_sync(eventId)
+    print(f"[DEBUG - get_paid_event_tickets] Found {len(tickets)} tickets")
     return JSONResponse(content=tickets, status_code=status.HTTP_200_OK)
 
 
 @router.post("/event/{eventId}/paid/ticket/delete")
-async def delete_paid_event_ticket(eventId: str, request: Request):
-    print(f"[DEBUG - delete_paid_event_ticket] Function called with eventId: {eventId}")
+async def delete_paid_event_ticket(
+    eventId: str, 
+    request: Request,
+    platform: Optional[str] = None,
+):
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
     try:
-        # Get the request data
-        data = await request.json()
-        print(f"[DEBUG - delete_paid_event_ticket] Request data: {data}")
+        form_data = await request.form()
+        ticket_id = form_data.get("ticket_id")
 
-        # Check if ticket_id is provided
-        ticket_id = data.get("ticket_id")
-        if not ticket_id:
-            return JSONResponse(
-                content={"error": "Missing ticket ID."},
-                status_code=status.HTTP_400_BAD_REQUEST,
-            )
-
-        # Wrap Django ORM calls in a synchronous function
         @database_sync_to_async
         def delete_ticket_sync(event_id, ticket_id):
             event = get_object_or_404(Event, eventId=event_id)
@@ -1206,17 +1374,26 @@ async def delete_paid_event_ticket(eventId: str, request: Request):
     except Exception as e:
         traceback_str = traceback.format_exc()
         print(f"Delete Paid Event Ticket error: {str(e)}\n{traceback_str}")
-        return JSONResponse(
-            content={"error": f"An unexpected error occurred: {str(e)}"},
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        await notify_by_bot(
+            f"**[API: delete_paid_event_ticket]** \n\n Error deleting ticket: eventId={eventId}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
         )
+        raise HTTPException(status_code=500, detail=f"Error deleting ticket: {str(e)}")
 
 
 @router.post("/event/{eventId}/createCoupon")
-async def create_event_coupon(eventId: str, payload: dict):
-    """
-    Create a coupon for the given event. Body is JSON.
-    """
+async def create_event_coupon(
+    eventId: str, 
+    payload: dict,
+    request: Request,
+    platform: Optional[str] = None,
+):
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
 
     @database_sync_to_async
     def create_coupon(eventId, payload):
@@ -1261,7 +1438,17 @@ class DeleteCouponRequest(BaseModel):
 
 
 @router.post("/event/{eventId}/deleteCoupon")
-async def delete_coupon(eventId: str, deleteCouponRequest: DeleteCouponRequest):
+async def delete_coupon(
+    eventId: str, 
+    deleteCouponRequest: DeleteCouponRequest,
+    request: Request,
+    platform: Optional[str] = None,
+):
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
     @database_sync_to_async
     def delete_coupon_sync(event_id, coupon_id):
         event = get_object_or_404(Event, eventId=event_id)
@@ -1289,45 +1476,38 @@ async def delete_coupon(eventId: str, deleteCouponRequest: DeleteCouponRequest):
 
 
 @router.get("/event/{eventId}/rsvp")
-async def get_event_rsvp_list(eventId: str, request: Request):
-    print(f"[DEBUG - get_event_rsvp_list] Function called with eventId: {eventId}")
-    try:
-        # Wrap Django ORM calls in a synchronous function
-        @database_sync_to_async
-        def get_event_rsvp_list_sync(event_id):
-            print(
-                f"[DEBUG - get_event_rsvp_list] Fetching RSVP list for event: {event_id}"
-            )
-            # Fetch the event object or raise a 404 error if not found
-            event = get_object_or_404(Event, eventId=event_id)
-            rsvp_list = RSVPTicket.objects.filter(event=event).values()
-            rsvp_list_data = []
-            for rsvp in rsvp_list:
-                # Convert all non-JSON serializable types to strings
-                for key, value in rsvp.items():
-                    if isinstance(value, UUID):
-                        rsvp[key] = str(value)
-                    elif isinstance(value, datetime):
-                        rsvp[key] = value.isoformat()
-                rsvp_list_data.append(rsvp)
-            return rsvp_list_data
+async def get_event_rsvp_list(
+    eventId: str, 
+    request: Request,
+    platform: Optional[str] = None,
+):
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
 
-        # Execute synchronous function asynchronously
-        rsvp_list = await get_event_rsvp_list_sync(eventId)
-        print(f"[DEBUG - get_event_rsvp_list] Found {len(rsvp_list)} RSVP entries")
-    except Event.DoesNotExist:
-        return JSONResponse(
-            content={"message": "Event not found."},
-            status_code=status.HTTP_404_NOT_FOUND,
+    @database_sync_to_async
+    def get_event_rsvp_list_sync(event_id):
+        print(
+            f"[DEBUG - get_event_rsvp_list] Fetching RSVP list for event: {event_id}"
         )
-    except Exception as e:
-        traceback_str = traceback.format_exc()
-        print(f"Get Event RSVP List error: {str(e)}\n{traceback_str}")
-        return JSONResponse(
-            content={"error": f"An unexpected error occurred: {str(e)}"},
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        )
+        # Fetch the event object or raise a 404 error if not found
+        event = get_object_or_404(Event, eventId=event_id)
+        rsvp_list = RSVPTicket.objects.filter(event=event).values()
+        rsvp_list_data = []
+        for rsvp in rsvp_list:
+            # Convert all non-JSON serializable types to strings
+            for key, value in rsvp.items():
+                if isinstance(value, UUID):
+                    rsvp[key] = str(value)
+                elif isinstance(value, datetime):
+                    rsvp[key] = value.isoformat()
+            rsvp_list_data.append(rsvp)
+        return rsvp_list_data
 
+    # Execute synchronous function asynchronously
+    rsvp_list = await get_event_rsvp_list_sync(eventId)
+    print(f"[DEBUG - get_event_rsvp_list] Found {len(rsvp_list)} RSVP entries")
     return JSONResponse(content=rsvp_list, status_code=status.HTTP_200_OK)
 
 
@@ -1335,51 +1515,27 @@ async def get_event_rsvp_list(eventId: str, request: Request):
 async def delete_event_rsvp(
     eventId: str,
     request: Request,
-    ticket_id: Optional[str] = None,
+    ticket_id: Optional[str] = None, 
     user_id: int = Depends(get_current_user),
+    platform: Optional[str] = None,
 ):
-    print(
-        f"[DEBUG - delete_event_rsvp] Function called with eventId: {eventId}, user_id: {user_id}"
-    )
-    """
-    API endpoint for a host to delete a user's RSVP ticket
-    """
-    try:
-        # Try to get ticket_id from multiple sources
-        # 1. Check if it was passed as a query parameter
-        if ticket_id is None:
-            ticket_id = request.query_params.get("ticket_id")
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
 
-        # 2. Check if it was passed in form data
-        if ticket_id is None:
+    try:
+        # If ticket_id is not provided in the path, try to get it from the request body
+        if not ticket_id:
             try:
                 form_data = await request.form()
                 ticket_id = form_data.get("ticket_id")
-            except Exception:
+            except:
                 pass
 
-        # 3. Check if it was passed as JSON in request body
-        if ticket_id is None:
-            try:
-                data = await request.json()
-                print(f"[DEBUG - delete_event_rsvp] Request data from JSON: {data}")
-                ticket_id = data.get("ticket_id")
-            except json.JSONDecodeError:
-                # No valid JSON in the request body
-                pass
-
-        print(f"[DEBUG - delete_event_rsvp] Ticket ID: {ticket_id}")
-
-        # Check if ticket_id was found in any of the sources
         if not ticket_id:
-            return JSONResponse(
-                content={
-                    "error": "Missing ticket ID. Please provide it as a query parameter, form field, or in JSON body."
-                },
-                status_code=status.HTTP_400_BAD_REQUEST,
-            )
+            raise HTTPException(status_code=400, detail="ticket_id is required")
 
-        # Wrap Django ORM calls in a synchronous function
         @database_sync_to_async
         def delete_rsvp_ticket():
             # Get the event object or raise a 404 error if not found
@@ -1441,7 +1597,6 @@ async def delete_event_rsvp(
             status_code=http_ex.status_code,
         )
     except Exception as e:
-        # Log the exception details and return a server error
         traceback_str = traceback.format_exc()
         print(f"Delete RSVP Ticket error: {str(e)}\n{traceback_str}")
 
@@ -1454,104 +1609,80 @@ async def delete_event_rsvp(
 
 @router.get("/event/{eventId}/purchasedTickets")
 async def get_purchased_tickets_for_event(
-    eventId: str, user_id: int = Depends(get_current_user)
+    eventId: str, 
+    user_id: int = Depends(get_current_user),
+    request: Request,
+    platform: Optional[str] = None,
 ):
-    print(
-        f"[DEBUG - get_purchased_tickets_for_event] Function called with eventId: {eventId}, user_id: {user_id}"
-    )
-    """
-    API endpoint for getting purchased tickets for an event
-    Only the host of the event can access this endpoint
-    """
-    try:
-        # Wrap Django ORM calls in a synchronous function
-        @database_sync_to_async
-        def get_purchased_tickets_sync(event_id):
-            print(
-                f"[DEBUG - get_purchased_tickets_for_event] Fetching purchased tickets for event: {event_id}"
-            )
-            # Get the event object or raise a 404 error if not found
-            event = get_object_or_404(Event, eventId=event_id)
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
 
-            # Get the current user
-            user = CustomUser.objects.get(id=user_id)
-
-            # Check if the requesting user is the host of the event
-            if event.host != user:
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="You don't have permission to access these tickets. Only the event host can view ticket information.",
-                )
-            # Get all purchased tickets for the event
-            purchased_tickets = Ticket.objects.filter(event=event)
-
-            # Serialize the tickets for the response
-            ticket_data = TicketSerializer(purchased_tickets, many=True).data
-
-            # Convert non-JSON serializable types to strings
-            for ticket in ticket_data:
-                for key, value in ticket.items():
-                    if isinstance(value, UUID):
-                        ticket[key] = str(value)
-                    elif isinstance(value, datetime):
-                        ticket[key] = value.isoformat()
-
-            return ticket_data
-
-        # Execute synchronous function asynchronously
-        purchased_tickets_data = await get_purchased_tickets_sync(eventId)
+    @database_sync_to_async
+    def get_purchased_tickets_sync(event_id):
         print(
-            f"[DEBUG - get_purchased_tickets_for_event] Found {len(purchased_tickets_data)} purchased tickets"
+            f"[DEBUG - get_purchased_tickets_for_event] Fetching purchased tickets for event: {event_id}"
         )
+        # Get the event object or raise a 404 error if not found
+        event = get_object_or_404(Event, eventId=event_id)
 
-        return JSONResponse(
-            content={"purchasedTickets": purchased_tickets_data},
-            status_code=status.HTTP_200_OK,
-        )
+        # Get the current user
+        user = CustomUser.objects.get(id=user_id)
 
-    except HTTPException as http_ex:
-        # Handle HTTP exceptions separately
-        return JSONResponse(
-            content={"error": str(http_ex.detail)},
-            status_code=http_ex.status_code,
-        )
-    except Exception as e:
-        # Log the exception details and return a server error
-        traceback_str = traceback.format_exc()
-        print(f"Get Purchased Tickets error: {str(e)}\n{traceback_str}")
+        # Check if the requesting user is the host of the event
+        if event.host != user:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You don't have permission to access these tickets. Only the event host can view ticket information.",
+            )
+        # Get all purchased tickets for the event
+        purchased_tickets = Ticket.objects.filter(event=event)
 
-        # Return error response
-        return JSONResponse(
-            content={"error": f"An unexpected error occurred: {str(e)}"},
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        )
+        # Serialize the tickets for the response
+        ticket_data = TicketSerializer(purchased_tickets, many=True).data
+
+        # Convert non-JSON serializable types to strings
+        for ticket in ticket_data:
+            for key, value in ticket.items():
+                if isinstance(value, UUID):
+                    ticket[key] = str(value)
+                elif isinstance(value, datetime):
+                    ticket[key] = value.isoformat()
+
+        return ticket_data
+
+    # Execute synchronous function asynchronously
+    purchased_tickets_data = await get_purchased_tickets_sync(eventId)
+    print(
+        f"[DEBUG - get_purchased_tickets_for_event] Found {len(purchased_tickets_data)} purchased tickets"
+    )
+
+    return JSONResponse(
+        content={"purchasedTickets": purchased_tickets_data},
+        status_code=status.HTTP_200_OK,
+    )
 
 
 @router.post("/event/{eventId}/purchasedTickets/delete")
 async def delete_purchased_ticket(
-    eventId: str, request: Request, user_id: int = Depends(get_current_user)
+    eventId: str, 
+    request: Request, 
+    user_id: int = Depends(get_current_user),
+    platform: Optional[str] = None,
 ):
-    print(
-        f"[DEBUG - delete_purchased_ticket] Function called with eventId: {eventId}, user_id: {user_id}"
-    )
-    """
-    API endpoint for deleting a purchased ticket
-    Only the host of the event can delete tickets
-    """
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
     try:
-        # Get the request data
-        data = await request.json()
-        print(f"[DEBUG - delete_purchased_ticket] Request data: {data}")
+        form_data = await request.form()
+        ticket_id = form_data.get("ticket_id")
 
-        # Check if ticket_id is provided
-        ticket_id = data.get("ticket_id")
         if not ticket_id:
-            return JSONResponse(
-                content={"error": "Missing ticket ID."},
-                status_code=status.HTTP_400_BAD_REQUEST,
-            )
+            raise HTTPException(status_code=400, detail="ticket_id is required")
 
-        # Wrap Django ORM calls in a synchronous function
         @database_sync_to_async
         def delete_purchased_ticket_sync():
             # Get the event object or raise a 404 error if not found
@@ -1594,7 +1725,6 @@ async def delete_purchased_ticket(
             status_code=http_ex.status_code,
         )
     except Exception as e:
-        # Log the exception details and return a server error
         traceback_str = traceback.format_exc()
         print(f"Delete Purchased Ticket error: {str(e)}\n{traceback_str}")
 
@@ -1606,125 +1736,66 @@ async def delete_purchased_ticket(
 
 
 @router.post("/event/becomeHost")
-async def become_host(request: Request, user_id: int = Depends(get_current_user)):
-    print(f"[DEBUG - become_host] Function called with user_id: {user_id}")
-    """
-    API endpoint for becoming a host on the platform and ensuring Stripe onboarding is complete
-    """
-    try:
-        # Wrap Django ORM calls in a synchronous function
-        @database_sync_to_async
-        def process_become_host():
-            try:
-                # Get the current user
-                user = get_object_or_404(CustomUser, id=user_id)
+async def become_host(
+    request: Request, 
+    user_id: int = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
 
-                # Set up common variables for Stripe redirect URLs
-                site_domain = "https://waveoncampus.com"
-                redirect_link = f"{site_domain}/host/portal/"
+    @database_sync_to_async
+    def process_become_host():
+        try:
+            # Get the current user
+            user = get_object_or_404(CustomUser, id=user_id)
 
-                # Check if the user has a Stripe Connect account
-                has_connect_account = bool(user.connectAccountID)
-                is_host = user.groups.filter(name="Host").exists()
-                is_fully_onboarded = False
+            # Set up common variables for Stripe redirect URLs
+            site_domain = "https://waveoncampus.com"
+            redirect_link = f"{site_domain}/host/portal/"
 
-                # If user has a Connect account, check if it's fully set up
-                if has_connect_account:
-                    try:
-                        stripe_account = stripe.Account.retrieve(user.connectAccountID)
-                        is_fully_onboarded = stripe_account.get(
-                            "payouts_enabled", False
-                        )
-                    except stripe.error.StripeError as e:
-                        return JSONResponse(
-                            content={"error": f"Stripe error: {str(e)}"},
-                            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                        )
+            # Check if the user has a Stripe Connect account
+            has_connect_account = bool(user.connectAccountID)
+            is_host = user.groups.filter(name="Host").exists()
+            is_fully_onboarded = False
 
-                # Case 1: User is a host and fully onboarded with Stripe
-                if is_host and is_fully_onboarded:
+            # If user has a Connect account, check if it's fully set up
+            if has_connect_account:
+                try:
+                    stripe_account = stripe.Account.retrieve(user.connectAccountID)
+                    is_fully_onboarded = stripe_account.get(
+                        "payouts_enabled", False
+                    )
+                except stripe.error.StripeError as e:
                     return JSONResponse(
-                        content={
-                            "message": "You are already a host with a complete Stripe setup."
-                        },
-                        status_code=status.HTTP_200_OK,
+                        content={"error": f"Stripe error: {str(e)}"},
+                        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                     )
 
-                # Case 2: User is a host but not fully onboarded with Stripe
-                if is_host and has_connect_account and not is_fully_onboarded:
-                    try:
-                        stripe_link_account = ConnectAccount.getStripeOnboardingLink(
-                            None, user.connectAccountID, site_domain, redirect_link
-                        )
-                        return JSONResponse(
-                            content={
-                                "message": "Please complete your Stripe account setup.",
-                                "stripe_onboarding_link": stripe_link_account,
-                                "connect_account_id": user.connectAccountID,
-                            },
-                            status_code=status.HTTP_200_OK,
-                        )
-                    except stripe.error.StripeError as e:
-                        return JSONResponse(
-                            content={
-                                "error": f"Failed to generate onboarding link: {str(e)}"
-                            },
-                            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                        )
+            # Case 1: User is a host and fully onboarded with Stripe
+            if is_host and is_fully_onboarded:
+                return JSONResponse(
+                    content={
+                        "message": "You are already a host with a complete Stripe setup."
+                    },
+                    status_code=status.HTTP_200_OK,
+                )
 
-                # Case 3: User is a host but has no Stripe account
-                if is_host and not has_connect_account:
-                    return JSONResponse(
-                        content={
-                            "message": "You are a host but missing Stripe setup. Please contact support."
-                        },
-                        status_code=status.HTTP_200_OK,
-                    )
-
-                # Case 4: User is not a host and needs to be set up
-                # First check if they have an existing Stripe account by email
-                if not has_connect_account:
-                    try:
-                        # Look for existing account with matching email
-                        stripe_accounts = stripe.Account.list(limit=10)
-                        existing_account = None
-
-                        for account in stripe_accounts.data:
-                            if account.get("email") == user.email:
-                                existing_account = account
-                                break
-
-                        if existing_account:
-                            # Delete old account if found to avoid duplicates
-                            stripe.Account.delete(existing_account.id)
-
-                        # Create a new Stripe Connect account
-                        stripe_connect_account = ConnectAccount.createConnectAccount(
-                            None, user
-                        )
-
-                        if not stripe_connect_account:
-                            return JSONResponse(
-                                content={
-                                    "error": "Failed to create Stripe Connect account"
-                                },
-                                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                            )
-
-                        # Update user with new account ID
-                        user.connectAccountID = stripe_connect_account.id
-                        user.connectAccountCreated = True
-
-                    except stripe.error.StripeError as e:
-                        return JSONResponse(
-                            content={"error": f"Stripe error: {str(e)}"},
-                            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                        )
-
-                # Generate onboarding link
+            # Case 2: User is a host but not fully onboarded with Stripe
+            if is_host and has_connect_account and not is_fully_onboarded:
                 try:
                     stripe_link_account = ConnectAccount.getStripeOnboardingLink(
                         None, user.connectAccountID, site_domain, redirect_link
+                    )
+                    return JSONResponse(
+                        content={
+                            "message": "Please complete your Stripe account setup.",
+                            "stripe_onboarding_link": stripe_link_account,
+                            "connect_account_id": user.connectAccountID,
+                        },
+                        status_code=status.HTTP_200_OK,
                     )
                 except stripe.error.StripeError as e:
                     return JSONResponse(
@@ -1734,58 +1805,113 @@ async def become_host(request: Request, user_id: int = Depends(get_current_user)
                         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                     )
 
-                # Assign "Host" role if not already assigned
-                if not is_host:
-                    event_host, created = Group.objects.get_or_create(name="Host")
-                    user.groups.add(event_host)
-
-                # Save the user with updated connectAccountID
-                user.save()
-
-                return {
-                    "message": "Welcome to hosting on WAVE.",
-                    "stripe_onboarding_link": stripe_link_account,
-                    "connect_account_id": user.connectAccountID,
-                }
-
-            except CustomUser.DoesNotExist:
+            # Case 3: User is a host but has no Stripe account
+            if is_host and not has_connect_account:
                 return JSONResponse(
-                    content={"error": "User not found"},
-                    status_code=status.HTTP_404_NOT_FOUND,
+                    content={
+                        "message": "You are a host but missing Stripe setup. Please contact support."
+                    },
+                    status_code=status.HTTP_200_OK,
                 )
-            except Exception as e:
-                traceback_str = traceback.format_exc()
-                print(f"Become Host error: {str(e)}\n{traceback_str}")
+
+            # Case 4: User is not a host and needs to be set up
+            # First check if they have an existing Stripe account by email
+            if not has_connect_account:
+                try:
+                    # Look for existing account with matching email
+                    stripe_accounts = stripe.Account.list(limit=10)
+                    existing_account = None
+
+                    for account in stripe_accounts.data:
+                        if account.get("email") == user.email:
+                            existing_account = account
+                            break
+
+                    if existing_account:
+                        # Delete old account if found to avoid duplicates
+                        stripe.Account.delete(existing_account.id)
+
+                    # Create a new Stripe Connect account
+                    stripe_connect_account = ConnectAccount.createConnectAccount(
+                        None, user
+                    )
+
+                    if not stripe_connect_account:
+                        return JSONResponse(
+                            content={
+                                "error": "Failed to create Stripe Connect account"
+                            },
+                            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                        )
+
+                    # Update user with new account ID
+                    user.connectAccountID = stripe_connect_account.id
+                    user.connectAccountCreated = True
+
+                except stripe.error.StripeError as e:
+                    return JSONResponse(
+                        content={"error": f"Stripe error: {str(e)}"},
+                        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    )
+
+            # Generate onboarding link
+            try:
+                stripe_link_account = ConnectAccount.getStripeOnboardingLink(
+                    None, user.connectAccountID, site_domain, redirect_link
+                )
+            except stripe.error.StripeError as e:
                 return JSONResponse(
-                    content={"error": f"An unexpected error occurred: {str(e)}"},
+                    content={
+                        "error": f"Failed to generate onboarding link: {str(e)}"
+                    },
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 )
 
-        # Execute the become host function
-        result = await process_become_host()
-        if isinstance(result, JSONResponse):
-            return result
-        return JSONResponse(content=result, status_code=status.HTTP_200_OK)
+            # Assign "Host" role if not already assigned
+            if not is_host:
+                event_host, created = Group.objects.get_or_create(name="Host")
+                user.groups.add(event_host)
 
-    except Exception as e:
-        # Log the exception details and return a server error
-        traceback_str = traceback.format_exc()
-        print(f"Become Host error: {str(e)}\n{traceback_str}")
-        return JSONResponse(
-            content={"error": f"An unexpected error occurred: {str(e)}"},
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        )
+            # Save the user with updated connectAccountID
+            user.save()
+
+            return {
+                "message": "Welcome to hosting on WAVE.",
+                "stripe_onboarding_link": stripe_link_account,
+                "connect_account_id": user.connectAccountID,
+            }
+
+        except CustomUser.DoesNotExist:
+            return JSONResponse(
+                content={"error": "User not found"},
+                status_code=status.HTTP_404_NOT_FOUND,
+            )
+        except Exception as e:
+            traceback_str = traceback.format_exc()
+            print(f"Become Host error: {str(e)}\n{traceback_str}")
+            return JSONResponse(
+                content={"error": f"An unexpected error occurred: {str(e)}"},
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+    # Execute the become host function
+    result = await process_become_host()
+    if isinstance(result, JSONResponse):
+        return result
+    return JSONResponse(content=result, status_code=status.HTTP_200_OK)
 
 
 @router.get("/event/{eventId}/analytics")
-async def get_event_analytics(eventId: str, user_id: int = Depends(get_current_user)):
-    """
-    API endpoint for retrieving comprehensive event analytics data.
-    Returns detailed analytics including performance metrics, audience insights, revenue data, and more.
-    """
-    print(
-        f"[get_event_analytics] API called with eventId: {eventId}, user_id: {user_id}"
-    )
+async def get_event_analytics(
+    eventId: str, 
+    user_id: int = Depends(get_current_user),
+    request: Request,
+    platform: Optional[str] = None,
+):
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
 
     @database_sync_to_async
     def get_analytics_data(event_id, requesting_user_id):
@@ -2195,14 +2321,15 @@ async def get_event_analytics(eventId: str, user_id: int = Depends(get_current_u
 
 
 @router.get("/analytics")
-async def get_host_recent_events_analytics(user_id: int = Depends(get_current_user)):
-    """
-    API endpoint for retrieving comprehensive analytics data for the most recent 30 events hosted by a user.
-    Returns aggregated analytics across the user's most recent events including totals, averages, and event-specific data.
-    Events are sorted by scheduled date (upcoming events first, then most recent past events).
-    Limited to 30 events for optimal performance.
-    """
-    print(f"[get_host_recent_events_analytics] API called with user_id: {user_id}")
+async def get_host_recent_events_analytics(
+    user_id: int = Depends(get_current_user),
+    request: Request,
+    platform: Optional[str] = None,
+):
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
 
     @database_sync_to_async
     def get_recent_events_analytics_data(requesting_user_id):

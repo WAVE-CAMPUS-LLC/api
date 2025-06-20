@@ -218,12 +218,20 @@ async def get_users(
 
 @router.get("/user/{user_id}", response_model=UserResponse)
 async def get_user_detail(
-    user_id: int, current_user: CustomUser = Depends(require_admin_role)
+    user_id: int,
+    request: Request,
+    current_user: CustomUser = Depends(require_admin_role),
+    platform: Optional[str] = None,
 ):
     """
     Get detailed user information including tickets, friends, and profile - requires Admin or Super Admin role.
     """
     print(f"[get_user_detail] API called for user_id: {user_id} by {current_user.id}")
+
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
 
     @database_sync_to_async
     def get_user_complete_data(user_id):
@@ -393,17 +401,31 @@ async def get_user_detail(
     except Exception as e:
         if "does not exist" in str(e).lower():
             raise HTTPException(status_code=404, detail="User not found")
+        await notify_by_bot(
+            f"**[API: get_user_detail]** \n\n Error fetching user: user_id={user_id}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
         raise HTTPException(status_code=500, detail=f"Error fetching user: {str(e)}")
 
 
 @router.post("/user/{user_id}/suspend")
 async def suspend_user(
-    user_id: int, current_user: CustomUser = Depends(require_super_admin_role)
+    user_id: int,
+    request: Request,
+    current_user: CustomUser = Depends(require_super_admin_role),
+    platform: Optional[str] = None,
 ):
     """
     Suspend a user - requires Super Admin role.
     """
     print(f"[suspend_user] API called for user_id: {user_id} by {current_user.id}")
+
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
 
     try:
         user = await database_sync_to_async(get_object_or_404)(CustomUser, id=user_id)
@@ -419,17 +441,31 @@ async def suspend_user(
     except Exception as e:
         if "does not exist" in str(e).lower():
             raise HTTPException(status_code=404, detail="User not found")
+        await notify_by_bot(
+            f"**[API: suspend_user]** \n\n Error suspending user: user_id={user_id}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
         raise HTTPException(status_code=500, detail=f"Error suspending user: {str(e)}")
 
 
 @router.post("/user/{user_id}/delete")
 async def delete_user(
-    user_id: int, current_user: CustomUser = Depends(require_super_admin_role)
+    user_id: int,
+    request: Request,
+    current_user: CustomUser = Depends(require_super_admin_role),
+    platform: Optional[str] = None,
 ):
     """
     Delete a user - requires Super Admin role.
     """
     print(f"[delete_user] API called for user_id: {user_id} by {current_user.id}")
+
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
 
     try:
         # Check if user exists first
@@ -453,17 +489,31 @@ async def delete_user(
         raise
     except Exception as e:
         print(f"[delete_user] Error deleting user {user_id}: {str(e)}")
+        await notify_by_bot(
+            f"**[API: delete_user]** \n\n Error deleting user: user_id={user_id}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
         raise HTTPException(status_code=500, detail=f"Error deleting user: {str(e)}")
 
 
 @router.post("/user/{user_id}/unsuspend")
 async def unsuspend_user(
-    user_id: int, current_user: CustomUser = Depends(require_super_admin_role)
+    user_id: int,
+    request: Request,
+    current_user: CustomUser = Depends(require_super_admin_role),
+    platform: Optional[str] = None,
 ):
     """
     Remove suspension from a user - requires Super Admin role.
     """
     print(f"[unsuspend_user] API called for user_id: {user_id} by {current_user.id}")
+
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
 
     try:
         user = await database_sync_to_async(get_object_or_404)(CustomUser, id=user_id)
@@ -474,6 +524,12 @@ async def unsuspend_user(
     except Exception as e:
         if "does not exist" in str(e).lower():
             raise HTTPException(status_code=404, detail="User not found")
+        await notify_by_bot(
+            f"**[API: unsuspend_user]** \n\n Error removing suspension: user_id={user_id}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
         raise HTTPException(
             status_code=500, detail=f"Error removing suspension: {str(e)}"
         )
@@ -481,11 +537,21 @@ async def unsuspend_user(
 
 # Event Management Admin API
 @router.get("/events/getAll")
-async def get_events(current_user: CustomUser = Depends(require_admin_role)):
+async def get_events(
+    request: Request,
+    current_user: CustomUser = Depends(require_admin_role),
+    platform: Optional[str] = None,
+):
     """
     Get list of events with only name and header_photo URL.
     """
     print(f"[get_events] API called with user_id: {current_user.id}")
+
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
     try:
         events_qs = Event.objects.only("title", "header_photo", "eventId")
         events = await database_sync_to_async(list)(events_qs)
@@ -513,13 +579,27 @@ async def get_events(current_user: CustomUser = Depends(require_admin_role)):
         return event_list
 
     except Exception as e:
+        await notify_by_bot(
+            f"**[API: get_events]** \n\n Error fetching events: error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
         raise HTTPException(status_code=500, detail=f"Error fetching events: {str(e)}")
 
 
 @router.get("/eventDetails/{event_id}")
 async def get_event_detail(
-    event_id: UUID, current_user: CustomUser = Depends(require_admin_role)
+    event_id: UUID,
+    request: Request,
+    current_user: CustomUser = Depends(require_admin_role),
+    platform: Optional[str] = None,
 ):
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
     try:
         # Safely print user ID
         user_id = await database_sync_to_async(
@@ -596,152 +676,72 @@ async def get_event_detail(
             thread_sensitive=True,
         )()
 
-        # Extract host fields safely
-        host_fields = await database_sync_to_async(
-            lambda: {
-                "id": event.host.id,
-                "username": event.host.username,
-                "email": event.host.email,
-                "first_name": event.host.first_name,
-                "last_name": event.host.last_name,
-            },
-            thread_sensitive=True,
-        )()
+        return event_fields
 
-        # RSVP tickets
-        rsvp_tickets = await database_sync_to_async(list)(
-            event.rsvp_tickets.all().values(
-                "ticket_id",
-                "email",
-                "first_name",
-                "last_name",
-                "display_on_guestlist",
-                "created_at",
-            )
-        )
-        for ticket in rsvp_tickets:
-            ticket["ticket_id"] = str(ticket["ticket_id"])
-            ticket["created_at"] = (
-                ticket["created_at"].isoformat() if ticket["created_at"] else None
-            )
-
-        # Ticket types
-        ticket_types = await database_sync_to_async(list)(
-            event.tickets.all().values(
-                "ticket_id",
-                "ticket_name",
-                "ticket_price",
-                "ticket_description",
-                "ticket_quantity",
-                "ticket_sold",
-                "crew_discounted_price",
-                "stripePriceId",
-            )
-        )
-        for tt in ticket_types:
-            tt["ticket_id"] = str(tt["ticket_id"])
-            tt["ticket_price"] = (
-                float(tt["ticket_price"]) if tt["ticket_price"] else None
-            )
-            tt["crew_discounted_price"] = (
-                float(tt["crew_discounted_price"])
-                if tt["crew_discounted_price"]
-                else None
-            )
-            tt["available_tickets"] = tt["ticket_quantity"] - (tt["ticket_sold"] or 0)
-
-        # Purchased tickets
-        purchased_tickets = await database_sync_to_async(list)(
-            event.ticket_set.all().values(
-                "ticketId",
-                "user__username",
-                "user__email",
-                "user__first_name",
-                "user__last_name",
-                "guestFirstName",
-                "guestLastName",
-                "guestEmail",
-                "status",
-                "created_at",
-                "stripe_session_id",
-            )
-        )
-        for pt in purchased_tickets:
-            pt["ticketId"] = str(pt["ticketId"])
-            pt["created_at"] = (
-                pt["created_at"].isoformat() if pt["created_at"] else None
-            )
-            pt["user"] = (
-                {
-                    "username": pt.pop("user__username", None),
-                    "email": pt.pop("user__email", None),
-                    "first_name": pt.pop("user__first_name", None),
-                    "last_name": pt.pop("user__last_name", None),
-                }
-                if pt.get("user__username")
-                else None
-            )
-
-        # Assemble final response
-        return {
-            **event_fields,
-            "host": host_fields,
-            "tickets": {
-                "rsvp_tickets": rsvp_tickets,
-                "ticket_types": ticket_types,
-                "purchased_tickets": purchased_tickets,
-                "ticket_stats": {
-                    "total_rsvps": len(rsvp_tickets),
-                    "total_ticket_types": len(ticket_types),
-                    "total_purchased_tickets": len(purchased_tickets),
-                    "total_tickets_sold": sum(
-                        tt.get("ticket_sold", 0) or 0 for tt in ticket_types
-                    ),
-                    "total_tickets_available": sum(
-                        tt.get("available_tickets", 0) for tt in ticket_types
-                    ),
-                },
-            },
-        }
-
-    except Http404:
-        raise HTTPException(status_code=404, detail="Event not found.")
     except Exception as e:
-        print(f"[ERROR get_event_detail] {str(e)}")
+        await notify_by_bot(
+            f"**[API: get_event_detail]** \n\n Error fetching event: event_id={event_id}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        if "does not exist" in str(e).lower():
+            raise HTTPException(status_code=404, detail="Event not found")
         raise HTTPException(status_code=500, detail=f"Error fetching event: {str(e)}")
 
 
 @router.post("/delete/event/{event_id}")
 async def delete_event(
-    event_id: UUID, current_user: CustomUser = Depends(require_admin_role)
+    event_id: UUID,
+    request: Request,
+    current_user: CustomUser = Depends(require_admin_role),
+    platform: Optional[str] = None,
 ):
-    """
-    Delete an event - requires Admin or Super Admin role.
-    """
-    print(f"[delete_event] API called for event_id: {event_id} by {current_user.id}")
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
 
     try:
-        event = await database_sync_to_async(get_object_or_404)(Event, eventId=event_id)
-        await database_sync_to_async(event.delete)()
+        # Safely print user ID
+        user_id = await database_sync_to_async(
+            lambda: current_user.id, thread_sensitive=True
+        )()
+        print(f"[delete_event] API called for event_id: {event_id} by {user_id}")
+
+        # Fetch event safely
+        event = await database_sync_to_async(get_object_or_404, thread_sensitive=True)(
+            Event, eventId=event_id
+        )
+
+        # Delete event safely
+        await database_sync_to_async(event.delete, thread_sensitive=True)()
 
         return {"message": f"Event {event.title} has been deleted"}
 
     except Exception as e:
-        print(f"Error with deletion {str(e)}")
+        await notify_by_bot(
+            f"**[API: delete_event]** \n\n Error deleting event: event_id={event_id}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        if "does not exist" in str(e).lower():
+            raise HTTPException(status_code=404, detail="Event not found")
         raise HTTPException(status_code=500, detail=f"Error deleting event: {str(e)}")
 
 
 @router.get("/userAnalytics/signups")
 async def get_user_signups(
+    request: Request,
     period: str = Query("daily", description="Time period: daily, weekly, or monthly"),
     current_user: CustomUser = Depends(require_admin_role),
+    platform: Optional[str] = None,
 ):
-    """
-    Get user signup analytics grouped by time period - requires Admin or Super Admin role.
-    """
-    print(
-        f"[get_user_signups] API called with user_id: {current_user.id}, period: {period}"
-    )
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
 
     @database_sync_to_async
     def get_signup_data(period):
@@ -794,7 +794,12 @@ async def get_user_signups(
         return result
 
     except Exception as e:
-        print(f"[get_user_signups] Error: {str(e)}")
+        await notify_by_bot(
+            f"**[API: get_user_signups]** \n\n Error fetching signup analytics: period={period}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
         raise HTTPException(
             status_code=500, detail=f"Error fetching signup analytics: {str(e)}"
         )
@@ -802,6 +807,7 @@ async def get_user_signups(
 
 @router.get("/userAnalytics/logins")
 async def get_user_logins(
+    request: Request,
     trend: str = Query(
         "general",
         description="Trend type: general, user_activity, time_trends, ip_insights, security, retention",
@@ -810,13 +816,12 @@ async def get_user_logins(
         "hourly", description="Time frame for time_trends: hourly, daily, monthly"
     ),
     current_user: CustomUser = Depends(require_admin_role),
+    platform: Optional[str] = None,
 ):
-    """
-    Get user login analytics with various trend types - requires Admin or Super Admin role.
-    """
-    print(
-        f"[get_user_logins] API called with user_id: {current_user.id}, trend: {trend}"
-    )
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
 
     @database_sync_to_async
     def get_login_data(trend_type, time_frame):
@@ -964,18 +969,27 @@ async def get_user_logins(
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        print(f"[get_user_logins] Error: {str(e)}")
+        await notify_by_bot(
+            f"**[API: get_user_logins]** \n\n Error fetching login analytics: trend={trend}, time_frame={time_frame}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
         raise HTTPException(
             status_code=500, detail=f"Error fetching login analytics: {str(e)}"
         )
 
 
 @router.get("/eventAnalytics/getAll")
-async def get_all_events(current_user: CustomUser = Depends(require_admin_role)):
-    """
-    Get list of events with basic analytics data
-    """
-    print(f"[get_all_events] API called with user_id: {current_user.id}")
+async def get_all_events(
+    request: Request,
+    current_user: CustomUser = Depends(require_admin_role),
+    platform: Optional[str] = None,
+):
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
 
     @database_sync_to_async
     def get_events_data():
@@ -1033,24 +1047,31 @@ async def get_all_events(current_user: CustomUser = Depends(require_admin_role))
         return events_info
 
     except Exception as e:
-        print(f"[get_all_events] Error in get_all_events: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Error fetching events: {str(e)}")
+        await notify_by_bot(
+            f"**[API: get_all_events]** \n\n Error fetching all events analytics: error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        raise HTTPException(
+            status_code=500, detail=f"Error fetching all events analytics: {str(e)}"
+        )
 
 
 @router.get("/eventAnalytics/specific/{event_id}")
 async def get_event_specific_analytics(
     event_id: UUID,
+    request: Request,
     time_period: str = Query(
         "daily", description="Time period: daily, weekly, or monthly"
     ),
     current_user: CustomUser = Depends(require_admin_role),
+    platform: Optional[str] = None,
 ):
-    """
-    Get detailed analytics for a specific event - requires Admin or Super Admin role.
-    """
-    print(
-        f"[get_event_specific_analytics] API called with user_id: {current_user.id}, event_id: {event_id}, time_period: {time_period}"
-    )
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
 
     @database_sync_to_async
     def get_event_analytics_data(event_id, time_period):
@@ -1221,7 +1242,12 @@ async def get_event_specific_analytics(
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        print(f"[get_event_specific_analytics] Error: {str(e)}")
+        await notify_by_bot(
+            f"**[API: get_event_specific_analytics]** \n\n Error fetching event analytics: event_id={event_id}, time_period={time_period}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
         raise HTTPException(
             status_code=500, detail=f"Error fetching event analytics: {str(e)}"
         )
@@ -1229,47 +1255,17 @@ async def get_event_specific_analytics(
 
 @router.get("/eventAnalytics/overall")
 async def get_overall_event_analytics(
+    request: Request,
     time_period: str = Query(
         "daily", description="Time period: daily, weekly, or monthly"
     ),
     current_user: CustomUser = Depends(require_admin_role),
+    platform: Optional[str] = None,
 ):
-    """
-    Get overall event analytics across all events - requires Admin or Super Admin role.
-    Optimized with caching and efficient database queries.
-
-    🚀 PERFORMANCE OPTIMIZATIONS IMPLEMENTED:
-    - Database indexes on all queried fields
-    - Efficient QuerySet slicing with SQL LIMIT
-    - Multi-level caching (5min full, 15min static)
-    - Minimal field selection with .only()
-    - Batched aggregation queries
-    - Proper ORDER BY with LIMIT instead of Python slicing
-
-    🔮 FUTURE OPTIMIZATIONS (can be added if needed):
-    - Celery background tasks for pre-computation
-    - Database connection pooling
-    - Read replicas for analytics queries
-    - Materialized views for complex aggregations
-
-    🕒 PERFORMANCE NOTE: For optimal performance, ensure these database indexes exist:
-    - Event.created_at (for time-based grouping)
-    - Event.status (for status filtering)
-    - Event.event_type (for type distribution)
-    - Event.state (for geographic distribution)
-    - RSVPTicket.created_at (for RSVP trends)
-    - Ticket.created_at (for paid ticket trends)
-    - PaidFreeTicket.ticket_sold (for revenue calculation)
-
-    Example SQL to create indexes:
-    CREATE INDEX idx_event_created_at ON eventmanagementapp_event(created_at);
-    CREATE INDEX idx_event_status ON eventmanagementapp_event(status);
-    CREATE INDEX idx_rsvp_created_at ON eventticketsapp_rsvpticket(created_at);
-    CREATE INDEX idx_ticket_created_at ON eventticketsapp_ticket(created_at);
-    """
-    print(
-        f"[get_overall_event_analytics] API called with user_id: {current_user.id}, time_period: {time_period}"
-    )
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
 
     @database_sync_to_async
     def get_overall_analytics_data(time_period):
@@ -1543,7 +1539,12 @@ async def get_overall_event_analytics(
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        print(f"[get_overall_event_analytics] Error: {str(e)}")
+        await notify_by_bot(
+            f"**[API: get_overall_event_analytics]** \n\n Error fetching overall event analytics: time_period={time_period}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
         raise HTTPException(
             status_code=500, detail=f"Error fetching overall event analytics: {str(e)}"
         )
@@ -1551,11 +1552,15 @@ async def get_overall_event_analytics(
 
 # COLLEGE MANAGEMENT ADMIN API
 @router.get("/colleges/getAll")
-async def get_colleges(current_user: CustomUser = Depends(require_admin_role)):
-    """
-    Get list of colleges with optimized database queries.
-    """
-    print(f"[get_colleges] API called with user_id: {current_user.id}")
+async def get_colleges(
+    request: Request,
+    current_user: CustomUser = Depends(require_admin_role),
+    platform: Optional[str] = None,
+):
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
 
     @database_sync_to_async
     def get_colleges_data():
@@ -1638,62 +1643,79 @@ async def get_colleges(current_user: CustomUser = Depends(require_admin_role)):
         return college_list
 
     except Exception as e:
-        print(f"[get_colleges] Error in get_colleges: {str(e)}")
+        await notify_by_bot(
+            f"**[API: get_colleges]** \n\n Error fetching colleges: error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
         raise HTTPException(
             status_code=500, detail=f"Error fetching colleges: {str(e)}"
         )
 
 
 @router.get("/colleges/create/form/fields")
-async def get_college_create_form_fields():
-    return get_form_fields(CollegeForm)
+async def get_college_create_form_fields(
+    request: Request,
+    platform: Optional[str] = None,
+):
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    try:
+        return {
+            "fields": [
+                {
+                    "name": "name",
+                    "type": "text",
+                    "label": "College Name",
+                    "required": True,
+                    "placeholder": "Enter college name",
+                },
+                {
+                    "name": "description",
+                    "type": "textarea",
+                    "label": "Description",
+                    "required": False,
+                    "placeholder": "Enter college description",
+                },
+                {
+                    "name": "logo",
+                    "type": "file",
+                    "label": "College Logo",
+                    "required": False,
+                    "accept": "image/*",
+                },
+            ]
+        }
+    except Exception as e:
+        await notify_by_bot(
+            f"**[API: get_college_create_form_fields]** \n\n Error fetching form fields: error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        raise HTTPException(
+            status_code=500, detail=f"Error fetching form fields: {str(e)}"
+        )
 
 
 @router.post("/colleges/create")
 async def create_college(
-    request: Request, current_user: CustomUser = Depends(require_admin_role)
+    request: Request,
+    current_user: CustomUser = Depends(require_admin_role),
+    platform: Optional[str] = None,
 ):
-    """
-    Create a new college - requires Admin or Super Admin role.
-    """
-    print(f"[create_college] Function called by user_id: {current_user.id}")
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
     try:
-        # Get form data from request
         form_data = await request.form()
-        form_dict = {}
-        file_dict = {}
-
-        # Separate regular form fields from file uploads
-        for key, value in form_data.items():
-            # Check if this is an UploadFile by checking for filename and read methods
-            if hasattr(value, "filename") and hasattr(
-                value, "read"
-            ):  # This is an UploadFile
-                if value.filename:  # Only process if a file was actually uploaded
-                    print(
-                        f"[create_college] Processing file upload: {key} = {value.filename}"
-                    )
-                    # Convert UploadFile to Django-compatible file
-                    file_content = await value.read()
-                    django_file = ContentFile(file_content, name=value.filename)
-                    file_dict[key] = django_file
-                    # Reset file position for potential re-reading
-                    await value.seek(0)
-                else:
-                    # Empty file upload, skip it
-                    print(
-                        f"[create_college] Skipping empty file upload for field: {key}"
-                    )
-            else:
-                form_dict[key] = value
-
-        print(
-            f"[create_college] Received form data with fields: {', '.join(form_dict.keys())}"
-        )
-        if file_dict:
-            print(
-                f"[create_college] Received file uploads: {', '.join(file_dict.keys())}"
-            )
+        file_data = await request.form()
 
         @database_sync_to_async
         def validate_and_create_college(form_data, file_data, created_by_user):
@@ -1743,22 +1765,26 @@ async def create_college(
     except Exception as e:
         traceback_str = traceback.format_exc()
         print(f"[create_college] College creation error: {str(e)}\n{traceback_str}")
-        return JSONResponse(
-            content={"error": f"An unexpected error occurred: {str(e)}"},
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        await notify_by_bot(
+            f"**[API: create_college]** \n\n Error creating college: error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
         )
+        raise HTTPException(status_code=500, detail=f"Error creating college: {str(e)}")
 
 
 @router.post("/colleges/{college_id}/delete")
 async def delete_college(
-    college_id: UUID, current_user: CustomUser = Depends(require_admin_role)
+    college_id: UUID,
+    request: Request,
+    current_user: CustomUser = Depends(require_admin_role),
+    platform: Optional[str] = None,
 ):
-    """
-    Delete a college - requires Admin or Super Admin role.
-    """
-    print(
-        f"[delete_college] API called for college_id: {college_id} by {current_user.id}"
-    )
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
 
     try:
         college = await database_sync_to_async(get_object_or_404)(
@@ -1769,20 +1795,28 @@ async def delete_college(
         return {"message": f"College {college.name} has been deleted"}
 
     except Exception as e:
-        print(f"Error with deletion {str(e)}")
+        await notify_by_bot(
+            f"**[API: delete_college]** \n\n Error deleting college: college_id={college_id}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        if "does not exist" in str(e).lower():
+            raise HTTPException(status_code=404, detail="College not found")
         raise HTTPException(status_code=500, detail=f"Error deleting college: {str(e)}")
 
 
 @router.get("/colleges/{college_id}/info")
 async def get_college_info(
-    college_id: UUID, current_user: CustomUser = Depends(require_admin_role)
+    college_id: UUID,
+    request: Request,
+    current_user: CustomUser = Depends(require_admin_role),
+    platform: Optional[str] = None,
 ):
-    """
-    Get detailed college information - requires Admin or Super Admin role.
-    """
-    print(
-        f"[get_college_info] API called for college_id: {college_id} by {current_user.id}"
-    )
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
 
     @database_sync_to_async
     def get_college_details(college_id):
@@ -1902,17 +1936,65 @@ async def get_college_info(
         return college_info
 
     except Exception as e:
-        if isinstance(e, HTTPException):
-            raise e
-        print(f"[get_college_info] Error in get_college_info: {str(e)}")
+        await notify_by_bot(
+            f"**[API: get_college_info]** \n\n Error fetching college info: college_id={college_id}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        if "does not exist" in str(e).lower():
+            raise HTTPException(status_code=404, detail="College not found")
         raise HTTPException(
             status_code=500, detail=f"Error fetching college info: {str(e)}"
         )
 
 
 @router.get("/colleges/{college_id}/edit/form/fields")
-async def get_college_edit_form_fields():
-    return get_form_fields(EditCollegeForm)
+async def get_college_edit_form_fields(
+    request: Request,
+    platform: Optional[str] = None,
+):
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    try:
+        return {
+            "fields": [
+                {
+                    "name": "name",
+                    "type": "text",
+                    "label": "College Name",
+                    "required": True,
+                    "placeholder": "Enter college name",
+                },
+                {
+                    "name": "description",
+                    "type": "textarea",
+                    "label": "Description",
+                    "required": False,
+                    "placeholder": "Enter college description",
+                },
+                {
+                    "name": "logo",
+                    "type": "file",
+                    "label": "College Logo",
+                    "required": False,
+                    "accept": "image/*",
+                },
+            ]
+        }
+    except Exception as e:
+        await notify_by_bot(
+            f"**[API: get_college_edit_form_fields]** \n\n Error fetching form fields: error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        raise HTTPException(
+            status_code=500, detail=f"Error fetching form fields: {str(e)}"
+        )
 
 
 @router.post("/colleges/{college_id}/edit")
@@ -1920,48 +2002,16 @@ async def edit_college(
     college_id: UUID,
     request: Request,
     current_user: CustomUser = Depends(require_admin_role),
+    platform: Optional[str] = None,
 ):
-    """
-    Edit a college - requires Admin or Super Admin role.
-    """
-    print(
-        f"[edit_college] API called for college_id: {college_id} by {current_user.id}"
-    )
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
     try:
-        # Get form data from request
         form_data = await request.form()
-        form_dict = {}
-        file_dict = {}
-
-        # Separate regular form fields from file uploads
-        for key, value in form_data.items():
-            # Check if this is an UploadFile by checking for filename and read methods
-            if hasattr(value, "filename") and hasattr(
-                value, "read"
-            ):  # This is an UploadFile
-                if value.filename:  # Only process if a file was actually uploaded
-                    print(
-                        f"[edit_college] Processing file upload: {key} = {value.filename}"
-                    )
-                    # Convert UploadFile to Django-compatible file
-                    file_content = await value.read()
-                    django_file = ContentFile(file_content, name=value.filename)
-                    file_dict[key] = django_file
-                    # Reset file position for potential re-reading
-                    await value.seek(0)
-                else:
-                    # Empty file upload, skip it
-                    print(f"[edit_college] Skipping empty file upload for field: {key}")
-            else:
-                form_dict[key] = value
-
-        print(
-            f"[edit_college] Received form data with fields: {', '.join(form_dict.keys())}"
-        )
-        if file_dict:
-            print(
-                f"[edit_college] Received file uploads: {', '.join(file_dict.keys())}"
-            )
+        file_data = await request.form()
 
         @database_sync_to_async
         def validate_and_update_college(college_id, form_data, file_data):
@@ -2092,22 +2142,26 @@ async def edit_college(
     except Exception as e:
         traceback_str = traceback.format_exc()
         print(f"[edit_college] College update error: {str(e)}\n{traceback_str}")
-        return JSONResponse(
-            content={"error": f"An unexpected error occurred: {str(e)}"},
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        await notify_by_bot(
+            f"**[API: edit_college]** \n\n Error editing college: college_id={college_id}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
         )
+        raise HTTPException(status_code=500, detail=f"Error editing college: {str(e)}")
 
 
 @router.get("/colleges/{college_id}/members")
 async def get_college_members(
-    college_id: UUID, current_user: CustomUser = Depends(require_admin_role)
+    college_id: UUID,
+    request: Request,
+    current_user: CustomUser = Depends(require_admin_role),
+    platform: Optional[str] = None,
 ):
-    """
-    Get members of a college - requires Admin or Super Admin role.
-    """
-    print(
-        f"[get_college_members] API called for college_id: {college_id} by {current_user.id}"
-    )
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
 
     @database_sync_to_async
     def get_members_data(college_id):
@@ -2230,9 +2284,14 @@ async def get_college_members(
         return members_data
 
     except Exception as e:
-        if isinstance(e, HTTPException):
-            raise e
-        print(f"[get_college_members] Error in get_college_members: {str(e)}")
+        await notify_by_bot(
+            f"**[API: get_college_members]** \n\n Error fetching college members: college_id={college_id}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        if "does not exist" in str(e).lower():
+            raise HTTPException(status_code=404, detail="College not found")
         raise HTTPException(
             status_code=500, detail=f"Error fetching college members: {str(e)}"
         )
@@ -2242,14 +2301,14 @@ async def get_college_members(
 async def remove_college_member(
     college_id: UUID,
     user_id: int,
+    request: Request,
     current_user: CustomUser = Depends(require_admin_role),
+    platform: Optional[str] = None,
 ):
-    """
-    Remove a member from a college - requires Admin or Super Admin role.
-    """
-    print(
-        f"[remove_college_member] API called for college_id: {college_id}, user_id: {user_id} by {current_user.id}"
-    )
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
 
     @database_sync_to_async
     def remove_member_from_college(college_id, user_id):
@@ -2341,9 +2400,12 @@ async def remove_college_member(
         return result
 
     except Exception as e:
-        if isinstance(e, HTTPException):
-            raise e
-        print(f"[remove_college_member] Error in remove_college_member: {str(e)}")
+        await notify_by_bot(
+            f"**[API: remove_college_member]** \n\n Error removing college member: college_id={college_id}, user_id={user_id}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
         raise HTTPException(
             status_code=500, detail=f"Error removing college member: {str(e)}"
         )
@@ -2351,14 +2413,15 @@ async def remove_college_member(
 
 @router.get("/colleges/{college_id}/events")
 async def get_college_events(
-    college_id: UUID, current_user: CustomUser = Depends(require_admin_role)
+    college_id: UUID,
+    request: Request,
+    current_user: CustomUser = Depends(require_admin_role),
+    platform: Optional[str] = None,
 ):
-    """
-    Get all events associated with a college - requires Admin or Super Admin role.
-    """
-    print(
-        f"[get_college_events] API called for college_id: {college_id} by {current_user.id}"
-    )
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
 
     @database_sync_to_async
     def get_events_data(college_id):
@@ -2489,9 +2552,14 @@ async def get_college_events(
         return events_data
 
     except Exception as e:
-        if isinstance(e, HTTPException):
-            raise e
-        print(f"[get_college_events] Error in get_college_events: {str(e)}")
+        await notify_by_bot(
+            f"**[API: get_college_events]** \n\n Error fetching college events: college_id={college_id}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        if "does not exist" in str(e).lower():
+            raise HTTPException(status_code=404, detail="College not found")
         raise HTTPException(
             status_code=500, detail=f"Error fetching college events: {str(e)}"
         )

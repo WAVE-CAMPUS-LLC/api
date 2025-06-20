@@ -270,7 +270,16 @@ async def update_profile_detailed(
 
 
 @router.get("/getUserTickets")
-async def get_user_tickets(user_id: int = Depends(get_current_user)):
+async def get_user_tickets(
+    request: Request,
+    user_id: int = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
     print(f"[get_user_tickets] API called with user_id: {user_id}")
 
     @database_sync_to_async
@@ -349,11 +358,22 @@ async def get_user_tickets(user_id: int = Depends(get_current_user)):
 
     print(f"[get_user_tickets] Returning {len(tickets)} serialized tickets")
     return {"tickets": tickets}
+    except Exception as e:
+        await notify_by_bot(
+            f"**[API: get_user_tickets]** \n\n Error fetching user tickets: user_id={user_id}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        raise HTTPException(status_code=500, detail=f"Error fetching user tickets: {str(e)}")
 
 
 @router.get("/getUserTickets/{ticketId}/details")
 async def get_user_ticket_details(
-    ticketId: str, user_id: int = Depends(get_current_user)
+    ticketId: str, 
+    request: Request,
+    user_id: int = Depends(get_current_user),
+    platform: Optional[str] = None,
 ):
     """
     API endpoint for getting user ticket details.
@@ -362,6 +382,11 @@ async def get_user_ticket_details(
     print(
         f"[get_user_ticket_details] API called with ticketId: {ticketId}, user_id: {user_id}"
     )
+
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
 
     @database_sync_to_async
     def get_user_ticket_details_async(ticketId, user_id):
@@ -399,15 +424,32 @@ async def get_user_ticket_details(
 
     print(f"[get_user_ticket_details] Returning ticket data for ticketId: {ticketId}")
     return ticket_data
+    except Exception as e:
+        await notify_by_bot(
+            f"**[API: get_user_ticket_details]** \n\n Error fetching ticket details: ticketId={ticketId}, user_id={user_id}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        raise HTTPException(status_code=500, detail=f"Error fetching ticket details: {str(e)}")
 
 
 @router.get("/profile/favoriteEvents")
-async def favoriteEvents(user_id: int = Depends(get_current_user)):
+async def favoriteEvents(
+    request: Request,
+    user_id: int = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
     """
     API endpoint for getting profile overview.
     Returns user profile data.
     """
     print(f"[favoriteEvents] API called with user_id: {user_id}")
+
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
 
     @database_sync_to_async
     def get_fav_events(user_id):
@@ -436,24 +478,42 @@ async def favoriteEvents(user_id: int = Depends(get_current_user)):
     if events_data is None:
         print(f"[favoriteEvents] Error: User not found for user_id: {user_id}")
         await notify_by_bot(
-            f"[favoriteEvents] User not found: user_id={user_id}",
-            "account_management_api",
+            f"**[API: favoriteEvents]** \n\n Error fetching favorite events: user_id={user_id}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
             "ERROR",
+            device_info,
         )
         raise HTTPException(status_code=404, detail="Event not found")
     print(
         f"[favoriteEvents] Returning {len(events_data)} favorite events for user_id: {user_id}"
     )
     return events_data
+    except Exception as e:
+        await notify_by_bot(
+            f"**[API: favoriteEvents]** \n\n Error fetching favorite events: user_id={user_id}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        raise HTTPException(status_code=500, detail=f"Error fetching favorite events: {str(e)}")
 
 
 @router.post("/profile/delete")
-async def delete_profile(user_id: int = Depends(get_current_user)):
+async def delete_profile(
+    request: Request,
+    user_id: int = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
     """
     API endpoint for deleting a user profile.
     Deletes the user profile and associated data.
     """
     print(f"[delete_profile] API called with user_id: {user_id}")
+
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
 
     @database_sync_to_async
     def delete_profile(user_id):
@@ -470,19 +530,37 @@ async def delete_profile(user_id: int = Depends(get_current_user)):
     if not success:
         print(f"[delete_profile] Error: User not found for user_id: {user_id}")
         await notify_by_bot(
-            f"[delete_profile] User not found: user_id={user_id}",
-            "account_management_api",
+            f"**[API: delete_profile]** \n\n Error deleting profile: user_id={user_id}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
             "ERROR",
+            device_info,
         )
         raise HTTPException(status_code=404, detail="User not found")
 
     print(f"[delete_profile] Profile deleted successfully for user_id: {user_id}")
     return {"message": "Profile deleted successfully"}
+    except Exception as e:
+        await notify_by_bot(
+            f"**[API: delete_profile]** \n\n Error deleting profile: user_id={user_id}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        raise HTTPException(status_code=500, detail=f"Error deleting profile: {str(e)}")
 
 
 @router.get("/getUserTransactions")
-async def get_user_transactions(user_id: int = Depends(get_current_user)):
+async def get_user_transactions(
+    request: Request,
+    user_id: int = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
     print(f"[get_user_transactions] API called with user_id: {user_id}")
+
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
 
     @database_sync_to_async
     def get_user_transactions(user_id):
@@ -542,20 +620,38 @@ async def get_user_transactions(user_id: int = Depends(get_current_user)):
     if transactions_data is None:
         print(f"[get_user_transactions] Error: User not found for user_id: {user_id}")
         await notify_by_bot(
-            f"[get_user_transactions] User not found: user_id={user_id}",
-            "account_management_api",
+            f"**[API: get_user_transactions]** \n\n Error fetching user transactions: user_id={user_id}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
             "ERROR",
+            device_info,
         )
         raise HTTPException(status_code=404, detail="User not found")
     print(
         f"[get_user_transactions] Returning {len(transactions_data)} transactions for user_id: {user_id}"
     )
     return transactions_data
+    except Exception as e:
+        await notify_by_bot(
+            f"**[API: get_user_transactions]** \n\n Error fetching user transactions: user_id={user_id}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        raise HTTPException(status_code=500, detail=f"Error fetching user transactions: {str(e)}")
 
 
 @router.get("/getUserPaymentMethods")
-async def get_user_payment_methods(user_id: int = Depends(get_current_user)):
+async def get_user_payment_methods(
+    request: Request,
+    user_id: int = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
     print(f"[get_user_payment_methods] API called with user_id: {user_id}")
+
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
 
     @database_sync_to_async
     def get_user_payment_methods_sync(user_id):
@@ -614,15 +710,24 @@ async def get_user_payment_methods(user_id: int = Depends(get_current_user)):
             f"[get_user_payment_methods] Error: User not found for user_id: {user_id}"
         )
         await notify_by_bot(
-            f"[get_user_payment_methods] User not found: user_id={user_id}",
-            "account_management_api",
+            f"**[API: get_user_payment_methods]** \n\n Error fetching payment methods: user_id={user_id}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
             "ERROR",
+            device_info,
         )
         raise HTTPException(status_code=404, detail="User not found")
     print(
         f"[get_user_payment_methods] Returning {len(payment_methods_data)} payment methods for user_id: {user_id}"
     )
     return payment_methods_data
+    except Exception as e:
+        await notify_by_bot(
+            f"**[API: get_user_payment_methods]** \n\n Error fetching payment methods: user_id={user_id}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        raise HTTPException(status_code=500, detail=f"Error fetching payment methods: {str(e)}")
 
 
 @router.post("/payment/deletePaymentMethod")
@@ -630,8 +735,14 @@ async def delete_payment_method(
     request: Request,
     user_id: int = Depends(get_current_user),
     paymentMethodId: str = Body(..., embed=True),
+    platform: Optional[str] = None,
 ):
     """Delete a payment method for the current user."""
+
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
 
     @database_sync_to_async
     def get_user(user_id):
@@ -643,6 +754,14 @@ async def delete_payment_method(
         return {"success": True, "message": "Payment method deleted successfully."}
     else:
         raise HTTPException(status_code=400, detail="Invalid payment method ID.")
+    except Exception as e:
+        await notify_by_bot(
+            f"**[API: delete_payment_method]** \n\n Error deleting payment method: user_id={user_id}, paymentMethodId={paymentMethodId}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        raise HTTPException(status_code=500, detail=f"Error deleting payment method: {str(e)}")
 
 
 @router.post("/payment/setDefaultPaymentMethod")
@@ -650,8 +769,14 @@ async def set_default_payment_method(
     request: Request,
     user_id: int = Depends(get_current_user),
     paymentMethodId: str = Body(..., embed=True),
+    platform: Optional[str] = None,
 ):
     """Set a default payment method for the current user."""
+
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
 
     @database_sync_to_async
     def get_user(user_id):
@@ -673,13 +798,28 @@ async def set_default_payment_method(
             )
     else:
         raise HTTPException(status_code=400, detail="Invalid payment method ID.")
+    except Exception as e:
+        await notify_by_bot(
+            f"**[API: set_default_payment_method]** \n\n Error setting default payment method: user_id={user_id}, paymentMethodId={paymentMethodId}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        raise HTTPException(status_code=500, detail=f"Error setting default payment method: {str(e)}")
 
 
 @router.post("/payment/addPayoutMethodToProfile")
 async def add_payout_method_to_profile(
-    request: Request, user_id: int = Depends(get_current_user)
+    request: Request, 
+    user_id: int = Depends(get_current_user),
+    platform: Optional[str] = None,
 ):
     """Add a payout (bank) method to the user's profile."""
+
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
 
     @database_sync_to_async
     def get_user(user_id):
@@ -691,13 +831,28 @@ async def add_payout_method_to_profile(
         return {"success": True, "message": "Bank account added successfully."}
     else:
         raise HTTPException(status_code=400, detail="Failed to add bank account.")
+    except Exception as e:
+        await notify_by_bot(
+            f"**[API: add_payout_method_to_profile]** \n\n Error adding payout method: user_id={user_id}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        raise HTTPException(status_code=500, detail=f"Error adding payout method: {str(e)}")
 
 
 @router.post("/payment/requestInstantPayout")
 async def request_instant_payout(
-    request: Request, user_id: int = Depends(get_current_user)
+    request: Request, 
+    user_id: int = Depends(get_current_user),
+    platform: Optional[str] = None,
 ):
     """Request an instant payout for the user if eligible."""
+
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
 
     @database_sync_to_async
     def get_user(user_id):
@@ -723,11 +878,28 @@ async def request_instant_payout(
         return {"success": True, "message": "Payout requested successfully."}
     else:
         raise HTTPException(status_code=400, detail="Failed to process payout.")
+    except Exception as e:
+        await notify_by_bot(
+            f"**[API: request_instant_payout]** \n\n Error requesting instant payout: user_id={user_id}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        raise HTTPException(status_code=500, detail=f"Error requesting instant payout: {str(e)}")
 
 
 @router.get("/checkHost")
-async def check_host(user_id: int = Depends(get_current_user)):
+async def check_host(
+    request: Request,
+    user_id: int = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
     print(f"[check_host] API called with user_id: {user_id}")
+
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
 
     @database_sync_to_async
     def check_user_is_host(user_id):
@@ -744,22 +916,40 @@ async def check_host(user_id: int = Depends(get_current_user)):
     if result is None:
         print(f"[check_host] Error: User not found for user_id: {user_id}")
         await notify_by_bot(
-            f"[check_host] User not found: user_id={user_id}",
-            "account_management_api",
+            f"**[API: check_host]** \n\n Error checking host status: user_id={user_id}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
             "ERROR",
+            device_info,
         )
         raise HTTPException(status_code=404, detail="User not found")
     print(f"[check_host] Returning host status for user_id: {user_id}: {result}")
     return result
+    except Exception as e:
+        await notify_by_bot(
+            f"**[API: check_host]** \n\n Error checking host status: user_id={user_id}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        raise HTTPException(status_code=500, detail=f"Error checking host status: {str(e)}")
 
 
 @router.get("/getHostDashboardLink")
-async def get_host_dashboard_link(user_id: int = Depends(get_current_user)):
+async def get_host_dashboard_link(
+    request: Request,
+    user_id: int = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
     """
     API endpoint for getting Stripe dashboard link for hosts.
     Returns a link to the Stripe dashboard for the user's connected account.
     """
     print(f"[get_host_dashboard_link] API called with user_id: {user_id}")
+
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
 
     @database_sync_to_async
     def get_host_stripe_link(user_id):
@@ -801,9 +991,10 @@ async def get_host_dashboard_link(user_id: int = Depends(get_current_user)):
     if result is None:
         print(f"[get_host_dashboard_link] Error: User not found for user_id: {user_id}")
         await notify_by_bot(
-            f"[get_host_dashboard_link] User not found: user_id={user_id}",
-            "account_management_api",
+            f"**[API: get_host_dashboard_link]** \n\n Error getting host dashboard link: user_id={user_id}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
             "ERROR",
+            device_info,
         )
         raise HTTPException(status_code=404, detail="User not found")
 
@@ -812,23 +1003,41 @@ async def get_host_dashboard_link(user_id: int = Depends(get_current_user)):
             f"[get_host_dashboard_link] Error: {result.get('error')} for user_id: {user_id}"
         )
         await notify_by_bot(
-            f"[get_host_dashboard_link] Stripe error: user_id={user_id}, error={result.get('error')}",
-            "account_management_api",
+            f"**[API: get_host_dashboard_link]** \n\n Error getting host dashboard link: user_id={user_id}, error={result.get('error')} \n\n Platform: {platform}",
+            platform or "Unknown",
             "ERROR",
+            device_info,
         )
         raise HTTPException(status_code=status_code, detail=result.get("error"))
 
     print(f"[get_host_dashboard_link] Returning dashboard link for user_id: {user_id}")
     return result
+    except Exception as e:
+        await notify_by_bot(
+            f"**[API: get_host_dashboard_link]** \n\n Error getting host dashboard link: user_id={user_id}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        raise HTTPException(status_code=500, detail=f"Error getting host dashboard link: {str(e)}")
 
 
 @router.get("/getUserCollege")
-async def get_user_college(user_id: int = Depends(get_current_user)):
+async def get_user_college(
+    request: Request,
+    user_id: int = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
     """
     API endpoint for getting user's college information.
     Returns the college name and ID associated with the user.
     """
     print(f"[get_user_college] API called with user_id: {user_id}")
+
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
 
     @database_sync_to_async
     def get_user_college(user_id):
@@ -853,9 +1062,10 @@ async def get_user_college(user_id: int = Depends(get_current_user)):
             f"[get_user_college] Error: User or college not found for user_id: {user_id}"
         )
         await notify_by_bot(
-            f"[get_user_college] User or college not found: user_id={user_id}",
-            "account_management_api",
+            f"**[API: get_user_college]** \n\n Error fetching user college: user_id={user_id}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
             "ERROR",
+            device_info,
         )
         raise HTTPException(status_code=404, detail="User not found")
 
@@ -863,15 +1073,32 @@ async def get_user_college(user_id: int = Depends(get_current_user)):
         f"[get_user_college] Returning college data for user_id: {user_id}: {college_data}"
     )
     return college_data
+    except Exception as e:
+        await notify_by_bot(
+            f"**[API: get_user_college]** \n\n Error fetching user college: user_id={user_id}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        raise HTTPException(status_code=500, detail=f"Error fetching user college: {str(e)}")
 
 
 @router.get("/settings")
-async def get_user_settings(user_id: int = Depends(get_current_user)):
+async def get_user_settings(
+    request: Request,
+    user_id: int = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
     """
     API endpoint for retrieving user settings and profile information.
     Returns user profile data and settings.
     """
     print(f"[get_user_settings] API called with user_id: {user_id}")
+
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
 
     @database_sync_to_async
     def get_settings_async(user_id):
@@ -903,9 +1130,10 @@ async def get_user_settings(user_id: int = Depends(get_current_user)):
         settings_data = await get_settings_async(user_id)
         if settings_data is None:
             await notify_by_bot(
-                f"[get_user_settings] User not found: user_id={user_id}",
-                "account_management_api",
+                f"**[API: get_user_settings]** \n\n Error fetching user settings: user_id={user_id}, error={str(e)} \n\n Platform: {platform}",
+                platform or "Unknown",
                 "ERROR",
+                device_info,
             )
             raise HTTPException(status_code=404, detail="User not found")
         return settings_data
@@ -914,9 +1142,10 @@ async def get_user_settings(user_id: int = Depends(get_current_user)):
             error_trace = traceback.format_exc()
             print(f"[get_user_settings] Unhandled exception: {str(e)}\n{error_trace}")
             await notify_by_bot(
-                f"[get_user_settings] Unhandled exception: user_id={user_id}, error={str(e)}",
-                "account_management_api",
+                f"**[API: get_user_settings]** \n\n Error fetching user settings: user_id={user_id}, error={str(e)} \n\n Platform: {platform}",
+                platform or "Unknown",
                 "ERROR",
+                device_info,
             )
             raise HTTPException(status_code=500, detail="Internal server error")
         raise e
@@ -926,6 +1155,7 @@ async def get_user_settings(user_id: int = Depends(get_current_user)):
 async def update_user_settings(
     request: Request,
     user_id: int = Depends(get_current_user),
+    platform: Optional[str] = None,
 ):
     """
     API endpoint for updating user settings and profile information.
@@ -1181,6 +1411,12 @@ async def update_user_settings(
         if not isinstance(e, HTTPException):
             error_trace = traceback.format_exc()
             print("[update_user_settings] Exception:", str(e), error_trace)
+            await notify_by_bot(
+                f"**[API: update_user_settings]** \n\n Error updating user settings: user_id={user_id}, error={str(e)} \n\n Platform: {platform}",
+                platform or "Unknown",
+                "ERROR",
+                device_info,
+            )
             raise HTTPException(status_code=500, detail="Internal server error")
         raise e
 
@@ -1189,12 +1425,18 @@ async def update_user_settings(
 async def password_reset(
     request: Request,
     email: str = Form(...),
+    platform: Optional[str] = None,
 ):
     """
     API endpoint for password reset functionality.
     Sends a password reset email to the user.
     """
     print(f"[password_reset] API called with email: {email}")
+
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
 
     @database_sync_to_async
     def process_password_reset(email):
@@ -1266,28 +1508,39 @@ async def password_reset(
     if not result["success"]:
         if "error" in result:
             await notify_by_bot(
-                f"[password_reset] Error: email={email}, error={result['error']}",
-                "account_management_api",
+                f"**[API: password_reset]** \n\n Error processing password reset: email={email}, error={result['error']} \n\n Platform: {platform}",
+                platform or "Unknown",
                 "ERROR",
+                device_info,
             )
             raise HTTPException(status_code=404, detail=result["error"])
         elif "errors" in result:
             await notify_by_bot(
-                f"[password_reset] Validation errors: email={email}, errors={result['errors']}",
-                "account_management_api",
+                f"**[API: password_reset]** \n\n Validation errors: email={email}, errors={result['errors']} \n\n Platform: {platform}",
+                platform or "Unknown",
                 "ERROR",
+                device_info,
             )
             raise HTTPException(status_code=400, detail=result["errors"])
         else:
             await notify_by_bot(
-                f"[password_reset] Internal error: email={email}",
-                "account_management_api",
+                f"**[API: password_reset]** \n\n Internal error: email={email} \n\n Platform: {platform}",
+                platform or "Unknown",
                 "ERROR",
+                device_info,
             )
             raise HTTPException(status_code=500, detail="Internal server error")
 
     print(f"[password_reset] Password reset processed successfully for email: {email}")
     return result
+    except Exception as e:
+        await notify_by_bot(
+            f"**[API: password_reset]** \n\n Error processing password reset: email={email}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        raise HTTPException(status_code=500, detail=f"Error processing password reset: {str(e)}")
 
 
 @router.post("/password-reset-confirm")
@@ -1297,12 +1550,18 @@ async def password_reset_confirm(
     token: str = Form(...),
     new_password: str = Form(...),
     confirm_password: str = Form(...),
+    platform: Optional[str] = None,
 ):
     """
     API endpoint for confirming password reset and setting new password.
     Validates the reset token and sets the new password.
     """
     print(f"[password_reset_confirm] API called with uid: {uid}, token: {token}")
+
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
 
     @database_sync_to_async
     def process_password_reset_confirm(uid, token, new_password, confirm_password):
@@ -1363,16 +1622,18 @@ async def password_reset_confirm(
     if not result["success"]:
         if "error" in result:
             await notify_by_bot(
-                f"[password_reset_confirm] Error: uid={uid}, error={result['error']}",
-                "account_management_api",
+                f"**[API: password_reset_confirm]** \n\n Error confirming password reset: uid={uid}, error={result['error']} \n\n Platform: {platform}",
+                platform or "Unknown",
                 "ERROR",
+                device_info,
             )
             raise HTTPException(status_code=400, detail=result["error"])
         else:
             await notify_by_bot(
-                f"[password_reset_confirm] Internal error: uid={uid}",
-                "account_management_api",
+                f"**[API: password_reset_confirm]** \n\n Internal error: uid={uid} \n\n Platform: {platform}",
+                platform or "Unknown",
                 "ERROR",
+                device_info,
             )
             raise HTTPException(status_code=500, detail="Internal server error")
 
@@ -1380,3 +1641,11 @@ async def password_reset_confirm(
         f"[password_reset_confirm] Password reset confirmation processed successfully"
     )
     return result
+    except Exception as e:
+        await notify_by_bot(
+            f"**[API: password_reset_confirm]** \n\n Error confirming password reset: uid={uid}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        raise HTTPException(status_code=500, detail=f"Error confirming password reset: {str(e)}")

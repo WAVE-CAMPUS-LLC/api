@@ -18,8 +18,25 @@ router = APIRouter()
 
 
 @router.get("/ping")
-async def ping():
-    return {"message": "Pong!"}
+async def ping(
+    request: Request,
+    platform: Optional[str] = None,
+):
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    try:
+        return {"message": "Pong!"}
+    except Exception as e:
+        await notify_by_bot(
+            f"**[API: ping]** \n\n Error in ping endpoint: error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        raise HTTPException(status_code=500, detail=f"Error in ping endpoint: {str(e)}")
 
 
 @router.get("/explore")
@@ -136,8 +153,18 @@ async def get_college_details(
 
 
 @router.get("/college/{collegeId}/events")
-async def get_college_events(collegeId: str):
+async def get_college_events(
+    collegeId: str,
+    request: Request,
+    platform: Optional[str] = None,
+):
     print(f"[DEBUG - get_college_events] Function called with collegeId: {collegeId}")
+
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
     try:
 
         @database_sync_to_async
@@ -184,9 +211,10 @@ async def get_college_events(collegeId: str):
         # Log the error for debugging
         print(f"Error in get_college_events: {str(e)}")
         await notify_by_bot(
-            f"[get_college_events] Error fetching college events: collegeId={collegeId}, error={str(e)}",
-            "college_management_api",
+            f"**[API: get_college_events]** \n\n Error fetching college events: collegeId={collegeId}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
             "ERROR",
+            device_info,
         )
         # Return a more helpful error response
         raise HTTPException(
@@ -196,10 +224,22 @@ async def get_college_events(collegeId: str):
 
 
 @router.get("/college/{collegeId}/members")
-async def get_college_members(collegeId: str, page: int = 1, limit: int = 20):
+async def get_college_members(
+    collegeId: str,
+    request: Request,
+    page: int = 1,
+    limit: int = 20,
+    platform: Optional[str] = None,
+):
     print(
         f"[DEBUG - get_college_members] Function called with collegeId: {collegeId}, page: {page}, limit: {limit}"
     )
+
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
     try:
 
         @database_sync_to_async
@@ -277,6 +317,12 @@ async def get_college_members(collegeId: str, page: int = 1, limit: int = 20):
     except Exception as e:
         # Log the error for debugging
         print(f"Error in get_college_members: {str(e)}")
+        await notify_by_bot(
+            f"**[API: get_college_members]** \n\n Error fetching college members: collegeId={collegeId}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
         # Return a more helpful error response
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -293,18 +339,19 @@ class JoinCollegeRequest(BaseModel):
 
 
 @router.post("/college/{collegeId}/join")
-async def join_college(collegeId: str, join_request: JoinCollegeRequest):
-    """
-    Send a verification email to join a college.
+async def join_college(
+    collegeId: str,
+    join_request: JoinCollegeRequest,
+    request: Request,
+    platform: Optional[str] = None,
+):
+    print(f"[DEBUG - join_college] Function called with collegeId: {collegeId}")
 
-    This endpoint:
-    1. Validates the email belongs to the college domain
-    2. Sends a verification code to the provided email
-    3. Stores verification data in database
-    """
-    print(
-        f"[DEBUG - join_college] Function called with collegeId: {collegeId}, email: {join_request.email}"
-    )
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
     try:
 
         @database_sync_to_async
@@ -402,26 +449,33 @@ async def join_college(collegeId: str, join_request: JoinCollegeRequest):
     except Exception as e:
         # Log the error for debugging
         print(f"Error in join_college: {str(e)}")
+        await notify_by_bot(
+            f"**[API: join_college]** \n\n Error joining college: collegeId={collegeId}, email={join_request.email}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
         # Return a more helpful error response
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to process join college request: {str(e)}",
+            detail=f"Failed to join college: {str(e)}",
         )
 
 
 @router.post("/college/{collegeId}/verify")
-async def verify_join_college(collegeId: str, verification: VerificationRequest):
-    """
-    Verify a college join code and complete the membership process.
+async def verify_join_college(
+    collegeId: str,
+    verification: VerificationRequest,
+    request: Request,
+    platform: Optional[str] = None,
+):
+    print(f"[DEBUG - verify_join_college] Function called with collegeId: {collegeId}")
 
-    This endpoint:
-    1. Validates the verification code against stored code in database
-    2. Updates user profile with college association
-    3. Creates membership record linking user to college
-    """
-    print(
-        f"[DEBUG - verify_join_college] Function called with collegeId: {collegeId}, code: {verification.code}"
-    )
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
     try:
 
         @database_sync_to_async
@@ -506,23 +560,32 @@ async def verify_join_college(collegeId: str, verification: VerificationRequest)
     except Exception as e:
         # Log the error for debugging
         print(f"Error in verify_join_college: {str(e)}")
+        await notify_by_bot(
+            f"**[API: verify_join_college]** \n\n Error verifying college join: collegeId={collegeId}, code={verification.code}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
         # Return a more helpful error response
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to process verification: {str(e)}",
+            detail=f"Failed to verify college join: {str(e)}",
         )
 
 
 @router.post("/college/{collegeId}/leave")
-async def leave_college(collegeId: str):
-    """
-    Leave a college and remove membership.
-
-    This endpoint:
-    1. Validates the college ID
-    2. Removes the user from the college membership
-    """
+async def leave_college(
+    collegeId: str,
+    request: Request,
+    platform: Optional[str] = None,
+):
     print(f"[DEBUG - leave_college] Function called with collegeId: {collegeId}")
+
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
     try:
 
         @database_sync_to_async
@@ -576,8 +639,14 @@ async def leave_college(collegeId: str):
     except Exception as e:
         # Log the error for debugging
         print(f"Error in leave_college: {str(e)}")
+        await notify_by_bot(
+            f"**[API: leave_college]** \n\n Error leaving college: collegeId={collegeId}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
         # Return a more helpful error response
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to process leave request: {str(e)}",
+            detail=f"Failed to leave college: {str(e)}",
         )
