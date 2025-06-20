@@ -283,7 +283,7 @@ async def process_checkout(
                 print(f"[DEBUG] Processing coupon code: {coupon_code_value}")
                 try:
                     # Get the event
-                    event = Event.objects.get(eventId=list(event_ids)[0])
+                    event = await database_sync_to_async(Event.objects.get)(eventId=list(event_ids)[0])
 
                     # Check if event has payment processing configured
                     if not event.stripe_connect_account_id:
@@ -302,7 +302,7 @@ async def process_checkout(
                         )
 
                     # Find the coupon
-                    coupon = CouponCode.objects.get(
+                    coupon = await database_sync_to_async(CouponCode.objects.get)(
                         coupon_code=coupon_code_value, event=event, is_active=True
                     )
 
@@ -464,7 +464,7 @@ async def process_checkout(
             print(f"[DEBUG] User ID for session: {user_id}")
 
             # Get the event and connect account
-            event = Event.objects.get(eventId=list(event_ids)[0])
+            event = await database_sync_to_async(Event.objects.get)(eventId=list(event_ids)[0])
             connect_account_id = event.stripe_connect_account_id
 
             if not connect_account_id:
