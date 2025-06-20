@@ -612,7 +612,7 @@ async def get_event_detail(
 
         # Purchased tickets
         purchased_tickets = await database_sync_to_async(list)(
-            event.ticket.all().values(
+            event.ticket_set.all().values(
                 "ticketId",
                 "user__username",
                 "user__email",
