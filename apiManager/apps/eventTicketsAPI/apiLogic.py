@@ -1102,6 +1102,7 @@ async def payment_successful(
     def check_existing_tickets_and_process():
         """Check for existing tickets and process payment if needed"""
         from eventTicketsApp.views import generateTicket
+        from django.db import transaction
         
         # Check if tickets have already been generated for this session
         print(f"[payment_successful API] Checking for tickets tied to session_id: {session_id}")
@@ -1120,22 +1121,30 @@ async def payment_successful(
             print(f"Retrieving Stripe session: {session_id}")
             session = stripe.checkout.Session.retrieve(session_id)
             
-            # Reconstruct cart from Stripe session
-            cart = _reconstruct_cart_from_stripe_sync(session)
-            
-            # Check if we still have an empty cart
-            if not cart or len(cart) == 0 or all(k in ['coupon_code', 'discount_percentage'] for k in cart.keys()):
-                print("Warning: Cart is still empty after reconstruction attempt.")
-                # Try to create a minimal cart from session data if possible
-                cart = {}
-            
-            # Generate tickets from cart items
-            ticket_count = _generate_tickets_from_cart_sync(user_id, cart, session_id, session)
-            
-            return {
-                "status": "paymentSuccessful", 
-                "tickets_generated": ticket_count
-            }
+            # Use atomic transaction for ticket generation to ensure data consistency
+            with transaction.atomic():
+                # Reconstruct cart from Stripe session
+                cart = _reconstruct_cart_from_stripe_sync(session)
+                
+                # Check if we still have an empty cart
+                if not cart or len(cart) == 0 or all(k in ['coupon_code', 'discount_percentage'] for k in cart.keys()):
+                    print("Warning: Cart is still empty after reconstruction attempt.")
+                    # If cart reconstruction completely failed, we still need to create tickets based on the payment
+                    # This can happen if the user paid but the cart metadata was corrupted
+                    # In this case, we should still generate tickets based on what Stripe shows was paid for
+                    ticket_line_items = [item for item in stripe.checkout.Session.list_line_items(session_id).data 
+                                       if "Service Fee" not in item.description]
+                    if ticket_line_items:
+                        print(f"Creating minimal cart from {len(ticket_line_items)} line items due to cart reconstruction failure")
+                        cart = {}  # Will be populated by fallback logic in ticket generation
+                
+                # Generate tickets from cart items
+                ticket_count = _generate_tickets_from_cart_sync(user_id, cart, session_id, session)
+                
+                return {
+                    "status": "paymentSuccessful", 
+                    "tickets_generated": ticket_count
+                }
             
         except stripe.error.StripeError as e:
             print(f"Stripe error: {e}")
@@ -1218,9 +1227,14 @@ def _extract_cart_from_line_items_sync(line_items):
                     try:
                         event = Event.objects.get(eventId=event_id)
                         
-                        # Try to find the original ticket
+                        # Try to find the original ticket - original_ticket_id is the cart key, not the PaidFreeTicket.ticket_id
                         try:
-                            ticket = PaidFreeTicket.objects.get(ticket_id=original_ticket_id, event=event)
+                            # First try by ticket_id (UUID)
+                            try:
+                                ticket = PaidFreeTicket.objects.get(ticket_id=original_ticket_id, event=event)
+                            except PaidFreeTicket.DoesNotExist:
+                                # If not found, try by primary key (for cart keys that are database IDs)
+                                ticket = PaidFreeTicket.objects.get(pk=original_ticket_id, event=event)
                             
                             cart[original_ticket_id] = {
                                 "name": ticket.ticket_name,
@@ -1230,7 +1244,14 @@ def _extract_cart_from_line_items_sync(line_items):
                             }
                             continue
                         except Exception as e:
-                            print(f"Error finding ticket with ticket_id={original_ticket_id}: {e}")
+                            print(f"Error finding ticket with original_ticket_id={original_ticket_id}: {e}")
+                            # Fallback: create cart item from line item data
+                            cart[original_ticket_id] = {
+                                "name": item.description.replace(" (100% discount applied)", "").replace(f" ({metadata.get('discount_percentage', 0)}% discount applied)", ""),
+                                "price": item.amount_total / 100,
+                                "quantity": item.quantity,
+                                "eventId": str(event.eventId)
+                            }
                     except (Event.DoesNotExist, PaidFreeTicket.DoesNotExist) as e:
                         print(f"Could not find original ticket/event: {e}")
         except Exception as e:
@@ -1322,6 +1343,12 @@ def _generate_tickets_from_cart_sync(user_id, cart, session_id, session):
     event_id_from_cart = cart.get('event_id')
     if event_id_from_cart and isinstance(event_id_from_cart, str):
         print(f"Found event_id directly in cart: {event_id_from_cart}")
+    
+    # If cart is empty or only has metadata, try to generate tickets from Stripe line items directly
+    if not cart or all(k in ['coupon_code', 'discount_percentage', 'event_id'] for k in cart.keys()):
+        print("Cart is empty or contains only metadata. Attempting fallback ticket generation from Stripe session.")
+        ticket_count = _generate_tickets_from_stripe_session_sync(user_id, session_id, session)
+        return ticket_count
     
     for cart_key, ticket_info in cart.items():
         # Skip non-ticket items
@@ -1462,11 +1489,83 @@ def _update_ticket_sold_count_sync(cart_key, event):
     """Synchronous version of updating the ticket_sold count in the PaidFreeTicket model"""
     try:
         # Find the ticket type and increment its sold count
-        ticket_type = PaidFreeTicket.objects.get(ticket_id=cart_key, event=event)
+        # Try by ticket_id first, then by primary key
+        try:
+            ticket_type = PaidFreeTicket.objects.get(ticket_id=cart_key, event=event)
+        except PaidFreeTicket.DoesNotExist:
+            # If not found by ticket_id, try by primary key (for cart keys that are database IDs)
+            ticket_type = PaidFreeTicket.objects.get(pk=cart_key, event=event)
+        
         ticket_type.ticket_sold += 1
         ticket_type.save()
         print(f"Updated ticket_sold count for {ticket_type.ticket_name}: now {ticket_type.ticket_sold}")
     except PaidFreeTicket.DoesNotExist:
-        print(f"Could not find ticket type with ID {cart_key}")
+        print(f"Could not find ticket type with cart_key {cart_key} for event {event.eventId}")
     except Exception as e:
         print(f"Error updating ticket_sold count: {e}")
+
+
+def _generate_tickets_from_stripe_session_sync(user_id, session_id, session):
+    """Fallback method to generate tickets directly from Stripe session when cart reconstruction fails"""
+    from eventTicketsApp.views import generateTicket
+    
+    ticket_count = 0
+    
+    try:
+        # Get line items from the session
+        line_items = stripe.checkout.Session.list_line_items(session_id)
+        
+        # Get user if authenticated
+        user = None
+        if user_id:
+            try:
+                user = CustomUser.objects.get(id=user_id)
+            except CustomUser.DoesNotExist:
+                print(f"User with ID {user_id} not found")
+        
+        # Get customer info from session
+        first_name, last_name, email = _get_customer_info_sync(user, session)
+        
+        # Get event from payment intent metadata
+        event = None
+        if session.payment_intent:
+            try:
+                payment_intent = stripe.PaymentIntent.retrieve(session.payment_intent)
+                event_id = payment_intent.metadata.get('event_id')
+                if event_id:
+                    event = Event.objects.get(eventId=event_id)
+            except Exception as e:
+                print(f"Error getting event from payment intent: {e}")
+        
+        if not event:
+            print("Could not determine event for ticket generation")
+            return 0
+        
+        # Generate tickets based on line items (excluding service fees)
+        for item in line_items.data:
+            if "Service Fee" not in item.description:
+                # Generate tickets for this line item
+                quantity = item.quantity
+                for i in range(quantity):
+                    ticket = generateTicket(
+                        request=None,
+                        event=event,
+                        user=user if user else None,
+                        guestFirstName=first_name,
+                        guestLastName=last_name,
+                        guestEmail=email,
+                        stripe_session_id=session_id,
+                        from_api=True
+                    )
+                    ticket_count += 1
+                
+                print(f"Generated {quantity} tickets from fallback method for {item.description}")
+        
+        print(f"Fallback ticket generation completed. Total tickets: {ticket_count}")
+        return ticket_count
+        
+    except Exception as e:
+        print(f"Error in fallback ticket generation: {e}")
+        import traceback
+        traceback.print_exc()
+        return 0
