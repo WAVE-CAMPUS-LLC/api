@@ -286,7 +286,8 @@ async def process_checkout(
                     event = await database_sync_to_async(Event.objects.get)(eventId=list(event_ids)[0])
 
                     # Check if event has payment processing configured
-                    if not event.stripe_connect_account_id:
+                    host = await database_sync_to_async(lambda: event.host)()
+                    if not host.connectAccountID:
                         print(
                             f"[DEBUG] ERROR: Event host has not configured payment processing"
                         )
@@ -465,7 +466,9 @@ async def process_checkout(
 
             # Get the event and connect account
             event = await database_sync_to_async(Event.objects.get)(eventId=list(event_ids)[0])
-            connect_account_id = event.stripe_connect_account_id
+            # Get the connect account ID from the event's host
+            host = await database_sync_to_async(lambda: event.host)()
+            connect_account_id = host.connectAccountID
 
             if not connect_account_id:
                 print(f"[DEBUG] ERROR: No connect account found for event")
