@@ -292,7 +292,17 @@ def record_crew_activity(sender, instance, created, **kwargs):
 
 @receiver(post_save, sender=Ticket)
 def record_ticket_activity(sender, instance, created, **kwargs):
-    if created:
+    if created and instance.user:  # Only create activity for authenticated users, not guests
+        # Try to extract ticket type from QR code data or use default
+        ticket_type = "General Admission"  # Default value
+        try:
+            if instance.qrCodeData:
+                import json
+                qr_data = json.loads(instance.qrCodeData)
+                ticket_type = qr_data.get("ticketType", "General Admission")
+        except (json.JSONDecodeError, KeyError):
+            pass
+        
         SocialActivity.objects.create(
             user=instance.user,
             activity_type="ticket_purchased",
@@ -305,15 +315,15 @@ def record_ticket_activity(sender, instance, created, **kwargs):
                     if instance.event.header_photo
                     else None
                 ),
-                "ticket_type": instance.ticket_type,
-                "quantity": instance.quantity,
-                "venue": instance.event.venue.name if instance.event.venue else None,
+                "ticket_type": ticket_type,
+                "quantity": 1,  # Each ticket instance represents 1 ticket
+                "venue": instance.event.venue.name if hasattr(instance.event, 'venue') and instance.event.venue else None,
                 "event_time": (
                     instance.event.time.strftime("%I:%M %p")
-                    if instance.event.time
+                    if hasattr(instance.event, 'time') and instance.event.time
                     else None
                 ),
-                "price": str(instance.price) if instance.price else None,
+                "price": None,  # Ticket model doesn't store price, would need to lookup from PaidFreeTicket
             },
         )
 
