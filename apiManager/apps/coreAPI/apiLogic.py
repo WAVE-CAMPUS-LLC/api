@@ -27,16 +27,41 @@ router = APIRouter()
 
 
 @router.get("/ping")
-async def ping():
-    return {"message": "Core API is running!"}
+async def ping(
+    request: Request,
+    platform: Optional[str] = None,
+):
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    try:
+        return {"message": "Core API is running!"}
+    except Exception as e:
+        await notify_by_bot(
+            f"**[API: ping]** \n\n Error in ping endpoint: error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        raise HTTPException(status_code=500, detail=f"Error in ping endpoint: {str(e)}")
 
 
 @router.get("/events/preview")
-async def get_events_preview():
+async def get_events_preview(
+    request: Request,
+    platform: Optional[str] = None,
+):
     """
     API endpoint to retrieve a preview of events for the explore page.
     """
     print("[get_events_preview API] Function called")
+
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
 
     @database_sync_to_async
     def get_events_preview_data():
@@ -62,19 +87,38 @@ async def get_events_preview():
             )
         return events_list
 
-    events_data = await get_events_preview_data()
-    events = [ExplorePageEvent(**event_data) for event_data in events_data]
-    response = {"events": events}
+    try:
+        events_data = await get_events_preview_data()
+        events = [ExplorePageEvent(**event_data) for event_data in events_data]
+        response = {"events": events}
 
-    return response
+        return response
+    except Exception as e:
+        await notify_by_bot(
+            f"**[API: get_events_preview]** \n\n Error fetching events preview: error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        raise HTTPException(
+            status_code=500, detail=f"Error fetching events preview: {str(e)}"
+        )
 
 
 @router.get("/events")
-async def get_events():
+async def get_events(
+    request: Request,
+    platform: Optional[str] = None,
+):
     """
     API endpoint to retrieve events for the explore page.
     """
     print("[get_events API] Function called")
+
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
 
     @database_sync_to_async
     def get_events_data():
@@ -100,21 +144,38 @@ async def get_events():
         print(f"[get_events API] Retrieved {len(events_list)} events from database")
         return events_list
 
-    # Get the data and convert to Pydantic models
-    events_data = await get_events_data()
-    events = [ExplorePageEvent(**event_data) for event_data in events_data]
+    try:
+        # Get the data and convert to Pydantic models
+        events_data = await get_events_data()
+        events = [ExplorePageEvent(**event_data) for event_data in events_data]
 
-    response = {"events": events}
-    print(f"[get_events API] Returning {len(events)} events in response")
-    return response
+        response = {"events": events}
+        print(f"[get_events API] Returning {len(events)} events in response")
+        return response
+    except Exception as e:
+        await notify_by_bot(
+            f"**[API: get_events]** \n\n Error fetching events: error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        raise HTTPException(status_code=500, detail=f"Error fetching events: {str(e)}")
 
 
 @router.get("/categories")
-async def get_categories():
+async def get_categories(
+    request: Request,
+    platform: Optional[str] = None,
+):
     """
     API endpoint to retrieve all event categories from the EXPLORE_TYPE_CHOICES.
     """
     print("[get_categories API] Function called")
+
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
 
     @database_sync_to_async
     def get_categories_data():
@@ -126,10 +187,23 @@ async def get_categories():
         print(f"[get_categories API] Retrieved {len(categories)} categories")
         return categories
 
-    categories = await get_categories_data()
-    response = {"categories": categories}
-    print(f"[get_categories API] Returning response with {len(categories)} categories")
-    return response
+    try:
+        categories = await get_categories_data()
+        response = {"categories": categories}
+        print(
+            f"[get_categories API] Returning response with {len(categories)} categories"
+        )
+        return response
+    except Exception as e:
+        await notify_by_bot(
+            f"**[API: get_categories]** \n\n Error fetching categories: error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        raise HTTPException(
+            status_code=500, detail=f"Error fetching categories: {str(e)}"
+        )
 
 
 @router.get("/event/{eventId}")
@@ -491,117 +565,128 @@ async def check_event_favorite(
 
 @router.post("/event/{eventId}/rsvp")
 async def rsvp(
-    request: Request, eventId: str, user_id: Optional[int] = Depends(get_current_user)
+    request: Request,
+    eventId: str,
+    user_id: Optional[int] = Depends(get_current_user),
+    platform: Optional[str] = None,
 ):
-    """
-    API endpoint for RSVPing to an event.
-    """
-    print(f"[rsvp API] Function called with eventId: {eventId}, user_id: {user_id}")
-    # Get form data from request - this is async and fast
-    form_info = await request.form()
-    # Convert form data to dict
-    form_data = dict(form_info)
-    print(f"[rsvp API] Received form data: {form_data}")
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
 
-    @database_sync_to_async
-    def rsvp_for_event(request, eventId, user_id, form_data):
-        user = CustomUser.objects.filter(id=user_id).first() if user_id else None
-        form_data_final = None
+    try:
+        form_data = await request.form()
 
-        try:
-            event = Event.objects.get(eventId=eventId)
-        except Event.DoesNotExist:
-            return {"error": "Event not found"}
+        @database_sync_to_async
+        def rsvp_for_event(request, eventId, user_id, form_data):
+            user = CustomUser.objects.filter(id=user_id).first() if user_id else None
+            form_data_final = None
 
-        # Delete any existing RSVPs for this user/email
-        if user:
-            RSVPTicket.objects.filter(event=event, email=user.email).delete()
-            Ticket.objects.filter(event=event, guestEmail=user.email).delete()
-            event.guest_list.remove(user)
+            try:
+                event = Event.objects.get(eventId=eventId)
+            except Event.DoesNotExist:
+                return {"error": "Event not found"}
 
-            # Check for existing RSVP
-            existing_rsvp = RSVPTicket.objects.filter(
-                event=event, email=user.email
-            ).first()
-            if existing_rsvp:
-                return {"message": "You have an RSVP to this event."}
+            # Delete any existing RSVPs for this user/email
+            if user:
+                RSVPTicket.objects.filter(event=event, email=user.email).delete()
+                Ticket.objects.filter(event=event, guestEmail=user.email).delete()
+                event.guest_list.remove(user)
 
-            # Check if display_on_guestlist is in form_data, default to False if not present
-            display_on_guestlist = False
-            if "display_on_guestlist" in form_data:
-                display_on_guestlist = form_data["display_on_guestlist"] == "true"
+                # Check for existing RSVP
+                existing_rsvp = RSVPTicket.objects.filter(
+                    event=event, email=user.email
+                ).first()
+                if existing_rsvp:
+                    return {"message": "You have an RSVP to this event."}
 
-            form_data_final = {
-                "email": user.email,
-                "first_name": user.first_name,
-                "last_name": user.last_name,
-                "display_on_guestlist": display_on_guestlist,
-            }
-        else:
-            # For non-authenticated users
-            # Check if required fields are present
-            required_fields = ["email", "first_name", "last_name"]
-            missing_fields = [
-                field for field in required_fields if field not in form_data
-            ]
+                # Check if display_on_guestlist is in form_data, default to False if not present
+                display_on_guestlist = False
+                if "display_on_guestlist" in form_data:
+                    display_on_guestlist = form_data["display_on_guestlist"] == "true"
 
-            if missing_fields:
-                return {
-                    "error": f"Missing required fields: {', '.join(missing_fields)}"
+                form_data_final = {
+                    "email": user.email,
+                    "first_name": user.first_name,
+                    "last_name": user.last_name,
+                    "display_on_guestlist": display_on_guestlist,
+                }
+            else:
+                # For non-authenticated users
+                # Check if required fields are present
+                required_fields = ["email", "first_name", "last_name"]
+                missing_fields = [
+                    field for field in required_fields if field not in form_data
+                ]
+
+                if missing_fields:
+                    return {
+                        "error": f"Missing required fields: {', '.join(missing_fields)}"
+                    }
+
+                # Delete any existing RSVPs for this email
+                if "email" in form_data:
+                    RSVPTicket.objects.filter(
+                        event=event, email=form_data["email"]
+                    ).delete()
+                    Ticket.objects.filter(
+                        event=event, guestEmail=form_data["email"]
+                    ).delete()
+
+                # Check for existing RSVP
+                existing_rsvp = RSVPTicket.objects.filter(
+                    event=event, email=form_data["email"]
+                ).first()
+                if existing_rsvp:
+                    return {"message": "You have an RSVP to this event."}
+
+                # Check if display_on_guestlist is in form_data, default to False if not present
+                display_on_guestlist = False
+                if "display_on_guestlist" in form_data:
+                    display_on_guestlist = form_data["display_on_guestlist"] == "true"
+
+                form_data_final = {
+                    "email": form_data["email"],
+                    "first_name": form_data["first_name"],
+                    "last_name": form_data["last_name"],
+                    "display_on_guestlist": display_on_guestlist,
                 }
 
-            # Delete any existing RSVPs for this email
-            if "email" in form_data:
-                RSVPTicket.objects.filter(
-                    event=event, email=form_data["email"]
-                ).delete()
-                Ticket.objects.filter(
-                    event=event, guestEmail=form_data["email"]
-                ).delete()
+            # Process the RSVP form
+            form = RSVPForm(form_data_final, user=user)
 
-            # Check for existing RSVP
-            existing_rsvp = RSVPTicket.objects.filter(
-                event=event, email=form_data["email"]
-            ).first()
-            if existing_rsvp:
-                return {"message": "You have an RSVP to this event."}
+            if form.is_valid():
+                rsvp_ticket = form.save(commit=False)
+                rsvp_ticket.event = event
+                rsvp_ticket.user = user
+                rsvp_ticket.save()
+                generateTicket(
+                    request,
+                    event,
+                    user if user else None,
+                    rsvp_ticket.first_name,
+                    rsvp_ticket.last_name,
+                    rsvp_ticket.email,
+                    from_api=True,
+                )
+                if form_data_final["display_on_guestlist"] and user:
+                    event.guest_list.add(user)
+                print(
+                    f"Display on guest list: {form_data_final['display_on_guestlist']}"
+                )
+                return {"message": "RSVP successful!"}
+            else:
+                return {"errors": form.errors}
 
-            # Check if display_on_guestlist is in form_data, default to False if not present
-            display_on_guestlist = False
-            if "display_on_guestlist" in form_data:
-                display_on_guestlist = form_data["display_on_guestlist"] == "true"
-
-            form_data_final = {
-                "email": form_data["email"],
-                "first_name": form_data["first_name"],
-                "last_name": form_data["last_name"],
-                "display_on_guestlist": display_on_guestlist,
-            }
-
-        # Process the RSVP form
-        form = RSVPForm(form_data_final, user=user)
-
-        if form.is_valid():
-            rsvp_ticket = form.save(commit=False)
-            rsvp_ticket.event = event
-            rsvp_ticket.user = user
-            rsvp_ticket.save()
-            generateTicket(
-                request,
-                event,
-                user if user else None,
-                rsvp_ticket.first_name,
-                rsvp_ticket.last_name,
-                rsvp_ticket.email,
-                from_api=True,
-            )
-            if form_data_final["display_on_guestlist"] and user:
-                event.guest_list.add(user)
-            print(f"Display on guest list: {form_data_final['display_on_guestlist']}")
-            return {"message": "RSVP successful!"}
-        else:
-            return {"errors": form.errors}
-
-    result = await rsvp_for_event(request, eventId, user_id, form_data)
-    print(f"[rsvp API] Returning result: {result}")
-    return result
+        result = await rsvp_for_event(request, eventId, user_id, form_data)
+        print(f"[rsvp API] Returning result: {result}")
+        return result
+    except Exception as e:
+        await notify_by_bot(
+            f"**[API: rsvp]** \n\n Error processing RSVP: eventId={eventId}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        raise HTTPException(status_code=500, detail=f"Error processing RSVP: {str(e)}")

@@ -51,51 +51,128 @@ class AdminUserCheckRequest(BaseModel):
 
 
 @router.get("/ping")
-async def ping():
-    return {"message": "Authentication API is running!"}
+async def ping(
+    request: Request,
+    platform: Optional[str] = None,
+):
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    try:
+        return {"message": "Authentication API is running!"}
+    except Exception as e:
+        await notify_by_bot(
+            f"**[API: ping]** \n\n Error in ping endpoint: error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        raise HTTPException(status_code=500, detail=f"Error in ping endpoint: {str(e)}")
 
 
 @router.post("/check-admin-url")
-async def check_admin_url(payload: AdminURLCheckRequest):
-    if payload.urlKey:
-        print(f"[check_admin_url] function called with: {payload.urlKey}")
-    elif payload:
-        print(f"[check_admin_url] function called incorrect body: {payload}")
-    else:
-        print(f"[check_admin_url] function called no body")
+async def check_admin_url(
+    payload: AdminURLCheckRequest,
+    request: Request,
+    platform: Optional[str] = None,
+):
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
 
-    if payload.urlKey == SECRET_ADMIN_URL:
-        return JSONResponse(content={"match": True})
-    else:
-        return JSONResponse(content={"match": False}, status_code=401)
+    try:
+        if payload.urlKey:
+            print(f"[check_admin_url] function called with: {payload.urlKey}")
+        elif payload:
+            print(f"[check_admin_url] function called incorrect body: {payload}")
+        else:
+            print(f"[check_admin_url] function called no body")
+
+        if payload.urlKey == SECRET_ADMIN_URL:
+            return JSONResponse(content={"match": True})
+        else:
+            return JSONResponse(content={"match": False}, status_code=401)
+    except Exception as e:
+        await notify_by_bot(
+            f"**[API: check_admin_url]** \n\n Error checking admin URL: error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        raise HTTPException(
+            status_code=500, detail=f"Error checking admin URL: {str(e)}"
+        )
 
 
 @router.post("/check-admin-key")
-async def check_admin_key(payload: AdminKeyCheckRequest):
-    if payload.adminKey:
-        print(f"[check_admin_key] function called with: {payload.adminKey}")
-    elif payload:
-        print(f"[check_admin_key] function called incorrect body: {payload}")
-    else:
-        print(f"[check_admin_key] function called no body")
-    if payload.adminKey == SECRET_ADMIN_KEY:
-        return JSONResponse(content={"match": True})
-    else:
-        return JSONResponse(content={"match": False}, status_code=401)
+async def check_admin_key(
+    payload: AdminKeyCheckRequest,
+    request: Request,
+    platform: Optional[str] = None,
+):
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    try:
+        if payload.adminKey:
+            print(f"[check_admin_key] function called with: {payload.adminKey}")
+        elif payload:
+            print(f"[check_admin_key] function called incorrect body: {payload}")
+        else:
+            print(f"[check_admin_key] function called no body")
+        if payload.adminKey == SECRET_ADMIN_KEY:
+            return JSONResponse(content={"match": True})
+        else:
+            return JSONResponse(content={"match": False}, status_code=401)
+    except Exception as e:
+        await notify_by_bot(
+            f"**[API: check_admin_key]** \n\n Error checking admin key: error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        raise HTTPException(
+            status_code=500, detail=f"Error checking admin key: {str(e)}"
+        )
 
 
 @router.post("/check-admin-user")
-async def check_admin_user(payload: AdminUserCheckRequest):
-    if payload.userEmail:
-        print(f"[check_admin_user] function called with: {payload.userEmail}")
-    elif payload:
-        print(f"[check_admin_user] function called incorrect body: {payload}")
-    else:
-        print(f"[check_admin_user] function called no body")
-    if payload.userEmail == SECRET_ADMIN_USER:
-        return JSONResponse(content={"match": True})
-    else:
-        return JSONResponse(content={"match": False}, status_code=401)
+async def check_admin_user(
+    payload: AdminUserCheckRequest,
+    request: Request,
+    platform: Optional[str] = None,
+):
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    try:
+        if payload.userEmail:
+            print(f"[check_admin_user] function called with: {payload.userEmail}")
+        elif payload:
+            print(f"[check_admin_user] function called incorrect body: {payload}")
+        else:
+            print(f"[check_admin_user] function called no body")
+        if payload.userEmail == SECRET_ADMIN_USER:
+            return JSONResponse(content={"match": True})
+        else:
+            return JSONResponse(content={"match": False}, status_code=401)
+    except Exception as e:
+        await notify_by_bot(
+            f"**[API: check_admin_user]** \n\n Error checking admin user: error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        raise HTTPException(
+            status_code=500, detail=f"Error checking admin user: {str(e)}"
+        )
 
 
 @router.post("/login")
