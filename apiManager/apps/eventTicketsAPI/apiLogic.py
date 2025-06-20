@@ -511,16 +511,13 @@ async def process_checkout(
 
             # Set up payment intent data for transfers
             print(f"[DEBUG] Setting up payment intent data...")
-            total_transfer_amount = amount_in_cents if not is_full_discount else 0
-            print(
-                f"[DEBUG] Transfer amount: {total_transfer_amount} cents to {connect_account_id}"
-            )
+            print(f"[DEBUG] Application fee amount: {fee_amount} cents")
+            print(f"[DEBUG] Destination account: {connect_account_id}")
 
             session_params["payment_intent_data"] = {
                 "application_fee_amount": fee_amount,
                 "transfer_data": {
                     "destination": connect_account_id,
-                    "amount": total_transfer_amount,
                 },
                 "metadata": {
                     "user_id": str(user_id) if user_id else "guest",
