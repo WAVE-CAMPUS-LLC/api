@@ -146,6 +146,12 @@ async def process_checkout(
     device_info = device_data["device_info"]
 
     try:
+        # Handle case where cart has an extra "cart" wrapper
+        if len(cart) == 1 and "cart" in cart and isinstance(cart["cart"], dict):
+            print(f"[DEBUG] Detected cart wrapper, extracting inner cart")
+            cart = cart["cart"]
+            print(f"[DEBUG] Extracted cart: {cart}")
+        
         # Extract ticket items from cart (excluding metadata keys)
         ticket_items = {
             k: v for k, v in cart.items() 
