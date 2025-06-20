@@ -80,3 +80,62 @@ def get_current_user(authorization: Optional[str] = Header(default=None)):
         raise HTTPException(status_code=500, 
                           detail="Internal server error during authentication", 
                           headers={"WWW-Authenticate": "Bearer"})
+
+
+def get_current_user_optional(authorization: Optional[str] = Header(default=None)):
+    """Optional authentication - returns user ID if token is valid, None if no token or invalid token.
+    
+    Args:
+        authorization: The Authorization header containing the Bearer token
+        
+    Returns:
+        The user ID extracted from the token, or None if not authenticated
+        
+    Does not raise HTTPException for missing/invalid tokens
+    """
+    if authorization is None:
+        print("[Authentication] No authorization header provided")
+        return None
+
+    if not authorization.startswith("Bearer "):
+        print("[Authentication] Invalid token format: Authorization header does not start with 'Bearer '")
+        return None
+
+    token = authorization.split(" ")[1]
+    print(f"[Authentication] Processing optional token: {token[:10]}...")
+
+    try:
+        # Decode the token and extract the payload
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        
+        # Extract user_id from the subject claim
+        user_id = payload.get("sub")
+        if user_id is None:
+            print("[Authentication] Token missing subject claim")
+            return None
+        
+        # Check token type
+        token_type = payload.get("type")
+        if token_type != "access":
+            print(f"[Authentication] Invalid token type: {token_type}")
+            return None
+        
+        # Check token expiration explicitly
+        exp = payload.get("exp")
+        if exp is None:
+            print("[Authentication] Token missing expiration claim")
+            return None
+        
+        # Log successful authentication
+        print(f"[Authentication] Successfully authenticated user_id: {user_id}")
+        return user_id
+        
+    except ExpiredSignatureError:
+        print("[Authentication] Token has expired")
+        return None
+    except JWTError as e:
+        print(f"[Authentication] JWT validation error: {str(e)}")
+        return None
+    except Exception as e:
+        print(f"[Authentication] Unexpected error during authentication: {str(e)}")
+        return None

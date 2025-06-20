@@ -634,16 +634,16 @@ async def get_user_friends(
     except Exception as e:
         error_message = f"Error in get_user_friends API: {str(e)}"
         print(f"[get_user_friends API] {error_message}")
-        notification_sent = await notify_by_bot(
-            f"**[API: get_user_friends API]** \n\n {error_message} \n\n Platform: {platform} \n\n User ID: {caller_user_id}",
-            platform or "Unknown",
-            "ERROR",
-            device_info,
-        )
-        if notification_sent is None:
-            print(
-                "[get_user_friends API] Could not send notification: BOT_API_KEY not set"
-            )
+        # notification_sent = await notify_by_bot(
+        #     f"**[API: get_user_friends API]** \n\n {error_message} \n\n Platform: {platform} \n\n User ID: {caller_user_id}",
+        #     platform or "Unknown",
+        #     "ERROR",
+        #     device_info,
+        # )
+        # if notification_sent is None:
+        #     print(
+        #         "[get_user_friends API] Could not send notification: BOT_API_KEY not set"
+        #     )
         raise HTTPException(status_code=500, detail=error_message)
 
 

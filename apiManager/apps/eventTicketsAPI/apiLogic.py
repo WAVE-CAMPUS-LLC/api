@@ -23,7 +23,7 @@ from eventTicketsApp.models import (
 from eventManagementApp.models import Event, CouponCode
 from authenticationApp.models import CustomUser
 from fastapi import Depends
-from apiManager.dependencies import get_current_user
+from apiManager.dependencies import get_current_user, get_current_user_optional
 from eventTicketsApp.serializers import TicketSerializer
 from socialApp.models import Crew
 from apiManager.utilities.device_info import get_comprehensive_request_info, create_enhanced_log_message
@@ -76,6 +76,16 @@ async def get_user(user_id):
         return None
 
 
+async def get_current_user_object(user_id: Optional[int] = Depends(get_current_user_optional)):
+    """Get the current user object from the user_id returned by the dependency"""
+    if user_id is None:
+        return None
+    try:
+        return await database_sync_to_async(CustomUser.objects.get)(id=user_id)
+    except CustomUser.DoesNotExist:
+        return None
+
+
 class TicketItem(BaseModel):
     """Pydantic model for a ticket item in the cart"""
 
@@ -95,7 +105,11 @@ class CartData(BaseModel):
 class CheckoutResponse(BaseModel):
     """Pydantic model for the checkout response"""
 
-    sessionUrl: str
+    checkout_url: str
+    session_id: str
+    amount: float
+    fee_amount: float
+    discount_percentage: float
 
 
 @router.post(
@@ -106,7 +120,7 @@ class CheckoutResponse(BaseModel):
 async def process_checkout(
     request: Request,
     cart: Dict[str, Any] = Body(...),
-    current_user: Optional[CustomUser] = Depends(get_current_user_optional),
+    current_user: Optional[CustomUser] = Depends(get_current_user_object),
     platform: Optional[str] = None,
 ):
     """
@@ -277,14 +291,27 @@ async def process_checkout(
                     discount_percentage = await database_sync_to_async(
                         lambda: coupon.discount_percentage
                     )()
+                    has_discount = True
                     print(
                         f"[DEBUG] Valid coupon applied: {coupon_code_value}, Discount: {discount_percentage}%"
                     )
-                else:
+                except CouponCode.DoesNotExist:
                     print(f"[DEBUG] ERROR: Invalid coupon code: {coupon_code_value}")
                     raise HTTPException(
                         status_code=status.HTTP_400_BAD_REQUEST,
                         detail="Invalid coupon code",
+                    )
+                except Event.DoesNotExist:
+                    print(f"[DEBUG] ERROR: Event not found for coupon validation")
+                    raise HTTPException(
+                        status_code=status.HTTP_404_NOT_FOUND,
+                        detail="Event not found",
+                    )
+                except Exception as e:
+                    print(f"[DEBUG] ERROR: Unexpected error processing coupon: {e}")
+                    raise HTTPException(
+                        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                        detail="Error processing coupon code",
                     )
 
         print(
@@ -377,11 +404,11 @@ async def process_checkout(
                                 "original_ticket_id": key,
                                 "event_id": ticket.get("eventId"),
                                 "discount_percentage": str(discount_percentage),
-                                "fee_type": "service_fee",
+                                "original_price": str(original_price),
                                 "is_full_discount": str(is_full_discount),
                             },
                         },
-                        "unit_amount": fee_amount,
+                        "unit_amount": unit_amount,
                     },
                     "quantity": quantity,
                 }
@@ -1105,67 +1132,6 @@ async def payment_successful(
                 "duplicate": True,
             }
 
-        # Get the Stripe session to extract payment details
-        session = stripe.checkout.Session.retrieve(session_id)
-        payment_intent = stripe.PaymentIntent.retrieve(session.payment_intent)
-
-        # Extract user ID from session metadata
-        user_id = session.metadata.get("user_id")
-        if user_id and user_id != "guest":
-            user_id = int(user_id)
-            user = CustomUser.objects.get(id=user_id)
-        else:
-            user = None
-
-        # Reconstruct cart from session metadata
-        cart_data = session.metadata.get("cart_data")
-        if cart_data:
-            try:
-                cart = json.loads(cart_data)
-            except json.JSONDecodeError:
-                print("Warning: Could not parse cart_data JSON from session metadata")
-                cart = {}
-        else:
-            cart = {}
-
-        # Check if we still have an empty cart
-        if (
-            not cart
-            or len(cart) == 0
-            or all(
-                k in ["coupon_code", "discount_percentage"] for k in cart.keys()
-            )
-        ):
-            print("Warning: Cart is still empty after reconstruction attempt.")
-            # If cart reconstruction completely failed, we still need to create tickets based on the payment
-            # This can happen if the user paid but the cart metadata was corrupted
-            # In this case, we should still generate tickets based on what Stripe shows was paid for
-            ticket_line_items = [
-                item
-                for item in stripe.checkout.Session.list_line_items(
-                    session_id
-                ).data
-                if "Service Fee" not in item.description
-            ]
-            if ticket_line_items:
-                print(
-                    f"Creating minimal cart from {len(ticket_line_items)} line items due to cart reconstruction failure"
-                )
-                cart = (
-                    {}
-                )  # Will be populated by fallback logic in ticket generation
-
-        # Generate tickets from cart items
-        ticket_count = _generate_tickets_from_cart_sync(
-            user_id, cart, session_id, session
-        )
-
-        return {
-            "status": "paymentSuccessful",
-            "tickets_generated": ticket_count,
-        }
-
-        
         print(f"[check_existing_tickets_and_process] No existing tickets found. Proceeding with payment processing.")
         
         try:
@@ -1176,6 +1142,22 @@ async def payment_successful(
             print(f"[check_existing_tickets_and_process] Session mode: {session.mode}")
             print(f"[check_existing_tickets_and_process] Customer: {session.customer}")
             print(f"[check_existing_tickets_and_process] Payment intent: {session.payment_intent}")
+            
+            # Extract user ID from session metadata
+            user_id = session.metadata.get("user_id")
+            if user_id and user_id != "guest":
+                try:
+                    user_id = int(user_id)
+                    user = CustomUser.objects.get(id=user_id)
+                    print(f"[check_existing_tickets_and_process] Found authenticated user: {user.email}")
+                except (ValueError, CustomUser.DoesNotExist):
+                    print(f"[check_existing_tickets_and_process] Invalid or non-existent user_id: {user_id}")
+                    user_id = None
+                    user = None
+            else:
+                print(f"[check_existing_tickets_and_process] Guest checkout detected")
+                user_id = None
+                user = None
             
             # Use atomic transaction for ticket generation to ensure data consistency
             print(f"[check_existing_tickets_and_process] Starting atomic transaction for ticket generation")

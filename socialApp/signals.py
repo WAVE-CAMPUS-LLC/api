@@ -292,40 +292,64 @@ def record_crew_activity(sender, instance, created, **kwargs):
 
 @receiver(post_save, sender=Ticket)
 def record_ticket_activity(sender, instance, created, **kwargs):
-    if created and instance.user:  # Only create activity for authenticated users, not guests
-        # Try to extract ticket type from QR code data or use default
-        ticket_type = "General Admission"  # Default value
-        try:
-            if instance.qrCodeData:
-                import json
-                qr_data = json.loads(instance.qrCodeData)
-                ticket_type = qr_data.get("ticketType", "General Admission")
-        except (json.JSONDecodeError, KeyError):
-            pass
-        
-        SocialActivity.objects.create(
-            user=instance.user,
-            activity_type="ticket_purchased",
-            content={
-                "event_id": str(instance.event.eventId),
-                "event_title": instance.event.title,
-                "event_date": instance.event.date.isoformat(),
-                "event_photo": (
-                    instance.event.header_photo.url
-                    if instance.event.header_photo
-                    else None
-                ),
-                "ticket_type": ticket_type,
-                "quantity": 1,  # Each ticket instance represents 1 ticket
-                "venue": instance.event.venue.name if hasattr(instance.event, 'venue') and instance.event.venue else None,
-                "event_time": (
-                    instance.event.time.strftime("%I:%M %p")
-                    if hasattr(instance.event, 'time') and instance.event.time
-                    else None
-                ),
-                "price": None,  # Ticket model doesn't store price, would need to lookup from PaidFreeTicket
-            },
-        )
+    try:
+        if created and instance.user:  # Only create activity for authenticated users, not guests
+            # Try to extract ticket type from QR code data or use default
+            ticket_type = "General Admission"  # Default value
+            try:
+                if instance.qrCodeData:
+                    import json
+                    qr_data = json.loads(instance.qrCodeData)
+                    ticket_type = qr_data.get("ticketType", "General Admission")
+            except (json.JSONDecodeError, KeyError, AttributeError):
+                print(f"[record_ticket_activity] Could not parse ticket type from QR data, using default")
+                pass
+            
+            # Safely get event details
+            event_id = None
+            event_title = "Unknown Event"
+            event_date = None
+            event_photo = None
+            venue = None
+            event_time = None
+            
+            try:
+                if hasattr(instance, 'event') and instance.event:
+                    event_id = str(instance.event.eventId) if hasattr(instance.event, 'eventId') else None
+                    event_title = instance.event.title if hasattr(instance.event, 'title') else "Unknown Event"
+                    event_date = instance.event.date.isoformat() if hasattr(instance.event, 'date') and instance.event.date else None
+                    event_photo = instance.event.header_photo.url if hasattr(instance.event, 'header_photo') and instance.event.header_photo else None
+                    venue = instance.event.venue.name if hasattr(instance.event, 'venue') and instance.event.venue else None
+                    event_time = (
+                        instance.event.time.strftime("%I:%M %p")
+                        if hasattr(instance.event, 'time') and instance.event.time
+                        else None
+                    )
+            except Exception as e:
+                print(f"[record_ticket_activity] Error extracting event details: {e}")
+            
+            # Create the social activity record
+            SocialActivity.objects.create(
+                user=instance.user,
+                activity_type="ticket_purchased",
+                content={
+                    "event_id": event_id,
+                    "event_title": event_title,
+                    "event_date": event_date,
+                    "event_photo": event_photo,
+                    "ticket_type": ticket_type,
+                    "quantity": 1,  # Each ticket instance represents 1 ticket
+                    "venue": venue,
+                    "event_time": event_time,
+                    "price": None,  # Ticket model doesn't store price, would need to lookup from PaidFreeTicket
+                },
+            )
+            print(f"[record_ticket_activity] Successfully recorded ticket activity for user {instance.user.id}")
+    except Exception as e:
+        print(f"[record_ticket_activity] Error recording ticket activity: {e}")
+        # Don't re-raise the exception to prevent blocking ticket creation
+        import traceback
+        print(f"[record_ticket_activity] Full traceback: {traceback.format_exc()}")
 
 
 @receiver(post_save, sender=GoWithRequest)
