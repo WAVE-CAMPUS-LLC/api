@@ -22,11 +22,13 @@ from eventTicketsApp.models import (
 )
 from eventManagementApp.models import Event, CouponCode
 from authenticationApp.models import CustomUser
-from fastapi import Depends
 from apiManager.dependencies import get_current_user, get_current_user_optional
 from eventTicketsApp.serializers import TicketSerializer
 from socialApp.models import Crew
-from apiManager.utilities.device_info import get_comprehensive_request_info, create_enhanced_log_message
+from apiManager.utilities.device_info import (
+    get_comprehensive_request_info,
+    create_enhanced_log_message,
+)
 from apiManager.utilities.device_info import get_device_info
 
 
@@ -76,7 +78,9 @@ async def get_user(user_id):
         return None
 
 
-async def get_current_user_object(user_id: Optional[int] = Depends(get_current_user_optional)):
+async def get_current_user_object(
+    user_id: Optional[int] = Depends(get_current_user_optional),
+):
     """Get the current user object from the user_id returned by the dependency"""
     if user_id is None:
         return None
@@ -125,21 +129,23 @@ async def process_checkout(
 ):
     """
     Process checkout and create Stripe checkout session for ticket purchase.
-    
+
     Args:
         request: FastAPI request object
         cart: Dictionary containing ticket items and metadata
         current_user: Optional authenticated user
         platform: Optional platform identifier
-        
+
     Returns:
         CheckoutResponse: Contains checkout session URL and metadata
-        
+
     Raises:
         HTTPException: For various validation and processing errors
     """
     print(f"[process_checkout API] Function called with cart keys: {list(cart.keys())}")
-    print(f"[process_checkout API] Current user: {current_user.id if current_user else 'None'}")
+    print(
+        f"[process_checkout API] Current user: {current_user.id if current_user else 'None'}"
+    )
 
     user_agent_str = request.headers.get("user-agent", "")
     device_data = get_device_info(user_agent_str)
@@ -148,8 +154,9 @@ async def process_checkout(
     try:
         # Extract ticket items from cart (excluding metadata keys)
         ticket_items = {
-            k: v for k, v in cart.items() 
-            if k not in ['coupon_code', 'discount_percentage', 'event_id']
+            k: v
+            for k, v in cart.items()
+            if k not in ["coupon_code", "discount_percentage", "event_id"]
         }
         print(f"[DEBUG] Extracted ticket items: {ticket_items}")
         print(f"[DEBUG] Number of ticket items found: {len(ticket_items)}")
@@ -179,19 +186,25 @@ async def process_checkout(
                 event_id = ticket.get("eventId")
 
                 if original_price < 0:
-                    print(f"[DEBUG] ERROR: Invalid price for ticket {key}: {original_price}")
+                    print(
+                        f"[DEBUG] ERROR: Invalid price for ticket {key}: {original_price}"
+                    )
                     raise HTTPException(
                         status_code=status.HTTP_400_BAD_REQUEST,
                         detail=f"Invalid price for ticket {key}: price cannot be negative",
                     )
                 if quantity <= 0:
-                    print(f"[DEBUG] ERROR: Invalid quantity for ticket {key}: {quantity}")
+                    print(
+                        f"[DEBUG] ERROR: Invalid quantity for ticket {key}: {quantity}"
+                    )
                     raise HTTPException(
                         status_code=status.HTTP_400_BAD_REQUEST,
                         detail=f"Invalid quantity for ticket {key}: quantity must be greater than 0",
                     )
             except (ValueError, TypeError) as e:
-                print(f"[DEBUG] ERROR: Invalid price/quantity format for ticket {key}: {e}")
+                print(
+                    f"[DEBUG] ERROR: Invalid price/quantity format for ticket {key}: {e}"
+                )
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail=f"Invalid price or quantity format for ticket {key}",
@@ -265,10 +278,12 @@ async def process_checkout(
                 try:
                     # Get the event
                     event = Event.objects.get(eventId=list(event_ids)[0])
-                    
+
                     # Check if event has payment processing configured
                     if not event.stripe_connect_account_id:
-                        print(f"[DEBUG] ERROR: Event host has not configured payment processing")
+                        print(
+                            f"[DEBUG] ERROR: Event host has not configured payment processing"
+                        )
                         await notify_by_bot(
                             f"**[API: process_checkout]** \n\n Event host has not configured payment processing: eventId={event.eventId} \n\n Platform: {platform} \n\n User ID: {current_user.id if current_user else 'None'}",
                             platform or "Unknown",
@@ -282,11 +297,9 @@ async def process_checkout(
 
                     # Find the coupon
                     coupon = CouponCode.objects.get(
-                        coupon_code=coupon_code_value,
-                        event=event,
-                        is_active=True
+                        coupon_code=coupon_code_value, event=event, is_active=True
                     )
-                    
+
                     # Apply the coupon discount
                     discount_percentage = await database_sync_to_async(
                         lambda: coupon.discount_percentage
@@ -1066,12 +1079,12 @@ async def payment_successful(
 ):
     """
     API endpoint to handle successful payment and generate tickets.
-    
+
     Args:
         request: FastAPI request object
         payment_data: Contains session_id from Stripe
         platform: Optional platform identifier
-        
+
     Returns:
         A JSON response with payment status and ticket generation details
     """
@@ -1085,378 +1098,666 @@ async def payment_successful(
 
     # Get comprehensive request information for enhanced logging
     request_info = get_comprehensive_request_info(request)
-    
-    print(create_enhanced_log_message("payment_successful API", "========== PAYMENT SUCCESS START ==========", request_info))
-    print(create_enhanced_log_message("payment_successful API", f"Function called with session_id: {payment_data.session_id}", request_info))
-    print(create_enhanced_log_message("payment_successful API", f"User ID: {user_id}", request_info))
-    print(create_enhanced_log_message("payment_successful API", f"From mobile: {payment_data.from_mobile}", request_info))
-    print(create_enhanced_log_message("payment_successful API", f"Request method: {request.method}", request_info))
-    print(create_enhanced_log_message("payment_successful API", f"Request URL: {request.url}", request_info))
-    print(create_enhanced_log_message("payment_successful API", f"Client location: {request_info['location_string']}", request_info))
-    print(create_enhanced_log_message("payment_successful API", f"Device info: {request_info['device_info']}", request_info))
-    print(create_enhanced_log_message("payment_successful API", f"ISP: {request_info['isp']}", request_info))
-    
+
+    print(
+        create_enhanced_log_message(
+            "payment_successful API",
+            "========== PAYMENT SUCCESS START ==========",
+            request_info,
+        )
+    )
+    print(
+        create_enhanced_log_message(
+            "payment_successful API",
+            f"Function called with session_id: {payment_data.session_id}",
+            request_info,
+        )
+    )
+    print(
+        create_enhanced_log_message(
+            "payment_successful API", f"User ID: {user_id}", request_info
+        )
+    )
+    print(
+        create_enhanced_log_message(
+            "payment_successful API",
+            f"From mobile: {payment_data.from_mobile}",
+            request_info,
+        )
+    )
+    print(
+        create_enhanced_log_message(
+            "payment_successful API", f"Request method: {request.method}", request_info
+        )
+    )
+    print(
+        create_enhanced_log_message(
+            "payment_successful API", f"Request URL: {request.url}", request_info
+        )
+    )
+    print(
+        create_enhanced_log_message(
+            "payment_successful API",
+            f"Client location: {request_info['location_string']}",
+            request_info,
+        )
+    )
+    print(
+        create_enhanced_log_message(
+            "payment_successful API",
+            f"Device info: {request_info['device_info']}",
+            request_info,
+        )
+    )
+    print(
+        create_enhanced_log_message(
+            "payment_successful API", f"ISP: {request_info['isp']}", request_info
+        )
+    )
+
     session_id = payment_data.session_id
     from_mobile = payment_data.from_mobile
-    
+
     if not session_id or session_id == "{CHECKOUT_SESSION_ID}":
-        print(create_enhanced_log_message("payment_successful API", f"ERROR: session_id is missing or invalid: {session_id}", request_info))
+        print(
+            create_enhanced_log_message(
+                "payment_successful API",
+                f"ERROR: session_id is missing or invalid: {session_id}",
+                request_info,
+            )
+        )
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="session_id is missing or invalid"
+            detail="session_id is missing or invalid",
         )
-    
-    print(create_enhanced_log_message("payment_successful API", f"Session ID validation passed: {session_id}", request_info))
+
+    print(
+        create_enhanced_log_message(
+            "payment_successful API",
+            f"Session ID validation passed: {session_id}",
+            request_info,
+        )
+    )
 
     # Use database_sync_to_async wrapper for all Django ORM operations
     @database_sync_to_async
     def check_existing_tickets_and_process():
         """Check for existing tickets and process payment if needed"""
-        print(f"[check_existing_tickets_and_process] ========== STARTING TICKET PROCESSING ==========")
+        print(
+            f"[check_existing_tickets_and_process] ========== STARTING TICKET PROCESSING =========="
+        )
         from eventTicketsApp.views import generateTicket
         from django.db import transaction
-        
+
         # Check if tickets have already been generated for this session
-        print(f"[check_existing_tickets_and_process] Checking for existing tickets with session_id: {session_id}")
+        print(
+            f"[check_existing_tickets_and_process] Checking for existing tickets with session_id: {session_id}"
+        )
         existing_tickets = Ticket.objects.filter(stripe_session_id=session_id)
-        print(f"[check_existing_tickets_and_process] Query result: {existing_tickets.count()} existing tickets found")
-        
+        print(
+            f"[check_existing_tickets_and_process] Query result: {existing_tickets.count()} existing tickets found"
+        )
+
         if existing_tickets.exists():
             ticket_count = existing_tickets.count()
-            print(f"[check_existing_tickets_and_process] DUPLICATE PREVENTION: Found {ticket_count} existing tickets for session {session_id}")
+            print(
+                f"[check_existing_tickets_and_process] DUPLICATE PREVENTION: Found {ticket_count} existing tickets for session {session_id}"
+            )
             for ticket in existing_tickets:
-                print(f"[check_existing_tickets_and_process] Existing ticket: {ticket.ticketId} - {ticket.status}")
+                print(
+                    f"[check_existing_tickets_and_process] Existing ticket: {ticket.ticketId} - {ticket.status}"
+                )
             return {
                 "status": "paymentSuccessful",
                 "tickets_generated": ticket_count,
                 "duplicate": True,
             }
 
-        print(f"[check_existing_tickets_and_process] No existing tickets found. Proceeding with payment processing.")
-        
+        print(
+            f"[check_existing_tickets_and_process] No existing tickets found. Proceeding with payment processing."
+        )
+
         try:
-            print(f"[check_existing_tickets_and_process] Retrieving Stripe session: {session_id}")
+            print(
+                f"[check_existing_tickets_and_process] Retrieving Stripe session: {session_id}"
+            )
             session = stripe.checkout.Session.retrieve(session_id)
-            print(f"[check_existing_tickets_and_process] Stripe session retrieved successfully")
-            print(f"[check_existing_tickets_and_process] Session status: {session.payment_status}")
+            print(
+                f"[check_existing_tickets_and_process] Stripe session retrieved successfully"
+            )
+            print(
+                f"[check_existing_tickets_and_process] Session status: {session.payment_status}"
+            )
             print(f"[check_existing_tickets_and_process] Session mode: {session.mode}")
             print(f"[check_existing_tickets_and_process] Customer: {session.customer}")
-            print(f"[check_existing_tickets_and_process] Payment intent: {session.payment_intent}")
-            
+            print(
+                f"[check_existing_tickets_and_process] Payment intent: {session.payment_intent}"
+            )
+
             # Extract user ID from session metadata
             user_id = session.metadata.get("user_id")
             if user_id and user_id != "guest":
                 try:
                     user_id = int(user_id)
                     user = CustomUser.objects.get(id=user_id)
-                    print(f"[check_existing_tickets_and_process] Found authenticated user: {user.email}")
+                    print(
+                        f"[check_existing_tickets_and_process] Found authenticated user: {user.email}"
+                    )
                 except (ValueError, CustomUser.DoesNotExist):
-                    print(f"[check_existing_tickets_and_process] Invalid or non-existent user_id: {user_id}")
+                    print(
+                        f"[check_existing_tickets_and_process] Invalid or non-existent user_id: {user_id}"
+                    )
                     user_id = None
                     user = None
             else:
                 print(f"[check_existing_tickets_and_process] Guest checkout detected")
                 user_id = None
                 user = None
-            
+
             # Use atomic transaction for ticket generation to ensure data consistency
-            print(f"[check_existing_tickets_and_process] Starting atomic transaction for ticket generation")
+            print(
+                f"[check_existing_tickets_and_process] Starting atomic transaction for ticket generation"
+            )
             with transaction.atomic():
                 # Reconstruct cart from Stripe session
-                print(f"[check_existing_tickets_and_process] Starting cart reconstruction from Stripe session")
+                print(
+                    f"[check_existing_tickets_and_process] Starting cart reconstruction from Stripe session"
+                )
                 cart = _reconstruct_cart_from_stripe_sync(session)
-                print(f"[check_existing_tickets_and_process] Cart reconstruction completed. Cart keys: {list(cart.keys()) if cart else 'None'}")
-                print(f"[check_existing_tickets_and_process] Full reconstructed cart: {cart}")
-                
+                print(
+                    f"[check_existing_tickets_and_process] Cart reconstruction completed. Cart keys: {list(cart.keys()) if cart else 'None'}"
+                )
+                print(
+                    f"[check_existing_tickets_and_process] Full reconstructed cart: {cart}"
+                )
+
                 # Check if we still have an empty cart
-                if not cart or len(cart) == 0 or all(k in ['coupon_code', 'discount_percentage'] for k in cart.keys()):
-                    print(f"[check_existing_tickets_and_process] WARNING: Cart is empty after reconstruction attempt")
-                    print(f"[check_existing_tickets_and_process] Cart keys: {list(cart.keys()) if cart else 'None'}")
+                if (
+                    not cart
+                    or len(cart) == 0
+                    or all(
+                        k in ["coupon_code", "discount_percentage"] for k in cart.keys()
+                    )
+                ):
+                    print(
+                        f"[check_existing_tickets_and_process] WARNING: Cart is empty after reconstruction attempt"
+                    )
+                    print(
+                        f"[check_existing_tickets_and_process] Cart keys: {list(cart.keys()) if cart else 'None'}"
+                    )
                     # If cart reconstruction completely failed, we still need to create tickets based on the payment
                     # This can happen if the user paid but the cart metadata was corrupted
                     # In this case, we should still generate tickets based on what Stripe shows was paid for
-                    ticket_line_items = [item for item in stripe.checkout.Session.list_line_items(session_id).data 
-                                       if "Service Fee" not in item.description]
-                    print(f"[check_existing_tickets_and_process] Found {len(ticket_line_items)} non-service-fee line items")
+                    ticket_line_items = [
+                        item
+                        for item in stripe.checkout.Session.list_line_items(
+                            session_id
+                        ).data
+                        if "Service Fee" not in item.description
+                    ]
+                    print(
+                        f"[check_existing_tickets_and_process] Found {len(ticket_line_items)} non-service-fee line items"
+                    )
                     if ticket_line_items:
-                        print(f"[check_existing_tickets_and_process] Creating minimal cart from {len(ticket_line_items)} line items due to cart reconstruction failure")
-                        cart = {}  # Will be populated by fallback logic in ticket generation
-                
+                        print(
+                            f"[check_existing_tickets_and_process] Creating minimal cart from {len(ticket_line_items)} line items due to cart reconstruction failure"
+                        )
+                        cart = (
+                            {}
+                        )  # Will be populated by fallback logic in ticket generation
+
                 # Generate tickets from cart items
-                print(f"[check_existing_tickets_and_process] Starting ticket generation with user_id: {user_id}")
-                ticket_count = _generate_tickets_from_cart_sync(user_id, cart, session_id, session)
-                print(f"[check_existing_tickets_and_process] Ticket generation completed. Total tickets: {ticket_count}")
-                
+                print(
+                    f"[check_existing_tickets_and_process] Starting ticket generation with user_id: {user_id}"
+                )
+                ticket_count = _generate_tickets_from_cart_sync(
+                    user_id, cart, session_id, session
+                )
+                print(
+                    f"[check_existing_tickets_and_process] Ticket generation completed. Total tickets: {ticket_count}"
+                )
+
                 return {
-                    "status": "paymentSuccessful", 
-                    "tickets_generated": ticket_count
+                    "status": "paymentSuccessful",
+                    "tickets_generated": ticket_count,
                 }
-            
+
         except stripe.error.StripeError as e:
             print(f"[check_existing_tickets_and_process] STRIPE ERROR: {e}")
             print(f"[check_existing_tickets_and_process] Stripe error type: {type(e)}")
             raise Exception(f"Stripe error: {e}")
         except Exception as e:
-            print(f"[check_existing_tickets_and_process] GENERAL ERROR in payment processing: {e}")
+            print(
+                f"[check_existing_tickets_and_process] GENERAL ERROR in payment processing: {e}"
+            )
             import traceback
+
             print(f"[check_existing_tickets_and_process] Full traceback:")
             traceback.print_exc()
             raise Exception(f"Payment processing error: {str(e)}")
-    
-    print(f"[payment_successful API] About to call check_existing_tickets_and_process()")
+
+    print(
+        f"[payment_successful API] About to call check_existing_tickets_and_process()"
+    )
     try:
         result = await check_existing_tickets_and_process()
-        print(create_enhanced_log_message("payment_successful API", f"Payment processing completed successfully: {result}", request_info))
-        print(create_enhanced_log_message("payment_successful API", "========== PAYMENT SUCCESS END ==========", request_info))
-        return result
-        
-    except Exception as e:
-        print(create_enhanced_log_message("payment_successful API", f"ERROR in payment_successful: {e}", request_info))
-        print(create_enhanced_log_message("payment_successful API", f"Error type: {type(e)}", request_info))
-        import traceback
-        print(create_enhanced_log_message("payment_successful API", "Full traceback:", request_info))
-        traceback.print_exc()
-        print(create_enhanced_log_message("payment_successful API", "========== PAYMENT SUCCESS ERROR END ==========", request_info))
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
+        print(
+            create_enhanced_log_message(
+                "payment_successful API",
+                f"Payment processing completed successfully: {result}",
+                request_info,
+            )
         )
+        print(
+            create_enhanced_log_message(
+                "payment_successful API",
+                "========== PAYMENT SUCCESS END ==========",
+                request_info,
+            )
+        )
+        return result
+
+    except Exception as e:
+        print(
+            create_enhanced_log_message(
+                "payment_successful API",
+                f"ERROR in payment_successful: {e}",
+                request_info,
+            )
+        )
+        print(
+            create_enhanced_log_message(
+                "payment_successful API", f"Error type: {type(e)}", request_info
+            )
+        )
+        import traceback
+
+        print(
+            create_enhanced_log_message(
+                "payment_successful API", "Full traceback:", request_info
+            )
+        )
+        traceback.print_exc()
+        print(
+            create_enhanced_log_message(
+                "payment_successful API",
+                "========== PAYMENT SUCCESS ERROR END ==========",
+                request_info,
+            )
+        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
 def _reconstruct_cart_from_stripe_sync(session):
     """Synchronous version of cart reconstruction from Stripe session data"""
-    print(f"[_reconstruct_cart_from_stripe_sync] ========== STARTING CART RECONSTRUCTION ==========")
+    print(
+        f"[_reconstruct_cart_from_stripe_sync] ========== STARTING CART RECONSTRUCTION =========="
+    )
     print(f"[_reconstruct_cart_from_stripe_sync] Session ID: {session.id}")
-    print(f"[_reconstruct_cart_from_stripe_sync] Session payment status: {session.payment_status}")
+    print(
+        f"[_reconstruct_cart_from_stripe_sync] Session payment status: {session.payment_status}"
+    )
     cart = {}
     try:
         # Get line items from the session
-        print(f"[_reconstruct_cart_from_stripe_sync] Retrieving line items from session")
+        print(
+            f"[_reconstruct_cart_from_stripe_sync] Retrieving line items from session"
+        )
         line_items = stripe.checkout.Session.list_line_items(
             session.id, expand=["data.price.product"]  # Expand to get product metadata
         )
-        print(f"[_reconstruct_cart_from_stripe_sync] Line items retrieved: {len(line_items.data)} items")
-        
+        print(
+            f"[_reconstruct_cart_from_stripe_sync] Line items retrieved: {len(line_items.data)} items"
+        )
+
         for i, item in enumerate(line_items.data):
-            print(f"[_reconstruct_cart_from_stripe_sync] Line item {i}: {item.description}, quantity: {item.quantity}, amount: {item.amount_total/100}")
-        
+            print(
+                f"[_reconstruct_cart_from_stripe_sync] Line item {i}: {item.description}, quantity: {item.quantity}, amount: {item.amount_total/100}"
+            )
+
         # Get the payment intent to access metadata
         payment_intent = None
         if session.payment_intent:
-            print(f"[_reconstruct_cart_from_stripe_sync] Retrieving payment intent: {session.payment_intent}")
+            print(
+                f"[_reconstruct_cart_from_stripe_sync] Retrieving payment intent: {session.payment_intent}"
+            )
             try:
                 payment_intent = stripe.PaymentIntent.retrieve(session.payment_intent)
-                print(f"[_reconstruct_cart_from_stripe_sync] Payment intent retrieved: {payment_intent.id}")
-                print(f"[_reconstruct_cart_from_stripe_sync] Payment intent metadata: {payment_intent.metadata}")
+                print(
+                    f"[_reconstruct_cart_from_stripe_sync] Payment intent retrieved: {payment_intent.id}"
+                )
+                print(
+                    f"[_reconstruct_cart_from_stripe_sync] Payment intent metadata: {payment_intent.metadata}"
+                )
             except Exception as e:
-                print(f"[_reconstruct_cart_from_stripe_sync] Error retrieving payment intent: {e}")
+                print(
+                    f"[_reconstruct_cart_from_stripe_sync] Error retrieving payment intent: {e}"
+                )
         else:
-            print(f"[_reconstruct_cart_from_stripe_sync] No payment intent found in session")
-        
+            print(
+                f"[_reconstruct_cart_from_stripe_sync] No payment intent found in session"
+            )
+
         # First try to reconstruct from line items
-        print(f"[_reconstruct_cart_from_stripe_sync] Attempting cart reconstruction from line items")
+        print(
+            f"[_reconstruct_cart_from_stripe_sync] Attempting cart reconstruction from line items"
+        )
         if line_items and line_items.data:
             cart = _extract_cart_from_line_items_sync(line_items.data)
             print(f"[_reconstruct_cart_from_stripe_sync] Cart from line items: {cart}")
         else:
             print(f"[_reconstruct_cart_from_stripe_sync] No line items found")
-        
+
         # If cart is still empty, try session metadata
-        if not cart or all(k in ['coupon_code', 'discount_percentage'] for k in cart.keys()):
-            print(f"[_reconstruct_cart_from_stripe_sync] Cart empty from line items, trying metadata reconstruction")
+        if not cart or all(
+            k in ["coupon_code", "discount_percentage"] for k in cart.keys()
+        ):
+            print(
+                f"[_reconstruct_cart_from_stripe_sync] Cart empty from line items, trying metadata reconstruction"
+            )
             cart = _extract_cart_from_metadata_sync(session, payment_intent, line_items)
             print(f"[_reconstruct_cart_from_stripe_sync] Cart from metadata: {cart}")
         else:
-            print(f"[_reconstruct_cart_from_stripe_sync] Cart successfully reconstructed from line items")
-            
-        print(f"[_reconstruct_cart_from_stripe_sync] Final reconstructed cart: {json.dumps(cart, indent=2)}")
+            print(
+                f"[_reconstruct_cart_from_stripe_sync] Cart successfully reconstructed from line items"
+            )
+
+        print(
+            f"[_reconstruct_cart_from_stripe_sync] Final reconstructed cart: {json.dumps(cart, indent=2)}"
+        )
         print(f"[_reconstruct_cart_from_stripe_sync] Cart keys: {list(cart.keys())}")
-        print(f"[_reconstruct_cart_from_stripe_sync] ========== CART RECONSTRUCTION COMPLETE ==========")
+        print(
+            f"[_reconstruct_cart_from_stripe_sync] ========== CART RECONSTRUCTION COMPLETE =========="
+        )
     except Exception as e:
-        print(f"[_reconstruct_cart_from_stripe_sync] ERROR reconstructing cart from Stripe session: {e}")
+        print(
+            f"[_reconstruct_cart_from_stripe_sync] ERROR reconstructing cart from Stripe session: {e}"
+        )
         import traceback
+
         print(f"[_reconstruct_cart_from_stripe_sync] Full traceback:")
         traceback.print_exc()
-        print(f"[_reconstruct_cart_from_stripe_sync] ========== CART RECONSTRUCTION ERROR ==========")
-    
+        print(
+            f"[_reconstruct_cart_from_stripe_sync] ========== CART RECONSTRUCTION ERROR =========="
+        )
+
     return cart
 
 
 def _extract_cart_from_line_items_sync(line_items):
     """Synchronous version of extracting cart data from Stripe line items"""
-    print(f"[_extract_cart_from_line_items_sync] ========== STARTING LINE ITEMS EXTRACTION ==========")
-    print(f"[_extract_cart_from_line_items_sync] Processing {len(line_items)} line items")
+    print(
+        f"[_extract_cart_from_line_items_sync] ========== STARTING LINE ITEMS EXTRACTION =========="
+    )
+    print(
+        f"[_extract_cart_from_line_items_sync] Processing {len(line_items)} line items"
+    )
     cart = {}
-    
+
     for i, item in enumerate(line_items):
-        print(f"[_extract_cart_from_line_items_sync] Processing line item {i}: {item.description}")
-        
+        print(
+            f"[_extract_cart_from_line_items_sync] Processing line item {i}: {item.description}"
+        )
+
         # Skip service fee items
         if "Service Fee" in item.description:
-            print(f"[_extract_cart_from_line_items_sync] Skipping service fee item: {item.description}")
+            print(
+                f"[_extract_cart_from_line_items_sync] Skipping service fee item: {item.description}"
+            )
             continue
-        
-        print(f"[_extract_cart_from_line_items_sync] Line item details - Description: {item.description}, Price: {item.amount_total/100}, Quantity: {item.quantity}")
-        
+
+        print(
+            f"[_extract_cart_from_line_items_sync] Line item details - Description: {item.description}, Price: {item.amount_total/100}, Quantity: {item.quantity}"
+        )
+
         # Try to get the original ticket info from metadata
         try:
             product = item.price.product
             print(f"[_extract_cart_from_line_items_sync] Product: {product}")
-            if product and hasattr(product, 'metadata'):
+            if product and hasattr(product, "metadata"):
                 metadata = product.metadata
-                print(f"[_extract_cart_from_line_items_sync] Product metadata: {metadata}")
-                original_ticket_id = metadata.get('original_ticket_id')
-                event_id = metadata.get('event_id')
-                print(f"[_extract_cart_from_line_items_sync] Original ticket ID: {original_ticket_id}, Event ID: {event_id}")
-                
+                print(
+                    f"[_extract_cart_from_line_items_sync] Product metadata: {metadata}"
+                )
+                original_ticket_id = metadata.get("original_ticket_id")
+                event_id = metadata.get("event_id")
+                print(
+                    f"[_extract_cart_from_line_items_sync] Original ticket ID: {original_ticket_id}, Event ID: {event_id}"
+                )
+
                 if original_ticket_id and event_id:
                     try:
-                        print(f"[_extract_cart_from_line_items_sync] Looking up event with ID: {event_id}")
+                        print(
+                            f"[_extract_cart_from_line_items_sync] Looking up event with ID: {event_id}"
+                        )
                         event = Event.objects.get(eventId=event_id)
-                        print(f"[_extract_cart_from_line_items_sync] Event found: {event.title}")
-                        
-                                                # Try to find the original ticket - original_ticket_id is the cart key, not necessarily the PaidFreeTicket.ticket_id
+                        print(
+                            f"[_extract_cart_from_line_items_sync] Event found: {event.title}"
+                        )
+
+                        # Try to find the original ticket - original_ticket_id is the cart key, not necessarily the PaidFreeTicket.ticket_id
                         try:
                             # First try by ticket_id (UUID) - but handle validation errors
-                            print(f"[_extract_cart_from_line_items_sync] Trying to find PaidFreeTicket by ticket_id: {original_ticket_id}")
+                            print(
+                                f"[_extract_cart_from_line_items_sync] Trying to find PaidFreeTicket by ticket_id: {original_ticket_id}"
+                            )
                             ticket = None
-                            
+
                             # Check if original_ticket_id looks like a UUID
                             try:
                                 import uuid
+
                                 # Try to parse as UUID to validate format
                                 uuid.UUID(original_ticket_id)
                                 # If it's a valid UUID, try to find by ticket_id
-                                ticket = PaidFreeTicket.objects.get(ticket_id=original_ticket_id, event=event)
-                                print(f"[_extract_cart_from_line_items_sync] Found ticket by ticket_id: {ticket.ticket_name}")
+                                ticket = PaidFreeTicket.objects.get(
+                                    ticket_id=original_ticket_id, event=event
+                                )
+                                print(
+                                    f"[_extract_cart_from_line_items_sync] Found ticket by ticket_id: {ticket.ticket_name}"
+                                )
                             except (ValueError, PaidFreeTicket.DoesNotExist):
                                 # If not a valid UUID or not found by UUID, try by primary key if it's numeric
                                 try:
                                     # Try to find by primary key (for cart keys that are database IDs)
-                                    print(f"[_extract_cart_from_line_items_sync] Not found by ticket_id, trying by primary key: {original_ticket_id}")
+                                    print(
+                                        f"[_extract_cart_from_line_items_sync] Not found by ticket_id, trying by primary key: {original_ticket_id}"
+                                    )
                                     # For non-UUID cart keys, try to find ticket by name match
                                     tickets = PaidFreeTicket.objects.filter(event=event)
-                                    ticket_name_from_metadata = metadata.get('original_ticket_name', item.description)
+                                    ticket_name_from_metadata = metadata.get(
+                                        "original_ticket_name", item.description
+                                    )
                                     for t in tickets:
                                         if t.ticket_name == ticket_name_from_metadata:
                                             ticket = t
-                                            print(f"[_extract_cart_from_line_items_sync] Found ticket by name match: {ticket.ticket_name}")
+                                            print(
+                                                f"[_extract_cart_from_line_items_sync] Found ticket by name match: {ticket.ticket_name}"
+                                            )
                                             break
                                 except Exception as inner_e:
-                                    print(f"[_extract_cart_from_line_items_sync] Error in fallback lookup: {inner_e}")
-                            
+                                    print(
+                                        f"[_extract_cart_from_line_items_sync] Error in fallback lookup: {inner_e}"
+                                    )
+
                             if ticket:
                                 cart_item = {
                                     "name": ticket.ticket_name,
                                     "price": float(ticket.ticket_price),
                                     "quantity": item.quantity,
-                                    "eventId": str(event.eventId)
+                                    "eventId": str(event.eventId),
                                 }
                                 cart[original_ticket_id] = cart_item
-                                print(f"[_extract_cart_from_line_items_sync] Added cart item: {original_ticket_id} -> {cart_item}")
+                                print(
+                                    f"[_extract_cart_from_line_items_sync] Added cart item: {original_ticket_id} -> {cart_item}"
+                                )
                                 continue
                             else:
                                 raise Exception("Ticket not found")
-                                
+
                         except Exception as e:
-                            print(f"[_extract_cart_from_line_items_sync] Error finding ticket with original_ticket_id={original_ticket_id}: {e}")
+                            print(
+                                f"[_extract_cart_from_line_items_sync] Error finding ticket with original_ticket_id={original_ticket_id}: {e}"
+                            )
                             # Fallback: create cart item from line item data
                             fallback_item = {
-                                "name": item.description.replace(" (100% discount applied)", "").replace(f" ({metadata.get('discount_percentage', 0)}% discount applied)", ""),
+                                "name": item.description.replace(
+                                    " (100% discount applied)", ""
+                                ).replace(
+                                    f" ({metadata.get('discount_percentage', 0)}% discount applied)",
+                                    "",
+                                ),
                                 "price": item.amount_total / 100,
                                 "quantity": item.quantity,
                                 "eventId": str(event.eventId),
                             }
                             cart[original_ticket_id] = fallback_item
-                            print(f"[_extract_cart_from_line_items_sync] Added fallback cart item: {original_ticket_id} -> {fallback_item}")
+                            print(
+                                f"[_extract_cart_from_line_items_sync] Added fallback cart item: {original_ticket_id} -> {fallback_item}"
+                            )
                     except (Event.DoesNotExist, PaidFreeTicket.DoesNotExist) as e:
-                        print(f"[_extract_cart_from_line_items_sync] Could not find original ticket/event: {e}")
+                        print(
+                            f"[_extract_cart_from_line_items_sync] Could not find original ticket/event: {e}"
+                        )
                 else:
-                    print(f"[_extract_cart_from_line_items_sync] Missing original_ticket_id or event_id in metadata")
+                    print(
+                        f"[_extract_cart_from_line_items_sync] Missing original_ticket_id or event_id in metadata"
+                    )
             else:
-                print(f"[_extract_cart_from_line_items_sync] No product or metadata found for line item")
+                print(
+                    f"[_extract_cart_from_line_items_sync] No product or metadata found for line item"
+                )
         except Exception as e:
-            print(f"[_extract_cart_from_line_items_sync] Error accessing product metadata: {e}")
+            print(
+                f"[_extract_cart_from_line_items_sync] Error accessing product metadata: {e}"
+            )
             import traceback
+
             print(f"[_extract_cart_from_line_items_sync] Traceback:")
             traceback.print_exc()
-    
+
     print(f"[_extract_cart_from_line_items_sync] Final cart from line items: {cart}")
-    print(f"[_extract_cart_from_line_items_sync] ========== LINE ITEMS EXTRACTION COMPLETE ==========")
+    print(
+        f"[_extract_cart_from_line_items_sync] ========== LINE ITEMS EXTRACTION COMPLETE =========="
+    )
     return cart
 
 
 def _extract_cart_from_metadata_sync(session, payment_intent, line_items):
     """Synchronous version of extracting cart data from session or payment intent metadata"""
-    print(f"[_extract_cart_from_metadata_sync] ========== STARTING METADATA EXTRACTION ==========")
+    print(
+        f"[_extract_cart_from_metadata_sync] ========== STARTING METADATA EXTRACTION =========="
+    )
     cart = {}
     try:
         # First try session metadata
         print(f"[_extract_cart_from_metadata_sync] Checking session metadata")
-        if hasattr(session, 'metadata') and session.metadata:
-            print(f"[_extract_cart_from_metadata_sync] Session metadata found: {session.metadata}")
-            cart_data = session.metadata.get('cart_data')
+        if hasattr(session, "metadata") and session.metadata:
+            print(
+                f"[_extract_cart_from_metadata_sync] Session metadata found: {session.metadata}"
+            )
+            cart_data = session.metadata.get("cart_data")
             if cart_data:
-                print(f"[_extract_cart_from_metadata_sync] Cart data found in session metadata: {cart_data[:200]}...")
+                print(
+                    f"[_extract_cart_from_metadata_sync] Cart data found in session metadata: {cart_data[:200]}..."
+                )
                 try:
                     cart = json.loads(cart_data)
-                    print(f"[_extract_cart_from_metadata_sync] Successfully restored cart from session metadata: {cart}")
+                    print(
+                        f"[_extract_cart_from_metadata_sync] Successfully restored cart from session metadata: {cart}"
+                    )
                     return cart
                 except json.JSONDecodeError as e:
-                    print(f"[_extract_cart_from_metadata_sync] Error decoding cart data from session metadata: {e}")
+                    print(
+                        f"[_extract_cart_from_metadata_sync] Error decoding cart data from session metadata: {e}"
+                    )
             else:
-                print(f"[_extract_cart_from_metadata_sync] No cart_data found in session metadata")
+                print(
+                    f"[_extract_cart_from_metadata_sync] No cart_data found in session metadata"
+                )
         else:
             print(f"[_extract_cart_from_metadata_sync] No session metadata found")
-        
+
         # If that fails, try payment intent metadata
         print(f"[_extract_cart_from_metadata_sync] Checking payment intent metadata")
         if not cart and payment_intent and payment_intent.metadata:
-            print(f"[_extract_cart_from_metadata_sync] Payment intent metadata found: {payment_intent.metadata}")
-            cart_data = payment_intent.metadata.get('cart_data')
+            print(
+                f"[_extract_cart_from_metadata_sync] Payment intent metadata found: {payment_intent.metadata}"
+            )
+            cart_data = payment_intent.metadata.get("cart_data")
             if cart_data:
-                print(f"[_extract_cart_from_metadata_sync] Cart data found in payment intent metadata: {cart_data[:200]}...")
+                print(
+                    f"[_extract_cart_from_metadata_sync] Cart data found in payment intent metadata: {cart_data[:200]}..."
+                )
                 try:
                     cart = json.loads(cart_data)
-                    print(f"[_extract_cart_from_metadata_sync] Successfully restored cart from payment intent metadata: {cart}")
+                    print(
+                        f"[_extract_cart_from_metadata_sync] Successfully restored cart from payment intent metadata: {cart}"
+                    )
                     return cart
                 except json.JSONDecodeError as e:
-                    print(f"[_extract_cart_from_metadata_sync] Error decoding cart data from payment intent metadata: {e}")
+                    print(
+                        f"[_extract_cart_from_metadata_sync] Error decoding cart data from payment intent metadata: {e}"
+                    )
             else:
-                print(f"[_extract_cart_from_metadata_sync] No cart_data found in payment intent metadata")
-            
+                print(
+                    f"[_extract_cart_from_metadata_sync] No cart_data found in payment intent metadata"
+                )
+
             # If we still don't have cart data, try to reconstruct from event ID
             if not cart:
-                print(f"[_extract_cart_from_metadata_sync] Attempting reconstruction from event ID")
-                event_id = payment_intent.metadata.get('event_id')
-                print(f"[_extract_cart_from_metadata_sync] Event ID from payment intent: {event_id}")
+                print(
+                    f"[_extract_cart_from_metadata_sync] Attempting reconstruction from event ID"
+                )
+                event_id = payment_intent.metadata.get("event_id")
+                print(
+                    f"[_extract_cart_from_metadata_sync] Event ID from payment intent: {event_id}"
+                )
                 if event_id:
                     try:
-                        print(f"[_extract_cart_from_metadata_sync] Looking up event with ID: {event_id}")
+                        print(
+                            f"[_extract_cart_from_metadata_sync] Looking up event with ID: {event_id}"
+                        )
                         event = Event.objects.get(eventId=event_id)
-                        print(f"[_extract_cart_from_metadata_sync] Event found: {event.title}")
-                        
+                        print(
+                            f"[_extract_cart_from_metadata_sync] Event found: {event.title}"
+                        )
+
                         # Create cart items from line items
-                        print(f"[_extract_cart_from_metadata_sync] Creating cart items from line items")
+                        print(
+                            f"[_extract_cart_from_metadata_sync] Creating cart items from line items"
+                        )
                         for i, item in enumerate(line_items.data):
                             if "Service Fee" not in item.description:
-                                print(f"[_extract_cart_from_metadata_sync] Processing line item {i}: {item.description}")
+                                print(
+                                    f"[_extract_cart_from_metadata_sync] Processing line item {i}: {item.description}"
+                                )
                                 # Try to find the original ticket name without the discount note
-                                original_name = item.description.replace(" (100% discount applied)", "")
-                                print(f"[_extract_cart_from_metadata_sync] Original name after discount removal: {original_name}")
+                                original_name = item.description.replace(
+                                    " (100% discount applied)", ""
+                                )
+                                print(
+                                    f"[_extract_cart_from_metadata_sync] Original name after discount removal: {original_name}"
+                                )
                                 tickets = PaidFreeTicket.objects.filter(
                                     event=event, ticket_name__iexact=original_name
                                 )
-                                print(f"[_extract_cart_from_metadata_sync] Found {tickets.count()} matching tickets")
-                                
+                                print(
+                                    f"[_extract_cart_from_metadata_sync] Found {tickets.count()} matching tickets"
+                                )
+
                                 if tickets.exists():
                                     ticket = tickets.first()
                                     cart_key = str(ticket.id)
-                                    print(f"[_extract_cart_from_metadata_sync] Using ticket ID as cart key: {cart_key}")
+                                    print(
+                                        f"[_extract_cart_from_metadata_sync] Using ticket ID as cart key: {cart_key}"
+                                    )
                                 else:
                                     cart_key = f"stripe_item_{item.id}"
-                                    print(f"[_extract_cart_from_metadata_sync] Using fallback cart key: {cart_key}")
-                                
+                                    print(
+                                        f"[_extract_cart_from_metadata_sync] Using fallback cart key: {cart_key}"
+                                    )
+
                                 cart_item = {
                                     "name": original_name,
                                     "price": item.amount_total / 100,
@@ -1464,32 +1765,49 @@ def _extract_cart_from_metadata_sync(session, payment_intent, line_items):
                                     "eventId": str(event.eventId),
                                 }
                                 cart[cart_key] = cart_item
-                                print(f"[_extract_cart_from_metadata_sync] Added cart item: {cart_key} -> {cart_item}")
+                                print(
+                                    f"[_extract_cart_from_metadata_sync] Added cart item: {cart_key} -> {cart_item}"
+                                )
                     except Event.DoesNotExist:
-                        print(f"[_extract_cart_from_metadata_sync] Event with ID {event_id} from metadata not found")
+                        print(
+                            f"[_extract_cart_from_metadata_sync] Event with ID {event_id} from metadata not found"
+                        )
                 else:
-                    print(f"[_extract_cart_from_metadata_sync] No event_id found in payment intent metadata")
+                    print(
+                        f"[_extract_cart_from_metadata_sync] No event_id found in payment intent metadata"
+                    )
         else:
-            print(f"[_extract_cart_from_metadata_sync] No payment intent or payment intent metadata found")
+            print(
+                f"[_extract_cart_from_metadata_sync] No payment intent or payment intent metadata found"
+            )
     except Exception as e:
-        print(f"[_extract_cart_from_metadata_sync] Error trying to restore cart from metadata: {e}")
+        print(
+            f"[_extract_cart_from_metadata_sync] Error trying to restore cart from metadata: {e}"
+        )
         import traceback
+
         print(f"[_extract_cart_from_metadata_sync] Full traceback:")
         traceback.print_exc()
-    
+
     print(f"[_extract_cart_from_metadata_sync] Final cart from metadata: {cart}")
-    print(f"[_extract_cart_from_metadata_sync] ========== METADATA EXTRACTION COMPLETE ==========")
+    print(
+        f"[_extract_cart_from_metadata_sync] ========== METADATA EXTRACTION COMPLETE =========="
+    )
     return cart
 
 
 def _generate_tickets_from_cart_sync(user_id, cart, session_id, session):
     """Synchronous version of generating tickets from cart items"""
-    print(f"[_generate_tickets_from_cart_sync] ========== STARTING TICKET GENERATION ==========")
+    print(
+        f"[_generate_tickets_from_cart_sync] ========== STARTING TICKET GENERATION =========="
+    )
     print(f"[_generate_tickets_from_cart_sync] User ID: {user_id}")
     print(f"[_generate_tickets_from_cart_sync] Session ID: {session_id}")
     print(f"[_generate_tickets_from_cart_sync] Cart: {cart}")
-    print(f"[_generate_tickets_from_cart_sync] Cart keys: {list(cart.keys()) if cart else 'None'}")
-    
+    print(
+        f"[_generate_tickets_from_cart_sync] Cart keys: {list(cart.keys()) if cart else 'None'}"
+    )
+
     from eventTicketsApp.views import generateTicket
 
     ticket_count = 0
@@ -1500,92 +1818,140 @@ def _generate_tickets_from_cart_sync(user_id, cart, session_id, session):
         print(f"[_generate_tickets_from_cart_sync] Looking up user with ID: {user_id}")
         try:
             user = CustomUser.objects.get(id=user_id)
-            print(f"[_generate_tickets_from_cart_sync] User found: {user.username} ({user.email})")
+            print(
+                f"[_generate_tickets_from_cart_sync] User found: {user.username} ({user.email})"
+            )
         except CustomUser.DoesNotExist:
-            print(f"[_generate_tickets_from_cart_sync] User with ID {user_id} not found")
+            print(
+                f"[_generate_tickets_from_cart_sync] User with ID {user_id} not found"
+            )
     else:
-        print(f"[_generate_tickets_from_cart_sync] No user ID provided (guest checkout)")
-    
+        print(
+            f"[_generate_tickets_from_cart_sync] No user ID provided (guest checkout)"
+        )
+
     # Special handling for event_id if it's a direct key in the cart
     event_id_from_cart = cart.get("event_id")
     if event_id_from_cart and isinstance(event_id_from_cart, str):
-        print(f"[_generate_tickets_from_cart_sync] Found event_id directly in cart: {event_id_from_cart}")
+        print(
+            f"[_generate_tickets_from_cart_sync] Found event_id directly in cart: {event_id_from_cart}"
+        )
     else:
         print(f"[_generate_tickets_from_cart_sync] No event_id found directly in cart")
-    
+
     # If cart is empty or only has metadata, try to generate tickets from Stripe line items directly
-    if not cart or all(k in ['coupon_code', 'discount_percentage', 'event_id'] for k in cart.keys()):
-        print(f"[_generate_tickets_from_cart_sync] Cart is empty or contains only metadata. Attempting fallback ticket generation from Stripe session.")
-        ticket_count = _generate_tickets_from_stripe_session_sync(user_id, session_id, session)
-        print(f"[_generate_tickets_from_cart_sync] Fallback generation returned {ticket_count} tickets")
+    if not cart or all(
+        k in ["coupon_code", "discount_percentage", "event_id"] for k in cart.keys()
+    ):
+        print(
+            f"[_generate_tickets_from_cart_sync] Cart is empty or contains only metadata. Attempting fallback ticket generation from Stripe session."
+        )
+        ticket_count = _generate_tickets_from_stripe_session_sync(
+            user_id, session_id, session
+        )
+        print(
+            f"[_generate_tickets_from_cart_sync] Fallback generation returned {ticket_count} tickets"
+        )
         return ticket_count
-    
+
     print(f"[_generate_tickets_from_cart_sync] Processing {len(cart)} cart items")
     for cart_key, ticket_info in cart.items():
-        print(f"[_generate_tickets_from_cart_sync] Processing cart item: {cart_key} -> {ticket_info}")
-        
+        print(
+            f"[_generate_tickets_from_cart_sync] Processing cart item: {cart_key} -> {ticket_info}"
+        )
+
         # Skip non-ticket items
-        if cart_key in ['coupon_code', 'discount_percentage', 'event_id', 'coupon_id']:
-            print(f"[_generate_tickets_from_cart_sync] Skipping metadata item: {cart_key}")
+        if cart_key in ["coupon_code", "discount_percentage", "event_id", "coupon_id"]:
+            print(
+                f"[_generate_tickets_from_cart_sync] Skipping metadata item: {cart_key}"
+            )
             continue
 
         # Check if ticket_info is a dictionary before trying to use .get()
         if not isinstance(ticket_info, dict):
-            print(f"[_generate_tickets_from_cart_sync] Warning: ticket_info for {cart_key} is not a dictionary: {type(ticket_info)}")
+            print(
+                f"[_generate_tickets_from_cart_sync] Warning: ticket_info for {cart_key} is not a dictionary: {type(ticket_info)}"
+            )
             continue
 
         # Get event_id from the ticket_info or use the one from the cart
         try:
             event_id = ticket_info.get("eventId") or event_id_from_cart
-            print(f"[_generate_tickets_from_cart_sync] Event ID for {cart_key}: {event_id}")
+            print(
+                f"[_generate_tickets_from_cart_sync] Event ID for {cart_key}: {event_id}"
+            )
         except Exception as e:
-            print(f"[_generate_tickets_from_cart_sync] Error getting event ID for {cart_key}: {e}")
+            print(
+                f"[_generate_tickets_from_cart_sync] Error getting event ID for {cart_key}: {e}"
+            )
             continue
 
         if not event_id:
-            print(f"[_generate_tickets_from_cart_sync] No event ID found in cart item {cart_key} or cart")
+            print(
+                f"[_generate_tickets_from_cart_sync] No event ID found in cart item {cart_key} or cart"
+            )
             continue
 
         try:
-            print(f"[_generate_tickets_from_cart_sync] Looking up event with ID: {event_id}")
+            print(
+                f"[_generate_tickets_from_cart_sync] Looking up event with ID: {event_id}"
+            )
             event = Event.objects.get(eventId=event_id)
             print(f"[_generate_tickets_from_cart_sync] Event found: {event.title}")
         except Event.DoesNotExist:
-            print(f"[_generate_tickets_from_cart_sync] Event with ID {event_id} not found.")
+            print(
+                f"[_generate_tickets_from_cart_sync] Event with ID {event_id} not found."
+            )
             continue
 
         # Handle crew tickets
         if "_crew_" in cart_key or "crewId" in ticket_info:
-            print(f"[_generate_tickets_from_cart_sync] Generating crew tickets for {cart_key}")
-            crew_ticket_count = _generate_crew_tickets_sync(user, ticket_info, event, session_id)
+            print(
+                f"[_generate_tickets_from_cart_sync] Generating crew tickets for {cart_key}"
+            )
+            crew_ticket_count = _generate_crew_tickets_sync(
+                user, ticket_info, event, session_id
+            )
             ticket_count += crew_ticket_count
-            print(f"[_generate_tickets_from_cart_sync] Generated {crew_ticket_count} crew tickets")
+            print(
+                f"[_generate_tickets_from_cart_sync] Generated {crew_ticket_count} crew tickets"
+            )
         else:
             # Handle regular tickets
-            print(f"[_generate_tickets_from_cart_sync] Generating regular tickets for {cart_key}")
-            regular_ticket_count = _generate_regular_tickets_sync(user, ticket_info, event, session_id, cart_key, session)
+            print(
+                f"[_generate_tickets_from_cart_sync] Generating regular tickets for {cart_key}"
+            )
+            regular_ticket_count = _generate_regular_tickets_sync(
+                user, ticket_info, event, session_id, cart_key, session
+            )
             ticket_count += regular_ticket_count
-            print(f"[_generate_tickets_from_cart_sync] Generated {regular_ticket_count} regular tickets")
-    
+            print(
+                f"[_generate_tickets_from_cart_sync] Generated {regular_ticket_count} regular tickets"
+            )
+
     print(f"[_generate_tickets_from_cart_sync] Total tickets generated: {ticket_count}")
-    print(f"[_generate_tickets_from_cart_sync] ========== TICKET GENERATION COMPLETE ==========")
+    print(
+        f"[_generate_tickets_from_cart_sync] ========== TICKET GENERATION COMPLETE =========="
+    )
     return ticket_count
 
 
 def _generate_crew_tickets_sync(user, ticket_info, event, session_id):
     """Synchronous version of generating tickets for crew members"""
-    print(f"[_generate_crew_tickets_sync] ========== STARTING CREW TICKET GENERATION ==========")
+    print(
+        f"[_generate_crew_tickets_sync] ========== STARTING CREW TICKET GENERATION =========="
+    )
     print(f"[_generate_crew_tickets_sync] User: {user}")
     print(f"[_generate_crew_tickets_sync] Ticket info: {ticket_info}")
     print(f"[_generate_crew_tickets_sync] Event: {event.title} ({event.eventId})")
     print(f"[_generate_crew_tickets_sync] Session ID: {session_id}")
-    
+
     from eventTicketsApp.views import generateTicket
 
     ticket_count = 0
     crew_id = ticket_info.get("crewId")
     print(f"[_generate_crew_tickets_sync] Crew ID from ticket info: {crew_id}")
-    
+
     if not crew_id:
         print(f"[_generate_crew_tickets_sync] No crew ID found in crew ticket")
         return ticket_count
@@ -1593,11 +1959,15 @@ def _generate_crew_tickets_sync(user, ticket_info, event, session_id):
     try:
         print(f"[_generate_crew_tickets_sync] Looking up crew with ID: {crew_id}")
         crew = Crew.objects.get(crewId=crew_id)
-        print(f"[_generate_crew_tickets_sync] Found crew: {crew.name} with {crew.members.count()} members")
-        
+        print(
+            f"[_generate_crew_tickets_sync] Found crew: {crew.name} with {crew.members.count()} members"
+        )
+
         # Generate one ticket for each crew member
         for i, member in enumerate(crew.members.all()):
-            print(f"[_generate_crew_tickets_sync] Processing crew member {i+1}: {member.first_name} {member.last_name} ({member.email})")
+            print(
+                f"[_generate_crew_tickets_sync] Processing crew member {i+1}: {member.first_name} {member.last_name} ({member.email})"
+            )
             try:
                 ticket = generateTicket(
                     request=None,  # No request object in API context
@@ -1611,22 +1981,34 @@ def _generate_crew_tickets_sync(user, ticket_info, event, session_id):
                     from_api=True,
                 )
                 ticket_count += 1
-                print(f"[_generate_crew_tickets_sync] Generated crew ticket for {member.first_name} {member.last_name}: {ticket.ticketId}")
+                print(
+                    f"[_generate_crew_tickets_sync] Generated crew ticket for {member.first_name} {member.last_name}: {ticket.ticketId}"
+                )
             except Exception as e:
-                print(f"[_generate_crew_tickets_sync] Error generating crew ticket for {member.first_name} {member.last_name}: {e}")
+                print(
+                    f"[_generate_crew_tickets_sync] Error generating crew ticket for {member.first_name} {member.last_name}: {e}"
+                )
                 import traceback
+
                 print(f"[_generate_crew_tickets_sync] Traceback:")
                 traceback.print_exc()
     except Crew.DoesNotExist:
         print(f"[_generate_crew_tickets_sync] Crew with ID {crew_id} not found.")
     except Exception as e:
-        print(f"[_generate_crew_tickets_sync] Unexpected error in crew ticket generation: {e}")
+        print(
+            f"[_generate_crew_tickets_sync] Unexpected error in crew ticket generation: {e}"
+        )
         import traceback
+
         print(f"[_generate_crew_tickets_sync] Full traceback:")
         traceback.print_exc()
-    
-    print(f"[_generate_crew_tickets_sync] Crew ticket generation complete. Generated {ticket_count} tickets")
-    print(f"[_generate_crew_tickets_sync] ========== CREW TICKET GENERATION COMPLETE ==========")
+
+    print(
+        f"[_generate_crew_tickets_sync] Crew ticket generation complete. Generated {ticket_count} tickets"
+    )
+    print(
+        f"[_generate_crew_tickets_sync] ========== CREW TICKET GENERATION COMPLETE =========="
+    )
     return ticket_count
 
 
@@ -1634,13 +2016,15 @@ def _generate_regular_tickets_sync(
     user, ticket_info, event, session_id, cart_key, session
 ):
     """Synchronous version of generating regular tickets"""
-    print(f"[_generate_regular_tickets_sync] ========== STARTING REGULAR TICKET GENERATION ==========")
+    print(
+        f"[_generate_regular_tickets_sync] ========== STARTING REGULAR TICKET GENERATION =========="
+    )
     print(f"[_generate_regular_tickets_sync] User: {user}")
     print(f"[_generate_regular_tickets_sync] Ticket info: {ticket_info}")
     print(f"[_generate_regular_tickets_sync] Event: {event.title} ({event.eventId})")
     print(f"[_generate_regular_tickets_sync] Session ID: {session_id}")
     print(f"[_generate_regular_tickets_sync] Cart key: {cart_key}")
-    
+
     from eventTicketsApp.views import generateTicket
 
     ticket_count = 0
@@ -1648,14 +2032,20 @@ def _generate_regular_tickets_sync(
         # Get customer information
         print(f"[_generate_regular_tickets_sync] Getting customer information")
         first_name, last_name, email = _get_customer_info_sync(user, session)
-        print(f"[_generate_regular_tickets_sync] Customer info - Name: {first_name} {last_name}, Email: {email}")
-        
+        print(
+            f"[_generate_regular_tickets_sync] Customer info - Name: {first_name} {last_name}, Email: {email}"
+        )
+
         # Generate tickets
         quantity = int(ticket_info.get("quantity", 1))
-        print(f"[_generate_regular_tickets_sync] Generating {quantity} tickets for {first_name} {last_name}")
-        
+        print(
+            f"[_generate_regular_tickets_sync] Generating {quantity} tickets for {first_name} {last_name}"
+        )
+
         for i in range(quantity):
-            print(f"[_generate_regular_tickets_sync] Generating ticket {i+1}/{quantity}")
+            print(
+                f"[_generate_regular_tickets_sync] Generating ticket {i+1}/{quantity}"
+            )
             try:
                 ticket = generateTicket(
                     request=None,  # No request object in API context
@@ -1665,29 +2055,41 @@ def _generate_regular_tickets_sync(
                     guestLastName=last_name,
                     guestEmail=email,
                     stripe_session_id=session_id,
-                    from_api=True
+                    from_api=True,
                 )
-                print(f"[_generate_regular_tickets_sync] Ticket {i+1} generated: {ticket.ticketId}")
+                print(
+                    f"[_generate_regular_tickets_sync] Ticket {i+1} generated: {ticket.ticketId}"
+                )
                 ticket_count += 1
-                
+
                 # Update the ticket_sold count in the PaidFreeTicket model only once per cart item
                 if i == 0:  # Only update on first ticket to avoid duplicate updates
-                    print(f"[_generate_regular_tickets_sync] Updating ticket sold count for cart key: {cart_key}")
+                    print(
+                        f"[_generate_regular_tickets_sync] Updating ticket sold count for cart key: {cart_key}"
+                    )
                     _update_ticket_sold_count_sync(cart_key, event)
             except Exception as e:
-                print(f"[_generate_regular_tickets_sync] Error generating individual ticket {i+1}: {e}")
+                print(
+                    f"[_generate_regular_tickets_sync] Error generating individual ticket {i+1}: {e}"
+                )
                 import traceback
+
                 print(f"[_generate_regular_tickets_sync] Traceback for ticket {i+1}:")
                 traceback.print_exc()
-                
+
     except Exception as e:
         print(f"[_generate_regular_tickets_sync] Error generating regular tickets: {e}")
         import traceback
+
         print(f"[_generate_regular_tickets_sync] Full traceback:")
         traceback.print_exc()
-    
-    print(f"[_generate_regular_tickets_sync] Regular ticket generation complete. Generated {ticket_count} tickets")
-    print(f"[_generate_regular_tickets_sync] ========== REGULAR TICKET GENERATION COMPLETE ==========")
+
+    print(
+        f"[_generate_regular_tickets_sync] Regular ticket generation complete. Generated {ticket_count} tickets"
+    )
+    print(
+        f"[_generate_regular_tickets_sync] ========== REGULAR TICKET GENERATION COMPLETE =========="
+    )
     return ticket_count
 
 
@@ -1696,170 +2098,259 @@ def _get_customer_info_sync(user, session):
     print(f"[_get_customer_info_sync] ========== GETTING CUSTOMER INFO ==========")
     print(f"[_get_customer_info_sync] User: {user}")
     print(f"[_get_customer_info_sync] Session: {session}")
-    
+
     if user:
         print(f"[_get_customer_info_sync] Using authenticated user information")
         first_name = user.first_name
         last_name = user.last_name
         email = user.email
-        print(f"[_get_customer_info_sync] User info - Name: {first_name} {last_name}, Email: {email}")
+        print(
+            f"[_get_customer_info_sync] User info - Name: {first_name} {last_name}, Email: {email}"
+        )
     else:
-        print(f"[_get_customer_info_sync] No user provided, extracting from Stripe session")
+        print(
+            f"[_get_customer_info_sync] No user provided, extracting from Stripe session"
+        )
         # Get customer details from Stripe session
         first_name, last_name, email = "", "", ""
-        
+
         print(f"[_get_customer_info_sync] Checking session customer_details")
-        if hasattr(session, 'customer_details') and session.customer_details:
-            print(f"[_get_customer_info_sync] Customer details found: {session.customer_details}")
-            
+        if hasattr(session, "customer_details") and session.customer_details:
+            print(
+                f"[_get_customer_info_sync] Customer details found: {session.customer_details}"
+            )
+
             # Split the name on whitespace
-            if hasattr(session.customer_details, 'name') and session.customer_details.name:
-                print(f"[_get_customer_info_sync] Customer name found: {session.customer_details.name}")
+            if (
+                hasattr(session.customer_details, "name")
+                and session.customer_details.name
+            ):
+                print(
+                    f"[_get_customer_info_sync] Customer name found: {session.customer_details.name}"
+                )
                 name_parts = session.customer_details.name.split()
                 first_name = name_parts[0] if name_parts else ""
                 last_name = name_parts[-1] if len(name_parts) > 1 else ""
-                print(f"[_get_customer_info_sync] Name parts: {name_parts}, First: {first_name}, Last: {last_name}")
+                print(
+                    f"[_get_customer_info_sync] Name parts: {name_parts}, First: {first_name}, Last: {last_name}"
+                )
             else:
                 print(f"[_get_customer_info_sync] No customer name found in session")
-            
-            if hasattr(session.customer_details, 'email') and session.customer_details.email:
+
+            if (
+                hasattr(session.customer_details, "email")
+                and session.customer_details.email
+            ):
                 email = session.customer_details.email
                 print(f"[_get_customer_info_sync] Customer email found: {email}")
             else:
                 print(f"[_get_customer_info_sync] No customer email found in session")
         else:
             print(f"[_get_customer_info_sync] No customer_details found in session")
-    
-    print(f"[_get_customer_info_sync] Final customer info - Name: {first_name} {last_name}, Email: {email}")
+
+    print(
+        f"[_get_customer_info_sync] Final customer info - Name: {first_name} {last_name}, Email: {email}"
+    )
     print(f"[_get_customer_info_sync] ========== CUSTOMER INFO COMPLETE ==========")
     return first_name, last_name, email
 
 
 def _update_ticket_sold_count_sync(cart_key, event):
     """Synchronous version of updating the ticket_sold count in the PaidFreeTicket model"""
-    print(f"[_update_ticket_sold_count_sync] ========== UPDATING TICKET SOLD COUNT ==========")
+    print(
+        f"[_update_ticket_sold_count_sync] ========== UPDATING TICKET SOLD COUNT =========="
+    )
     print(f"[_update_ticket_sold_count_sync] Cart key: {cart_key}")
     print(f"[_update_ticket_sold_count_sync] Event: {event.title} ({event.eventId})")
-    
+
     try:
         # Find the ticket type and increment its sold count
         # Try by ticket_id first, then by name match
-        print(f"[_update_ticket_sold_count_sync] Trying to find PaidFreeTicket by ticket_id: {cart_key}")
+        print(
+            f"[_update_ticket_sold_count_sync] Trying to find PaidFreeTicket by ticket_id: {cart_key}"
+        )
         ticket_type = None
-        
+
         try:
             import uuid
+
             # Check if cart_key is a valid UUID
             uuid.UUID(cart_key)
             # If valid UUID, try to find by ticket_id
             ticket_type = PaidFreeTicket.objects.get(ticket_id=cart_key, event=event)
-            print(f"[_update_ticket_sold_count_sync] Found ticket by ticket_id: {ticket_type.ticket_name}")
+            print(
+                f"[_update_ticket_sold_count_sync] Found ticket by ticket_id: {ticket_type.ticket_name}"
+            )
         except (ValueError, PaidFreeTicket.DoesNotExist):
-            print(f"[_update_ticket_sold_count_sync] Not found by ticket_id or invalid UUID, trying by name matching")
+            print(
+                f"[_update_ticket_sold_count_sync] Not found by ticket_id or invalid UUID, trying by name matching"
+            )
             # If not a valid UUID or not found, try to find by searching all tickets
             # This is a fallback for cart keys that don't match database IDs
             available_tickets = PaidFreeTicket.objects.filter(event=event)
-            print(f"[_update_ticket_sold_count_sync] Available ticket types for this event:")
+            print(
+                f"[_update_ticket_sold_count_sync] Available ticket types for this event:"
+            )
             for ticket in available_tickets:
-                print(f"[_update_ticket_sold_count_sync]   - {ticket.ticket_name} (ID: {ticket.ticket_id}, PK: {ticket.pk})")
-            
+                print(
+                    f"[_update_ticket_sold_count_sync]   - {ticket.ticket_name} (ID: {ticket.ticket_id}, PK: {ticket.pk})"
+                )
+
             # If there's only one ticket type, use it
             if available_tickets.count() == 1:
                 ticket_type = available_tickets.first()
-                print(f"[_update_ticket_sold_count_sync] Using single available ticket: {ticket_type.ticket_name}")
+                print(
+                    f"[_update_ticket_sold_count_sync] Using single available ticket: {ticket_type.ticket_name}"
+                )
             else:
-                print(f"[_update_ticket_sold_count_sync] Multiple ticket types found, cannot determine which one to update")
-        
+                print(
+                    f"[_update_ticket_sold_count_sync] Multiple ticket types found, cannot determine which one to update"
+                )
+
         if ticket_type:
-            print(f"[_update_ticket_sold_count_sync] Current ticket_sold: {ticket_type.ticket_sold}")
+            print(
+                f"[_update_ticket_sold_count_sync] Current ticket_sold: {ticket_type.ticket_sold}"
+            )
             ticket_type.ticket_sold += 1
             ticket_type.save()
-            print(f"[_update_ticket_sold_count_sync] Updated ticket_sold count for {ticket_type.ticket_name}: now {ticket_type.ticket_sold}")
-            print(f"[_update_ticket_sold_count_sync] ========== TICKET SOLD COUNT UPDATE COMPLETE ==========")
+            print(
+                f"[_update_ticket_sold_count_sync] Updated ticket_sold count for {ticket_type.ticket_name}: now {ticket_type.ticket_sold}"
+            )
+            print(
+                f"[_update_ticket_sold_count_sync] ========== TICKET SOLD COUNT UPDATE COMPLETE =========="
+            )
         else:
-            print(f"[_update_ticket_sold_count_sync] Could not find ticket type with cart_key {cart_key} for event {event.eventId}")
-            print(f"[_update_ticket_sold_count_sync] ========== TICKET SOLD COUNT UPDATE FAILED ==========")
-            
+            print(
+                f"[_update_ticket_sold_count_sync] Could not find ticket type with cart_key {cart_key} for event {event.eventId}"
+            )
+            print(
+                f"[_update_ticket_sold_count_sync] ========== TICKET SOLD COUNT UPDATE FAILED =========="
+            )
+
     except Exception as e:
         print(f"[_update_ticket_sold_count_sync] Error updating ticket_sold count: {e}")
         import traceback
+
         print(f"[_update_ticket_sold_count_sync] Full traceback:")
         traceback.print_exc()
-        print(f"[_update_ticket_sold_count_sync] ========== TICKET SOLD COUNT UPDATE ERROR ==========")
+        print(
+            f"[_update_ticket_sold_count_sync] ========== TICKET SOLD COUNT UPDATE ERROR =========="
+        )
 
 
 def _generate_tickets_from_stripe_session_sync(user_id, session_id, session):
     """Fallback method to generate tickets directly from Stripe session when cart reconstruction fails"""
-    print(f"[_generate_tickets_from_stripe_session_sync] ========== STARTING FALLBACK TICKET GENERATION ==========")
+    print(
+        f"[_generate_tickets_from_stripe_session_sync] ========== STARTING FALLBACK TICKET GENERATION =========="
+    )
     print(f"[_generate_tickets_from_stripe_session_sync] User ID: {user_id}")
     print(f"[_generate_tickets_from_stripe_session_sync] Session ID: {session_id}")
     print(f"[_generate_tickets_from_stripe_session_sync] Session: {session}")
-    
+
     from eventTicketsApp.views import generateTicket
 
     ticket_count = 0
 
     try:
         # Get line items from the session
-        print(f"[_generate_tickets_from_stripe_session_sync] Getting line items from session")
+        print(
+            f"[_generate_tickets_from_stripe_session_sync] Getting line items from session"
+        )
         line_items = stripe.checkout.Session.list_line_items(session_id)
-        print(f"[_generate_tickets_from_stripe_session_sync] Found {len(line_items.data)} line items")
-        
+        print(
+            f"[_generate_tickets_from_stripe_session_sync] Found {len(line_items.data)} line items"
+        )
+
         for i, item in enumerate(line_items.data):
-            print(f"[_generate_tickets_from_stripe_session_sync] Line item {i}: {item.description}, quantity: {item.quantity}")
-        
+            print(
+                f"[_generate_tickets_from_stripe_session_sync] Line item {i}: {item.description}, quantity: {item.quantity}"
+            )
+
         # Get user if authenticated
         user = None
         if user_id:
-            print(f"[_generate_tickets_from_stripe_session_sync] Looking up user with ID: {user_id}")
+            print(
+                f"[_generate_tickets_from_stripe_session_sync] Looking up user with ID: {user_id}"
+            )
             try:
                 user = CustomUser.objects.get(id=user_id)
-                print(f"[_generate_tickets_from_stripe_session_sync] User found: {user.username}")
+                print(
+                    f"[_generate_tickets_from_stripe_session_sync] User found: {user.username}"
+                )
             except CustomUser.DoesNotExist:
-                print(f"[_generate_tickets_from_stripe_session_sync] User with ID {user_id} not found")
+                print(
+                    f"[_generate_tickets_from_stripe_session_sync] User with ID {user_id} not found"
+                )
         else:
-            print(f"[_generate_tickets_from_stripe_session_sync] No user ID provided (guest)")
-        
+            print(
+                f"[_generate_tickets_from_stripe_session_sync] No user ID provided (guest)"
+            )
+
         # Get customer info from session
         print(f"[_generate_tickets_from_stripe_session_sync] Getting customer info")
         first_name, last_name, email = _get_customer_info_sync(user, session)
-        print(f"[_generate_tickets_from_stripe_session_sync] Customer: {first_name} {last_name} ({email})")
-        
+        print(
+            f"[_generate_tickets_from_stripe_session_sync] Customer: {first_name} {last_name} ({email})"
+        )
+
         # Get event from payment intent metadata
         event = None
         if session.payment_intent:
-            print(f"[_generate_tickets_from_stripe_session_sync] Getting event from payment intent: {session.payment_intent}")
+            print(
+                f"[_generate_tickets_from_stripe_session_sync] Getting event from payment intent: {session.payment_intent}"
+            )
             try:
                 payment_intent = stripe.PaymentIntent.retrieve(session.payment_intent)
-                print(f"[_generate_tickets_from_stripe_session_sync] Payment intent metadata: {payment_intent.metadata}")
-                event_id = payment_intent.metadata.get('event_id')
-                print(f"[_generate_tickets_from_stripe_session_sync] Event ID from metadata: {event_id}")
+                print(
+                    f"[_generate_tickets_from_stripe_session_sync] Payment intent metadata: {payment_intent.metadata}"
+                )
+                event_id = payment_intent.metadata.get("event_id")
+                print(
+                    f"[_generate_tickets_from_stripe_session_sync] Event ID from metadata: {event_id}"
+                )
                 if event_id:
                     event = Event.objects.get(eventId=event_id)
-                    print(f"[_generate_tickets_from_stripe_session_sync] Event found: {event.title}")
+                    print(
+                        f"[_generate_tickets_from_stripe_session_sync] Event found: {event.title}"
+                    )
             except Exception as e:
-                print(f"[_generate_tickets_from_stripe_session_sync] Error getting event from payment intent: {e}")
+                print(
+                    f"[_generate_tickets_from_stripe_session_sync] Error getting event from payment intent: {e}"
+                )
                 import traceback
+
                 print(f"[_generate_tickets_from_stripe_session_sync] Traceback:")
                 traceback.print_exc()
         else:
-            print(f"[_generate_tickets_from_stripe_session_sync] No payment intent found in session")
-        
+            print(
+                f"[_generate_tickets_from_stripe_session_sync] No payment intent found in session"
+            )
+
         if not event:
-            print(f"[_generate_tickets_from_stripe_session_sync] Could not determine event for ticket generation")
+            print(
+                f"[_generate_tickets_from_stripe_session_sync] Could not determine event for ticket generation"
+            )
             return 0
 
         # Generate tickets based on line items (excluding service fees)
-        print(f"[_generate_tickets_from_stripe_session_sync] Generating tickets from line items")
+        print(
+            f"[_generate_tickets_from_stripe_session_sync] Generating tickets from line items"
+        )
         for i, item in enumerate(line_items.data):
             if "Service Fee" not in item.description:
-                print(f"[_generate_tickets_from_stripe_session_sync] Processing ticket line item {i}: {item.description}")
+                print(
+                    f"[_generate_tickets_from_stripe_session_sync] Processing ticket line item {i}: {item.description}"
+                )
                 # Generate tickets for this line item
                 quantity = item.quantity
-                print(f"[_generate_tickets_from_stripe_session_sync] Generating {quantity} tickets for this line item")
-                
+                print(
+                    f"[_generate_tickets_from_stripe_session_sync] Generating {quantity} tickets for this line item"
+                )
+
                 for j in range(quantity):
-                    print(f"[_generate_tickets_from_stripe_session_sync] Generating ticket {j+1}/{quantity}")
+                    print(
+                        f"[_generate_tickets_from_stripe_session_sync] Generating ticket {j+1}/{quantity}"
+                    )
                     try:
                         ticket = generateTicket(
                             request=None,
@@ -1869,28 +2360,48 @@ def _generate_tickets_from_stripe_session_sync(user_id, session_id, session):
                             guestLastName=last_name,
                             guestEmail=email,
                             stripe_session_id=session_id,
-                            from_api=True
+                            from_api=True,
                         )
                         ticket_count += 1
-                        print(f"[_generate_tickets_from_stripe_session_sync] Ticket {j+1} generated: {ticket.ticketId}")
+                        print(
+                            f"[_generate_tickets_from_stripe_session_sync] Ticket {j+1} generated: {ticket.ticketId}"
+                        )
                     except Exception as e:
-                        print(f"[_generate_tickets_from_stripe_session_sync] Error generating ticket {j+1}: {e}")
+                        print(
+                            f"[_generate_tickets_from_stripe_session_sync] Error generating ticket {j+1}: {e}"
+                        )
                         import traceback
-                        print(f"[_generate_tickets_from_stripe_session_sync] Ticket generation error traceback:")
+
+                        print(
+                            f"[_generate_tickets_from_stripe_session_sync] Ticket generation error traceback:"
+                        )
                         traceback.print_exc()
-                
-                print(f"[_generate_tickets_from_stripe_session_sync] Generated {quantity} tickets from fallback method for {item.description}")
+
+                print(
+                    f"[_generate_tickets_from_stripe_session_sync] Generated {quantity} tickets from fallback method for {item.description}"
+                )
             else:
-                print(f"[_generate_tickets_from_stripe_session_sync] Skipping service fee item: {item.description}")
-        
-        print(f"[_generate_tickets_from_stripe_session_sync] Fallback ticket generation completed. Total tickets: {ticket_count}")
-        print(f"[_generate_tickets_from_stripe_session_sync] ========== FALLBACK TICKET GENERATION COMPLETE ==========")
+                print(
+                    f"[_generate_tickets_from_stripe_session_sync] Skipping service fee item: {item.description}"
+                )
+
+        print(
+            f"[_generate_tickets_from_stripe_session_sync] Fallback ticket generation completed. Total tickets: {ticket_count}"
+        )
+        print(
+            f"[_generate_tickets_from_stripe_session_sync] ========== FALLBACK TICKET GENERATION COMPLETE =========="
+        )
         return ticket_count
 
     except Exception as e:
-        print(f"[_generate_tickets_from_stripe_session_sync] Error in fallback ticket generation: {e}")
+        print(
+            f"[_generate_tickets_from_stripe_session_sync] Error in fallback ticket generation: {e}"
+        )
         import traceback
+
         print(f"[_generate_tickets_from_stripe_session_sync] Full traceback:")
         traceback.print_exc()
-        print(f"[_generate_tickets_from_stripe_session_sync] ========== FALLBACK TICKET GENERATION ERROR ==========")
+        print(
+            f"[_generate_tickets_from_stripe_session_sync] ========== FALLBACK TICKET GENERATION ERROR =========="
+        )
         return 0

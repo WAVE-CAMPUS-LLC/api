@@ -63,8 +63,8 @@ router = APIRouter()
 
 @router.api_route("/event/{eventId}/editEvent", methods=["POST", "PATCH"])
 async def edit_event_endpoint(
-    request: Request, 
-    eventId: str, 
+    request: Request,
+    eventId: str,
     user_id=Depends(get_current_user),
     platform: Optional[str] = None,
 ):
@@ -609,12 +609,14 @@ async def event_creation_fields(
             "ERROR",
             device_info,
         )
-        raise HTTPException(status_code=500, detail=f"Error fetching form fields: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error fetching form fields: {str(e)}"
+        )
 
 
 @router.post("/event/free/create")
 async def create_free_event(
-    request: Request, 
+    request: Request,
     user_id: int = Depends(get_current_user),
     platform: Optional[str] = None,
 ):
@@ -748,12 +750,14 @@ async def create_free_event(
             "ERROR",
             device_info,
         )
-        raise HTTPException(status_code=500, detail=f"Error creating free event: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error creating free event: {str(e)}"
+        )
 
 
 @router.post("/event/paid/create")
 async def create_paid_event(
-    request: Request, 
+    request: Request,
     user_id: int = Depends(get_current_user),
     platform: Optional[str] = None,
 ):
@@ -976,7 +980,9 @@ async def create_paid_event(
             "ERROR",
             device_info,
         )
-        raise HTTPException(status_code=500, detail=f"Error creating paid event: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error creating paid event: {str(e)}"
+        )
 
 
 @router.get("/event/get_host_stripe_account_link")
@@ -1115,12 +1121,14 @@ async def paid_ticket_creation_fields(
             "ERROR",
             device_info,
         )
-        raise HTTPException(status_code=500, detail=f"Error fetching form fields: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error fetching form fields: {str(e)}"
+        )
 
 
 @router.post("/event/{eventId}/createPaidFreeTicket")
 async def create_paid_free_ticket(
-    eventId: str, 
+    eventId: str,
     request: Request,
     platform: Optional[str] = None,
 ):
@@ -1252,12 +1260,14 @@ async def paid_coupon_creation_fields(
             "ERROR",
             device_info,
         )
-        raise HTTPException(status_code=500, detail=f"Error fetching form fields: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error fetching form fields: {str(e)}"
+        )
 
 
 @router.get("/event/{eventId}/coupons")
 async def get_event_coupons(
-    eventId: str, 
+    eventId: str,
     request: Request,
     platform: Optional[str] = None,
 ):
@@ -1284,14 +1294,10 @@ async def get_event_coupons(
                 "code": coupon["code"],
                 "discountPercentage": coupon["discount_percentage"],
                 "createdAt": (
-                    coupon["created_at"].isoformat()
-                    if coupon["created_at"]
-                    else None
+                    coupon["created_at"].isoformat() if coupon["created_at"] else None
                 ),
                 "updatedAt": (
-                    coupon["updated_at"].isoformat()
-                    if coupon["updated_at"]
-                    else None
+                    coupon["updated_at"].isoformat() if coupon["updated_at"] else None
                 ),
             }
             coupons_list.append(coupon_data)
@@ -1305,7 +1311,7 @@ async def get_event_coupons(
 
 @router.get("/event/{eventId}/paid/tickets")
 async def get_paid_event_tickets(
-    eventId: str, 
+    eventId: str,
     request: Request,
     platform: Optional[str] = None,
 ):
@@ -1341,7 +1347,7 @@ async def get_paid_event_tickets(
 
 @router.post("/event/{eventId}/paid/ticket/delete")
 async def delete_paid_event_ticket(
-    eventId: str, 
+    eventId: str,
     request: Request,
     platform: Optional[str] = None,
 ):
@@ -1385,7 +1391,7 @@ async def delete_paid_event_ticket(
 
 @router.post("/event/{eventId}/createCoupon")
 async def create_event_coupon(
-    eventId: str, 
+    eventId: str,
     payload: dict,
     request: Request,
     platform: Optional[str] = None,
@@ -1439,7 +1445,7 @@ class DeleteCouponRequest(BaseModel):
 
 @router.post("/event/{eventId}/deleteCoupon")
 async def delete_coupon(
-    eventId: str, 
+    eventId: str,
     deleteCouponRequest: DeleteCouponRequest,
     request: Request,
     platform: Optional[str] = None,
@@ -1477,7 +1483,7 @@ async def delete_coupon(
 
 @router.get("/event/{eventId}/rsvp")
 async def get_event_rsvp_list(
-    eventId: str, 
+    eventId: str,
     request: Request,
     platform: Optional[str] = None,
 ):
@@ -1488,9 +1494,7 @@ async def get_event_rsvp_list(
 
     @database_sync_to_async
     def get_event_rsvp_list_sync(event_id):
-        print(
-            f"[DEBUG - get_event_rsvp_list] Fetching RSVP list for event: {event_id}"
-        )
+        print(f"[DEBUG - get_event_rsvp_list] Fetching RSVP list for event: {event_id}")
         # Fetch the event object or raise a 404 error if not found
         event = get_object_or_404(Event, eventId=event_id)
         rsvp_list = RSVPTicket.objects.filter(event=event).values()
@@ -1515,7 +1519,7 @@ async def get_event_rsvp_list(
 async def delete_event_rsvp(
     eventId: str,
     request: Request,
-    ticket_id: Optional[str] = None, 
+    ticket_id: Optional[str] = None,
     user_id: int = Depends(get_current_user),
     platform: Optional[str] = None,
 ):
@@ -1609,9 +1613,9 @@ async def delete_event_rsvp(
 
 @router.get("/event/{eventId}/purchasedTickets")
 async def get_purchased_tickets_for_event(
-    eventId: str, 
-    user_id: int = Depends(get_current_user),
+    eventId: str,
     request: Request,
+    user_id: int = Depends(get_current_user),
     platform: Optional[str] = None,
 ):
     # Get device info
@@ -1666,8 +1670,8 @@ async def get_purchased_tickets_for_event(
 
 @router.post("/event/{eventId}/purchasedTickets/delete")
 async def delete_purchased_ticket(
-    eventId: str, 
-    request: Request, 
+    eventId: str,
+    request: Request,
     user_id: int = Depends(get_current_user),
     platform: Optional[str] = None,
 ):
@@ -1737,7 +1741,7 @@ async def delete_purchased_ticket(
 
 @router.post("/event/becomeHost")
 async def become_host(
-    request: Request, 
+    request: Request,
     user_id: int = Depends(get_current_user),
     platform: Optional[str] = None,
 ):
@@ -1765,9 +1769,7 @@ async def become_host(
             if has_connect_account:
                 try:
                     stripe_account = stripe.Account.retrieve(user.connectAccountID)
-                    is_fully_onboarded = stripe_account.get(
-                        "payouts_enabled", False
-                    )
+                    is_fully_onboarded = stripe_account.get("payouts_enabled", False)
                 except stripe.error.StripeError as e:
                     return JSONResponse(
                         content={"error": f"Stripe error: {str(e)}"},
@@ -1861,9 +1863,7 @@ async def become_host(
                 )
             except stripe.error.StripeError as e:
                 return JSONResponse(
-                    content={
-                        "error": f"Failed to generate onboarding link: {str(e)}"
-                    },
+                    content={"error": f"Failed to generate onboarding link: {str(e)}"},
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 )
 
@@ -1903,9 +1903,9 @@ async def become_host(
 
 @router.get("/event/{eventId}/analytics")
 async def get_event_analytics(
-    eventId: str, 
-    user_id: int = Depends(get_current_user),
+    eventId: str,
     request: Request,
+    user_id: int = Depends(get_current_user),
     platform: Optional[str] = None,
 ):
     # Get device info
@@ -2322,8 +2322,8 @@ async def get_event_analytics(
 
 @router.get("/analytics")
 async def get_host_recent_events_analytics(
-    user_id: int = Depends(get_current_user),
     request: Request,
+    user_id: int = Depends(get_current_user),
     platform: Optional[str] = None,
 ):
     # Get device info
