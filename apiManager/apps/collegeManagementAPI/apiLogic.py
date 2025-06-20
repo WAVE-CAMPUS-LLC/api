@@ -10,6 +10,8 @@ from adminDashboardApp.models import College
 
 # Serializers
 from .serializers import CollegeExplorePage, CollegeDetails, VerificationRequest
+from apiManager.utilities.notify_by_bot import notify_by_bot
+from apiManager.utilities.device_info import get_device_info
 
 
 router = APIRouter()
@@ -21,9 +23,12 @@ async def ping():
 
 
 @router.get("/explore")
-async def explore_colleges():
+async def explore_colleges(request: Request, platform: Optional[str] = None):
     print("[DEBUG - explore_colleges] Function called")
     try:
+        user_agent_str = request.headers.get("user-agent", "")
+        device_data = get_device_info(user_agent_str)
+        device_info = device_data["device_info"]
 
         @database_sync_to_async
         def get_colleges():
@@ -57,6 +62,12 @@ async def explore_colleges():
     except Exception as e:
         # Log the error for debugging
         print(f"Error in explore_colleges: {str(e)}")
+        await notify_by_bot(
+            f"**[API: explore_colleges]** \n\n Error fetching college data: error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
         # Return a more helpful error response
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -65,9 +76,14 @@ async def explore_colleges():
 
 
 @router.get("/college/{collegeId}/details")
-async def get_college_details(collegeId: str):
+async def get_college_details(
+    collegeId: str, request: Request, platform: Optional[str] = None
+):
     print(f"[DEBUG - get_college_details] Function called with collegeId: {collegeId}")
     try:
+        user_agent_str = request.headers.get("user-agent", "")
+        device_data = get_device_info(user_agent_str)
+        device_info = device_data["device_info"]
 
         @database_sync_to_async
         def get_college_details_data(collegeId):
@@ -106,6 +122,12 @@ async def get_college_details(collegeId: str):
     except Exception as e:
         # Log the error for debugging
         print(f"Error in get_college_details: {str(e)}")
+        await notify_by_bot(
+            f"**[API: get_college_details]** \n\n Error fetching college details: collegeId={collegeId}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
         # Return a more helpful error response
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -161,6 +183,11 @@ async def get_college_events(collegeId: str):
     except Exception as e:
         # Log the error for debugging
         print(f"Error in get_college_events: {str(e)}")
+        await notify_by_bot(
+            f"[get_college_events] Error fetching college events: collegeId={collegeId}, error={str(e)}",
+            "college_management_api",
+            "ERROR",
+        )
         # Return a more helpful error response
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

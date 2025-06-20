@@ -15,6 +15,8 @@ import traceback
 
 from apiManager.dependencies import get_current_user
 from apiManager.utilities.form_fields import get_form_fields
+from apiManager.utilities.notify_by_bot import notify_by_bot
+from apiManager.utilities.device_info import get_device_info
 from .serializers import (
     HostEventExplore,
     EventDetailSerializer,
@@ -218,68 +220,47 @@ async def edit_event_endpoint(
 
 
 @router.get("/getEvents")
-async def get_events(user_id: int = Depends(get_current_user)):
+async def get_events(
+    request: Request,
+    user_id: int = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
     print(f"[DEBUG - get_events] Function called with user_id: {user_id}")
     """
-    API endpoint for getting events
+    API endpoint for getting all events for a user
     """
     try:
+        user_agent_str = request.headers.get("user-agent", "")
+        device_data = get_device_info(user_agent_str)
+        device_info = device_data["device_info"]
 
         @database_sync_to_async
         def validate_user(user_id):
-            try:
-                user = CustomUser.objects.get(id=user_id)
-                # Check if user is None
-                if not user or user is None:
-                    return None
-                return user
-            except CustomUser.DoesNotExist:
-                return None
+            user = CustomUser.objects.get(id=user_id)
+            return user
 
         @database_sync_to_async
         def get_events(user_id):
-            try:
-                events_list = []
-                user_obj = CustomUser.objects.get(id=user_id)
-                # First, get the host profile for this user
-                try:
-                    # Then get the events where host is this host profile
-                    host_events = Event.objects.filter(host=user_obj)
-                    if not host_events:
-                        # Return an empty list if no events found instead of JSONResponse
-                        return []
-                    for event in host_events:
-                        header_photo_url = (
-                            event.header_photo.url if event.header_photo else None
-                        )
+            user = CustomUser.objects.get(id=user_id)
+            events = Event.objects.filter(host=user)
+            events_list = []
+            for event in events:
+                events_list.append(
+                    {
+                        "eventId": str(event.eventId),
+                        "title": event.title,
+                        "date": event.date,
+                        "event_type": event.event_type,
+                        "ticketing": str(event.ticketing),
+                        "status": event.status,
+                        "city": event.city,
+                        "state": event.state,
+                    }
+                )
+            return events_list
 
-                        event_data = {
-                            "eventId": str(event.eventId),
-                            "title": event.title,
-                            "description": event.description,
-                            "date": event.date,
-                            "city": event.city,
-                            "state": event.state,
-                            "header_photo": header_photo_url,
-                            "ticketing": event.ticketing,
-                        }
-                        events_list.append(event_data)
-                except HostProfile.DoesNotExist:
-                    # User doesn't have a host profile
-                    return []
-                return events_list
-            except Exception as e:
-                print(f"Error in get_events: {str(e)}")
-                return []
-
-        # Validate user asynchronously
-        user = await validate_user(user_id)
-        print(f"[DEBUG - get_events] User validated: {user is not None}")
-        if not user:
-            return JSONResponse(
-                content={"error": "Authentication required"},
-                status_code=status.HTTP_401_UNAUTHORIZED,
-            )
+        # Validate user exists
+        await validate_user(user_id)
 
         events_before_serializing = await get_events(user_id)
         events = [HostEventExplore(**event) for event in events_before_serializing]
@@ -301,6 +282,12 @@ async def get_events(user_id: int = Depends(get_current_user)):
     except Exception as e:
         traceback_str = traceback.format_exc()
         print(f"Get Events error: {str(e)}\n{traceback_str}")
+        await notify_by_bot(
+            f"**[API: get_events]** \n\n Unexpected error: user_id={user_id}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
 
         # Check if it's a validation error from Pydantic
         if "ValidationError" in str(type(e)):
@@ -320,7 +307,12 @@ async def get_events(user_id: int = Depends(get_current_user)):
 
 
 @router.get("/getEvent/{eventId}")
-async def get_event_details(eventId: str, user_id: int = Depends(get_current_user)):
+async def get_event_details(
+    eventId: str,
+    request: Request,
+    user_id: int = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
     print(
         f"[DEBUG - get_event_details] Function called with eventId: {eventId}, user_id: {user_id}"
     )
@@ -328,6 +320,9 @@ async def get_event_details(eventId: str, user_id: int = Depends(get_current_use
     API endpoint for getting event details
     """
     try:
+        user_agent_str = request.headers.get("user-agent", "")
+        device_data = get_device_info(user_agent_str)
+        device_info = device_data["device_info"]
 
         @database_sync_to_async
         def get_event(eventId):
@@ -411,6 +406,12 @@ async def get_event_details(eventId: str, user_id: int = Depends(get_current_use
     except Exception as e:
         traceback_str = traceback.format_exc()
         print(f"Get Event Details error: {str(e)}\n{traceback_str}")
+        await notify_by_bot(
+            f"**[API: get_event_details]** \n\n Unexpected error: eventId={eventId}, user_id={user_id}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
 
         # Handle all other exceptions
         return JSONResponse(
@@ -420,7 +421,12 @@ async def get_event_details(eventId: str, user_id: int = Depends(get_current_use
 
 
 @router.post("/event/{eventId}/deleteEvent")
-async def delete_event(eventId: str, user_id: int = Depends(get_current_user)):
+async def delete_event(
+    eventId: str,
+    request: Request,
+    user_id: int = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
     print(
         f"[DEBUG - delete_event] Function called with eventId: {eventId}, user_id: {user_id}"
     )
@@ -428,6 +434,9 @@ async def delete_event(eventId: str, user_id: int = Depends(get_current_user)):
     API endpoint for deleting an event
     """
     try:
+        user_agent_str = request.headers.get("user-agent", "")
+        device_data = get_device_info(user_agent_str)
+        device_info = device_data["device_info"]
 
         @database_sync_to_async
         def delete_event(eventId):
@@ -453,6 +462,12 @@ async def delete_event(eventId: str, user_id: int = Depends(get_current_user)):
     except Exception as e:
         traceback_str = traceback.format_exc()
         print(f"Delete Event error: {str(e)}\n{traceback_str}")
+        await notify_by_bot(
+            f"**[API: delete_event]** \n\n Unexpected error: eventId={eventId}, user_id={user_id}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
 
         # Handle all other exceptions
         return JSONResponse(

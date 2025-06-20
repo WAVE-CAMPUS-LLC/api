@@ -16,6 +16,8 @@ from socialApp.models import Crew, CrewMember
 # API Manager imports
 from .serializers import ExplorePageEvent, EventDetailsSerializer, RSVPInformation
 from apiManager.dependencies import get_current_user
+from apiManager.utilities.notify_by_bot import notify_by_bot
+from apiManager.utilities.device_info import get_device_info
 from authenticationApp.models import CustomUser
 from uuid import UUID
 from .version_middleware import VersionCheckMiddleware
@@ -131,11 +133,17 @@ async def get_categories():
 
 
 @router.get("/event/{eventId}")
-async def get_event_details(eventId: str):
+async def get_event_details(
+    eventId: str, request: Request, platform: Optional[str] = None
+):
     """
     API endpoint to retrieve details of a specific event.
     """
     print(f"[get_event_details API] Function called with eventId: {eventId}")
+
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
 
     @database_sync_to_async
     def get_event_data(eventId):
@@ -198,119 +206,46 @@ async def get_event_details(eventId: str):
             paid_free_tickets = []  # Default value, adjust based on your model
 
             # Sanitize HTML in the description to prevent XSS attacks
-            try:
-                # Import CSS sanitizer if it exists (in newer versions of bleach)
-                css_sanitizer = None
-                try:
-                    from bleach.css_sanitizer import CSSSanitizer
+            sanitized_description = (
+                bleach.clean(event.description) if event.description else ""
+            )
 
-                    allowed_css_properties = [
-                        "color",
-                        "font-weight",
-                        "text-align",
-                        "font-style",
-                        "text-decoration",
-                    ]
-                    css_sanitizer = CSSSanitizer(
-                        allowed_css_properties=allowed_css_properties
-                    )
-                except ImportError:
-                    print(
-                        "[get_event_details API] CSSSanitizer not available, using basic sanitization"
-                    )
-
-                # Clean the HTML with appropriate parameters
-                if css_sanitizer:
-                    sanitized_description = bleach.clean(
-                        event.description,
-                        tags=[
-                            "p",
-                            "br",
-                            "strong",
-                            "em",
-                            "u",
-                            "h1",
-                            "h2",
-                            "h3",
-                            "h4",
-                            "h5",
-                            "h6",
-                            "ol",
-                            "ul",
-                            "li",
-                            "b",
-                            "i",
-                        ],
-                        attributes={"*": ["class", "style"]},
-                        css_sanitizer=css_sanitizer,
-                        strip=True,
-                    )
-                else:
-                    # Fallback to basic sanitization without CSS sanitizer
-                    sanitized_description = bleach.clean(
-                        event.description,
-                        tags=[
-                            "p",
-                            "br",
-                            "strong",
-                            "em",
-                            "u",
-                            "h1",
-                            "h2",
-                            "h3",
-                            "h4",
-                            "h5",
-                            "h6",
-                            "ol",
-                            "ul",
-                            "li",
-                            "b",
-                            "i",
-                        ],
-                        attributes={
-                            "*": ["class"]
-                        },  # Allow class but not style without CSS sanitizer
-                        strip=True,
-                    )
-            except Exception as e:
-                print(f"[get_event_details API] Error sanitizing description: {str(e)}")
-                # Fallback to a more basic sanitization if full sanitization fails
-                sanitized_description = bleach.clean(event.description, strip=True)
-
-            # Collect all fields that actually exist in the Event model
             return {
                 "eventId": str(event.eventId),
                 "title": event.title,
-                "description": sanitized_description,
                 "date": event.date,
-                "header_photo": header_photo_url,
-                "building_name": event.building_name,
-                "street": event.street,
-                "apt_suite_unit": event.apt_suite_unit,
-                "city": event.city,
-                "state": event.state,
-                "zip_code": event.zip_code,
-                "hide_address": bool(event.hide_address),
-                "ticketing": str(event.ticketing),
-                "start_time": str(event.start_time),
-                "end_time": str(event.end_time),
-                "age_restriction": event.age_restriction,
+                "start_time": event.start_time,
+                "end_time": event.end_time,
+                "description": sanitized_description,
                 "event_type": event.event_type,
-                "status": event.status,
-                "country": event.country,
+                "ticketing": str(event.ticketing),
+                "location": {
+                    "building_name": event.building_name,
+                    "street": event.street,
+                    "apt_suite_unit": event.apt_suite_unit,
+                    "city": event.city,
+                    "state": event.state,
+                    "zip_code": event.zip_code,
+                    "country": event.country,
+                    "hide_address": event.hide_address,
+                },
+                "header_photo": header_photo_url,
                 "body_photo_one": body_photo_one_url,
                 "body_photo_two": body_photo_two_url,
                 "body_photo_three": body_photo_three_url,
                 "body_photo_four": body_photo_four_url,
                 "body_photo_five": body_photo_five_url,
                 "host": host_data,
-                "guestList": guest_list,
-                "isFavoriteEvent": is_favorite,
-                "rsvpFormRequired": rsvp_required,
-                "paidFreeTickets": paid_free_tickets,
-                "crew_discount": bool(event.crew_discount),
-                "crew_discount_percentage": event.crew_discount_percentage,
+                "guest_list": guest_list,
+                "is_favorite": is_favorite,
+                "rsvp_required": rsvp_required,
+                "paid_free_tickets": paid_free_tickets,
+                "crew_discount": event.crew_discount,
                 "minimum_crew_size": event.minimum_crew_size,
+                "crew_discount_percentage": event.crew_discount_percentage,
+                "show_guest_list": event.show_guest_list,
+                "forAllDisplay": bool(event.forAllDisplay),
+                "forCollegesDisplay": bool(event.forCollegesDisplay),
                 "coupons_activated": bool(event.couponsActivated),
             }
         except Event.DoesNotExist:
@@ -319,6 +254,12 @@ async def get_event_details(eventId: str):
 
     event_data = await get_event_data(eventId)
     if event_data is None:
+        await notify_by_bot(
+            f"**[API: get_event_details]** \n\n Event not found: eventId={eventId} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
         raise HTTPException(status_code=404, detail="Event not found")
 
     print(
@@ -329,11 +270,17 @@ async def get_event_details(eventId: str):
 
 
 @router.get("/event/{eventId}/host_profile")
-async def get_event_host_profile(eventId: str):
+async def get_event_host_profile(
+    eventId: str, request: Request, platform: Optional[str] = None
+):
     """
     API endpoint to retrieve the host profile for a specific event.
     """
     print(f"[get_event_host_profile API] Function called with eventId: {eventId}")
+
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
 
     @database_sync_to_async
     def get_host_profile(eventId):
@@ -360,6 +307,12 @@ async def get_event_host_profile(eventId: str):
 
     host_data = await get_host_profile(eventId)
     if host_data is None:
+        await notify_by_bot(
+            f"**[API: get_event_host_profile]** \n\n Event not found: eventId={eventId} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
         raise HTTPException(status_code=404, detail="Event not found")
 
     print(
@@ -369,11 +322,17 @@ async def get_event_host_profile(eventId: str):
 
 
 @router.get("/event/{eventId}/guests")
-async def get_event_guests(eventId: str):
+async def get_event_guests(
+    eventId: str, request: Request, platform: Optional[str] = None
+):
     """
     API endpoint to retrieve guests for a specific event.
     """
     print(f"[get_event_guests API] Function called with eventId: {eventId}")
+
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
 
     @database_sync_to_async
     def get_guests_data(eventId):
@@ -395,19 +354,34 @@ async def get_event_guests(eventId: str):
 
     guests_data = await get_guests_data(eventId)
     if guests_data is None:
+        await notify_by_bot(
+            f"**[API: get_event_guests]** \n\n Event not found: eventId={eventId} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
         raise HTTPException(status_code=404, detail="Event not found")
 
     return {"guests": guests_data}
 
 
 @router.post("/event/{eventId}/toggleFavorite")
-async def toggleFavorite(eventId: str, user_id: int = Depends(get_current_user)):
+async def toggleFavorite(
+    eventId: str,
+    request: Request,
+    user_id: int = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
     """
     API endpoint toggling a favorite on an event
     """
     print(
         f"[toggleFavorite API] Function called with eventId: {eventId}, user_id: {user_id}"
     )
+
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
 
     @database_sync_to_async
     def toggle_fav_event(eventId, user_id):
@@ -437,13 +411,24 @@ async def toggleFavorite(eventId: str, user_id: int = Depends(get_current_user))
 
     success = await toggle_fav_event(eventId, user_id)
     if not success:
+        await notify_by_bot(
+            f"**[API: toggleFavorite]** \n\n Could not favorite event: eventId={eventId}, user_id={user_id} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
         raise HTTPException(status_code=404, detail="Could not favorite event")
 
     return {"message": "Profile updated successfully"}
 
 
 @router.get("/event/{eventId}/isFavorite")
-async def check_event_favorite(eventId: str, user_id: int = Depends(get_current_user)):
+async def check_event_favorite(
+    eventId: str,
+    request: Request,
+    user_id: int = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
     """
     API endpoint to check if a specific event is in the user's favorites.
     Returns event data if favorited, otherwise returns isFavorite: false.
@@ -451,6 +436,10 @@ async def check_event_favorite(eventId: str, user_id: int = Depends(get_current_
     print(
         f"[check_event_favorite API] Function called with eventId: {eventId}, user_id: {user_id}"
     )
+
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
 
     @database_sync_to_async
     def check_favorite_status(eventId, user_id):
@@ -487,6 +476,12 @@ async def check_event_favorite(eventId: str, user_id: int = Depends(get_current_
     favorite_status = await check_favorite_status(eventId, user_id)
 
     if favorite_status is None:
+        await notify_by_bot(
+            f"**[API: check_event_favorite]** \n\n User, event, or user profile not found: eventId={eventId}, user_id={user_id} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
         raise HTTPException(
             status_code=404, detail="User, event, or user profile not found"
         )

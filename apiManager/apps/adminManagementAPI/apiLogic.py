@@ -23,7 +23,19 @@ import traceback
 import os
 from django.core.files.base import ContentFile
 from django.conf import settings
-from django.db.models import Count, Max, Avg, F, Sum, Q, Case, When, IntegerField, Subquery, OuterRef
+from django.db.models import (
+    Count,
+    Max,
+    Avg,
+    F,
+    Sum,
+    Q,
+    Case,
+    When,
+    IntegerField,
+    Subquery,
+    OuterRef,
+)
 from django.db.models.functions import TruncDay, TruncWeek, TruncMonth, TruncHour
 from django.utils.timezone import now
 from django.core.cache import cache
@@ -60,17 +72,27 @@ from adminDashboardApp.models import College
 from collegeManagementApp.models import Membership, CollegeEventLink
 from adminDashboardApp.forms import CollegeForm, EditCollegeForm
 from apiManager.utilities.form_fields import get_form_fields
+from apiManager.utilities.notify_by_bot import notify_by_bot
+from apiManager.utilities.device_info import get_device_info
 
 router = APIRouter()
 
 
 # USERS
 @router.get("/dashboard")
-async def admin_dashboard(current_user: CustomUser = Depends(require_admin_role)):
+async def admin_dashboard(
+    request: Request,
+    current_user: CustomUser = Depends(require_admin_role),
+    platform: Optional[str] = None,
+):
     """
     Admin dashboard endpoint - requires Admin or Super Admin role.
     """
     print(f"[admin_dashboard] API called with user_id: {current_user.id}")
+
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
 
     try:
         # Get current user info
@@ -101,6 +123,12 @@ async def admin_dashboard(current_user: CustomUser = Depends(require_admin_role)
             },
         }
     except Exception as e:
+        await notify_by_bot(
+            f"**[API: admin_dashboard]** \n\n Error loading dashboard: user_id={current_user.id}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
         raise HTTPException(
             status_code=500, detail=f"Error loading dashboard: {str(e)}"
         )
@@ -108,15 +136,21 @@ async def admin_dashboard(current_user: CustomUser = Depends(require_admin_role)
 
 @router.get("/users", response_model=List[UserResponse])
 async def get_users(
+    request: Request,
     skip: int = 0,
     limit: int = 0,  # 0 means no limit (return all users)
     current_user: CustomUser = Depends(require_admin_role),
+    platform: Optional[str] = None,
 ):
     """
     Get list of users - requires Admin or Super Admin role.
     If limit is 0, returns all users. Otherwise uses pagination.
     """
     print(f"[get_users] API called with user_id: {current_user.id}")
+
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
 
     try:
         # Get users with optional pagination - if limit is 0, get all users
@@ -173,6 +207,12 @@ async def get_users(
         return user_responses
 
     except Exception as e:
+        await notify_by_bot(
+            f"**[API: get_users]** \n\n Error fetching users: user_id={current_user.id}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
         raise HTTPException(status_code=500, detail=f"Error fetching users: {str(e)}")
 
 
@@ -1278,20 +1318,19 @@ async def get_overall_event_analytics(
             try:
                 # Method 1: Direct calculation from PaidFreeTicket model (most accurate)
                 revenue_data = PaidFreeTicket.objects.filter(
-                    ticket_sold__gt=0,
-                    ticket_price__gt=0
-                ).aggregate(
-                    total_revenue=Sum(F("ticket_sold") * F("ticket_price"))
-                )
+                    ticket_sold__gt=0, ticket_price__gt=0
+                ).aggregate(total_revenue=Sum(F("ticket_sold") * F("ticket_price")))
                 total_revenue = float(revenue_data["total_revenue"] or 0)
-                
+
                 # Method 2: If no revenue from PaidFreeTicket, calculate from successful Ticket purchases
                 if total_revenue == 0:
                     # Get all successful ticket purchases and sum their ticket type prices
-                    successful_tickets = Ticket.objects.filter(
-                        status="Valid"
-                    ).select_related("event").prefetch_related("event__tickets")
-                    
+                    successful_tickets = (
+                        Ticket.objects.filter(status="Valid")
+                        .select_related("event")
+                        .prefetch_related("event__tickets")
+                    )
+
                     for ticket in successful_tickets:
                         try:
                             # Find the first available ticket type for this event
@@ -1302,7 +1341,7 @@ async def get_overall_event_analytics(
                         except Exception:
                             # Skip problematic tickets
                             continue
-                
+
                 print(
                     f"[get_overall_event_analytics] DEBUG: Calculated total revenue: ${total_revenue}"
                 )
@@ -1387,40 +1426,40 @@ async def get_overall_event_analytics(
 
             # 📈 9. FIXED: Accurate popular events with optimized attendee counting
             # Use subqueries to efficiently calculate attendee counts
-            
+
             popular_events = list(
-                Event.objects.only(
-                    "eventId", "title", "event_type", "date", "views"
-                )
+                Event.objects.only("eventId", "title", "event_type", "date", "views")
                 .select_related("host")
                 .annotate(
                     rsvp_count=Subquery(
-                        RSVPTicket.objects.filter(event=OuterRef('pk'))
-                        .aggregate(count=Count('ticket_id'))['count']
-                    ) or 0,
+                        RSVPTicket.objects.filter(event=OuterRef("pk")).aggregate(
+                            count=Count("ticket_id")
+                        )["count"]
+                    )
+                    or 0,
                     paid_ticket_count=Subquery(
-                        Ticket.objects.filter(event=OuterRef('pk'))
-                        .aggregate(count=Count('ticketId'))['count']
-                    ) or 0,
+                        Ticket.objects.filter(event=OuterRef("pk")).aggregate(
+                            count=Count("ticketId")
+                        )["count"]
+                    )
+                    or 0,
                 )
-                .annotate(
-                    total_attendees=F('rsvp_count') + F('paid_ticket_count')
-                )
+                .annotate(total_attendees=F("rsvp_count") + F("paid_ticket_count"))
                 .filter(total_attendees__gt=0)  # Only events with attendees
                 .order_by("-total_attendees")[:10]
                 .values(
                     "eventId",
-                    "title", 
+                    "title",
                     "event_type",
                     "date",
                     "views",
                     "host__username",
                     "rsvp_count",
-                    "paid_ticket_count", 
+                    "paid_ticket_count",
                     "total_attendees",
                 )
             )
-            
+
             # Convert UUIDs and dates to strings
             for event in popular_events:
                 event["eventId"] = str(event["eventId"])

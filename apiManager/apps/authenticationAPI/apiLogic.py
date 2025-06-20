@@ -15,7 +15,8 @@ from authenticationApp.forms import MobileUserJoinForm
 
 from .serializers import LoginRequest, JoinRequest
 from apiManager.utilities.form_fields import get_form_fields
-
+from apiManager.utilities.notify_by_bot import notify_by_bot
+from apiManager.utilities.device_info import get_device_info
 
 from jose import jwt
 from datetime import datetime, timedelta
@@ -98,12 +99,18 @@ async def check_admin_user(payload: AdminUserCheckRequest):
 
 
 @router.post("/login")
-async def login_api(request: Request, login_data: LoginRequest):
+async def login_api(
+    request: Request, login_data: LoginRequest, platform: Optional[str] = None
+):
     """
     API endpoint for user authentication using email/username and password.
     Returns JWT tokens and user data upon successful authentication.
     """
     print(f"[login_api] Function called with identifier: {login_data.identifier}")
+
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
 
     @database_sync_to_async
     def login_sync(identifier, password, client_ip):
@@ -207,6 +214,12 @@ async def login_api(request: Request, login_data: LoginRequest):
         print(
             f"[login_api] Authentication failed with status code {status_code}: {error}"
         )
+        await notify_by_bot(
+            f"**[API: login_api]** \n\n Authentication failed: identifier={login_data.identifier}, status={status_code} \n\n Platform: {platform} \n\n Error: {error}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
         return JSONResponse(content=error, status_code=status_code)
 
     print(f"[login_api] Authentication successful with status code {status_code}")
@@ -214,7 +227,9 @@ async def login_api(request: Request, login_data: LoginRequest):
 
 
 @router.post("/logout")
-async def logout_api(request: Request, Authorization: str = Header(None)):
+async def logout_api(
+    request: Request, Authorization: str = Header(None), platform: Optional[str] = None
+):
     """
     API endpoint for user logout.
     Invalidates the refresh token and clears session data.
@@ -224,6 +239,11 @@ async def logout_api(request: Request, Authorization: str = Header(None)):
         if Authorization
         else "[logout_api] Function called without Authorization header"
     )
+
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
     try:
         # Invalidate the refresh token (if applicable)
         # This can be done by removing it from the database or marking it as invalid
@@ -237,6 +257,12 @@ async def logout_api(request: Request, Authorization: str = Header(None)):
     except Exception as e:
         traceback_str = traceback.format_exc()
         print(f"Logout error: {str(e)}\n{traceback_str}")
+        await notify_by_bot(
+            f"**[API: logout_api]** \n\n Unexpected error: {str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
         return JSONResponse(
             content={"error": "An unexpected error occurred"},
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -244,10 +270,15 @@ async def logout_api(request: Request, Authorization: str = Header(None)):
 
 
 @router.get("/join")
-async def get_join_form(request: Request):
+async def get_join_form(request: Request, platform: Optional[str] = None):
     print(
         f"[get_join_form] Function called with X-Platform: {request.headers.get('X-Platform')}"
     )
+
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
     is_mobile = request.headers.get("X-Platform") == "mobile"
     FormClass = MobileUserJoinForm
     fields_info = get_form_fields(FormClass)
@@ -256,8 +287,13 @@ async def get_join_form(request: Request):
 
 
 @router.post("/join")
-async def join_api(request: Request):
+async def join_api(request: Request, platform: Optional[str] = None):
     print("[join_api] Function called")
+
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
     try:
         # Get form data from request - this is async and fast
         form_data = await request.form()
@@ -327,6 +363,12 @@ async def join_api(request: Request):
     except Exception as e:
         traceback_str = traceback.format_exc()
         print(f"Registration error: {str(e)}\n{traceback_str}")
+        await notify_by_bot(
+            f"**[API: join_api]** \n\n Unexpected error: {str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
         return JSONResponse(
             content={"error": f"An unexpected error occurred: {str(e)}"},
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

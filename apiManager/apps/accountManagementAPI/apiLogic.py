@@ -9,6 +9,7 @@ from fastapi import (
     UploadFile,
     Form,
     Body,
+    File,
 )
 from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordRequestForm
@@ -19,9 +20,17 @@ import traceback
 import os
 from django.core.files.base import ContentFile
 from django.conf import settings
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
+from django.utils import timezone
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
+from django.urls import reverse
 
 from authenticationApp.models import CustomUser
 from authenticationApp.serializers import CustomUserSerializer
+from authenticationApp.forms import EmailPasswordResetForm
 from django.contrib.auth import authenticate
 from stripeManagementApp.customerSetup import CustomerAccount, ConnectAccount
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -38,9 +47,17 @@ from accountManagementApp.forms import (
 from fastapi import Depends
 from apiManager.dependencies import get_current_user
 from django.shortcuts import get_object_or_404
+from apiManager.utilities.notify_by_bot import notify_by_bot
+from apiManager.utilities.device_info import get_device_info
 
 stripeKey = settings.STRIPE_PUBLISHABLE_KEY
 
+# Import the ResetLinkExpiryTime setting
+from django.conf import settings
+
+ResetLinkExpiryTime = getattr(
+    settings, "RESET_LINK_EXPIRY_TIME", timezone.timedelta(hours=24)
+)
 
 from .serializers import TicketSerializer
 
@@ -48,41 +65,42 @@ router = APIRouter()
 
 
 @router.get("/profileOverview")
-async def profileOverview(user_id: int = Depends(get_current_user)):
+async def profileOverview(
+    request: Request,
+    user_id: int = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
     """
-    API endpoint for getting profile overview.
-    Returns user profile data.
+    API endpoint to retrieve user profile overview
     """
-    print(f"[profileOverview] API called with user_id: {user_id}")
-    # Log authentication status
-    if user_id is None:
-        print("[profileOverview] Authentication failed: No user_id provided")
-        raise HTTPException(
-            status_code=401,
-            detail="Authentication required",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+    print(f"[profileOverview] Function called with user_id: {user_id}")
+
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
 
     @database_sync_to_async
     def get_profile_overview(user_id):
         try:
             user = CustomUser.objects.get(id=user_id)
-            user_data = {
-                "id": user_id,
+            user_profile = UserProfile.objects.get(user=user)
+            return {
                 "user_id": str(user.user_id),
-                "profile_photo": (
-                    user.user_profile.profile_photo.url
-                    if user.user_profile.profile_photo
-                    else None
-                ),
+                "username": user.username,
                 "first_name": user.first_name,
                 "last_name": user.last_name,
-                "username": user.username,
+                "email": user.email,
+                "profile_photo": (
+                    user_profile.profile_photo.url
+                    if user_profile.profile_photo
+                    else None
+                ),
+                "college": (
+                    user_profile.college.name if user_profile.college else None
+                ),
+                "is_campus_manager": user_profile.is_campus_manager,
+                "was_host": user_profile.was_host,
             }
-            print(
-                f"[profileOverview] Successfully retrieved profile data for user_id: {user_id}"
-            )
-            return user_data
         except CustomUser.DoesNotExist:
             print(f"[profileOverview] Error: User with id {user_id} does not exist")
             return None
@@ -96,66 +114,87 @@ async def profileOverview(user_id: int = Depends(get_current_user)):
     try:
         profile_data = await get_profile_overview(user_id)
         if profile_data is None:
+            await notify_by_bot(
+                f"**[API: profileOverview]** \n\n User not found: user_id={user_id} \n\n Platform: {platform}",
+                platform or "Unknown",
+                "ERROR",
+                device_info,
+            )
             raise HTTPException(status_code=404, detail="User not found")
+
+        print(f"[profileOverview] Returning profile data: {profile_data}")
         return profile_data
     except Exception as e:
         if not isinstance(e, HTTPException):
             error_trace = traceback.format_exc()
             print(f"[profileOverview] Unhandled exception: {str(e)}\n{error_trace}")
+            await notify_by_bot(
+                f"**[API: profileOverview]** \n\n Unhandled exception: user_id={user_id}, error={str(e)} \n\n Platform: {platform}",
+                platform or "Unknown",
+                "ERROR",
+                device_info,
+            )
             raise HTTPException(status_code=500, detail="Internal server error")
         raise e
 
 
 @router.get("/profile/detailed")
-async def profile_detailed(user_id: int = Depends(get_current_user)):
+async def profile_detailed(
+    request: Request,
+    user_id: int = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
     """
-    API endpoint for getting detailed profile information.
-    Returns user profile data including email and phone number.
+    API endpoint to retrieve detailed user profile information
     """
-    print(f"[profile_detailed] API called with user_id: {user_id}")
+    print(f"[profile_detailed] Function called with user_id: {user_id}")
+
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
 
     @database_sync_to_async
     def get_profile_detailed(user_id):
         try:
             user = CustomUser.objects.get(id=user_id)
-            account_type = None
-            if user.is_staff:
-                account_type = "Staff"
-            elif user.is_superuser:
-                account_type = "Super User"
-            elif user.is_superadmin:
-                account_type = "Super Admin"
-            else:
-                account_type = "User"
-
-            user_data = {
-                "id": user_id,
+            user_profile = UserProfile.objects.get(user=user)
+            return {
                 "user_id": str(user.user_id),
-                "profile_photo": (
-                    user.user_profile.profile_photo.url
-                    if user.user_profile.profile_photo
-                    else None
-                ),
+                "username": user.username,
                 "first_name": user.first_name,
                 "last_name": user.last_name,
-                "username": user.username,
                 "email": user.email,
-                "date_joined": user.date_joined,
-                "account_status": user.is_suspended,
-                "account_type": account_type,
-                "college": (
-                    user.user_profile.college.name
-                    if user.user_profile.college
+                "profile_photo": (
+                    user_profile.profile_photo.url
+                    if user_profile.profile_photo
                     else None
                 ),
+                "college": (
+                    user_profile.college.name if user_profile.college else None
+                ),
+                "is_campus_manager": user_profile.is_campus_manager,
+                "was_host": user_profile.was_host,
+                "date_joined": user.date_joined,
+                "is_active": user.is_active,
             }
-            return user_data
         except CustomUser.DoesNotExist:
+            print(f"[profile_detailed] Error: User with id {user_id} does not exist")
+            return None
+        except Exception as e:
+            error_trace = traceback.format_exc()
+            print(
+                f"[profile_detailed] Unexpected error retrieving profile for user_id {user_id}: {str(e)}\n{error_trace}"
+            )
             return None
 
     profile_data = await get_profile_detailed(user_id)
     if profile_data is None:
-        print(f"[profile_detailed] Error: User not found for user_id: {user_id}")
+        await notify_by_bot(
+            f"**[API: profile_detailed]** \n\n User not found: user_id={user_id} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
         raise HTTPException(status_code=404, detail="Event not found")
     print(f"[profile_detailed] Returning profile data: {profile_data}")
     return profile_data
@@ -165,79 +204,63 @@ async def profile_detailed(user_id: int = Depends(get_current_user)):
 async def update_profile_detailed(
     request: Request,
     user_id: int = Depends(get_current_user),
-    first_name: Optional[str] = None,
-    last_name: Optional[str] = None,
-    email: Optional[str] = None,
-    profile_photo: Optional[UploadFile] = None,
+    first_name: str = Form(...),
+    last_name: str = Form(...),
+    email: str = Form(...),
+    profile_photo: Optional[UploadFile] = File(None),
+    platform: Optional[str] = None,
 ):
     """
-    API endpoint for updating detailed profile information.
-    Updates user profile data including email, phone number, and profile photo.
+    API endpoint to update user profile information
     """
-    print(f"[update_profile_detailed] API called with user_id: {user_id}")
-    print(
-        f"[update_profile_detailed] Request parameters: first_name={first_name}, last_name={last_name}, email={email}"
-    )
-    print(
-        f"[update_profile_detailed] Profile photo provided: {profile_photo is not None}"
-    )
+    print(f"[update_profile_detailed] Function called with user_id: {user_id}")
+
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
 
     @database_sync_to_async
     def update_profile_detailed(user_id, first_name, last_name, email, profile_photo):
         try:
-            print(
-                f"[update_profile_detailed] Updating user data for user_id: {user_id}"
-            )
             user = CustomUser.objects.get(id=user_id)
-            if first_name:
-                user.first_name = first_name
-            if last_name:
-                user.last_name = last_name
-            if email:
-                user.email = email
+            user_profile = UserProfile.objects.get(user=user)
+
+            # Update user fields
+            user.first_name = first_name
+            user.last_name = last_name
+            user.email = email
             user.save()
-            print(f"[update_profile_detailed] User data saved successfully")
 
-            # Handle profile photo upload if provided
+            # Update profile photo if provided
             if profile_photo:
-                # Get or create user profile
-                user_profile = user.user_profile
-                # Save the uploaded file to the profile_photo field
-                if user_profile.profile_photo:
-                    # Delete old photo if it exists to avoid storage buildup
-                    try:
-                        user_profile.profile_photo.delete(save=False)
-                    except Exception as e:
-                        print(
-                            f"[update_profile_detailed] Warning: Could not delete old profile photo: {str(e)}"
-                        )
+                user_profile.profile_photo.save(
+                    profile_photo.filename, ContentFile(profile_photo.file.read())
+                )
 
-                from django.core.files import File
-                from tempfile import NamedTemporaryFile
-
-                # Save the uploaded file to a temporary file
-                temp_file = NamedTemporaryFile(delete=False)
-                try:
-                    temp_file.write(profile_photo.file.read())
-                    temp_file.close()
-
-                    # Save the file to the profile_photo field
-                    with open(temp_file.name, "rb") as f:
-                        filename = profile_photo.filename
-                        user_profile.profile_photo.save(filename, File(f), save=True)
-                finally:
-                    # Clean up the temporary file
-                    os.unlink(temp_file.name)
-
+            user_profile.save()
             return True
         except CustomUser.DoesNotExist:
+            print(
+                f"[update_profile_detailed] Error: User with id {user_id} does not exist"
+            )
+            return False
+        except Exception as e:
+            error_trace = traceback.format_exc()
+            print(
+                f"[update_profile_detailed] Unexpected error updating profile for user_id {user_id}: {str(e)}\n{error_trace}"
+            )
             return False
 
     success = await update_profile_detailed(
         user_id, first_name, last_name, email, profile_photo
     )
     if not success:
-        print(f"[update_profile_detailed] Error: User not found for user_id: {user_id}")
+        await notify_by_bot(
+            f"**[API: update_profile_detailed]** \n\n User not found: user_id={user_id} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
         raise HTTPException(status_code=404, detail="User not found")
 
     print(
@@ -412,6 +435,11 @@ async def favoriteEvents(user_id: int = Depends(get_current_user)):
     events_data = await get_fav_events(user_id)
     if events_data is None:
         print(f"[favoriteEvents] Error: User not found for user_id: {user_id}")
+        await notify_by_bot(
+            f"[favoriteEvents] User not found: user_id={user_id}",
+            "account_management_api",
+            "ERROR",
+        )
         raise HTTPException(status_code=404, detail="Event not found")
     print(
         f"[favoriteEvents] Returning {len(events_data)} favorite events for user_id: {user_id}"
@@ -441,6 +469,11 @@ async def delete_profile(user_id: int = Depends(get_current_user)):
     success = await delete_profile(user_id)
     if not success:
         print(f"[delete_profile] Error: User not found for user_id: {user_id}")
+        await notify_by_bot(
+            f"[delete_profile] User not found: user_id={user_id}",
+            "account_management_api",
+            "ERROR",
+        )
         raise HTTPException(status_code=404, detail="User not found")
 
     print(f"[delete_profile] Profile deleted successfully for user_id: {user_id}")
@@ -508,6 +541,11 @@ async def get_user_transactions(user_id: int = Depends(get_current_user)):
     transactions_data = await get_user_transactions(user_id)
     if transactions_data is None:
         print(f"[get_user_transactions] Error: User not found for user_id: {user_id}")
+        await notify_by_bot(
+            f"[get_user_transactions] User not found: user_id={user_id}",
+            "account_management_api",
+            "ERROR",
+        )
         raise HTTPException(status_code=404, detail="User not found")
     print(
         f"[get_user_transactions] Returning {len(transactions_data)} transactions for user_id: {user_id}"
@@ -574,6 +612,11 @@ async def get_user_payment_methods(user_id: int = Depends(get_current_user)):
     if payment_methods_data is None:
         print(
             f"[get_user_payment_methods] Error: User not found for user_id: {user_id}"
+        )
+        await notify_by_bot(
+            f"[get_user_payment_methods] User not found: user_id={user_id}",
+            "account_management_api",
+            "ERROR",
         )
         raise HTTPException(status_code=404, detail="User not found")
     print(
@@ -700,6 +743,11 @@ async def check_host(user_id: int = Depends(get_current_user)):
     result = await check_user_is_host(user_id)
     if result is None:
         print(f"[check_host] Error: User not found for user_id: {user_id}")
+        await notify_by_bot(
+            f"[check_host] User not found: user_id={user_id}",
+            "account_management_api",
+            "ERROR",
+        )
         raise HTTPException(status_code=404, detail="User not found")
     print(f"[check_host] Returning host status for user_id: {user_id}: {result}")
     return result
@@ -752,11 +800,21 @@ async def get_host_dashboard_link(user_id: int = Depends(get_current_user)):
     result, status_code = await get_host_stripe_link(user_id)
     if result is None:
         print(f"[get_host_dashboard_link] Error: User not found for user_id: {user_id}")
+        await notify_by_bot(
+            f"[get_host_dashboard_link] User not found: user_id={user_id}",
+            "account_management_api",
+            "ERROR",
+        )
         raise HTTPException(status_code=404, detail="User not found")
 
     if status_code != 200:
         print(
             f"[get_host_dashboard_link] Error: {result.get('error')} for user_id: {user_id}"
+        )
+        await notify_by_bot(
+            f"[get_host_dashboard_link] Stripe error: user_id={user_id}, error={result.get('error')}",
+            "account_management_api",
+            "ERROR",
         )
         raise HTTPException(status_code=status_code, detail=result.get("error"))
 
@@ -793,6 +851,11 @@ async def get_user_college(user_id: int = Depends(get_current_user)):
     if college_data is None:
         print(
             f"[get_user_college] Error: User or college not found for user_id: {user_id}"
+        )
+        await notify_by_bot(
+            f"[get_user_college] User or college not found: user_id={user_id}",
+            "account_management_api",
+            "ERROR",
         )
         raise HTTPException(status_code=404, detail="User not found")
 
@@ -839,12 +902,22 @@ async def get_user_settings(user_id: int = Depends(get_current_user)):
     try:
         settings_data = await get_settings_async(user_id)
         if settings_data is None:
+            await notify_by_bot(
+                f"[get_user_settings] User not found: user_id={user_id}",
+                "account_management_api",
+                "ERROR",
+            )
             raise HTTPException(status_code=404, detail="User not found")
         return settings_data
     except Exception as e:
         if not isinstance(e, HTTPException):
             error_trace = traceback.format_exc()
             print(f"[get_user_settings] Unhandled exception: {str(e)}\n{error_trace}")
+            await notify_by_bot(
+                f"[get_user_settings] Unhandled exception: user_id={user_id}, error={str(e)}",
+                "account_management_api",
+                "ERROR",
+            )
             raise HTTPException(status_code=500, detail="Internal server error")
         raise e
 
@@ -1110,3 +1183,200 @@ async def update_user_settings(
             print("[update_user_settings] Exception:", str(e), error_trace)
             raise HTTPException(status_code=500, detail="Internal server error")
         raise e
+
+
+@router.post("/password-reset")
+async def password_reset(
+    request: Request,
+    email: str = Form(...),
+):
+    """
+    API endpoint for password reset functionality.
+    Sends a password reset email to the user.
+    """
+    print(f"[password_reset] API called with email: {email}")
+
+    @database_sync_to_async
+    def process_password_reset(email):
+        try:
+            print(
+                f"[process_password_reset] Processing password reset for email: {email}"
+            )
+
+            # Create form instance and validate
+            form_data = {"email": email}
+            email_form = EmailPasswordResetForm(form_data)
+
+            if email_form.is_valid():
+                email = email_form.cleaned_data["email"]
+                user = CustomUser.objects.filter(email=email).first()
+
+                if user:
+                    token = default_token_generator.make_token(user)
+                    uid = urlsafe_base64_encode(force_bytes(user.pk))
+
+                    expiry_time = timezone.now() + ResetLinkExpiryTime
+
+                    # Build the reset URL - using a placeholder since we don't have the full Django URL structure
+                    # In a real implementation, you'd need to configure the proper URL
+                    reset_url = f"https://waveoncampus.com/forgot/new-password?uid={uid}&token={token}&expires={expiry_time.timestamp()}"
+
+                    subject = "Request to reset password | WAVE."
+
+                    # Create a simple email message since we don't have the template
+                    message = f"""
+                    Hello,
+                    
+                    You requested to reset your password. Please click the link below to reset your password:
+                    
+                    {reset_url}
+                    
+                    This link will expire in 24 hours.
+                    
+                    If you didn't request this, please ignore this email.
+                    
+                    Best regards,
+                    WAVE Team
+                    """
+
+                    send_mail(subject, message, None, [email])
+                    print(
+                        f"[process_password_reset] Password reset email sent successfully to: {email}"
+                    )
+                    return {
+                        "success": True,
+                        "message": "Password reset email sent successfully!",
+                    }
+                else:
+                    print(f"[process_password_reset] User not found for email: {email}")
+                    return {"success": False, "error": "Account does not exist"}
+            else:
+                print(
+                    f"[process_password_reset] Form validation failed: {email_form.errors}"
+                )
+                return {"success": False, "errors": email_form.errors}
+
+        except Exception as e:
+            error_trace = traceback.format_exc()
+            print(f"[process_password_reset] Unexpected error: {str(e)}\n{error_trace}")
+            return {"success": False, "error": "Internal server error"}
+
+    result = await process_password_reset(email)
+
+    if not result["success"]:
+        if "error" in result:
+            await notify_by_bot(
+                f"[password_reset] Error: email={email}, error={result['error']}",
+                "account_management_api",
+                "ERROR",
+            )
+            raise HTTPException(status_code=404, detail=result["error"])
+        elif "errors" in result:
+            await notify_by_bot(
+                f"[password_reset] Validation errors: email={email}, errors={result['errors']}",
+                "account_management_api",
+                "ERROR",
+            )
+            raise HTTPException(status_code=400, detail=result["errors"])
+        else:
+            await notify_by_bot(
+                f"[password_reset] Internal error: email={email}",
+                "account_management_api",
+                "ERROR",
+            )
+            raise HTTPException(status_code=500, detail="Internal server error")
+
+    print(f"[password_reset] Password reset processed successfully for email: {email}")
+    return result
+
+
+@router.post("/password-reset-confirm")
+async def password_reset_confirm(
+    request: Request,
+    uid: str = Form(...),
+    token: str = Form(...),
+    new_password: str = Form(...),
+    confirm_password: str = Form(...),
+):
+    """
+    API endpoint for confirming password reset and setting new password.
+    Validates the reset token and sets the new password.
+    """
+    print(f"[password_reset_confirm] API called with uid: {uid}, token: {token}")
+
+    @database_sync_to_async
+    def process_password_reset_confirm(uid, token, new_password, confirm_password):
+        try:
+            print(
+                f"[process_password_reset_confirm] Processing password reset confirmation"
+            )
+
+            # Validate passwords match
+            if new_password != confirm_password:
+                print(f"[process_password_reset_confirm] Passwords do not match")
+                return {"success": False, "error": "Passwords do not match"}
+
+            # Validate password strength (basic validation)
+            if len(new_password) < 8:
+                print(f"[process_password_reset_confirm] Password too short")
+                return {
+                    "success": False,
+                    "error": "Password must be at least 8 characters long",
+                }
+
+            # Decode the user ID from the URL-safe base64 string
+            try:
+                user_id = force_str(urlsafe_base64_decode(uid))
+                user = CustomUser.objects.get(pk=user_id)
+                print(f"[process_password_reset_confirm] User found: {user.email}")
+            except (TypeError, ValueError, OverflowError, CustomUser.DoesNotExist):
+                print(
+                    f"[process_password_reset_confirm] Invalid user ID or user not found"
+                )
+                return {"success": False, "error": "Invalid reset link"}
+
+            # Check if the token is valid
+            if not default_token_generator.check_token(user, token):
+                print(f"[process_password_reset_confirm] Invalid token")
+                return {"success": False, "error": "Invalid or expired reset link"}
+
+            # Set the new password
+            user.set_password(new_password)
+            user.save()
+
+            print(
+                f"[process_password_reset_confirm] Password updated successfully for user: {user.email}"
+            )
+            return {"success": True, "message": "Password updated successfully!"}
+
+        except Exception as e:
+            error_trace = traceback.format_exc()
+            print(
+                f"[process_password_reset_confirm] Unexpected error: {str(e)}\n{error_trace}"
+            )
+            return {"success": False, "error": "Internal server error"}
+
+    result = await process_password_reset_confirm(
+        uid, token, new_password, confirm_password
+    )
+
+    if not result["success"]:
+        if "error" in result:
+            await notify_by_bot(
+                f"[password_reset_confirm] Error: uid={uid}, error={result['error']}",
+                "account_management_api",
+                "ERROR",
+            )
+            raise HTTPException(status_code=400, detail=result["error"])
+        else:
+            await notify_by_bot(
+                f"[password_reset_confirm] Internal error: uid={uid}",
+                "account_management_api",
+                "ERROR",
+            )
+            raise HTTPException(status_code=500, detail="Internal server error")
+
+    print(
+        f"[password_reset_confirm] Password reset confirmation processed successfully"
+    )
+    return result
