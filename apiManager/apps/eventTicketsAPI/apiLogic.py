@@ -25,6 +25,7 @@ from fastapi import Depends
 from apiManager.dependencies import get_current_user
 from eventTicketsApp.serializers import TicketSerializer
 from socialApp.models import Crew
+from apiManager.utilities.device_info import get_comprehensive_request_info, create_enhanced_log_message
 
 
 router = APIRouter()
@@ -1085,24 +1086,30 @@ async def payment_successful(
     Returns:
         A JSON response with payment status and ticket generation details
     """
-    print(f"[payment_successful API] ========== PAYMENT SUCCESS START ==========")
-    print(f"[payment_successful API] Function called with session_id: {payment_data.session_id}")
-    print(f"[payment_successful API] User ID: {user_id}")
-    print(f"[payment_successful API] From mobile: {payment_data.from_mobile}")
-    print(f"[payment_successful API] Request method: {request.method}")
-    print(f"[payment_successful API] Request URL: {request.url}")
+    # Get comprehensive request information for enhanced logging
+    request_info = get_comprehensive_request_info(request)
+    
+    print(create_enhanced_log_message("payment_successful API", "========== PAYMENT SUCCESS START ==========", request_info))
+    print(create_enhanced_log_message("payment_successful API", f"Function called with session_id: {payment_data.session_id}", request_info))
+    print(create_enhanced_log_message("payment_successful API", f"User ID: {user_id}", request_info))
+    print(create_enhanced_log_message("payment_successful API", f"From mobile: {payment_data.from_mobile}", request_info))
+    print(create_enhanced_log_message("payment_successful API", f"Request method: {request.method}", request_info))
+    print(create_enhanced_log_message("payment_successful API", f"Request URL: {request.url}", request_info))
+    print(create_enhanced_log_message("payment_successful API", f"Client location: {request_info['location_string']}", request_info))
+    print(create_enhanced_log_message("payment_successful API", f"Device info: {request_info['device_info']}", request_info))
+    print(create_enhanced_log_message("payment_successful API", f"ISP: {request_info['isp']}", request_info))
     
     session_id = payment_data.session_id
     from_mobile = payment_data.from_mobile
     
     if not session_id or session_id == "{CHECKOUT_SESSION_ID}":
-        print(f"[payment_successful API] ERROR: session_id is missing or invalid: {session_id}")
+        print(create_enhanced_log_message("payment_successful API", f"ERROR: session_id is missing or invalid: {session_id}", request_info))
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="session_id is missing or invalid"
         )
     
-    print(f"[payment_successful API] Session ID validation passed: {session_id}")
+    print(create_enhanced_log_message("payment_successful API", f"Session ID validation passed: {session_id}", request_info))
 
     # Use database_sync_to_async wrapper for all Django ORM operations
     @database_sync_to_async
@@ -1186,17 +1193,17 @@ async def payment_successful(
     print(f"[payment_successful API] About to call check_existing_tickets_and_process()")
     try:
         result = await check_existing_tickets_and_process()
-        print(f"[payment_successful API] Payment processing completed successfully: {result}")
-        print(f"[payment_successful API] ========== PAYMENT SUCCESS END ==========")
+        print(create_enhanced_log_message("payment_successful API", f"Payment processing completed successfully: {result}", request_info))
+        print(create_enhanced_log_message("payment_successful API", "========== PAYMENT SUCCESS END ==========", request_info))
         return result
         
     except Exception as e:
-        print(f"[payment_successful API] ERROR in payment_successful: {e}")
-        print(f"[payment_successful API] Error type: {type(e)}")
+        print(create_enhanced_log_message("payment_successful API", f"ERROR in payment_successful: {e}", request_info))
+        print(create_enhanced_log_message("payment_successful API", f"Error type: {type(e)}", request_info))
         import traceback
-        print(f"[payment_successful API] Full traceback:")
+        print(create_enhanced_log_message("payment_successful API", "Full traceback:", request_info))
         traceback.print_exc()
-        print(f"[payment_successful API] ========== PAYMENT SUCCESS ERROR END ==========")
+        print(create_enhanced_log_message("payment_successful API", "========== PAYMENT SUCCESS ERROR END ==========", request_info))
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
@@ -1296,28 +1303,49 @@ def _extract_cart_from_line_items_sync(line_items):
                         event = Event.objects.get(eventId=event_id)
                         print(f"[_extract_cart_from_line_items_sync] Event found: {event.title}")
                         
-                        # Try to find the original ticket - original_ticket_id is the cart key, not the PaidFreeTicket.ticket_id
+                                                # Try to find the original ticket - original_ticket_id is the cart key, not necessarily the PaidFreeTicket.ticket_id
                         try:
-                            # First try by ticket_id (UUID)
+                            # First try by ticket_id (UUID) - but handle validation errors
                             print(f"[_extract_cart_from_line_items_sync] Trying to find PaidFreeTicket by ticket_id: {original_ticket_id}")
+                            ticket = None
+                            
+                            # Check if original_ticket_id looks like a UUID
                             try:
+                                import uuid
+                                # Try to parse as UUID to validate format
+                                uuid.UUID(original_ticket_id)
+                                # If it's a valid UUID, try to find by ticket_id
                                 ticket = PaidFreeTicket.objects.get(ticket_id=original_ticket_id, event=event)
                                 print(f"[_extract_cart_from_line_items_sync] Found ticket by ticket_id: {ticket.ticket_name}")
-                            except PaidFreeTicket.DoesNotExist:
-                                # If not found, try by primary key (for cart keys that are database IDs)
-                                print(f"[_extract_cart_from_line_items_sync] Not found by ticket_id, trying by primary key: {original_ticket_id}")
-                                ticket = PaidFreeTicket.objects.get(pk=original_ticket_id, event=event)
-                                print(f"[_extract_cart_from_line_items_sync] Found ticket by primary key: {ticket.ticket_name}")
+                            except (ValueError, PaidFreeTicket.DoesNotExist):
+                                # If not a valid UUID or not found by UUID, try by primary key if it's numeric
+                                try:
+                                    # Try to find by primary key (for cart keys that are database IDs)
+                                    print(f"[_extract_cart_from_line_items_sync] Not found by ticket_id, trying by primary key: {original_ticket_id}")
+                                    # For non-UUID cart keys, try to find ticket by name match
+                                    tickets = PaidFreeTicket.objects.filter(event=event)
+                                    ticket_name_from_metadata = metadata.get('original_ticket_name', item.description)
+                                    for t in tickets:
+                                        if t.ticket_name == ticket_name_from_metadata:
+                                            ticket = t
+                                            print(f"[_extract_cart_from_line_items_sync] Found ticket by name match: {ticket.ticket_name}")
+                                            break
+                                except Exception as inner_e:
+                                    print(f"[_extract_cart_from_line_items_sync] Error in fallback lookup: {inner_e}")
                             
-                            cart_item = {
-                                "name": ticket.ticket_name,
-                                "price": float(ticket.ticket_price),
-                                "quantity": item.quantity,
-                                "eventId": str(event.eventId)
-                            }
-                            cart[original_ticket_id] = cart_item
-                            print(f"[_extract_cart_from_line_items_sync] Added cart item: {original_ticket_id} -> {cart_item}")
-                            continue
+                            if ticket:
+                                cart_item = {
+                                    "name": ticket.ticket_name,
+                                    "price": float(ticket.ticket_price),
+                                    "quantity": item.quantity,
+                                    "eventId": str(event.eventId)
+                                }
+                                cart[original_ticket_id] = cart_item
+                                print(f"[_extract_cart_from_line_items_sync] Added cart item: {original_ticket_id} -> {cart_item}")
+                                continue
+                            else:
+                                raise Exception("Ticket not found")
+                                
                         except Exception as e:
                             print(f"[_extract_cart_from_line_items_sync] Error finding ticket with original_ticket_id={original_ticket_id}: {e}")
                             # Fallback: create cart item from line item data
@@ -1702,30 +1730,43 @@ def _update_ticket_sold_count_sync(cart_key, event):
     
     try:
         # Find the ticket type and increment its sold count
-        # Try by ticket_id first, then by primary key
+        # Try by ticket_id first, then by name match
         print(f"[_update_ticket_sold_count_sync] Trying to find PaidFreeTicket by ticket_id: {cart_key}")
+        ticket_type = None
+        
         try:
+            import uuid
+            # Check if cart_key is a valid UUID
+            uuid.UUID(cart_key)
+            # If valid UUID, try to find by ticket_id
             ticket_type = PaidFreeTicket.objects.get(ticket_id=cart_key, event=event)
             print(f"[_update_ticket_sold_count_sync] Found ticket by ticket_id: {ticket_type.ticket_name}")
-        except PaidFreeTicket.DoesNotExist:
-            print(f"[_update_ticket_sold_count_sync] Not found by ticket_id, trying by primary key: {cart_key}")
-            # If not found by ticket_id, try by primary key (for cart keys that are database IDs)
-            ticket_type = PaidFreeTicket.objects.get(pk=cart_key, event=event)
-            print(f"[_update_ticket_sold_count_sync] Found ticket by primary key: {ticket_type.ticket_name}")
+        except (ValueError, PaidFreeTicket.DoesNotExist):
+            print(f"[_update_ticket_sold_count_sync] Not found by ticket_id or invalid UUID, trying by name matching")
+            # If not a valid UUID or not found, try to find by searching all tickets
+            # This is a fallback for cart keys that don't match database IDs
+            available_tickets = PaidFreeTicket.objects.filter(event=event)
+            print(f"[_update_ticket_sold_count_sync] Available ticket types for this event:")
+            for ticket in available_tickets:
+                print(f"[_update_ticket_sold_count_sync]   - {ticket.ticket_name} (ID: {ticket.ticket_id}, PK: {ticket.pk})")
+            
+            # If there's only one ticket type, use it
+            if available_tickets.count() == 1:
+                ticket_type = available_tickets.first()
+                print(f"[_update_ticket_sold_count_sync] Using single available ticket: {ticket_type.ticket_name}")
+            else:
+                print(f"[_update_ticket_sold_count_sync] Multiple ticket types found, cannot determine which one to update")
         
-        print(f"[_update_ticket_sold_count_sync] Current ticket_sold: {ticket_type.ticket_sold}")
-        ticket_type.ticket_sold += 1
-        ticket_type.save()
-        print(f"[_update_ticket_sold_count_sync] Updated ticket_sold count for {ticket_type.ticket_name}: now {ticket_type.ticket_sold}")
-        print(f"[_update_ticket_sold_count_sync] ========== TICKET SOLD COUNT UPDATE COMPLETE ==========")
-    except PaidFreeTicket.DoesNotExist:
-        print(f"[_update_ticket_sold_count_sync] Could not find ticket type with cart_key {cart_key} for event {event.eventId}")
-        # List all available ticket types for debugging
-        available_tickets = PaidFreeTicket.objects.filter(event=event)
-        print(f"[_update_ticket_sold_count_sync] Available ticket types for this event:")
-        for ticket in available_tickets:
-            print(f"[_update_ticket_sold_count_sync]   - {ticket.ticket_name} (ID: {ticket.ticket_id}, PK: {ticket.pk})")
-        print(f"[_update_ticket_sold_count_sync] ========== TICKET SOLD COUNT UPDATE FAILED ==========")
+        if ticket_type:
+            print(f"[_update_ticket_sold_count_sync] Current ticket_sold: {ticket_type.ticket_sold}")
+            ticket_type.ticket_sold += 1
+            ticket_type.save()
+            print(f"[_update_ticket_sold_count_sync] Updated ticket_sold count for {ticket_type.ticket_name}: now {ticket_type.ticket_sold}")
+            print(f"[_update_ticket_sold_count_sync] ========== TICKET SOLD COUNT UPDATE COMPLETE ==========")
+        else:
+            print(f"[_update_ticket_sold_count_sync] Could not find ticket type with cart_key {cart_key} for event {event.eventId}")
+            print(f"[_update_ticket_sold_count_sync] ========== TICKET SOLD COUNT UPDATE FAILED ==========")
+            
     except Exception as e:
         print(f"[_update_ticket_sold_count_sync] Error updating ticket_sold count: {e}")
         import traceback
