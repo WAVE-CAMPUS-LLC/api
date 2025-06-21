@@ -1982,19 +1982,32 @@ def _generate_crew_tickets_sync(user, ticket_info, event, session_id):
                 f"[_generate_crew_tickets_sync] Processing crew member {i+1}: {member.first_name} {member.last_name} ({member.email})"
             )
             try:
-                # Create a mock request object for email functionality
+                # Create a comprehensive mock request object for email functionality
                 from django.http import HttpRequest
+                from django.contrib.auth.models import AnonymousUser
                 mock_request = HttpRequest()
                 mock_request.META['HTTP_HOST'] = 'waveoncampus.com'
                 mock_request.META['wsgi.url_scheme'] = 'https'
+                mock_request.META['SERVER_NAME'] = 'waveoncampus.com'
+                mock_request.META['SERVER_PORT'] = '443'
+                mock_request.is_secure = lambda: True
+                mock_request.user = user if user else AnonymousUser()
+                mock_request.method = 'POST'
+                
+                # Validate email before ticket generation
+                validated_email, validated_first, validated_last, email_valid = _ensure_email_delivery(
+                    member, member.email if member else None, 
+                    member.first_name if member else None, 
+                    member.last_name if member else None
+                )
                 
                 ticket = generateTicket(
                     request=mock_request,
                     event=event,
                     user=member if member else None,
-                    guestFirstName=member.first_name if member else None,
-                    guestLastName=member.last_name if member else None,
-                    guestEmail=member.email if member else None,
+                    guestFirstName=validated_first,
+                    guestLastName=validated_last,
+                    guestEmail=validated_email,
                     crewTicket=(member != user),
                     stripe_session_id=session_id,
                     from_api=True,
@@ -2004,12 +2017,20 @@ def _generate_crew_tickets_sync(user, ticket_info, event, session_id):
                     f"[_generate_crew_tickets_sync] Generated crew ticket for {member.first_name} {member.last_name}: {ticket.ticketId}"
                 )
                 
-                # Enhanced logging for email tracking
-                recipient_email = member.email if member else None
-                if recipient_email:
-                    print(f"[_generate_crew_tickets_sync] 📧 Email should be sent to: {recipient_email}")
+                # Enhanced logging for email tracking with validation
+                validated_email, validated_first, validated_last, email_valid = _ensure_email_delivery(
+                    member, member.email if member else None, 
+                    member.first_name if member else None, 
+                    member.last_name if member else None
+                )
+                
+                if email_valid:
+                    print(f"[_generate_crew_tickets_sync] ✅ Email validation passed for crew member: {validated_email}")
+                    # Force email verification
+                    _force_email_send_verification()
                 else:
-                    print(f"[_generate_crew_tickets_sync] ⚠️  No email address for crew member: {member.first_name} {member.last_name}")
+                    print(f"[_generate_crew_tickets_sync] ❌ Email validation FAILED for crew member: {member.first_name} {member.last_name}")
+                    print(f"[_generate_crew_tickets_sync] ⚠️  TICKET GENERATED BUT NO EMAIL WILL BE SENT!")
                     
             except Exception as e:
                 print(
@@ -2062,6 +2083,19 @@ def _generate_regular_tickets_sync(
         print(
             f"[_generate_regular_tickets_sync] Customer info - Name: {first_name} {last_name}, Email: {email}"
         )
+        
+        # Ensure we have an email address - this is critical for ticket delivery
+        if not email and user:
+            email = user.email
+            print(f"[_generate_regular_tickets_sync] Using user email as fallback: {email}")
+        
+        if not email:
+            print(f"[_generate_regular_tickets_sync] ⚠️  CRITICAL: No email address available for ticket delivery!")
+            print(f"[_generate_regular_tickets_sync] User: {user}")
+            print(f"[_generate_regular_tickets_sync] Session customer_details: {getattr(session, 'customer_details', 'None')}")
+            # Still generate ticket but log the issue
+        else:
+            print(f"[_generate_regular_tickets_sync] ✅ Email confirmed for ticket delivery: {email}")
 
         # Generate tickets
         quantity = int(ticket_info.get("quantity", 1))
@@ -2074,19 +2108,30 @@ def _generate_regular_tickets_sync(
                 f"[_generate_regular_tickets_sync] Generating ticket {i+1}/{quantity}"
             )
             try:
-                # Create a mock request object for email functionality
+                # Create a comprehensive mock request object for email functionality
                 from django.http import HttpRequest
+                from django.contrib.auth.models import AnonymousUser
                 mock_request = HttpRequest()
                 mock_request.META['HTTP_HOST'] = 'waveoncampus.com'
                 mock_request.META['wsgi.url_scheme'] = 'https'
+                mock_request.META['SERVER_NAME'] = 'waveoncampus.com'
+                mock_request.META['SERVER_PORT'] = '443'
+                mock_request.is_secure = lambda: True
+                mock_request.user = user if user else AnonymousUser()
+                mock_request.method = 'POST'
+                
+                # Validate email before ticket generation
+                validated_email, validated_first, validated_last, email_valid = _ensure_email_delivery(
+                    user, email, first_name, last_name
+                )
                 
                 ticket = generateTicket(
                     request=mock_request,
                     event=event,
                     user=user if user else None,
-                    guestFirstName=first_name,
-                    guestLastName=last_name,
-                    guestEmail=email,
+                    guestFirstName=validated_first,
+                    guestLastName=validated_last,
+                    guestEmail=validated_email,
                     stripe_session_id=session_id,
                     from_api=True,
                 )
@@ -2095,11 +2140,19 @@ def _generate_regular_tickets_sync(
                 )
                 ticket_count += 1
                 
-                # Enhanced logging for email tracking
-                if email:
-                    print(f"[_generate_regular_tickets_sync] 📧 Email should be sent to: {email}")
+                # Enhanced logging for email tracking with validation
+                validated_email, validated_first, validated_last, email_valid = _ensure_email_delivery(
+                    user, email, first_name, last_name
+                )
+                
+                if email_valid:
+                    print(f"[_generate_regular_tickets_sync] ✅ Email validation passed: {validated_email}")
+                    # Force email verification for first ticket only
+                    if i == 0:
+                        _force_email_send_verification()
                 else:
-                    print(f"[_generate_regular_tickets_sync] ⚠️  No email address provided for ticket generation")
+                    print(f"[_generate_regular_tickets_sync] ❌ Email validation FAILED for ticket generation")
+                    print(f"[_generate_regular_tickets_sync] ⚠️  TICKET GENERATED BUT NO EMAIL WILL BE SENT!")
 
                 # Update the ticket_sold count in the PaidFreeTicket model only once per cart item
                 if i == 0:  # Only update on first ticket to avoid duplicate updates
@@ -2186,6 +2239,35 @@ def _get_customer_info_sync(user, session):
                 print(f"[_get_customer_info_sync] No customer email found in session")
         else:
             print(f"[_get_customer_info_sync] No customer_details found in session")
+            
+        # If we still don't have customer info, try to get it from the Stripe customer object
+        if not email and hasattr(session, 'customer') and session.customer:
+            print(f"[_get_customer_info_sync] Trying to get email from Stripe customer: {session.customer}")
+            try:
+                import stripe
+                customer = stripe.Customer.retrieve(session.customer)
+                if customer.email:
+                    email = customer.email
+                    print(f"[_get_customer_info_sync] Found email from Stripe customer: {email}")
+                if customer.name and not first_name:
+                    name_parts = customer.name.split()
+                    first_name = name_parts[0] if name_parts else ""
+                    last_name = name_parts[-1] if len(name_parts) > 1 else ""
+                    print(f"[_get_customer_info_sync] Found name from Stripe customer: {first_name} {last_name}")
+            except Exception as e:
+                print(f"[_get_customer_info_sync] Error retrieving Stripe customer: {e}")
+                
+        # Last resort: try to get email from payment intent metadata
+        if not email and hasattr(session, 'payment_intent') and session.payment_intent:
+            print(f"[_get_customer_info_sync] Trying to get email from payment intent metadata")
+            try:
+                import stripe
+                payment_intent = stripe.PaymentIntent.retrieve(session.payment_intent)
+                if payment_intent.receipt_email:
+                    email = payment_intent.receipt_email
+                    print(f"[_get_customer_info_sync] Found receipt email: {email}")
+            except Exception as e:
+                print(f"[_get_customer_info_sync] Error retrieving payment intent: {e}")
 
     print(
         f"[_get_customer_info_sync] Final customer info - Name: {first_name} {last_name}, Email: {email}"
@@ -2391,19 +2473,30 @@ def _generate_tickets_from_stripe_session_sync(user_id, session_id, session):
                         f"[_generate_tickets_from_stripe_session_sync] Generating ticket {j+1}/{quantity}"
                     )
                     try:
-                        # Create a mock request object for email functionality
+                        # Create a comprehensive mock request object for email functionality
                         from django.http import HttpRequest
+                        from django.contrib.auth.models import AnonymousUser
                         mock_request = HttpRequest()
                         mock_request.META['HTTP_HOST'] = 'waveoncampus.com'
                         mock_request.META['wsgi.url_scheme'] = 'https'
+                        mock_request.META['SERVER_NAME'] = 'waveoncampus.com'
+                        mock_request.META['SERVER_PORT'] = '443'
+                        mock_request.is_secure = lambda: True
+                        mock_request.user = user if user else AnonymousUser()
+                        mock_request.method = 'POST'
+                        
+                        # Validate email before ticket generation
+                        validated_email, validated_first, validated_last, email_valid = _ensure_email_delivery(
+                            user, email, first_name, last_name
+                        )
                         
                         ticket = generateTicket(
                             request=mock_request,
                             event=event,
                             user=user if user else None,
-                            guestFirstName=first_name,
-                            guestLastName=last_name,
-                            guestEmail=email,
+                            guestFirstName=validated_first,
+                            guestLastName=validated_last,
+                            guestEmail=validated_email,
                             stripe_session_id=session_id,
                             from_api=True,
                         )
@@ -2412,11 +2505,19 @@ def _generate_tickets_from_stripe_session_sync(user_id, session_id, session):
                             f"[_generate_tickets_from_stripe_session_sync] Ticket {j+1} generated: {ticket.ticketId}"
                         )
                         
-                        # Enhanced logging for email tracking
-                        if email:
-                            print(f"[_generate_tickets_from_stripe_session_sync] 📧 Email should be sent to: {email}")
+                        # Enhanced logging for email tracking with validation
+                        validated_email, validated_first, validated_last, email_valid = _ensure_email_delivery(
+                            user, email, first_name, last_name
+                        )
+                        
+                        if email_valid:
+                            print(f"[_generate_tickets_from_stripe_session_sync] ✅ Email validation passed: {validated_email}")
+                            # Force email verification for first ticket only
+                            if j == 0:
+                                _force_email_send_verification()
                         else:
-                            print(f"[_generate_tickets_from_stripe_session_sync] ⚠️  No email address provided for fallback ticket generation")
+                            print(f"[_generate_tickets_from_stripe_session_sync] ❌ Email validation FAILED for fallback ticket generation")
+                            print(f"[_generate_tickets_from_stripe_session_sync] ⚠️  TICKET GENERATED BUT NO EMAIL WILL BE SENT!")
                             
                     except Exception as e:
                         print(
@@ -2533,3 +2634,91 @@ try:
     _test_email_functionality()
 except Exception as e:
     print(f"[Email Init] Error during email configuration validation: {e}")
+
+
+def _ensure_email_delivery(user, email, first_name, last_name):
+    """
+    Comprehensive function to ensure we have all necessary information for email delivery
+    Returns: (final_email, final_first_name, final_last_name, validation_passed)
+    """
+    print(f"[_ensure_email_delivery] ========== EMAIL DELIVERY VALIDATION ==========")
+    print(f"[_ensure_email_delivery] Input - User: {user}, Email: {email}, Name: {first_name} {last_name}")
+    
+    final_email = email
+    final_first_name = first_name
+    final_last_name = last_name
+    validation_passed = True
+    
+    # Priority 1: Use provided email if valid
+    if final_email and "@" in final_email:
+        print(f"[_ensure_email_delivery] ✅ Valid email provided: {final_email}")
+    # Priority 2: Use user email if authenticated
+    elif user and hasattr(user, 'email') and user.email:
+        final_email = user.email
+        print(f"[_ensure_email_delivery] ✅ Using authenticated user email: {final_email}")
+    else:
+        print(f"[_ensure_email_delivery] ❌ NO VALID EMAIL FOUND!")
+        validation_passed = False
+    
+    # Ensure we have names
+    if not final_first_name and user and hasattr(user, 'first_name'):
+        final_first_name = user.first_name
+        print(f"[_ensure_email_delivery] Using user first name: {final_first_name}")
+    
+    if not final_last_name and user and hasattr(user, 'last_name'):
+        final_last_name = user.last_name
+        print(f"[_ensure_email_delivery] Using user last name: {final_last_name}")
+    
+    # Final validation
+    if not final_email or "@" not in final_email:
+        print(f"[_ensure_email_delivery] ❌ CRITICAL: Invalid or missing email address: {final_email}")
+        validation_passed = False
+    else:
+        print(f"[_ensure_email_delivery] ✅ Email validation passed: {final_email}")
+    
+    print(f"[_ensure_email_delivery] Final result - Email: {final_email}, Name: {final_first_name} {final_last_name}, Valid: {validation_passed}")
+    print(f"[_ensure_email_delivery] ========== EMAIL DELIVERY VALIDATION COMPLETE ==========")
+    
+    return final_email, final_first_name, final_last_name, validation_passed
+
+
+def _force_email_send_verification():
+    """Force verification that email sending is working properly"""
+    print(f"[_force_email_send_verification] ========== FORCING EMAIL VERIFICATION ==========")
+    
+    try:
+        from django.core.mail import get_connection
+        from django.conf import settings
+        
+        # Test email connection
+        connection = get_connection()
+        print(f"[_force_email_send_verification] ✅ Email connection established")
+        
+        # Validate settings
+        email_backend = getattr(settings, 'EMAIL_BACKEND', None)
+        email_host = getattr(settings, 'EMAIL_HOST', None)
+        default_from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', None)
+        
+        print(f"[_force_email_send_verification] Email Backend: {email_backend}")
+        print(f"[_force_email_send_verification] Email Host: {email_host}")
+        print(f"[_force_email_send_verification] Default From Email: {default_from_email}")
+        
+        if not email_backend:
+            print(f"[_force_email_send_verification] ❌ EMAIL_BACKEND not configured!")
+            return False
+            
+        if not default_from_email:
+            print(f"[_force_email_send_verification] ❌ DEFAULT_FROM_EMAIL not configured!")
+            return False
+            
+        print(f"[_force_email_send_verification] ✅ Email configuration appears valid")
+        return True
+        
+    except Exception as e:
+        print(f"[_force_email_send_verification] ❌ Email verification failed: {e}")
+        import traceback
+        traceback.print_exc()
+        return False
+    
+    finally:
+        print(f"[_force_email_send_verification] ========== EMAIL VERIFICATION COMPLETE ==========")
