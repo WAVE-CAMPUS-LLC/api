@@ -489,130 +489,15 @@ async def delete_event(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
 
-
 @router.get("/event/fields")
-async def event_creation_fields(
-    request: Request,
-    platform: Optional[str] = None,
-):
-    # Get device info
-    user_agent_str = request.headers.get("user-agent", "")
-    device_data = get_device_info(user_agent_str)
-    device_info = device_data["device_info"]
-
-    try:
-        return {
-            "fields": [
-                {
-                    "name": "title",
-                    "type": "text",
-                    "label": "Event Title",
-                    "required": True,
-                    "placeholder": "Enter event title",
-                },
-                {
-                    "name": "description",
-                    "type": "textarea",
-                    "label": "Description",
-                    "required": True,
-                    "placeholder": "Enter event description",
-                },
-                {
-                    "name": "date",
-                    "type": "date",
-                    "label": "Event Date",
-                    "required": True,
-                },
-                {
-                    "name": "start_time",
-                    "type": "time",
-                    "label": "Start Time",
-                    "required": False,
-                },
-                {
-                    "name": "end_time",
-                    "type": "time",
-                    "label": "End Time",
-                    "required": False,
-                },
-                {
-                    "name": "event_type",
-                    "type": "select",
-                    "label": "Event Type",
-                    "required": True,
-                    "options": [
-                        {"value": "party", "label": "Party"},
-                        {"value": "concert", "label": "Concert"},
-                        {"value": "sports", "label": "Sports"},
-                        {"value": "academic", "label": "Academic"},
-                        {"value": "other", "label": "Other"},
-                    ],
-                },
-                {
-                    "name": "ticketing",
-                    "type": "select",
-                    "label": "Ticketing",
-                    "required": True,
-                    "options": [
-                        {"value": "free", "label": "Free"},
-                        {"value": "paid", "label": "Paid"},
-                    ],
-                },
-                {
-                    "name": "building_name",
-                    "type": "text",
-                    "label": "Building Name",
-                    "required": False,
-                    "placeholder": "Enter building name",
-                },
-                {
-                    "name": "street",
-                    "type": "text",
-                    "label": "Street Address",
-                    "required": False,
-                    "placeholder": "Enter street address",
-                },
-                {
-                    "name": "city",
-                    "type": "text",
-                    "label": "City",
-                    "required": False,
-                    "placeholder": "Enter city",
-                },
-                {
-                    "name": "state",
-                    "type": "text",
-                    "label": "State",
-                    "required": False,
-                    "placeholder": "Enter state",
-                },
-                {
-                    "name": "zip_code",
-                    "type": "text",
-                    "label": "ZIP Code",
-                    "required": False,
-                    "placeholder": "Enter ZIP code",
-                },
-                {
-                    "name": "header_photo",
-                    "type": "file",
-                    "label": "Header Photo",
-                    "required": False,
-                    "accept": "image/*",
-                },
-            ]
-        }
-    except Exception as e:
-        await notify_by_bot(
-            f"**[API: event_creation_fields]** \n\n Error fetching form fields: error={str(e)} \n\n Platform: {platform}",
-            platform or "Unknown",
-            "ERROR",
-            device_info,
-        )
-        raise HTTPException(
-            status_code=500, detail=f"Error fetching form fields: {str(e)}"
-        )
-
+async def event_creation_fields(request: Request):
+    print(f"[DEBUG - event_creation_fields] Function called")
+    FormClass = EventForm
+    fields_info = get_form_fields(FormClass)
+    print(
+        f"[DEBUG - event_creation_fields] Returning form fields: {list(fields_info.keys())}"
+    )
+    return JSONResponse(content=fields_info, status_code=status.HTTP_200_OK)
 
 @router.post("/event/free/create")
 async def create_free_event(
