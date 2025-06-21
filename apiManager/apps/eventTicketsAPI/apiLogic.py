@@ -1104,62 +1104,16 @@ async def payment_successful(
 
     # Get comprehensive request information for enhanced logging
     request_info = get_comprehensive_request_info(request)
-
-    print(
-        create_enhanced_log_message(
-            "payment_successful API",
-            "========== PAYMENT SUCCESS START ==========",
-            request_info,
-        )
-    )
-    print(
-        create_enhanced_log_message(
-            "payment_successful API",
-            f"Function called with session_id: {payment_data.session_id}",
-            request_info,
-        )
-    )
-    print(
-        create_enhanced_log_message(
-            "payment_successful API", f"User ID: {user_id}", request_info
-        )
-    )
-    print(
-        create_enhanced_log_message(
-            "payment_successful API",
-            f"From mobile: {payment_data.from_mobile}",
-            request_info,
-        )
-    )
-    print(
-        create_enhanced_log_message(
-            "payment_successful API", f"Request method: {request.method}", request_info
-        )
-    )
-    print(
-        create_enhanced_log_message(
-            "payment_successful API", f"Request URL: {request.url}", request_info
-        )
-    )
-    print(
-        create_enhanced_log_message(
-            "payment_successful API",
-            f"Client location: {request_info['location_string']}",
-            request_info,
-        )
-    )
-    print(
-        create_enhanced_log_message(
-            "payment_successful API",
-            f"Device info: {request_info['device_info']}",
-            request_info,
-        )
-    )
-    print(
-        create_enhanced_log_message(
-            "payment_successful API", f"ISP: {request_info['isp']}", request_info
-        )
-    )
+    
+    print(create_enhanced_log_message("payment_successful API", "========== PAYMENT SUCCESS START ==========", request_info))
+    print(create_enhanced_log_message("payment_successful API", f"Function called with session_id: {payment_data.session_id}", request_info))
+    print(create_enhanced_log_message("payment_successful API", f"User ID: TBD (will extract from session)", request_info))
+    print(create_enhanced_log_message("payment_successful API", f"From mobile: {payment_data.from_mobile}", request_info))
+    print(create_enhanced_log_message("payment_successful API", f"Request method: {request.method}", request_info))
+    print(create_enhanced_log_message("payment_successful API", f"Request URL: {request.url}", request_info))
+    print(create_enhanced_log_message("payment_successful API", f"Client location: {request_info['location_string']}", request_info))
+    print(create_enhanced_log_message("payment_successful API", f"Device info: {request_info['device_info']}", request_info))
+    print(create_enhanced_log_message("payment_successful API", f"ISP: {request_info['isp']}", request_info))
 
     session_id = payment_data.session_id
     from_mobile = payment_data.from_mobile
@@ -1242,6 +1196,8 @@ async def payment_successful(
 
             # Extract user ID from session metadata
             user_id = session.metadata.get("user_id")
+            print(f"[check_existing_tickets_and_process] Extracted user_id from session metadata: {user_id}")
+            
             if user_id and user_id != "guest":
                 try:
                     user_id = int(user_id)
