@@ -259,10 +259,12 @@ async def get_events(
             events = Event.objects.filter(host=user)
             events_list = []
             for event in events:
+                header_photo = event.header_photo.url if event.header_photo else None
                 events_list.append(
                     {
                         "eventId": str(event.eventId),
                         "title": event.title,
+                        "header_photo": header_photo,
                         "date": event.date,
                         "event_type": event.event_type,
                         "ticketing": str(event.ticketing),
