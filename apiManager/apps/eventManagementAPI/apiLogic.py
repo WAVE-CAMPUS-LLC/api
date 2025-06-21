@@ -515,6 +515,20 @@ async def create_free_event(
     try:
         form_data = await request.form()
 
+        # Separate normal data and file data from the form
+        data = {}
+        files = {}
+        print(f"[DEBUG - create_free_event] Processing form data")
+        for key, value in form_data.multi_items():
+            if isinstance(value, UploadFile):
+                print(f"[DEBUG - create_free_event] File uploaded: {key}")
+                # Convert FastAPI UploadFile to Django file object
+                django_file = await starlette_to_django(value)
+                files[key] = django_file
+            else:
+                print(f"[DEBUG - create_free_event] Text field: {key} = {value}")
+                data[key] = value
+
         @database_sync_to_async
         def process_create_event():
             # Get the current user's profile.
@@ -655,6 +669,20 @@ async def create_paid_event(
 
     try:
         form_data = await request.form()
+
+        # Separate normal data and file data from the form
+        data = {}
+        files = {}
+        print(f"[DEBUG - create_paid_event] Processing form data")
+        for key, value in form_data.multi_items():
+            if isinstance(value, UploadFile):
+                print(f"[DEBUG - create_paid_event] File uploaded: {key}")
+                # Convert FastAPI UploadFile to Django file object
+                django_file = await starlette_to_django(value)
+                files[key] = django_file
+            else:
+                print(f"[DEBUG - create_paid_event] Text field: {key} = {value}")
+                data[key] = value
 
         @database_sync_to_async
         def process_create_event():
