@@ -450,3 +450,8 @@ async def join_api(request: Request, platform: Optional[str] = None):
             content={"error": f"An unexpected error occurred: {str(e)}"},
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
+
+
+# @router.post("/join/verify")
+# async def join_verify_api(request: Request, platform: Optional[str] = None):
+#     print("[join_verify_api] Function called")
