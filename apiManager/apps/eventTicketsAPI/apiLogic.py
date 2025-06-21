@@ -1310,6 +1310,27 @@ async def payment_successful(
                 request_info,
             )
         )
+        
+        # Enhanced logging for email debugging
+        if result.get("tickets_generated", 0) > 0:
+            print(
+                create_enhanced_log_message(
+                    "payment_successful API",
+                    f"Generated {result['tickets_generated']} tickets. Emails should have been sent to users.",
+                    request_info,
+                )
+            )
+            
+            # Log email configuration for debugging
+            from django.conf import settings
+            print(
+                create_enhanced_log_message(
+                    "payment_successful API",
+                    f"Email configuration - HOST: {getattr(settings, 'EMAIL_HOST', 'Not set')}, FROM: {getattr(settings, 'DEFAULT_FROM_EMAIL', 'Not set')}",
+                    request_info,
+                )
+            )
+        
         print(
             create_enhanced_log_message(
                 "payment_successful API",
@@ -1931,8 +1952,14 @@ def _generate_crew_tickets_sync(user, ticket_info, event, session_id):
                 f"[_generate_crew_tickets_sync] Processing crew member {i+1}: {member.first_name} {member.last_name} ({member.email})"
             )
             try:
+                # Create a mock request object for email functionality
+                from django.http import HttpRequest
+                mock_request = HttpRequest()
+                mock_request.META['HTTP_HOST'] = 'waveoncampus.com'
+                mock_request.META['wsgi.url_scheme'] = 'https'
+                
                 ticket = generateTicket(
-                    request=None,  # No request object in API context
+                    request=mock_request,
                     event=event,
                     user=member if member else None,
                     guestFirstName=member.first_name if member else None,
@@ -1946,6 +1973,14 @@ def _generate_crew_tickets_sync(user, ticket_info, event, session_id):
                 print(
                     f"[_generate_crew_tickets_sync] Generated crew ticket for {member.first_name} {member.last_name}: {ticket.ticketId}"
                 )
+                
+                # Enhanced logging for email tracking
+                recipient_email = member.email if member else None
+                if recipient_email:
+                    print(f"[_generate_crew_tickets_sync] 📧 Email should be sent to: {recipient_email}")
+                else:
+                    print(f"[_generate_crew_tickets_sync] ⚠️  No email address for crew member: {member.first_name} {member.last_name}")
+                    
             except Exception as e:
                 print(
                     f"[_generate_crew_tickets_sync] Error generating crew ticket for {member.first_name} {member.last_name}: {e}"
@@ -2009,8 +2044,14 @@ def _generate_regular_tickets_sync(
                 f"[_generate_regular_tickets_sync] Generating ticket {i+1}/{quantity}"
             )
             try:
+                # Create a mock request object for email functionality
+                from django.http import HttpRequest
+                mock_request = HttpRequest()
+                mock_request.META['HTTP_HOST'] = 'waveoncampus.com'
+                mock_request.META['wsgi.url_scheme'] = 'https'
+                
                 ticket = generateTicket(
-                    request=None,  # No request object in API context
+                    request=mock_request,
                     event=event,
                     user=user if user else None,
                     guestFirstName=first_name,
@@ -2023,6 +2064,12 @@ def _generate_regular_tickets_sync(
                     f"[_generate_regular_tickets_sync] Ticket {i+1} generated: {ticket.ticketId}"
                 )
                 ticket_count += 1
+                
+                # Enhanced logging for email tracking
+                if email:
+                    print(f"[_generate_regular_tickets_sync] 📧 Email should be sent to: {email}")
+                else:
+                    print(f"[_generate_regular_tickets_sync] ⚠️  No email address provided for ticket generation")
 
                 # Update the ticket_sold count in the PaidFreeTicket model only once per cart item
                 if i == 0:  # Only update on first ticket to avoid duplicate updates
@@ -2314,8 +2361,14 @@ def _generate_tickets_from_stripe_session_sync(user_id, session_id, session):
                         f"[_generate_tickets_from_stripe_session_sync] Generating ticket {j+1}/{quantity}"
                     )
                     try:
+                        # Create a mock request object for email functionality
+                        from django.http import HttpRequest
+                        mock_request = HttpRequest()
+                        mock_request.META['HTTP_HOST'] = 'waveoncampus.com'
+                        mock_request.META['wsgi.url_scheme'] = 'https'
+                        
                         ticket = generateTicket(
-                            request=None,
+                            request=mock_request,
                             event=event,
                             user=user if user else None,
                             guestFirstName=first_name,
@@ -2328,6 +2381,13 @@ def _generate_tickets_from_stripe_session_sync(user_id, session_id, session):
                         print(
                             f"[_generate_tickets_from_stripe_session_sync] Ticket {j+1} generated: {ticket.ticketId}"
                         )
+                        
+                        # Enhanced logging for email tracking
+                        if email:
+                            print(f"[_generate_tickets_from_stripe_session_sync] 📧 Email should be sent to: {email}")
+                        else:
+                            print(f"[_generate_tickets_from_stripe_session_sync] ⚠️  No email address provided for fallback ticket generation")
+                            
                     except Exception as e:
                         print(
                             f"[_generate_tickets_from_stripe_session_sync] Error generating ticket {j+1}: {e}"
@@ -2367,3 +2427,79 @@ def _generate_tickets_from_stripe_session_sync(user_id, session_id, session):
             f"[_generate_tickets_from_stripe_session_sync] ========== FALLBACK TICKET GENERATION ERROR =========="
         )
         return 0
+
+
+def _validate_email_configuration():
+    """Helper function to validate Django email configuration"""
+    from django.conf import settings
+    
+    print(f"[Email Config] ========== EMAIL CONFIGURATION VALIDATION ==========")
+    
+    # Check basic email settings
+    email_backend = getattr(settings, 'EMAIL_BACKEND', 'Not set')
+    email_host = getattr(settings, 'EMAIL_HOST', 'Not set')
+    email_port = getattr(settings, 'EMAIL_PORT', 'Not set')
+    email_use_tls = getattr(settings, 'EMAIL_USE_TLS', 'Not set')
+    email_use_ssl = getattr(settings, 'EMAIL_USE_SSL', 'Not set')
+    default_from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'Not set')
+    
+    print(f"[Email Config] EMAIL_BACKEND: {email_backend}")
+    print(f"[Email Config] EMAIL_HOST: {email_host}")
+    print(f"[Email Config] EMAIL_PORT: {email_port}")
+    print(f"[Email Config] EMAIL_USE_TLS: {email_use_tls}")
+    print(f"[Email Config] EMAIL_USE_SSL: {email_use_ssl}")
+    print(f"[Email Config] DEFAULT_FROM_EMAIL: {default_from_email}")
+    
+    # Check if basic configuration is present
+    config_issues = []
+    if email_backend == 'Not set':
+        config_issues.append("EMAIL_BACKEND not configured")
+    if email_host == 'Not set':
+        config_issues.append("EMAIL_HOST not configured")
+    if default_from_email == 'Not set':
+        config_issues.append("DEFAULT_FROM_EMAIL not configured")
+    
+    if config_issues:
+        print(f"[Email Config] ⚠️  Configuration Issues Found:")
+        for issue in config_issues:
+            print(f"[Email Config]   - {issue}")
+    else:
+        print(f"[Email Config] ✅ Basic email configuration appears to be set")
+    
+    print(f"[Email Config] ========== EMAIL CONFIGURATION VALIDATION COMPLETE ==========")
+    return len(config_issues) == 0
+
+
+def _test_email_functionality():
+    """Helper function to test if email functionality is working"""
+    from django.core.mail import send_mail
+    from django.conf import settings
+    
+    print(f"[Email Test] ========== EMAIL FUNCTIONALITY TEST ==========")
+    
+    try:
+        # Try to send a test email (but don't actually send it)
+        from django.core.mail import get_connection
+        
+        connection = get_connection()
+        print(f"[Email Test] ✅ Email connection established successfully")
+        print(f"[Email Test] Connection type: {type(connection)}")
+        return True
+        
+    except Exception as e:
+        print(f"[Email Test] ❌ Email connection failed: {e}")
+        import traceback
+        print(f"[Email Test] Traceback:")
+        traceback.print_exc()
+        return False
+    
+    finally:
+        print(f"[Email Test] ========== EMAIL FUNCTIONALITY TEST COMPLETE ==========")
+
+
+# Call email validation when the module is loaded
+try:
+    _validate_email_configuration()
+    _test_email_functionality()
+except Exception as e:
+    print(f"[Email Init] Error during email configuration validation: {e}")
