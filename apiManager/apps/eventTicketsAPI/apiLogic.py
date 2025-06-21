@@ -371,7 +371,14 @@ async def process_checkout(
 
         # Calculate service fee
         is_full_discount = discount_percentage >= 100
-        if is_full_discount:
+        
+        # If cart total is $0 before service fee, don't apply any service fee
+        if amount_in_cents == 0:
+            fee_amount = 0
+            print(
+                f"[DEBUG] Cart total is $0 - no service fee applied for completely free checkout"
+            )
+        elif is_full_discount:
             # For 100% discounts, apply a minimal service fee based on the original price
             fee_amount = max(99, int(original_amount_in_cents * 0.07) + 99)
             print(
@@ -385,7 +392,7 @@ async def process_checkout(
             )
 
         print(
-            f"[DEBUG] Service fee: ${fee_amount/100} calculated for {'100% discount' if is_full_discount else f'${total_amount} discounted amount'}"
+            f"[DEBUG] Service fee: ${fee_amount/100} calculated for {'completely free checkout' if amount_in_cents == 0 else '100% discount' if is_full_discount else f'${total_amount} discounted amount'}"
         )
 
         # Build Stripe line items
@@ -437,23 +444,27 @@ async def process_checkout(
                 f"[DEBUG] Added line item for {key}: {ticket_name} x{ticket['quantity']} at ${unit_amount/100} each"
             )
 
-        # Add service fee as a separate line item
-        line_items.append(
-            {
-                "price_data": {
-                    "currency": "usd",
-                    "product_data": {
-                        "name": "Service Fee",
-                        "metadata": {
-                            "fee_type": "service_fee",
-                            "is_full_discount": str(is_full_discount),
+        # Add service fee as a separate line item (only if fee_amount > 0)
+        if fee_amount > 0:
+            line_items.append(
+                {
+                    "price_data": {
+                        "currency": "usd",
+                        "product_data": {
+                            "name": "Service Fee",
+                            "metadata": {
+                                "fee_type": "service_fee",
+                                "is_full_discount": str(is_full_discount),
+                            },
                         },
+                        "unit_amount": fee_amount,
                     },
-                    "unit_amount": fee_amount,
-                },
-                "quantity": 1,
-            }
-        )
+                    "quantity": 1,
+                }
+            )
+            print(f"[DEBUG] Added service fee line item: ${fee_amount/100}")
+        else:
+            print(f"[DEBUG] No service fee line item added - completely free checkout")
 
         try:
             print(
@@ -509,25 +520,44 @@ async def process_checkout(
             if customer_id:
                 session_params["customer"] = customer_id
 
-            # Set up payment intent data for transfers
+            # Set up payment intent data for transfers (only if there's an amount to transfer)
             print(f"[DEBUG] Setting up payment intent data...")
             print(f"[DEBUG] Application fee amount: {fee_amount} cents")
             print(f"[DEBUG] Destination account: {connect_account_id}")
+            print(f"[DEBUG] Total amount in cents: {amount_in_cents}")
 
-            session_params["payment_intent_data"] = {
-                "application_fee_amount": fee_amount,
-                "transfer_data": {
-                    "destination": connect_account_id,
-                },
-                "metadata": {
-                    "user_id": str(user_id) if user_id else "guest",
-                    "event_id": str(event.eventId),
-                    "cart_data": json.dumps(cart),
-                    "platform": platform or "unknown",
-                },
-            }
+            if amount_in_cents > 0 or fee_amount > 0:
+                # Only set up payment intent data if there's money to transfer
+                session_params["payment_intent_data"] = {
+                    "metadata": {
+                        "user_id": str(user_id) if user_id else "guest",
+                        "event_id": str(event.eventId),
+                        "cart_data": json.dumps(cart),
+                        "platform": platform or "unknown",
+                    },
+                }
+                
+                # Only add application fee and transfer data if there's a fee or amount to transfer
+                if fee_amount > 0:
+                    session_params["payment_intent_data"]["application_fee_amount"] = fee_amount
+                    
+                if amount_in_cents > 0:
+                    session_params["payment_intent_data"]["transfer_data"] = {
+                        "destination": connect_account_id,
+                    }
+                
+                print(f"[DEBUG] Payment intent configured for transfer")
+            else:
+                # For completely free checkouts, we still need metadata but no transfers
+                session_params["metadata"]["user_id"] = str(user_id) if user_id else "guest"
+                session_params["metadata"]["event_id"] = str(event.eventId)
+                session_params["metadata"]["cart_data"] = json.dumps(cart)
+                session_params["metadata"]["platform"] = platform or "unknown"
+                session_params["metadata"]["is_free_checkout"] = "true"
+                print(f"[DEBUG] Completely free checkout - no payment intent data needed")
+            
             print(
-                f"[DEBUG] Payment intent metadata: {session_params['payment_intent_data']['metadata']}"
+                f"[DEBUG] Session configuration complete"
             )
 
             print(f"[DEBUG] Creating Stripe checkout session...")
