@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordRequestForm
 import bleach
+import uuid
 
 # Django imports
 from coreApp.forms import RSVPForm
@@ -18,12 +19,18 @@ from .serializers import ExplorePageEvent, EventDetailsSerializer, RSVPInformati
 from apiManager.dependencies import get_current_user
 from apiManager.utilities.notify_by_bot import notify_by_bot
 from apiManager.utilities.device_info import get_device_info
+from apiManager.utilities.enhanced_logger import get_enhanced_logger
 from authenticationApp.models import CustomUser
 from uuid import UUID
 from .version_middleware import VersionCheckMiddleware
+from opentelemetry.trace import get_current_span
 
+
+import logging
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
+enhanced_logger = get_enhanced_logger(__name__)
 
 
 @router.get("/ping")
@@ -56,21 +63,72 @@ async def get_events_preview(
     """
     API endpoint to retrieve a preview of events for the explore page.
     """
-    print("[get_events_preview API] Function called")
+    # Generate unique request ID for this request
+    request_id = str(uuid.uuid4())
 
-    # Get device info
+    # Start performance timing
+    enhanced_logger.start_timer()
+
+    # Get device info and request context
     user_agent_str = request.headers.get("user-agent", "")
     device_data = get_device_info(user_agent_str)
-    device_info = device_data["device_info"]
+    device_info = device_data
+    device_info_str = device_data["device_info"]
+
+    # Extract additional request context
+    client_ip = request.client.host if request.client else "unknown"
+    referer = request.headers.get("referer", "")
+
+    # Enhanced logging with automatic enrichment
+    enhanced_logger.info(
+        "Events preview request initiated",
+        platform=platform,
+        device_info=device_info,
+        user_agent=user_agent_str,
+        request_id=request_id,
+        # Additional context
+        client_ip=client_ip,
+        referer=referer,
+        endpoint="get_events_preview",
+        operation="fetch_preview_events",
+        request_method=request.method,
+        query_params=dict(request.query_params),
+        headers_count=len(request.headers),
+    )
+
+    # Set OpenTelemetry span attributes
+    span = get_current_span()
+    span.set_attribute("api.endpoint", "get_events_preview")
+    span.set_attribute("api.platform", platform or "Unknown")
+    span.set_attribute("api.device_info", device_info_str)
+    span.set_attribute("api.user_agent", user_agent_str)
+    span.set_attribute("api.request_id", request_id)
+    span.set_attribute("api.client_ip", client_ip)
 
     @database_sync_to_async
     def get_events_preview_data():
+        # Log database operation start
+        enhanced_logger.debug(
+            "Starting database query for preview events",
+            platform=platform,
+            device_info=device_info,
+            user_agent=user_agent_str,
+            request_id=request_id,
+            operation="database_query",
+            query_type="random_events",
+            limit=3,
+        )
+
         events_list = []
         # Get 3 random events using order_by('?')
-        for event in Event.objects.order_by("?")[:3]:
-            header_photo_url = event.header_photo.url if event.header_photo else None
-            events_list.append(
-                {
+        events_queryset = Event.objects.order_by("?")[:3]
+
+        for event in events_queryset:
+            try:
+                header_photo_url = (
+                    event.header_photo.url if event.header_photo else None
+                )
+                event_data = {
                     "eventId": str(event.eventId),  # Convert UUID to string
                     "title": event.title,
                     "date": event.date,
@@ -84,24 +142,123 @@ async def get_events_preview(
                         event.forCollegesDisplay
                     ),  # Ensure it's a boolean
                 }
-            )
+                events_list.append(event_data)
+
+                # Log individual event processing
+                enhanced_logger.debug(
+                    "Processed event for preview",
+                    platform=platform,
+                    device_info=device_info,
+                    user_agent=user_agent_str,
+                    request_id=request_id,
+                    event_id=str(event.eventId),
+                    event_title=event.title,
+                    event_type=event.event_type,
+                    event_location=f"{event.city}, {event.state}",
+                    has_photo=bool(header_photo_url),
+                )
+
+            except Exception as event_error:
+                # Log individual event processing errors
+                enhanced_logger.warning(
+                    "Failed to process event for preview",
+                    platform=platform,
+                    device_info=device_info,
+                    user_agent=user_agent_str,
+                    request_id=request_id,
+                    error=event_error,
+                    event_id=(
+                        str(event.eventId) if hasattr(event, "eventId") else "unknown"
+                    ),
+                    operation="event_processing",
+                )
+                continue
+
+        # Log database operation completion
+        enhanced_logger.debug(
+            "Completed database query for preview events",
+            platform=platform,
+            device_info=device_info,
+            user_agent=user_agent_str,
+            request_id=request_id,
+            events_found=len(events_list),
+            operation="database_query_complete",
+        )
+
         return events_list
 
     try:
+        # Log operation start
+        enhanced_logger.info(
+            "Processing events preview data",
+            platform=platform,
+            device_info=device_info,
+            user_agent=user_agent_str,
+            request_id=request_id,
+            operation="data_processing",
+        )
+
         events_data = await get_events_preview_data()
         events = [ExplorePageEvent(**event_data) for event_data in events_data]
-        response = {"events": events}
 
+        # Enhanced success logging with metrics
+        enhanced_logger.info(
+            "Successfully fetched and processed preview events",
+            platform=platform,
+            device_info=device_info,
+            user_agent=user_agent_str,
+            request_id=request_id,
+            # Success metrics
+            events_count=len(events),
+            events_with_photos=sum(1 for e in events_data if e.get("header_photo")),
+            event_types=list(
+                set(e.get("event_type") for e in events_data if e.get("event_type"))
+            ),
+            locations=list(
+                set(
+                    f"{e.get('city')}, {e.get('state')}"
+                    for e in events_data
+                    if e.get("city") and e.get("state")
+                )
+            ),
+            operation="success",
+            status="completed",
+        )
+
+        response = {"events": events}
         return response
+
     except Exception as e:
+        # Enhanced error logging with full context
+        enhanced_logger.error(
+            "Failed to fetch events preview",
+            platform=platform,
+            device_info=device_info,
+            user_agent=user_agent_str,
+            request_id=request_id,
+            error=e,
+            # Error context
+            operation="fetch_events_preview",
+            status="failed",
+            error_stage=(
+                "data_processing" if "events_data" in locals() else "database_query"
+            ),
+            client_ip=client_ip,
+            referer=referer,
+        )
+
+        # Platform-specific error notification
         await notify_by_bot(
-            f"**[API: get_events_preview]** \n\n Error fetching events preview: error={str(e)} \n\n Platform: {platform}",
+            f"**[API: get_events_preview]** \n\n Error fetching events preview: error={str(e)} \n\n Platform: {platform} \n\n Request ID: {request_id}",
             platform or "Unknown",
             "ERROR",
-            device_info,
+            device_info_str,
         )
+
         raise HTTPException(
-            status_code=500, detail=f"Error fetching events preview: {str(e)}"
+            status_code=500,
+            detail=f"Error fetching events preview: {str(e)}",
+            headers={"X-Request-ID": request_id},
         )
 
 

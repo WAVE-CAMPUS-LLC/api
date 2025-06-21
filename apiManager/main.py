@@ -17,8 +17,13 @@ from apiManager.apps.eventTicketsAPI.apiLogic import router as ticket_router
 from apiManager.apps.adminManagementAPI.apiLogic import router as admin_router
 from apiManager.apps.socialAPI.apiLogic import router as social_router
 from apiManager.apps.coreAPI.version_middleware import VersionCheckMiddleware
+from apiManager.utilities.otel import setup_otel, setup_logging
+
 
 app = FastAPI(title="WAVE. API", version="1.0.0")
+
+setup_otel(app)
+setup_logging()
 
 app.add_middleware(
     CORSMiddleware,
