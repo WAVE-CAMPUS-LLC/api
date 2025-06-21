@@ -985,61 +985,15 @@ async def get_host_stripe_account_link(
     # Execute the function and return the result
     return await process_stripe_account_check()
 
-
 @router.get("/event/paid/ticket/fields")
-async def paid_ticket_creation_fields(
-    request: Request,
-    platform: Optional[str] = None,
-):
-    # Get device info
-    user_agent_str = request.headers.get("user-agent", "")
-    device_data = get_device_info(user_agent_str)
-    device_info = device_data["device_info"]
-
-    try:
-        return {
-            "fields": [
-                {
-                    "name": "ticket_name",
-                    "type": "text",
-                    "label": "Ticket Name",
-                    "required": True,
-                    "placeholder": "Enter ticket name",
-                },
-                {
-                    "name": "ticket_price",
-                    "type": "number",
-                    "label": "Ticket Price",
-                    "required": True,
-                    "placeholder": "Enter ticket price",
-                },
-                {
-                    "name": "ticket_description",
-                    "type": "textarea",
-                    "label": "Description",
-                    "required": False,
-                    "placeholder": "Enter ticket description",
-                },
-                {
-                    "name": "ticket_quantity",
-                    "type": "number",
-                    "label": "Quantity Available",
-                    "required": True,
-                    "placeholder": "Enter quantity available",
-                },
-            ]
-        }
-    except Exception as e:
-        await notify_by_bot(
-            f"**[API: paid_ticket_creation_fields]** \n\n Error fetching form fields: error={str(e)} \n\n Platform: {platform}",
-            platform or "Unknown",
-            "ERROR",
-            device_info,
-        )
-        raise HTTPException(
-            status_code=500, detail=f"Error fetching form fields: {str(e)}"
-        )
-
+async def paid_ticket_creation_fields(request: Request):
+    print(f"[DEBUG - paid_ticket_creation_fields] Function called")
+    FormClass = PaidFreeTicketForm
+    fields_info = get_form_fields(FormClass)
+    print(
+        f"[DEBUG - paid_ticket_creation_fields] Returning form fields: {list(fields_info.keys())}"
+    )
+    return JSONResponse(content=fields_info, status_code=status.HTTP_200_OK)
 
 @router.post("/event/{eventId}/createPaidFreeTicket")
 async def create_paid_free_ticket(
@@ -1131,54 +1085,15 @@ async def create_paid_free_ticket(
         )
         raise HTTPException(status_code=500, detail=f"Error creating ticket: {str(e)}")
 
-
 @router.get("/event/paid/coupon/fields")
-async def paid_coupon_creation_fields(
-    request: Request,
-    platform: Optional[str] = None,
-):
-    # Get device info
-    user_agent_str = request.headers.get("user-agent", "")
-    device_data = get_device_info(user_agent_str)
-    device_info = device_data["device_info"]
-
-    try:
-        return {
-            "fields": [
-                {
-                    "name": "coupon_code",
-                    "type": "text",
-                    "label": "Coupon Code",
-                    "required": True,
-                    "placeholder": "Enter coupon code",
-                },
-                {
-                    "name": "discount_percentage",
-                    "type": "number",
-                    "label": "Discount Percentage",
-                    "required": True,
-                    "placeholder": "Enter discount percentage",
-                },
-                {
-                    "name": "max_uses",
-                    "type": "number",
-                    "label": "Maximum Uses",
-                    "required": False,
-                    "placeholder": "Enter maximum uses",
-                },
-            ]
-        }
-    except Exception as e:
-        await notify_by_bot(
-            f"**[API: paid_coupon_creation_fields]** \n\n Error fetching form fields: error={str(e)} \n\n Platform: {platform}",
-            platform or "Unknown",
-            "ERROR",
-            device_info,
-        )
-        raise HTTPException(
-            status_code=500, detail=f"Error fetching form fields: {str(e)}"
-        )
-
+async def paid_coupon_creation_fields(request: Request):
+    print(f"[DEBUG - paid_coupon_creation_fields] Function called")
+    FormClass = CouponCodeForm
+    fields_info = get_form_fields(FormClass)
+    print(
+        f"[DEBUG - paid_coupon_creation_fields] Returning form fields: {list(fields_info.keys())}"
+    )
+    return JSONResponse(content=fields_info, status_code=status.HTTP_200_OK)
 
 @router.get("/event/{eventId}/coupons")
 async def get_event_coupons(
