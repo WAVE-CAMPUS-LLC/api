@@ -2748,6 +2748,14 @@ class TicketDetailsResponse(BaseModel):
     metadata: Dict[str, Any]
 
 
+# Pydantic models for ticket activation API
+class TicketActivationResponse(BaseModel):
+    """Pydantic model for ticket activation response"""
+    
+    success: bool
+    message: str
+
+
 @router.get(
     "/{ticketId}/details",
     response_model=TicketDetailsResponse,
@@ -2952,4 +2960,158 @@ async def get_ticket_details(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An unexpected error occurred while retrieving ticket details"
+        )
+
+
+@router.post(
+    "/{ticketId}/activate",
+    response_model=TicketActivationResponse,
+    status_code=status.HTTP_200_OK,
+)
+async def activate_ticket_by_id(
+    ticketId: str,
+    request: Request,
+    current_user: Optional[CustomUser] = Depends(get_current_user_object),
+):
+    """
+    Activate a specific ticket by ticket ID and change its status to 'Scanned'.
+    
+    This endpoint activates a ticket by changing its status to 'Scanned', marking
+    it as used/activated. This is typically used for ticket scanning at events.
+    
+    Args:
+        ticketId: The UUID of the ticket to activate
+        request: The FastAPI request object
+        current_user: Optional authenticated user
+        
+    Returns:
+        TicketActivationResponse: Contains validation status and ticket information
+        
+    Raises:
+        HTTPException: For various validation and access errors
+    """
+    print(f"[activate_ticket_by_id API] Function called with ticketId: {ticketId}")
+    print(f"[activate_ticket_by_id API] Current user: {current_user.id if current_user else 'None'}")
+    
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+    
+    # Get comprehensive request information for enhanced logging
+    request_info = get_comprehensive_request_info(request)
+    
+    print(create_enhanced_log_message("activate_ticket_by_id API", "========== TICKET ACTIVATION REQUEST START ==========", request_info))
+    print(create_enhanced_log_message("activate_ticket_by_id API", f"Ticket ID: {ticketId}", request_info))
+    print(create_enhanced_log_message("activate_ticket_by_id API", f"User ID: {current_user.id if current_user else 'Guest'}", request_info))
+    
+    if not ticketId:
+        print(create_enhanced_log_message("activate_ticket_by_id API", "ERROR: Ticket ID is required", request_info))
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Ticket ID is required"
+        )
+    
+    @database_sync_to_async
+    def activate_user_ticket_by_id(ticket_id):
+        """Activate a ticket by ticket ID and return simple status"""
+        print(f"[activate_user_ticket_by_id] ========== ACTIVATING TICKET ==========")
+        print(f"[activate_user_ticket_by_id] Searching for ticket with ID: {ticket_id}")
+        
+        try:
+            # Try to find the ticket by mainId first, then by ticketId as fallback
+            ticket = None
+            try:
+                ticket = Ticket.objects.select_related('event').get(mainId=ticket_id)
+                print(f"[activate_user_ticket_by_id] Ticket found by mainId: {ticket.ticketId}")
+            except Ticket.DoesNotExist:
+                try:
+                    ticket = Ticket.objects.select_related('event').get(ticketId=ticket_id)
+                    print(f"[activate_user_ticket_by_id] Ticket found by ticketId: {ticket.ticketId}")
+                except Ticket.DoesNotExist:
+                    print(f"[activate_user_ticket_by_id] Ticket not found with ID: {ticket_id}")
+                    return {
+                        "success": False,
+                        "message": "Ticket not found"
+                    }
+            
+            event = ticket.event
+            print(f"[activate_user_ticket_by_id] Ticket belongs to event: {event.title}")
+            print(f"[activate_user_ticket_by_id] Current ticket status: {ticket.status}")
+            
+            # Check if ticket is already activated
+            if ticket.status == "Scanned":
+                print(f"[activate_user_ticket_by_id] Ticket is already activated")
+                return {
+                    "success": False,
+                    "message": "Ticket is already activated"
+                }
+            
+            # Check if ticket is invalid
+            elif ticket.status == "Invalid":
+                print(f"[activate_user_ticket_by_id] Ticket is invalid")
+                return {
+                    "success": False,
+                    "message": "Ticket is invalid"
+                }
+            
+            # Activate the ticket
+            print(f"[activate_user_ticket_by_id] Activating ticket: changing status from '{ticket.status}' to 'Scanned'")
+            ticket.status = "Scanned"
+            ticket.save()
+            print(f"[activate_user_ticket_by_id] Ticket successfully activated")
+            
+            return {
+                "success": True,
+                "message": "Ticket activated successfully"
+            }
+            
+        except Exception as e:
+            print(f"[activate_user_ticket_by_id] ERROR: Unexpected error activating ticket: {e}")
+            import traceback
+            print(f"[activate_user_ticket_by_id] Full traceback:")
+            traceback.print_exc()
+            return {
+                "success": False,
+                "message": f"An error occurred: {e}"
+            }
+        finally:
+            print(f"[activate_user_ticket_by_id] ========== TICKET ACTIVATION COMPLETE ==========")
+    
+    try:
+        print(create_enhanced_log_message("activate_ticket_by_id API", "Calling database function to activate ticket", request_info))
+        result = await activate_user_ticket_by_id(ticketId)
+        
+        if result["success"]:
+            print(create_enhanced_log_message("activate_ticket_by_id API", f"Successfully activated ticket: {ticketId}", request_info))
+        else:
+            print(create_enhanced_log_message("activate_ticket_by_id API", f"Ticket activation failed: {result['message']}", request_info))
+            
+            # Log to bot for monitoring
+            await notify_by_bot(
+                f"**[API: activate_ticket_by_id]** \n\n Ticket activation failed: {result['message']} \n\n Ticket ID: {ticketId} \n\n User ID: {current_user.id if current_user else 'None'}",
+                "API",
+                "WARNING",
+                device_info,
+            )
+        
+        print(create_enhanced_log_message("activate_ticket_by_id API", "========== TICKET ACTIVATION REQUEST END ==========", request_info))
+        return result
+        
+    except Exception as e:
+        print(create_enhanced_log_message("activate_ticket_by_id API", f"Unexpected error: {str(e)}", request_info))
+        import traceback
+        print(create_enhanced_log_message("activate_ticket_by_id API", "Full traceback:", request_info))
+        traceback.print_exc()
+        
+        await notify_by_bot(
+            f"**[API: activate_ticket_by_id]** \n\n Unexpected error: {str(e)} \n\n Ticket ID: {ticketId} \n\n User ID: {current_user.id if current_user else 'None'}",
+            "API",
+            "ERROR",
+            device_info,
+        )
+        
+        print(create_enhanced_log_message("activate_ticket_by_id API", "========== TICKET ACTIVATION REQUEST ERROR END ==========", request_info))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An unexpected error occurred while activating the ticket"
         )
