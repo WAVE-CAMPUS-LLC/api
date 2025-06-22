@@ -2722,3 +2722,271 @@ def _force_email_send_verification():
     
     finally:
         print(f"[_force_email_send_verification] ========== EMAIL VERIFICATION COMPLETE ==========")
+
+
+# Pydantic models for ticket details API
+class TicketDetailsResponse(BaseModel):
+    """Pydantic model for detailed ticket response"""
+    
+    ticket_id: str
+    main_id: str
+    status: str
+    created_at: str
+    updated_at: str
+    
+    # Event information
+    event: Dict[str, Any]
+    
+    # User information (if authenticated user)
+    user_info: Optional[Dict[str, Any]] = None
+    
+    # Guest information (if guest ticket)
+    guest_info: Optional[Dict[str, Any]] = None
+    
+    # QR Code information
+    qr_code_data: Optional[str] = None
+    qr_code_image_url: Optional[str] = None
+    
+    # Ticket URLs
+    activation_link: str
+    view_link: str
+    
+    # Purchase information
+    stripe_session_id: Optional[str] = None
+    is_crew_ticket: bool = False
+    
+    # Additional metadata
+    metadata: Dict[str, Any]
+
+
+@router.get(
+    "/{ticketId}/details",
+    response_model=TicketDetailsResponse,
+    status_code=status.HTTP_200_OK,
+)
+async def get_ticket_details(
+    ticketId: str,
+    request: Request,
+    current_user: Optional[CustomUser] = Depends(get_current_user_object),
+):
+    """
+    Get comprehensive details for a specific ticket by ticket ID.
+    
+    This endpoint returns all available information about a ticket including
+    event details, user/guest information, QR code data, and ticket status.
+    
+    Args:
+        ticketId: The UUID of the ticket to retrieve
+        request: The FastAPI request object
+        current_user: Optional authenticated user
+        
+    Returns:
+        TicketDetailsResponse: Comprehensive ticket information
+        
+    Raises:
+        HTTPException: For various validation and access errors
+    """
+    print(f"[get_ticket_details API] Function called with ticketId: {ticketId}")
+    print(f"[get_ticket_details API] Current user: {current_user.id if current_user else 'None'}")
+    
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+    
+    # Get comprehensive request information for enhanced logging
+    request_info = get_comprehensive_request_info(request)
+    
+    print(create_enhanced_log_message("get_ticket_details API", "========== TICKET DETAILS REQUEST START ==========", request_info))
+    print(create_enhanced_log_message("get_ticket_details API", f"Ticket ID: {ticketId}", request_info))
+    print(create_enhanced_log_message("get_ticket_details API", f"User ID: {current_user.id if current_user else 'Guest'}", request_info))
+    
+    if not ticketId:
+        print(create_enhanced_log_message("get_ticket_details API", "ERROR: Ticket ID is required", request_info))
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Ticket ID is required"
+        )
+    
+    @database_sync_to_async
+    def get_ticket_comprehensive_details(ticket_id):
+        """Get comprehensive ticket details from database"""
+        print(f"[get_ticket_comprehensive_details] ========== RETRIEVING TICKET DETAILS ==========")
+        print(f"[get_ticket_comprehensive_details] Searching for ticket ID: {ticket_id}")
+        
+        try:
+            # Get the ticket
+            ticket = Ticket.objects.select_related('event', 'user').get(ticketId=ticket_id)
+            print(f"[get_ticket_comprehensive_details] Ticket found: {ticket.ticketId}")
+            print(f"[get_ticket_comprehensive_details] Ticket status: {ticket.status}")
+            print(f"[get_ticket_comprehensive_details] Event: {ticket.event.title}")
+            
+            # Get event details
+            event = ticket.event
+            event_data = {
+                "event_id": str(event.eventId),
+                "title": event.title,
+                "description": event.description,
+                "date": event.date.isoformat() if event.date else None,
+                "start_time": event.start_time.strftime("%H:%M") if event.start_time else None,
+                "end_time": event.end_time.strftime("%H:%M") if event.end_time else None,
+                "ticketing": event.ticketing,
+                "age_restriction": event.age_restriction,
+                "location": {
+                    "building_name": event.building_name,
+                    "street": event.street,
+                    "city": event.city,
+                    "state": event.state,
+                    "country": event.country,
+                    "zip_code": event.zip_code,
+                    "hide_address": event.hide_address,
+                },
+                "host": {
+                    "id": event.host.id,
+                    "username": event.host.username,
+                    "first_name": event.host.first_name,
+                    "last_name": event.host.last_name,
+                } if event.host else None,
+                "event_type": event.event_type,
+                "header_photo_url": event.header_photo.url if event.header_photo else None,
+            }
+            
+            # Get user information if ticket belongs to authenticated user
+            user_info = None
+            if ticket.user:
+                user_info = {
+                    "user_id": ticket.user.id,
+                    "username": ticket.user.username,
+                    "first_name": ticket.user.first_name,
+                    "last_name": ticket.user.last_name,
+                    "email": ticket.user.email,
+                    "date_joined": ticket.user.date_joined.isoformat(),
+                }
+                print(f"[get_ticket_comprehensive_details] User info included for: {ticket.user.username}")
+            
+            # Get guest information if it's a guest ticket
+            guest_info = None
+            if ticket.guestFirstName or ticket.guestLastName or ticket.guestEmail:
+                guest_info = {
+                    "first_name": ticket.guestFirstName,
+                    "last_name": ticket.guestLastName,
+                    "email": ticket.guestEmail,
+                }
+                print(f"[get_ticket_comprehensive_details] Guest info included for: {ticket.guestFirstName} {ticket.guestLastName}")
+            
+            # Generate ticket URLs
+            from django.urls import reverse
+            import os
+            
+            base_url = str(os.getenv("WEBSITE_DOMAIN", "https://waveoncampus.com"))
+            activation_link = base_url + reverse("eventTickets:activateTicket", kwargs={"mainId": ticket.mainId})
+            view_link = base_url + reverse("eventTickets:viewTicket", kwargs={"mainId": ticket.mainId})
+            
+            print(f"[get_ticket_comprehensive_details] Generated URLs - Activation: {activation_link}, View: {view_link}")
+            
+            # Get QR code information
+            qr_code_image_url = None
+            if ticket.qrCodeImage:
+                try:
+                    qr_code_image_url = ticket.qrCodeImage.url
+                    print(f"[get_ticket_comprehensive_details] QR code image URL: {qr_code_image_url}")
+                except Exception as e:
+                    print(f"[get_ticket_comprehensive_details] Error getting QR code URL: {e}")
+            
+            # Determine if it's a crew ticket
+            is_crew_ticket = bool(ticket.user and ticket.guestEmail and ticket.user.email != ticket.guestEmail)
+            
+            # Build metadata
+            metadata = {
+                "ticket_generated_via_api": True,
+                "has_qr_code": bool(ticket.qrCodeImage),
+                "is_guest_ticket": bool(guest_info and not user_info),
+                "is_authenticated_user_ticket": bool(user_info and not guest_info),
+                "is_mixed_ticket": bool(user_info and guest_info),
+                "event_ticketing_type": event.ticketing,
+                "ticket_main_id": ticket.mainId,
+            }
+            
+            # Build the response
+            ticket_details = {
+                "ticket_id": str(ticket.ticketId),
+                "main_id": ticket.mainId,
+                "status": ticket.status,
+                "created_at": ticket.created_at.isoformat(),
+                "updated_at": ticket.updated_at.isoformat(),
+                "event": event_data,
+                "user_info": user_info,
+                "guest_info": guest_info,
+                "qr_code_data": ticket.qrCodeData,
+                "qr_code_image_url": qr_code_image_url,
+                "activation_link": activation_link,
+                "view_link": view_link,
+                "stripe_session_id": ticket.stripe_session_id,
+                "is_crew_ticket": is_crew_ticket,
+                "metadata": metadata,
+            }
+            
+            print(f"[get_ticket_comprehensive_details] Ticket details compiled successfully")
+            print(f"[get_ticket_comprehensive_details] ========== TICKET DETAILS RETRIEVAL COMPLETE ==========")
+            
+            return ticket_details
+            
+        except Ticket.DoesNotExist:
+            print(f"[get_ticket_comprehensive_details] ERROR: Ticket not found with ID: {ticket_id}")
+            return {"error": "Ticket not found"}
+        except Exception as e:
+            print(f"[get_ticket_comprehensive_details] ERROR: Unexpected error retrieving ticket: {e}")
+            import traceback
+            print(f"[get_ticket_comprehensive_details] Full traceback:")
+            traceback.print_exc()
+            return {"error": str(e)}
+    
+    try:
+        print(create_enhanced_log_message("get_ticket_details API", "Calling database function to retrieve ticket details", request_info))
+        result = await get_ticket_comprehensive_details(ticketId)
+        
+        if "error" in result:
+            error_message = result["error"]
+            print(create_enhanced_log_message("get_ticket_details API", f"Error retrieving ticket: {error_message}", request_info))
+            
+            if error_message == "Ticket not found":
+                status_code = status.HTTP_404_NOT_FOUND
+            else:
+                status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+                
+            await notify_by_bot(
+                f"**[API: get_ticket_details]** \n\n Error retrieving ticket details: {error_message} \n\n Ticket ID: {ticketId} \n\n User ID: {current_user.id if current_user else 'None'}",
+                "API",
+                "ERROR",
+                device_info,
+            )
+            
+            raise HTTPException(status_code=status_code, detail=error_message)
+        
+        print(create_enhanced_log_message("get_ticket_details API", f"Successfully retrieved ticket details for: {ticketId}", request_info))
+        print(create_enhanced_log_message("get_ticket_details API", f"Ticket status: {result.get('status')}", request_info))
+        print(create_enhanced_log_message("get_ticket_details API", f"Event: {result.get('event', {}).get('title', 'Unknown')}", request_info))
+        print(create_enhanced_log_message("get_ticket_details API", "========== TICKET DETAILS REQUEST END ==========", request_info))
+        
+        return result
+        
+    except HTTPException:
+        # Re-raise HTTP exceptions as-is
+        raise
+    except Exception as e:
+        print(create_enhanced_log_message("get_ticket_details API", f"Unexpected error: {str(e)}", request_info))
+        import traceback
+        print(create_enhanced_log_message("get_ticket_details API", "Full traceback:", request_info))
+        traceback.print_exc()
+        
+        await notify_by_bot(
+            f"**[API: get_ticket_details]** \n\n Unexpected error: {str(e)} \n\n Ticket ID: {ticketId} \n\n User ID: {current_user.id if current_user else 'None'}",
+            "API",
+            "ERROR",
+            device_info,
+        )
+        
+        print(create_enhanced_log_message("get_ticket_details API", "========== TICKET DETAILS REQUEST ERROR END ==========", request_info))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An unexpected error occurred while retrieving ticket details"
+        )
