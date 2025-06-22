@@ -942,103 +942,113 @@ def generateTicket(
                 
                 print(f"Email settings: DEFAULT_FROM_EMAIL={settings.DEFAULT_FROM_EMAIL}, EMAIL_HOST={settings.EMAIL_HOST}")
                 
-                # Attempt to load the primary email template.
-                try:
-                    qrCodeHtml = render_to_string(
-                        "emailManagement/build_production/emails/eventTicketsApp/ticketEmail.html",
-                        {"ticketLink": activationLink, "event": event, "ticket": ticket, "viewLink": viewLink},
-                    )
-                    print("Using primary email template")
-                except TemplateDoesNotExist:
-                    # Fallback to a simpler template.
-                    try:
-                        qrCodeHtml = render_to_string(
-                            "emails/ticketEmail.html",
-                            {"ticketLink": activationLink, "event": event, "ticket": ticket, "viewLink": viewLink},
-                        )
-                        print("Using fallback email template")
-                    except TemplateDoesNotExist:
-                        # Last resort: create a professional inline HTML template.
-                        qrCodeHtml = f"""
-                        <!DOCTYPE html>
-                        <html lang="en">
-                        <head>
-                            <meta charset="UTF-8">
-                            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                            <title>Your Event Ticket</title>
-                        </head>
-                        <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8fafc;">
-                            <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f8fafc; padding: 40px 0;">
-                                <tr>
-                                    <td align="center">
-                                        <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); overflow: hidden; max-width: 600px;">
-                                            <!-- Header Section -->
-                                            <tr>
-                                                <td style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 30px; text-align: center;">
-                                                    <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.2);">
-                                                        🎟️ Your Ticket is Ready!
-                                                    </h1>
-                                                    <p style="color: #e2e8f0; margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;">
-                                                        Thanks for your purchase
-                                                    </p>
-                                                </td>
-                                            </tr>
+                # Use inline HTML email template as the primary and only method
+                profile_link = "https://www.waveoncampus.com/profile"
+                qrCodeHtml = f"""
+                <!DOCTYPE html>
+                <html lang="en">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>Your Event Ticket</title>
+                </head>
+                <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0fdfa;">
+                    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f0fdfa; padding: 40px 0;">
+                        <tr>
+                            <td align="center">
+                                <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 16px; box-shadow: 0 10px 25px rgba(20, 184, 166, 0.15); overflow: hidden; max-width: 600px; border: 1px solid #5eead4;">
+                                    <!-- Header Section -->
+                                    <tr>
+                                        <td style="background: linear-gradient(135deg, #0d9488 0%, #14b8a6 50%, #2dd4bf 100%); padding: 40px 30px; text-align: center;">
+                                            <h1 style="color: #ffffff; margin: 0; font-size: 32px; font-weight: 800; text-shadow: 0 2px 4px rgba(0,0,0,0.3); letter-spacing: -0.5px;">
+                                                🎟️ Your Ticket is Ready!
+                                            </h1>
+                                            <p style="color: #ccfbf1; margin: 15px 0 0 0; font-size: 18px; font-weight: 500;">
+                                                Successfully purchased and confirmed
+                                            </p>
+                                        </td>
+                                    </tr>
+                                    
+                                    <!-- Event Details Section -->
+                                    <tr>
+                                        <td style="padding: 40px 30px; text-align: center;">
+                                            <div style="background: linear-gradient(135deg, #0891b2 0%, #0284c7 100%); color: white; padding: 25px; border-radius: 12px; margin-bottom: 35px; box-shadow: 0 4px 15px rgba(8, 145, 178, 0.3);">
+                                                <h2 style="margin: 0; font-size: 26px; font-weight: 700; text-shadow: 0 1px 3px rgba(0,0,0,0.3); line-height: 1.3;">
+                                                    {event.title}
+                                                </h2>
+                                            </div>
                                             
-                                            <!-- Event Details Section -->
-                                            <tr>
-                                                <td style="padding: 40px 30px; text-align: center;">
-                                                    <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
-                                                        <h2 style="margin: 0; font-size: 24px; font-weight: 600; text-shadow: 0 1px 3px rgba(0,0,0,0.2);">
-                                                            {event.title}
-                                                        </h2>
-                                                    </div>
-                                                    
-                                                    <p style="color: #374151; font-size: 18px; line-height: 1.6; margin: 0 0 30px 0;">
-                                                        🎉 <strong>Congratulations!</strong> Your ticket has been confirmed and is ready to use.
-                                                    </p>
-                                                    
-                                                    <div style="background-color: #f0f9ff; border: 2px solid #0ea5e9; border-radius: 8px; padding: 20px; margin: 20px 0;">
-                                                        <p style="color: #0369a1; margin: 0; font-size: 16px; font-weight: 600;">
-                                                            💡 <strong>Important:</strong> Please save this email and present your ticket at the event entrance.
-                                                        </p>
-                                                    </div>
-                                                </td>
-                                            </tr>
+                                            <p style="color: #0f766e; font-size: 20px; line-height: 1.6; margin: 0 0 35px 0; font-weight: 600;">
+                                                🎉 <strong>Congratulations!</strong> Your ticket has been confirmed and is ready to use.
+                                            </p>
                                             
-                                            <!-- CTA Button Section -->
-                                            <tr>
-                                                <td style="padding: 0 30px 40px 30px; text-align: center;">
-                                                    <a href="{viewLink}" style="display: inline-block; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; text-decoration: none; padding: 16px 32px; border-radius: 8px; font-size: 18px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4); transition: all 0.3s ease;">
-                                                        🎫 View My Ticket
-                                                    </a>
-                                                    
-                                                    <p style="color: #6b7280; font-size: 14px; margin: 20px 0 0 0; line-height: 1.5;">
-                                                        Can't click the button? Copy and paste this link into your browser:<br>
-                                                        <span style="color: #3b82f6; word-break: break-all;">{viewLink}</span>
-                                                    </p>
-                                                </td>
-                                            </tr>
+                                            <!-- QR Code Section -->
+                                            <div style="background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%); border: 3px solid #5eead4; border-radius: 16px; padding: 30px; margin: 30px 0; box-shadow: 0 4px 15px rgba(94, 234, 212, 0.2);">
+                                                <h3 style="color: #0f766e; margin: 0 0 20px 0; font-size: 20px; font-weight: 700;">
+                                                    📱 Your QR Code Ticket
+                                                </h3>
+                                                <p style="color: #134e4a; margin: 0 0 20px 0; font-size: 16px; line-height: 1.5;">
+                                                    <strong>Scan this QR code at the event entrance</strong><br>
+                                                    Save this email or screenshot the QR code below
+                                                </p>
+                                                <div style="background-color: #ffffff; padding: 20px; border-radius: 12px; display: inline-block; border: 2px solid #2dd4bf;">
+                                                    <img src="cid:qr_code" alt="Ticket QR Code" style="width: 200px; height: 200px; display: block; margin: 0 auto;" />
+                                                </div>
+                                                <p style="color: #0f766e; margin: 15px 0 0 0; font-size: 14px; font-weight: 600;">
+                                                    Ticket ID: {ticket.ticketId}
+                                                </p>
+                                            </div>
                                             
-                                            <!-- Footer Section -->
-                                            <tr>
-                                                <td style="background-color: #f9fafb; padding: 30px; text-align: center; border-top: 1px solid #e5e7eb;">
-                                                    <p style="color: #6b7280; font-size: 14px; margin: 0 0 10px 0;">
-                                                        Need help? Contact our support team
-                                                    </p>
-                                                    <p style="color: #9ca3af; font-size: 12px; margin: 0; line-height: 1.4;">
-                                                        This is an automated message. Please do not reply to this email.<br>
-                                                        Make sure to arrive at the event with your ticket ready to scan.
-                                                    </p>
-                                                </td>
-                                            </tr>
-                                        </table>
-                                    </td>
-                                </tr>
-                            </table>
-                        </body>
-                        </html>
-                        """
-                        print("Using enhanced inline HTML email template")
+                                            <div style="background-color: #ecfeff; border: 3px solid #22d3ee; border-radius: 12px; padding: 25px; margin: 25px 0;">
+                                                <p style="color: #0e7490; margin: 0; font-size: 16px; font-weight: 600;">
+                                                    💡 <strong>Important:</strong> Present this QR code at the event entrance for quick and easy check-in.
+                                                </p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    
+                                    <!-- CTA Button Section -->
+                                    <tr>
+                                        <td style="padding: 0 30px 40px 30px; text-align: center;">
+                                            <a href="{profile_link}" style="display: inline-block; background: linear-gradient(135deg, #0d9488 0%, #14b8a6 50%, #2dd4bf 100%); color: #ffffff; text-decoration: none; padding: 18px 40px; border-radius: 12px; font-size: 18px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 6px 20px rgba(20, 184, 166, 0.4); transition: all 0.3s ease; border: 2px solid transparent;">
+                                                🎫 View All My Tickets
+                                            </a>
+                                            
+                                            <p style="color: #0f766e; font-size: 16px; margin: 25px 0 0 0; line-height: 1.6; font-weight: 600;">
+                                                Click the button above to go to your profile, then click <strong>"My Tickets"</strong> to see all your event tickets.
+                                            </p>
+                                            
+                                            <div style="background-color: #fefce8; border: 2px solid #eab308; border-radius: 12px; padding: 20px; margin: 25px 0; text-align: left;">
+                                                <p style="color: #a16207; margin: 0; font-size: 15px; font-weight: 600;">
+                                                    📱 <strong>Alternative Access:</strong>
+                                                </p>
+                                                <p style="color: #a16207; margin: 8px 0 0 0; font-size: 14px; line-height: 1.5;">
+                                                    Can't click the button? Go to <strong>waveoncampus.com/profile</strong> and click "My Tickets" to access all your event tickets.
+                                                </p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    
+                                    <!-- Footer Section -->
+                                    <tr>
+                                        <td style="background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%); padding: 35px 30px; text-align: center; border-top: 2px solid #5eead4;">
+                                            <p style="color: #0f766e; font-size: 16px; margin: 0 0 15px 0; font-weight: 600;">
+                                                Need help? Contact our support team
+                                            </p>
+                                            <p style="color: #134e4a; font-size: 13px; margin: 0; line-height: 1.5; opacity: 0.8;">
+                                                This is an automated message. Please do not reply to this email.<br>
+                                                Make sure to arrive at the event with your QR code ready to scan.
+                                            </p>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+                </body>
+                </html>
+                """
+                print("Using inline HTML email template")
                 
                 from_email = settings.DEFAULT_FROM_EMAIL
                 
@@ -1053,42 +1063,51 @@ def generateTicket(
                     except Exception as e:
                         print(f"Error getting QR code attachment: {e}")
                 
-                # Send the email.
+                # Send the email with inline QR code image.
                 try:
-                    send_mail(
-                        subject,
-                        message,
-                        from_email,
-                        recipient_list,
-                        fail_silently=False,
-                        html_message=qrCodeHtml,
+                    from django.core.mail import EmailMultiAlternatives
+                    from email.mime.image import MIMEImage
+                    
+                    email = EmailMultiAlternatives(
+                        subject=subject,
+                        body=message,
+                        from_email=from_email,
+                        to=recipient_list
                     )
-                    print(f"Email sent successfully to {recipient_list}")
+                    email.attach_alternative(qrCodeHtml, "text/html")
+                    
+                    # Attach QR code image inline for email display
+                    if qr_attachment and os.path.exists(qr_attachment):
+                        with open(qr_attachment, 'rb') as f:
+                            qr_image_data = f.read()
+                            # Create inline image attachment with cid:qr_code
+                            qr_image = MIMEImage(qr_image_data)
+                            qr_image.add_header('Content-ID', '<qr_code>')
+                            qr_image.add_header('Content-Disposition', 'inline', filename=f"ticket-{ticket.ticketId}.png")
+                            email.attach(qr_image)
+                            print(f"QR code image attached inline with CID: qr_code")
+                    
+                    email.send(fail_silently=False)
+                    print(f"Email sent successfully with inline QR code to {recipient_list}")
+                    
                 except Exception as e:
-                    print(f"Error in send_mail function: {e}")
+                    print(f"Error sending email with inline QR code: {e}")
                     import traceback
                     traceback.print_exc()
                     
-                    # Try an alternative approach with EmailMultiAlternatives.
+                    # Fallback: try basic send_mail without inline image
                     try:
-                        from django.core.mail import EmailMultiAlternatives
-                        
-                        email = EmailMultiAlternatives(
-                            subject=subject,
-                            body=message,
-                            from_email=from_email,
-                            to=recipient_list
+                        send_mail(
+                            subject,
+                            message,
+                            from_email,
+                            recipient_list,
+                            fail_silently=False,
+                            html_message=qrCodeHtml,
                         )
-                        email.attach_alternative(qrCodeHtml, "text/html")
-                        
-                        if qr_attachment and os.path.exists(qr_attachment):
-                            with open(qr_attachment, 'rb') as f:
-                                email.attach(f"ticket-{ticket.ticketId}.png", f.read(), 'image/png')
-                        
-                        email.send(fail_silently=False)
-                        print(f"Email sent successfully using EmailMultiAlternatives to {recipient_list}")
+                        print(f"Fallback email sent successfully to {recipient_list} (without inline QR code)")
                     except Exception as e2:
-                        print(f"Alternative email sending also failed: {e2}")
+                        print(f"Fallback email sending also failed: {e2}")
                         traceback.print_exc()
                 
                 # Add event to the user's purchased events if authenticated.
