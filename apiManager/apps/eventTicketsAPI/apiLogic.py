@@ -2878,7 +2878,7 @@ async def get_ticket_details(
             
             # Build the response
             ticket_details = {
-                "main_id": ticket.mainId,
+                "main_id": str(ticket.mainId),
                 "status": ticket.status,
                 "event": event_data,
                 "guest_info": guest_info,
