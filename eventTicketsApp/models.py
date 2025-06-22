@@ -7,6 +7,7 @@ from datetime import timedelta
 from django.dispatch import receiver
 from django.conf import settings
 from django.db.models import Index
+from decimal import Decimal
 import json
 
 
@@ -25,22 +26,26 @@ class Ticket(models.Model):
         primary_key=True, default=uuid.uuid4, editable=False, unique=True
     )
     ticketId = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
-    user = models.ForeignKey("authenticationApp.CustomUser", on_delete=models.CASCADE, null=True, blank=True)
+    user = models.ForeignKey(
+        "authenticationApp.CustomUser", on_delete=models.CASCADE, null=True, blank=True
+    )
     guestFirstName = models.CharField(max_length=50, blank=True, null=True)
     guestLastName = models.CharField(max_length=50, blank=True, null=True)
     guestEmail = models.EmailField(max_length=254, blank=True, null=True)
     event = models.ForeignKey("eventManagementApp.Event", on_delete=models.CASCADE)
     qrCodeData = models.TextField(blank=True, null=True)
-    qrCodeImage = models.FileField(upload_to='qr_codes/', blank=True, null=True)
-    status = models.CharField(max_length=10, choices=TICKET_STATUS_CHOICES, default="Valid")
+    qrCodeImage = models.FileField(upload_to="qr_codes/", blank=True, null=True)
+    status = models.CharField(
+        max_length=10, choices=TICKET_STATUS_CHOICES, default="Valid"
+    )
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     stripe_session_id = models.CharField(max_length=100, blank=True, null=True)
-    
+
     def __str__(self):
         if self.user:
             return f"Ticket {self.ticketId} for {self.event.title} - {self.status} (User: {self.user.username})"
         return f"Ticket {self.ticketId} for {self.event.title} - {self.status} (Guest: {self.guestFirstName} {self.guestLastName})"
-    
+
     class Meta:
         default_permissions = ()
         indexes = [
@@ -48,7 +53,7 @@ class Ticket(models.Model):
             Index(fields=["event", "created_at"], name="ticket_event_created_idx"),
             Index(fields=["created_at", "status"], name="ticket_created_status_idx"),
         ]
-    
+
     def save(self, *args, **kwargs):
         if not self.qrCodeData:
             self.qrCodeData = self.generate_qr_code_data()
@@ -61,7 +66,7 @@ class Ticket(models.Model):
         qr_data = {
             "ticketId": str(self.ticketId),
             "eventId": str(self.event.eventId),
-            "guestFirstName": self.guestFirstName  if self.guestFirstName else None,
+            "guestFirstName": self.guestFirstName if self.guestFirstName else None,
             "guestLastName": self.guestLastName if self.guestLastName else None,
             "guestEmail": self.guestEmail if self.guestEmail else None,
             "userFirstName": self.user.first_name if self.user else None,
@@ -69,6 +74,7 @@ class Ticket(models.Model):
             "userEmail": self.user.email if self.user else None,
         }
         return json.dumps(qr_data)
+
 
 class InviteEventOption(models.Model):
     event = models.ForeignKey("eventManagementApp.Event", on_delete=models.CASCADE)
@@ -78,7 +84,7 @@ class InviteEventOption(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     expires_at = models.DateTimeField()
-    
+
     class Meta:
         default_permissions = ()
 
@@ -104,18 +110,20 @@ class RSVPTicket(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     ticket_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
-    
+
     class Meta:
         default_permissions = ()
         indexes = [
             # Composite indexes for analytics queries
             Index(fields=["event", "created_at"], name="rsvp_event_created_idx"),
-            Index(fields=["created_at", "display_on_guestlist"], name="rsvp_created_display_idx"),
+            Index(
+                fields=["created_at", "display_on_guestlist"],
+                name="rsvp_created_display_idx",
+            ),
         ]
 
     def __str__(self):
         return f"{self.first_name} {self.last_name} RSVP'd for {self.event.title}"
-    
 
 
 class PaidFreeTicket(models.Model):
@@ -130,7 +138,7 @@ class PaidFreeTicket(models.Model):
     )
     stripePriceId = models.CharField(max_length=100, blank=True, null=True)
     ticket_name = models.CharField(_("Ticket Name"), max_length=50)
-    
+
     ticket_price = models.DecimalField(
         _("Ticket Price"), max_digits=10, decimal_places=2, null=True, blank=True
     )
@@ -144,9 +152,14 @@ class PaidFreeTicket(models.Model):
         _("Tickets Sold"), default=0, null=True, blank=True, db_index=True
     )
     crew_discounted_price = models.DecimalField(
-        _("Discounted Price for Crews"), max_digits=10, decimal_places=2, null=True, blank=True
+        _("Discounted Price for Crews"),
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
     )
     # created_at = models.DateTimeField(auto_now_add=True)
+    deadline = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         unique_together = ("event", "ticket_name")
@@ -154,9 +167,10 @@ class PaidFreeTicket(models.Model):
         indexes = [
             # Composite indexes for analytics queries
             Index(fields=["event", "ticket_sold"], name="paidfree_event_sold_idx"),
-            Index(fields=["ticket_sold", "ticket_price"], name="paidfree_sold_price_idx"),
+            Index(
+                fields=["ticket_sold", "ticket_price"], name="paidfree_sold_price_idx"
+            ),
         ]
-        
 
     def __str__(self):
         return f"{self.ticket_name} for {self.event.title}"
@@ -166,28 +180,36 @@ class PaidFreeTicket(models.Model):
 
     def generate_discount(self):
         if self.event.crew_discount_percentage:
-            discount_amount = (self.ticket_price * self.event.crew_discount_percentage) / 100
+            discount_amount = (
+                self.ticket_price * self.event.crew_discount_percentage
+            ) / 100
             self.crew_discounted_price = self.ticket_price - discount_amount
         else:
             self.crew_discounted_price = None
 
-            
     def save(self, *args, **kwargs):
         if self.ticket_price is None:
             raise ValueError("Ticket price must be set for paid tickets")
         else:
             self.generate_discount()
-        super().save(*args, **kwargs)
 
+        # Set deadline to 12 hours after event date and start time if not already set
+        if not self.deadline and self.event:
+            from datetime import datetime, timedelta
+
+            event_datetime = datetime.combine(self.event.date, self.event.start_time)
+            self.deadline = event_datetime + timedelta(hours=12)
+
+        super().save(*args, **kwargs)
 
 
 class UserPayment(models.Model):
     user = models.ForeignKey("authenticationApp.CustomUser", on_delete=models.CASCADE)
     success = models.BooleanField(default=False)
-    
+
     class Meta:
         default_permissions = ()
-    
+
     @receiver(post_save, sender="authenticationApp.CustomUser")
     def create_user_payment(sender, instance, created, **kwargs):
         if created:
@@ -195,13 +217,27 @@ class UserPayment(models.Model):
 
 
 class StripePlatformSettings(models.Model):
-    salesTaxPercentage = models.DecimalField("Sales Tax Percentage", max_digits=5, decimal_places=2, default=7.0)
-    salesFeeAmount = models.DecimalField("Sales Fee Amount", max_digits=10, decimal_places=2, default=0.99)
-    percentageMadeAvailableToHost = models.DecimalField("Percentage Made Available to Host", max_digits=5, decimal_places=2, default=50.0)
-    percentageStayingOnPlatform = models.DecimalField("Percentage Staying on Platform", max_digits=5, decimal_places=2, default=50.0)
-    
+    salesTaxPercentage = models.DecimalField(
+        "Sales Tax Percentage", max_digits=5, decimal_places=2, default=Decimal("7.0")
+    )
+    salesFeeAmount = models.DecimalField(
+        "Sales Fee Amount", max_digits=10, decimal_places=2, default=Decimal("0.99")
+    )
+    percentageMadeAvailableToHost = models.DecimalField(
+        "Percentage Made Available to Host",
+        max_digits=5,
+        decimal_places=2,
+        default=Decimal("50.0"),
+    )
+    percentageStayingOnPlatform = models.DecimalField(
+        "Percentage Staying on Platform",
+        max_digits=5,
+        decimal_places=2,
+        default=Decimal("50.0"),
+    )
+
     class Meta:
         default_permissions = ()
-        
+
     def __str__(self):
         return "Stripe Platform Settings"
