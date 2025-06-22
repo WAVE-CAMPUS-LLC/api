@@ -2815,7 +2815,7 @@ async def get_ticket_details(
         
         try:
             # Get the ticket
-            ticket = Ticket.objects.select_related('event', 'user').get(ticketId=ticket_id)
+            ticket = Ticket.objects.select_related('event', 'user').get(mainId=ticket_id)
             print(f"[get_ticket_comprehensive_details] Ticket found: {ticket.ticketId}")
             print(f"[get_ticket_comprehensive_details] Ticket status: {ticket.status}")
             print(f"[get_ticket_comprehensive_details] Event: {ticket.event.title}")
