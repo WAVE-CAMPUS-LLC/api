@@ -1,0 +1,13 @@
+services:
+    - type: web
+      name: wave_api
+      env: docker
+      plan: starter
+      dockerfilePath: ./Dockerfile
+      envVars:
+          - key: OTEL_EXPORTER_OTLP_ENDPOINT
+            value: "https://otlp-gateway-prod-us-east-2.grafana.net/otlp"
+          - key: GRAFANA_CLOUD_API_KEY
+            value: "glc_eyJvIjoiMTMwOTA4MSIsIm4iOiJ3YXZlX2FwaSIsImsiOiJJMnNoNDIyWTZzcFpZb2VKNWUzVXIyODgiLCJtIjp7InIiOiJwcm9kLXVzLWVhc3QtMCJ9fQ=="
+          - key: RESOURCE_ENVIRONMENT
+            value: "apiProduction"
