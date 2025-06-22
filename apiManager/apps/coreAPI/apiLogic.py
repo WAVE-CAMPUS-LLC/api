@@ -19,18 +19,13 @@ from .serializers import ExplorePageEvent, EventDetailsSerializer, RSVPInformati
 from apiManager.dependencies import get_current_user
 from apiManager.utilities.notify_by_bot import notify_by_bot
 from apiManager.utilities.device_info import get_device_info
-from apiManager.utilities.enhanced_logger import get_enhanced_logger
 from authenticationApp.models import CustomUser
 from uuid import UUID
 from .version_middleware import VersionCheckMiddleware
 from opentelemetry.trace import get_current_span
 
 
-import logging
-
 router = APIRouter()
-logger = logging.getLogger(__name__)
-enhanced_logger = get_enhanced_logger(__name__)
 
 
 @router.get("/ping")
