@@ -958,18 +958,87 @@ def generateTicket(
                         )
                         print("Using fallback email template")
                     except TemplateDoesNotExist:
-                        # Last resort: create a simple inline HTML template.
+                        # Last resort: create a professional inline HTML template.
                         qrCodeHtml = f"""
-                        <html>
-                        <body>
-                            <h1>Your Ticket for {event.title}</h1>
-                            <p>Thank you for your purchase!</p>
-                            <p>Click the link below to activate your ticket:</p>
-                            <a href="{viewLink}">{viewLink}</a>
+                        <!DOCTYPE html>
+                        <html lang="en">
+                        <head>
+                            <meta charset="UTF-8">
+                            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                            <title>Your Event Ticket</title>
+                        </head>
+                        <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8fafc;">
+                            <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f8fafc; padding: 40px 0;">
+                                <tr>
+                                    <td align="center">
+                                        <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); overflow: hidden; max-width: 600px;">
+                                            <!-- Header Section -->
+                                            <tr>
+                                                <td style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 30px; text-align: center;">
+                                                    <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+                                                        🎟️ Your Ticket is Ready!
+                                                    </h1>
+                                                    <p style="color: #e2e8f0; margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;">
+                                                        Thanks for your purchase
+                                                    </p>
+                                                </td>
+                                            </tr>
+                                            
+                                            <!-- Event Details Section -->
+                                            <tr>
+                                                <td style="padding: 40px 30px; text-align: center;">
+                                                    <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
+                                                        <h2 style="margin: 0; font-size: 24px; font-weight: 600; text-shadow: 0 1px 3px rgba(0,0,0,0.2);">
+                                                            {event.title}
+                                                        </h2>
+                                                    </div>
+                                                    
+                                                    <p style="color: #374151; font-size: 18px; line-height: 1.6; margin: 0 0 30px 0;">
+                                                        🎉 <strong>Congratulations!</strong> Your ticket has been confirmed and is ready to use.
+                                                    </p>
+                                                    
+                                                    <div style="background-color: #f0f9ff; border: 2px solid #0ea5e9; border-radius: 8px; padding: 20px; margin: 20px 0;">
+                                                        <p style="color: #0369a1; margin: 0; font-size: 16px; font-weight: 600;">
+                                                            💡 <strong>Important:</strong> Please save this email and present your ticket at the event entrance.
+                                                        </p>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            
+                                            <!-- CTA Button Section -->
+                                            <tr>
+                                                <td style="padding: 0 30px 40px 30px; text-align: center;">
+                                                    <a href="{viewLink}" style="display: inline-block; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; text-decoration: none; padding: 16px 32px; border-radius: 8px; font-size: 18px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4); transition: all 0.3s ease;">
+                                                        🎫 View My Ticket
+                                                    </a>
+                                                    
+                                                    <p style="color: #6b7280; font-size: 14px; margin: 20px 0 0 0; line-height: 1.5;">
+                                                        Can't click the button? Copy and paste this link into your browser:<br>
+                                                        <span style="color: #3b82f6; word-break: break-all;">{viewLink}</span>
+                                                    </p>
+                                                </td>
+                                            </tr>
+                                            
+                                            <!-- Footer Section -->
+                                            <tr>
+                                                <td style="background-color: #f9fafb; padding: 30px; text-align: center; border-top: 1px solid #e5e7eb;">
+                                                    <p style="color: #6b7280; font-size: 14px; margin: 0 0 10px 0;">
+                                                        Need help? Contact our support team
+                                                    </p>
+                                                    <p style="color: #9ca3af; font-size: 12px; margin: 0; line-height: 1.4;">
+                                                        This is an automated message. Please do not reply to this email.<br>
+                                                        Make sure to arrive at the event with your ticket ready to scan.
+                                                    </p>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
                         </body>
                         </html>
                         """
-                        print("Using inline HTML email template")
+                        print("Using enhanced inline HTML email template")
                 
                 from_email = settings.DEFAULT_FROM_EMAIL
                 
