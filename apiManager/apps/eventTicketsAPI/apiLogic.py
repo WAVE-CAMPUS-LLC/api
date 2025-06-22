@@ -2728,32 +2728,21 @@ def _force_email_send_verification():
 class TicketDetailsResponse(BaseModel):
     """Pydantic model for detailed ticket response"""
     
-    ticket_id: str
     main_id: str
     status: str
-    created_at: str
-    updated_at: str
     
     # Event information
     event: Dict[str, Any]
-    
-    # User information (if authenticated user)
-    user_info: Optional[Dict[str, Any]] = None
     
     # Guest information (if guest ticket)
     guest_info: Optional[Dict[str, Any]] = None
     
     # QR Code information
-    qr_code_data: Optional[str] = None
     qr_code_image_url: Optional[str] = None
     
     # Ticket URLs
     activation_link: str
     view_link: str
-    
-    # Purchase information
-    stripe_session_id: Optional[str] = None
-    is_crew_ticket: bool = False
     
     # Additional metadata
     metadata: Dict[str, Any]
@@ -2825,7 +2814,6 @@ async def get_ticket_details(
             event_data = {
                 "event_id": str(event.eventId),
                 "title": event.title,
-                "description": event.description,
                 "date": event.date.isoformat() if event.date else None,
                 "start_time": event.start_time.strftime("%H:%M") if event.start_time else None,
                 "end_time": event.end_time.strftime("%H:%M") if event.end_time else None,
@@ -2849,19 +2837,6 @@ async def get_ticket_details(
                 "event_type": event.event_type,
                 "header_photo_url": event.header_photo.url if event.header_photo else None,
             }
-            
-            # Get user information if ticket belongs to authenticated user
-            user_info = None
-            if ticket.user:
-                user_info = {
-                    "user_id": ticket.user.id,
-                    "username": ticket.user.username,
-                    "first_name": ticket.user.first_name,
-                    "last_name": ticket.user.last_name,
-                    "email": ticket.user.email,
-                    "date_joined": ticket.user.date_joined.isoformat(),
-                }
-                print(f"[get_ticket_comprehensive_details] User info included for: {ticket.user.username}")
             
             # Get guest information if it's a guest ticket
             guest_info = None
@@ -2892,36 +2867,24 @@ async def get_ticket_details(
                 except Exception as e:
                     print(f"[get_ticket_comprehensive_details] Error getting QR code URL: {e}")
             
-            # Determine if it's a crew ticket
-            is_crew_ticket = bool(ticket.user and ticket.guestEmail and ticket.user.email != ticket.guestEmail)
-            
             # Build metadata
             metadata = {
                 "ticket_generated_via_api": True,
                 "has_qr_code": bool(ticket.qrCodeImage),
-                "is_guest_ticket": bool(guest_info and not user_info),
-                "is_authenticated_user_ticket": bool(user_info and not guest_info),
-                "is_mixed_ticket": bool(user_info and guest_info),
+                "is_guest_ticket": bool(guest_info),
                 "event_ticketing_type": event.ticketing,
                 "ticket_main_id": ticket.mainId,
             }
             
             # Build the response
             ticket_details = {
-                "ticket_id": str(ticket.ticketId),
                 "main_id": ticket.mainId,
                 "status": ticket.status,
-                "created_at": ticket.created_at.isoformat(),
-                "updated_at": ticket.updated_at.isoformat(),
                 "event": event_data,
-                "user_info": user_info,
                 "guest_info": guest_info,
-                "qr_code_data": ticket.qrCodeData,
                 "qr_code_image_url": qr_code_image_url,
                 "activation_link": activation_link,
                 "view_link": view_link,
-                "stripe_session_id": ticket.stripe_session_id,
-                "is_crew_ticket": is_crew_ticket,
                 "metadata": metadata,
             }
             
