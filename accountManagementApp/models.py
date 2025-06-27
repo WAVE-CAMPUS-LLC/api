@@ -244,3 +244,28 @@ class UserProfile(models.Model):
 
     def get_shared_events(self):
         return SharedEvent.objects.filter(receiver=self.user)
+
+
+class AccountDeletionReason(models.Model):
+    """
+    Model to track reasons why users delete their accounts
+    """
+
+    user_email = models.EmailField(help_text="Email of the deleted user")
+    username = models.CharField(max_length=150, help_text="Username of the deleted user")
+    user_id = models.CharField(max_length=100, help_text="User ID of the deleted user")
+    reason = models.TextField(help_text="Reason provided by user for account deletion")
+    deleted_at = models.DateTimeField(auto_now_add=True, help_text="When the account was deleted")
+
+    # Optional additional context
+    platform = models.CharField(max_length=50, blank=True, null=True, help_text="Platform used for deletion (web, mobile, etc.)")
+    user_agent = models.TextField(blank=True, null=True, help_text="User agent string")
+
+    class Meta:
+        verbose_name = "Account Deletion Reason"
+        verbose_name_plural = "Account Deletion Reasons"
+        ordering = ['-deleted_at']
+        default_permissions = ()
+
+    def __str__(self):
+        return f"Account deletion: {self.username} ({self.user_email}) - {self.deleted_at}"

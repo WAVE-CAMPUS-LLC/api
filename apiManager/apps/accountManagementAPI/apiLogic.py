@@ -615,6 +615,125 @@ async def delete_profile(
         raise HTTPException(status_code=500, detail=f"Error deleting profile: {str(e)}")
 
 
+@router.post("/account/delete-with-reason")
+async def delete_account_with_reason(
+    request: Request,
+    user_id: int = Depends(get_current_user),
+    reason: str = Form(...),
+    platform: Optional[str] = None,
+):
+    """
+    API endpoint for deleting a user account with a reason.
+    Saves the deletion reason and then deletes the user account.
+    """
+    print(f"[delete_account_with_reason] API called with user_id: {user_id}")
+
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    try:
+        @database_sync_to_async
+        def delete_account_with_reason_sync(user_id, reason, platform, user_agent_str):
+            try:
+                print(f"[delete_account_with_reason_sync] Processing deletion for user_id: {user_id}")
+                
+                # Get user details before deletion
+                user = CustomUser.objects.get(id=user_id)
+                user_email = user.email
+                username = user.username
+                str_user_id = str(user.user_id)
+                
+                print(f"[delete_account_with_reason_sync] User found: {username} ({user_email})")
+                
+                # Import the AccountDeletionReason model
+                from accountManagementApp.models import AccountDeletionReason
+                
+                # Save the deletion reason before deleting the user
+                deletion_record = AccountDeletionReason.objects.create(
+                    user_email=user_email,
+                    username=username,
+                    user_id=str_user_id,
+                    reason=reason,
+                    platform=platform or "Unknown",
+                    user_agent=user_agent_str
+                )
+                
+                print(f"[delete_account_with_reason_sync] Deletion reason saved with ID: {deletion_record.id}")
+                
+                # Delete the user account
+                user.delete()
+                
+                print(f"[delete_account_with_reason_sync] User account deleted successfully")
+                
+                return {
+                    "success": True,
+                    "deletion_record_id": deletion_record.id,
+                    "message": "Account deleted successfully"
+                }
+                
+            except CustomUser.DoesNotExist:
+                print(f"[delete_account_with_reason_sync] Error: User with id {user_id} does not exist")
+                return {"success": False, "error": "User not found"}
+            except Exception as e:
+                import traceback
+                error_trace = traceback.format_exc()
+                print(f"[delete_account_with_reason_sync] Unexpected error: {str(e)}\n{error_trace}")
+                return {"success": False, "error": f"Unexpected error: {str(e)}"}
+
+        # Validate reason input
+        if not reason or len(reason.strip()) == 0:
+            raise HTTPException(status_code=400, detail="Deletion reason is required")
+        
+        if len(reason) > 1000:  # Reasonable limit for reason length
+            raise HTTPException(status_code=400, detail="Deletion reason is too long (max 1000 characters)")
+
+        result = await delete_account_with_reason_sync(user_id, reason.strip(), platform, user_agent_str)
+        
+        if not result["success"]:
+            if "User not found" in result.get("error", ""):
+                raise HTTPException(status_code=404, detail="User not found")
+            else:
+                await notify_by_bot(
+                    f"**[API: delete_account_with_reason]** \n\n Error deleting account: user_id={user_id}, error={result.get('error')} \n\n Platform: {platform}",
+                    platform or "Unknown",
+                    "ERROR",
+                    device_info,
+                )
+                raise HTTPException(status_code=500, detail=f"Error deleting account: {result.get('error')}")
+
+        print(f"[delete_account_with_reason] Account deleted successfully for user_id: {user_id}")
+        
+        # Notify about account deletion (optional - you may want to track this)
+        await notify_by_bot(
+            f"**[Account Deletion]** \n\n User account deleted: user_id={user_id}, reason: {reason[:100]}{'...' if len(reason) > 100 else ''} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "INFO",
+            device_info,
+        )
+        
+        return {
+            "message": "Account deleted successfully",
+            "deletion_record_id": result["deletion_record_id"]
+        }
+
+    except HTTPException:
+        # Re-raise HTTP exceptions
+        raise
+    except Exception as e:
+        import traceback
+        error_trace = traceback.format_exc()
+        print(f"[delete_account_with_reason] Unhandled exception: {str(e)}\n{error_trace}")
+        await notify_by_bot(
+            f"**[API: delete_account_with_reason]** \n\n Unhandled exception: user_id={user_id}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
 @router.get("/getUserTransactions")
 async def get_user_transactions(
     request: Request,
