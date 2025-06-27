@@ -291,12 +291,14 @@ async def login_api(
         print(
             f"[login_api] Authentication failed with status code {status_code}: {error}"
         )
-        await notify_by_bot(
-            f"**[API: login_api]** \n\n Authentication failed: identifier={login_data.identifier}, status={status_code} \n\n Platform: {platform} \n\n Error: {error}",
-            platform or "Unknown",
-            "ERROR",
-            device_info,
-        )
+        # Only notify if it's a server error (500), not user authentication errors (401, 400)
+        if status_code >= 500:
+            await notify_by_bot(
+                f"**[API: login_api]** \n\n Server error during authentication: identifier={login_data.identifier}, status={status_code} \n\n Platform: {platform} \n\n Error: {error}",
+                platform or "Unknown",
+                "ERROR",
+                device_info,
+            )
         return JSONResponse(content=error, status_code=status_code)
 
     print(f"[login_api] Authentication successful with status code {status_code}")
