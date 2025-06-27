@@ -615,7 +615,7 @@ async def delete_profile(
         raise HTTPException(status_code=500, detail=f"Error deleting profile: {str(e)}")
 
 
-@router.post("/account/delete-with-reason")
+@router.post("/profile/delete-with-reason")
 async def delete_account_with_reason(
     request: Request,
     user_id: int = Depends(get_current_user),
