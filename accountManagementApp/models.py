@@ -251,7 +251,7 @@ class AccountDeletionReason(models.Model):
     Model to track reasons why users delete their accounts
     """
 
-    user_email = models.EmailField(help_text="Email of the deleted user")
+    user_email = models.EmailField(help_text="Email of the deleted user account")
     username = models.CharField(max_length=150, help_text="Username of the deleted user")
     user_id = models.CharField(max_length=100, help_text="User ID of the deleted user")
     reason = models.TextField(help_text="Reason provided by user for account deletion")
