@@ -1,3 +1,4 @@
+import traceback
 from datetime import datetime
 from fastapi import (
     APIRouter,
@@ -82,9 +83,20 @@ async def profileOverview(
     @database_sync_to_async
     def get_profile_overview(user_id):
         try:
+            print(f"[get_profile_overview] Attempting to retrieve user with id: {user_id}")
             user = CustomUser.objects.get(id=user_id)
-            user_profile = UserProfile.objects.get(user=user)
-            return {
+            print(f"[get_profile_overview] User found: {user.username}")
+            
+            try:
+                user_profile = UserProfile.objects.get(user=user)
+                print(f"[get_profile_overview] UserProfile found for user: {user.username}")
+            except UserProfile.DoesNotExist:
+                print(f"[get_profile_overview] UserProfile not found for user: {user.username}, creating one...")
+                user_profile = UserProfile.objects.create(user=user)
+                print(f"[get_profile_overview] UserProfile created for user: {user.username}")
+            
+            # Build the response with detailed logging
+            profile_data = {
                 "user_id": str(user.user_id),
                 "username": user.username,
                 "first_name": user.first_name,
@@ -101,13 +113,21 @@ async def profileOverview(
                 "is_campus_manager": user_profile.is_campus_manager,
                 "was_host": user_profile.was_host,
             }
+            
+            # Log what we're returning for debugging
+            print(f"[get_profile_overview] Profile data being returned:")
+            for key, value in profile_data.items():
+                print(f"  {key}: {value} (type: {type(value)})")
+            
+            return profile_data
+            
         except CustomUser.DoesNotExist:
-            print(f"[profileOverview] Error: User with id {user_id} does not exist")
+            print(f"[get_profile_overview] Error: User with id {user_id} does not exist")
             return None
         except Exception as e:
             error_trace = traceback.format_exc()
             print(
-                f"[profileOverview] Unexpected error retrieving profile for user_id {user_id}: {str(e)}\n{error_trace}"
+                f"[get_profile_overview] Unexpected error retrieving profile for user_id {user_id}: {str(e)}\n{error_trace}"
             )
             return None
 
@@ -156,9 +176,20 @@ async def profile_detailed(
     @database_sync_to_async
     def get_profile_detailed(user_id):
         try:
+            print(f"[get_profile_detailed] Attempting to retrieve user with id: {user_id}")
             user = CustomUser.objects.get(id=user_id)
-            user_profile = UserProfile.objects.get(user=user)
-            return {
+            print(f"[get_profile_detailed] User found: {user.username}")
+            
+            try:
+                user_profile = UserProfile.objects.get(user=user)
+                print(f"[get_profile_detailed] UserProfile found for user: {user.username}")
+            except UserProfile.DoesNotExist:
+                print(f"[get_profile_detailed] UserProfile not found for user: {user.username}, creating one...")
+                user_profile = UserProfile.objects.create(user=user)
+                print(f"[get_profile_detailed] UserProfile created for user: {user.username}")
+            
+            # Build the response with detailed logging
+            profile_data = {
                 "user_id": str(user.user_id),
                 "username": user.username,
                 "first_name": user.first_name,
@@ -177,27 +208,48 @@ async def profile_detailed(
                 "date_joined": user.date_joined,
                 "is_active": user.is_active,
             }
+            
+            # Log what we're returning for debugging
+            print(f"[get_profile_detailed] Profile data being returned:")
+            for key, value in profile_data.items():
+                print(f"  {key}: {value} (type: {type(value)})")
+            
+            return profile_data
+            
         except CustomUser.DoesNotExist:
-            print(f"[profile_detailed] Error: User with id {user_id} does not exist")
+            print(f"[get_profile_detailed] Error: User with id {user_id} does not exist")
             return None
         except Exception as e:
             error_trace = traceback.format_exc()
             print(
-                f"[profile_detailed] Unexpected error retrieving profile for user_id {user_id}: {str(e)}\n{error_trace}"
+                f"[get_profile_detailed] Unexpected error retrieving profile for user_id {user_id}: {str(e)}\n{error_trace}"
             )
             return None
 
-    profile_data = await get_profile_detailed(user_id)
-    if profile_data is None:
-        await notify_by_bot(
-            f"**[API: profile_detailed]** \n\n User not found: user_id={user_id} \n\n Platform: {platform}",
-            platform or "Unknown",
-            "ERROR",
-            device_info,
-        )
-        raise HTTPException(status_code=404, detail="Event not found")
-    print(f"[profile_detailed] Returning profile data: {profile_data}")
-    return profile_data
+    try:
+        profile_data = await get_profile_detailed(user_id)
+        if profile_data is None:
+            await notify_by_bot(
+                f"**[API: profile_detailed]** \n\n User not found: user_id={user_id} \n\n Platform: {platform}",
+                platform or "Unknown",
+                "ERROR",
+                device_info,
+            )
+            raise HTTPException(status_code=404, detail="User not found")
+        print(f"[profile_detailed] Returning profile data: {profile_data}")
+        return profile_data
+    except Exception as e:
+        if not isinstance(e, HTTPException):
+            error_trace = traceback.format_exc()
+            print(f"[profile_detailed] Unhandled exception: {str(e)}\n{error_trace}")
+            await notify_by_bot(
+                f"**[API: profile_detailed]** \n\n Unhandled exception: user_id={user_id}, error={str(e)} \n\n Platform: {platform}",
+                platform or "Unknown",
+                "ERROR",
+                device_info,
+            )
+            raise HTTPException(status_code=500, detail="Internal server error")
+        raise e
 
 
 @router.post("/profile/detailed")
