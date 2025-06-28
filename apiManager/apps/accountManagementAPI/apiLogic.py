@@ -1367,6 +1367,142 @@ async def get_edit_fields(
         raise e
 
 
+@router.post("/editProfile")
+async def update_edit_fields(
+    request: Request,
+    user_id: int = Depends(get_current_user),
+    first_name: str = Form(...),
+    last_name: str = Form(...),
+    email: str = Form(...),
+    profile_photo: Optional[UploadFile] = File(None),
+    platform: Optional[str] = None,
+):
+    """
+    API endpoint for updating editable profile fields.
+    Updates user profile data with the provided information.
+    """
+    print(f"[update_edit_fields] API called with user_id: {user_id}")
+
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    @database_sync_to_async
+    def update_profile_data(user_id, first_name, last_name, email, profile_photo):
+        try:
+            print(f"[update_profile_data] Updating profile for user_id: {user_id}")
+            user = CustomUser.objects.get(id=user_id)
+            
+            try:
+                user_profile = UserProfile.objects.get(user=user)
+                print(f"[update_profile_data] UserProfile found for user: {user.username}")
+            except UserProfile.DoesNotExist:
+                print(f"[update_profile_data] UserProfile not found for user: {user.username}, creating one...")
+                user_profile = UserProfile.objects.create(user=user)
+                print(f"[update_profile_data] UserProfile created for user: {user.username}")
+            
+            # Update user fields
+            user.first_name = first_name
+            user.last_name = last_name
+            user.email = email
+            user.save()
+            print(f"[update_profile_data] User basic info updated successfully")
+
+            # Update profile photo if provided
+            if profile_photo:
+                user_profile.profile_photo.save(
+                    profile_photo.filename, ContentFile(profile_photo.file.read())
+                )
+                print(f"[update_profile_data] Profile photo updated successfully")
+
+            user_profile.save()
+            
+            # Return updated profile data
+            updated_profile_data = {
+                "user_id": str(user.user_id),
+                "username": user.username,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "email": user.email,
+                "profile_photo": (
+                    user_profile.profile_photo.url
+                    if user_profile.profile_photo
+                    else None
+                ),
+            }
+            
+            print(f"[update_profile_data] Profile updated successfully")
+            return updated_profile_data
+            
+        except CustomUser.DoesNotExist:
+            print(f"[update_profile_data] Error: User with id {user_id} does not exist")
+            return None
+        except Exception as e:
+            error_trace = traceback.format_exc()
+            print(
+                f"[update_profile_data] Unexpected error updating profile for user_id {user_id}: {str(e)}\n{error_trace}"
+            )
+            return None
+
+    try:
+        # Validate input data
+        if not first_name or len(first_name.strip()) == 0:
+            raise HTTPException(status_code=400, detail="First name is required")
+        
+        if not last_name or len(last_name.strip()) == 0:
+            raise HTTPException(status_code=400, detail="Last name is required")
+        
+        if not email or len(email.strip()) == 0:
+            raise HTTPException(status_code=400, detail="Email is required")
+        
+        # Basic email validation
+        import re
+        email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        if not re.match(email_pattern, email):
+            raise HTTPException(status_code=400, detail="Invalid email format")
+
+        profile_data = await update_profile_data(user_id, first_name.strip(), last_name.strip(), email.strip(), profile_photo)
+        
+        if profile_data is None:
+            await notify_by_bot(
+                f"**[API: update_edit_fields]** \n\n User not found: user_id={user_id} \n\n Platform: {platform}",
+                platform or "Unknown",
+                "ERROR",
+                device_info,
+            )
+            raise HTTPException(status_code=404, detail="User not found")
+
+        print(f"[update_edit_fields] Profile updated successfully for user_id: {user_id}")
+        
+        # Notify about profile update (optional)
+        await notify_by_bot(
+            f"**[Profile Update]** \n\n User profile updated: user_id={user_id}, email={email} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "INFO",
+            device_info,
+        )
+        
+        return {
+            "message": "Profile updated successfully",
+            "profile": profile_data
+        }
+        
+    except HTTPException:
+        # Re-raise HTTP exceptions
+        raise
+    except Exception as e:
+        error_trace = traceback.format_exc()
+        print(f"[update_edit_fields] Unhandled exception: {str(e)}\n{error_trace}")
+        await notify_by_bot(
+            f"**[API: update_edit_fields]** \n\n Unhandled exception: user_id={user_id}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
 @router.get("/settings")
 async def get_user_settings(
     request: Request,
