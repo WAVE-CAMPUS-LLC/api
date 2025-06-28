@@ -1282,6 +1282,91 @@ async def get_user_college(
         )
 
 
+@router.get("/editProfile")
+async def get_edit_fields(
+    request: Request,
+    user_id: int = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
+    """
+    API endpoint for retrieving editable profile fields.
+    Returns user profile data that can be edited.
+    """
+    print(f"[get_edit_fields] API called with user_id: {user_id}")
+
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    @database_sync_to_async
+    def get_edit_profile_data(user_id):
+        try:
+            print(f"[get_edit_profile_data] Retrieving editable profile data for user_id: {user_id}")
+            user = CustomUser.objects.get(id=user_id)
+            
+            try:
+                user_profile = UserProfile.objects.get(user=user)
+                print(f"[get_edit_profile_data] UserProfile found for user: {user.username}")
+            except UserProfile.DoesNotExist:
+                print(f"[get_edit_profile_data] UserProfile not found for user: {user.username}, creating one...")
+                user_profile = UserProfile.objects.create(user=user)
+                print(f"[get_edit_profile_data] UserProfile created for user: {user.username}")
+            
+            # Build editable profile data
+            profile_data = {
+                "user_id": str(user.user_id),
+                "username": user.username,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "email": user.email,
+                "profile_photo": (
+                    user_profile.profile_photo.url
+                    if user_profile.profile_photo
+                    else None
+                ),
+            }
+            
+            print(f"[get_edit_profile_data] Profile data prepared successfully")
+            return profile_data
+            
+        except CustomUser.DoesNotExist:
+            print(f"[get_edit_profile_data] Error: User with id {user_id} does not exist")
+            return None
+        except Exception as e:
+            error_trace = traceback.format_exc()
+            print(
+                f"[get_edit_profile_data] Unexpected error retrieving editable profile for user_id {user_id}: {str(e)}\n{error_trace}"
+            )
+            return None
+
+    try:
+        profile_data = await get_edit_profile_data(user_id)
+        if profile_data is None:
+            await notify_by_bot(
+                f"**[API: get_edit_fields]** \n\n User not found: user_id={user_id} \n\n Platform: {platform}",
+                platform or "Unknown",
+                "ERROR",
+                device_info,
+            )
+            raise HTTPException(status_code=404, detail="User not found")
+
+        print(f"[get_edit_fields] Returning editable profile data: {profile_data}")
+        return profile_data
+    except Exception as e:
+        if not isinstance(e, HTTPException):
+            error_trace = traceback.format_exc()
+            print(f"[get_edit_fields] Unhandled exception: {str(e)}\n{error_trace}")
+            await notify_by_bot(
+                f"**[API: get_edit_fields]** \n\n Unhandled exception: user_id={user_id}, error={str(e)} \n\n Platform: {platform}",
+                platform or "Unknown",
+                "ERROR",
+                device_info,
+            )
+            raise HTTPException(status_code=500, detail="Internal server error")
+        raise e
+
+
 @router.get("/settings")
 async def get_user_settings(
     request: Request,
@@ -1361,6 +1446,12 @@ async def update_user_settings(
     Updates user profile data based on the action provided.
     """
     print(f"[update_user_settings] API called with user_id: {user_id}")
+
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
     # Check content type and handle accordingly
     content_type = request.headers.get("content-type", "")
     print("[update_user_settings] Content type:", content_type)
