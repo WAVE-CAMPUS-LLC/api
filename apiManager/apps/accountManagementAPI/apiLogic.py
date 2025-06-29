@@ -2321,3 +2321,105 @@ async def set_user_preferences(
         raise HTTPException(
             status_code=500, detail=f"Error saving preferences: {str(e)}"
         )
+
+
+@router.get("/preferences")
+async def get_user_preferences(
+    request: Request,
+    user_id: int = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
+    """
+    API endpoint for retrieving all user preferences.
+    Returns complete user preferences data.
+    """
+    print(f"[get_user_preferences] API called with user_id: {user_id}")
+
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    try:
+
+        @database_sync_to_async
+        def get_user_preferences_async(user_id):
+            try:
+                print(
+                    f"[get_user_preferences_async] Retrieving preferences for user_id: {user_id}"
+                )
+                user = CustomUser.objects.get(id=user_id)
+
+                # Get or create user preferences
+                try:
+                    user_preferences = UserPreferences.objects.get(user=user)
+                    print(
+                        f"[get_user_preferences_async] UserPreferences found for user: {user.username}"
+                    )
+                except UserPreferences.DoesNotExist:
+                    # Create UserPreferences if it doesn't exist
+                    from accountManagementApp.models import UserProfile
+
+                    user_profile, created = UserProfile.objects.get_or_create(user=user)
+                    user_preferences = UserPreferences.objects.create(
+                        user=user, profile=user_profile
+                    )
+                    print(
+                        f"[get_user_preferences_async] Created new UserPreferences for user_id: {user_id}"
+                    )
+
+                # Build preferences data
+                preferences_data = {
+                    "user_id": str(user.user_id),
+                    "first_name": user.first_name,
+                    "last_name": user.last_name,
+                    "interests": user_preferences.interests or [],
+                    "vibe": user_preferences.vibe or "",
+                    "people_to_meet": user_preferences.people_to_meet or [],
+                    "preffered_times": user_preferences.preffered_times or "",
+                    "preferences_completed": user_preferences.preferences_completed,
+                }
+
+                print(
+                    f"[get_user_preferences_async] Preferences data prepared successfully"
+                )
+                return preferences_data
+
+            except CustomUser.DoesNotExist:
+                print(
+                    f"[get_user_preferences_async] Error: User with id {user_id} does not exist"
+                )
+                return None
+            except Exception as e:
+                error_trace = traceback.format_exc()
+                print(
+                    f"[get_user_preferences_async] Unexpected error retrieving preferences for user_id {user_id}: {str(e)}\n{error_trace}"
+                )
+                return None
+
+        preferences_data = await get_user_preferences_async(user_id)
+        if preferences_data is None:
+            await notify_by_bot(
+                f"**[API: get_user_preferences]** \n\n User not found: user_id={user_id} \n\n Platform: {platform}",
+                platform or "Unknown",
+                "ERROR",
+                device_info,
+            )
+            raise HTTPException(status_code=404, detail="User not found")
+
+        print(f"[get_user_preferences] Returning preferences data: {preferences_data}")
+        return preferences_data
+    except Exception as e:
+        if not isinstance(e, HTTPException):
+            error_trace = traceback.format_exc()
+            print(
+                f"[get_user_preferences] Unhandled exception: {str(e)}\n{error_trace}"
+            )
+            await notify_by_bot(
+                f"**[API: get_user_preferences]** \n\n Unhandled exception: user_id={user_id}, error={str(e)} \n\n Platform: {platform}",
+                platform or "Unknown",
+                "ERROR",
+                device_info,
+            )
+            raise HTTPException(status_code=500, detail="Internal server error")
+        raise e
