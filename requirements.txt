@@ -62,6 +62,7 @@ ecdsa==0.19.1
 executing==2.1.0
 fastapi==0.115.12
 fastjsonschema==2.21.1
+filelock==3.18.0
 firebase-admin==6.6.0
 frozenlist==1.5.0
 geoip2==4.8.1
@@ -207,6 +208,7 @@ redis==5.0.5
 referencing==0.35.1
 reportlab==4.2.5
 requests==2.32.3
+requests-file==2.1.0
 resend==2.4.0
 rpds-py==0.22.3
 rsa==4.9
@@ -229,6 +231,7 @@ supabase==2.11.0
 supafunc==0.9.0
 threadpoolctl==3.5.0
 tinycss2==1.4.0
+tldextract==5.3.0
 tornado==6.4.2
 tqdm==4.66.6
 traitlets==5.14.3

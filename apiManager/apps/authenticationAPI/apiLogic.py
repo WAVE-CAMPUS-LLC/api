@@ -10,13 +10,14 @@ from authenticationApp.models import CustomUser
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
 from authenticationApp.serializers import CustomUserSerializer
-from adminDashboardApp.models import LoginHistoryModel
-from authenticationApp.forms import MobileUserJoinForm
+from adminDashboardApp.models import LoginHistoryModel, College
+from authenticationApp.forms import MobileUserJoinForm, IterationTwoJoinForm
 
 from .serializers import LoginRequest, JoinRequest
 from apiManager.utilities.form_fields import get_form_fields
 from apiManager.utilities.notify_by_bot import notify_by_bot
 from apiManager.utilities.device_info import get_device_info
+from apiManager.utilities.lookup_college import resolve_or_create_college_from_email
 
 from jose import jwt
 from datetime import datetime, timedelta
@@ -365,6 +366,25 @@ async def get_join_form(request: Request, platform: Optional[str] = None):
     return JSONResponse(content=fields_info, status_code=status.HTTP_200_OK)
 
 
+@router.get("/join/iteration-two")
+async def get_iteration_two_join_form(request: Request, platform: Optional[str] = None):
+    print(
+        f"[get_iteration_two_join_form] Function called with X-Platform: {request.headers.get('X-Platform')}"
+    )
+
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    is_mobile = request.headers.get("X-Platform") == "mobile"
+    FormClass = IterationTwoJoinForm
+    fields_info = get_form_fields(FormClass)
+    print(
+        f"[get_iteration_two_join_form] Returning form fields, field count: {len(fields_info)}"
+    )
+    return JSONResponse(content=fields_info, status_code=status.HTTP_200_OK)
+
+
 @router.post("/join")
 async def join_api(request: Request, platform: Optional[str] = None):
     print("[join_api] Function called")
@@ -391,12 +411,40 @@ async def join_api(request: Request, platform: Optional[str] = None):
             # Check required fields (email, username, passwords)
             if not form_data.get("email"):
                 errors["email"] = ["Email is required"]
-            if not form_data.get("username"):
-                errors["username"] = ["Username is required"]
             if not form_data.get("password1"):
                 errors["password1"] = ["Password is required"]
             if form_data.get("password1") != form_data.get("password2"):
                 errors["password2"] = ["Passwords do not match"]
+
+            # Prevent college/university emails from regular signup
+            email = form_data.get("email")
+            if email:
+                domain = email.split("@")[1].lower()
+
+                # Check for .edu domains
+                if domain.endswith(".edu"):
+                    errors["email"] = [
+                        "College email detected. Please use the student registration instead."
+                    ]
+
+                # Check for common university domains that might not end in .edu
+                university_domains = [
+                    "ac.uk",
+                    "edu.au",
+                    "edu.ca",
+                    "university.edu",
+                    "college.edu",
+                    "uni.edu",
+                    "school.edu",
+                    "campus.edu",
+                ]
+
+                if any(
+                    domain.endswith(uni_domain) for uni_domain in university_domains
+                ):
+                    errors["email"] = [
+                        "College email detected. Please use the student registration instead."
+                    ]
 
             # Return errors if basic validation failed
             if errors:
@@ -454,6 +502,269 @@ async def join_api(request: Request, platform: Optional[str] = None):
         )
 
 
-# @router.post("/join/verify")
-# async def join_verify_api(request: Request, platform: Optional[str] = None):
-#     print("[join_verify_api] Function called")
+@router.post("/join/as-student")
+async def join_as_student_api(request: Request, platform: Optional[str] = None):
+    print("[join_as_student_api] Function called")
+
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    try:
+        # Get form data from request - this is async and fast
+        form_data = await request.form()
+        # Convert form data to dict
+        form_dict = dict(form_data)
+        print(
+            f"[join_as_student_api] Received form data with fields: {', '.join(form_dict.keys())}"
+        )
+
+        # Run user creation in a background task to improve response time
+        @database_sync_to_async
+        def validate_and_create_student_user(form_data):
+            # Student-specific validation
+            errors = {}
+
+            # Check required fields for student registration (minimal for fast signup)
+            if not form_data.get("email"):
+                errors["email"] = ["College email is required"]
+            if not form_data.get("password1"):
+                errors["password1"] = ["Password is required"]
+            if form_data.get("password1") != form_data.get("password2"):
+                errors["password2"] = ["Passwords do not match"]
+
+            # Validate college email domain
+            college_email = form_data.get("email")
+            if college_email:
+                # Check for common public email domains
+                domain = college_email.split("@")[1].lower()
+                common_public_domains = [
+                    "gmail.com",
+                    "yahoo.com",
+                    "hotmail.com",
+                    "outlook.com",
+                    "icloud.com",
+                    "aol.com",
+                    "protonmail.com",
+                ]
+
+                if domain in common_public_domains:
+                    errors["email"] = [
+                        "Please use your official college email address, not a personal email."
+                    ]
+
+            # Return errors if basic validation failed
+            if errors:
+                return {"errors": errors, "college": None}, status.HTTP_400_BAD_REQUEST
+
+            try:
+                # Step 1: Resolve or create college from email domain
+                print(
+                    f"[join_as_student_api] Looking up college for email: {college_email}"
+                )
+                college = resolve_or_create_college_from_email(college_email)
+                print(f"[join_as_student_api] College resolved: {college.name}")
+
+                # Step 2: Create the user
+                # Check if user with this email already exists
+                if CustomUser.objects.filter(email=college_email).exists():
+                    return {
+                        "errors": {"email": ["Email already registered"]},
+                        "college": None,
+                    }, status.HTTP_400_BAD_REQUEST
+
+                # Generate username first to use for Stripe customer names
+                generated_username = CustomUser.generate_username_for_email(
+                    college_email
+                )
+
+                # Create user with generated username for both first and last name (for Stripe)
+                user = CustomUser.objects.create(
+                    email=college_email,
+                    username=generated_username,
+                    first_name=generated_username,  # Use username for Stripe first name
+                    last_name=generated_username,  # Use username for Stripe last name
+                    is_active=True,
+                    email_verified=True,
+                    is_staff=False,
+                    is_superuser=False,
+                    is_superadmin=False,
+                )
+                # Set password using the built-in method for proper hashing
+                user.set_password(form_data.get("password1"))
+                user.save()
+
+                # Step 3: Assign user to college groups
+                from django.contrib.auth.models import Group
+
+                member_group, _ = Group.objects.get_or_create(name="Member")
+                verified_group, _ = Group.objects.get_or_create(name="Verified")
+                student_group, _ = Group.objects.get_or_create(name="Student")
+
+                user.groups.add(member_group)
+                user.groups.add(verified_group)
+                user.groups.add(student_group)
+
+                # Step 4: Create college membership
+                from collegeManagementApp.models import Membership
+
+                membership, created = Membership.objects.get_or_create(
+                    user=user, college=college
+                )
+
+                # Step 5: Update user profile with college
+                from accountManagementApp.models import UserProfile
+
+                user_profile, created = UserProfile.objects.get_or_create(user=user)
+                user_profile.college = college
+                user_profile.save()
+
+                print(
+                    f"[join_as_student_api] Student user created and assigned to {college.name}"
+                )
+
+                return {
+                    "user": user,
+                    "college": college,
+                    "membership_created": created,
+                    "errors": None,
+                }, status.HTTP_201_CREATED
+
+            except Exception as e:
+                print(
+                    f"[join_as_student_api] Error during college lookup/user creation: {str(e)}"
+                )
+                return {
+                    "errors": {"general": [f"Error processing registration: {str(e)}"]},
+                    "college": None,
+                }, status.HTTP_500_INTERNAL_SERVER_ERROR
+
+        # Run validation and user creation
+        result, status_code = await validate_and_create_student_user(form_dict)
+
+        if result["errors"]:
+            print(
+                f"[join_as_student_api] Registration failed with errors: {result['errors']}"
+            )
+            return JSONResponse(content=result["errors"], status_code=status_code)
+        else:
+            # Build success response
+            user = result["user"]
+            college = result["college"]
+
+            response_data = {
+                "message": "Student registered successfully",
+                "user": {
+                    "id": str(user.user_id),
+                    "email": user.email,
+                },
+                "college": {
+                    "id": str(college.collegeId),
+                    "name": college.name,
+                    "email_domain": college.email_domain,
+                    "city": college.city,
+                    "state": college.state,
+                },
+                "membership_created": result["membership_created"],
+            }
+
+            print(
+                f"[join_as_student_api] Student registered successfully with status code {status_code}"
+            )
+            return JSONResponse(content=response_data, status_code=status_code)
+
+    except Exception as e:
+        traceback_str = traceback.format_exc()
+        print(f"Registration error: {str(e)}\n{traceback_str}")
+        await notify_by_bot(
+            f"**[API: join_as_student_api]** \n\n Unexpected error: {str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        return JSONResponse(
+            content={"error": f"An unexpected error occurred: {str(e)}"},
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@router.get("/get-user-preferences-completion-status")
+async def check_user_preferences_completed(
+    request: Request, platform: Optional[str] = None
+):
+    print("[check_user_preferences_completed] Function called")
+
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    try:
+        # Get user_id from authorization header using the dependency
+        from apiManager.dependencies import get_current_user
+
+        authorization = request.headers.get("authorization")
+
+        try:
+            user_id = get_current_user(authorization)
+            if user_id is None:
+                return JSONResponse(
+                    content={"error": "User not authenticated"},
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                )
+        except HTTPException as e:
+            return JSONResponse(
+                content={"error": "User not authenticated"},
+                status_code=e.status_code,
+            )
+
+        # Get user preferences from the database
+        from accountManagementApp.models import UserPreferences
+
+        @database_sync_to_async
+        def get_user_preferences_completion_status(user_id):
+            try:
+                # First get the user object
+                user = CustomUser.objects.get(id=user_id)
+
+                # Check if UserPreferences instance exists for the user
+                user_preferences = UserPreferences.objects.get(user=user)
+
+                # Check the preferences_completed field value
+                preferences_completed = user_preferences.preferences_completed
+
+                print(
+                    f"[check_user_preferences_completed] UserPreferences found for user {user_id}, preferences_completed: {preferences_completed}"
+                )
+
+                return preferences_completed
+            except CustomUser.DoesNotExist:
+                print(f"[check_user_preferences_completed] User {user_id} not found")
+                return False
+            except UserPreferences.DoesNotExist:
+                # If UserPreferences doesn't exist, preferences are not completed
+                print(
+                    f"[check_user_preferences_completed] No UserPreferences found for user {user_id}, defaulting to False"
+                )
+                return False
+
+        # Get the preferences completion status
+        preferences_completed = await get_user_preferences_completion_status(user_id)
+
+        # Return just the boolean value as a string
+        return JSONResponse(
+            content=str(preferences_completed).lower(), status_code=status.HTTP_200_OK
+        )
+
+    except Exception as e:
+        traceback_str = traceback.format_exc()
+        print(f"Error in check_user_preferences_completed: {str(e)}\n{traceback_str}")
+        await notify_by_bot(
+            f"**[API: check_user_preferences_completed]** \n\n Unexpected error: {str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        return JSONResponse(
+            content={"error": f"An unexpected error occurred: {str(e)}"},
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )

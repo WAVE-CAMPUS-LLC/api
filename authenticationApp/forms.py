@@ -24,7 +24,6 @@ class CustomUserJoinForm(UserCreationForm):
             "first_name",
             "last_name",
             "email",
-            "username",
             "password1",
             "password2",
             "captcha",
@@ -51,7 +50,6 @@ class CustomUserJoinForm(UserCreationForm):
             raise ValidationError("Username taken!")
         return username
 
-
     # In the defined function below, we loop through the first_name to see if it meets the set criteria.
     def clean_first_name(self):
         first_name = self.cleaned_data.get("first_name")
@@ -70,10 +68,8 @@ class CustomUserJoinForm(UserCreationForm):
             raise ValidationError("Can contain only letters, spaces, or hyphens.")
         return last_name.strip()
 
-
     def save(self, commit=True):
         user = super().save(commit=False)
-        
 
         if commit:
             user.save()
@@ -81,17 +77,14 @@ class CustomUserJoinForm(UserCreationForm):
         return user
 
 
-
 class MobileUserJoinForm(UserCreationForm):
     password1 = forms.CharField(label="Password", widget=forms.PasswordInput)
     password2 = forms.CharField(label="Confirm Password", widget=forms.PasswordInput)
     current_year = datetime.now().year
-    
+
     class Meta:
         model = CustomUser
         fields = (
-            "first_name",
-            "last_name",
             "email",
             "username",
             "password1",
@@ -119,10 +112,11 @@ class MobileUserJoinForm(UserCreationForm):
             raise ValidationError("Username taken!")
         return username
 
-
     # In the defined function below, we loop through the first_name to see if it meets the set criteria.
     def clean_first_name(self):
         first_name = self.cleaned_data.get("first_name")
+        if first_name is None:
+            return first_name
         if not all(
             char.isalpha() or char.isspace() or char == "-" for char in first_name
         ):
@@ -132,22 +126,21 @@ class MobileUserJoinForm(UserCreationForm):
     # In the defined function below, we loop through the first_name to see if it meets the set criteria.
     def clean_last_name(self):
         last_name = self.cleaned_data.get("last_name")
+        if last_name is None:
+            return last_name
         if not all(
             char.isalpha() or char.isspace() or char == "-" for char in last_name
         ):
             raise ValidationError("Can contain only letters, spaces, or hyphens.")
         return last_name.strip()
 
-
     def save(self, commit=True):
         user = super().save(commit=False)
-        
 
         if commit:
             user.save()
 
         return user
-
 
 
 class CustomUserChangeForm(UserChangeForm):
@@ -176,14 +169,16 @@ class UserAuthenticationForm(forms.Form):
             if not user:
                 # Try authenticating by username
                 user = CustomUser.objects.filter(username=identifier).first()
-            
+
             if not user:
-                self.add_error("identifier", forms.ValidationError("Invalid credentials"))
+                self.add_error(
+                    "identifier", forms.ValidationError("Invalid credentials")
+                )
             elif not user.check_password(password):
                 self.add_error("password", forms.ValidationError("Incorrect password"))
 
-        
         return cleaned_data
+
 
 # Extend from Django's default password reset form and use it to build customized form.
 class EmailPasswordResetForm(PasswordResetForm):
@@ -218,3 +213,40 @@ class NewPasswordForm(forms.Form):
             raise forms.ValidationError("Passwords do not match")
 
         return cleaned_data
+
+
+class IterationTwoJoinForm(UserCreationForm):
+    password1 = forms.CharField(label="Password", widget=forms.PasswordInput)
+    password2 = forms.CharField(label="Confirm Password", widget=forms.PasswordInput)
+    current_year = datetime.now().year
+
+    class Meta:
+        model = CustomUser
+        fields = (
+            "email",
+            "password1",
+            "password2",
+        )
+
+    def clean_password2(self):
+        password1 = self.cleaned_data.get("password1")
+        password2 = self.cleaned_data.get("password2")
+
+        if password1 and password2 and password1 != password2:
+            raise ValidationError("Passwords do not match!")
+
+        return password2
+
+    def clean_email(self):
+        email = self.cleaned_data.get("email")
+        if CustomUser.objects.filter(email=email).exists():
+            raise ValidationError("Email taken!")
+        return email
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+
+        if commit:
+            user.save()
+
+        return user

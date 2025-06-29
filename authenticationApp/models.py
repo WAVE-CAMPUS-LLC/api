@@ -7,6 +7,8 @@ from django.utils import timezone
 from django.contrib.auth.models import Group
 import uuid
 import threading
+import random
+import string
 from django.dispatch import receiver
 from django.db.models.signals import pre_save, post_save, post_delete
 from django.utils.translation import gettext_lazy as _
@@ -25,16 +27,16 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     first_name = models.CharField(
         _("First Name"),
         max_length=50,
-        blank=False,
-        null=False,
+        blank=True,
+        null=True,
         help_text=(_("First Name")),
         db_index=True,
     )
     last_name = models.CharField(
         _("Last Name"),
         max_length=50,
-        blank=False,
-        null=False,
+        blank=True,
+        null=True,
         help_text=(_("Last Name")),
         db_index=True,
     )
@@ -93,6 +95,80 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     def get_shared_events(self):
         return SharedEvent.objects.filter(receiver=self.user)
 
+    def generate_username_from_email(self):
+        """
+        Auto-generate username from email in format: prefix#0000
+        Example: enoshlartey3@gmail.com -> enlart#0034
+        """
+        if not self.email:
+            return None
+
+        # Extract email prefix (part before @)
+        email_prefix = self.email.split("@")[0].lower()
+
+        # Remove numbers and special characters, keep only letters
+        clean_prefix = "".join(char for char in email_prefix if char.isalpha())
+
+        # Take up to 6 characters for the base username
+        base_username = clean_prefix[:6] if len(clean_prefix) >= 6 else clean_prefix
+
+        # Generate 4 random digits
+        random_digits = "".join(random.choices(string.digits, k=4))
+
+        # Create username with # separator
+        generated_username = f"{base_username}#{random_digits}"
+
+        # Ensure uniqueness - regenerate digits if username already exists
+        max_attempts = 100  # Prevent infinite loop
+        attempts = 0
+        while (
+            CustomUser.objects.filter(username=generated_username).exists()
+            and attempts < max_attempts
+        ):
+            random_digits = "".join(random.choices(string.digits, k=4))
+            generated_username = f"{base_username}#{random_digits}"
+            attempts += 1
+
+        return generated_username
+
+    @classmethod
+    def generate_username_for_email(cls, email):
+        """
+        Class method to generate username for any given email
+        Useful for forms or other contexts where you need to generate
+        a username before creating the user instance
+        """
+        if not email:
+            return None
+
+        # Extract email prefix (part before @)
+        email_prefix = email.split("@")[0].lower()
+
+        # Remove numbers and special characters, keep only letters
+        clean_prefix = "".join(char for char in email_prefix if char.isalpha())
+
+        # Take up to 6 characters for the base username
+        base_username = clean_prefix[:6] if len(clean_prefix) >= 6 else clean_prefix
+
+        # Generate 4 random digits
+        random_digits = "".join(random.choices(string.digits, k=4))
+
+        # Create username with # separator
+        generated_username = f"{base_username}#{random_digits}"
+
+        # Ensure uniqueness - regenerate digits if username already exists
+        max_attempts = 100  # Prevent infinite loop
+        attempts = 0
+        while (
+            cls.objects.filter(username=generated_username).exists()
+            and attempts < max_attempts
+        ):
+            random_digits = "".join(random.choices(string.digits, k=4))
+            generated_username = f"{base_username}#{random_digits}"
+            attempts += 1
+
+        return generated_username
+
     objects = CustomUserManager()
 
     USERNAME_FIELD = "email"
@@ -127,6 +203,10 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         verbose_name_plural = "Member Accounts"
 
     def save(self, *args, **kwargs):
+        # Auto-generate username if not provided
+        if not self.username and self.email:
+            self.username = self.generate_username_from_email()
+
         if not self.customer_id:
             from stripeManagementApp.customerSetup import CustomerAccount
 

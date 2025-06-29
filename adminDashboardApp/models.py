@@ -301,7 +301,13 @@ class College(models.Model):
     state = models.CharField("State", max_length=2, choices=STATE_CHOICES, default="")
     zip_code = models.CharField("ZIP Code", max_length=5)
     country = models.CharField("Country", max_length=5, choices=COUNTRY_CHOICES)
-    campus_image = models.FileField("Upload a campus image", upload_to="campus_images/", null=True, blank=True, default="")
+    campus_image = models.FileField(
+        "Upload a campus image",
+        upload_to="campus_images/",
+        null=True,
+        blank=True,
+        default="",
+    )
     logo = models.FileField(
         "Upload the college logo", upload_to="college_logos/", blank=True, null=False
     )
@@ -314,6 +320,12 @@ class College(models.Model):
         blank=True,
         related_name="managed_colleges",
         verbose_name="Campus Manager",
+    )
+
+    created_by_walleai = models.BooleanField(
+        "Created by WALLE.",
+        default=False,
+        help_text="If the college was created by WALLE.",
     )
 
     created_by = models.ForeignKey(

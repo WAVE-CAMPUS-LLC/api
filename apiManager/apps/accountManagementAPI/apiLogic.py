@@ -38,13 +38,15 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from adminDashboardApp.models import LoginHistoryModel
 from eventManagementApp.models import Event
 from eventTicketsApp.models import Ticket
-from accountManagementApp.models import UserProfile
+from accountManagementApp.models import UserProfile, UserPreferences
 from accountManagementApp.serializers import UserProfileSerializer
 from accountManagementApp.forms import (
     UpdateProfilePhotoForm,
     UpdatePersonalInfo,
     UpdateContactInfo,
 )
+from apiManager.utilities.form_fields import get_form_fields
+from accountManagementApp.forms import UserPreferencesForm
 from fastapi import Depends
 from apiManager.dependencies import get_current_user
 from django.shortcuts import get_object_or_404
@@ -83,18 +85,26 @@ async def profileOverview(
     @database_sync_to_async
     def get_profile_overview(user_id):
         try:
-            print(f"[get_profile_overview] Attempting to retrieve user with id: {user_id}")
+            print(
+                f"[get_profile_overview] Attempting to retrieve user with id: {user_id}"
+            )
             user = CustomUser.objects.get(id=user_id)
             print(f"[get_profile_overview] User found: {user.username}")
-            
+
             try:
                 user_profile = UserProfile.objects.get(user=user)
-                print(f"[get_profile_overview] UserProfile found for user: {user.username}")
+                print(
+                    f"[get_profile_overview] UserProfile found for user: {user.username}"
+                )
             except UserProfile.DoesNotExist:
-                print(f"[get_profile_overview] UserProfile not found for user: {user.username}, creating one...")
+                print(
+                    f"[get_profile_overview] UserProfile not found for user: {user.username}, creating one..."
+                )
                 user_profile = UserProfile.objects.create(user=user)
-                print(f"[get_profile_overview] UserProfile created for user: {user.username}")
-            
+                print(
+                    f"[get_profile_overview] UserProfile created for user: {user.username}"
+                )
+
             # Build the response with detailed logging
             profile_data = {
                 "user_id": str(user.user_id),
@@ -113,16 +123,18 @@ async def profileOverview(
                 "is_campus_manager": user_profile.is_campus_manager,
                 "was_host": user_profile.was_host,
             }
-            
+
             # Log what we're returning for debugging
             print(f"[get_profile_overview] Profile data being returned:")
             for key, value in profile_data.items():
                 print(f"  {key}: {value} (type: {type(value)})")
-            
+
             return profile_data
-            
+
         except CustomUser.DoesNotExist:
-            print(f"[get_profile_overview] Error: User with id {user_id} does not exist")
+            print(
+                f"[get_profile_overview] Error: User with id {user_id} does not exist"
+            )
             return None
         except Exception as e:
             error_trace = traceback.format_exc()
@@ -176,18 +188,26 @@ async def profile_detailed(
     @database_sync_to_async
     def get_profile_detailed(user_id):
         try:
-            print(f"[get_profile_detailed] Attempting to retrieve user with id: {user_id}")
+            print(
+                f"[get_profile_detailed] Attempting to retrieve user with id: {user_id}"
+            )
             user = CustomUser.objects.get(id=user_id)
             print(f"[get_profile_detailed] User found: {user.username}")
-            
+
             try:
                 user_profile = UserProfile.objects.get(user=user)
-                print(f"[get_profile_detailed] UserProfile found for user: {user.username}")
+                print(
+                    f"[get_profile_detailed] UserProfile found for user: {user.username}"
+                )
             except UserProfile.DoesNotExist:
-                print(f"[get_profile_detailed] UserProfile not found for user: {user.username}, creating one...")
+                print(
+                    f"[get_profile_detailed] UserProfile not found for user: {user.username}, creating one..."
+                )
                 user_profile = UserProfile.objects.create(user=user)
-                print(f"[get_profile_detailed] UserProfile created for user: {user.username}")
-            
+                print(
+                    f"[get_profile_detailed] UserProfile created for user: {user.username}"
+                )
+
             # Build the response with detailed logging
             profile_data = {
                 "user_id": str(user.user_id),
@@ -208,16 +228,18 @@ async def profile_detailed(
                 "date_joined": user.date_joined,
                 "is_active": user.is_active,
             }
-            
+
             # Log what we're returning for debugging
             print(f"[get_profile_detailed] Profile data being returned:")
             for key, value in profile_data.items():
                 print(f"  {key}: {value} (type: {type(value)})")
-            
+
             return profile_data
-            
+
         except CustomUser.DoesNotExist:
-            print(f"[get_profile_detailed] Error: User with id {user_id} does not exist")
+            print(
+                f"[get_profile_detailed] Error: User with id {user_id} does not exist"
+            )
             return None
         except Exception as e:
             error_trace = traceback.format_exc()
@@ -634,22 +656,27 @@ async def delete_account_with_reason(
     device_info = device_data["device_info"]
 
     try:
+
         @database_sync_to_async
         def delete_account_with_reason_sync(user_id, reason, platform, user_agent_str):
             try:
-                print(f"[delete_account_with_reason_sync] Processing deletion for user_id: {user_id}")
-                
+                print(
+                    f"[delete_account_with_reason_sync] Processing deletion for user_id: {user_id}"
+                )
+
                 # Get user details before deletion
                 user = CustomUser.objects.get(id=user_id)
                 user_email = user.email
                 username = user.username
                 str_user_id = str(user.user_id)
-                
-                print(f"[delete_account_with_reason_sync] User found: {username} ({user_email})")
-                
+
+                print(
+                    f"[delete_account_with_reason_sync] User found: {username} ({user_email})"
+                )
+
                 # Import the AccountDeletionReason model
                 from accountManagementApp.models import AccountDeletionReason
-                
+
                 # Save the deletion reason before deleting the user
                 deletion_record = AccountDeletionReason.objects.create(
                     user_email=user_email,
@@ -657,40 +684,54 @@ async def delete_account_with_reason(
                     user_id=str_user_id,
                     reason=reason,
                     platform=platform or "Unknown",
-                    user_agent=user_agent_str
+                    user_agent=user_agent_str,
                 )
-                
-                print(f"[delete_account_with_reason_sync] Deletion reason saved with ID: {deletion_record.id}")
-                
+
+                print(
+                    f"[delete_account_with_reason_sync] Deletion reason saved with ID: {deletion_record.id}"
+                )
+
                 # Delete the user account
                 user.delete()
-                
-                print(f"[delete_account_with_reason_sync] User account deleted successfully")
-                
+
+                print(
+                    f"[delete_account_with_reason_sync] User account deleted successfully"
+                )
+
                 return {
                     "success": True,
                     "deletion_record_id": deletion_record.id,
-                    "message": "Account deleted successfully"
+                    "message": "Account deleted successfully",
                 }
-                
+
             except CustomUser.DoesNotExist:
-                print(f"[delete_account_with_reason_sync] Error: User with id {user_id} does not exist")
+                print(
+                    f"[delete_account_with_reason_sync] Error: User with id {user_id} does not exist"
+                )
                 return {"success": False, "error": "User not found"}
             except Exception as e:
                 import traceback
+
                 error_trace = traceback.format_exc()
-                print(f"[delete_account_with_reason_sync] Unexpected error: {str(e)}\n{error_trace}")
+                print(
+                    f"[delete_account_with_reason_sync] Unexpected error: {str(e)}\n{error_trace}"
+                )
                 return {"success": False, "error": f"Unexpected error: {str(e)}"}
 
         # Validate reason input
         if not reason or len(reason.strip()) == 0:
             raise HTTPException(status_code=400, detail="Deletion reason is required")
-        
-        if len(reason) > 1000:  # Reasonable limit for reason length
-            raise HTTPException(status_code=400, detail="Deletion reason is too long (max 1000 characters)")
 
-        result = await delete_account_with_reason_sync(user_id, reason.strip(), platform, user_agent_str)
-        
+        if len(reason) > 1000:  # Reasonable limit for reason length
+            raise HTTPException(
+                status_code=400,
+                detail="Deletion reason is too long (max 1000 characters)",
+            )
+
+        result = await delete_account_with_reason_sync(
+            user_id, reason.strip(), platform, user_agent_str
+        )
+
         if not result["success"]:
             if "User not found" in result.get("error", ""):
                 raise HTTPException(status_code=404, detail="User not found")
@@ -701,10 +742,15 @@ async def delete_account_with_reason(
                     "ERROR",
                     device_info,
                 )
-                raise HTTPException(status_code=500, detail=f"Error deleting account: {result.get('error')}")
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"Error deleting account: {result.get('error')}",
+                )
 
-        print(f"[delete_account_with_reason] Account deleted successfully for user_id: {user_id}")
-        
+        print(
+            f"[delete_account_with_reason] Account deleted successfully for user_id: {user_id}"
+        )
+
         # Notify about account deletion (optional - you may want to track this)
         await notify_by_bot(
             f"**[Account Deletion]** \n\n User account deleted: user_id={user_id}, reason: {reason[:100]}{'...' if len(reason) > 100 else ''} \n\n Platform: {platform}",
@@ -712,10 +758,10 @@ async def delete_account_with_reason(
             "INFO",
             device_info,
         )
-        
+
         return {
             "message": "Account deleted successfully",
-            "deletion_record_id": result["deletion_record_id"]
+            "deletion_record_id": result["deletion_record_id"],
         }
 
     except HTTPException:
@@ -723,8 +769,11 @@ async def delete_account_with_reason(
         raise
     except Exception as e:
         import traceback
+
         error_trace = traceback.format_exc()
-        print(f"[delete_account_with_reason] Unhandled exception: {str(e)}\n{error_trace}")
+        print(
+            f"[delete_account_with_reason] Unhandled exception: {str(e)}\n{error_trace}"
+        )
         await notify_by_bot(
             f"**[API: delete_account_with_reason]** \n\n Unhandled exception: user_id={user_id}, error={str(e)} \n\n Platform: {platform}",
             platform or "Unknown",
@@ -1302,17 +1351,25 @@ async def get_edit_fields(
     @database_sync_to_async
     def get_edit_profile_data(user_id):
         try:
-            print(f"[get_edit_profile_data] Retrieving editable profile data for user_id: {user_id}")
+            print(
+                f"[get_edit_profile_data] Retrieving editable profile data for user_id: {user_id}"
+            )
             user = CustomUser.objects.get(id=user_id)
-            
+
             try:
                 user_profile = UserProfile.objects.get(user=user)
-                print(f"[get_edit_profile_data] UserProfile found for user: {user.username}")
+                print(
+                    f"[get_edit_profile_data] UserProfile found for user: {user.username}"
+                )
             except UserProfile.DoesNotExist:
-                print(f"[get_edit_profile_data] UserProfile not found for user: {user.username}, creating one...")
+                print(
+                    f"[get_edit_profile_data] UserProfile not found for user: {user.username}, creating one..."
+                )
                 user_profile = UserProfile.objects.create(user=user)
-                print(f"[get_edit_profile_data] UserProfile created for user: {user.username}")
-            
+                print(
+                    f"[get_edit_profile_data] UserProfile created for user: {user.username}"
+                )
+
             # Build editable profile data
             profile_data = {
                 "user_id": str(user.user_id),
@@ -1326,12 +1383,14 @@ async def get_edit_fields(
                     else None
                 ),
             }
-            
+
             print(f"[get_edit_profile_data] Profile data prepared successfully")
             return profile_data
-            
+
         except CustomUser.DoesNotExist:
-            print(f"[get_edit_profile_data] Error: User with id {user_id} does not exist")
+            print(
+                f"[get_edit_profile_data] Error: User with id {user_id} does not exist"
+            )
             return None
         except Exception as e:
             error_trace = traceback.format_exc()
@@ -1393,15 +1452,21 @@ async def update_edit_fields(
         try:
             print(f"[update_profile_data] Updating profile for user_id: {user_id}")
             user = CustomUser.objects.get(id=user_id)
-            
+
             try:
                 user_profile = UserProfile.objects.get(user=user)
-                print(f"[update_profile_data] UserProfile found for user: {user.username}")
+                print(
+                    f"[update_profile_data] UserProfile found for user: {user.username}"
+                )
             except UserProfile.DoesNotExist:
-                print(f"[update_profile_data] UserProfile not found for user: {user.username}, creating one...")
+                print(
+                    f"[update_profile_data] UserProfile not found for user: {user.username}, creating one..."
+                )
                 user_profile = UserProfile.objects.create(user=user)
-                print(f"[update_profile_data] UserProfile created for user: {user.username}")
-            
+                print(
+                    f"[update_profile_data] UserProfile created for user: {user.username}"
+                )
+
             # Update user fields
             user.first_name = first_name
             user.last_name = last_name
@@ -1417,7 +1482,7 @@ async def update_edit_fields(
                 print(f"[update_profile_data] Profile photo updated successfully")
 
             user_profile.save()
-            
+
             # Return updated profile data
             updated_profile_data = {
                 "user_id": str(user.user_id),
@@ -1431,10 +1496,10 @@ async def update_edit_fields(
                     else None
                 ),
             }
-            
+
             print(f"[update_profile_data] Profile updated successfully")
             return updated_profile_data
-            
+
         except CustomUser.DoesNotExist:
             print(f"[update_profile_data] Error: User with id {user_id} does not exist")
             return None
@@ -1449,21 +1514,24 @@ async def update_edit_fields(
         # Validate input data
         if not first_name or len(first_name.strip()) == 0:
             raise HTTPException(status_code=400, detail="First name is required")
-        
+
         if not last_name or len(last_name.strip()) == 0:
             raise HTTPException(status_code=400, detail="Last name is required")
-        
+
         if not email or len(email.strip()) == 0:
             raise HTTPException(status_code=400, detail="Email is required")
-        
+
         # Basic email validation
         import re
-        email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+
+        email_pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
         if not re.match(email_pattern, email):
             raise HTTPException(status_code=400, detail="Invalid email format")
 
-        profile_data = await update_profile_data(user_id, first_name.strip(), last_name.strip(), email.strip(), profile_photo)
-        
+        profile_data = await update_profile_data(
+            user_id, first_name.strip(), last_name.strip(), email.strip(), profile_photo
+        )
+
         if profile_data is None:
             await notify_by_bot(
                 f"**[API: update_edit_fields]** \n\n User not found: user_id={user_id} \n\n Platform: {platform}",
@@ -1473,8 +1541,10 @@ async def update_edit_fields(
             )
             raise HTTPException(status_code=404, detail="User not found")
 
-        print(f"[update_edit_fields] Profile updated successfully for user_id: {user_id}")
-        
+        print(
+            f"[update_edit_fields] Profile updated successfully for user_id: {user_id}"
+        )
+
         # Notify about profile update (optional)
         await notify_by_bot(
             f"**[Profile Update]** \n\n User profile updated: user_id={user_id}, email={email} \n\n Platform: {platform}",
@@ -1482,12 +1552,9 @@ async def update_edit_fields(
             "INFO",
             device_info,
         )
-        
-        return {
-            "message": "Profile updated successfully",
-            "profile": profile_data
-        }
-        
+
+        return {"message": "Profile updated successfully", "profile": profile_data}
+
     except HTTPException:
         # Re-raise HTTP exceptions
         raise
@@ -2088,4 +2155,169 @@ async def password_reset_confirm(
         )
         raise HTTPException(
             status_code=500, detail=f"Error confirming password reset: {str(e)}"
+        )
+
+
+@router.get("/preferences/form")
+async def get_preferences_form(
+    request: Request,
+    platform: Optional[str] = None,
+):
+    """
+    API endpoint for retrieving user preferences form.
+    Returns the form fields for user preferences.
+    """
+
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    is_mobile = request.headers.get("X-Platform") == "mobile"
+    FormClass = UserPreferencesForm
+    fields_info = get_form_fields(FormClass)
+    print(
+        f"[get_preferences_form] Returning form fields, field count: {len(fields_info)}"
+    )
+    return JSONResponse(content=fields_info, status_code=status.HTTP_200_OK)
+
+
+@router.post("/preferences")
+async def set_user_preferences(
+    request: Request,
+    user_id: int = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
+    """
+    API endpoint for setting user preferences.
+    """
+    print(f"[set_user_preferences] API called with user_id: {user_id}")
+
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    try:
+        # Get form data from request
+        form_data = await request.form()
+        form_dict = dict(form_data)
+
+        @database_sync_to_async
+        def set_user_preferences_async(user_id, form_data):
+            try:
+                print(
+                    f"[set_user_preferences_async] Processing preferences for user_id: {user_id}"
+                )
+                user = CustomUser.objects.get(id=user_id)
+
+                # Update user's first and last name if provided
+                if form_data.get("first_name"):
+                    user.first_name = form_data.get("first_name").strip()
+                    print(
+                        f"[set_user_preferences_async] Updated first_name: {user.first_name}"
+                    )
+
+                if form_data.get("last_name"):
+                    user.last_name = form_data.get("last_name").strip()
+                    print(
+                        f"[set_user_preferences_async] Updated last_name: {user.last_name}"
+                    )
+
+                # Save user changes
+                user.save()
+
+                # Get or create user preferences
+                try:
+                    user_preferences = UserPreferences.objects.get(user=user)
+                except UserPreferences.DoesNotExist:
+                    # Create UserPreferences if it doesn't exist
+                    from accountManagementApp.models import UserProfile
+
+                    user_profile, created = UserProfile.objects.get_or_create(user=user)
+                    user_preferences = UserPreferences.objects.create(
+                        user=user, profile=user_profile
+                    )
+                    print(
+                        f"[set_user_preferences_async] Created new UserPreferences for user_id: {user_id}"
+                    )
+
+                # Update preferences fields if provided
+                if form_data.get("interests"):
+                    # Handle both string and list formats
+                    interests = form_data.get("interests")
+                    if isinstance(interests, str):
+                        # Try to parse as JSON if it's a string
+                        try:
+                            import json
+
+                            interests = json.loads(interests)
+                        except:
+                            # If not JSON, split by comma
+                            interests = [item.strip() for item in interests.split(",")]
+                    user_preferences.interests = interests
+
+                if form_data.get("vibe"):
+                    user_preferences.vibe = form_data.get("vibe")
+
+                if form_data.get("people_to_meet"):
+                    # Handle both string and list formats
+                    people_to_meet = form_data.get("people_to_meet")
+                    if isinstance(people_to_meet, str):
+                        try:
+                            import json
+
+                            people_to_meet = json.loads(people_to_meet)
+                        except:
+                            people_to_meet = [
+                                item.strip() for item in people_to_meet.split(",")
+                            ]
+                    user_preferences.people_to_meet = people_to_meet
+
+                if form_data.get("preffered_times"):
+                    user_preferences.preffered_times = form_data.get("preffered_times")
+
+                # Mark preferences as completed
+                user_preferences.preferences_completed = True
+                user_preferences.save()
+
+                print(
+                    f"[set_user_preferences_async] Preferences saved for user_id: {user_id}"
+                )
+                return {
+                    "success": True,
+                    "message": "Preferences and profile updated successfully",
+                }
+            except Exception as e:
+                print(f"[set_user_preferences_async] Error: {str(e)}")
+                return {"success": False, "error": str(e)}
+
+        result = await set_user_preferences_async(user_id, form_dict)
+
+        if not result["success"]:
+            if "error" in result:
+                await notify_by_bot(
+                    f"**[API: set_user_preferences]** \n\n Error saving preferences: user_id={user_id}, error={result['error']} \n\n Platform: {platform}",
+                    platform or "Unknown",
+                    "ERROR",
+                    device_info,
+                )
+                raise HTTPException(status_code=400, detail=result["error"])
+            else:
+                await notify_by_bot(
+                    f"**[API: set_user_preferences]** \n\n Internal error: user_id={user_id} \n\n Platform: {platform}",
+                    platform or "Unknown",
+                    "ERROR",
+                    device_info,
+                )
+                raise HTTPException(status_code=500, detail="Internal server error")
+    except Exception as e:
+        await notify_by_bot(
+            f"**[API: set_user_preferences]** \n\n Error saving preferences: user_id={user_id}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        raise HTTPException(
+            status_code=500, detail=f"Error saving preferences: {str(e)}"
         )

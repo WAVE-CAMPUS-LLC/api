@@ -179,9 +179,7 @@ class UserProfile(models.Model):
         super(UserProfile, self).save(*args, **kwargs)
 
     def is_friends_with(self, other_user):
-        return self.friends.filter(
-            user=other_user
-        ).exists()
+        return self.friends.filter(user=other_user).exists()
 
     def has_pending_request(self, other_user):
         return (
@@ -246,26 +244,126 @@ class UserProfile(models.Model):
         return SharedEvent.objects.filter(receiver=self.user)
 
 
+class UserPreferences(models.Model):
+    VIBE_CHOICES = [
+        ("chill", "Chill & Relaxed"),
+        ("party", "Party & High Energy"),
+        ("creative", "Creative & Expressive"),
+        ("study", "Study & Focus"),
+        ("work", "Work & Productive"),
+        ("nerdy", "Nerdy & Intellectual"),
+        ("athletic", "Athletic & Active"),
+        ("romantic", "Romantic & Intimate"),
+        ("deep", "Deep & Meaningful"),
+        ("spiritual", "Spiritual & Mindful"),
+        ("nerdy", "Nerdy & Intellectual"),
+        ("athletic", "Athletic & Active"),
+    ]
+
+    PREFFERED_TIMES_CHOICES = [
+        ("morning", "Early Bird"),
+        ("afternoon", "Midday"),
+        ("night", "Night-Owl"),
+    ]
+
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="user_preferences",
+        null=False,
+        blank=False,
+        db_index=True,
+        help_text="Automatically set to the user's account",
+    )
+
+    profile = models.OneToOneField(
+        UserProfile,
+        on_delete=models.CASCADE,
+        related_name="user_preferences",
+        null=False,
+        blank=False,
+        db_index=True,
+        help_text="Automatically set to the user's profile",
+    )
+
+    college = models.ForeignKey(
+        College,
+        on_delete=models.SET_NULL,
+        related_name="user_preferences",
+        null=True,
+        blank=True,
+        help_text="E.g. 'Tennessee State University'",
+    )
+
+    interests = models.JSONField(
+        default=list,
+        blank=True,
+        help_text="E.g. 'Music, Art, Technology, etc.'",
+    )
+
+    vibe = models.CharField(
+        max_length=50,
+        blank=True,
+        null=True,
+        help_text="E.g. 'What's your vibe? Chill & Relaxed, Party & High Energy, etc.'",
+        choices=VIBE_CHOICES,
+    )
+
+    people_to_meet = models.JSONField(
+        default=list,
+        blank=True,
+        help_text="E.g. 'Creators, Dancers, Entrepreneurs, etc.'",
+    )
+
+    preffered_times = models.CharField(
+        max_length=50,
+        blank=True,
+        null=True,
+        help_text="E.g. 'Night-Owl, Early Bird, Midday, etc.'",
+        choices=PREFFERED_TIMES_CHOICES,
+    )
+    preferences_completed = models.BooleanField(default=False)
+
+    class Meta:
+        verbose_name = "User Preferences"
+        verbose_name_plural = "User Preferences"
+        default_permissions = ()
+
+    def __str__(self):
+        return f"Preferences for {self.user.username}"
+
+
 class AccountDeletionReason(models.Model):
     """
     Model to track reasons why users delete their accounts
     """
 
     user_email = models.EmailField(help_text="Email of the deleted user account")
-    username = models.CharField(max_length=150, help_text="Username of the deleted user")
+    username = models.CharField(
+        max_length=150, help_text="Username of the deleted user"
+    )
     user_id = models.CharField(max_length=100, help_text="User ID of the deleted user")
     reason = models.TextField(help_text="Reason provided by user for account deletion")
-    deleted_at = models.DateTimeField(auto_now_add=True, help_text="When the account was deleted")
+    deleted_at = models.DateTimeField(
+        auto_now_add=True, help_text="When the account was deleted"
+    )
 
     # Optional additional context
-    platform = models.CharField(max_length=50, blank=True, null=True, help_text="Platform used for deletion (web, mobile, etc.)")
+    platform = models.CharField(
+        max_length=50,
+        blank=True,
+        null=True,
+        help_text="Platform used for deletion (web, mobile, etc.)",
+    )
     user_agent = models.TextField(blank=True, null=True, help_text="User agent string")
 
     class Meta:
         verbose_name = "Account Deletion Reason"
         verbose_name_plural = "Account Deletion Reasons"
-        ordering = ['-deleted_at']
+        ordering = ["-deleted_at"]
         default_permissions = ()
 
     def __str__(self):
-        return f"Account deletion: {self.username} ({self.user_email}) - {self.deleted_at}"
+        return (
+            f"Account deletion: {self.username} ({self.user_email}) - {self.deleted_at}"
+        )

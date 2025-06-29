@@ -6,9 +6,7 @@ from django.contrib.auth.forms import PasswordChangeForm
 from django.utils.translation import gettext_lazy as _
 
 
-from .models import EventTypePreferences
-
-
+from .models import EventTypePreferences, UserPreferences
 
 
 class UpdateProfilePhotoForm(forms.ModelForm):
@@ -25,6 +23,7 @@ class UpdateProfilePhotoForm(forms.ModelForm):
     class Meta:
         model = UserProfile
         fields = ["profile_photo"]
+
 
 # The class UpdateContactInfo is a form that allows users to update their email and phone number information. Used in the accountManagementApp/views.py
 class UpdateContactInfo(forms.ModelForm):
@@ -53,3 +52,18 @@ class UpdatePersonalInfo(forms.ModelForm):
         model = CustomUser
         fields = ["first_name", "last_name"]
 
+
+class UserPreferencesForm(forms.ModelForm):
+    class Meta:
+        model = UserPreferences
+        fields = ["interests", "vibe", "people_to_meet", "preffered_times"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Ensure choice fields are properly handled for API serialization
+        if "vibe" in self.fields:
+            self.fields["vibe"].choices = UserPreferences.VIBE_CHOICES
+        if "preffered_times" in self.fields:
+            self.fields["preffered_times"].choices = (
+                UserPreferences.PREFFERED_TIMES_CHOICES
+            )
