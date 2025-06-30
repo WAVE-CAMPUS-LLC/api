@@ -321,6 +321,17 @@ class UserPreferences(models.Model):
         help_text="E.g. 'Night-Owl, Early Bird, Midday, etc.'",
     )
     preferences_completed = models.BooleanField(default=False)
+    preference_created_at = models.DateTimeField(auto_now_add=True)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if not self.preffered_times:
+            self.preffered_times = json.dumps([])
+
+    def save(self, *args, **kwargs):
+        if not self.preffered_times:
+            self.preffered_times = json.dumps([])
+        super().save(*args, **kwargs)
 
     class Meta:
         verbose_name = "User Preferences"
