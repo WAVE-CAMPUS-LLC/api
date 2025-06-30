@@ -688,6 +688,170 @@ async def join_as_student_api(request: Request, platform: Optional[str] = None):
         )
 
 
+@router.post("/join/as-non-student")
+async def join_as_non_student_api(request: Request, platform: Optional[str] = None):
+    print("[join_as_non_student_api] Function called")
+
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    try:
+        # Get form data from request - this is async and fast
+        form_data = await request.form()
+        # Convert form data to dict
+        form_dict = dict(form_data)
+        print(
+            f"[join_as_non_student_api] Received form data with fields: {', '.join(form_dict.keys())}"
+        )
+
+        # Run user creation in a background task to improve response time
+        @database_sync_to_async
+        def validate_and_create_non_student_user(form_data):
+            # Non-student specific validation
+            errors = {}
+
+            # Check required fields for non-student registration (minimal for fast signup)
+            if not form_data.get("email"):
+                errors["email"] = ["Email is required"]
+            if not form_data.get("password1"):
+                errors["password1"] = ["Password is required"]
+            if form_data.get("password1") != form_data.get("password2"):
+                errors["password2"] = ["Passwords do not match"]
+
+            # Validate that it's NOT an educational email domain
+            email = form_data.get("email")
+            if email:
+                domain = email.split("@")[1].lower()
+
+                # Check for .edu domains
+                if domain.endswith(".edu"):
+                    errors["email"] = [
+                        "Educational email detected. Please use the student registration for college emails."
+                    ]
+
+                # Check for common university domains that might not end in .edu
+                university_domains = [
+                    "ac.uk",
+                    "edu.au",
+                    "edu.ca",
+                    "university.edu",
+                    "college.edu",
+                    "uni.edu",
+                    "school.edu",
+                    "campus.edu",
+                ]
+
+                if any(
+                    domain.endswith(uni_domain) for uni_domain in university_domains
+                ):
+                    errors["email"] = [
+                        "Educational email detected. Please use the student registration for college emails."
+                    ]
+
+            # Return errors if basic validation failed
+            if errors:
+                return {"errors": errors, "user": None}, status.HTTP_400_BAD_REQUEST
+
+            try:
+                # Check if user with this email already exists
+                if CustomUser.objects.filter(email=email).exists():
+                    return {
+                        "errors": {"email": ["Email already registered"]},
+                        "user": None,
+                    }, status.HTTP_400_BAD_REQUEST
+
+                # Generate username first to use for Stripe customer names
+                generated_username = CustomUser.generate_username_for_email(email)
+
+                # Create user with generated username for both first and last name (for Stripe)
+                user = CustomUser.objects.create(
+                    email=email,
+                    username=generated_username,
+                    first_name=generated_username,  # Use username for Stripe first name
+                    last_name=generated_username,  # Use username for Stripe last name
+                    is_active=True,
+                    email_verified=True,
+                    is_staff=False,
+                    is_superuser=False,
+                    is_superadmin=False,
+                )
+                # Set password using the built-in method for proper hashing
+                user.set_password(form_data.get("password1"))
+                user.save()
+
+                # Assign user to non-student groups (no Student group)
+                from django.contrib.auth.models import Group
+
+                member_group, _ = Group.objects.get_or_create(name="Member")
+                verified_group, _ = Group.objects.get_or_create(name="Verified")
+
+                user.groups.add(member_group)
+                user.groups.add(verified_group)
+
+                # Create basic user profile (without college association)
+                from accountManagementApp.models import UserProfile
+
+                user_profile, created = UserProfile.objects.get_or_create(user=user)
+                # No college assignment for non-students
+                user_profile.save()
+
+                print(
+                    f"[join_as_non_student_api] Non-student user created successfully"
+                )
+
+                return {
+                    "user": user,
+                    "errors": None,
+                }, status.HTTP_201_CREATED
+
+            except Exception as e:
+                print(f"[join_as_non_student_api] Error during user creation: {str(e)}")
+                return {
+                    "errors": {"general": [f"Error processing registration: {str(e)}"]},
+                    "user": None,
+                }, status.HTTP_500_INTERNAL_SERVER_ERROR
+
+        # Run validation and user creation
+        result, status_code = await validate_and_create_non_student_user(form_dict)
+
+        if result["errors"]:
+            print(
+                f"[join_as_non_student_api] Registration failed with errors: {result['errors']}"
+            )
+            return JSONResponse(content=result["errors"], status_code=status_code)
+        else:
+            # Build success response
+            user = result["user"]
+
+            response_data = {
+                "message": "Non-student user registered successfully",
+                "user": {
+                    "id": str(user.user_id),
+                    "email": user.email,
+                },
+            }
+
+            print(
+                f"[join_as_non_student_api] Non-student user registered successfully with status code {status_code}"
+            )
+            return JSONResponse(content=response_data, status_code=status_code)
+
+    except Exception as e:
+        traceback_str = traceback.format_exc()
+        print(f"Registration error: {str(e)}\n{traceback_str}")
+        await notify_by_bot(
+            f"**[API: join_as_non_student_api]** \n\n Unexpected error: {str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        return JSONResponse(
+            content={"error": f"An unexpected error occurred: {str(e)}"},
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
 @router.get("/get-user-preferences-completion-status")
 async def check_user_preferences_completed(
     request: Request, platform: Optional[str] = None
