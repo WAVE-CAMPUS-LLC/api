@@ -315,12 +315,10 @@ class UserPreferences(models.Model):
         help_text="E.g. 'Creators, Dancers, Entrepreneurs, etc.'",
     )
 
-    preffered_times = models.CharField(
-        max_length=50,
+    preffered_times = models.JSONField(
+        default=list,
         blank=True,
-        null=True,
         help_text="E.g. 'Night-Owl, Early Bird, Midday, etc.'",
-        choices=PREFFERED_TIMES_CHOICES,
     )
     preferences_completed = models.BooleanField(default=False)
 

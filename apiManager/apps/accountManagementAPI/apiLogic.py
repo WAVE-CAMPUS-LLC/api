@@ -1,5 +1,9 @@
+import os
+import json
 import traceback
 from datetime import datetime
+from pydantic import BaseModel
+from typing import Optional, Dict, Any
 from fastapi import (
     APIRouter,
     Depends,
@@ -14,11 +18,9 @@ from fastapi import (
 )
 from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordRequestForm
-from pydantic import BaseModel
-from typing import Optional, Dict, Any
+
 from channels.db import database_sync_to_async
-import traceback
-import os
+
 from django.core.files.base import ContentFile
 from django.conf import settings
 from django.contrib.auth.tokens import default_token_generator
@@ -2203,6 +2205,21 @@ async def set_user_preferences(
         form_data = await request.form()
         form_dict = dict(form_data)
 
+        # Helper function to parse list values
+        def parse_list(value):
+            if not value:
+                return []
+            if isinstance(value, list):
+                return value
+            if isinstance(value, str):
+                try:
+                    parsed = json.loads(value)
+                    if isinstance(parsed, list):
+                        return parsed
+                except Exception:
+                    return [item.strip() for item in value.split(",")]
+            return []
+
         @database_sync_to_async
         def set_user_preferences_async(user_id, form_data):
             try:
@@ -2211,30 +2228,22 @@ async def set_user_preferences(
                 )
                 user = CustomUser.objects.get(id=user_id)
 
-                # Update user's first and last name if provided
                 if form_data.get("first_name"):
                     user.first_name = form_data.get("first_name").strip()
                     print(
                         f"[set_user_preferences_async] Updated first_name: {user.first_name}"
                     )
-
                 if form_data.get("last_name"):
                     user.last_name = form_data.get("last_name").strip()
                     print(
                         f"[set_user_preferences_async] Updated last_name: {user.last_name}"
                     )
-
-                # Save user changes
                 user.save()
 
-                # Get or create user preferences
                 try:
                     user_preferences = UserPreferences.objects.get(user=user)
                 except UserPreferences.DoesNotExist:
-                    # Create UserPreferences if it doesn't exist
-                    from accountManagementApp.models import UserProfile
-
-                    user_profile, created = UserProfile.objects.get_or_create(user=user)
+                    user_profile, _ = UserProfile.objects.get_or_create(user=user)
                     user_preferences = UserPreferences.objects.create(
                         user=user, profile=user_profile
                     )
@@ -2242,42 +2251,29 @@ async def set_user_preferences(
                         f"[set_user_preferences_async] Created new UserPreferences for user_id: {user_id}"
                     )
 
-                # Update preferences fields if provided
-                if form_data.get("interests"):
-                    # Handle both string and list formats
-                    interests = form_data.get("interests")
-                    if isinstance(interests, str):
-                        # Try to parse as JSON if it's a string
-                        try:
-                            import json
+                if "interests" in form_data:
+                    user_preferences.interests = parse_list(form_data.get("interests"))
 
-                            interests = json.loads(interests)
-                        except:
-                            # If not JSON, split by comma
-                            interests = [item.strip() for item in interests.split(",")]
-                    user_preferences.interests = interests
-
-                if form_data.get("vibe"):
+                if "vibe" in form_data:
                     user_preferences.vibe = form_data.get("vibe")
 
-                if form_data.get("people_to_meet"):
-                    # Handle both string and list formats
-                    people_to_meet = form_data.get("people_to_meet")
-                    if isinstance(people_to_meet, str):
-                        try:
-                            import json
+                if "people_to_meet" in form_data:
+                    user_preferences.people_to_meet = parse_list(
+                        form_data.get("people_to_meet")
+                    )
 
-                            people_to_meet = json.loads(people_to_meet)
-                        except:
-                            people_to_meet = [
-                                item.strip() for item in people_to_meet.split(",")
-                            ]
-                    user_preferences.people_to_meet = people_to_meet
+                if "preffered_times" in form_data:
+                    # Handle JSONField mismatch - database has JSONField but model shows CharField
+                    preferred_time_value = form_data.get("preffered_times")
+                    if preferred_time_value and str(preferred_time_value).strip():
+                        clean_value = str(preferred_time_value).strip()
+                        # Force JSONField to properly serialize this as JSON
+                        import json
 
-                if form_data.get("preffered_times"):
-                    user_preferences.preffered_times = form_data.get("preffered_times")
+                        user_preferences.preffered_times = json.dumps(clean_value)
+                    else:
+                        user_preferences.preffered_times = json.dumps("")
 
-                # Mark preferences as completed
                 user_preferences.preferences_completed = True
                 user_preferences.save()
 
@@ -2288,6 +2284,7 @@ async def set_user_preferences(
                     "success": True,
                     "message": "Preferences and profile updated successfully",
                 }
+
             except Exception as e:
                 print(f"[set_user_preferences_async] Error: {str(e)}")
                 return {"success": False, "error": str(e)}
@@ -2295,25 +2292,19 @@ async def set_user_preferences(
         result = await set_user_preferences_async(user_id, form_dict)
 
         if not result["success"]:
-            if "error" in result:
-                await notify_by_bot(
-                    f"**[API: set_user_preferences]** \n\n Error saving preferences: user_id={user_id}, error={result['error']} \n\n Platform: {platform}",
-                    platform or "Unknown",
-                    "ERROR",
-                    device_info,
-                )
-                raise HTTPException(status_code=400, detail=result["error"])
-            else:
-                await notify_by_bot(
-                    f"**[API: set_user_preferences]** \n\n Internal error: user_id={user_id} \n\n Platform: {platform}",
-                    platform or "Unknown",
-                    "ERROR",
-                    device_info,
-                )
-                raise HTTPException(status_code=500, detail="Internal server error")
+            await notify_by_bot(
+                f"**[API: set_user_preferences]** \n\n Error saving preferences: user_id={user_id}, error={result['error']} \n\n Platform: {platform}",
+                platform or "Unknown",
+                "ERROR",
+                device_info,
+            )
+            raise HTTPException(status_code=400, detail=result["error"])
+
+        return result
+
     except Exception as e:
         await notify_by_bot(
-            f"**[API: set_user_preferences]** \n\n Error saving preferences: user_id={user_id}, error={str(e)} \n\n Platform: {platform}",
+            f"**[API: set_user_preferences]** \n\n Internal server error: user_id={user_id}, error={str(e)} \n\n Platform: {platform}",
             platform or "Unknown",
             "ERROR",
             device_info,
