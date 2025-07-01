@@ -88,7 +88,7 @@ async def admin_dashboard(
     """
     Admin dashboard endpoint - requires Admin or Super Admin role.
     """
-    print(f"[admin_dashboard] API called with user_id: {current_user.id}")
+    print(f"[admin_dashboard] API called with user_id: {current_user.pk}")
 
     user_agent_str = request.headers.get("user-agent", "")
     device_data = get_device_info(user_agent_str)
@@ -112,7 +112,7 @@ async def admin_dashboard(
         return {
             "message": "Admin dashboard",
             "user": {
-                "id": current_user.id,
+                "id": current_user.pk,
                 "username": current_user.username,
                 "roles": user_groups,
             },
@@ -124,7 +124,7 @@ async def admin_dashboard(
         }
     except Exception as e:
         await notify_by_bot(
-            f"**[API: admin_dashboard]** \n\n Error loading dashboard: user_id={current_user.id}, error={str(e)} \n\n Platform: {platform}",
+            f"**[API: admin_dashboard]** \n\n Error loading dashboard: user_id={current_user.pk}, error={str(e)} \n\n Platform: {platform}",
             platform or "Unknown",
             "ERROR",
             device_info,
@@ -146,7 +146,7 @@ async def get_users(
     Get list of users - requires Admin or Super Admin role.
     If limit is 0, returns all users. Otherwise uses pagination.
     """
-    print(f"[get_users] API called with user_id: {current_user.id}")
+    print(f"[get_users] API called with user_id: {current_user.pk}")
 
     user_agent_str = request.headers.get("user-agent", "")
     device_data = get_device_info(user_agent_str)
@@ -208,7 +208,7 @@ async def get_users(
 
     except Exception as e:
         await notify_by_bot(
-            f"**[API: get_users]** \n\n Error fetching users: user_id={current_user.id}, error={str(e)} \n\n Platform: {platform}",
+            f"**[API: get_users]** \n\n Error fetching users: user_id={current_user.pk}, error={str(e)} \n\n Platform: {platform}",
             platform or "Unknown",
             "ERROR",
             device_info,
@@ -226,7 +226,7 @@ async def get_user_detail(
     """
     Get detailed user information including tickets, friends, and profile - requires Admin or Super Admin role.
     """
-    print(f"[get_user_detail] API called for user_id: {user_id} by {current_user.id}")
+    print(f"[get_user_detail] API called for user_id: {user_id} by {current_user.pk}")
 
     # Get device info
     user_agent_str = request.headers.get("user-agent", "")
@@ -250,8 +250,8 @@ async def get_user_detail(
             profile_photo_url = None
             user_profile_info = None
             try:
-                if hasattr(user, "user_profile") and user.user_profile:
-                    user_profile = user.user_profile
+                user_profile = getattr(user, "user_profile", None)
+                if user_profile:
                     if user_profile.profile_photo:
                         profile_photo_url = user_profile.profile_photo.url
 
@@ -2562,4 +2562,137 @@ async def get_college_events(
             raise HTTPException(status_code=404, detail="College not found")
         raise HTTPException(
             status_code=500, detail=f"Error fetching college events: {str(e)}"
+        )
+
+
+@router.get("/member/{user_id}/preferences")
+async def get_member_preferences(
+    user_id: int,
+    request: Request,
+    current_user: CustomUser = Depends(require_admin_role),
+    platform: Optional[str] = None,
+):
+    """
+    Get user preferences for a specific member - requires Admin or Super Admin role.
+    """
+    print(f"[get_member_preferences] API called for user_id: {user_id}")
+
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    @database_sync_to_async
+    def get_user_preferences_data(user_id):
+        try:
+            # First verify the user exists
+            user = get_object_or_404(CustomUser, id=user_id)
+            print(f"[get_member_preferences] Found user: {user.username}")
+
+            # Get user preferences
+            from accountManagementApp.models import UserPreferences
+
+            try:
+                user_preferences = UserPreferences.objects.get(user=user)
+                print(
+                    f"[get_member_preferences] Found preferences for user: {user.username}"
+                )
+
+                # Build preferences data - handle JSON fields safely
+                preferences_data = {
+                    "user_info": {
+                        "id": user.pk,
+                        "username": user.username,
+                        "email": user.email,
+                        "first_name": user.first_name,
+                        "last_name": user.last_name,
+                    },
+                    "preferences_completed": user_preferences.preferences_completed,
+                    "preferences": {
+                        "interests": user_preferences.interests,
+                        "vibe": user_preferences.vibe,
+                        "people_to_meet": user_preferences.people_to_meet,
+                        "preffered_times": user_preferences.preffered_times,
+                    },
+                    "college_info": {
+                        "college": (
+                            user_preferences.college.name
+                            if user_preferences.college
+                            else None
+                        ),
+                        "college_id": (
+                            str(user_preferences.college.collegeId)
+                            if user_preferences.college
+                            else None
+                        ),
+                    },
+                    "metadata": {
+                        "preference_created_at": (
+                            user_preferences.preference_created_at.isoformat()
+                            if user_preferences.preference_created_at
+                            else None
+                        ),
+                    },
+                }
+
+                return preferences_data
+
+            except UserPreferences.DoesNotExist:
+                print(
+                    f"[get_member_preferences] No preferences found for user: {user.username}"
+                )
+                # Return default structure with null values
+                return {
+                    "user_info": {
+                        "id": user.pk,
+                        "username": user.username,
+                        "email": user.email,
+                        "first_name": user.first_name,
+                        "last_name": user.last_name,
+                    },
+                    "preferences_completed": False,
+                    "preferences": {
+                        "interests": None,
+                        "vibe": None,
+                        "people_to_meet": None,
+                        "preffered_times": None,
+                    },
+                    "college_info": {
+                        "college": None,
+                        "college_id": None,
+                    },
+                    "metadata": {
+                        "preference_created_at": None,
+                        "note": "No preferences record found - user has not completed preferences setup",
+                    },
+                }
+
+        except CustomUser.DoesNotExist:
+            print(f"[get_member_preferences] User not found with ID: {user_id}")
+            return None
+        except Exception as e:
+            print(f"[get_member_preferences] Database error: {str(e)}")
+            raise e
+
+    try:
+        preferences_data = await get_user_preferences_data(user_id)
+        if preferences_data is None:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        print(
+            f"[get_member_preferences] Returning preferences for user: {preferences_data['user_info']['username']}"
+        )
+        return preferences_data
+
+    except Exception as e:
+        await notify_by_bot(
+            f"**[API: get_member_preferences]** \n\n Error fetching member preferences: user_id={user_id}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        if "does not exist" in str(e).lower():
+            raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(
+            status_code=500, detail=f"Error fetching member preferences: {str(e)}"
         )
