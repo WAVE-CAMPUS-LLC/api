@@ -2567,7 +2567,7 @@ async def get_college_events(
 
 @router.get("/member/{user_id}/preferences")
 async def get_member_preferences(
-    user_id: int,
+    user_id: str,
     request: Request,
     current_user: CustomUser = Depends(require_admin_role),
     platform: Optional[str] = None,
@@ -2585,8 +2585,21 @@ async def get_member_preferences(
     @database_sync_to_async
     def get_user_preferences_data(user_id):
         try:
-            # First verify the user exists
-            user = get_object_or_404(CustomUser, id=user_id)
+            # First verify the user exists - handle both UUID and integer IDs
+            try:
+                # Try UUID first (primary key format)
+                from uuid import UUID
+
+                uuid_obj = UUID(user_id)
+                user = get_object_or_404(CustomUser, user_id=uuid_obj)
+            except ValueError:
+                # If not UUID, try integer ID
+                try:
+                    int_id = int(user_id)
+                    user = get_object_or_404(CustomUser, id=int_id)
+                except ValueError:
+                    raise CustomUser.DoesNotExist("Invalid user ID format")
+
             print(f"[get_member_preferences] Found user: {user.username}")
 
             # Get user preferences
