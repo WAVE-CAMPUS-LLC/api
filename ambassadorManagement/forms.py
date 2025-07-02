@@ -1,5 +1,5 @@
 from django import forms
-from .models import AmbassadorApplication
+from .models import AmbassadorApplication, AmbassadorProgramDetails
 
 
 class AmbassadorApplicationForm(forms.ModelForm):
@@ -47,4 +47,39 @@ class AmbassadorApplicationForm(forms.ModelForm):
             "instagram_handle": "Instagram Handle",
             "tiktok_handle": "TikTok Handle",
             "graduation_year": "Graduation Year",
+        }
+
+
+class AmbassadorProgramDetailsForm(forms.ModelForm):
+    class Meta:
+        model = AmbassadorProgramDetails
+        fields = [
+            "description",
+            "documentation_link",
+        ]
+
+        widgets = {
+            "description": forms.Textarea(
+                attrs={
+                    "placeholder": "Enter a detailed description of the ambassador program...",
+                    "class": "form-control",
+                    "rows": 6,
+                }
+            ),
+            "documentation_link": forms.URLInput(
+                attrs={
+                    "placeholder": "e.g. https://docs.yoursite.com/ambassador-program",
+                    "class": "form-control",
+                }
+            ),
+        }
+
+        labels = {
+            "description": "Program Description",
+            "documentation_link": "Documentation Link",
+        }
+
+        help_texts = {
+            "description": "Provide a comprehensive description of the ambassador program, including benefits, requirements, and expectations.",
+            "documentation_link": "Link to detailed documentation or guidelines for ambassadors.",
         }

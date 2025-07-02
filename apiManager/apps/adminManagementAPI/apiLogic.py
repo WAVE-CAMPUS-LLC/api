@@ -64,7 +64,8 @@ from .serializers import (
 )
 
 from eventManagementApp.models import Event
-from ambassadorManagement.models import AmbassadorApplication
+from ambassadorManagement.models import AmbassadorApplication, AmbassadorProgramDetails
+from ambassadorManagement.forms import AmbassadorProgramDetailsForm
 from eventTicketsApp.models import RSVPTicket, PaidFreeTicket, Ticket
 from eventTicketsApp.models import Ticket, RSVPTicket
 from accountManagementApp.models import UserProfile
@@ -3087,4 +3088,303 @@ async def get_tide_ambassador_application(
         return JSONResponse(
             content={"error": "An unexpected error occurred"},
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@router.get("/ambassador/program/details/form/fields")
+async def get_ambassador_program_details_form_fields(
+    request: Request,
+    current_user: CustomUser = Depends(require_marketing_lead_role),
+    platform: Optional[str] = None,
+):
+    """
+    Get form fields for creating/editing ambassador program details - requires Marketing Lead role.
+    """
+    print(f"[get_ambassador_program_details_form_fields] API called")
+
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    try:
+
+        @database_sync_to_async
+        def get_form_fields_data():
+            form = AmbassadorProgramDetailsForm()
+            return get_form_fields(form)
+
+        form_fields = await get_form_fields_data()
+
+        return {
+            "success": True,
+            "form_fields": form_fields,
+            "form_name": "AmbassadorProgramDetailsForm",
+            "endpoint_info": {
+                "create_url": "/ambassador/program/details/create",
+                "edit_url": "/ambassador/program/details/edit",
+            },
+        }
+
+    except Exception as e:
+        await notify_by_bot(
+            f"**[API: get_ambassador_program_details_form_fields]** \n\n Error fetching form fields: error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        raise HTTPException(
+            status_code=500, detail=f"Error fetching form fields: {str(e)}"
+        )
+
+
+@router.post("/ambassador/program/details/create")
+async def create_ambassador_program_details(
+    request: Request,
+    current_user: CustomUser = Depends(require_marketing_lead_role),
+    platform: Optional[str] = None,
+):
+    """
+    Create ambassador program details - requires Marketing Lead role.
+    """
+    print(f"[create_ambassador_program_details] API called")
+
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    try:
+        # Get form data from request
+        form_data = await request.form()
+
+        @database_sync_to_async
+        def validate_and_create_program_details(form_data):
+            try:
+                # Check if program details already exist (assuming only one should exist)
+                existing_details = AmbassadorProgramDetails.objects.first()
+                if existing_details:
+                    return {
+                        "success": False,
+                        "errors": {
+                            "general": [
+                                "Ambassador program details already exist. Use the edit endpoint to update them."
+                            ]
+                        },
+                        "status_code": status.HTTP_400_BAD_REQUEST,
+                    }
+
+                # Create and validate form
+                form = AmbassadorProgramDetailsForm(form_data)
+
+                if form.is_valid():
+                    # Save the program details
+                    program_details = form.save()
+
+                    return {
+                        "success": True,
+                        "message": "Ambassador program details created successfully!",
+                        "program_details": {
+                            "id": program_details.id,
+                            "description": program_details.description,
+                            "documentation_link": program_details.documentation_link,
+                        },
+                        "status_code": status.HTTP_201_CREATED,
+                    }
+                else:
+                    return {
+                        "success": False,
+                        "errors": form.errors,
+                        "status_code": status.HTTP_400_BAD_REQUEST,
+                    }
+
+            except Exception as e:
+                return {
+                    "success": False,
+                    "error": f"Database error: {str(e)}",
+                    "status_code": status.HTTP_500_INTERNAL_SERVER_ERROR,
+                }
+
+        # Execute creation
+        result = await validate_and_create_program_details(form_data)
+        status_code = result.pop("status_code", status.HTTP_200_OK)
+
+        if not result.get("success", True):
+            return JSONResponse(content=result, status_code=status_code)
+
+        print(
+            f"[create_ambassador_program_details] Program details created successfully"
+        )
+        return JSONResponse(content=result, status_code=status_code)
+
+    except Exception as e:
+        await notify_by_bot(
+            f"**[API: create_ambassador_program_details]** \n\n Error creating program details: error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        raise HTTPException(
+            status_code=500, detail=f"Error creating program details: {str(e)}"
+        )
+
+
+@router.get("/ambassador/program/details")
+async def get_ambassador_program_details(
+    request: Request,
+    current_user: CustomUser = Depends(require_marketing_lead_role),
+    platform: Optional[str] = None,
+):
+    """
+    Get existing ambassador program details - requires Marketing Lead role.
+    """
+    print(f"[get_ambassador_program_details] API called")
+
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    try:
+
+        @database_sync_to_async
+        def get_program_details_data():
+            try:
+                # Get the first (and presumably only) program details record
+                program_details = AmbassadorProgramDetails.objects.first()
+
+                if not program_details:
+                    return {
+                        "success": False,
+                        "message": "No ambassador program details found. Create them first.",
+                        "status_code": status.HTTP_404_NOT_FOUND,
+                    }
+
+                return {
+                    "success": True,
+                    "program_details": {
+                        "description": program_details.description,
+                        "documentation_link": program_details.documentation_link,
+                    },
+                    "status_code": status.HTTP_200_OK,
+                }
+
+            except Exception as e:
+                return {
+                    "success": False,
+                    "error": f"Database error: {str(e)}",
+                    "status_code": status.HTTP_500_INTERNAL_SERVER_ERROR,
+                }
+
+        # Execute retrieval
+        result = await get_program_details_data()
+        status_code = result.pop("status_code", status.HTTP_200_OK)
+
+        if not result.get("success", True):
+            return JSONResponse(content=result, status_code=status_code)
+
+        print(
+            f"[get_ambassador_program_details] Program details retrieved successfully"
+        )
+        return JSONResponse(content=result, status_code=status_code)
+
+    except Exception as e:
+        await notify_by_bot(
+            f"**[API: get_ambassador_program_details]** \n\n Error fetching program details: error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        raise HTTPException(
+            status_code=500, detail=f"Error fetching program details: {str(e)}"
+        )
+
+
+@router.post("/ambassador/program/details/edit")
+async def edit_ambassador_program_details(
+    request: Request,
+    current_user: CustomUser = Depends(require_marketing_lead_role),
+    platform: Optional[str] = None,
+):
+    """
+    Edit existing ambassador program details - requires Marketing Lead role.
+    """
+    print(f"[edit_ambassador_program_details] API called")
+
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    try:
+        # Get form data from request
+        form_data = await request.form()
+
+        @database_sync_to_async
+        def validate_and_update_program_details(form_data):
+            try:
+                # Get existing program details
+                program_details = AmbassadorProgramDetails.objects.first()
+
+                if not program_details:
+                    return {
+                        "success": False,
+                        "errors": {
+                            "general": [
+                                "No ambassador program details found. Create them first using the create endpoint."
+                            ]
+                        },
+                        "status_code": status.HTTP_404_NOT_FOUND,
+                    }
+
+                # Create form with existing instance and new data
+                form = AmbassadorProgramDetailsForm(form_data, instance=program_details)
+
+                if form.is_valid():
+                    # Save the updated program details
+                    updated_program_details = form.save()
+
+                    return {
+                        "success": True,
+                        "message": "Ambassador program details updated successfully!",
+                        "program_details": {
+                            "id": updated_program_details.id,
+                            "description": updated_program_details.description,
+                            "documentation_link": updated_program_details.documentation_link,
+                        },
+                        "status_code": status.HTTP_200_OK,
+                    }
+                else:
+                    return {
+                        "success": False,
+                        "errors": form.errors,
+                        "status_code": status.HTTP_400_BAD_REQUEST,
+                    }
+
+            except Exception as e:
+                return {
+                    "success": False,
+                    "error": f"Database error: {str(e)}",
+                    "status_code": status.HTTP_500_INTERNAL_SERVER_ERROR,
+                }
+
+        # Execute update
+        result = await validate_and_update_program_details(form_data)
+        status_code = result.pop("status_code", status.HTTP_200_OK)
+
+        if not result.get("success", True):
+            return JSONResponse(content=result, status_code=status_code)
+
+        print(f"[edit_ambassador_program_details] Program details updated successfully")
+        return JSONResponse(content=result, status_code=status_code)
+
+    except Exception as e:
+        await notify_by_bot(
+            f"**[API: edit_ambassador_program_details]** \n\n Error updating program details: error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        raise HTTPException(
+            status_code=500, detail=f"Error updating program details: {str(e)}"
         )
