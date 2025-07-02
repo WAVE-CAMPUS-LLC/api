@@ -8,7 +8,7 @@ import uuid
 
 
 from ambassadorManagement.forms import AmbassadorApplicationForm
-from ambassadorManagement.models import AmbassadorApplication
+from ambassadorManagement.models import AmbassadorApplication, AmbassadorProgramDetails
 from authenticationApp.models import CustomUser
 
 from apiManager.dependencies import get_current_user
@@ -162,5 +162,80 @@ async def apply_for_tide_program(request: Request, platform: Optional[str] = Non
         )
         return JSONResponse(
             content={"error": "An unexpected error occurred. Please try again later."},
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@router.get("/tide/program/details")
+async def get_ambassador_program_details(
+    request: Request,
+    platform: Optional[str] = None,
+):
+    """
+    Get ambassador program details - publicly accessible for potential applicants.
+    """
+    print(f"[get_ambassador_program_details] API called")
+
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    try:
+
+        @database_sync_to_async
+        def get_program_details_data():
+            try:
+                # Get the first (and presumably only) program details record
+                program_details = AmbassadorProgramDetails.objects.first()
+
+                if not program_details:
+                    return {
+                        "success": False,
+                        "message": "Ambassador program details are not available at this time. Please check back later.",
+                        "status_code": status.HTTP_404_NOT_FOUND,
+                    }
+
+                return {
+                    "success": True,
+                    "program_details": {
+                        "description": program_details.description,
+                        "documentation_link": program_details.documentation_link,
+                    },
+                    "status_code": status.HTTP_200_OK,
+                }
+
+            except Exception as e:
+                print(f"[get_ambassador_program_details] Database error: {str(e)}")
+                return {
+                    "success": False,
+                    "error": f"Database error: {str(e)}",
+                    "status_code": status.HTTP_500_INTERNAL_SERVER_ERROR,
+                }
+
+        # Execute retrieval
+        result = await get_program_details_data()
+        status_code = result.pop("status_code", status.HTTP_200_OK)
+
+        if not result.get("success", True):
+            print(f"[get_ambassador_program_details] Failed with status {status_code}")
+            return JSONResponse(content=result, status_code=status_code)
+
+        print(
+            f"[get_ambassador_program_details] Program details retrieved successfully"
+        )
+        return JSONResponse(content=result, status_code=status_code)
+
+    except Exception as e:
+        print(f"[get_ambassador_program_details] Unexpected error: {str(e)}")
+        await notify_by_bot(
+            f"**[API: get_ambassador_program_details]** \n\n Unexpected error: {str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        return JSONResponse(
+            content={
+                "error": "An unexpected error occurred while fetching program details."
+            },
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
