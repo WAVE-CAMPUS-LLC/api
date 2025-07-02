@@ -59,6 +59,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     is_staff = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
     is_superadmin = models.BooleanField(default=False)
+    is_tide_ambassador = models.BooleanField(default=False)
 
     # The generation of a random user id for every user that signs up.
     user_id = models.UUIDField(

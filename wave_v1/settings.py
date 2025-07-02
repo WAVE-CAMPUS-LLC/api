@@ -25,8 +25,10 @@ import sys  # Added for better error handling
 import logging
 
 # Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] - %(message)s')
-logger = logging.getLogger('wave_settings')
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s [%(levelname)s] - %(message)s"
+)
+logger = logging.getLogger("wave_settings")
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -69,40 +71,45 @@ if ENVIRONMENT == "development":
     CSP_FRAME_SRC = ("'self'", "*")
     CSP_CONNECT_SRC = ("'self'", "ws:", "wss:", "*")  # Allow WebSocket connections
 
-    PGHOST=os.getenv("PGHOST")
-    PGDATABASE=os.getenv("PGDATABASE")
-    PGUSER=os.getenv("PGUSER")
-    PGPASSWORD=os.getenv("PGPASSWORD")
+    PGHOST = os.getenv("PGHOST")
+    PGDATABASE = os.getenv("PGDATABASE")
+    PGUSER = os.getenv("PGUSER")
+    PGPASSWORD = os.getenv("PGPASSWORD")
 
     DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': PGDATABASE,
-            'USER': PGUSER,
-            'PASSWORD': PGPASSWORD,
-            'HOST': PGHOST,
-            'PORT': 5432,
-            'OPTIONS': {
-                'sslmode': 'require',  # 👈 Fix for problem #2
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": PGDATABASE,
+            "USER": PGUSER,
+            "PASSWORD": PGPASSWORD,
+            "HOST": PGHOST,
+            "PORT": 5432,
+            "OPTIONS": {
+                "sslmode": "require",  # 👈 Fix for problem #2
             },
         }
     }
     print("Development Environment")
 else:
-    ALLOWED_HOSTS = ["wavecampus.net","wave-v1-1-s4ju.onrender.com"]
-    CSRF_TRUSTED_ORIGINS = ["https://wave-v1-1-s4ju.onrender.com", "https://wavecampus.net"]
+    ALLOWED_HOSTS = ["wavecampus.net", "wave-v1-1-s4ju.onrender.com"]
+    CSRF_TRUSTED_ORIGINS = [
+        "https://wave-v1-1-s4ju.onrender.com",
+        "https://wavecampus.net",
+    ]
     DEBUG = False
     DEBUG_PROPAGATE_EXCEPTIONS = True
-    
+
     # Database credentials with more robust error handling
     db_password = os.getenv("DB_PASSWORD")
     if not db_password:
         logger.critical("DB_PASSWORD environment variable is not set!")
         # Log to a file for debugging purposes
-        with open('db_connection.log', 'a') as log_file:
-            log_file.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')} - DB_PASSWORD is missing or empty\n")
+        with open("db_connection.log", "a") as log_file:
+            log_file.write(
+                f"{time.strftime('%Y-%m-%d %H:%M:%S')} - DB_PASSWORD is missing or empty\n"
+            )
         sys.exit(1)
-    
+
     # Database configuration with connection retries
     DATABASES = {
         "default": {
@@ -126,16 +133,18 @@ else:
             "CONN_HEALTH_CHECKS": True,  # Enable connection health checks
         }
     }
-    
+
     # Verify database connection during startup
     try:
         import psycopg2
         import urllib.parse
-        
+
         # Log connection attempt
-        with open('db_connection.log', 'a') as log_file:
-            log_file.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')} - Testing database connection...\n")
-        
+        with open("db_connection.log", "a") as log_file:
+            log_file.write(
+                f"{time.strftime('%Y-%m-%d %H:%M:%S')} - Testing database connection...\n"
+            )
+
         # Test connection with the password
         conn = psycopg2.connect(
             dbname="postgres",
@@ -144,27 +153,54 @@ else:
             host="aws-0-us-east-1.pooler.supabase.com",
             port="6543",
             connect_timeout=5,
-            sslmode="require"
+            sslmode="require",
         )
         conn.close()
         logger.info("Successfully connected to the database")
-        with open('db_connection.log', 'a') as log_file:
-            log_file.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')} - Database connection successful\n")
+        with open("db_connection.log", "a") as log_file:
+            log_file.write(
+                f"{time.strftime('%Y-%m-%d %H:%M:%S')} - Database connection successful\n"
+            )
     except Exception as e:
         logger.critical(f"Failed to connect to the database: {e}")
-        with open('db_connection.log', 'a') as log_file:
-            log_file.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')} - Database connection failed: {e}\n")
+        with open("db_connection.log", "a") as log_file:
+            log_file.write(
+                f"{time.strftime('%Y-%m-%d %H:%M:%S')} - Database connection failed: {e}\n"
+            )
         # Continue execution but log the error
-    # Comment to test notifications for discord.  
+    # Comment to test notifications for discord.
     # CORS Settings
     CORS_ALLOW_ALL_ORIGINS = False
     CORS_ALLOW_CREDENTIALS = False
-    CORS_ALLOWED_ORIGINS = ["https://wave-v1-1-s4ju.onrender.com", "https://wavecampus.net"]
-    CSP_DEFAULT_SRC = ("'self'", "https://wave-v1-1-s4ju.onrender.com", "https://wavecampus.net")
-    CSP_SCRIPT_SRC = ("'self'", "https://wave-v1-1-s4ju.onrender.com", "https://wavecampus.net")
-    CSP_STYLE_SRC = ("'self'", "https://wave-v1-1-s4ju.onrender.com", "https://wavecampus.net")
-    CSP_FONT_SRC = ("'self'", "https://wave-v1-1-s4ju.onrender.com", "https://wavecampus.net")
-    CSP_IMG_SRC = ("'self'", "https://wave-v1-1-s4ju.onrender.com", "https://wavecampus.net")
+    CORS_ALLOWED_ORIGINS = [
+        "https://wave-v1-1-s4ju.onrender.com",
+        "https://wavecampus.net",
+    ]
+    CSP_DEFAULT_SRC = (
+        "'self'",
+        "https://wave-v1-1-s4ju.onrender.com",
+        "https://wavecampus.net",
+    )
+    CSP_SCRIPT_SRC = (
+        "'self'",
+        "https://wave-v1-1-s4ju.onrender.com",
+        "https://wavecampus.net",
+    )
+    CSP_STYLE_SRC = (
+        "'self'",
+        "https://wave-v1-1-s4ju.onrender.com",
+        "https://wavecampus.net",
+    )
+    CSP_FONT_SRC = (
+        "'self'",
+        "https://wave-v1-1-s4ju.onrender.com",
+        "https://wavecampus.net",
+    )
+    CSP_IMG_SRC = (
+        "'self'",
+        "https://wave-v1-1-s4ju.onrender.com",
+        "https://wavecampus.net",
+    )
     CSP_FRAME_SRC = ("'self'",)
     # using cloudflare r2 for storage
     # default_storage._wrapped = SupabaseStorage()
@@ -177,7 +213,6 @@ else:
                 "style": "{",
             },
         },
-        
         "handlers": {
             "console": {
                 "class": "logging.StreamHandler",
@@ -201,7 +236,7 @@ else:
                 "level": "DEBUG",
                 "propagate": True,
             },
-            "django": { 
+            "django": {
                 "handlers": ["console", "file"],
                 "level": "INFO",
                 "propagate": True,
@@ -224,7 +259,10 @@ if not DEBUG:  # In production
     CSRF_COOKIE_SAMESITE = "Lax"
     SESSION_COOKIE_SAMESITE = "Lax"
     CSRF_COOKIE_HTTPONLY = False  # False because we need to access it from JavaScript
-    CSRF_TRUSTED_ORIGINS = ["https://wave-v1-1-s4ju.onrender.com", "https://wavecampus.net"]
+    CSRF_TRUSTED_ORIGINS = [
+        "https://wave-v1-1-s4ju.onrender.com",
+        "https://wavecampus.net",
+    ]
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
     SECURE_HSTS_SECONDS = 31536000
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
@@ -276,7 +314,7 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt",
     "corsheaders",
     "hcaptcha",
-    
+    "ambassadorManagement",
 ]
 
 # Redis and Channels configuration
@@ -343,7 +381,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "authenticationApp.middleware.RedirectAuthenticatedUsersMiddleware",
-    'django.middleware.gzip.GZipMiddleware',
+    "django.middleware.gzip.GZipMiddleware",
     "silk.middleware.SilkyMiddleware",
     "coreApp.middleware.TimezoneMiddleware",  # Add this line
 ]
@@ -573,14 +611,11 @@ REST_FRAMEWORK = {
     "DEFAULT_RENDERER_CLASSES": [
         "rest_framework.renderers.JSONRenderer",
     ],
-    'DEFAULT_THROTTLE_CLASSES': [
-        'rest_framework.throttling.AnonRateThrottle',
-        'rest_framework.throttling.UserRateThrottle'
+    "DEFAULT_THROTTLE_CLASSES": [
+        "rest_framework.throttling.AnonRateThrottle",
+        "rest_framework.throttling.UserRateThrottle",
     ],
-    'DEFAULT_THROTTLE_RATES': {
-        'anon': '20/min',
-        'user': '100/min'
-    }
+    "DEFAULT_THROTTLE_RATES": {"anon": "20/min", "user": "100/min"},
 }
 
 # Update AWS S3 / Cloudflare R2 configuration with better retry settings

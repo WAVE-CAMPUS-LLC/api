@@ -107,6 +107,13 @@ async def require_admin_role(
     return await check_user_roles(current_user_id, ["Admin", "Super Admin"])
 
 
+async def require_marketing_lead_role(
+    current_user_id: str = Depends(get_current_user),
+) -> CustomUser:
+    """FastAPI dependency that requires Marketing Lead role."""
+    return await check_user_roles(current_user_id, ["Marketing Lead"])
+
+
 async def require_super_admin_role(
     current_user_id: str = Depends(get_current_user),
 ) -> CustomUser:

@@ -52,6 +52,7 @@ from apiManager.middleware.adminAccess import (
     get_user_with_roles,
     require_roles,
     require_permissions,
+    require_marketing_lead_role,
 )
 from django.shortcuts import get_object_or_404
 from .serializers import (
@@ -63,6 +64,7 @@ from .serializers import (
 )
 
 from eventManagementApp.models import Event
+from ambassadorManagement.models import AmbassadorApplication
 from eventTicketsApp.models import RSVPTicket, PaidFreeTicket, Ticket
 from eventTicketsApp.models import Ticket, RSVPTicket
 from accountManagementApp.models import UserProfile
@@ -532,6 +534,263 @@ async def unsuspend_user(
         )
         raise HTTPException(
             status_code=500, detail=f"Error removing suspension: {str(e)}"
+        )
+
+
+@router.post("/user/{user_id}/roles/add")
+async def add_role_to_user(
+    user_id: int,
+    request: Request,
+    current_user: CustomUser = Depends(require_admin_role),
+    platform: Optional[str] = None,
+):
+    """
+    Add a role (group) to a specific user - requires Admin or Super Admin role.
+    """
+    print(f"[add_role_to_user] API called for user_id: {user_id} by {current_user.pk}")
+
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    try:
+        # Get the role name from request body
+        request_data = await request.json()
+        role_name = request_data.get("role_name", "").strip()
+
+        if not role_name:
+            raise HTTPException(status_code=400, detail="Role name is required")
+
+        @database_sync_to_async
+        def add_user_role(user_id, role_name):
+            try:
+                # Get the user
+                user = get_object_or_404(CustomUser, id=user_id)
+                print(f"[add_role_to_user] Found user: {user.username}")
+
+                # Import Group model
+                from django.contrib.auth.models import Group
+
+                # Get or create the group/role
+                group, created = Group.objects.get_or_create(name=role_name)
+
+                if created:
+                    print(f"[add_role_to_user] Created new group: {role_name}")
+                else:
+                    print(f"[add_role_to_user] Using existing group: {role_name}")
+
+                # Check if user already has this role
+                if user.groups.filter(name=role_name).exists():
+                    return {
+                        "success": False,
+                        "message": f"User {user.username} already has the role '{role_name}'",
+                        "user": {
+                            "id": user.pk,
+                            "username": user.username,
+                            "first_name": user.first_name,
+                            "last_name": user.last_name,
+                        },
+                        "role": role_name,
+                        "already_had_role": True,
+                    }
+
+                # Add the user to the group
+                user.groups.add(group)
+                print(
+                    f"[add_role_to_user] Added role '{role_name}' to user {user.username}"
+                )
+
+                # Get updated user groups for response
+                updated_groups = list(user.groups.values_list("name", flat=True))
+
+                return {
+                    "success": True,
+                    "message": f"Successfully added role '{role_name}' to user {user.username}",
+                    "user": {
+                        "id": user.pk,
+                        "username": user.username,
+                        "first_name": user.first_name,
+                        "last_name": user.last_name,
+                        "all_roles": updated_groups,
+                    },
+                    "role_added": role_name,
+                    "group_was_created": created,
+                }
+
+            except CustomUser.DoesNotExist:
+                print(f"[add_role_to_user] User not found with ID: {user_id}")
+                return {
+                    "success": False,
+                    "message": "User not found",
+                    "error_type": "user_not_found",
+                }
+            except Exception as e:
+                print(f"[add_role_to_user] Database error: {str(e)}")
+                return {
+                    "success": False,
+                    "message": f"Database error: {str(e)}",
+                    "error_type": "database_error",
+                }
+
+        # Execute the role addition
+        result = await add_user_role(user_id, role_name)
+
+        if not result["success"]:
+            if result.get("error_type") == "user_not_found":
+                raise HTTPException(status_code=404, detail=result["message"])
+            elif result.get("already_had_role"):
+                # Return 200 for already having role (not an error)
+                return JSONResponse(content=result, status_code=200)
+            else:
+                raise HTTPException(status_code=500, detail=result["message"])
+
+        print(f"[add_role_to_user] Role addition successful: {result['message']}")
+        return JSONResponse(content=result, status_code=200)
+
+    except HTTPException:
+        # Re-raise HTTP exceptions
+        raise
+    except Exception as e:
+        await notify_by_bot(
+            f"**[API: add_role_to_user]** \n\n Error adding role to user: user_id={user_id}, role_name={role_name if 'role_name' in locals() else 'unknown'}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        raise HTTPException(
+            status_code=500, detail=f"Error adding role to user: {str(e)}"
+        )
+
+
+@router.post("/user/{user_id}/roles/remove")
+async def remove_role_from_user(
+    user_id: int,
+    request: Request,
+    current_user: CustomUser = Depends(require_admin_role),
+    platform: Optional[str] = None,
+):
+    """
+    Remove a role (group) from a specific user - requires Admin or Super Admin role.
+    """
+    print(
+        f"[remove_role_from_user] API called for user_id: {user_id} by {current_user.pk}"
+    )
+
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    try:
+        # Get the role name from request body
+        request_data = await request.json()
+        role_name = request_data.get("role_name", "").strip()
+
+        if not role_name:
+            raise HTTPException(status_code=400, detail="Role name is required")
+
+        @database_sync_to_async
+        def remove_user_role(user_id, role_name):
+            try:
+                # Get the user
+                user = get_object_or_404(CustomUser, id=user_id)
+                print(f"[remove_role_from_user] Found user: {user.username}")
+
+                # Import Group model
+                from django.contrib.auth.models import Group
+
+                # Check if the group exists
+                try:
+                    group = Group.objects.get(name=role_name)
+                except Group.DoesNotExist:
+                    return {
+                        "success": False,
+                        "message": f"Role '{role_name}' does not exist",
+                        "error_type": "role_not_found",
+                    }
+
+                # Check if user has this role
+                if not user.groups.filter(name=role_name).exists():
+                    return {
+                        "success": False,
+                        "message": f"User {user.username} does not have the role '{role_name}'",
+                        "user": {
+                            "id": user.pk,
+                            "username": user.username,
+                            "first_name": user.first_name,
+                            "last_name": user.last_name,
+                        },
+                        "role": role_name,
+                        "user_didnt_have_role": True,
+                    }
+
+                # Remove the user from the group
+                user.groups.remove(group)
+                print(
+                    f"[remove_role_from_user] Removed role '{role_name}' from user {user.username}"
+                )
+
+                # Get updated user groups for response
+                updated_groups = list(user.groups.values_list("name", flat=True))
+
+                return {
+                    "success": True,
+                    "message": f"Successfully removed role '{role_name}' from user {user.username}",
+                    "user": {
+                        "id": user.pk,
+                        "username": user.username,
+                        "first_name": user.first_name,
+                        "last_name": user.last_name,
+                        "all_roles": updated_groups,
+                    },
+                    "role_removed": role_name,
+                }
+
+            except CustomUser.DoesNotExist:
+                print(f"[remove_role_from_user] User not found with ID: {user_id}")
+                return {
+                    "success": False,
+                    "message": "User not found",
+                    "error_type": "user_not_found",
+                }
+            except Exception as e:
+                print(f"[remove_role_from_user] Database error: {str(e)}")
+                return {
+                    "success": False,
+                    "message": f"Database error: {str(e)}",
+                    "error_type": "database_error",
+                }
+
+        # Execute the role removal
+        result = await remove_user_role(user_id, role_name)
+
+        if not result["success"]:
+            if result.get("error_type") == "user_not_found":
+                raise HTTPException(status_code=404, detail=result["message"])
+            elif result.get("error_type") == "role_not_found":
+                raise HTTPException(status_code=404, detail=result["message"])
+            elif result.get("user_didnt_have_role"):
+                # Return 200 for user not having role (not an error)
+                return JSONResponse(content=result, status_code=200)
+            else:
+                raise HTTPException(status_code=500, detail=result["message"])
+
+        print(f"[remove_role_from_user] Role removal successful: {result['message']}")
+        return JSONResponse(content=result, status_code=200)
+
+    except HTTPException:
+        # Re-raise HTTP exceptions
+        raise
+    except Exception as e:
+        await notify_by_bot(
+            f"**[API: remove_role_from_user]** \n\n Error removing role from user: user_id={user_id}, role_name={role_name if 'role_name' in locals() else 'unknown'}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        raise HTTPException(
+            status_code=500, detail=f"Error removing role from user: {str(e)}"
         )
 
 
@@ -2708,4 +2967,124 @@ async def get_member_preferences(
             raise HTTPException(status_code=404, detail="User not found")
         raise HTTPException(
             status_code=500, detail=f"Error fetching member preferences: {str(e)}"
+        )
+
+
+@router.get("/tide/ambassador/applications")
+async def get_tide_ambassador_applications(
+    request: Request,
+    current_user: CustomUser = Depends(require_marketing_lead_role),
+    platform: Optional[str] = None,
+):
+    print(f"[get_tide_ambassador_applications] API called")
+
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    @database_sync_to_async
+    def get_tide_ambassador_applications_data():
+        try:
+            applications = AmbassadorApplication.objects.all()
+            return [
+                {
+                    "app_id": str(application.app_id),
+                    "full_name": application.full_name,
+                    "status": application.status,
+                    "application_date": application.application_date,
+                }
+                for application in applications
+            ]
+        except Exception as e:
+            print(f"[get_tide_ambassador_applications] Database error: {str(e)}")
+            raise e
+
+    try:
+        applications_data = await get_tide_ambassador_applications_data()
+        return applications_data
+    except Exception as e:
+        await notify_by_bot(
+            f"**[API: get_tide_ambassador_applications]** \n\n Error fetching tide ambassador applications: error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error fetching tide ambassador applications: {str(e)}",
+        )
+
+
+@router.get("/tide/ambassador/applications/{app_id}")
+async def get_tide_ambassador_application(
+    app_id: str,
+    request: Request,
+    current_user: CustomUser = Depends(require_marketing_lead_role),
+    platform: Optional[str] = None,
+):
+    print(f"[get_tide_ambassador_application] API called for app_id: {app_id}")
+
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    @database_sync_to_async
+    def get_tide_ambassador_application_data(app_id):
+        try:
+            application = AmbassadorApplication.objects.get(app_id=app_id)
+            return {
+                "success": True,
+                "application": {
+                    "app_id": str(application.app_id),
+                    "full_name": application.full_name,
+                    "college": application.college,
+                    "email": application.email,
+                    "instagram_handle": application.instagram_handle,
+                    "major": application.major,
+                    "tiktok_handle": application.tiktok_handle,
+                    "graduation_year": application.graduation_year,
+                    "status": application.status,
+                    "application_date": application.application_date.isoformat(),
+                },
+                "status_code": status.HTTP_200_OK,
+            }
+        except AmbassadorApplication.DoesNotExist:
+            print(f"[get_tide_ambassador_application] Application not found: {app_id}")
+            return {
+                "success": False,
+                "error": "Application not found",
+                "status_code": status.HTTP_404_NOT_FOUND,
+            }
+        except Exception as e:
+            print(f"[get_tide_ambassador_application] Database error: {str(e)}")
+            return {
+                "success": False,
+                "error": f"Database error: {str(e)}",
+                "status_code": status.HTTP_500_INTERNAL_SERVER_ERROR,
+            }
+
+    try:
+        # Get the application data
+        result = await get_tide_ambassador_application_data(app_id)
+
+        status_code = result.pop("status_code", status.HTTP_200_OK)
+
+        if not result.get("success", True):
+            print(f"[get_tide_ambassador_application] Error with status {status_code}")
+            return JSONResponse(content=result, status_code=status_code)
+
+        print(f"[get_tide_ambassador_application] Application retrieved successfully")
+        return JSONResponse(content=result, status_code=status_code)
+
+    except Exception as e:
+        print(f"[get_tide_ambassador_application] Unexpected error: {str(e)}")
+        await notify_by_bot(
+            f"**[API: get_tide_ambassador_application]** \n\n Unexpected error: {str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        return JSONResponse(
+            content={"error": "An unexpected error occurred"},
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )

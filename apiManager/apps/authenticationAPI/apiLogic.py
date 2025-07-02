@@ -852,6 +852,155 @@ async def join_as_non_student_api(request: Request, platform: Optional[str] = No
         )
 
 
+@router.post("/join/as-tide-ambassador")
+async def join_as_tide_ambassador_api(request: Request, platform: Optional[str] = None):
+    print("[join_as_tide_ambassador_api] Function called")
+
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    try:
+        # Get form data from request - this is async and fast
+        form_data = await request.form()
+        # Convert form data to dict
+        form_dict = dict(form_data)
+        print(
+            f"[join_as_tide_ambassador_api] Received form data with fields: {', '.join(form_dict.keys())}"
+        )
+
+        # Run user creation in a background task to improve response time
+        @database_sync_to_async
+        def validate_and_create_tide_ambassador_user(form_data):
+            # Tide ambassador specific validation
+            errors = {}
+
+            # Check required fields for tide ambassador registration
+            if not form_data.get("email"):
+                errors["email"] = ["Email is required"]
+            if not form_data.get("first_name"):
+                errors["first_name"] = ["First name is required"]
+            if not form_data.get("last_name"):
+                errors["last_name"] = ["Last name is required"]
+            if not form_data.get("password1"):
+                errors["password1"] = ["Password is required"]
+            if form_data.get("password1") != form_data.get("password2"):
+                errors["password2"] = ["Passwords do not match"]
+
+            # Return errors if basic validation failed
+            if errors:
+                return {"errors": errors, "user": None}, status.HTTP_400_BAD_REQUEST
+
+            try:
+                email = form_data.get("email")
+                first_name = form_data.get("first_name").strip()
+                last_name = form_data.get("last_name").strip()
+
+                # Check if user with this email already exists
+                if CustomUser.objects.filter(email=email).exists():
+                    return {
+                        "errors": {"email": ["Email already registered"]},
+                        "user": None,
+                    }, status.HTTP_400_BAD_REQUEST
+
+                # Generate username from email
+                generated_username = CustomUser.generate_username_for_email(email)
+
+                # Create user with actual first and last names and set is_tide_ambassador to True
+                user = CustomUser.objects.create(
+                    email=email,
+                    username=generated_username,
+                    first_name=first_name,  # Use actual first name
+                    last_name=last_name,  # Use actual last name
+                    is_active=True,
+                    email_verified=True,
+                    is_staff=False,
+                    is_superuser=False,
+                    is_superadmin=False,
+                    is_tide_ambassador=True,  # Set tide ambassador flag to True
+                )
+                # Set password using the built-in method for proper hashing
+                user.set_password(form_data.get("password1"))
+                user.save()
+
+                # Assign user to tide ambassador groups
+                from django.contrib.auth.models import Group
+
+                member_group, _ = Group.objects.get_or_create(name="Member")
+                verified_group, _ = Group.objects.get_or_create(name="Verified")
+                tide_ambassador_group, _ = Group.objects.get_or_create(
+                    name="TideAmbassador"
+                )
+
+                user.groups.add(member_group)
+                user.groups.add(verified_group)
+                user.groups.add(tide_ambassador_group)
+
+                # Create basic user profile
+                from accountManagementApp.models import UserProfile
+
+                user_profile, created = UserProfile.objects.get_or_create(user=user)
+                user_profile.save()
+
+                print(
+                    f"[join_as_tide_ambassador_api] Tide ambassador user created successfully"
+                )
+
+                return {
+                    "user": user,
+                    "errors": None,
+                }, status.HTTP_201_CREATED
+
+            except Exception as e:
+                print(
+                    f"[join_as_tide_ambassador_api] Error during user creation: {str(e)}"
+                )
+                return {
+                    "errors": {"general": [f"Error processing registration: {str(e)}"]},
+                    "user": None,
+                }, status.HTTP_500_INTERNAL_SERVER_ERROR
+
+        # Run validation and user creation
+        result, status_code = await validate_and_create_tide_ambassador_user(form_dict)
+
+        if result["errors"]:
+            print(
+                f"[join_as_tide_ambassador_api] Registration failed with errors: {result['errors']}"
+            )
+            return JSONResponse(content=result["errors"], status_code=status_code)
+        else:
+            # Build success response
+            user = result["user"]
+
+            response_data = {
+                "message": "Tide ambassador registered successfully",
+                "user": {
+                    "id": str(user.user_id),
+                    "email": user.email,
+                    "is_tide_ambassador": user.is_tide_ambassador,
+                },
+            }
+
+            print(
+                f"[join_as_tide_ambassador_api] Tide ambassador registered successfully with status code {status_code}"
+            )
+            return JSONResponse(content=response_data, status_code=status_code)
+
+    except Exception as e:
+        traceback_str = traceback.format_exc()
+        print(f"Registration error: {str(e)}\n{traceback_str}")
+        await notify_by_bot(
+            f"**[API: join_as_tide_ambassador_api]** \n\n Unexpected error: {str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        return JSONResponse(
+            content={"error": f"An unexpected error occurred: {str(e)}"},
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
 @router.get("/get-user-preferences-completion-status")
 async def check_user_preferences_completed(
     request: Request, platform: Optional[str] = None
