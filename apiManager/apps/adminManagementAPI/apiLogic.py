@@ -3108,21 +3108,20 @@ async def get_ambassador_program_details_form_fields(
     device_info = device_data["device_info"]
 
     try:
-
-        @database_sync_to_async
-        def get_form_fields_data():
-            form = AmbassadorProgramDetailsForm()
-            return get_form_fields(form)
-
-        form_fields = await get_form_fields_data()
+        FormClass = AmbassadorProgramDetailsForm
+        fields_info = get_form_fields(FormClass)
+        print(
+            f"[get_ambassador_program_details_form_fields] Returning form fields, field count: {len(fields_info)}"
+        )
 
         return {
             "success": True,
-            "form_fields": form_fields,
+            "form_fields": fields_info,
             "form_name": "AmbassadorProgramDetailsForm",
             "endpoint_info": {
                 "create_url": "/ambassador/program/details/create",
                 "edit_url": "/ambassador/program/details/edit",
+                "get_details_url": "/ambassador/program/details",
             },
         }
 
