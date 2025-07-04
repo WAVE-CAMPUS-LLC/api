@@ -791,4 +791,6 @@ async def search_events(
             "ERROR",
             device_info,
         )
-        raise HTTPException(status_code=500, detail=f"Error searching events: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error searching events: {str(e)}"
+        ) from e
