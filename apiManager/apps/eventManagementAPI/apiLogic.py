@@ -491,6 +491,7 @@ async def delete_event(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
 
+
 @router.get("/event/fields")
 async def event_creation_fields(request: Request):
     print(f"[DEBUG - event_creation_fields] Function called")
@@ -500,6 +501,7 @@ async def event_creation_fields(request: Request):
         f"[DEBUG - event_creation_fields] Returning form fields: {list(fields_info.keys())}"
     )
     return JSONResponse(content=fields_info, status_code=status.HTTP_200_OK)
+
 
 @router.post("/event/free/create")
 async def create_free_event(
@@ -985,6 +987,7 @@ async def get_host_stripe_account_link(
     # Execute the function and return the result
     return await process_stripe_account_check()
 
+
 @router.get("/event/paid/ticket/fields")
 async def paid_ticket_creation_fields(request: Request):
     print(f"[DEBUG - paid_ticket_creation_fields] Function called")
@@ -994,6 +997,7 @@ async def paid_ticket_creation_fields(request: Request):
         f"[DEBUG - paid_ticket_creation_fields] Returning form fields: {list(fields_info.keys())}"
     )
     return JSONResponse(content=fields_info, status_code=status.HTTP_200_OK)
+
 
 @router.post("/event/{eventId}/createPaidFreeTicket")
 async def create_paid_free_ticket(
@@ -1085,6 +1089,7 @@ async def create_paid_free_ticket(
         )
         raise HTTPException(status_code=500, detail=f"Error creating ticket: {str(e)}")
 
+
 @router.get("/event/paid/coupon/fields")
 async def paid_coupon_creation_fields(request: Request):
     print(f"[DEBUG - paid_coupon_creation_fields] Function called")
@@ -1094,6 +1099,7 @@ async def paid_coupon_creation_fields(request: Request):
         f"[DEBUG - paid_coupon_creation_fields] Returning form fields: {list(fields_info.keys())}"
     )
     return JSONResponse(content=fields_info, status_code=status.HTTP_200_OK)
+
 
 @router.get("/event/{eventId}/coupons")
 async def get_event_coupons(

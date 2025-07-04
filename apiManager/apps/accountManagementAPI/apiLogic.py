@@ -1619,7 +1619,7 @@ async def get_user_settings(
         settings_data = await get_settings_async(user_id)
         if settings_data is None:
             await notify_by_bot(
-                f"**[API: get_user_settings]** \n\n Error fetching user settings: user_id={user_id}, error={str(e)} \n\n Platform: {platform}",
+                f"**[API: get_user_settings]** \n\n User not found: user_id={user_id} \n\n Platform: {platform}",
                 platform or "Unknown",
                 "ERROR",
                 device_info,
@@ -2408,6 +2408,101 @@ async def get_user_preferences(
             )
             await notify_by_bot(
                 f"**[API: get_user_preferences]** \n\n Unhandled exception: user_id={user_id}, error={str(e)} \n\n Platform: {platform}",
+                platform or "Unknown",
+                "ERROR",
+                device_info,
+            )
+            raise HTTPException(status_code=500, detail="Internal server error")
+        raise e
+
+
+@router.get("/check/college")
+async def check_user_college(
+    request: Request,
+    user_id: int = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
+    """
+    API endpoint for checking if a user is a college student.
+    Returns whether the currently logged in user is associated with a college.
+    """
+    print(f"[check_user_college] API called with user_id: {user_id}")
+
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    try:
+
+        @database_sync_to_async
+        def check_user_has_college(user_id):
+            try:
+                print(
+                    f"[check_user_has_college] Checking college association for user_id: {user_id}"
+                )
+                user = CustomUser.objects.get(id=user_id)
+
+                try:
+                    user_profile = UserProfile.objects.get(user=user)
+                    print(
+                        f"[check_user_has_college] UserProfile found for user: {user.username}"
+                    )
+                except UserProfile.DoesNotExist:
+                    print(
+                        f"[check_user_has_college] UserProfile not found for user: {user.username}, creating one..."
+                    )
+                    user_profile = UserProfile.objects.create(user=user)
+                    print(
+                        f"[check_user_has_college] UserProfile created for user: {user.username}"
+                    )
+
+                # Check if user has a college associated
+                has_college = user_profile.college is not None
+                college_info = None
+
+                if has_college:
+                    college_info = {
+                        "collegeId": str(user_profile.college.collegeId),
+                        "collegeName": user_profile.college.name,
+                    }
+
+                print(f"[check_user_has_college] User has college: {has_college}")
+
+                return {"has_college": has_college, "college": college_info}
+
+            except CustomUser.DoesNotExist:
+                print(
+                    f"[check_user_has_college] Error: User with id {user_id} does not exist"
+                )
+                return None
+            except Exception as e:
+                error_trace = traceback.format_exc()
+                print(
+                    f"[check_user_has_college] Unexpected error checking college for user_id {user_id}: {str(e)}\n{error_trace}"
+                )
+                return None
+
+        result = await check_user_has_college(user_id)
+        if result is None:
+            await notify_by_bot(
+                f"**[API: check_user_college]** \n\n User not found: user_id={user_id} \n\n Platform: {platform}",
+                platform or "Unknown",
+                "ERROR",
+                device_info,
+            )
+            raise HTTPException(status_code=404, detail="User not found")
+
+        print(
+            f"[check_user_college] Returning college check result for user_id: {user_id}: {result}"
+        )
+        return result
+    except Exception as e:
+        if not isinstance(e, HTTPException):
+            error_trace = traceback.format_exc()
+            print(f"[check_user_college] Unhandled exception: {str(e)}\n{error_trace}")
+            await notify_by_bot(
+                f"**[API: check_user_college]** \n\n Unhandled exception: user_id={user_id}, error={str(e)} \n\n Platform: {platform}",
                 platform or "Unknown",
                 "ERROR",
                 device_info,

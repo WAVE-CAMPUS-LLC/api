@@ -673,3 +673,122 @@ async def rsvp(
             device_info,
         )
         raise HTTPException(status_code=500, detail=f"Error processing RSVP: {str(e)}")
+
+
+@router.get("/events/search")
+async def search_events(
+    request: Request,
+    q: Optional[str] = None,  # Search query
+    category: Optional[str] = None,  # Event category filter
+    city: Optional[str] = None,  # City filter
+    state: Optional[str] = None,  # State filter
+    ticketing: Optional[str] = None,  # Ticketing type filter (free/paid)
+    limit: Optional[int] = 20,  # Limit number of results
+    platform: Optional[str] = None,
+):
+    """
+    API endpoint to search events with live results.
+    Supports filtering by query, category, location, and ticketing type.
+    """
+    print(
+        f"[search_events API] Function called with query: {q}, category: {category}, city: {city}, state: {state}, ticketing: {ticketing}"
+    )
+
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    @database_sync_to_async
+    def search_events_data(q, category, city, state, ticketing, limit):
+        try:
+            # Start with all events
+            events_queryset = Event.objects.all()
+
+            # Apply search filters
+            if q:
+                # Search in title and description (case-insensitive)
+                events_queryset = events_queryset.filter(
+                    title__icontains=q
+                ) | events_queryset.filter(description__icontains=q)
+
+            if category:
+                events_queryset = events_queryset.filter(event_type=category)
+
+            if city:
+                events_queryset = events_queryset.filter(city__icontains=city)
+
+            if state:
+                events_queryset = events_queryset.filter(state__icontains=state)
+
+            if ticketing:
+                events_queryset = events_queryset.filter(ticketing=ticketing)
+
+            # Apply limit
+            if limit and limit > 0:
+                events_queryset = events_queryset[:limit]
+
+            # Convert to list format
+            events_list = []
+            for event in events_queryset:
+                header_photo_url = (
+                    event.header_photo.url if event.header_photo else None
+                )
+                events_list.append(
+                    {
+                        "eventId": str(event.eventId),  # Convert UUID to string
+                        "title": event.title,
+                        "date": event.date,
+                        "header_photo": header_photo_url,
+                        "event_type": event.event_type,
+                        "state": event.state,
+                        "city": event.city,
+                        "ticketing": str(event.ticketing),  # Ensure it's a string
+                        "forAllDisplay": bool(
+                            event.forAllDisplay
+                        ),  # Ensure it's a boolean
+                        "forCollegesDisplay": bool(
+                            event.forCollegesDisplay
+                        ),  # Ensure it's a boolean
+                    }
+                )
+
+            print(
+                f"[search_events API] Found {len(events_list)} events matching search criteria"
+            )
+            return events_list
+
+        except Exception as e:
+            print(f"[search_events API] Error during search: {str(e)}")
+            return []
+
+    try:
+        # Get the search results
+        events_data = await search_events_data(
+            q, category, city, state, ticketing, limit
+        )
+        events = [ExplorePageEvent(**event_data) for event_data in events_data]
+
+        response = {
+            "events": events,
+            "total_results": len(events),
+            "search_params": {
+                "query": q,
+                "category": category,
+                "city": city,
+                "state": state,
+                "ticketing": ticketing,
+                "limit": limit,
+            },
+        }
+
+        print(f"[search_events API] Returning {len(events)} search results")
+        return response
+    except Exception as e:
+        await notify_by_bot(
+            f"**[API: search_events]** \n\n Error searching events: query={q}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        raise HTTPException(status_code=500, detail=f"Error searching events: {str(e)}")
