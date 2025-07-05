@@ -1007,3 +1007,105 @@ async def get_event_body_photos(
         "total_photos": len(photos_data),
         "event_id": eventId,
     }
+
+
+@router.get("/event/{eventId}/photos/exists")
+async def check_event_body_photos_exist(
+    eventId: str, request: Request, platform: Optional[str] = None
+):
+    """
+    API endpoint to check if body photos exist for a specific event.
+    Returns true if any body photos exist, false otherwise.
+    """
+    print(
+        f"[check_event_body_photos_exist API] Function called with eventId: {eventId}"
+    )
+
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    @database_sync_to_async
+    def check_photos_exist(eventId):
+        try:
+            event = Event.objects.get(eventId=eventId)
+
+            # Check if any body photo fields have content
+            photo_fields = [
+                event.body_photo_one,
+                event.body_photo_two,
+                event.body_photo_three,
+                event.body_photo_four,
+                event.body_photo_five,
+            ]
+
+            photos_exist = any(photo_field for photo_field in photo_fields)
+
+            print(f"[check_event_body_photos_exist API] Photos exist: {photos_exist}")
+            return photos_exist
+
+        except Event.DoesNotExist:
+            print(
+                f"[check_event_body_photos_exist API] Event not found with ID: {eventId}"
+            )
+            return None
+
+    photos_exist = await check_photos_exist(eventId)
+
+    if photos_exist is None:
+        await notify_by_bot(
+            f"**[API: check_event_body_photos_exist]** \n\n Event not found: eventId={eventId} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        raise HTTPException(status_code=404, detail="Event not found")
+
+    return {"photos_exist": photos_exist, "event_id": eventId}
+
+
+@router.get("/event/{eventId}/guests/exists")
+async def check_event_guestlist_exists(
+    eventId: str, request: Request, platform: Optional[str] = None
+):
+    """
+    API endpoint to check if a guestlist exists for a specific event.
+    Returns true if guestlist exists and is public, false otherwise.
+    """
+    print(f"[check_event_guestlist_exists API] Function called with eventId: {eventId}")
+
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    @database_sync_to_async
+    def check_guestlist_exists(eventId):
+        try:
+            event = Event.objects.get(eventId=eventId)
+
+            # Check if event allows showing guest list and has guests
+            guestlist_exists = event.show_guest_list and event.guest_list.exists()
+
+            print(
+                f"[check_event_guestlist_exists API] Guestlist exists: {guestlist_exists}"
+            )
+            return guestlist_exists
+
+        except Event.DoesNotExist:
+            print(
+                f"[check_event_guestlist_exists API] Event not found with ID: {eventId}"
+            )
+            return None
+
+    guestlist_exists = await check_guestlist_exists(eventId)
+
+    if guestlist_exists is None:
+        await notify_by_bot(
+            f"**[API: check_event_guestlist_exists]** \n\n Event not found: eventId={eventId} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        raise HTTPException(status_code=404, detail="Event not found")
+
+    return {"guestlist_exists": guestlist_exists, "event_id": eventId}
