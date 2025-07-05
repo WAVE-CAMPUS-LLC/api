@@ -422,6 +422,148 @@ async def get_event_guests(
     return {"guests": guests_data}
 
 
+@router.get("/event/{eventId}/guests/preview")
+async def get_event_guests_preview(
+    eventId: str, request: Request, platform: Optional[str] = None
+):
+    """
+    API endpoint to retrieve 3 guests from the guestlist for preview.
+    """
+    print(f"[get_event_guests_preview API] Function called with eventId: {eventId}")
+
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    @database_sync_to_async
+    def get_guests_preview_data(eventId):
+        try:
+            event = Event.objects.get(eventId=eventId)
+
+            # Check if event allows showing guest list
+            if not event.show_guest_list:
+                return []
+
+            # Get first 3 guests from the guest list
+            guests = event.guest_list.all()[:3]
+
+            guests_data = []
+            for guest in guests:
+                try:
+                    user_profile = guest.user_profile
+                    guest_info = {
+                        "id": str(guest.id),
+                        "user_id": str(guest.user_id),
+                        "username": guest.username,
+                        "first_name": guest.first_name,
+                        "last_name": guest.last_name,
+                        "profile_photo": (
+                            user_profile.profile_photo.url
+                            if user_profile.profile_photo
+                            else None
+                        ),
+                    }
+                    guests_data.append(guest_info)
+                except AttributeError:
+                    # Skip guests without user profiles
+                    continue
+
+            print(
+                f"[get_event_guests_preview API] Retrieved {len(guests_data)} guests for preview"
+            )
+            return guests_data
+
+        except Event.DoesNotExist:
+            print(f"[get_event_guests_preview API] Event not found with ID: {eventId}")
+            return None
+
+    guests_data = await get_guests_preview_data(eventId)
+
+    if guests_data is None:
+        await notify_by_bot(
+            f"**[API: get_event_guests_preview]** \n\n Event not found: eventId={eventId} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        raise HTTPException(status_code=404, detail="Event not found")
+
+    return {"guests": guests_data, "total_guests": len(guests_data), "is_preview": True}
+
+
+@router.get("/event/{eventId}/guests/all")
+async def get_event_guests_all(
+    eventId: str, request: Request, platform: Optional[str] = None
+):
+    """
+    API endpoint to retrieve all guests from the guestlist for an event.
+    """
+    print(f"[get_event_guests_all API] Function called with eventId: {eventId}")
+
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    @database_sync_to_async
+    def get_all_guests_data(eventId):
+        try:
+            event = Event.objects.get(eventId=eventId)
+
+            # Check if event allows showing guest list
+            if not event.show_guest_list:
+                return []
+
+            # Get all guests from the guest list
+            guests = event.guest_list.all()
+
+            guests_data = []
+            for guest in guests:
+                try:
+                    user_profile = guest.user_profile
+                    guest_info = {
+                        "id": str(guest.id),
+                        "user_id": str(guest.user_id),
+                        "username": guest.username,
+                        "first_name": guest.first_name,
+                        "last_name": guest.last_name,
+                        "profile_photo": (
+                            user_profile.profile_photo.url
+                            if user_profile.profile_photo
+                            else None
+                        ),
+                    }
+                    guests_data.append(guest_info)
+                except AttributeError:
+                    # Skip guests without user profiles
+                    continue
+
+            print(
+                f"[get_event_guests_all API] Retrieved {len(guests_data)} total guests"
+            )
+            return guests_data
+
+        except Event.DoesNotExist:
+            print(f"[get_event_guests_all API] Event not found with ID: {eventId}")
+            return None
+
+    guests_data = await get_all_guests_data(eventId)
+
+    if guests_data is None:
+        await notify_by_bot(
+            f"**[API: get_event_guests_all]** \n\n Event not found: eventId={eventId} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        raise HTTPException(status_code=404, detail="Event not found")
+
+    return {
+        "guests": guests_data,
+        "total_guests": len(guests_data),
+        "is_preview": False,
+    }
+
+
 @router.post("/event/{eventId}/toggleFavorite")
 async def toggleFavorite(
     eventId: str,
@@ -794,3 +936,74 @@ async def search_events(
         raise HTTPException(
             status_code=500, detail=f"Error searching events: {str(e)}"
         ) from e
+
+
+@router.get("/event/{eventId}/photos")
+async def get_event_body_photos(
+    eventId: str, request: Request, platform: Optional[str] = None
+):
+    """
+    API endpoint to retrieve all body photos for a specific event.
+    """
+    print(f"[get_event_body_photos API] Function called with eventId: {eventId}")
+
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    @database_sync_to_async
+    def get_event_photos_data(eventId):
+        try:
+            event = Event.objects.get(eventId=eventId)
+
+            # Collect all body photos that exist
+            body_photos = []
+
+            # Check each body photo field and add to list if it exists
+            photo_fields = [
+                ("body_photo_one", event.body_photo_one),
+                ("body_photo_two", event.body_photo_two),
+                ("body_photo_three", event.body_photo_three),
+                ("body_photo_four", event.body_photo_four),
+                ("body_photo_five", event.body_photo_five),
+            ]
+
+            for field_name, photo_field in photo_fields:
+                if photo_field:
+                    body_photos.append(
+                        {
+                            "field_name": field_name,
+                            "photo_url": photo_field.url,
+                            "photo_name": (
+                                photo_field.name.split("/")[-1]
+                                if photo_field.name
+                                else None
+                            ),
+                        }
+                    )
+
+            print(
+                f"[get_event_body_photos API] Retrieved {len(body_photos)} body photos for event"
+            )
+            return body_photos
+
+        except Event.DoesNotExist:
+            print(f"[get_event_body_photos API] Event not found with ID: {eventId}")
+            return None
+
+    photos_data = await get_event_photos_data(eventId)
+
+    if photos_data is None:
+        await notify_by_bot(
+            f"**[API: get_event_body_photos]** \n\n Event not found: eventId={eventId} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        raise HTTPException(status_code=404, detail="Event not found")
+
+    return {
+        "photos": photos_data,
+        "total_photos": len(photos_data),
+        "event_id": eventId,
+    }
