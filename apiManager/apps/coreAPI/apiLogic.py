@@ -395,14 +395,30 @@ async def get_event_guests(
     def get_guests_data(eventId):
         try:
             event = Event.objects.get(eventId=eventId)
-            guests = (
-                event.guest_list.all()
-            )  # Assuming guests is a related name for the ManyToMany field
-            guest_photos = [
-                guest.user_profile.profile_photo for guest in guests
-            ]  # Adjust according to your User model
+
+            # Check if event allows showing guest list
+            if not event.show_guest_list:
+                return []
+
+            guests = event.guest_list.all()
+            guest_photos = []
+
+            for guest in guests:
+                try:
+                    user_profile = guest.user_profile
+                    # Convert FileField to URL string or None
+                    profile_photo_url = (
+                        user_profile.profile_photo.url
+                        if user_profile.profile_photo
+                        else None
+                    )
+                    guest_photos.append(profile_photo_url)
+                except AttributeError:
+                    # Skip guests without user profiles
+                    continue
+
             print(
-                f"[get_event_guests API] Retrieved {len(guest_photos)} guests for event"
+                f"[get_event_guests API] Retrieved {len(guest_photos)} guest photos for event"
             )
             return guest_photos
         except Event.DoesNotExist:
