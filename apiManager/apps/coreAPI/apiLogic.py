@@ -401,26 +401,30 @@ async def get_event_guests(
                 return []
 
             guests = event.guest_list.all()
-            guest_photos = []
+            guests_data = []
 
             for guest in guests:
                 try:
                     user_profile = guest.user_profile
-                    # Convert FileField to URL string or None
-                    profile_photo_url = (
-                        user_profile.profile_photo.url
-                        if user_profile.profile_photo
-                        else None
-                    )
-                    guest_photos.append(profile_photo_url)
+                    guest_info = {
+                        "id": str(guest.id),
+                        "user_id": str(guest.user_id),
+                        "first_name": guest.first_name,
+                        "profile_photo": (
+                            user_profile.profile_photo.url
+                            if user_profile.profile_photo
+                            else None
+                        ),
+                    }
+                    guests_data.append(guest_info)
                 except AttributeError:
                     # Skip guests without user profiles
                     continue
 
             print(
-                f"[get_event_guests API] Retrieved {len(guest_photos)} guest photos for event"
+                f"[get_event_guests API] Retrieved {len(guests_data)} guests for event"
             )
-            return guest_photos
+            return guests_data
         except Event.DoesNotExist:
             print(f"[get_event_guests API] Event not found with ID: {eventId}")
             return None
@@ -435,7 +439,11 @@ async def get_event_guests(
         )
         raise HTTPException(status_code=404, detail="Event not found")
 
-    return {"guests": guests_data}
+    return {
+        "guests": guests_data,
+        "total_guests": len(guests_data),
+        "event_id": eventId,
+    }
 
 
 @router.get("/event/{eventId}/guests/preview")
