@@ -11,7 +11,6 @@ from opentelemetry.instrumentation.logging import LoggingInstrumentor
 from opentelemetry.sdk._logs import LoggerProvider
 from opentelemetry.sdk._logs.export import BatchLogRecordProcessor
 from opentelemetry._logs import set_logger_provider
-from opentelemetry.instrumentation.fastapi import OpenTelemetryMiddleware
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.exporter.otlp.proto.http.metric_exporter import OTLPMetricExporter
 from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
@@ -21,6 +20,13 @@ import os
 
 
 def setup_otel(app: FastAPI):
+    # Only setup if environment variables are available
+    if not os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT") or not os.getenv(
+        "NEW_RELIC_LICENSE_KEY"
+    ):
+        print("OpenTelemetry environment variables not set, skipping setup")
+        return
+
     provider = TracerProvider()
     trace.set_tracer_provider(provider)
 
@@ -35,10 +41,16 @@ def setup_otel(app: FastAPI):
     provider.add_span_processor(span_processor)
 
     FastAPIInstrumentor.instrument_app(app)
-    app.add_middleware(OpenTelemetryMiddleware)
 
 
 def setup_metrics(app: FastAPI):
+    # Only setup if environment variables are available
+    if not os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT") or not os.getenv(
+        "NEW_RELIC_LICENSE_KEY"
+    ):
+        print("OpenTelemetry environment variables not set, skipping metrics setup")
+        return
+
     metric_exporter = OTLPMetricExporter(
         endpoint=os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT"),
         headers={"api-key": f"{os.getenv('NEW_RELIC_LICENSE_KEY')}"},
@@ -50,6 +62,13 @@ def setup_metrics(app: FastAPI):
 
 
 def setup_logging():
+    # Only setup if environment variables are available
+    if not os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT") or not os.getenv(
+        "NEW_RELIC_LICENSE_KEY"
+    ):
+        print("OpenTelemetry environment variables not set, skipping logging setup")
+        return
+
     provider = LoggerProvider()
     set_logger_provider(provider)
 
