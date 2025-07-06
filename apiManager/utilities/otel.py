@@ -15,6 +15,7 @@ from opentelemetry.instrumentation.fastapi import OpenTelemetryMiddleware
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.exporter.otlp.proto.http.metric_exporter import OTLPMetricExporter
 from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
+from opentelemetry import metrics
 
 import os
 
@@ -45,8 +46,7 @@ def setup_metrics(app: FastAPI):
 
     reader = PeriodicExportingMetricReader(metric_exporter)
     provider = MeterProvider(metric_readers=[reader])
-
-    return provider
+    metrics.set_meter_provider(provider)
 
 
 def setup_logging():
