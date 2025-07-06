@@ -103,6 +103,21 @@ async def get_user_details(
 
             friend_amount = user_profile.friends.count()
 
+            # Get user's friends (max 4)
+            friends = []
+            for friend in user_profile.friends.all()[:4]:
+                friends.append(
+                    {
+                        "user_id": str(friend.user.user_id),
+                        "username": friend.user.username,
+                        "first_name": friend.user.first_name,
+                        "last_name": friend.user.last_name,
+                        "profile_photo": (
+                            friend.profile_photo.url if friend.profile_photo else None
+                        ),
+                    }
+                )
+
             # Get user's crews
             crew_memberships = []
             for crew_member in CrewMember.objects.filter(user=user).select_related(
@@ -115,9 +130,9 @@ async def get_user_details(
                     }
                 )
 
-            # Get user's favorite events (limit for performance)
+            # Get user's favorite events (max 4)
             favorite_events = []
-            for event in user_profile.favorite_events.all()[:20]:
+            for event in user_profile.favorite_events.all()[:4]:
                 favorite_events.append(
                     {
                         "eventId": str(event.eventId),
@@ -132,9 +147,9 @@ async def get_user_details(
                     }
                 )
 
-            # Get user's purchased events (limit for performance)
+            # Get user's purchased events (max 4)
             purchased_events = []
-            for event in user_profile.purchased_events.all()[:20]:
+            for event in user_profile.purchased_events.all()[:4]:
                 purchased_events.append(
                     {
                         "eventId": str(event.eventId),
@@ -149,9 +164,9 @@ async def get_user_details(
                     }
                 )
 
-            # Get user's hosted events (if they are a host)
+            # Get user's hosted events (max 4, most recent)
             hosted_events = []
-            for event in Event.objects.filter(host=user)[:20]:
+            for event in Event.objects.filter(host=user).order_by("-date")[:4]:
                 hosted_events.append(
                     {
                         "eventId": str(event.eventId),
@@ -216,6 +231,7 @@ async def get_user_details(
                     "college": college_data,
                     "groups": groups,
                     "friend_amount": friend_amount,
+                    "friends": friends,
                     "crew_memberships": crew_memberships,
                     "favorite_events": favorite_events,
                     "purchased_events": purchased_events,
