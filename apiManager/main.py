@@ -31,6 +31,8 @@ from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
 
+from apiManager.utilities.otel import setup_otel, setup_logging, setup_metrics
+
 
 app = FastAPI(title="WAVE. API", version="1.0.0")
 app.add_middleware(
@@ -40,6 +42,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+setup_otel(app)
+setup_logging()
+setup_metrics(app)
 
 version_checker = VersionCheckMiddleware(
     minimum_ios_version="1.0.4",
@@ -52,28 +58,6 @@ version_checker = VersionCheckMiddleware(
         "/openapi.json",
     ],
 )
-
-resource = Resource.create(
-    attributes={
-        "service.name": os.getenv("RESOURCE_SERVICE_NAME", "wave-api"),
-        "deployment.environment": os.getenv("RESOURCE_ENVIRONMENT", "unknown"),
-    }
-)
-
-tracer_provider = TracerProvider(resource=resource)
-trace.set_tracer_provider(tracer_provider)
-
-otlp_exporter = OTLPSpanExporter(
-    endpoint=os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT"),
-    headers={
-        "Authorization": f"Bearer {os.getenv('OTEL_EXPORTER_OTLP_AUTHORIZATION')}"
-    },
-)
-
-tracer_provider.add_span_processor(BatchSpanProcessor(otlp_exporter))
-
-FastAPIInstrumentor.instrument_app(app)
-RequestsInstrumentor().instrument()
 
 
 @app.middleware("http")
