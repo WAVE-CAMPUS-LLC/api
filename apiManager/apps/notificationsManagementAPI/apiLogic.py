@@ -63,28 +63,40 @@ async def get_feed(
         # Pull notification-based feed
         notification_feed = await get_notification_feed(user_id)
 
-        # Pull Neo4j graph feed
-        graph_feed = get_friendship_feed_from_graph(user_id)
+        # Pull Neo4j graph feed with error handling
+        try:
+            graph_feed = get_friendship_feed_from_graph(user_id)
+        except Exception as graph_error:
+            logger.error(f"Error getting graph feed for user {user_id}: {graph_error}")
+            graph_feed = []
 
-        # Optionally: resolve usernames for graph entries
-        user_map = {
-            u.user_id: u.username
-            for u in CustomUser.objects.filter(
-                user_id__in=[entry["friend_id"] for entry in graph_feed]
-                + [entry["new_friend_id"] for entry in graph_feed]
-            )
-        }
+        # Only process graph feed if we have entries
+        if graph_feed:
+            # Optionally: resolve usernames for graph entries
+            try:
+                user_map = {
+                    u.user_id: u.username
+                    for u in CustomUser.objects.filter(
+                        user_id__in=[entry["friend_id"] for entry in graph_feed]
+                        + [entry["new_friend_id"] for entry in graph_feed]
+                    )
+                }
+            except Exception as user_map_error:
+                logger.error(f"Error creating user map: {user_map_error}")
+                user_map = {}
 
-        formatted_graph_feed = [
-            {
-                "type": "graph_friendship",
-                "content": f"{user_map.get(entry['friend_id'], 'Your friend')} is now friends with {user_map.get(entry['new_friend_id'], 'someone new')}",
-                "actor": user_map.get(entry["friend_id"]),
-                "timestamp": None,  # You could add a `created_at` relationship property later
-                "metadata": entry,
-            }
-            for entry in graph_feed
-        ]
+            formatted_graph_feed = [
+                {
+                    "type": "graph_friendship",
+                    "content": f"{user_map.get(entry['friend_id'], 'Your friend')} is now friends with {user_map.get(entry['new_friend_id'], 'someone new')}",
+                    "actor": user_map.get(entry["friend_id"]),
+                    "timestamp": None,  # You could add a `created_at` relationship property later
+                    "metadata": entry,
+                }
+                for entry in graph_feed
+            ]
+        else:
+            formatted_graph_feed = []
 
         # Merge and sort (if timestamps available)
         merged_feed = notification_feed + formatted_graph_feed

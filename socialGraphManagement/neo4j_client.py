@@ -15,4 +15,5 @@ class GraphClient:
     def run_query(self, query, parameters=None):
         with self.driver.session() as session:
             result = session.run(query, parameters or {})
-            return result
+            # Convert result to list to avoid "Result has been consumed" error
+            return list(result)
