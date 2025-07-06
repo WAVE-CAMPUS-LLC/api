@@ -2670,3 +2670,324 @@ async def check_friend_request_status(
 
     print(f"[check_friend_request_status API] {success_message}")
     return {"message": success_message, "friend_request_status": status_data}
+
+
+@router.get("/get_user_crews_paginated")
+async def get_user_crews_paginated(
+    request: Request,
+    caller_user_id: Optional[int] = Depends(get_current_user),
+    page: int = Query(1, ge=1, description="Page number (starts from 1)"),
+    page_size: int = Query(
+        10, ge=1, le=50, description="Number of crews per page (max 50)"
+    ),
+    platform: Optional[str] = None,
+):
+    """
+    API endpoint to get all crews a user is a member of with pagination support.
+    Returns paginated results to prevent slow load times with large crew lists.
+    """
+    print(
+        f"[get_user_crews_paginated API] Function called for user ID: {caller_user_id}, page: {page}, page_size: {page_size}"
+    )
+
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    @database_sync_to_async
+    def get_user_crews_paginated_data(caller_user_id, page, page_size):
+        try:
+            user = CustomUser.objects.get(id=caller_user_id)
+
+            # Get total count of crews the user is a member of
+            total_crews = CrewMember.objects.filter(user=user).count()
+
+            # Calculate pagination
+            total_pages = (total_crews + page_size - 1) // page_size  # Ceiling division
+            offset = (page - 1) * page_size
+
+            # Get paginated crew memberships with crew details
+            crew_memberships = (
+                CrewMember.objects.filter(user=user)
+                .select_related("crew", "crew__created_by")
+                .order_by("-joined_at")[offset : offset + page_size]
+            )
+
+            crews_data = []
+            for membership in crew_memberships:
+                crew = membership.crew
+
+                # Get member count for this crew
+                member_count = CrewMember.objects.filter(crew=crew).count()
+
+                crews_data.append(
+                    {
+                        "crewId": str(crew.crewId),
+                        "name": crew.name,
+                        "member_count": member_count,
+                    }
+                )
+
+            return {
+                "crews": crews_data,
+                "pagination": {
+                    "current_page": page,
+                    "page_size": page_size,
+                    "total_crews": total_crews,
+                    "total_pages": total_pages,
+                    "has_next": page < total_pages,
+                    "has_previous": page > 1,
+                },
+            }, None
+        except CustomUser.DoesNotExist:
+            print(
+                f"[get_user_crews_paginated API] User not found with ID: {caller_user_id}"
+            )
+            return None, "User not found"
+        except Exception as e:
+            print(
+                f"[get_user_crews_paginated API] Error retrieving user crews: {str(e)}"
+            )
+            return None, f"Error retrieving user crews: {str(e)}"
+
+    try:
+        result_data, error_message = await get_user_crews_paginated_data(
+            caller_user_id, page, page_size
+        )
+        if result_data is None:
+            notification_sent = await notify_by_bot(
+                f"**[API: get_user_crews_paginated API]** \n\n {error_message} \n\n Platform: {platform} \n\n User ID: {caller_user_id} \n\n Page: {page} \n\n Page Size: {page_size}",
+                platform or "Unknown",
+                "ERROR",
+                device_info,
+            )
+            if notification_sent is None:
+                print(
+                    "[get_user_crews_paginated API] Could not send notification: BOT_API_KEY not set"
+                )
+            raise HTTPException(status_code=500, detail=error_message)
+
+        print(
+            f"[get_user_crews_paginated API] Returning {len(result_data['crews'])} crews for page {page}"
+        )
+        return result_data
+    except Exception as e:
+        error_message = f"Error in get_user_crews_paginated API: {str(e)}"
+        print(f"[get_user_crews_paginated API] {error_message}")
+        raise HTTPException(status_code=500, detail=error_message)
+
+
+@router.get("/get_crew_details_with_members/{crew_id}")
+async def get_crew_details_with_members(
+    request: Request,
+    crew_id: UUID,
+    caller_user_id: Optional[int] = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
+    """
+    API endpoint to retrieve comprehensive information about a specific crew including all members.
+    """
+    print(
+        f"[get_crew_details_with_members API] Function called with crew_id: {crew_id}"
+    )
+
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    @database_sync_to_async
+    def get_crew_details_with_members_data(crew_id, caller_user_id):
+        try:
+            # Get crew with related data in optimized queries
+            crew = Crew.objects.select_related(
+                "created_by", "created_by__user_profile"
+            ).get(crewId=crew_id)
+
+            # Get crew creator profile information
+            creator_profile = (
+                crew.created_by.user_profile
+                if hasattr(crew.created_by, "user_profile")
+                else None
+            )
+            creator_data = {
+                "user_id": str(crew.created_by.user_id),
+                "username": crew.created_by.username,
+                "first_name": crew.created_by.first_name,
+                "last_name": crew.created_by.last_name,
+                "profile_photo": (
+                    creator_profile.profile_photo.url
+                    if creator_profile and creator_profile.profile_photo
+                    else None
+                ),
+            }
+
+            # Get all crew members with their profiles
+            crew_members = []
+            user_is_member = False
+            user_is_admin = False
+
+            # FIRST: Check if the caller is the crew creator
+            if caller_user_id and crew.created_by.id == caller_user_id:
+                user_is_member = True
+                user_is_admin = True  # Creator is always admin
+                print(
+                    f"[get_crew_details_with_members] User {caller_user_id} is the crew creator"
+                )
+
+            # Get all crew member records
+            crew_member_records = CrewMember.objects.filter(crew=crew).select_related(
+                "user", "user__user_profile"
+            )
+
+            print(
+                f"[get_crew_details_with_members] Found {crew_member_records.count()} crew members"
+            )
+            print(
+                f"[get_crew_details_with_members] Checking membership for user_id: {caller_user_id}"
+            )
+
+            for crew_member in crew_member_records:
+                member_profile = (
+                    crew_member.user.user_profile
+                    if hasattr(crew_member.user, "user_profile")
+                    else None
+                )
+
+                # DEBUG: Log member IDs for comparison
+                print(
+                    f"[get_crew_details_with_members] Comparing caller_user_id={caller_user_id} with member_user_id={crew_member.user.id}"
+                )
+
+                # Check if the caller is this crew member - ensure both are integers
+                if caller_user_id and int(crew_member.user.id) == int(caller_user_id):
+                    user_is_member = True
+                    user_is_admin = crew_member.is_admin
+                    print(
+                        f"[get_crew_details_with_members] User {caller_user_id} found as crew member with admin={crew_member.is_admin}"
+                    )
+
+                crew_members.append(
+                    {
+                        "user": {
+                            "user_id": str(crew_member.user.user_id),
+                            "username": crew_member.user.username,
+                            "first_name": crew_member.user.first_name,
+                            "last_name": crew_member.user.last_name,
+                        },
+                        "profile": {
+                            "profile_photo": (
+                                member_profile.profile_photo.url
+                                if member_profile and member_profile.profile_photo
+                                else None
+                            ),
+                        },
+                        "membership_details": {
+                            "joined_at": crew_member.joined_at,
+                            "is_admin": crew_member.is_admin,
+                        },
+                    }
+                )
+
+            # Final debug log
+            print(
+                f"[get_crew_details_with_members] Final membership status: user_is_member={user_is_member}, user_is_admin={user_is_admin}"
+            )
+
+            # Also check if caller should be included but is missing from CrewMember records
+            if caller_user_id and not user_is_member:
+                # Check for potential data inconsistency
+                direct_membership_check = CrewMember.objects.filter(
+                    crew=crew, user_id=caller_user_id
+                ).exists()
+                print(
+                    f"[get_crew_details_with_members] Direct membership check result: {direct_membership_check}"
+                )
+
+                if direct_membership_check:
+                    print(
+                        f"[get_crew_details_with_members] WARNING: Found membership in direct check but missed in iteration!"
+                    )
+                    user_is_member = True
+                    # Get the admin status
+                    try:
+                        member_record = CrewMember.objects.get(
+                            crew=crew, user_id=caller_user_id
+                        )
+                        user_is_admin = member_record.is_admin
+                    except CrewMember.DoesNotExist:
+                        pass
+
+            # Get shared events for this crew (limit for performance)
+            from eventManagementApp.models import SharedEvent
+
+            shared_events = []
+            for shared_event in SharedEvent.objects.filter(crew=crew).select_related(
+                "event", "sender"
+            )[:20]:
+                shared_events.append(
+                    {
+                        "event": {
+                            "eventId": str(shared_event.event.eventId),
+                            "title": shared_event.event.title,
+                            "date": shared_event.event.date,
+                            "header_photo": (
+                                shared_event.event.header_photo.url
+                                if shared_event.event.header_photo
+                                else None
+                            ),
+                        },
+                        "sender": {
+                            "username": shared_event.sender.username,
+                            "first_name": shared_event.sender.first_name,
+                            "last_name": shared_event.sender.last_name,
+                        },
+                        "shared_at": shared_event.shared_at,
+                    }
+                )
+
+            return {
+                "crewId": str(crew.crewId),
+                "name": crew.name,
+                "bio": crew.bio,
+                "created_at": crew.created_at,
+                "created_by": creator_data,
+                "members": crew_members,
+                "member_count": len(crew_members),
+                "shared_events": shared_events,
+                "user_is_member": user_is_member,
+                "user_is_admin": user_is_admin,
+            }, None
+        except Crew.DoesNotExist:
+            error_message = f"Crew not found with ID: {crew_id}"
+            print(
+                f"[get_crew_details_with_members API] Crew not found with ID: {crew_id}"
+            )
+            return None, error_message
+        except Exception as e:
+            error_message = f"Error retrieving crew data: {str(e)}"
+            print(
+                f"[get_crew_details_with_members API] Error retrieving crew data: {str(e)}"
+            )
+            return None, error_message
+
+    crew_data, error_message = await get_crew_details_with_members_data(
+        crew_id, caller_user_id
+    )
+    if crew_data is None:
+        notification_sent = await notify_by_bot(
+            f"**[API: get_crew_details_with_members API]** \n\n {error_message} \n\n Platform: {platform} \n\n User ID: {caller_user_id} \n\n Crew ID: {crew_id}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        if notification_sent is None:
+            print(
+                "[get_crew_details_with_members API] Could not send notification: BOT_API_KEY not set"
+            )
+        raise HTTPException(status_code=404, detail=error_message)
+
+    print(
+        f"[get_crew_details_with_members API] Returning details for crew: {crew_data['name']}"
+    )
+
+    return {"crew_details": crew_data}

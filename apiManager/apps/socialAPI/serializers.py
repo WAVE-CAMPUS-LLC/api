@@ -54,3 +54,46 @@ class UserCrew(BaseModel):
 
 class UserCrewsResponse(BaseModel):
     user_crews: List[UserCrew]
+
+
+class CrewMemberDetail(BaseModel):
+    user: Dict[str, Any]
+    profile: Dict[str, Any]
+    membership_details: Dict[str, Any]
+
+
+class CrewDetailsWithMembers(BaseModel):
+    crewId: str
+    name: str
+    bio: Optional[str] = None
+    created_at: datetime
+    created_by: Dict[str, Any]
+    members: List[CrewMemberDetail]
+    member_count: int
+    shared_events: List[Dict[str, Any]]
+    user_is_member: bool
+    user_is_admin: bool
+
+
+class CrewDetailsWithMembersResponse(BaseModel):
+    crew_details: CrewDetailsWithMembers
+
+
+class CrewPaginationInfo(BaseModel):
+    current_page: int
+    page_size: int
+    total_crews: int
+    total_pages: int
+    has_next: bool
+    has_previous: bool
+
+
+class UserCrewWithPagination(BaseModel):
+    crewId: str
+    name: str
+    member_count: int
+
+
+class UserCrewsPaginatedResponse(BaseModel):
+    crews: List[UserCrewWithPagination]
+    pagination: CrewPaginationInfo
