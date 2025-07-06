@@ -520,36 +520,6 @@ class Event(models.Model):
         super().save(*args, **kwargs)
 
 
-# class EventPrivacy(models.Model):
-#     event = models.OneToOneField(
-#         "Event", on_delete=models.CASCADE, related_name="privacy_details"
-#     )
-#     display_on_explore = models.BooleanField(
-#         _("Do you want this event displayed on the explore page?"),
-#         null=True,
-#         blank=True,
-#         default=False,
-#     )
-#     require_invitation = models.BooleanField(
-#         _("Require invitation?"),
-#         null=True,
-#         blank=True,
-#         default=False,
-#     )
-#     restricted_college = models.ForeignKey(
-#         College, on_delete=models.SET_NULL, blank=True, null=True
-#     )
-#     restricted_organization = models.ForeignKey(
-#         Organization, on_delete=models.SET_NULL, blank=True, null=True
-#     )
-
-#     class Meta:
-#         default_permissions = ()
-
-#     def __str__(self):
-#         return f"{self.event.title} Privacy Settings"
-
-
 class HostProfile(models.Model):
     hostProfileId = models.UUIDField(
         primary_key=True, default=uuid.uuid4, editable=False, unique=True

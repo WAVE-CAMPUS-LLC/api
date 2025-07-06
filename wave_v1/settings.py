@@ -48,6 +48,10 @@ except Exception as e:
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", secrets.token_urlsafe(64))
 
+NEO4J_URI = os.getenv("NEO4J_URI")
+NEO4J_USER = os.getenv("NEO4J_USER")
+NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD")
+
 # SECURITY WARNING: don't run with debug turned on in production!
 ENVIRONMENT = os.getenv("ENVIRONMENT", "production")
 if ENVIRONMENT == "development":
@@ -299,6 +303,7 @@ INSTALLED_APPS = [
     "supportCenterApp",
     "collegeManagementApp",
     "socialApp",
+    "socialGraphManagement",
     "newsroomApp",
     "blogApp",
     "campusManagerApp",
@@ -315,6 +320,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "hcaptcha",
     "ambassadorManagement",
+    "notificationManagement",
 ]
 
 # Redis and Channels configuration

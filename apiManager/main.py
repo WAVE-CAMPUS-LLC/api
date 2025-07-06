@@ -17,6 +17,9 @@ from apiManager.apps.eventTicketsAPI.apiLogic import router as ticket_router
 from apiManager.apps.adminManagementAPI.apiLogic import router as admin_router
 from apiManager.apps.socialAPI.apiLogic import router as social_router
 from apiManager.apps.ambassadorManagementAPI.apiLogic import router as tide_router
+from apiManager.apps.notificationsManagementAPI.apiLogic import (
+    router as notification_router,
+)
 from apiManager.apps.coreAPI.version_middleware import VersionCheckMiddleware
 
 
@@ -104,4 +107,9 @@ app.include_router(
 )
 app.include_router(
     tide_router, prefix="/waveYourCampusAPIFromOAK/tideambd", tags=["Tide"]
+)
+app.include_router(
+    notification_router,
+    prefix="/waveYourCampusAPIFromOAK/notifications",
+    tags=["Notifications"],
 )
