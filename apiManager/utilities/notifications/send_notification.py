@@ -4,7 +4,9 @@ from django.contrib.auth import get_user_model
 User = get_user_model()
 
 
-def send_notification(recipient_id, actor_id, type, content, metadata=None):
+def send_notification(
+    recipient_id, actor_id, notification_type, content, metadata=None
+):
     if not recipient_id or not type or not content:
         return
 
@@ -15,7 +17,7 @@ def send_notification(recipient_id, actor_id, type, content, metadata=None):
         notification = Notification.objects.create(
             recipient=recipient,
             actor=actor,
-            type=type,
+            type=notification_type,
             content=content,
             metadata=metadata or {},
         )

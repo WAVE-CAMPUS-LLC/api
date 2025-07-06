@@ -61,21 +61,26 @@ def handle_friends_changed(sender, instance, action, pk_set, **kwargs):
     """
     if action == "post_add":
         # Friends were added
-        for friend_id in pk_set:
+        for new_friend_id in pk_set:
             try:
-                friend = UserProfile.objects.get(user_id=friend_id)
-                if instance.user and friend.user:
-                    logger.info(
-                        "Syncing friendship for user %s and user %s",
-                        instance.user.user_id,
-                        friend.user.user_id,
-                    )
-                    sync_friendship(instance.user.user_id, friend.user.user_id)
+                new_friend_profile = UserProfile.objects.get(user_id=new_friend_id)
+                user_profile = instance
+
+                sync_friendship(
+                    user_profile.user.user_id, new_friend_profile.user.user_id
+                )
+                mutuals = user_profile.friends.exclude(user_id=new_friend_id)
+
+                for mutual in mutuals:
                     send_notification(
-                        friend.user.user_id,
-                        instance.user.user_id,
-                        "FRIEND_REQUEST",
-                        f"You have a new friend request from {instance.sender.username}",
+                        recipient_id=mutual.user.user_id,
+                        actor_id=user_profile.user.user_id,
+                        type="friend_connected",
+                        content=f"{user_profile.user.username} became friends with {new_friend_profile.user.username}",
+                        metadata={
+                            "friend_1_id": user_profile.user.user_id,
+                            "friend_2_id": new_friend_profile.user.user_id,
+                        },
                     )
             except UserProfile.DoesNotExist:
                 continue
