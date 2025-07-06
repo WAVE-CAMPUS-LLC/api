@@ -65,7 +65,7 @@ async def get_user_details(
             user = CustomUser.objects.select_related("user_profile").get(
                 username=username
             )
-            user_profile = user.user_profile
+            user_profile = user.user_profile  # type: ignore[attr-defined]
 
             # Determine if the calling user is viewing their own profile
             is_own_profile = False
@@ -473,7 +473,7 @@ async def get_my_pass(
     def get_my_pass_data(caller_user_id):
         try:
             user = CustomUser.objects.get(id=caller_user_id)
-            user_profile = user.user_profile
+            user_profile = user.user_profile  # type: ignore[attr-defined]
 
             return (
                 MyPassSerializer(
@@ -614,7 +614,7 @@ async def get_user_friends(
     def get_user_friends_data(caller_user_id):
         try:
             user = CustomUser.objects.get(id=caller_user_id)
-            user_profile = user.user_profile
+            user_profile = user.user_profile  # type: ignore[attr-defined]
             friends = user_profile.friends.all()
             friends_data = [
                 {
@@ -835,10 +835,10 @@ async def send_friend_request(
                         try:
                             sender_user.user_profile.friends.add(
                                 receiver_user.user_profile
-                            )
+                            )  # type: ignore[attr-defined]
                             receiver_user.user_profile.friends.add(
                                 sender_user.user_profile
-                            )
+                            )  # type: ignore[attr-defined]
                             return (
                                 None,
                                 "You are already friends with this user.",
@@ -1130,8 +1130,16 @@ async def accept_friend_request(
                 friend_request.save()
 
                 # Add both users to each other's friends list
-                receiver_user.user_profile.friends.add(sender_user_profile)
-                sender_user_profile.friends.add(receiver_user.user_profile)
+                receiver_user.user_profile.friends.add(sender_user_profile)  # type: ignore[attr-defined]
+                sender_user_profile.friends.add(receiver_user.user_profile)  # type: ignore[attr-defined]
+
+            # Defensive type check
+            from socialApp.models import FriendRequest as FriendRequestModel
+
+            if not isinstance(friend_request, FriendRequestModel):
+                raise Exception(
+                    f"Internal error: friend_request is not a FriendRequest instance, got {type(friend_request)}"
+                )
 
             return (
                 {
