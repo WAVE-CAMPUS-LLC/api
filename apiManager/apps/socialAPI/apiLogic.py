@@ -813,13 +813,13 @@ async def send_friend_request(
                         return (
                             None,
                             "You have already sent a friend request to this user.",
-                            active_request,
+                            None,
                         )
                     else:
                         return (
                             None,
                             f"{receiver_username} has already sent you a friend request. Check your notifications to respond.",
-                            active_request,
+                            None,
                         )
                 else:  # status is 'accepted'
                     # Double-check if friendship actually exists
@@ -827,7 +827,7 @@ async def send_friend_request(
                         return (
                             None,
                             "You are already friends with this user.",
-                            active_request,
+                            None,
                         )
                     else:
                         # Data inconsistency: accepted request but no friendship
@@ -842,7 +842,7 @@ async def send_friend_request(
                             return (
                                 None,
                                 "You are already friends with this user.",
-                                active_request,
+                                None,
                             )
                         except Exception as e:
                             print(
