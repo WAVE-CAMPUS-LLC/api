@@ -2362,3 +2362,105 @@ async def get_whats_happening(
 
     print(f"[get_whats_happening API] Returning {len(activities_data)} activities")
     return {"activities": activities_data}
+
+
+@router.get("/get_user_friends_paginated")
+async def get_user_friends_paginated(
+    request: Request,
+    caller_user_id: Optional[int] = Depends(get_current_user),
+    page: int = Query(1, ge=1, description="Page number (starts from 1)"),
+    page_size: int = Query(
+        10, ge=1, le=50, description="Number of friends per page (max 50)"
+    ),
+    platform: Optional[str] = None,
+):
+    """
+    API endpoint to get all friends of a user with pagination support.
+    Returns paginated results to prevent slow load times with large friend lists.
+    """
+    print(
+        f"[get_user_friends_paginated API] Function called for user ID: {caller_user_id}, page: {page}, page_size: {page_size}"
+    )
+
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    @database_sync_to_async
+    def get_user_friends_paginated_data(caller_user_id, page, page_size):
+        try:
+            user = CustomUser.objects.get(id=caller_user_id)
+            user_profile = user.user_profile  # type: ignore[attr-defined]
+
+            # Get total count of friends
+            total_friends = user_profile.friends.count()
+
+            # Calculate pagination
+            total_pages = (
+                total_friends + page_size - 1
+            ) // page_size  # Ceiling division
+            offset = (page - 1) * page_size
+
+            # Get paginated friends
+            friends = user_profile.friends.all()[offset : offset + page_size]
+
+            friends_data = [
+                {
+                    "user_id": str(friend.user.user_id),
+                    "username": friend.user.username,
+                    "first_name": friend.user.first_name,
+                    "last_name": friend.user.last_name,
+                    "profile_photo": (
+                        friend.profile_photo.url if friend.profile_photo else None
+                    ),
+                }
+                for friend in friends
+            ]
+
+            return {
+                "friends": friends_data,
+                "pagination": {
+                    "current_page": page,
+                    "page_size": page_size,
+                    "total_friends": total_friends,
+                    "total_pages": total_pages,
+                    "has_next": page < total_pages,
+                    "has_previous": page > 1,
+                },
+            }, None
+        except CustomUser.DoesNotExist:
+            print(
+                f"[get_user_friends_paginated API] User not found with ID: {caller_user_id}"
+            )
+            return None, "User not found"
+        except Exception as e:
+            print(
+                f"[get_user_friends_paginated API] Error retrieving user friends: {str(e)}"
+            )
+            return None, f"Error retrieving user friends: {str(e)}"
+
+    try:
+        result_data, error_message = await get_user_friends_paginated_data(
+            caller_user_id, page, page_size
+        )
+        if result_data is None:
+            notification_sent = await notify_by_bot(
+                f"**[API: get_user_friends_paginated API]** \n\n {error_message} \n\n Platform: {platform} \n\n User ID: {caller_user_id} \n\n Page: {page} \n\n Page Size: {page_size}",
+                platform or "Unknown",
+                "ERROR",
+                device_info,
+            )
+            if notification_sent is None:
+                print(
+                    "[get_user_friends_paginated API] Could not send notification: BOT_API_KEY not set"
+                )
+            raise HTTPException(status_code=500, detail=error_message)
+
+        print(
+            f"[get_user_friends_paginated API] Returning {len(result_data['friends'])} friends for page {page}"
+        )
+        return result_data
+    except Exception as e:
+        error_message = f"Error in get_user_friends_paginated API: {str(e)}"
+        print(f"[get_user_friends_paginated API] {error_message}")
+        raise HTTPException(status_code=500, detail=error_message)
