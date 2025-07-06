@@ -84,7 +84,7 @@ gunicorn==23.0.0
 h11>=0.16.0
 h2==4.1.0
 hpack==4.0.0
-httpcore==1.0.6
+httpcore>=1.0.7
 httplib2==0.22.0
 httptools==0.6.4
 httpx==0.27.2
@@ -189,7 +189,7 @@ pydantic==2.10.4
 pydantic_core==2.27.2
 Pygments==2.19.1
 PyJWT==2.10.1
-pyOpenSSL==24.2.1
+pyOpenSSL>=24.3.0
 pyparsing==3.2.1
 pytest==8.3.5
 pytest-cov==6.1.1
