@@ -103,9 +103,9 @@ async def get_user_details(
 
             friend_amount = user_profile.friends.count()
 
-            # Get user's friends (max 4)
+            # Get user's friends (max 4, randomized)
             friends = []
-            for friend in user_profile.friends.all()[:4]:
+            for friend in user_profile.friends.all().order_by("?")[:4]:
                 friends.append(
                     {
                         "user_id": str(friend.user.user_id),
@@ -2480,3 +2480,193 @@ async def get_user_friends_paginated(
         error_message = f"Error in get_user_friends_paginated API: {str(e)}"
         print(f"[get_user_friends_paginated API] {error_message}")
         raise HTTPException(status_code=500, detail=error_message)
+
+
+@router.get("/check-friend-request-status/{target_username}")
+async def check_friend_request_status(
+    request: Request,
+    target_username: str,
+    caller_user_id: Optional[int] = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
+    """
+    API endpoint to check the friend request status between the caller and target user.
+    Returns the current status to help determine which UI elements to show.
+    """
+    print(
+        f"[check_friend_request_status API] Function called with target_username: {target_username}"
+    )
+
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    @database_sync_to_async
+    def check_friend_request_status_logic(caller_user_id, target_username):
+        try:
+            # Validate Discord-style username
+            if not is_valid_discord_username(target_username):
+                return (
+                    None,
+                    "Invalid username format. Please use the full Discord-style username (e.g., name#1234).",
+                    None,
+                )
+
+            # Get caller user
+            caller_user = CustomUser.objects.get(id=caller_user_id)
+
+            # Check if trying to check status with self
+            if target_username == caller_user.username:
+                return (
+                    None,
+                    "You cannot check friend request status with yourself.",
+                    None,
+                )
+
+            # Get target user profile - use full Discord-style username
+            try:
+                target_user_profile = UserProfile.objects.select_related("user").get(
+                    user__username=target_username
+                )
+                target_user = target_user_profile.user
+            except UserProfile.DoesNotExist:
+                return None, "Target user not found.", None
+
+            # Check if they are already friends
+            if caller_user.user_profile.is_friends_with(target_user):
+                return (
+                    {
+                        "status": "friends",
+                        "message": "You are already friends with this user.",
+                        "can_send_request": False,
+                        "can_accept_request": False,
+                        "can_cancel_request": False,
+                        "can_decline_request": False,
+                        "can_remove_friend": True,
+                    },
+                    "Already friends",
+                    None,
+                )
+
+            # Check for existing friend request
+            friend_request = (
+                FriendRequest.objects.filter(
+                    Q(sender=caller_user, receiver=target_user)
+                    | Q(sender=target_user, receiver=caller_user)
+                )
+                .order_by("-created_at")
+                .first()
+            )
+
+            if friend_request:
+                if friend_request.status == "pending":
+                    # Check who sent the request
+                    if friend_request.sender == caller_user:
+                        # Caller sent the request
+                        return (
+                            {
+                                "status": "sent_pending",
+                                "message": "You have sent a friend request to this user.",
+                                "can_send_request": False,
+                                "can_accept_request": False,
+                                "can_cancel_request": True,
+                                "can_decline_request": False,
+                                "can_remove_friend": False,
+                                "request_id": str(friend_request.requestId),
+                                "created_at": friend_request.created_at,
+                            },
+                            "Request sent and pending",
+                            None,
+                        )
+                    else:
+                        # Caller received the request
+                        return (
+                            {
+                                "status": "received_pending",
+                                "message": "You have received a friend request from this user.",
+                                "can_send_request": False,
+                                "can_accept_request": True,
+                                "can_cancel_request": False,
+                                "can_decline_request": True,
+                                "can_remove_friend": False,
+                                "request_id": str(friend_request.requestId),
+                                "created_at": friend_request.created_at,
+                            },
+                            "Request received and pending",
+                            None,
+                        )
+                elif friend_request.status == "accepted":
+                    # This shouldn't happen if they're not friends, but handle it
+                    return (
+                        {
+                            "status": "friends",
+                            "message": "You are already friends with this user.",
+                            "can_send_request": False,
+                            "can_accept_request": False,
+                            "can_cancel_request": False,
+                            "can_decline_request": False,
+                            "can_remove_friend": True,
+                        },
+                        "Already friends",
+                        None,
+                    )
+                elif friend_request.status == "canceled":
+                    # Request was canceled, can send new one
+                    return (
+                        {
+                            "status": "canceled",
+                            "message": "Previous friend request was canceled. You can send a new one.",
+                            "can_send_request": True,
+                            "can_accept_request": False,
+                            "can_cancel_request": False,
+                            "can_decline_request": False,
+                            "can_remove_friend": False,
+                        },
+                        "Request was canceled",
+                        None,
+                    )
+                # Note: declined requests are deleted, so they won't appear here
+
+            # No friend request exists
+            return (
+                {
+                    "status": "no_request",
+                    "message": "No friend request exists. You can send one.",
+                    "can_send_request": True,
+                    "can_accept_request": False,
+                    "can_cancel_request": False,
+                    "can_decline_request": False,
+                    "can_remove_friend": False,
+                },
+                "No request exists",
+                None,
+            )
+
+        except CustomUser.DoesNotExist:
+            error_message = f"Caller user not found with ID: {caller_user_id}"
+            print(f"[check_friend_request_status API] {error_message}")
+            return None, error_message, None
+        except Exception as e:
+            error_message = f"Error checking friend request status: {str(e)}"
+            print(f"[check_friend_request_status API] {error_message}")
+            return None, error_message, None
+
+    status_data, success_message, error_message = (
+        await check_friend_request_status_logic(caller_user_id, target_username)
+    )
+
+    if status_data is None:
+        notification_sent = await notify_by_bot(
+            f"**[API: check_friend_request_status API]** \n\n {success_message or error_message} \n\n Platform: {platform} \n\n User ID: {caller_user_id} \n\n Target Username: {target_username}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        if notification_sent is None:
+            print(
+                "[check_friend_request_status API] Could not send notification: BOT_API_KEY not set"
+            )
+        raise HTTPException(status_code=400, detail=success_message or error_message)
+
+    print(f"[check_friend_request_status API] {success_message}")
+    return {"message": success_message, "friend_request_status": status_data}
