@@ -9,6 +9,7 @@ from user_agents import parse as parse_user_agent
 from django.db.models import Q, Prefetch
 from django.db import transaction
 from django.utils import timezone
+import re
 
 
 from apiManager.utilities.notify_by_bot import notify_by_bot
@@ -35,6 +36,10 @@ from .serializers import MyPassSerializer, SearchResult, UserFriends, UserCrewsR
 
 
 router = APIRouter()
+
+
+def is_valid_discord_username(username):
+    return re.match(r"^[^#]{2,32}#[0-9]{4}$", username) is not None
 
 
 @router.get("/user/{username}")
@@ -306,9 +311,13 @@ async def get_crew_details(
             crew_member_records = CrewMember.objects.filter(crew=crew).select_related(
                 "user", "user__user_profile"
             )
-            
-            print(f"[get_crew_details] Found {crew_member_records.count()} crew members")
-            print(f"[get_crew_details] Checking membership for user_id: {caller_user_id}")
+
+            print(
+                f"[get_crew_details] Found {crew_member_records.count()} crew members"
+            )
+            print(
+                f"[get_crew_details] Checking membership for user_id: {caller_user_id}"
+            )
 
             for crew_member in crew_member_records:
                 member_profile = (
@@ -318,13 +327,17 @@ async def get_crew_details(
                 )
 
                 # DEBUG: Log member IDs for comparison
-                print(f"[get_crew_details] Comparing caller_user_id={caller_user_id} with member_user_id={crew_member.user.id}")
+                print(
+                    f"[get_crew_details] Comparing caller_user_id={caller_user_id} with member_user_id={crew_member.user.id}"
+                )
 
                 # Check if the caller is this crew member - ensure both are integers
                 if caller_user_id and int(crew_member.user.id) == int(caller_user_id):
                     user_is_member = True
                     user_is_admin = crew_member.is_admin
-                    print(f"[get_crew_details] User {caller_user_id} found as crew member with admin={crew_member.is_admin}")
+                    print(
+                        f"[get_crew_details] User {caller_user_id} found as crew member with admin={crew_member.is_admin}"
+                    )
 
                 crew_members.append(
                     {
@@ -349,7 +362,9 @@ async def get_crew_details(
                 )
 
             # Final debug log
-            print(f"[get_crew_details] Final membership status: user_is_member={user_is_member}, user_is_admin={user_is_admin}")
+            print(
+                f"[get_crew_details] Final membership status: user_is_member={user_is_member}, user_is_admin={user_is_admin}"
+            )
 
             # Also check if caller should be included but is missing from CrewMember records
             if caller_user_id and not user_is_member:
@@ -357,14 +372,20 @@ async def get_crew_details(
                 direct_membership_check = CrewMember.objects.filter(
                     crew=crew, user_id=caller_user_id
                 ).exists()
-                print(f"[get_crew_details] Direct membership check result: {direct_membership_check}")
-                
+                print(
+                    f"[get_crew_details] Direct membership check result: {direct_membership_check}"
+                )
+
                 if direct_membership_check:
-                    print(f"[get_crew_details] WARNING: Found membership in direct check but missed in iteration!")
+                    print(
+                        f"[get_crew_details] WARNING: Found membership in direct check but missed in iteration!"
+                    )
                     user_is_member = True
                     # Get the admin status
                     try:
-                        member_record = CrewMember.objects.get(crew=crew, user_id=caller_user_id)
+                        member_record = CrewMember.objects.get(
+                            crew=crew, user_id=caller_user_id
+                        )
                         user_is_admin = member_record.is_admin
                     except CrewMember.DoesNotExist:
                         pass
@@ -752,6 +773,13 @@ async def send_friend_request(
     @database_sync_to_async
     def send_friend_request_logic(sender_user_id, receiver_username):
         try:
+            # Validate Discord-style username
+            if not is_valid_discord_username(receiver_username):
+                return (
+                    None,
+                    "Invalid username format. Please use the full Discord-style username (e.g., name#1234).",
+                    None,
+                )
             # Get sender user
             sender_user = CustomUser.objects.get(id=sender_user_id)
 
@@ -759,7 +787,7 @@ async def send_friend_request(
             if receiver_username == sender_user.username:
                 return None, "You cannot send a friend request to yourself.", None
 
-            # Get receiver user profile
+            # Get receiver user profile - use full Discord-style username
             try:
                 receiver_user_profile = UserProfile.objects.select_related("user").get(
                     user__username=receiver_username
@@ -908,6 +936,13 @@ async def cancel_friend_request(
     @database_sync_to_async
     def cancel_friend_request_logic(sender_user_id, receiver_username):
         try:
+            # Validate Discord-style username
+            if not is_valid_discord_username(receiver_username):
+                return (
+                    None,
+                    "Invalid username format. Please use the full Discord-style username (e.g., name#1234).",
+                    None,
+                )
             # Get sender user
             sender_user = CustomUser.objects.get(id=sender_user_id)
 
@@ -915,7 +950,7 @@ async def cancel_friend_request(
             if receiver_username == sender_user.username:
                 return None, "You cannot cancel a friend request to yourself.", None
 
-            # Get receiver user profile
+            # Get receiver user profile - use full Discord-style username
             try:
                 receiver_user_profile = UserProfile.objects.select_related("user").get(
                     user__username=receiver_username
@@ -1024,6 +1059,13 @@ async def accept_friend_request(
     @database_sync_to_async
     def accept_friend_request_logic(receiver_user_id, sender_username):
         try:
+            # Validate Discord-style username
+            if not is_valid_discord_username(sender_username):
+                return (
+                    None,
+                    "Invalid username format. Please use the full Discord-style username (e.g., name#1234).",
+                    None,
+                )
             # Get receiver user (the one accepting the request)
             receiver_user = CustomUser.objects.get(id=receiver_user_id)
 
@@ -1031,7 +1073,7 @@ async def accept_friend_request(
             if sender_username == receiver_user.username:
                 return None, "You cannot accept a friend request from yourself.", None
 
-            # Get sender user profile
+            # Get sender user profile - use full Discord-style username
             try:
                 sender_user_profile = UserProfile.objects.select_related("user").get(
                     user__username=sender_username
@@ -1152,6 +1194,13 @@ async def decline_friend_request(
     @database_sync_to_async
     def decline_friend_request_logic(receiver_user_id, sender_username):
         try:
+            # Validate Discord-style username
+            if not is_valid_discord_username(sender_username):
+                return (
+                    None,
+                    "Invalid username format. Please use the full Discord-style username (e.g., name#1234).",
+                    None,
+                )
             # Get receiver user (the one declining the request)
             receiver_user = CustomUser.objects.get(id=receiver_user_id)
 
@@ -1159,7 +1208,7 @@ async def decline_friend_request(
             if sender_username == receiver_user.username:
                 return None, "You cannot decline a friend request from yourself.", None
 
-            # Get sender user profile
+            # Get sender user profile - use full Discord-style username
             try:
                 sender_user_profile = UserProfile.objects.select_related("user").get(
                     user__username=sender_username
@@ -1271,6 +1320,13 @@ async def remove_friend(
     @database_sync_to_async
     def remove_friend_logic(caller_user_id, friend_username):
         try:
+            # Validate Discord-style username
+            if not is_valid_discord_username(friend_username):
+                return (
+                    None,
+                    "Invalid username format. Please use the full Discord-style username (e.g., name#1234).",
+                    None,
+                )
             # Get caller user
             caller_user = CustomUser.objects.get(id=caller_user_id)
 
@@ -1278,7 +1334,7 @@ async def remove_friend(
             if friend_username == caller_user.username:
                 return None, "You cannot remove yourself as a friend.", None
 
-            # Get friend user profile
+            # Get friend user profile - use full Discord-style username
             try:
                 friend_user_profile = UserProfile.objects.select_related("user").get(
                     user__username=friend_username
