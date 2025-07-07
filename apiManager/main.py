@@ -60,12 +60,6 @@ app.add_middleware(
 setup_otel(app)
 
 
-@app.middleware("http")
-async def enforce_version(request: Request, call_next):
-    # this will run BEFORE any router, and short-circuit old clients with 426
-    return await version_checker(request, call_next)
-
-
 # now mount your routers
 app.include_router(core, prefix="/waveYourCampusAPIFromOAK/core", tags=["Core"])
 app.include_router(
