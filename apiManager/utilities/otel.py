@@ -37,10 +37,7 @@ def setup_otel(app):
         log_provider = LoggerProvider(resource=resource)
         LoggingInstrumentor().instrument(set_logging_format=True)
 
-        # Add ASGI middleware instrumentation
-        app.add_middleware(OpenTelemetryMiddleware)
-
-        # Attach FastAPI instrumentation
+        # Attach FastAPI instrumentation only (safer than middleware)
         FastAPIInstrumentor.instrument_app(app)
 
     except Exception as e:
