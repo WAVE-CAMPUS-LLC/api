@@ -17,18 +17,32 @@ def setup_otel(app):
         attributes={"service.name": "wave-api", "deployment.environment": "production"}
     )
 
-    # Tracing setup
-    provider = TracerProvider(resource=resource)
-    trace.set_tracer_provider(provider)
-    otlp_exporter = OTLPSpanExporter()
-    provider.add_span_processor(BatchSpanProcessor(otlp_exporter))
+    # Tracing setup with error handling
+    try:
+        provider = TracerProvider(resource=resource)
+        trace.set_tracer_provider(provider)
 
-    # Logging setup (simplified without OTLP exporter)
-    log_provider = LoggerProvider(resource=resource)
-    LoggingInstrumentor().instrument(set_logging_format=True)
+        # Only setup OTLP exporter if environment variables are configured
+        otlp_endpoint = os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
+        if otlp_endpoint:
+            otlp_exporter = OTLPSpanExporter(
+                endpoint=otlp_endpoint,
+                headers={
+                    "api-key": os.getenv("NEW_RELIC_API_KEY", ""),
+                },
+            )
+            provider.add_span_processor(BatchSpanProcessor(otlp_exporter))
 
-    # Add ASGI middleware instrumentation
-    app.add_middleware(OpenTelemetryMiddleware)
+        # Logging setup (simplified without OTLP exporter)
+        log_provider = LoggerProvider(resource=resource)
+        LoggingInstrumentor().instrument(set_logging_format=True)
 
-    # Attach FastAPI instrumentation
-    FastAPIInstrumentor.instrument_app(app)
+        # Add ASGI middleware instrumentation
+        app.add_middleware(OpenTelemetryMiddleware)
+
+        # Attach FastAPI instrumentation
+        FastAPIInstrumentor.instrument_app(app)
+
+    except Exception as e:
+        print(f"OpenTelemetry setup failed: {e}")
+        # Continue without OpenTelemetry if setup fails
