@@ -34,8 +34,10 @@ def sync_friendship(user_one_id: str, user_two_id: str):
     MATCH (u1:User {user_id: $user1}), (u2:User {user_id: $user2})
     MERGE (u1)-[:FRIEND]->(u2)
     MERGE (u2)-[:FRIEND]->(u1)
+    WITH u1, u2
     OPTIONAL MATCH (u1)-[r1:REQUESTED]->(u2)
     DELETE r1
+    WITH u1, u2
     OPTIONAL MATCH (u2)-[r2:REQUESTED]->(u1)
     DELETE r2
     """
@@ -58,6 +60,7 @@ def remove_friendship(user_one_id: str, user_two_id: str):
     query = """
         MATCH (u1:User {user_id: $user1})-[r1:FRIEND]->(u2:User {user_id: $user2})
         DELETE r1
+        WITH u1, u2
         MATCH (u2:User {user_id: $user2})-[r2:FRIEND]->(u1:User {user_id: $user1})
         DELETE r2
     """
