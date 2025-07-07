@@ -52,6 +52,8 @@ NEO4J_URI = os.getenv("NEO4J_URI")
 NEO4J_USER = os.getenv("NEO4J_USER")
 NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD")
 
+COLLEGE_OPENAI_API_KEY = os.getenv("COLLEGE_OPENAI_API_KEY")
+
 # SECURITY WARNING: don't run with debug turned on in production!
 ENVIRONMENT = os.getenv("ENVIRONMENT", "production")
 if ENVIRONMENT == "development":

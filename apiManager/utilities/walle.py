@@ -2,8 +2,9 @@ import os
 import json
 import re
 from openai import OpenAI
+from django.conf import settings
 
-client = OpenAI(api_key=os.getenv("COLLEGE_OPENAI_API_KEY"))
+client = OpenAI(api_key=settings.COLLEGE_OPENAI_API_KEY)
 
 
 def call_walle_ai(domain: str) -> dict:

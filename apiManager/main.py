@@ -20,6 +20,7 @@ from apiManager.apps.ambassadorManagementAPI.apiLogic import router as tide_rout
 from apiManager.apps.notificationsManagementAPI.apiLogic import (
     router as notification_router,
 )
+from apiManager.apps.walleManagementAPI.apiLogic import router as walle_router
 from apiManager.apps.coreAPI.version_middleware import VersionCheckMiddleware
 
 
@@ -90,4 +91,7 @@ app.include_router(
     notification_router,
     prefix="/waveYourCampusAPIFromOAK/notifications",
     tags=["Notifications"],
+)
+app.include_router(
+    walle_router, prefix="/waveYourCampusAPIFromOAK/walle", tags=["WALLE"]
 )
