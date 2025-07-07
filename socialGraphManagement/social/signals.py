@@ -53,8 +53,9 @@ def handle_friend_request_status(sender, instance, **kwargs):
         )
     elif instance.status in ["declined", "canceled"]:
         remove_friend_request(instance.sender.user_id, instance.receiver.user_id)
+        remove_friendship(instance.sender.user_id, instance.receiver.user_id)
         logger.info(
-            "Removing REQUESTED from %s to %s",
+            "Removing REQUESTED and FRIEND relationships from %s to %s",
             instance.sender.user_id,
             instance.receiver.user_id,
         )
