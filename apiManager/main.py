@@ -31,7 +31,7 @@ from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
 
-from apiManager.utilities.otel import setup_otel, setup_logging, setup_metrics
+from apiManager.utilities.otel import setup_otel
 
 
 app = FastAPI(title="WAVE. API", version="1.0.0")
@@ -43,9 +43,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-setup_otel(app)
-setup_logging()
-setup_metrics(app)
 
 version_checker = VersionCheckMiddleware(
     minimum_ios_version="1.0.4",
@@ -58,6 +55,8 @@ version_checker = VersionCheckMiddleware(
         "/openapi.json",
     ],
 )
+
+setup_otel(app)
 
 
 @app.middleware("http")

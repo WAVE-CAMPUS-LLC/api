@@ -22,10 +22,15 @@ from apiManager.utilities.device_info import get_device_info
 from authenticationApp.models import CustomUser
 from uuid import UUID
 from .version_middleware import VersionCheckMiddleware
-from opentelemetry.trace import get_current_span
+from opentelemetry.trace import get_tracer
+from opentelemetry import trace
+import logging
 
 
 router = APIRouter()
+
+logger = logging.getLogger("wave.api")
+tracer = trace.get_tracer(__name__)
 
 
 @router.get("/ping")
@@ -598,51 +603,98 @@ async def toggleFavorite(
     """
     API endpoint toggling a favorite on an event
     """
-    print(
-        f"[toggleFavorite API] Function called with eventId: {eventId}, user_id: {user_id}"
-    )
 
-    user_agent_str = request.headers.get("user-agent", "")
-    device_data = get_device_info(user_agent_str)
-    device_info = device_data["device_info"]
+    with tracer.start_as_current_span("toggleFavorite-handler") as span:
+        span.set_attribute("event.id", eventId)
+        span.set_attribute("user.id", user_id)
+        span.set_attribute("platform", platform or "unknown")
 
-    @database_sync_to_async
-    def toggle_fav_event(eventId, user_id):
-        try:
-            user = CustomUser.objects.get(id=user_id)
-            event = Event.objects.get(eventId=eventId)
-            user_profile = UserProfile.objects.get(user=user)
-            if event in user_profile.favorite_events.all():
-                user_profile.favorite_events.remove(event)
-                print(
-                    f"[toggleFavorite API] Removed event {event.title} from favorites for user {user.username}"
-                )
-            else:
-                user_profile.favorite_events.add(event)
-                print(
-                    f"[toggleFavorite API] Added event {event.title} to favorites for user {user.username}"
-                )
-            user_profile.save()
-            return True
-        except (
-            CustomUser.DoesNotExist or Event.DoesNotExist or UserProfile.DoesNotExist
-        ):
-            print(
-                f"[toggleFavorite API] Error: Could not find user, event, or user profile"
-            )
-            return False
-
-    success = await toggle_fav_event(eventId, user_id)
-    if not success:
-        await notify_by_bot(
-            f"**[API: toggleFavorite]** \n\n Could not favorite event: eventId={eventId}, user_id={user_id} \n\n Platform: {platform}",
-            platform or "Unknown",
-            "ERROR",
-            device_info,
+        logger.info(
+            "Toggling favorite status for event",
+            extra={"eventId": eventId, "user_id": user_id, "platform": platform},
         )
-        raise HTTPException(status_code=404, detail="Could not favorite event")
 
-    return {"message": "Profile updated successfully"}
+        user_agent_str = request.headers.get("user-agent", "")
+        device_data = get_device_info(user_agent_str)
+        device_info = device_data["device_info"]
+
+        @database_sync_to_async
+        def toggle_fav_event(eventId, user_id):
+            with tracer.start_as_current_span("toggleFavorite-db-operation"):
+                try:
+                    user = CustomUser.objects.get(id=user_id)
+                    event = Event.objects.get(eventId=eventId)
+                    user_profile = UserProfile.objects.get(user=user)
+
+                    if event in user_profile.favorite_events.all():
+                        user_profile.favorite_events.remove(event)
+                        logger.info(
+                            f"Removed event {event.title} from favorites",
+                            extra={"user": user.username, "eventId": eventId},
+                        )
+                    else:
+                        user_profile.favorite_events.add(event)
+                        logger.info(
+                            f"Added event {event.title} to favorites",
+                            extra={"user": user.username, "eventId": eventId},
+                        )
+
+                    user_profile.save()
+                    return True
+
+                except CustomUser.DoesNotExist:
+                    logger.error(
+                        "User does not exist",
+                        extra={"user_id": user_id},
+                    )
+                except Event.DoesNotExist:
+                    logger.error(
+                        "Event does not exist",
+                        extra={"eventId": eventId},
+                    )
+                except UserProfile.DoesNotExist:
+                    logger.error(
+                        "UserProfile does not exist",
+                        extra={"user_id": user_id},
+                    )
+                except Exception as e:
+                    logger.exception("Unexpected error in toggle_fav_event")
+                return False
+
+        try:
+            success = await toggle_fav_event(eventId, user_id)
+            if not success:
+                logger.warning(
+                    "Failed to favorite/unfavorite event",
+                    extra={
+                        "eventId": eventId,
+                        "user_id": user_id,
+                        "platform": platform,
+                    },
+                )
+                await notify_by_bot(
+                    f"**[API: toggleFavorite]** \n\n Could not favorite event: eventId={eventId}, user_id={user_id} \n\n Platform: {platform}",
+                    platform or "Unknown",
+                    "ERROR",
+                    device_info,
+                )
+                raise HTTPException(status_code=404, detail="Could not favorite event")
+
+            logger.info(
+                "Successfully toggled favorite status",
+                extra={"eventId": eventId, "user_id": user_id},
+            )
+            return {"message": "Profile updated successfully"}
+
+        except Exception as e:
+            logger.exception("Unhandled exception in toggleFavorite")
+            await notify_by_bot(
+                f"**[API: toggleFavorite]** \n\n Unhandled exception: eventId={eventId}, user_id={user_id}, error={str(e)} \n\n Platform: {platform}",
+                platform or "Unknown",
+                "ERROR",
+                device_info,
+            )
+            raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/event/{eventId}/isFavorite")
