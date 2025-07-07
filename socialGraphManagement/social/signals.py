@@ -46,8 +46,8 @@ def handle_friend_request_creation(sender, instance, created, **kwargs):
         )
         sync_friendship(instance.sender.user_id, instance.receiver.user_id)
         send_notification(
-            instance.receiver.user_id,
-            instance.sender.user_id,
+            str(instance.receiver.user_id),
+            str(instance.sender.user_id),
             "FRIEND_REQUEST",
             f"You have a new friend request from {instance.sender.username}",
         )
@@ -78,8 +78,8 @@ def handle_friends_changed(sender, instance, action, pk_set, **kwargs):
                         notification_type="friend_connected",
                         content=f"{user_profile.user.username} became friends with {new_friend_profile.user.username}",
                         metadata={
-                            "friend_1_id": user_profile.user.user_id,
-                            "friend_2_id": new_friend_profile.user.user_id,
+                            "friend_1_id": str(user_profile.user.user_id),
+                            "friend_2_id": str(new_friend_profile.user.user_id),
                         },
                     )
             except UserProfile.DoesNotExist:
