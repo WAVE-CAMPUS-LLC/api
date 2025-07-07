@@ -75,7 +75,7 @@ def handle_friends_changed(sender, instance, action, pk_set, **kwargs):
                     send_notification(
                         recipient_id=mutual.user.user_id,
                         actor_id=user_profile.user.user_id,
-                        type="friend_connected",
+                        notification_type="friend_connected",
                         content=f"{user_profile.user.username} became friends with {new_friend_profile.user.username}",
                         metadata={
                             "friend_1_id": user_profile.user.user_id,
