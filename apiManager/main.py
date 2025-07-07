@@ -44,19 +44,6 @@ app.add_middleware(
 )
 
 
-app.add_middleware(
-    VersionCheckMiddleware,
-    minimum_ios_version="1.0.4",
-    minimum_android_version="1.0.4",
-    excluded_paths=[
-        "/waveYourCampusAPIFromOAK/auth",
-        "/waveYourCampusAPIFromOAK/core/ping",
-        "/docs",
-        "/redoc",
-        "/openapi.json",
-    ],
-)
-
 setup_otel(app)
 
 
