@@ -44,7 +44,8 @@ app.add_middleware(
 )
 
 
-version_checker = VersionCheckMiddleware(
+app.add_middleware(
+    VersionCheckMiddleware,
     minimum_ios_version="1.0.4",
     minimum_android_version="1.0.4",
     excluded_paths=[
