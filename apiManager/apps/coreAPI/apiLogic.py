@@ -414,7 +414,7 @@ async def get_event_guests(
                     guest_info = {
                         "id": str(guest.id),
                         "user_id": str(guest.user_id),
-                        "first_name": guest.first_name,
+                        "username": guest.username,
                         "profile_photo": (
                             user_profile.profile_photo.url
                             if user_profile.profile_photo
