@@ -12,7 +12,7 @@ from django.utils import timezone
 import re
 from django.conf import settings
 
-from walle import config, suggest
+from walle import config, suggest_friends_ai, suggest_friends_graph
 
 
 from apiManager.utilities.notify_by_bot import notify_by_bot
@@ -44,10 +44,9 @@ async def suggest_friends(
 
     try:
         # Use walle.suggest.suggest_friends_graph and walle.core.suggest_friends_ai
-        from walle.core import suggest_friends_ai, suggest_friends_graph
 
         graph_suggestions = suggest_friends_graph(user_id, limit)
-        ai_suggestions = suggest_friends_ai(user_id)
+        ai_suggestions = suggest_friends_ai(user_id, limit)
 
         return {
             "user_id": user_id,
