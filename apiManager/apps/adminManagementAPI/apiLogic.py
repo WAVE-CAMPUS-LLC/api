@@ -2885,7 +2885,7 @@ async def get_member_preferences(
                         "interests": user_preferences.interests,
                         "vibe": user_preferences.vibe,
                         "people_to_meet": user_preferences.people_to_meet,
-                        "preffered_times": user_preferences.preffered_times,
+                        "preferred_times": user_preferences.preferred_times,
                     },
                     "college_info": {
                         "college": (
@@ -2928,7 +2928,7 @@ async def get_member_preferences(
                         "interests": None,
                         "vibe": None,
                         "people_to_meet": None,
-                        "preffered_times": None,
+                        "preferred_times": None,
                     },
                     "college_info": {
                         "college": None,

@@ -1148,7 +1148,7 @@ async def get_user_preferences(
                         "interests": user_preferences.interests if user_preferences.interests else None,
                         "vibe": user_preferences.vibe if user_preferences.vibe else None,
                         "people_to_meet": user_preferences.people_to_meet if user_preferences.people_to_meet else None,
-                        "preffered_times": user_preferences.preffered_times if user_preferences.preffered_times else None,
+                        "preferred_times": user_preferences.preferred_times if user_preferences.preferred_times else None,
                         "preference_created_at": user_preferences.preference_created_at.isoformat() if user_preferences.preference_created_at else None,
                     }
 
@@ -1170,7 +1170,7 @@ async def get_user_preferences(
                         "interests": None,
                         "vibe": None,
                         "people_to_meet": None,
-                        "preffered_times": None,
+                        "preferred_times": None,
                         "preference_created_at": None,
                     }
 

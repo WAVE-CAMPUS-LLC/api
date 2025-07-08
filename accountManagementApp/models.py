@@ -260,7 +260,7 @@ class UserPreferences(models.Model):
         ("athletic", "Athletic & Active"),
     ]
 
-    PREFFERED_TIMES_CHOICES = [
+    PREFERRED_TIMES_CHOICES = [
         ("morning", "Early Bird"),
         ("afternoon", "Midday"),
         ("night", "Night-Owl"),

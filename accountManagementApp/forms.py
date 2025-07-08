@@ -56,14 +56,14 @@ class UpdatePersonalInfo(forms.ModelForm):
 class UserPreferencesForm(forms.ModelForm):
     class Meta:
         model = UserPreferences
-        fields = ["interests", "vibe", "people_to_meet", "preffered_times"]
+        fields = ["interests", "vibe", "people_to_meet", "preferred_times"]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # Ensure choice fields are properly handled for API serialization
         if "vibe" in self.fields:
             self.fields["vibe"].choices = UserPreferences.VIBE_CHOICES
-        if "preffered_times" in self.fields:
-            self.fields["preffered_times"].choices = (
-                UserPreferences.PREFFERED_TIMES_CHOICES
+        if "preferred_times" in self.fields:
+            self.fields["preferred_times"].choices = (
+                UserPreferences.PREFERRED_TIMES_CHOICES
             )

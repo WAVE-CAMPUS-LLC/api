@@ -2262,17 +2262,18 @@ async def set_user_preferences(
                         form_data.get("people_to_meet")
                     )
 
-                if "preffered_times" in form_data:
+                # Handle preferred_times field
+                if "preferred_times" in form_data:
                     # Handle JSONField mismatch - database has JSONField but model shows CharField
-                    preferred_time_value = form_data.get("preffered_times")
+                    preferred_time_value = form_data.get("preferred_times")
                     if preferred_time_value and str(preferred_time_value).strip():
                         clean_value = str(preferred_time_value).strip()
                         # Force JSONField to properly serialize this as JSON
                         import json
 
-                        user_preferences.preffered_times = json.dumps(clean_value)
+                        user_preferences.preferred_times = json.dumps(clean_value)
                     else:
-                        user_preferences.preffered_times = json.dumps("")
+                        user_preferences.preferred_times = json.dumps("")
 
                 user_preferences.preferences_completed = True
                 user_preferences.save()
@@ -2367,7 +2368,7 @@ async def get_user_preferences(
                     "interests": user_preferences.interests or [],
                     "vibe": user_preferences.vibe or "",
                     "people_to_meet": user_preferences.people_to_meet or [],
-                    "preffered_times": user_preferences.preffered_times or "",
+                    "preferred_times": user_preferences.preferred_times or "",
                     "preferences_completed": user_preferences.preferences_completed,
                 }
 

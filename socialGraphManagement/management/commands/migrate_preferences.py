@@ -32,7 +32,7 @@ class Command(BaseCommand):
                     user_id = str(user.user_id)
                     vibe = pref.vibe or ""
                     interests = pref.interests or []
-                    times = pref.preffered_times or []
+                    times = pref.preferred_times or []
                     people = pref.people_to_meet or []
 
                     session.run(
