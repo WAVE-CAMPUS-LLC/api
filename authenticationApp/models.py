@@ -61,6 +61,12 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     is_superadmin = models.BooleanField(default=False)
     is_tide_ambassador = models.BooleanField(default=False)
 
+    show_on_guestlist = models.BooleanField(default=True)
+    show_others_your_name = models.BooleanField(default=True)
+    show_yourself_as_a_college_member = models.BooleanField(default=True)
+    allow_notifications_from_email = models.BooleanField(default=True)
+    allow_notifications_from_mobile = models.BooleanField(default=True)
+
     # The generation of a random user id for every user that signs up.
     user_id = models.UUIDField(
         _("User ID"), default=uuid.uuid4, editable=False, unique=True
