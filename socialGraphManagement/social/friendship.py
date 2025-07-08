@@ -91,3 +91,16 @@ def remove_friend_request(sender_id: str, receiver_id: str):
     graph_client = GraphClient()
     graph_client.run_query(query, parameters)
     graph_client.close()
+
+
+def remove_user_from_graph(user_id: str):
+    """
+    Completely remove a user and all their relationships from the graph.
+    """
+    query = """
+    MATCH (u:User {user_id: $user_id})
+    DETACH DELETE u
+    """
+    parameters = {"user_id": str(user_id)}
+    graph_client = GraphClient()
+    graph_client.run_query(query, parameters)

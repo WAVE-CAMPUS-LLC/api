@@ -1,7 +1,8 @@
-from django.db.models.signals import post_save, m2m_changed
+from django.db.models.signals import post_save, m2m_changed, post_delete
 from django.dispatch import receiver
 from socialApp.models import Crew, CrewMember, FriendRequest
 from accountManagementApp.models import UserProfile
+from authenticationApp.models import CustomUser
 
 from socialGraphManagement.social.crew import sync_crew_membership
 from socialGraphManagement.social.friendship import (
@@ -9,6 +10,7 @@ from socialGraphManagement.social.friendship import (
     remove_friendship,
     create_friend_request,
     remove_friend_request,
+    remove_user_from_graph,
 )
 
 from apiManager.utilities.notifications.send_notification import send_notification
@@ -102,3 +104,8 @@ def handle_friends_changed(sender, instance, action, pk_set, **kwargs):
                     remove_friendship(instance.user.user_id, friend.user.user_id)
             except UserProfile.DoesNotExist:
                 continue
+
+
+@receiver(post_delete, sender=CustomUser)
+def remove_user_from_graph_signal(sender, instance, **kwargs):
+    remove_user_from_graph(str(instance.user_id))
