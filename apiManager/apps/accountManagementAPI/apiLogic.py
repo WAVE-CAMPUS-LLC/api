@@ -2264,6 +2264,7 @@ async def set_user_preferences(
 
                 # Handle preferred_times field
                 if "preferred_times" in form_data:
+                    print(f"[set_user_preferences_async] Preferred times: {form_data.get('preferred_times')}")
                     # Handle JSONField mismatch - database has JSONField but model shows CharField
                     preferred_time_value = form_data.get("preferred_times")
                     if preferred_time_value and str(preferred_time_value).strip():
@@ -2271,9 +2272,11 @@ async def set_user_preferences(
                         # Force JSONField to properly serialize this as JSON
                         import json
 
+                        print(f"[set_user_preferences_async] Clean value: {clean_value}")
                         user_preferences.preferred_times = json.dumps(clean_value)
                     else:
                         user_preferences.preferred_times = json.dumps("")
+                        print(f"[set_user_preferences_async] Preferred times set to empty string: {user_preferences.preferred_times}")
 
                 user_preferences.preferences_completed = True
                 user_preferences.save()
