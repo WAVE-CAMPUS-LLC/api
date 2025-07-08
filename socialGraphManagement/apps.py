@@ -16,6 +16,7 @@ class SocialgraphmanagementConfig(AppConfig):
 
             call_command("migrate_friends_to_graph")
             call_command("migrate_preferences")
+            call_command("migrate_colleges")
 
         except Exception as e:
             logger.error("Error migrating friends to graph: %s", e)
