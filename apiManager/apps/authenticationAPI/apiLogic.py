@@ -1081,3 +1081,129 @@ async def check_user_preferences_completed(
             content={"error": f"An unexpected error occurred: {str(e)}"},
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
+
+
+@router.get("/get-user-preferences")
+async def get_user_preferences(
+    request: Request, platform: Optional[str] = None
+):
+    print("[get_user_preferences] Function called")
+
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    try:
+        # Get user_id from authorization header using the dependency
+        from apiManager.dependencies import get_current_user
+
+        authorization = request.headers.get("authorization")
+
+        try:
+            user_id = get_current_user(authorization)
+            if user_id is None:
+                return JSONResponse(
+                    content={"error": "User not authenticated"},
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                )
+        except HTTPException as e:
+            return JSONResponse(
+                content={"error": "User not authenticated"},
+                status_code=e.status_code,
+            )
+
+        # Get user preferences from the database
+        from accountManagementApp.models import UserPreferences
+
+        @database_sync_to_async
+        def get_user_preferences_data(user_id):
+            try:
+                # First get the user object
+                user = CustomUser.objects.get(id=user_id)
+
+                try:
+                    # Check if UserPreferences instance exists for the user
+                    user_preferences = UserPreferences.objects.get(user=user)
+
+                    print(
+                        f"[get_user_preferences] UserPreferences found for user {user_id}"
+                    )
+
+                    # Get college information
+                    college_info = None
+                    if user_preferences.college:
+                        college_info = {
+                            "collegeId": str(user_preferences.college.collegeId),
+                            "name": user_preferences.college.name,
+                        }
+
+                    # Build preferences data with null for missing fields
+                    preferences_data = {
+                        "user_id": str(user.user_id),
+                        "first_name": user.first_name,
+                        "last_name": user.last_name,
+                        "email": user.email,
+                        "preferences_completed": user_preferences.preferences_completed,
+                        "college": college_info,
+                        "interests": user_preferences.interests if user_preferences.interests else None,
+                        "vibe": user_preferences.vibe if user_preferences.vibe else None,
+                        "people_to_meet": user_preferences.people_to_meet if user_preferences.people_to_meet else None,
+                        "preffered_times": user_preferences.preffered_times if user_preferences.preffered_times else None,
+                        "preference_created_at": user_preferences.preference_created_at.isoformat() if user_preferences.preference_created_at else None,
+                    }
+
+                    return preferences_data
+
+                except UserPreferences.DoesNotExist:
+                    # If UserPreferences doesn't exist, return default structure with null values
+                    print(
+                        f"[get_user_preferences] No UserPreferences found for user {user_id}, returning default structure"
+                    )
+
+                    preferences_data = {
+                        "user_id": str(user.user_id),
+                        "first_name": user.first_name,
+                        "last_name": user.last_name,
+                        "email": user.email,
+                        "preferences_completed": False,
+                        "college": None,
+                        "interests": None,
+                        "vibe": None,
+                        "people_to_meet": None,
+                        "preffered_times": None,
+                        "preference_created_at": None,
+                    }
+
+                    return preferences_data
+
+            except CustomUser.DoesNotExist:
+                print(f"[get_user_preferences] User {user_id} not found")
+                return None
+
+        # Get the user preferences data
+        preferences_data = await get_user_preferences_data(user_id)
+
+        if preferences_data is None:
+            return JSONResponse(
+                content={"error": "User not found"},
+                status_code=status.HTTP_404_NOT_FOUND,
+            )
+
+        # Return the preferences data
+        return JSONResponse(
+            content=preferences_data, status_code=status.HTTP_200_OK
+        )
+
+    except Exception as e:
+        traceback_str = traceback.format_exc()
+        print(f"Error in get_user_preferences: {str(e)}\n{traceback_str}")
+        await notify_by_bot(
+            f"**[API: get_user_preferences]** \n\n Unexpected error: {str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        return JSONResponse(
+            content={"error": f"An unexpected error occurred: {str(e)}"},
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )

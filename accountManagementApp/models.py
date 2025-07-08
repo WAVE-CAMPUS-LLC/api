@@ -315,7 +315,7 @@ class UserPreferences(models.Model):
         help_text="E.g. 'Creators, Dancers, Entrepreneurs, etc.'",
     )
 
-    preffered_times = models.JSONField(
+    preferred_times = models.JSONField(
         default=list,
         blank=True,
         help_text="E.g. 'Night-Owl, Early Bird, Midday, etc.'",
@@ -325,12 +325,12 @@ class UserPreferences(models.Model):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        if not self.preffered_times:
-            self.preffered_times = json.dumps([])
+        if not self.preferred_times:
+            self.preferred_times = json.dumps([])
 
     def save(self, *args, **kwargs):
-        if not self.preffered_times:
-            self.preffered_times = json.dumps([])
+        if not self.preferred_times:
+            self.preferred_times = json.dumps([])
         super().save(*args, **kwargs)
 
     class Meta:
