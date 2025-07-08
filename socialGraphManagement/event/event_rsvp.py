@@ -1,15 +1,16 @@
 from socialGraphManagement.neo4j_client import GraphClient
 
 
-def sync_event_rsvp(user_id, event_id):
+def sync_event_rsvp(user_id: str, event_id: str, event_title: str = ""):
     query = """
-        MERGE (u:User {id: $user})  
-        MERGE (e:Event {id: $event})
+        MERGE (u:User {user_id: $user_id})  
+        MERGE (e:Event {eventId: $event_id, title: $event_title})
         MERGE (u)-[:RSVP]->(e)
     """
     parameters = {
-        "user": str(user_id),
-        "event": str(event_id),
+        "user_id": str(user_id),
+        "event_id": str(event_id),
+        "event_title": event_title,
     }
     graph_client = GraphClient()
     graph_client.run_query(query, parameters)
