@@ -113,7 +113,7 @@ def sync_preferences_to_graph(sender, instance, **kwargs):
         user_id=instance.user.user_id,
         vibe=instance.vibe or "",
         interests=instance.interests or [],
-        times=instance.times or [],
+        times=instance.preferred_times or [],
         people_to_meet=instance.people_to_meet or [],
     )
 
