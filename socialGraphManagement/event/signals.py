@@ -107,7 +107,8 @@ def handle_event_favorited(sender, instance, action, pk_set, **kwargs):
         # Event was favorited
         for event_id in pk_set:
             try:
-                event = Event.objects.get(id=event_id)
+                # The pk_set contains the actual eventId values (UUIDs)
+                event = Event.objects.get(eventId=event_id)
                 logger.info(
                     "Syncing event favorited for user %s and event %s",
                     instance.user.user_id,
@@ -119,12 +120,17 @@ def handle_event_favorited(sender, instance, action, pk_set, **kwargs):
                     event_title=event.title,
                 )
             except Event.DoesNotExist:
+                logger.warning(
+                    "Event with eventId %s not found during favorite sync",
+                    event_id,
+                )
                 continue
     elif action == "post_remove":
         # Event was unfavorited
         for event_id in pk_set:
             try:
-                event = Event.objects.get(id=event_id)
+                # The pk_set contains the actual eventId values (UUIDs)
+                event = Event.objects.get(eventId=event_id)
                 logger.info(
                     "Removing event favorited for user %s and event %s",
                     instance.user.user_id,
@@ -135,4 +141,8 @@ def handle_event_favorited(sender, instance, action, pk_set, **kwargs):
                     event_id=str(event.eventId),
                 )
             except Event.DoesNotExist:
+                logger.warning(
+                    "Event with eventId %s not found during favorite removal",
+                    event_id,
+                )
                 continue
