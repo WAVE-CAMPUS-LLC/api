@@ -183,6 +183,41 @@ async def suggest_friends_personalized(
         user = await database_sync_to_async(CustomUser.objects.get)(id=current_user_id)
         user_name = user.username or str(user.user_id)
 
+        # Get friend recommendations with user details
+        from socialGraphManagement.recommendations.social.friend import (
+            get_friend_recommendations,
+        )
+
+        recommendations = get_friend_recommendations(str(user.user_id), limit)
+
+        # Get detailed user profiles for recommendations
+        recommended_users = []
+        for rec in recommendations:
+            try:
+                recommended_user = await database_sync_to_async(CustomUser.objects.get)(
+                    user_id=rec["user_id"]
+                )
+                user_profile = await database_sync_to_async(
+                    lambda: recommended_user.user_profile
+                )()
+
+                recommended_users.append(
+                    {
+                        "user_id": str(recommended_user.user_id),
+                        "username": recommended_user.username,
+                        "first_name": recommended_user.first_name,
+                        "last_name": recommended_user.last_name,
+                        "profile_photo": (
+                            user_profile.profile_photo.url
+                            if user_profile and user_profile.profile_photo
+                            else None
+                        ),
+                        "score": rec["score"],
+                    }
+                )
+            except CustomUser.DoesNotExist:  # type: ignore[attr-defined]
+                continue
+
         # Generate personalized friend suggestion message
         personalized_message = suggest_friends_for_user(
             str(user.user_id), user_name, limit
@@ -192,6 +227,7 @@ async def suggest_friends_personalized(
             "user_id": str(user.user_id),
             "user_name": user_name,
             "personalized_message": personalized_message,
+            "recommended_users": recommended_users,
             "limit": limit,
             "platform": platform,
         }
