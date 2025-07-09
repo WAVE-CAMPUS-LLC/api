@@ -17,6 +17,7 @@ from walle import config, suggest_friends_ai, suggest_friends_graph
 
 from authenticationApp.models import CustomUser
 from accountManagementApp.models import UserProfile
+from socialGraphManagement.recommendations.social.friend import suggest_friends_for_user
 
 from apiManager.utilities.notify_by_bot import notify_by_bot
 from apiManager.utilities.device_info import get_device_info
@@ -158,4 +159,57 @@ async def suggest_friends(
         )
         raise HTTPException(
             status_code=500, detail=f"Error suggesting friends: {str(e)}"
+        )
+
+
+@router.get("/suggest/friends/personalized")
+async def suggest_friends_personalized(
+    request: Request,
+    user_id: str = Query(..., description="User ID to suggest friends for"),
+    limit: int = Query(5, description="Maximum number of suggestions"),
+    platform: Optional[str] = None,
+):
+    """
+    Get personalized friend suggestions with AI-generated messages.
+    Returns a personalized message suggesting friends for the user.
+    """
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    try:
+        # Get user details for personalization
+        user = await database_sync_to_async(CustomUser.objects.get)(user_id=user_id)
+        user_name = user.username or str(user.user_id)
+
+        # Generate personalized friend suggestion message
+        personalized_message = suggest_friends_for_user(
+            str(user.user_id), user_name, limit
+        )
+
+        return {
+            "user_id": user_id,
+            "user_name": user_name,
+            "personalized_message": personalized_message,
+            "limit": limit,
+            "platform": platform,
+        }
+    except CustomUser.DoesNotExist:  # type: ignore[attr-defined]
+        await notify_by_bot(
+            f"**[API: suggest_friends_personalized]** \n\n User not found: {user_id} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        raise HTTPException(status_code=404, detail=f"User with ID {user_id} not found")
+    except Exception as e:
+        await notify_by_bot(
+            f"**[API: suggest_friends_personalized]** \n\n Error: {str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error generating personalized friend suggestions: {str(e)}",
         )
