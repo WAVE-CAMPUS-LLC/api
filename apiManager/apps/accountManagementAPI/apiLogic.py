@@ -2513,3 +2513,239 @@ async def check_user_college(
             )
             raise HTTPException(status_code=500, detail="Internal server error")
         raise e
+
+
+@router.get("/privacy-settings")
+async def get_privacy_settings(
+    request: Request,
+    user_id: int = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
+    """
+    API endpoint for retrieving user privacy settings.
+    Returns privacy settings from the CustomUser model.
+    """
+    print(f"[get_privacy_settings] API called with user_id: {user_id}")
+
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    @database_sync_to_async
+    def get_privacy_settings_async(user_id):
+        try:
+            print(
+                f"[get_privacy_settings_async] Retrieving privacy settings for user_id: {user_id}"
+            )
+            user = CustomUser.objects.get(id=user_id)
+            print(f"[get_privacy_settings_async] User found: {user.username}")
+
+            # Build privacy settings data
+            privacy_settings = {
+                "user_id": str(user.user_id),
+                "show_on_guestlist": user.show_on_guestlist,
+                "show_others_your_name": user.show_others_your_name,
+                "show_yourself_as_a_college_member": user.show_yourself_as_a_college_member,
+                "allow_notifications_from_email": user.allow_notifications_from_email,
+                "allow_notifications_from_mobile": user.allow_notifications_from_mobile,
+            }
+
+            print(f"[get_privacy_settings_async] Privacy settings data prepared successfully")
+            return privacy_settings
+
+        except CustomUser.DoesNotExist:
+            print(
+                f"[get_privacy_settings_async] Error: User with id {user_id} does not exist"
+            )
+            return None
+        except Exception as e:
+            error_trace = traceback.format_exc()
+            print(
+                f"[get_privacy_settings_async] Unexpected error retrieving privacy settings for user_id {user_id}: {str(e)}\n{error_trace}"
+            )
+            return None
+
+    try:
+        privacy_settings = await get_privacy_settings_async(user_id)
+        if privacy_settings is None:
+            await notify_by_bot(
+                f"**[API: get_privacy_settings]** \n\n User not found: user_id={user_id} \n\n Platform: {platform}",
+                platform or "Unknown",
+                "ERROR",
+                device_info,
+            )
+            raise HTTPException(status_code=404, detail="User not found")
+
+        print(f"[get_privacy_settings] Returning privacy settings data: {privacy_settings}")
+        return privacy_settings
+    except Exception as e:
+        if not isinstance(e, HTTPException):
+            error_trace = traceback.format_exc()
+            print(f"[get_privacy_settings] Unhandled exception: {str(e)}\n{error_trace}")
+            await notify_by_bot(
+                f"**[API: get_privacy_settings]** \n\n Unhandled exception: user_id={user_id}, error={str(e)} \n\n Platform: {platform}",
+                platform or "Unknown",
+                "ERROR",
+                device_info,
+            )
+            raise HTTPException(status_code=500, detail="Internal server error")
+        raise e
+
+
+@router.post("/privacy-settings")
+async def set_privacy_settings(
+    request: Request,
+    user_id: int = Depends(get_current_user),
+    show_on_guestlist: Optional[bool] = Form(None),
+    show_others_your_name: Optional[bool] = Form(None),
+    show_yourself_as_a_college_member: Optional[bool] = Form(None),
+    allow_notifications_from_email: Optional[bool] = Form(None),
+    allow_notifications_from_mobile: Optional[bool] = Form(None),
+    platform: Optional[str] = None,
+):
+    """
+    API endpoint for updating user privacy settings.
+    Updates privacy settings in the CustomUser model.
+    """
+    print(f"[set_privacy_settings] API called with user_id: {user_id}")
+
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    @database_sync_to_async
+    def set_privacy_settings_async(user_id, settings):
+        try:
+            print(
+                f"[set_privacy_settings_async] Processing privacy settings for user_id: {user_id}"
+            )
+            user = CustomUser.objects.get(id=user_id)
+            print(f"[set_privacy_settings_async] User found: {user.username}")
+
+            # Track what was updated for logging
+            updated_fields = []
+
+            # Update privacy settings only if they are provided (not None)
+            if settings.get("show_on_guestlist") is not None:
+                user.show_on_guestlist = settings["show_on_guestlist"]
+                updated_fields.append(f"show_on_guestlist: {settings['show_on_guestlist']}")
+
+            if settings.get("show_others_your_name") is not None:
+                user.show_others_your_name = settings["show_others_your_name"]
+                updated_fields.append(f"show_others_your_name: {settings['show_others_your_name']}")
+
+            if settings.get("show_yourself_as_a_college_member") is not None:
+                user.show_yourself_as_a_college_member = settings["show_yourself_as_a_college_member"]
+                updated_fields.append(f"show_yourself_as_a_college_member: {settings['show_yourself_as_a_college_member']}")
+
+            if settings.get("allow_notifications_from_email") is not None:
+                user.allow_notifications_from_email = settings["allow_notifications_from_email"]
+                updated_fields.append(f"allow_notifications_from_email: {settings['allow_notifications_from_email']}")
+
+            if settings.get("allow_notifications_from_mobile") is not None:
+                user.allow_notifications_from_mobile = settings["allow_notifications_from_mobile"]
+                updated_fields.append(f"allow_notifications_from_mobile: {settings['allow_notifications_from_mobile']}")
+
+            # Only save if there were actual changes
+            if updated_fields:
+                user.save()
+                print(f"[set_privacy_settings_async] Updated fields: {', '.join(updated_fields)}")
+                
+                # Return updated privacy settings
+                updated_privacy_settings = {
+                    "user_id": str(user.user_id),
+                    "show_on_guestlist": user.show_on_guestlist,
+                    "show_others_your_name": user.show_others_your_name,
+                    "show_yourself_as_a_college_member": user.show_yourself_as_a_college_member,
+                    "allow_notifications_from_email": user.allow_notifications_from_email,
+                    "allow_notifications_from_mobile": user.allow_notifications_from_mobile,
+                }
+
+                print(f"[set_privacy_settings_async] Privacy settings updated successfully")
+                return {
+                    "success": True,
+                    "message": "Privacy settings updated successfully",
+                    "privacy_settings": updated_privacy_settings,
+                }
+            else:
+                print(f"[set_privacy_settings_async] No changes provided")
+                return {
+                    "success": False,
+                    "error": "No privacy settings provided for update",
+                }
+
+        except CustomUser.DoesNotExist:
+            print(
+                f"[set_privacy_settings_async] Error: User with id {user_id} does not exist"
+            )
+            return {"success": False, "error": "User not found"}
+        except Exception as e:
+            error_trace = traceback.format_exc()
+            print(
+                f"[set_privacy_settings_async] Unexpected error updating privacy settings for user_id {user_id}: {str(e)}\n{error_trace}"
+            )
+            return {"success": False, "error": str(e)}
+
+    try:
+        # Build settings dictionary from form parameters
+        settings = {}
+        if show_on_guestlist is not None:
+            settings["show_on_guestlist"] = show_on_guestlist
+        if show_others_your_name is not None:
+            settings["show_others_your_name"] = show_others_your_name
+        if show_yourself_as_a_college_member is not None:
+            settings["show_yourself_as_a_college_member"] = show_yourself_as_a_college_member
+        if allow_notifications_from_email is not None:
+            settings["allow_notifications_from_email"] = allow_notifications_from_email
+        if allow_notifications_from_mobile is not None:
+            settings["allow_notifications_from_mobile"] = allow_notifications_from_mobile
+
+        print(f"[set_privacy_settings] Settings to update: {settings}")
+
+        result = await set_privacy_settings_async(user_id, settings)
+
+        if not result["success"]:
+            if "User not found" in result.get("error", ""):
+                await notify_by_bot(
+                    f"**[API: set_privacy_settings]** \n\n User not found: user_id={user_id} \n\n Platform: {platform}",
+                    platform or "Unknown",
+                    "ERROR",
+                    device_info,
+                )
+                raise HTTPException(status_code=404, detail="User not found")
+            else:
+                await notify_by_bot(
+                    f"**[API: set_privacy_settings]** \n\n Error updating privacy settings: user_id={user_id}, error={result.get('error')} \n\n Platform: {platform}",
+                    platform or "Unknown",
+                    "ERROR",
+                    device_info,
+                )
+                raise HTTPException(status_code=400, detail=result.get("error"))
+
+        print(f"[set_privacy_settings] Privacy settings updated successfully for user_id: {user_id}")
+
+        # Notify about privacy settings update
+        await notify_by_bot(
+            f"**[Privacy Settings Update]** \n\n User privacy settings updated: user_id={user_id}, settings={settings} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "INFO",
+            device_info,
+        )
+
+        return result
+
+    except HTTPException:
+        # Re-raise HTTP exceptions
+        raise
+    except Exception as e:
+        error_trace = traceback.format_exc()
+        print(f"[set_privacy_settings] Unhandled exception: {str(e)}\n{error_trace}")
+        await notify_by_bot(
+            f"**[API: set_privacy_settings]** \n\n Unhandled exception: user_id={user_id}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        raise HTTPException(status_code=500, detail="Internal server error")
