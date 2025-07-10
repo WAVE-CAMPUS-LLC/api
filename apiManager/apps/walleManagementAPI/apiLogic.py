@@ -18,6 +18,11 @@ from walle import config, suggest_friends_ai, suggest_friends_graph
 from authenticationApp.models import CustomUser
 from accountManagementApp.models import UserProfile
 from socialGraphManagement.recommendations.social.friend import suggest_friends_for_user
+from socialGraphManagement.recommendations.event.event import (
+    get_event_recommendations_for_user,
+    get_users_for_event_recommendation,
+    get_similar_events,
+)
 
 from apiManager.utilities.notify_by_bot import notify_by_bot
 from apiManager.utilities.device_info import get_device_info
@@ -215,7 +220,7 @@ async def suggest_friends_personalized(
                         "score": rec["score"],
                     }
                 )
-            except CustomUser.DoesNotExist:  # type: ignore[attr-defined]
+            except CustomUser.DoesNotExist:  # type: ignore
                 continue
 
         # Generate personalized friend suggestion message
@@ -231,7 +236,7 @@ async def suggest_friends_personalized(
             "limit": limit,
             "platform": platform,
         }
-    except CustomUser.DoesNotExist:  # type: ignore[attr-defined]
+    except CustomUser.DoesNotExist:  # type: ignore
         await notify_by_bot(
             f"**[API: suggest_friends_personalized]** \n\n User not found: {current_user_id} \n\n Platform: {platform}",
             platform or "Unknown",
@@ -251,4 +256,135 @@ async def suggest_friends_personalized(
         raise HTTPException(
             status_code=500,
             detail=f"Error generating personalized friend suggestions: {str(e)}",
+        )
+
+
+@router.get("/suggest/events")
+async def suggest_events(
+    request: Request,
+    current_user_id: int = Depends(get_current_user),
+    college_name: str = Query(..., description="User's college name"),
+    limit: int = Query(10, description="Maximum number of event suggestions"),
+    platform: Optional[str] = None,
+):
+    """
+    Get personalized event recommendations for the currently logged in user.
+    Returns events based on user's social network, preferences, and college context.
+    """
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    try:
+        # Get user details
+        user = await database_sync_to_async(CustomUser.objects.get)(id=current_user_id)
+
+        # Get event recommendations
+        event_recommendations = get_event_recommendations_for_user(
+            str(user.user_id), college_name, limit
+        )
+
+        return {
+            "user_id": str(user.user_id),
+            "user_name": user.username or str(user.user_id),
+            "college_name": college_name,
+            "event_recommendations": event_recommendations,
+            "limit": limit,
+            "platform": platform,
+        }
+    except CustomUser.DoesNotExist:  # type: ignore
+        await notify_by_bot(
+            f"**[API: suggest_events]** \n\n User not found: {current_user_id} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        raise HTTPException(
+            status_code=404, detail=f"User with ID {current_user_id} not found"
+        )
+    except Exception as e:
+        await notify_by_bot(
+            f"**[API: suggest_events]** \n\n Error: {str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        raise HTTPException(
+            status_code=500, detail=f"Error generating event suggestions: {str(e)}"
+        )
+
+
+@router.get("/suggest/events/{event_id}/users")
+async def suggest_users_for_event(
+    request: Request,
+    event_id: str,
+    limit: int = Query(20, description="Maximum number of user suggestions"),
+    platform: Optional[str] = None,
+):
+    """
+    Get user recommendations for a specific event.
+    Returns users who might be interested in attending the event.
+    """
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    try:
+        # Get user recommendations for the event
+        user_recommendations = get_users_for_event_recommendation(event_id, limit)
+
+        return {
+            "event_id": event_id,
+            "user_recommendations": user_recommendations,
+            "limit": limit,
+            "platform": platform,
+        }
+    except Exception as e:
+        await notify_by_bot(
+            f"**[API: suggest_users_for_event]** \n\n Error: {str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error generating user suggestions for event: {str(e)}",
+        )
+
+
+@router.get("/suggest/events/{event_id}/similar")
+async def suggest_similar_events(
+    request: Request,
+    event_id: str,
+    limit: int = Query(5, description="Maximum number of similar event suggestions"),
+    platform: Optional[str] = None,
+):
+    """
+    Get similar event recommendations for a specific event.
+    Returns events that are similar based on category, host, interests, etc.
+    """
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    try:
+        # Get similar events
+        similar_events = get_similar_events(event_id, limit)
+
+        return {
+            "event_id": event_id,
+            "similar_events": similar_events,
+            "limit": limit,
+            "platform": platform,
+        }
+    except Exception as e:
+        await notify_by_bot(
+            f"**[API: suggest_similar_events]** \n\n Error: {str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error generating similar event suggestions: {str(e)}",
         )

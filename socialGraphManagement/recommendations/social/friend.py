@@ -45,7 +45,7 @@ def get_friend_recommendations(user_id: str, limit: int = 5):
             (shared_interests * 3 + 
             shared_events * 3 + 
             shared_times * 2 + 
-            shared_people * 2 + 
+            shared_people * 4 + 
             vibe_match * 2 + 
             mutual_friends) AS score
         ORDER BY score DESC
