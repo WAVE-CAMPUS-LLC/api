@@ -1,8 +1,9 @@
+from typing import Optional
 from socialGraphManagement.neo4j_client import GraphClient
 
 
 def get_event_recommendations_for_user(
-    user_id: str, college_name: str, limit: int = 10
+    user_id: str, college_name: Optional[str] = None, limit: int = 10
 ):
     query = """
     MATCH (u:User {user_id: $user_id})
@@ -24,14 +25,14 @@ def get_event_recommendations_for_user(
     WHERE e3.eventDate >= datetime()
     WITH u, prefs, friend_attended_events, friend_rsvp_events, collect(DISTINCT e3) as mutual_events
     
-    // 4. Events hosted by users from same college (weight: 3)
+    // 4. Events hosted by users from same college (weight: 3) - only if college is specified
     OPTIONAL MATCH (e4:Event)<-[:HOSTED]-(host:User)
-    WHERE host.college = $college_name
+    WHERE $college_name IS NOT NULL AND host.college = $college_name
     WITH u, prefs, friend_attended_events, friend_rsvp_events, mutual_events, collect(DISTINCT e4) as college_host_events
     
-    // 5. Events where other college members are going (weight: 2)
+    // 5. Events where other college members are going (weight: 2) - only if college is specified
     OPTIONAL MATCH (e5:Event)<-[:RSVP]-(college_user:User)
-    WHERE college_user.college = $college_name AND college_user.user_id <> $user_id
+    WHERE $college_name IS NOT NULL AND college_user.college = $college_name AND college_user.user_id <> $user_id
     WITH u, prefs, friend_attended_events, friend_rsvp_events, mutual_events, college_host_events, collect(DISTINCT e5) as college_rsvp_events
     
     // 6. Events matching user preferences (weight: 4)
@@ -54,12 +55,14 @@ def get_event_recommendations_for_user(
     WITH u, prefs, friend_attended_events, friend_rsvp_events, mutual_events, college_host_events, college_rsvp_events, preference_events, interest_events, time_events, collect(DISTINCT e9) as people_events
     
     // Combine all events and calculate weighted scores
-    WITH u, 
+    WITH u, friend_attended_events, friend_rsvp_events, mutual_events, college_host_events, 
+         college_rsvp_events, preference_events, interest_events, time_events, people_events,
          friend_attended_events + friend_rsvp_events + mutual_events + college_host_events + 
          college_rsvp_events + preference_events + interest_events + time_events + people_events as all_events
     
     UNWIND all_events as event
-    WITH event, 
+    WITH event, friend_attended_events, friend_rsvp_events, mutual_events, college_host_events,
+         college_rsvp_events, preference_events, interest_events, people_events, time_events,
          // Calculate weighted score based on which list the event appears in
          CASE 
              WHEN event IN friend_rsvp_events THEN 5

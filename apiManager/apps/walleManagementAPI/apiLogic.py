@@ -263,13 +263,17 @@ async def suggest_friends_personalized(
 async def suggest_events(
     request: Request,
     current_user_id: int = Depends(get_current_user),
-    college_name: str = Query(..., description="User's college name"),
+    college_name: Optional[str] = Query(
+        None,
+        description="User's college name (optional - will auto-detect from profile)",
+    ),
     limit: int = Query(10, description="Maximum number of event suggestions"),
     platform: Optional[str] = None,
 ):
     """
     Get personalized event recommendations for the currently logged in user.
     Returns events based on user's social network, preferences, and college context.
+    Automatically detects college from user profile if not provided.
     """
     user_agent_str = request.headers.get("user-agent", "")
     device_data = get_device_info(user_agent_str)
@@ -279,15 +283,31 @@ async def suggest_events(
         # Get user details
         user = await database_sync_to_async(CustomUser.objects.get)(id=current_user_id)
 
+        # Auto-detect college from user profile if not provided
+        detected_college_name = college_name
+        if not detected_college_name:
+            try:
+                user_profile = await database_sync_to_async(lambda: user.user_profile)()
+                if user_profile and user_profile.college:
+                    detected_college_name = user_profile.college.name
+                else:
+                    # If no college found, use None to indicate no college context
+                    detected_college_name = None
+            except Exception as e:
+                print(f"Error detecting college from profile: {str(e)}")
+                detected_college_name = None  # Fallback
+
         # Get event recommendations
         event_recommendations = get_event_recommendations_for_user(
-            str(user.user_id), college_name, limit
+            str(user.user_id), detected_college_name, limit
         )
 
         return {
             "user_id": str(user.user_id),
             "user_name": user.username or str(user.user_id),
-            "college_name": college_name,
+            "college_name": detected_college_name,
+            "college_auto_detected": college_name is None,
+            "has_college_context": detected_college_name is not None,
             "event_recommendations": event_recommendations,
             "limit": limit,
             "platform": platform,
