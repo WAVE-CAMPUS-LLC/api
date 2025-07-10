@@ -12,7 +12,7 @@ client = OpenAI(api_key=settings.COLLEGE_OPENAI_API_KEY)
 logger = logging.getLogger(__name__)
 
 
-def get_friend_recommendations(user_id: str, limit: int = 5):
+def get_friend_recommendations(user_id: str, limit: int = None):
     query = """
         MATCH (u:User {user_id: $user_id})
 
@@ -49,20 +49,73 @@ def get_friend_recommendations(user_id: str, limit: int = 5):
             vibe_match * 2 + 
             mutual_friends) AS score
         ORDER BY score DESC
-        LIMIT $limit
         RETURN user_id, score
         """
 
     parameters = {
         "user_id": str(user_id),
-        "limit": limit,
     }
 
     graph_client = GraphClient()
     results = graph_client.run_query(query, parameters)
     graph_client.close()
 
-    return [{"user_id": r["user_id"], "score": r["score"]} for r in results]
+    # Python-side filter to ensure no already-friends are included
+    # (in case of data sync issues between Neo4j and Django)
+    user = CustomUser.objects.filter(user_id=user_id).first()
+    if user:
+        current_friends = set(
+            CustomUser.objects.filter(
+                user_id__in=[user_id],
+            ).values_list("friends__user_id", flat=True)
+        )
+        filtered_results = [
+            r
+            for r in results
+            if r["user_id"] not in current_friends and r["user_id"] != str(user_id)
+        ]
+    else:
+        filtered_results = [r for r in results if r["user_id"] != str(user_id)]
+
+    # Apply limit if specified, otherwise return all
+    if limit:
+        filtered_results = filtered_results[:limit]
+
+    return [{"user_id": r["user_id"], "score": r["score"]} for r in filtered_results]
+
+
+def get_paginated_friend_recommendations(
+    user_id: str, page: int = 1, page_size: int = 20
+):
+    """
+    Get paginated friend recommendations to prevent API slowdown.
+    Returns a subset of recommendations with pagination metadata.
+    """
+    # Get all recommendations first
+    all_recommendations = get_friend_recommendations(user_id)
+
+    # Calculate pagination
+    total_recommendations = len(all_recommendations)
+    total_pages = (total_recommendations + page_size - 1) // page_size
+    start_index = (page - 1) * page_size
+    end_index = start_index + page_size
+
+    # Get paginated results
+    paginated_results = all_recommendations[start_index:end_index]
+
+    return {
+        "recommendations": paginated_results,
+        "pagination": {
+            "current_page": page,
+            "page_size": page_size,
+            "total_recommendations": total_recommendations,
+            "total_pages": total_pages,
+            "has_next": page < total_pages,
+            "has_previous": page > 1,
+            "next_page": page + 1 if page < total_pages else None,
+            "previous_page": page - 1 if page > 1 else None,
+        },
+    }
 
 
 def get_user_by_id(user_id: str) -> str:

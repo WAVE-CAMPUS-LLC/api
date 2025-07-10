@@ -17,12 +17,17 @@ from walle import config, suggest_friends_ai, suggest_friends_graph
 
 from authenticationApp.models import CustomUser
 from accountManagementApp.models import UserProfile
-from socialGraphManagement.recommendations.social.friend import suggest_friends_for_user
+from socialGraphManagement.recommendations.social.friend import (
+    suggest_friends_for_user,
+    get_paginated_friend_recommendations,
+)
 from socialGraphManagement.recommendations.event.event import (
     get_event_recommendations_for_user,
     get_users_for_event_recommendation,
     get_similar_events,
     get_event_details_from_ids,
+    get_personalized_event_discovery,
+    get_college_events,
 )
 
 from apiManager.utilities.notify_by_bot import notify_by_bot
@@ -173,12 +178,15 @@ async def suggest_friends(
 async def suggest_friends_personalized(
     request: Request,
     current_user_id: int = Depends(get_current_user),
-    limit: int = Query(5, description="Maximum number of suggestions"),
+    page: int = Query(1, ge=1, description="Page number (starts from 1)"),
+    page_size: int = Query(
+        20, ge=1, le=50, description="Number of suggestions per page (max 50)"
+    ),
     platform: Optional[str] = None,
 ):
     """
-    Get personalized friend suggestions with AI-generated messages for the currently logged in user.
-    Returns a personalized message suggesting friends for the user.
+    Get personalized friend suggestions with pagination.
+    Returns friend recommendations with user profiles and pagination metadata.
     """
     user_agent_str = request.headers.get("user-agent", "")
     device_data = get_device_info(user_agent_str)
@@ -189,16 +197,14 @@ async def suggest_friends_personalized(
         user = await database_sync_to_async(CustomUser.objects.get)(id=current_user_id)
         user_name = user.username or str(user.user_id)
 
-        # Get friend recommendations with user details
-        from socialGraphManagement.recommendations.social.friend import (
-            get_friend_recommendations,
+        # Get paginated friend recommendations
+        paginated_data = get_paginated_friend_recommendations(
+            str(user.user_id), page, page_size
         )
-
-        recommendations = get_friend_recommendations(str(user.user_id), limit)
 
         # Get detailed user profiles for recommendations
         recommended_users = []
-        for rec in recommendations:
+        for rec in paginated_data["recommendations"]:
             try:
                 recommended_user = await database_sync_to_async(CustomUser.objects.get)(
                     user_id=rec["user_id"]
@@ -226,7 +232,7 @@ async def suggest_friends_personalized(
 
         # Generate personalized friend suggestion message
         personalized_message = suggest_friends_for_user(
-            str(user.user_id), user_name, limit
+            str(user.user_id), user_name, len(paginated_data["recommendations"])
         )
 
         return {
@@ -234,7 +240,7 @@ async def suggest_friends_personalized(
             "user_name": user_name,
             "personalized_message": personalized_message,
             "recommended_users": recommended_users,
-            "limit": limit,
+            "pagination": paginated_data["pagination"],
             "platform": platform,
         }
     except CustomUser.DoesNotExist:  # type: ignore
@@ -418,4 +424,171 @@ async def suggest_similar_events(
         raise HTTPException(
             status_code=500,
             detail=f"Error generating similar event suggestions: {str(e)}",
+        )
+
+
+@router.get("/discover/events")
+async def discover_events(
+    request: Request,
+    current_user_id: int = Depends(get_current_user),
+    page: int = Query(1, ge=1, description="Page number (starts from 1)"),
+    page_size: int = Query(
+        3, ge=1, le=20, description="Number of events per page (max 20)"
+    ),
+    platform: Optional[str] = None,
+):
+    """
+    Get personalized event discovery with pagination.
+    Returns events prioritized by user preferences and social connections.
+    Loads events gradually as more requests come in.
+    """
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    try:
+        # Get user details
+        user = await database_sync_to_async(CustomUser.objects.get)(id=current_user_id)
+
+        # Calculate offset for pagination
+        offset = (page - 1) * page_size
+
+        # Get personalized event discovery from Neo4j (fetch more to allow for pagination)
+        total_limit = (
+            page_size * 10
+        )  # Fetch more events to ensure we have enough for pagination
+        event_discovery = get_personalized_event_discovery(
+            str(user.user_id), total_limit
+        )
+
+        # Apply pagination to the results
+        paginated_events = event_discovery[offset : offset + page_size]
+
+        # Fetch detailed event information from database
+        detailed_events = await database_sync_to_async(get_event_details_from_ids)(
+            paginated_events
+        )
+
+        # Calculate pagination metadata
+        total_events = len(event_discovery)
+        total_pages = (total_events + page_size - 1) // page_size
+        has_next = page < total_pages
+        has_previous = page > 1
+
+        return {
+            "user_id": str(user.user_id),
+            "user_name": user.username or str(user.user_id),
+            "events": detailed_events,
+            "pagination": {
+                "current_page": page,
+                "page_size": page_size,
+                "total_events": total_events,
+                "total_pages": total_pages,
+                "has_next": has_next,
+                "has_previous": has_previous,
+                "next_page": page + 1 if has_next else None,
+                "previous_page": page - 1 if has_previous else None,
+            },
+            "platform": platform,
+        }
+    except CustomUser.DoesNotExist:  # type: ignore
+        await notify_by_bot(
+            f"**[API: discover_events]** \n\n User not found: {current_user_id} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        raise HTTPException(
+            status_code=404, detail=f"User with ID {current_user_id} not found"
+        )
+    except Exception as e:
+        await notify_by_bot(
+            f"**[API: discover_events]** \n\n Error: {str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        raise HTTPException(
+            status_code=500, detail=f"Error generating event discovery: {str(e)}"
+        )
+
+
+@router.get("/discover/events/college")
+async def discover_college_events(
+    request: Request,
+    current_user_id: int = Depends(get_current_user),
+    page: int = Query(1, ge=1, description="Page number (starts from 1)"),
+    page_size: int = Query(
+        3, ge=1, le=20, description="Number of events per page (max 20)"
+    ),
+    platform: Optional[str] = None,
+):
+    """
+    Get college-specific event discovery with pagination.
+    Returns events only from the user's college, prioritized by preferences.
+    """
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    try:
+        # Get user details
+        user = await database_sync_to_async(CustomUser.objects.get)(id=current_user_id)
+        user_profile = await database_sync_to_async(lambda: user.user_profile)()
+        if (
+            not user_profile
+            or not user_profile.college
+            or not user_profile.college.name
+        ):
+            raise HTTPException(
+                status_code=400,
+                detail="User does not have a college set in their profile.",
+            )
+        college_name = user_profile.college.name
+
+        # Calculate offset for pagination
+        offset = (page - 1) * page_size
+
+        # Get college events from Neo4j (fetch more to allow for pagination)
+        total_limit = page_size * 10
+        event_discovery = get_college_events(
+            str(user.user_id), college_name, total_limit
+        )
+
+        # Apply pagination to the results
+        paginated_events = event_discovery[offset : offset + page_size]
+
+        # Fetch detailed event information from database
+        detailed_events = await database_sync_to_async(get_event_details_from_ids)(
+            paginated_events
+        )
+
+        # Calculate pagination metadata
+        total_events = len(event_discovery)
+        total_pages = (total_events + page_size - 1) // page_size
+        has_next = page < total_pages
+        has_previous = page > 1
+
+        return {
+            "user_id": str(user.user_id),
+            "user_name": user.username or str(user.user_id),
+            "college_name": college_name,
+            "events": detailed_events,
+            "pagination": {
+                "current_page": page,
+                "page_size": page_size,
+                "total_events": total_events,
+                "total_pages": total_pages,
+                "has_next": has_next,
+                "has_previous": has_previous,
+                "next_page": page + 1 if has_next else None,
+                "previous_page": page - 1 if has_previous else None,
+            },
+            "platform": platform,
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Error discovering college events: {str(e)}"
         )
