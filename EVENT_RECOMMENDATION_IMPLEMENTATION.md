@@ -24,7 +24,8 @@ The event recommendation system has been enhanced to automatically handle users 
 
 -   **College context indicator**: `has_college_context` field shows if college was detected
 -   **Auto-detection flag**: `college_auto_detected` indicates if college was auto-detected
--   **Detailed event info**: Returns event details with match scores
+-   **Database integration**: Fetches actual event details from database using event IDs from Neo4j
+-   **Minimal event data**: Returns only title, header_photo, and event_id for efficiency
 
 ## Implementation Details
 
@@ -92,6 +93,23 @@ def get_event_recommendations_for_user(
 -   Made `college_name` optional with default `None`
 -   Enhanced error handling for edge cases
 
+### Database Integration
+
+```python
+def get_event_details_from_ids(event_recommendations: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """
+    Fetch event details from database using event IDs from Neo4j recommendations.
+    Returns events with title, header_photo, and event_id.
+    """
+```
+
+**Features:**
+
+-   Efficient batch querying of events by IDs
+-   Maintains original recommendation order and scores
+-   Graceful handling of missing events
+-   Returns only essential event data (title, header_photo, event_id)
+
 ## Usage Examples
 
 ### 1. API Usage
@@ -121,9 +139,7 @@ GET /api/walle/suggest/events?limit=10
 		{
 			"event_id": "event-123",
 			"title": "Campus Social Mixer",
-			"event_date": "2024-01-15T18:00:00Z",
-			"location": "Student Center",
-			"description": "Meet new people and make connections",
+			"header_photo": "/media/event_photos/mixer_header.jpg",
 			"match_score": 8.5
 		}
 	],

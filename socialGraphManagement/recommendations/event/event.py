@@ -1,5 +1,6 @@
-from typing import Optional
+from typing import Optional, List, Dict, Any
 from socialGraphManagement.neo4j_client import GraphClient
+from eventManagementApp.models import Event
 
 
 def get_event_recommendations_for_user(
@@ -87,11 +88,7 @@ def get_event_recommendations_for_user(
     
     WITH event, base_score + time_bonus as final_score
     
-    RETURN event.eventId as event_id, 
-           event.title as title, 
-           event.eventDate as event_date,
-           event.location as location,
-           event.description as description,
+    RETURN event.eventId as event_id,
            final_score as score
     ORDER BY final_score DESC
     LIMIT $limit
@@ -110,14 +107,62 @@ def get_event_recommendations_for_user(
     return [
         {
             "event_id": record["event_id"],
-            "title": record["title"],
-            "event_date": record["event_date"],
-            "location": record["location"],
-            "description": record["description"],
             "match_score": record["score"],
         }
         for record in results
     ]
+
+
+def get_event_details_from_ids(
+    event_recommendations: List[Dict[str, Any]],
+) -> List[Dict[str, Any]]:
+    """
+    Fetch event details from database using event IDs from Neo4j recommendations.
+    Returns events with title, header_photo, and event_id.
+    """
+    if not event_recommendations:
+        return []
+
+    # Extract event IDs from recommendations
+    event_ids = []
+    for rec in event_recommendations:
+        try:
+            # Validate UUID format
+            import uuid
+
+            uuid.UUID(rec["event_id"])
+            event_ids.append(rec["event_id"])
+        except (ValueError, TypeError):
+            # Skip invalid UUIDs
+            continue
+
+    if not event_ids:
+        return []
+
+    # Fetch events from database
+    events = Event.objects.filter(eventId__in=event_ids)
+
+    # Create a mapping of event_id to event object for efficient lookup
+    event_map = {str(event.eventId): event for event in events}
+
+    # Build response maintaining the original order and scores
+    detailed_recommendations = []
+    for rec in event_recommendations:
+        event_id = rec["event_id"]
+        if event_id in event_map:
+            event = event_map[event_id]
+            detailed_recommendations.append(
+                {
+                    "event_id": str(event.eventId),
+                    "title": event.title,
+                    "header_photo": (
+                        event.header_photo.url if event.header_photo else None
+                    ),
+                    "match_score": rec["match_score"],
+                }
+            )
+
+    return detailed_recommendations
 
 
 def get_users_for_event_recommendation(event_id: str, limit: int = 20):
@@ -281,10 +326,6 @@ def get_similar_events(event_id: str, limit: int = 5):
     WITH similar_event, e, base_score + time_bonus as final_score
     
     RETURN similar_event.eventId as event_id,
-           similar_event.title as title,
-           similar_event.eventDate as event_date,
-           similar_event.location as location,
-           similar_event.category as category,
            final_score as score
     ORDER BY final_score DESC
     LIMIT $limit
@@ -299,10 +340,6 @@ def get_similar_events(event_id: str, limit: int = 5):
     return [
         {
             "event_id": record["event_id"],
-            "title": record["title"],
-            "event_date": record["event_date"],
-            "location": record["location"],
-            "category": record["category"],
             "match_score": record["score"],
         }
         for record in results

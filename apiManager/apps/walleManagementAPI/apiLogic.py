@@ -22,6 +22,7 @@ from socialGraphManagement.recommendations.event.event import (
     get_event_recommendations_for_user,
     get_users_for_event_recommendation,
     get_similar_events,
+    get_event_details_from_ids,
 )
 
 from apiManager.utilities.notify_by_bot import notify_by_bot
@@ -297,10 +298,13 @@ async def suggest_events(
                 print(f"Error detecting college from profile: {str(e)}")
                 detected_college_name = None  # Fallback
 
-        # Get event recommendations
+        # Get event recommendations from Neo4j
         event_recommendations = get_event_recommendations_for_user(
             str(user.user_id), detected_college_name, limit
         )
+
+        # Fetch detailed event information from database
+        detailed_recommendations = get_event_details_from_ids(event_recommendations)
 
         return {
             "user_id": str(user.user_id),
@@ -308,7 +312,7 @@ async def suggest_events(
             "college_name": detected_college_name,
             "college_auto_detected": college_name is None,
             "has_college_context": detected_college_name is not None,
-            "event_recommendations": event_recommendations,
+            "event_recommendations": detailed_recommendations,
             "limit": limit,
             "platform": platform,
         }
@@ -388,12 +392,15 @@ async def suggest_similar_events(
     device_info = device_data["device_info"]
 
     try:
-        # Get similar events
+        # Get similar events from Neo4j
         similar_events = get_similar_events(event_id, limit)
+
+        # Fetch detailed event information from database
+        detailed_similar_events = get_event_details_from_ids(similar_events)
 
         return {
             "event_id": event_id,
-            "similar_events": similar_events,
+            "similar_events": detailed_similar_events,
             "limit": limit,
             "platform": platform,
         }
