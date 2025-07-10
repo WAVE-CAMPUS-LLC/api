@@ -433,14 +433,14 @@ async def discover_events(
     current_user_id: int = Depends(get_current_user),
     page: int = Query(1, ge=1, description="Page number (starts from 1)"),
     page_size: int = Query(
-        3, ge=1, le=20, description="Number of events per page (max 20)"
+        15, ge=5, le=50, description="Number of events per page (min 5, max 50)"
     ),
     platform: Optional[str] = None,
 ):
     """
-    Get personalized event discovery with pagination.
+    Get personalized event discovery with pagination optimized for React Native.
     Returns events prioritized by user preferences and social connections.
-    Loads events gradually as more requests come in.
+    Supports infinite scrolling with larger page sizes for better UX.
     """
     user_agent_str = request.headers.get("user-agent", "")
     device_data = get_device_info(user_agent_str)
@@ -455,7 +455,7 @@ async def discover_events(
 
         # Get personalized event discovery from Neo4j (fetch more to allow for pagination)
         total_limit = (
-            page_size * 10
+            page_size * 15
         )  # Fetch more events to ensure we have enough for pagination
         event_discovery = get_personalized_event_discovery(
             str(user.user_id), total_limit
@@ -488,6 +488,7 @@ async def discover_events(
                 "has_previous": has_previous,
                 "next_page": page + 1 if has_next else None,
                 "previous_page": page - 1 if has_previous else None,
+                "remaining_events": total_events - (page * page_size),
             },
             "platform": platform,
         }
@@ -519,13 +520,14 @@ async def discover_college_events(
     current_user_id: int = Depends(get_current_user),
     page: int = Query(1, ge=1, description="Page number (starts from 1)"),
     page_size: int = Query(
-        3, ge=1, le=20, description="Number of events per page (max 20)"
+        15, ge=5, le=50, description="Number of events per page (min 5, max 50)"
     ),
     platform: Optional[str] = None,
 ):
     """
-    Get college-specific event discovery with pagination.
+    Get college-specific event discovery with pagination optimized for React Native.
     Returns events only from the user's college, prioritized by preferences.
+    Supports infinite scrolling with larger page sizes for better UX.
     """
     user_agent_str = request.headers.get("user-agent", "")
     device_data = get_device_info(user_agent_str)
@@ -550,7 +552,7 @@ async def discover_college_events(
         offset = (page - 1) * page_size
 
         # Get college events from Neo4j (fetch more to allow for pagination)
-        total_limit = page_size * 10
+        total_limit = page_size * 15
         event_discovery = get_college_events(
             str(user.user_id), college_name, total_limit
         )
@@ -583,6 +585,7 @@ async def discover_college_events(
                 "has_previous": has_previous,
                 "next_page": page + 1 if has_next else None,
                 "previous_page": page - 1 if has_previous else None,
+                "remaining_events": total_events - (page * page_size),
             },
             "platform": platform,
         }
