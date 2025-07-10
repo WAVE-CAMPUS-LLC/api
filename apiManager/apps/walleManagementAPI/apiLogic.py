@@ -304,7 +304,9 @@ async def suggest_events(
         )
 
         # Fetch detailed event information from database
-        detailed_recommendations = get_event_details_from_ids(event_recommendations)
+        detailed_recommendations = await database_sync_to_async(
+            get_event_details_from_ids
+        )(event_recommendations)
 
         return {
             "user_id": str(user.user_id),
@@ -396,7 +398,9 @@ async def suggest_similar_events(
         similar_events = get_similar_events(event_id, limit)
 
         # Fetch detailed event information from database
-        detailed_similar_events = get_event_details_from_ids(similar_events)
+        detailed_similar_events = await database_sync_to_async(
+            get_event_details_from_ids
+        )(similar_events)
 
         return {
             "event_id": event_id,
