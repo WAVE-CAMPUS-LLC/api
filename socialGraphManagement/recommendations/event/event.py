@@ -360,56 +360,43 @@ def get_personalized_event_discovery(
     query = """
     MATCH (u:User {user_id: $user_id})
     
-    // Get user's preferences from UserPreferences model
-    OPTIONAL MATCH (u)-[:HAS_PREFERENCES]->(prefs:UserPreferences)
-    
     // Get all events on the platform
     MATCH (e:Event)
-    WHERE e.status = 'live' AND e.eventDate >= datetime()
     
     // Calculate similarity scores based on multiple factors
     
     // 1. Friends attending this event (weight: 5)
     OPTIONAL MATCH (u)-[:FRIEND]->(f:User)-[:RSVP]->(e)
-    WITH u, e, prefs, count(DISTINCT f) as friend_rsvp_count
+    WITH u, e, count(DISTINCT f) as friend_rsvp_count
     
     // 2. Friends who attended similar events (weight: 4)
     OPTIONAL MATCH (u)-[:FRIEND]->(f2:User)-[:ATTENDED_EVENT]->(similar:Event)
-    WHERE similar.category = e.category AND similar.eventId <> e.eventId
-    WITH u, e, prefs, friend_rsvp_count, count(DISTINCT f2) as friend_similar_count
+    WHERE similar.eventId <> e.eventId
+    WITH u, e, friend_rsvp_count, count(DISTINCT f2) as friend_similar_count
     
-    // 3. Event matches user preferences (weight: 4)
-    WITH u, e, prefs, friend_rsvp_count, friend_similar_count,
-         CASE 
-             WHEN prefs.preferred_times IS NOT NULL AND e.best_time IN prefs.preferred_times THEN 1
-             WHEN prefs.interests IS NOT NULL AND ANY(interest IN e.interests WHERE interest IN prefs.interests) THEN 1
-             ELSE 0
-         END as preference_match
-    
-    // 4. User's interests match event (weight: 3)
+    // 3. User's interests match event (weight: 3)
     OPTIONAL MATCH (u)-[:INTERESTED_IN]->(i:Interest)<-[:RELATES_TO_INTEREST]-(e)
-    WITH u, e, prefs, friend_rsvp_count, friend_similar_count, preference_match,
+    WITH u, e, friend_rsvp_count, friend_similar_count,
          CASE WHEN i IS NOT NULL THEN 1 ELSE 0 END as interest_match
     
-    // 5. Event time matches user preferences (weight: 2)
+    // 4. Event time matches user preferences (weight: 2)
     OPTIONAL MATCH (u)-[:PREFERRED_TIME]->(t:Time)<-[:BEST_TIME]-(e)
-    WITH u, e, prefs, friend_rsvp_count, friend_similar_count, preference_match, interest_match,
+    WITH u, e, friend_rsvp_count, friend_similar_count, interest_match,
          CASE WHEN t IS NOT NULL THEN 1 ELSE 0 END as time_match
     
     // Calculate weighted score
     WITH e, 
          (friend_rsvp_count * 5) + 
          (friend_similar_count * 4) + 
-         (preference_match * 4) + 
          (interest_match * 3) + 
          (time_match * 2) as base_score
     
-    // Add time bonus for events happening soon
+    // Add time bonus for events happening soon (if event has date property)
     WITH e, base_score,
          CASE 
-             WHEN e.eventDate <= datetime() + duration('P7D') THEN 3  // Next 7 days
-             WHEN e.eventDate <= datetime() + duration('P14D') THEN 2  // Next 14 days
-             WHEN e.eventDate <= datetime() + duration('P30D') THEN 1  // Next 30 days
+             WHEN e.date IS NOT NULL AND e.date <= datetime() + duration('P7D') THEN 3  // Next 7 days
+             WHEN e.date IS NOT NULL AND e.date <= datetime() + duration('P14D') THEN 2  // Next 14 days
+             WHEN e.date IS NOT NULL AND e.date <= datetime() + duration('P30D') THEN 1  // Next 30 days
              ELSE 0
          END as time_bonus
     
@@ -417,7 +404,7 @@ def get_personalized_event_discovery(
     
     RETURN e.eventId as event_id,
            final_score as score
-    ORDER BY final_score DESC, e.eventDate ASC
+    ORDER BY final_score DESC
     LIMIT $limit
     """
 
@@ -449,46 +436,35 @@ def get_college_events(
     query = """
     MATCH (u:User {user_id: $user_id})
     
-    // Get user's preferences from UserPreferences model
-    OPTIONAL MATCH (u)-[:HAS_PREFERENCES]->(prefs:UserPreferences)
-    
     // Get events hosted by users from the same college
     MATCH (e:Event)<-[:HOSTED]-(host:User)
-    WHERE host.college = $college_name AND e.status = 'live' AND e.eventDate >= datetime()
+    WHERE host.college = $college_name
     
     // Calculate similarity scores based on multiple factors
     
     // 1. Friends attending this event (weight: 5)
     OPTIONAL MATCH (u)-[:FRIEND]->(f:User)-[:RSVP]->(e)
-    WITH u, e, prefs, count(DISTINCT f) as friend_rsvp_count
+    WITH u, e, count(DISTINCT f) as friend_rsvp_count
     
     // 2. Friends who attended similar events (weight: 4)
     OPTIONAL MATCH (u)-[:FRIEND]->(f2:User)-[:ATTENDED_EVENT]->(similar:Event)
-    WHERE similar.category = e.category AND similar.eventId <> e.eventId
-    WITH u, e, prefs, friend_rsvp_count, count(DISTINCT f2) as friend_similar_count
+    WHERE similar.eventId <> e.eventId
+    WITH u, e, friend_rsvp_count, count(DISTINCT f2) as friend_similar_count
     
     // 3. College members attending (weight: 3)
     OPTIONAL MATCH (e)<-[:RSVP]-(college_user:User)
     WHERE college_user.college = $college_name AND college_user.user_id <> $user_id
-    WITH u, e, prefs, friend_rsvp_count, friend_similar_count,
+    WITH u, e, friend_rsvp_count, friend_similar_count,
          count(DISTINCT college_user) as college_rsvp_count
     
-    // 4. Event matches user preferences (weight: 4)
-    WITH u, e, prefs, friend_rsvp_count, friend_similar_count, college_rsvp_count,
-         CASE 
-             WHEN prefs.preferred_times IS NOT NULL AND e.best_time IN prefs.preferred_times THEN 1
-             WHEN prefs.interests IS NOT NULL AND ANY(interest IN e.interests WHERE interest IN prefs.interests) THEN 1
-             ELSE 0
-         END as preference_match
-    
-    // 5. User's interests match event (weight: 3)
+    // 4. User's interests match event (weight: 3)
     OPTIONAL MATCH (u)-[:INTERESTED_IN]->(i:Interest)<-[:RELATES_TO_INTEREST]-(e)
-    WITH u, e, prefs, friend_rsvp_count, friend_similar_count, college_rsvp_count, preference_match,
+    WITH u, e, friend_rsvp_count, friend_similar_count, college_rsvp_count,
          CASE WHEN i IS NOT NULL THEN 1 ELSE 0 END as interest_match
     
-    // 6. Event time matches user preferences (weight: 2)
+    // 5. Event time matches user preferences (weight: 2)
     OPTIONAL MATCH (u)-[:PREFERRED_TIME]->(t:Time)<-[:BEST_TIME]-(e)
-    WITH u, e, prefs, friend_rsvp_count, friend_similar_count, college_rsvp_count, preference_match, interest_match,
+    WITH u, e, friend_rsvp_count, friend_similar_count, college_rsvp_count, interest_match,
          CASE WHEN t IS NOT NULL THEN 1 ELSE 0 END as time_match
     
     // Calculate weighted score
@@ -496,16 +472,15 @@ def get_college_events(
          (friend_rsvp_count * 5) + 
          (friend_similar_count * 4) + 
          (college_rsvp_count * 3) + 
-         (preference_match * 4) + 
          (interest_match * 3) + 
          (time_match * 2) as base_score
     
-    // Add time bonus for events happening soon
+    // Add time bonus for events happening soon (if event has date property)
     WITH e, base_score,
          CASE 
-             WHEN e.eventDate <= datetime() + duration('P7D') THEN 3  // Next 7 days
-             WHEN e.eventDate <= datetime() + duration('P14D') THEN 2  // Next 14 days
-             WHEN e.eventDate <= datetime() + duration('P30D') THEN 1  // Next 30 days
+             WHEN e.date IS NOT NULL AND e.date <= datetime() + duration('P7D') THEN 3  // Next 7 days
+             WHEN e.date IS NOT NULL AND e.date <= datetime() + duration('P14D') THEN 2  // Next 14 days
+             WHEN e.date IS NOT NULL AND e.date <= datetime() + duration('P30D') THEN 1  // Next 30 days
              ELSE 0
          END as time_bonus
     
@@ -513,7 +488,7 @@ def get_college_events(
     
     RETURN e.eventId as event_id,
            final_score as score
-    ORDER BY final_score DESC, e.eventDate ASC
+    ORDER BY final_score DESC
     LIMIT $limit
     """
 
