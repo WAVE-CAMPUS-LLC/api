@@ -323,30 +323,33 @@ async def get_event_details(
                 print(f"[get_event_ticket_data API] Event is not paid ticketing, returning empty list")
                 return []
                 
-            # Get all tickets for this event
-            tickets = Ticket.objects.filter(event=event)
+            # Import PaidFreeTicket model
+            from eventTicketsApp.models import PaidFreeTicket
+            
+            # Get all ticket types for this event
+            ticket_types = PaidFreeTicket.objects.filter(event=event)
             
             tickets_data = []
-            for ticket in tickets:
+            for ticket_type in ticket_types:
                 ticket_info = {
-                    "id": str(ticket.id),
-                    "ticket_name": ticket.ticket_name if hasattr(ticket, 'ticket_name') else "General Admission",
-                    "price": float(ticket.price) if hasattr(ticket, 'price') and ticket.price else 0.0,
-                    "description": ticket.description if hasattr(ticket, 'description') else "",
-                    "available_quantity": ticket.available_quantity if hasattr(ticket, 'available_quantity') else None,
-                    "sold_quantity": ticket.sold_quantity if hasattr(ticket, 'sold_quantity') else 0,
-                    "is_active": ticket.is_active if hasattr(ticket, 'is_active') else True,
-                    "sale_start_date": ticket.sale_start_date if hasattr(ticket, 'sale_start_date') else None,
-                    "sale_end_date": ticket.sale_end_date if hasattr(ticket, 'sale_end_date') else None,
+                    "id": str(ticket_type.ticket_id),
+                    "ticket_name": ticket_type.ticket_name,
+                    "price": float(ticket_type.ticket_price) if ticket_type.ticket_price else 0.0,
+                    "description": ticket_type.ticket_description,
+                    "available_quantity": ticket_type.ticket_quantity,
+                    "sold_quantity": ticket_type.ticket_sold,
+                    "available_tickets": ticket_type.available_tickets(),
                     "crew_discounted_price": (
-                        float(ticket.crew_discounted_price) 
-                        if hasattr(ticket, 'crew_discounted_price') and ticket.crew_discounted_price 
+                        float(ticket_type.crew_discounted_price) 
+                        if ticket_type.crew_discounted_price 
                         else None
                     ),
+                    "stripe_price_id": ticket_type.stripePriceId,
+                    "deadline": ticket_type.deadline,
                 }
                 tickets_data.append(ticket_info)
             
-            print(f"[get_event_ticket_data API] Retrieved {len(tickets_data)} tickets for paid event")
+            print(f"[get_event_ticket_data API] Retrieved {len(tickets_data)} ticket types for paid event")
             return tickets_data
             
         except Event.DoesNotExist:
