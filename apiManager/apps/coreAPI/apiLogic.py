@@ -264,9 +264,6 @@ async def get_event_details(
             # Check for RSVP requirement
             rsvp_required = False  # Default value, adjust based on your model
 
-            # Check for paid/free tickets
-            paid_free_tickets = []  # Default value, adjust based on your model
-
             # Sanitize HTML in the description to prevent XSS attacks
             sanitized_description = (
                 bleach.clean(event.description) if event.description else ""
@@ -301,7 +298,6 @@ async def get_event_details(
                 "guest_list": guest_list,
                 "is_favorite": is_favorite,
                 "rsvp_required": rsvp_required,
-                "paid_free_tickets": paid_free_tickets,
                 "crew_discount": event.crew_discount,
                 "minimum_crew_size": event.minimum_crew_size,
                 "crew_discount_percentage": event.crew_discount_percentage,
@@ -314,6 +310,52 @@ async def get_event_details(
             print(f"[get_event_details API] Event not found with ID: {eventId}")
             return None
 
+    @database_sync_to_async
+    def get_event_ticket_data(eventId):
+        """
+        Retrieve ticket information for paid events.
+        """
+        try:
+            event = Event.objects.get(eventId=eventId)
+            
+            # Check if event is paid ticketing
+            if str(event.ticketing).lower() != 'paid':
+                print(f"[get_event_ticket_data API] Event is not paid ticketing, returning empty list")
+                return []
+                
+            # Get all tickets for this event
+            tickets = Ticket.objects.filter(event=event)
+            
+            tickets_data = []
+            for ticket in tickets:
+                ticket_info = {
+                    "id": str(ticket.id),
+                    "ticket_name": ticket.ticket_name if hasattr(ticket, 'ticket_name') else "General Admission",
+                    "price": float(ticket.price) if hasattr(ticket, 'price') and ticket.price else 0.0,
+                    "description": ticket.description if hasattr(ticket, 'description') else "",
+                    "available_quantity": ticket.available_quantity if hasattr(ticket, 'available_quantity') else None,
+                    "sold_quantity": ticket.sold_quantity if hasattr(ticket, 'sold_quantity') else 0,
+                    "is_active": ticket.is_active if hasattr(ticket, 'is_active') else True,
+                    "sale_start_date": ticket.sale_start_date if hasattr(ticket, 'sale_start_date') else None,
+                    "sale_end_date": ticket.sale_end_date if hasattr(ticket, 'sale_end_date') else None,
+                    "crew_discounted_price": (
+                        float(ticket.crew_discounted_price) 
+                        if hasattr(ticket, 'crew_discounted_price') and ticket.crew_discounted_price 
+                        else None
+                    ),
+                }
+                tickets_data.append(ticket_info)
+            
+            print(f"[get_event_ticket_data API] Retrieved {len(tickets_data)} tickets for paid event")
+            return tickets_data
+            
+        except Event.DoesNotExist:
+            print(f"[get_event_ticket_data API] Event not found with ID: {eventId}")
+            return []
+        except Exception as e:
+            print(f"[get_event_ticket_data API] Error retrieving tickets: {str(e)}")
+            return []
+
     event_data = await get_event_data(eventId)
     if event_data is None:
         await notify_by_bot(
@@ -323,6 +365,10 @@ async def get_event_details(
             device_info,
         )
         raise HTTPException(status_code=404, detail="Event not found")
+
+    # Get ticket information if event is paid
+    tickets_data = await get_event_ticket_data(eventId)
+    event_data["paid_free_tickets"] = tickets_data
 
     print(
         f"[get_event_details API] Returning details for event: {event_data.get('title')}"
