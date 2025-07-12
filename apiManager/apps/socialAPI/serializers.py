@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field, HttpUrl
 from typing import Optional, List, Dict, Any
 from datetime import date, datetime, time
+from uuid import UUID
 
 
 class MyPassSerializer(BaseModel):
@@ -97,3 +98,26 @@ class UserCrewWithPagination(BaseModel):
 class UserCrewsPaginatedResponse(BaseModel):
     crews: List[UserCrewWithPagination]
     pagination: CrewPaginationInfo
+
+
+class SurfPostCreate(BaseModel):
+    event_id: UUID
+    content: str
+
+
+class SurfPostResponse(BaseModel):
+    post_id: UUID
+    event_id: UUID
+    content: str
+    created_at: datetime
+    tideup: int
+    tidedown: int
+    score: int
+
+    class Config:
+        orm_mode = True
+
+
+class VoteRequest(BaseModel):
+    post_id: UUID
+    vote: int

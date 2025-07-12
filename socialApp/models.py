@@ -256,3 +256,63 @@ class SocialActivity(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.activity_type} at {self.created_at}"
+
+
+class SurfPost(models.Model):
+    surfId = models.UUIDField(
+        primary_key=True, default=uuid.uuid4, editable=False, unique=True
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="surf_posts",
+    )
+    event = models.ForeignKey(
+        "eventManagementApp.Event",
+        on_delete=models.CASCADE,
+        related_name="surf_posts",
+    )
+
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        default_permissions = ()
+
+    @property
+    def tideup(self):
+        return self.votes.filter(value=1).count()
+
+    @property
+    def tidedown(self):
+        return self.votes.filter(value=-1).count()
+
+    @property
+    def score(self):
+        return self.votes.aggregate(score=models.Sum("value"))["score"] or 0
+
+
+class TideUpTideDown(models.Model):
+    TIDEUP = 1
+    TIDEDOWN = -1
+    VOTE_CHOICES = (
+        (TIDEUP, "Tideup"),
+        (TIDEDOWN, "Tidedown"),
+    )
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    post = models.ForeignKey(SurfPost, on_delete=models.CASCADE, related_name="votes")
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="post_votes"
+    )
+    value = models.SmallIntegerField(choices=VOTE_CHOICES)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ("post", "user")
+        default_permissions = ()
+        app_label = "socialApp"
+
+    def __str__(self):
+        return f"{self.user.username} -> {self.post.event.name} ({self.value})"
