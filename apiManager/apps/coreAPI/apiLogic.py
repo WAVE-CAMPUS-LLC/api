@@ -8,7 +8,7 @@ import uuid
 
 # Django imports
 from coreApp.forms import RSVPForm
-from eventManagementApp.models import Event
+from eventManagementApp.models import Event, CouponCode
 from accountManagementApp.models import UserProfile
 from eventTicketsApp.models import RSVPTicket, Ticket
 from eventTicketsApp.views import generateTicket
@@ -359,6 +359,38 @@ async def get_event_details(
             print(f"[get_event_ticket_data API] Error retrieving tickets: {str(e)}")
             return []
 
+    @database_sync_to_async
+    def get_event_coupons_data(eventId):
+        """
+        Retrieve all coupons for an event.
+        """
+        try:
+            event = Event.objects.get(eventId=eventId)
+            
+            # Get all coupons for this event using the related_name
+            coupons = event.event_coupons.all()
+            
+            coupons_data = []
+            for coupon in coupons:
+                coupon_info = {
+                    "coupon_id": str(coupon.coupon_id),
+                    "code": coupon.code,
+                    "discount_percentage": coupon.discount_percentage,
+                    "created_at": coupon.created_at.isoformat() if coupon.created_at else None,
+                    "updated_at": coupon.updated_at.isoformat() if coupon.updated_at else None,
+                }
+                coupons_data.append(coupon_info)
+            
+            print(f"[get_event_coupons_data API] Retrieved {len(coupons_data)} coupons for event")
+            return coupons_data
+            
+        except Event.DoesNotExist:
+            print(f"[get_event_coupons_data API] Event not found with ID: {eventId}")
+            return []
+        except Exception as e:
+            print(f"[get_event_coupons_data API] Error retrieving coupons: {str(e)}")
+            return []
+
     event_data = await get_event_data(eventId)
     if event_data is None:
         await notify_by_bot(
@@ -372,6 +404,10 @@ async def get_event_details(
     # Get ticket information if event is paid
     tickets_data = await get_event_ticket_data(eventId)
     event_data["paid_free_tickets"] = tickets_data
+
+    # Get coupon information for the event
+    coupons_data = await get_event_coupons_data(eventId)
+    event_data["coupons"] = coupons_data
 
     print(
         f"[get_event_details API] Returning details for event: {event_data.get('title')}"
