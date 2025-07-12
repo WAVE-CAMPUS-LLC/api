@@ -115,11 +115,15 @@ async def get_events(
 
     @database_sync_to_async
     def get_events_data(offset, limit):
-        # Get total count of future events
-        total_events = Event.objects.filter(date__gte=date.today()).count()
+        # Get total count of all events
+        total_events = Event.objects.count()
         
         # Get paginated events
-        events_queryset = Event.objects.filter(date__gte=date.today()).order_by('date')[offset:offset + limit]
+        events_queryset = Event.objects.order_by('date')[offset:offset + limit]
+        
+        print(f"[DEBUG] Total events in database: {Event.objects.count()}")
+        print(f"[DEBUG] Future events: {Event.objects.filter(date__gte=date.today()).count()}")
+        print(f"[DEBUG] Past events: {Event.objects.filter(date__lt=date.today()).count()}")
         
         events_list = []
         for event in events_queryset:
