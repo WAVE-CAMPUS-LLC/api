@@ -102,7 +102,11 @@ async def edit_event_endpoint(
         @database_sync_to_async
         def process_edit_event():
             # Retrieve the event or raise a 404
-            event = get_object_or_404(Event, eventId=eventId)
+            try:
+                event = Event.objects.get(eventId=eventId)
+            except Event.DoesNotExist:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event not found")
+                
             print(f"[DEBUG - process_edit_event] Event fields: {event.__dict__}")
             print(f"[DEBUG - process_edit_event] Incoming data: {data}")
             print(f"[DEBUG - process_edit_event] Incoming files: {files}")
@@ -342,12 +346,18 @@ async def get_event_details(
 
         @database_sync_to_async
         def get_event(eventId):
-            event = Event.objects.filter(eventId=eventId).first()
-            if not event:
+            try:
+                event = Event.objects.get(eventId=eventId)
+                return event
+            except Event.DoesNotExist:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND, detail="Event not found."
                 )
-            return event  # Get the event details asynchronously
+            except Event.MultipleObjectsReturned:
+                # Log this critical issue but return the first one to maintain functionality
+                print(f"[CRITICAL] Multiple events found with eventId: {eventId}")
+                event = Event.objects.filter(eventId=eventId).first()
+                return event
 
         event = await get_event(eventId)
         print(
@@ -1017,7 +1027,10 @@ async def create_paid_free_ticket(
         @database_sync_to_async
         def process_create_ticket(eventId, data):
             # Fetch the event object or raise a 404 error if not found
-            event = get_object_or_404(Event, eventId=eventId)
+            try:
+                event = Event.objects.get(eventId=eventId)
+            except Event.DoesNotExist:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event not found")
 
             # Map frontend field names to model field names if needed
             form_data = {}
@@ -1115,8 +1128,12 @@ async def get_event_coupons(
     @database_sync_to_async
     def get_event_coupons_sync(event_id):
         print(f"[DEBUG - get_event_coupons] Fetching coupons for event: {event_id}")
-        # Fetch the event object or raise a 404 error if not found
-        event = get_object_or_404(Event, eventId=event_id)
+        # Fetch the event object or return None if not found
+        try:
+            event = Event.objects.get(eventId=event_id)
+        except Event.DoesNotExist:
+            return None
+            
         coupon_codes = CouponCode.objects.filter(event=event).values()
         coupons_list = []
         for coupon in coupon_codes:
@@ -1139,10 +1156,31 @@ async def get_event_coupons(
             coupons_list.append(coupon_data)
         return coupons_list
 
-    # Execute synchronous function asynchronously
-    coupons = await get_event_coupons_sync(eventId)
-    print(f"[DEBUG - get_event_coupons] Found {len(coupons)} coupons")
-    return JSONResponse(content=coupons, status_code=status.HTTP_200_OK)
+    try:
+        # Execute synchronous function asynchronously
+        coupons = await get_event_coupons_sync(eventId)
+        
+        if coupons is None:
+            await notify_by_bot(
+                f"**[API: get_event_coupons]** \n\n Event not found: eventId={eventId} \n\n Platform: {platform}",
+                platform or "Unknown",
+                "ERROR",
+                device_info,
+            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event not found")
+            
+        print(f"[DEBUG - get_event_coupons] Found {len(coupons)} coupons")
+        return JSONResponse(content=coupons, status_code=status.HTTP_200_OK)
+    except HTTPException:
+        raise
+    except Exception as e:
+        await notify_by_bot(
+            f"**[API: get_event_coupons]** \n\n Error fetching coupons: eventId={eventId}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error fetching coupons: {str(e)}")
 
 
 @router.get("/event/{eventId}/paid/tickets")
@@ -1161,8 +1199,12 @@ async def get_paid_event_tickets(
         print(
             f"[DEBUG - get_paid_event_tickets] Fetching tickets for event: {event_id}"
         )
-        # Fetch the event object or raise a 404 error if not found
-        event = get_object_or_404(Event, eventId=event_id)
+        # Fetch the event object or return None if not found
+        try:
+            event = Event.objects.get(eventId=event_id)
+        except Event.DoesNotExist:
+            return None
+            
         tickets = PaidFreeTicket.objects.filter(event=event).values()
         tickets_list = []
         for ticket in tickets:
@@ -1175,10 +1217,31 @@ async def get_paid_event_tickets(
             tickets_list.append(ticket)
         return tickets_list
 
-    # Execute synchronous function asynchronously
-    tickets = await get_paid_event_tickets_sync(eventId)
-    print(f"[DEBUG - get_paid_event_tickets] Found {len(tickets)} tickets")
-    return JSONResponse(content=tickets, status_code=status.HTTP_200_OK)
+    try:
+        # Execute synchronous function asynchronously
+        tickets = await get_paid_event_tickets_sync(eventId)
+        
+        if tickets is None:
+            await notify_by_bot(
+                f"**[API: get_paid_event_tickets]** \n\n Event not found: eventId={eventId} \n\n Platform: {platform}",
+                platform or "Unknown",
+                "ERROR",
+                device_info,
+            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event not found")
+            
+        print(f"[DEBUG - get_paid_event_tickets] Found {len(tickets)} tickets")
+        return JSONResponse(content=tickets, status_code=status.HTTP_200_OK)
+    except HTTPException:
+        raise
+    except Exception as e:
+        await notify_by_bot(
+            f"**[API: get_paid_event_tickets]** \n\n Error fetching tickets: eventId={eventId}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error fetching tickets: {str(e)}")
 
 
 @router.post("/event/{eventId}/paid/ticket/delete")
@@ -1198,8 +1261,16 @@ async def delete_paid_event_ticket(
 
         @database_sync_to_async
         def delete_ticket_sync(event_id, ticket_id):
-            event = get_object_or_404(Event, eventId=event_id)
-            ticket = get_object_or_404(PaidFreeTicket, ticket_id=ticket_id, event=event)
+            try:
+                event = Event.objects.get(eventId=event_id)
+            except Event.DoesNotExist:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event not found")
+                
+            try:
+                ticket = PaidFreeTicket.objects.get(ticket_id=ticket_id, event=event)
+            except PaidFreeTicket.DoesNotExist:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ticket not found")
+                
             ticket.delete()
             return {"message": "Ticket deleted successfully"}
 
@@ -1239,7 +1310,10 @@ async def create_event_coupon(
 
     @database_sync_to_async
     def create_coupon(eventId, payload):
-        event = get_object_or_404(Event, eventId=eventId)
+        try:
+            event = Event.objects.get(eventId=eventId)
+        except Event.DoesNotExist:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event not found")
 
         coupon_form = CouponCodeForm(payload)
 
@@ -1293,8 +1367,16 @@ async def delete_coupon(
 
     @database_sync_to_async
     def delete_coupon_sync(event_id, coupon_id):
-        event = get_object_or_404(Event, eventId=event_id)
-        coupon = get_object_or_404(CouponCode, coupon_id=coupon_id)
+        try:
+            event = Event.objects.get(eventId=event_id)
+        except Event.DoesNotExist:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event not found")
+            
+        try:
+            coupon = CouponCode.objects.get(coupon_id=coupon_id)
+        except CouponCode.DoesNotExist:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Coupon not found")
+            
         if coupon.event != event:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
