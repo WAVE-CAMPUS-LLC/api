@@ -299,6 +299,9 @@ async def get_event_details(
                 bleach.clean(event.description) if event.description else ""
             )
 
+            # Check if event is in the past
+            is_past_event = event.date < date.today()
+
             return {
                 "eventId": str(event.eventId),
                 "title": event.title,
@@ -335,6 +338,7 @@ async def get_event_details(
                 "forAllDisplay": bool(event.forAllDisplay),
                 "forCollegesDisplay": bool(event.forCollegesDisplay),
                 "coupons_activated": bool(event.couponsActivated),
+                "is_past_event": is_past_event,
             }
         except Event.DoesNotExist:
             print(f"[get_event_details API] Event not found with ID: {eventId}")
