@@ -5,8 +5,10 @@ from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordRequestForm
 import bleach
 import uuid
+from datetime import date
 
 # Django imports
+from django.utils import timezone
 from coreApp.forms import RSVPForm
 from eventManagementApp.models import Event, CouponCode
 from accountManagementApp.models import UserProfile
@@ -97,11 +99,14 @@ async def get_events_preview():
 async def get_events(
     request: Request,
     platform: Optional[str] = None,
+    offset: int = 0,
+    limit: int = 10,
 ):
     """
-    API endpoint to retrieve events for the explore page.
+    API endpoint to retrieve events for the explore page with pagination.
+    Returns 10 events by default, use offset to get more events.
     """
-    print("[get_events API] Function called")
+    print(f"[get_events API] Function called with offset={offset}, limit={limit}")
 
     # Get device info
     user_agent_str = request.headers.get("user-agent", "")
@@ -109,9 +114,15 @@ async def get_events(
     device_info = device_data["device_info"]
 
     @database_sync_to_async
-    def get_events_data():
+    def get_events_data(offset, limit):
+        # Get total count of future events
+        total_events = Event.objects.filter(date__gte=date.today()).count()
+        
+        # Get paginated events
+        events_queryset = Event.objects.filter(date__gte=date.today()).order_by('date')[offset:offset + limit]
+        
         events_list = []
-        for event in Event.objects.all():
+        for event in events_queryset:
             header_photo_url = event.header_photo.url if event.header_photo else None
             events_list.append(
                 {
@@ -129,16 +140,31 @@ async def get_events(
                     ),  # Ensure it's a boolean
                 }
             )
-        print(f"[get_events API] Retrieved {len(events_list)} events from database")
-        return events_list
+        
+        print(f"[get_events API] Retrieved {len(events_list)} events from database (offset={offset}, limit={limit})")
+        return events_list, total_events
 
     try:
         # Get the data and convert to Pydantic models
-        events_data = await get_events_data()
+        events_data, total_count = await get_events_data(offset, limit)
         events = [ExplorePageEvent(**event_data) for event_data in events_data]
 
-        response = {"events": events}
-        print(f"[get_events API] Returning {len(events)} events in response")
+        # Calculate pagination metadata
+        has_more = (offset + len(events_data)) < total_count
+        next_offset = offset + len(events_data) if has_more else None
+
+        response = {
+            "events": events,
+            "pagination": {
+                "offset": offset,
+                "limit": limit,
+                "total_count": total_count,
+                "returned_count": len(events_data),
+                "has_more": has_more,
+                "next_offset": next_offset
+            }
+        }
+        print(f"[get_events API] Returning {len(events)} events in response with pagination info")
         return response
     except Exception as e:
         await notify_by_bot(
