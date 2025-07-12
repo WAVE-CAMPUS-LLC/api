@@ -227,7 +227,7 @@ async def suggest_friends_personalized(
                         "score": rec["score"],
                     }
                 )
-            except CustomUser.DoesNotExist:  # type: ignore
+            except Exception:
                 continue
 
         # Generate personalized friend suggestion message
@@ -243,27 +243,28 @@ async def suggest_friends_personalized(
             "pagination": paginated_data["pagination"],
             "platform": platform,
         }
-    except CustomUser.DoesNotExist:  # type: ignore
-        await notify_by_bot(
-            f"**[API: suggest_friends_personalized]** \n\n User not found: {current_user_id} \n\n Platform: {platform}",
-            platform or "Unknown",
-            "ERROR",
-            device_info,
-        )
-        raise HTTPException(
-            status_code=404, detail=f"User with ID {current_user_id} not found"
-        )
     except Exception as e:
-        await notify_by_bot(
-            f"**[API: suggest_friends_personalized]** \n\n Error: {str(e)} \n\n Platform: {platform}",
-            platform or "Unknown",
-            "ERROR",
-            device_info,
-        )
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error generating personalized friend suggestions: {str(e)}",
-        )
+        if "does not exist" in str(e).lower():
+            await notify_by_bot(
+                f"**[API: suggest_friends_personalized]** \n\n User not found: {current_user_id} \n\n Platform: {platform}",
+                platform or "Unknown",
+                "ERROR",
+                device_info,
+            )
+            raise HTTPException(
+                status_code=404, detail=f"User with ID {current_user_id} not found"
+            )
+        else:
+            await notify_by_bot(
+                f"**[API: suggest_friends_personalized]** \n\n Error: {str(e)} \n\n Platform: {platform}",
+                platform or "Unknown",
+                "ERROR",
+                device_info,
+            )
+            raise HTTPException(
+                status_code=500,
+                detail=f"Error generating personalized friend suggestions: {str(e)}",
+            )
 
 
 @router.get("/suggest/events")
@@ -324,26 +325,27 @@ async def suggest_events(
             "limit": limit,
             "platform": platform,
         }
-    except CustomUser.DoesNotExist:  # type: ignore
-        await notify_by_bot(
-            f"**[API: suggest_events]** \n\n User not found: {current_user_id} \n\n Platform: {platform}",
-            platform or "Unknown",
-            "ERROR",
-            device_info,
-        )
-        raise HTTPException(
-            status_code=404, detail=f"User with ID {current_user_id} not found"
-        )
     except Exception as e:
-        await notify_by_bot(
-            f"**[API: suggest_events]** \n\n Error: {str(e)} \n\n Platform: {platform}",
-            platform or "Unknown",
-            "ERROR",
-            device_info,
-        )
-        raise HTTPException(
-            status_code=500, detail=f"Error generating event suggestions: {str(e)}"
-        )
+        if "does not exist" in str(e).lower():
+            await notify_by_bot(
+                f"**[API: suggest_events]** \n\n User not found: {current_user_id} \n\n Platform: {platform}",
+                platform or "Unknown",
+                "ERROR",
+                device_info,
+            )
+            raise HTTPException(
+                status_code=404, detail=f"User with ID {current_user_id} not found"
+            )
+        else:
+            await notify_by_bot(
+                f"**[API: suggest_events]** \n\n Error: {str(e)} \n\n Platform: {platform}",
+                platform or "Unknown",
+                "ERROR",
+                device_info,
+            )
+            raise HTTPException(
+                status_code=500, detail=f"Error generating event suggestions: {str(e)}"
+            )
 
 
 @router.get("/suggest/events/{event_id}/users")
@@ -492,26 +494,27 @@ async def discover_events(
             },
             "platform": platform,
         }
-    except CustomUser.DoesNotExist:  # type: ignore
-        await notify_by_bot(
-            f"**[API: discover_events]** \n\n User not found: {current_user_id} \n\n Platform: {platform}",
-            platform or "Unknown",
-            "ERROR",
-            device_info,
-        )
-        raise HTTPException(
-            status_code=404, detail=f"User with ID {current_user_id} not found"
-        )
     except Exception as e:
-        await notify_by_bot(
-            f"**[API: discover_events]** \n\n Error: {str(e)} \n\n Platform: {platform}",
-            platform or "Unknown",
-            "ERROR",
-            device_info,
-        )
-        raise HTTPException(
-            status_code=500, detail=f"Error generating event discovery: {str(e)}"
-        )
+        if "does not exist" in str(e).lower():
+            await notify_by_bot(
+                f"**[API: discover_events]** \n\n User not found: {current_user_id} \n\n Platform: {platform}",
+                platform or "Unknown",
+                "ERROR",
+                device_info,
+            )
+            raise HTTPException(
+                status_code=404, detail=f"User with ID {current_user_id} not found"
+            )
+        else:
+            await notify_by_bot(
+                f"**[API: discover_events]** \n\n Error: {str(e)} \n\n Platform: {platform}",
+                platform or "Unknown",
+                "ERROR",
+                device_info,
+            )
+            raise HTTPException(
+                status_code=500, detail=f"Error generating event discovery: {str(e)}"
+            )
 
 
 @router.get("/discover/events/college")

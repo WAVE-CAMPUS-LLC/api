@@ -8,14 +8,14 @@ def get_event_recommendations_for_user(
 ):
     query = """
     MATCH (u:User {user_id: $user_id})
-    
+
     // Get user's preferences from UserPreferences model
     OPTIONAL MATCH (u)-[:HAS_PREFERENCES]->(prefs:UserPreferences)
     
     // 1. Friends who have attended similar events (weight: 4)
     OPTIONAL MATCH (u)-[:FRIEND]->(f:User)-[:ATTENDED_EVENT]->(e1:Event)
     WITH u, prefs, collect(DISTINCT e1) as friend_attended_events
-    
+
     // 2. Friends who are going to current events (weight: 5)
     OPTIONAL MATCH (u)-[:FRIEND]->(f2:User)-[:RSVP]->(e2:Event)
     WHERE e2.eventDate >= datetime()
@@ -46,11 +46,11 @@ def get_event_recommendations_for_user(
     // 7. Events related to user's interests (weight: 3)
     OPTIONAL MATCH (u)-[:INTERESTED_IN]->(i:Interest)<-[:RELATES_TO_INTEREST]-(e7:Event)
     WITH u, prefs, friend_attended_events, friend_rsvp_events, mutual_events, college_host_events, college_rsvp_events, preference_events, collect(DISTINCT e7) as interest_events
-    
+
     // 8. Events at preferred times (weight: 2)
     OPTIONAL MATCH (u)-[:PREFERRED_TIME]->(t:Time)<-[:BEST_TIME]-(e8:Event)
     WITH u, prefs, friend_attended_events, friend_rsvp_events, mutual_events, college_host_events, college_rsvp_events, preference_events, interest_events, collect(DISTINCT e8) as time_events
-    
+
     // 9. Events that attract people user wants to meet (weight: 3)
     OPTIONAL MATCH (u)-[:WANTS_TO_MEET]->(p:Person)<-[:ATTRACTS_PEOPLE]-(e9:Event)
     WITH u, prefs, friend_attended_events, friend_rsvp_events, mutual_events, college_host_events, college_rsvp_events, preference_events, interest_events, time_events, collect(DISTINCT e9) as people_events
@@ -60,7 +60,7 @@ def get_event_recommendations_for_user(
          college_rsvp_events, preference_events, interest_events, time_events, people_events,
          friend_attended_events + friend_rsvp_events + mutual_events + college_host_events + 
          college_rsvp_events + preference_events + interest_events + time_events + people_events as all_events
-    
+
     UNWIND all_events as event
     WITH event, friend_attended_events, friend_rsvp_events, mutual_events, college_host_events,
          college_rsvp_events, preference_events, interest_events, people_events, time_events,

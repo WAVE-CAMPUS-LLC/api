@@ -1,3 +1,4 @@
+from typing import Optional
 from socialGraphManagement.neo4j_client import GraphClient
 from openai import OpenAI
 from django.conf import settings
@@ -12,15 +13,13 @@ client = OpenAI(api_key=settings.COLLEGE_OPENAI_API_KEY)
 logger = logging.getLogger(__name__)
 
 
-def get_friend_recommendations(user_id: str, limit: int = None):
+def get_friend_recommendations(user_id: str, limit: Optional[int] = None):
     query = """
         MATCH (u:User {user_id: $user_id})
 
         MATCH (other:User)
         WHERE other.user_id <> $user_id
         AND NOT (u)-[:FRIEND]-(other)
-        AND NOT (u)-[:REQUESTED]->(other)
-        AND NOT (other)-[:REQUESTED]->(u)
 
         OPTIONAL MATCH (u)-[:INTERESTED_IN]->(i:Interest)<-[:INTERESTED_IN]-(other)
         WITH u, other, count(i) AS shared_interests
@@ -34,11 +33,8 @@ def get_friend_recommendations(user_id: str, limit: int = None):
         OPTIONAL MATCH (u)-[:WANTS_TO_MEET]->(p:Person)<-[:WANTS_TO_MEET]-(other)
         WITH u, other, shared_interests, shared_events, shared_times, count(p) AS shared_people
 
-        WITH u, other, shared_interests, shared_events, shared_times, shared_people,
-            CASE WHEN u.vibe = other.vibe THEN 1 ELSE 0 END AS vibe_match
-
         OPTIONAL MATCH (u)-[:FRIEND]-(mf:User)-[:FRIEND]-(other)
-        WITH other, shared_interests, shared_events, shared_times, shared_people, vibe_match,
+        WITH other, shared_interests, shared_events, shared_times, shared_people,
             count(DISTINCT mf) AS mutual_friends
 
         WITH other.user_id AS user_id, 
@@ -46,7 +42,6 @@ def get_friend_recommendations(user_id: str, limit: int = None):
             shared_events * 3 + 
             shared_times * 2 + 
             shared_people * 4 + 
-            vibe_match * 2 + 
             mutual_friends) AS score
         ORDER BY score DESC
         RETURN user_id, score
@@ -64,16 +59,19 @@ def get_friend_recommendations(user_id: str, limit: int = None):
     # (in case of data sync issues between Neo4j and Django)
     user = CustomUser.objects.filter(user_id=user_id).first()
     if user:
-        current_friends = set(
-            CustomUser.objects.filter(
-                user_id__in=[user_id],
-            ).values_list("friends__user_id", flat=True)
-        )
-        filtered_results = [
-            r
-            for r in results
-            if r["user_id"] not in current_friends and r["user_id"] != str(user_id)
-        ]
+        try:
+            # Get current friends from UserProfile
+            current_friends = set(
+                user.user_profile.friends.values_list("user__user_id", flat=True)  # type: ignore[attr-defined]
+            )
+            filtered_results = [
+                r
+                for r in results
+                if r["user_id"] not in current_friends and r["user_id"] != str(user_id)
+            ]
+        except Exception:
+            # If user_profile doesn't exist or friends can't be accessed, just filter by user_id
+            filtered_results = [r for r in results if r["user_id"] != str(user_id)]
     else:
         filtered_results = [r for r in results if r["user_id"] != str(user_id)]
 
@@ -193,17 +191,17 @@ def send_friend_recommendation_notification(user_id: str, message: str):
         logger.info("Sent friend recommendation notification to user %s", user_id)
         return True
 
-    except CustomUser.DoesNotExist:  # type: ignore
-        logger.warning(
-            "User %s not found for friend recommendation notification", user_id
-        )
-        return False
     except Exception as e:
-        logger.error(
-            "Error sending friend recommendation notification to user %s: %s",
-            user_id,
-            e,
-        )
+        if "does not exist" in str(e).lower():
+            logger.warning(
+                "User %s not found for friend recommendation notification", user_id
+            )
+        else:
+            logger.error(
+                "Error sending friend recommendation notification to user %s: %s",
+                user_id,
+                str(e),
+            )
         return False
 
 
