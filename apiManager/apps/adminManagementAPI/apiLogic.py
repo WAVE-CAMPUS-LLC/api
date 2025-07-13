@@ -70,6 +70,7 @@ from eventTicketsApp.models import RSVPTicket, PaidFreeTicket, Ticket
 from eventTicketsApp.models import Ticket, RSVPTicket
 from accountManagementApp.models import UserProfile
 from adminDashboardApp.models import College, LoginHistoryModel
+from socialApp.models import FixedMessage
 
 from adminDashboardApp.models import College
 from collegeManagementApp.models import Membership, CollegeEventLink
@@ -3386,4 +3387,312 @@ async def edit_ambassador_program_details(
         )
         raise HTTPException(
             status_code=500, detail=f"Error updating program details: {str(e)}"
+        )
+
+
+# FIXED MESSAGES MANAGEMENT
+@router.get("/fixedMessages/getAll")
+async def get_fixed_messages(
+    request: Request,
+    current_user: CustomUser = Depends(require_admin_role),
+    platform: Optional[str] = None,
+):
+    """
+    Get all fixed messages - requires Admin or Super Admin role.
+    """
+    print(f"[get_fixed_messages] API called with user_id: {current_user.pk}")
+
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    @database_sync_to_async
+    def get_fixed_messages_data():
+        try:
+            fixed_messages = FixedMessage.objects.all().order_by("text")
+            return [
+                {
+                    "id": str(message.id),
+                    "text": message.text,
+                    "created_at": (
+                        message.created_at.isoformat()
+                        if hasattr(message, "created_at")
+                        else None
+                    ),
+                }
+                for message in fixed_messages
+            ]
+        except Exception as e:
+            print(f"[get_fixed_messages] Database error: {str(e)}")
+            raise e
+
+    try:
+        messages_data = await get_fixed_messages_data()
+        print(f"[get_fixed_messages] Returning {len(messages_data)} fixed messages")
+        return messages_data
+
+    except Exception as e:
+        await notify_by_bot(
+            f"**[API: get_fixed_messages]** \n\n Error fetching fixed messages: error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        raise HTTPException(
+            status_code=500, detail=f"Error fetching fixed messages: {str(e)}"
+        )
+
+
+@router.post("/fixedMessages/create")
+async def create_fixed_message(
+    request: Request,
+    current_user: CustomUser = Depends(require_admin_role),
+    platform: Optional[str] = None,
+):
+    """
+    Create a new fixed message - requires Admin or Super Admin role.
+    """
+    print(f"[create_fixed_message] API called with user_id: {current_user.pk}")
+
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    try:
+        # Get form data from request
+        form_data = await request.form()
+        text = form_data.get("text", "").strip()
+
+        if not text:
+            raise HTTPException(status_code=400, detail="Text is required")
+
+        @database_sync_to_async
+        def validate_and_create_fixed_message(text):
+            try:
+                # Check if message with same text already exists
+                if FixedMessage.objects.filter(text=text).exists():
+                    return {
+                        "success": False,
+                        "error": f"Fixed message with text '{text}' already exists",
+                        "status_code": status.HTTP_400_BAD_REQUEST,
+                    }
+
+                # Create the fixed message
+                fixed_message = FixedMessage.objects.create(text=text)
+
+                return {
+                    "success": True,
+                    "message": "Fixed message created successfully!",
+                    "fixed_message": {
+                        "id": str(fixed_message.id),
+                        "text": fixed_message.text,
+                    },
+                    "status_code": status.HTTP_201_CREATED,
+                }
+
+            except Exception as e:
+                return {
+                    "success": False,
+                    "error": f"Database error: {str(e)}",
+                    "status_code": status.HTTP_500_INTERNAL_SERVER_ERROR,
+                }
+
+        # Execute creation
+        result = await validate_and_create_fixed_message(text)
+        status_code = result.pop("status_code", status.HTTP_200_OK)
+
+        if not result.get("success", True):
+            return JSONResponse(content=result, status_code=status_code)
+
+        print(f"[create_fixed_message] Fixed message created successfully")
+        return JSONResponse(content=result, status_code=status_code)
+
+    except HTTPException:
+        # Re-raise HTTP exceptions
+        raise
+    except Exception as e:
+        await notify_by_bot(
+            f"**[API: create_fixed_message]** \n\n Error creating fixed message: error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        raise HTTPException(
+            status_code=500, detail=f"Error creating fixed message: {str(e)}"
+        )
+
+
+@router.delete("/fixedMessages/{message_id}/delete")
+async def delete_fixed_message(
+    message_id: str,
+    request: Request,
+    current_user: CustomUser = Depends(require_admin_role),
+    platform: Optional[str] = None,
+):
+    """
+    Delete a fixed message - requires Admin or Super Admin role.
+    """
+    print(
+        f"[delete_fixed_message] API called for message_id: {message_id} by {current_user.pk}"
+    )
+
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    @database_sync_to_async
+    def delete_fixed_message_data(message_id):
+        try:
+            # Try to get the fixed message
+            fixed_message = get_object_or_404(FixedMessage, id=message_id)
+            message_text = fixed_message.text
+
+            # Delete the message
+            fixed_message.delete()
+
+            return {
+                "success": True,
+                "message": f"Fixed message '{message_text}' has been deleted",
+                "deleted_message": {
+                    "id": message_id,
+                    "text": message_text,
+                },
+            }
+
+        except FixedMessage.DoesNotExist:
+            return {
+                "success": False,
+                "error": "Fixed message not found",
+                "status_code": status.HTTP_404_NOT_FOUND,
+            }
+        except Exception as e:
+            return {
+                "success": False,
+                "error": f"Database error: {str(e)}",
+                "status_code": status.HTTP_500_INTERNAL_SERVER_ERROR,
+            }
+
+    try:
+        result = await delete_fixed_message_data(message_id)
+
+        if not result.get("success", True):
+            status_code = result.pop(
+                "status_code", status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+            return JSONResponse(content=result, status_code=status_code)
+
+        print(f"[delete_fixed_message] Fixed message deleted successfully")
+        return JSONResponse(content=result, status_code=status.HTTP_200_OK)
+
+    except Exception as e:
+        await notify_by_bot(
+            f"**[API: delete_fixed_message]** \n\n Error deleting fixed message: message_id={message_id}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        raise HTTPException(
+            status_code=500, detail=f"Error deleting fixed message: {str(e)}"
+        )
+
+
+@router.put("/fixedMessages/{message_id}/edit")
+async def edit_fixed_message(
+    message_id: str,
+    request: Request,
+    current_user: CustomUser = Depends(require_admin_role),
+    platform: Optional[str] = None,
+):
+    """
+    Edit a fixed message - requires Admin or Super Admin role.
+    """
+    print(
+        f"[edit_fixed_message] API called for message_id: {message_id} by {current_user.pk}"
+    )
+
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    try:
+        # Get form data from request
+        form_data = await request.form()
+        new_text = form_data.get("text", "").strip()
+
+        if not new_text:
+            raise HTTPException(status_code=400, detail="Text is required")
+
+        @database_sync_to_async
+        def validate_and_update_fixed_message(message_id, new_text):
+            try:
+                # Get the existing fixed message
+                fixed_message = get_object_or_404(FixedMessage, id=message_id)
+                old_text = fixed_message.text
+
+                # Check if another message with the same text already exists
+                if (
+                    FixedMessage.objects.filter(text=new_text)
+                    .exclude(id=message_id)
+                    .exists()
+                ):
+                    return {
+                        "success": False,
+                        "error": f"Another fixed message with text '{new_text}' already exists",
+                        "status_code": status.HTTP_400_BAD_REQUEST,
+                    }
+
+                # Update the message
+                fixed_message.text = new_text
+                fixed_message.save()
+
+                return {
+                    "success": True,
+                    "message": "Fixed message updated successfully!",
+                    "fixed_message": {
+                        "id": str(fixed_message.id),
+                        "text": fixed_message.text,
+                        "old_text": old_text,
+                    },
+                    "status_code": status.HTTP_200_OK,
+                }
+
+            except FixedMessage.DoesNotExist:
+                return {
+                    "success": False,
+                    "error": "Fixed message not found",
+                    "status_code": status.HTTP_404_NOT_FOUND,
+                }
+            except Exception as e:
+                return {
+                    "success": False,
+                    "error": f"Database error: {str(e)}",
+                    "status_code": status.HTTP_500_INTERNAL_SERVER_ERROR,
+                }
+
+        # Execute update
+        result = await validate_and_update_fixed_message(message_id, new_text)
+        status_code = result.pop("status_code", status.HTTP_200_OK)
+
+        if not result.get("success", True):
+            return JSONResponse(content=result, status_code=status_code)
+
+        print(f"[edit_fixed_message] Fixed message updated successfully")
+        return JSONResponse(content=result, status_code=status_code)
+
+    except HTTPException:
+        # Re-raise HTTP exceptions
+        raise
+    except Exception as e:
+        await notify_by_bot(
+            f"**[API: edit_fixed_message]** \n\n Error updating fixed message: message_id={message_id}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        raise HTTPException(
+            status_code=500, detail=f"Error updating fixed message: {str(e)}"
         )
