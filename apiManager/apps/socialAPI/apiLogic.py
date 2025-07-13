@@ -3108,10 +3108,23 @@ async def vote_on_post(
             # Get the post
             post = SurfPost.objects.get(surfId=post_id)
 
-            # Create or update the vote
-            vote_obj, created = TideUpTideDown.objects.update_or_create(
-                post=post, user=user, defaults={"value": vote_value}
-            )
+            # Check if user already has a vote
+            existing_vote = TideUpTideDown.objects.filter(post=post, user=user).first()
+
+            if existing_vote:
+                # User already voted - update their vote
+                old_vote_value = existing_vote.value
+                existing_vote.value = vote_value
+                existing_vote.save()
+                created = False
+                vote_changed = old_vote_value != vote_value
+            else:
+                # User hasn't voted before - create new vote
+                existing_vote = TideUpTideDown.objects.create(
+                    post=post, user=user, value=vote_value
+                )
+                created = True
+                vote_changed = False
 
             # Refresh the post to get updated vote counts
             post.refresh_from_db()
@@ -3123,6 +3136,10 @@ async def vote_on_post(
                 "tidedown": post.tidedown,
                 "vote_value": vote_value,
                 "created": created,
+                "vote_changed": vote_changed,
+                "previous_vote": (
+                    old_vote_value if existing_vote and not created else None
+                ),
             }, None
         except CustomUser.DoesNotExist:
             error_message = f"User not found with ID: {caller_user_id}"
@@ -3211,17 +3228,19 @@ async def remove_vote(
             print(f"[remove_vote API] {error_message}")
             return None, error_message, None
 
-    vote_data, error_message = await remove_vote_logic(caller_user_id, post_id)
+    vote_data, success_message, error_message = await remove_vote_logic(
+        caller_user_id, post_id
+    )
     if vote_data is None:
         notification_sent = await notify_by_bot(
-            f"**[API: remove_vote API]** \n\n {error_message} \n\n Platform: {platform} \n\n User ID: {caller_user_id} \n\n Post ID: {post_id}",
+            f"**[API: remove_vote API]** \n\n {success_message or error_message} \n\n Platform: {platform} \n\n User ID: {caller_user_id} \n\n Post ID: {post_id}",
             platform or "Unknown",
             "ERROR",
             device_info,
         )
         if notification_sent is None:
             print("[remove_vote API] Could not send notification: BOT_API_KEY not set")
-        raise HTTPException(status_code=404, detail=error_message)
+        raise HTTPException(status_code=404, detail=success_message or error_message)
 
     print(f"[remove_vote API] Vote removed successfully")
     return {"message": vote_data["message"], "vote_data": vote_data}
@@ -3611,3 +3630,90 @@ async def get_active_events_for_surf_post(
         f"[get_active_events_for_surf_post API] Returning {len(events_data['active_events'])} active events"
     )
     return events_data
+
+
+@router.get("/surf-posts/vote/{post_id}")
+async def check_user_vote(
+    request: Request,
+    post_id: UUID,
+    caller_user_id: Optional[int] = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
+    """
+    API endpoint to check the current user's vote status on a surf post.
+    Returns whether the user has voted and what they voted (tideup/tidedown).
+    """
+    print(f"[check_user_vote API] Function called with post_id: {post_id}")
+
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    @database_sync_to_async
+    def check_user_vote_logic(caller_user_id, post_id):
+        try:
+            # Get the user
+            user = CustomUser.objects.get(id=caller_user_id)
+
+            # Get the post
+            post = SurfPost.objects.get(surfId=post_id)
+
+            # Check if user has voted
+            vote = TideUpTideDown.objects.filter(post=post, user=user).first()
+
+            if vote:
+                # User has voted
+                vote_status = "tideup" if vote.value == 1 else "tidedown"
+                return {
+                    "has_voted": True,
+                    "vote_value": vote.value,
+                    "vote_status": vote_status,
+                    "voted_at": vote.created_at,
+                    "post_id": str(post.surfId),
+                    "post_score": post.score,
+                    "post_tideup": post.tideup,
+                    "post_tidedown": post.tidedown,
+                }, None
+            else:
+                # User hasn't voted
+                return {
+                    "has_voted": False,
+                    "vote_value": None,
+                    "vote_status": None,
+                    "voted_at": None,
+                    "post_id": str(post.surfId),
+                    "post_score": post.score,
+                    "post_tideup": post.tideup,
+                    "post_tidedown": post.tidedown,
+                }, None
+        except CustomUser.DoesNotExist:
+            error_message = f"User not found with ID: {caller_user_id}"
+            print(f"[check_user_vote API] {error_message}")
+            return None, error_message, None
+        except SurfPost.DoesNotExist:
+            error_message = f"Surf post not found with ID: {post_id}"
+            print(f"[check_user_vote API] {error_message}")
+            return None, error_message, None
+        except Exception as e:
+            error_message = f"Error checking user vote: {str(e)}"
+            print(f"[check_user_vote API] {error_message}")
+            return None, error_message, None
+
+    vote_data, success_message, error_message = await check_user_vote_logic(
+        caller_user_id, post_id
+    )
+    if vote_data is None:
+        notification_sent = await notify_by_bot(
+            f"**[API: check_user_vote API]** \n\n {success_message or error_message} \n\n Platform: {platform} \n\n User ID: {caller_user_id} \n\n Post ID: {post_id}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        if notification_sent is None:
+            print(
+                "[check_user_vote API] Could not send notification: BOT_API_KEY not set"
+            )
+        raise HTTPException(status_code=404, detail=success_message or error_message)
+
+    print(f"[check_user_vote API] Vote status retrieved successfully")
+    return {"vote_status": vote_data}
