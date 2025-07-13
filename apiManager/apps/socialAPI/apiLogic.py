@@ -3683,28 +3683,36 @@ async def check_user_vote(
             if vote:
                 # User has voted
                 vote_status = "tideup" if vote.value == 1 else "tidedown"
-                return {
-                    "has_voted": True,
-                    "vote_value": vote.value,
-                    "vote_status": vote_status,
-                    "voted_at": vote.created_at,
-                    "post_id": str(post.surfId),
-                    "post_score": post.score,
-                    "post_tideup": post.tideup,
-                    "post_tidedown": post.tidedown,
-                }, None
+                return (
+                    {
+                        "has_voted": True,
+                        "vote_value": vote.value,
+                        "vote_status": vote_status,
+                        "voted_at": vote.created_at,
+                        "post_id": str(post.surfId),
+                        "post_score": post.score,
+                        "post_tideup": post.tideup,
+                        "post_tidedown": post.tidedown,
+                    },
+                    "Vote status retrieved successfully",
+                    None,
+                )
             else:
                 # User hasn't voted
-                return {
-                    "has_voted": False,
-                    "vote_value": None,
-                    "vote_status": None,
-                    "voted_at": None,
-                    "post_id": str(post.surfId),
-                    "post_score": post.score,
-                    "post_tideup": post.tideup,
-                    "post_tidedown": post.tidedown,
-                }, None
+                return (
+                    {
+                        "has_voted": False,
+                        "vote_value": None,
+                        "vote_status": None,
+                        "voted_at": None,
+                        "post_id": str(post.surfId),
+                        "post_score": post.score,
+                        "post_tideup": post.tideup,
+                        "post_tidedown": post.tidedown,
+                    },
+                    "Vote status retrieved successfully",
+                    None,
+                )
         except CustomUser.DoesNotExist:
             error_message = f"User not found with ID: {caller_user_id}"
             print(f"[check_user_vote API] {error_message}")
