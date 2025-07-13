@@ -3914,7 +3914,7 @@ async def send_message(
 ):
     @database_sync_to_async
     def send_message_logic(data, current_user):
-        receiver = get_object_or_404(CustomUser, id=data.receiver_id)
+        receiver = get_object_or_404(CustomUser, username=data.receiver_id)
         fixed_message = get_object_or_404(FixedMessage, id=data.fixed_message_id)
 
         latest = (
