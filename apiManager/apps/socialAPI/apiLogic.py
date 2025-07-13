@@ -3820,7 +3820,6 @@ async def get_surf_post_details(
                 "post_id": str(post.surfId),
                 "content": post.content,
                 "created_at": post.created_at,
-                "updated_at": post.updated_at,
                 "score": post.score,
                 "tideup": post.tideup,
                 "tidedown": post.tidedown,
