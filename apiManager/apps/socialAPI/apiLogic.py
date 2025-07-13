@@ -3744,3 +3744,162 @@ async def check_user_vote(
 
     print(f"[check_user_vote API] Vote status retrieved successfully")
     return {"vote_status": vote_data}
+
+
+@router.get("/surf-posts/post/{post_id}")
+async def get_surf_post_details(
+    request: Request,
+    post_id: UUID,
+    caller_user_id: Optional[int] = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
+    """
+    API endpoint to get detailed information about a specific surf post.
+    Returns comprehensive post details including user info, event info, and vote counts.
+    """
+    print(f"[get_surf_post_details API] Function called with post_id: {post_id}")
+
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    @database_sync_to_async
+    def get_surf_post_details_logic(caller_user_id, post_id):
+        try:
+            # Get the post with related data
+            post = SurfPost.objects.select_related(
+                "user",
+                "user__user_profile",
+                "event",
+                "event__host",
+                "event__host__user_profile",
+            ).get(surfId=post_id)
+
+            # Get user profile
+            user_profile = (
+                post.user.user_profile if hasattr(post.user, "user_profile") else None
+            )
+
+            # Get event host profile
+            event_host_profile = (
+                post.event.host.user_profile
+                if hasattr(post.event.host, "user_profile")
+                else None
+            )
+
+            # Check if current user has voted on this post
+            current_user_vote = None
+            if caller_user_id:
+                try:
+                    user = CustomUser.objects.get(id=caller_user_id)
+                    vote = TideUpTideDown.objects.filter(post=post, user=user).first()
+                    if vote:
+                        current_user_vote = {
+                            "has_voted": True,
+                            "vote_value": vote.value,
+                            "vote_status": "tideup" if vote.value == 1 else "tidedown",
+                            "voted_at": vote.created_at,
+                        }
+                    else:
+                        current_user_vote = {
+                            "has_voted": False,
+                            "vote_value": None,
+                            "vote_status": None,
+                            "voted_at": None,
+                        }
+                except CustomUser.DoesNotExist:
+                    current_user_vote = {
+                        "has_voted": False,
+                        "vote_value": None,
+                        "vote_status": None,
+                        "voted_at": None,
+                    }
+
+            # Build comprehensive post details
+            post_details = {
+                "post_id": str(post.surfId),
+                "content": post.content,
+                "created_at": post.created_at,
+                "updated_at": post.updated_at,
+                "score": post.score,
+                "tideup": post.tideup,
+                "tidedown": post.tidedown,
+                "user": {
+                    "user_id": str(post.user.user_id),
+                    "username": post.user.username,
+                    "first_name": post.user.first_name,
+                    "last_name": post.user.last_name,
+                    "profile_photo": (
+                        user_profile.profile_photo.url
+                        if user_profile and user_profile.profile_photo
+                        else None
+                    ),
+                    "is_verified": getattr(post.user, "is_verified", False),
+                },
+                "event": {
+                    "event_id": str(post.event.eventId),
+                    "title": post.event.title,
+                    "description": post.event.description,
+                    "date": post.event.date,
+                    "venue": post.event.venue,
+                    "header_photo": (
+                        post.event.header_photo.url if post.event.header_photo else None
+                    ),
+                    "host": {
+                        "user_id": str(post.event.host.user_id),
+                        "username": post.event.host.username,
+                        "first_name": post.event.host.first_name,
+                        "last_name": post.event.host.last_name,
+                        "profile_photo": (
+                            event_host_profile.profile_photo.url
+                            if event_host_profile and event_host_profile.profile_photo
+                            else None
+                        ),
+                        "is_verified": getattr(post.event.host, "is_verified", False),
+                    },
+                    "formatted_date": (
+                        post.event.date.strftime("%B %d, %Y at %I:%M %p")
+                        if post.event.date
+                        else None
+                    ),
+                },
+                "current_user_vote": current_user_vote,
+                "engagement_metrics": {
+                    "total_votes": post.tideup + post.tidedown,
+                    "vote_ratio": (
+                        round(post.tideup / (post.tideup + post.tidedown) * 100, 1)
+                        if (post.tideup + post.tidedown) > 0
+                        else 0
+                    ),
+                    "popularity_score": post.score,
+                },
+            }
+
+            return post_details, "Post details retrieved successfully", None
+        except SurfPost.DoesNotExist:
+            error_message = f"Surf post not found with ID: {post_id}"
+            print(f"[get_surf_post_details API] {error_message}")
+            return None, error_message, None
+        except Exception as e:
+            error_message = f"Error getting surf post details: {str(e)}"
+            print(f"[get_surf_post_details API] {error_message}")
+            return None, error_message, None
+
+    post_details, success_message, error_message = await get_surf_post_details_logic(
+        caller_user_id, post_id
+    )
+    if post_details is None:
+        notification_sent = await notify_by_bot(
+            f"**[API: get_surf_post_details API]** \n\n {success_message or error_message} \n\n Platform: {platform} \n\n User ID: {caller_user_id} \n\n Post ID: {post_id}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        if notification_sent is None:
+            print(
+                "[get_surf_post_details API] Could not send notification: BOT_API_KEY not set"
+            )
+        raise HTTPException(status_code=404, detail=success_message or error_message)
+
+    print(f"[get_surf_post_details API] Post details retrieved successfully")
+    return {"post_details": post_details}
