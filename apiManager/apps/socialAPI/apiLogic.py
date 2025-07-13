@@ -3840,7 +3840,7 @@ async def get_surf_post_details(
                     "title": post.event.title,
                     "description": post.event.description,
                     "date": post.event.date,
-                    "venue": post.event.venue,
+                    "venue": f"{post.event.city}, {post.event.state}",
                     "header_photo": (
                         post.event.header_photo.url if post.event.header_photo else None
                     ),
