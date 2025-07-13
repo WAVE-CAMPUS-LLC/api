@@ -3172,77 +3172,92 @@ async def vote_on_post(
     return {"message": vote_data["message"], "vote_data": vote_data}
 
 
-@router.delete("/surf-posts/vote/{post_id}")
-async def remove_vote(
+@router.post("/surf-posts/downvote/{post_id}")
+async def downvote_post(
     request: Request,
     post_id: UUID,
     caller_user_id: Optional[int] = Depends(get_current_user),
     platform: Optional[str] = None,
 ):
     """
-    API endpoint to remove a vote from a surf post.
+    API endpoint to downvote a surf post.
+    Allows users to downvote even if they haven't upvoted before.
     """
-    print(f"[remove_vote API] Function called with post_id: {post_id}")
+    print(f"[downvote_post API] Function called with post_id: {post_id}")
 
     user_agent_str = request.headers.get("user-agent", "")
     device_data = get_device_info(user_agent_str)
     device_info = device_data["device_info"]
 
     @database_sync_to_async
-    def remove_vote_logic(caller_user_id, post_id):
+    def downvote_post_logic(caller_user_id, post_id):
         try:
             # Get the user
             user = CustomUser.objects.get(id=caller_user_id)
 
-            # Find the vote
-            vote = TideUpTideDown.objects.filter(
-                post__surfId=post_id, user=user
-            ).first()
+            # Get the post
+            post = SurfPost.objects.get(surfId=post_id)
 
-            if not vote:
-                return None, "Vote not found.", None
+            # Check if user already has a vote
+            existing_vote = TideUpTideDown.objects.filter(post=post, user=user).first()
 
-            # Store post info before deletion
-            post = vote.post
-            vote_value = vote.value
-
-            # Delete the vote
-            vote.delete()
+            if existing_vote:
+                # User already voted - update to downvote
+                old_vote_value = existing_vote.value
+                existing_vote.value = -1  # Downvote
+                existing_vote.save()
+                vote_changed = old_vote_value != -1
+            else:
+                # User hasn't voted before - create downvote
+                existing_vote = TideUpTideDown.objects.create(
+                    post=post, user=user, value=-1
+                )
+                vote_changed = False
 
             # Refresh the post to get updated vote counts
             post.refresh_from_db()
 
             return {
-                "message": "Vote removed successfully",
+                "message": "Downvote recorded successfully",
                 "score": post.score,
                 "tideup": post.tideup,
                 "tidedown": post.tidedown,
-                "removed_vote_value": vote_value,
+                "vote_value": -1,
+                "vote_changed": vote_changed,
+                "previous_vote": (
+                    old_vote_value if existing_vote and vote_changed else None
+                ),
             }, None
         except CustomUser.DoesNotExist:
             error_message = f"User not found with ID: {caller_user_id}"
-            print(f"[remove_vote API] {error_message}")
+            print(f"[downvote_post API] {error_message}")
+            return None, error_message, None
+        except SurfPost.DoesNotExist:
+            error_message = f"Surf post not found with ID: {post_id}"
+            print(f"[downvote_post API] {error_message}")
             return None, error_message, None
         except Exception as e:
-            error_message = f"Error removing vote: {str(e)}"
-            print(f"[remove_vote API] {error_message}")
+            error_message = f"Error downvoting post: {str(e)}"
+            print(f"[downvote_post API] {error_message}")
             return None, error_message, None
 
-    vote_data, success_message, error_message = await remove_vote_logic(
+    vote_data, success_message, error_message = await downvote_post_logic(
         caller_user_id, post_id
     )
     if vote_data is None:
         notification_sent = await notify_by_bot(
-            f"**[API: remove_vote API]** \n\n {success_message or error_message} \n\n Platform: {platform} \n\n User ID: {caller_user_id} \n\n Post ID: {post_id}",
+            f"**[API: downvote_post API]** \n\n {success_message or error_message} \n\n Platform: {platform} \n\n User ID: {caller_user_id} \n\n Post ID: {post_id}",
             platform or "Unknown",
             "ERROR",
             device_info,
         )
         if notification_sent is None:
-            print("[remove_vote API] Could not send notification: BOT_API_KEY not set")
+            print(
+                "[downvote_post API] Could not send notification: BOT_API_KEY not set"
+            )
         raise HTTPException(status_code=404, detail=success_message or error_message)
 
-    print(f"[remove_vote API] Vote removed successfully")
+    print(f"[downvote_post API] Downvote recorded successfully")
     return {"message": vote_data["message"], "vote_data": vote_data}
 
 
