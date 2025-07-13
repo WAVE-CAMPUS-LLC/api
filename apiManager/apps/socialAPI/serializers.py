@@ -124,8 +124,8 @@ class VoteRequest(BaseModel):
 
 
 class SendMessageRequest(BaseModel):
-    receiver_id: UUID
-    message_id: UUID
+    receiver_username: str
+    fixed_message_id: UUID
     event_id: Optional[UUID] = None
 
 

@@ -3914,7 +3914,7 @@ async def send_message(
 ):
     @database_sync_to_async
     def send_message_logic(data, current_user):
-        receiver = get_object_or_404(CustomUser, username=data.receiver_id)
+        receiver = get_object_or_404(CustomUser, username=data.receiver_username)
         fixed_message = get_object_or_404(FixedMessage, id=data.fixed_message_id)
 
         latest = (
@@ -3975,13 +3975,13 @@ async def inbox(current_user: CustomUser = Depends(get_current_user)):
     return await get_inbox_messages(current_user)
 
 
-@router.get("/messages/chat/{user_id}", response_model=List[EventMessageResponse])
+@router.get("/messages/chat/{username}", response_model=List[EventMessageResponse])
 async def conversation(
-    user_id: UUID, current_user: CustomUser = Depends(get_current_user)
+    username: str, current_user: CustomUser = Depends(get_current_user)
 ):
     @database_sync_to_async
-    def get_conversation_messages(user_id, current_user):
-        target_user = get_object_or_404(CustomUser, id=user_id)
+    def get_conversation_messages(username, current_user):
+        target_user = get_object_or_404(CustomUser, username=username)
         messages = (
             EventMessage.objects.filter(
                 sender__in=[current_user, target_user],
@@ -3992,7 +3992,7 @@ async def conversation(
         )
         return [_serialize_message(m) for m in messages]
 
-    return await get_conversation_messages(user_id, current_user)
+    return await get_conversation_messages(username, current_user)
 
 
 @router.post("/messages/mark-seen/{message_id}")
