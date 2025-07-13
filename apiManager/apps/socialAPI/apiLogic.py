@@ -14,6 +14,7 @@ import re
 
 from apiManager.utilities.notify_by_bot import notify_by_bot
 from apiManager.utilities.device_info import get_device_info
+from apiManager.utilities.form_fields import get_form_fields
 
 from eventManagementApp.models import Event
 from accountManagementApp.models import UserProfile
@@ -23,7 +24,10 @@ from socialApp.models import (
     FriendRequest,
     CrewRequest,
     SocialActivity,
+    SurfPost,
+    TideUpTideDown,
 )
+from socialApp.forms import SurfPostForm
 from eventTicketsApp.views import generateTicket
 from apiManager.algorithms.suggested_friends import get_suggested_friends
 
@@ -32,7 +36,15 @@ from apiManager.dependencies import get_current_user
 from authenticationApp.models import CustomUser
 from uuid import UUID
 
-from .serializers import MyPassSerializer, SearchResult, UserFriends, UserCrewsResponse
+from .serializers import (
+    MyPassSerializer,
+    SearchResult,
+    UserFriends,
+    UserCrewsResponse,
+    SurfPostResponse,
+    SurfPostCreate,
+    VoteRequest,
+)
 
 
 router = APIRouter()
@@ -2991,3 +3003,466 @@ async def get_crew_details_with_members(
     )
 
     return {"crew_details": crew_data}
+
+
+@router.post("/create-surf-post", response_model=SurfPostResponse)
+async def create_surf_post(
+    request: Request,
+    data: SurfPostCreate,
+    caller_user_id: Optional[int] = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
+    """
+    API endpoint to create a new surf post for an event.
+    """
+    print(f"[create_surf_post API] Function called with event_id: {data.event_id}")
+
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    @database_sync_to_async
+    def create_surf_post_logic(caller_user_id, event_id, content):
+        try:
+            # Get the user
+            user = CustomUser.objects.get(id=caller_user_id)
+
+            # Get the event
+            event = Event.objects.get(eventId=event_id)
+
+            # Create the surf post
+            post = SurfPost.objects.create(user=user, event=event, content=content)
+
+            return {
+                "post_id": post.surfId,
+                "event_id": event.eventId,
+                "content": post.content,
+                "created_at": post.created_at,
+                "tideup": post.tideup,
+                "tidedown": post.tidedown,
+                "score": post.score,
+            }, None
+        except CustomUser.DoesNotExist:
+            error_message = f"User not found with ID: {caller_user_id}"
+            print(f"[create_surf_post API] {error_message}")
+            return None, error_message
+        except Event.DoesNotExist:
+            error_message = f"Event not found with ID: {event_id}"
+            print(f"[create_surf_post API] {error_message}")
+            return None, error_message
+        except Exception as e:
+            error_message = f"Error creating surf post: {str(e)}"
+            print(f"[create_surf_post API] {error_message}")
+            return None, error_message
+
+    post_data, error_message = await create_surf_post_logic(
+        caller_user_id, data.event_id, data.content
+    )
+    if post_data is None:
+        notification_sent = await notify_by_bot(
+            f"**[API: create_surf_post API]** \n\n {error_message} \n\n Platform: {platform} \n\n User ID: {caller_user_id} \n\n Event ID: {data.event_id}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        if notification_sent is None:
+            print(
+                "[create_surf_post API] Could not send notification: BOT_API_KEY not set"
+            )
+        raise HTTPException(status_code=400, detail=error_message)
+
+    print(f"[create_surf_post API] Surf post created successfully")
+    return SurfPostResponse(**post_data)
+
+
+@router.post("/surf-posts/vote")
+async def vote_on_post(
+    request: Request,
+    data: VoteRequest,
+    caller_user_id: Optional[int] = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
+    """
+    API endpoint to vote on a surf post.
+    """
+    print(f"[vote_on_post API] Function called with post_id: {data.post_id}")
+
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    @database_sync_to_async
+    def vote_on_post_logic(caller_user_id, post_id, vote_value):
+        try:
+            # Validate vote value
+            if vote_value not in [1, -1]:
+                return (
+                    None,
+                    "Invalid vote value. Must be 1 (tideup) or -1 (tidedown).",
+                    None,
+                )
+
+            # Get the user
+            user = CustomUser.objects.get(id=caller_user_id)
+
+            # Get the post
+            post = SurfPost.objects.get(surfId=post_id)
+
+            # Create or update the vote
+            vote_obj, created = TideUpTideDown.objects.update_or_create(
+                post=post, user=user, defaults={"value": vote_value}
+            )
+
+            # Refresh the post to get updated vote counts
+            post.refresh_from_db()
+
+            return {
+                "message": "Vote recorded successfully",
+                "score": post.score,
+                "tideup": post.tideup,
+                "tidedown": post.tidedown,
+                "vote_value": vote_value,
+                "created": created,
+            }, None
+        except CustomUser.DoesNotExist:
+            error_message = f"User not found with ID: {caller_user_id}"
+            print(f"[vote_on_post API] {error_message}")
+            return None, error_message, None
+        except SurfPost.DoesNotExist:
+            error_message = f"Surf post not found with ID: {post_id}"
+            print(f"[vote_on_post API] {error_message}")
+            return None, error_message, None
+        except Exception as e:
+            error_message = f"Error voting on post: {str(e)}"
+            print(f"[vote_on_post API] {error_message}")
+            return None, error_message, None
+
+    vote_data, error_message = await vote_on_post_logic(
+        caller_user_id, data.post_id, data.vote
+    )
+    if vote_data is None:
+        notification_sent = await notify_by_bot(
+            f"**[API: vote_on_post API]** \n\n {error_message} \n\n Platform: {platform} \n\n User ID: {caller_user_id} \n\n Post ID: {data.post_id} \n\n Vote: {data.vote}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        if notification_sent is None:
+            print("[vote_on_post API] Could not send notification: BOT_API_KEY not set")
+        raise HTTPException(status_code=400, detail=error_message)
+
+    print(f"[vote_on_post API] Vote recorded successfully")
+    return {"message": vote_data["message"], "vote_data": vote_data}
+
+
+@router.delete("/surf-posts/vote/{post_id}")
+async def remove_vote(
+    request: Request,
+    post_id: UUID,
+    caller_user_id: Optional[int] = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
+    """
+    API endpoint to remove a vote from a surf post.
+    """
+    print(f"[remove_vote API] Function called with post_id: {post_id}")
+
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    @database_sync_to_async
+    def remove_vote_logic(caller_user_id, post_id):
+        try:
+            # Get the user
+            user = CustomUser.objects.get(id=caller_user_id)
+
+            # Find the vote
+            vote = TideUpTideDown.objects.filter(
+                post__surfId=post_id, user=user
+            ).first()
+
+            if not vote:
+                return None, "Vote not found.", None
+
+            # Store post info before deletion
+            post = vote.post
+            vote_value = vote.value
+
+            # Delete the vote
+            vote.delete()
+
+            # Refresh the post to get updated vote counts
+            post.refresh_from_db()
+
+            return {
+                "message": "Vote removed successfully",
+                "score": post.score,
+                "tideup": post.tideup,
+                "tidedown": post.tidedown,
+                "removed_vote_value": vote_value,
+            }, None
+        except CustomUser.DoesNotExist:
+            error_message = f"User not found with ID: {caller_user_id}"
+            print(f"[remove_vote API] {error_message}")
+            return None, error_message, None
+        except Exception as e:
+            error_message = f"Error removing vote: {str(e)}"
+            print(f"[remove_vote API] {error_message}")
+            return None, error_message, None
+
+    vote_data, error_message = await remove_vote_logic(caller_user_id, post_id)
+    if vote_data is None:
+        notification_sent = await notify_by_bot(
+            f"**[API: remove_vote API]** \n\n {error_message} \n\n Platform: {platform} \n\n User ID: {caller_user_id} \n\n Post ID: {post_id}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        if notification_sent is None:
+            print("[remove_vote API] Could not send notification: BOT_API_KEY not set")
+        raise HTTPException(status_code=404, detail=error_message)
+
+    print(f"[remove_vote API] Vote removed successfully")
+    return {"message": vote_data["message"], "vote_data": vote_data}
+
+
+@router.get("/surf-posts/{event_id}")
+async def get_surf_posts_for_event(
+    request: Request,
+    event_id: UUID,
+    platform: Optional[str] = None,
+    limit: int = Query(20, ge=1, le=100),
+):
+    """
+    API endpoint to get surf posts for a specific event.
+    """
+    print(f"[get_surf_posts_for_event API] Function called with event_id: {event_id}")
+
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    @database_sync_to_async
+    def get_surf_posts_logic(event_id, limit):
+        try:
+            # Get the event
+            event = Event.objects.get(eventId=event_id)
+
+            # Get surf posts for this event
+            posts = (
+                SurfPost.objects.filter(event=event)
+                .select_related("user", "user__user_profile")
+                .order_by("-created_at")[:limit]
+            )
+
+            posts_data = []
+            for post in posts:
+                user_profile = (
+                    post.user.user_profile
+                    if hasattr(post.user, "user_profile")
+                    else None
+                )
+
+                posts_data.append(
+                    {
+                        "post_id": post.surfId,
+                        "event_id": event.eventId,
+                        "content": post.content,
+                        "created_at": post.created_at,
+                        "tideup": post.tideup,
+                        "tidedown": post.tidedown,
+                        "score": post.score,
+                        "user": {
+                            "user_id": str(post.user.user_id),
+                            "username": post.user.username,
+                            "first_name": post.user.first_name,
+                            "last_name": post.user.last_name,
+                            "profile_photo": (
+                                user_profile.profile_photo.url
+                                if user_profile and user_profile.profile_photo
+                                else None
+                            ),
+                        },
+                    }
+                )
+
+            return posts_data, None
+        except Event.DoesNotExist:
+            error_message = f"Event not found with ID: {event_id}"
+            print(f"[get_surf_posts_for_event API] {error_message}")
+            return None, error_message
+        except Exception as e:
+            error_message = f"Error getting surf posts: {str(e)}"
+            print(f"[get_surf_posts_for_event API] {error_message}")
+            return None, error_message
+
+    posts_data, error_message = await get_surf_posts_logic(event_id, limit)
+    if posts_data is None:
+        notification_sent = await notify_by_bot(
+            f"**[API: get_surf_posts_for_event API]** \n\n {error_message} \n\n Platform: {platform} \n\n Event ID: {event_id}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        if notification_sent is None:
+            print(
+                "[get_surf_posts_for_event API] Could not send notification: BOT_API_KEY not set"
+            )
+        raise HTTPException(status_code=404, detail=error_message)
+
+    print(f"[get_surf_posts_for_event API] Returning {len(posts_data)} surf posts")
+    return {"surf_posts": posts_data}
+
+
+@router.get("/surf-posts")
+async def get_all_surf_posts(
+    request: Request,
+    platform: Optional[str] = None,
+    page: int = Query(1, ge=1, description="Page number (starts from 1)"),
+    page_size: int = Query(
+        20, ge=1, le=100, description="Number of posts per page (max 100)"
+    ),
+    sort_by: str = Query(
+        "created_at", description="Sort by field: created_at, score, tideup, tidedown"
+    ),
+    order: str = Query("desc", description="Sort order: asc or desc"),
+):
+    """
+    API endpoint to get all surf posts with pagination and sorting support.
+    """
+    print(
+        f"[get_all_surf_posts API] Function called with page: {page}, page_size: {page_size}"
+    )
+
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    @database_sync_to_async
+    def get_all_surf_posts_logic(page, page_size, sort_by, order):
+        try:
+            # Validate sort_by field
+            valid_sort_fields = ["created_at", "score", "tideup", "tidedown"]
+            if sort_by not in valid_sort_fields:
+                sort_by = "created_at"  # Default to created_at if invalid
+
+            # Validate order
+            if order not in ["asc", "desc"]:
+                order = "desc"  # Default to desc if invalid
+
+            # Build sort field
+            sort_field = f"{'-' if order == 'desc' else ''}{sort_by}"
+
+            # Get total count of surf posts
+            total_posts = SurfPost.objects.count()
+
+            # Calculate pagination
+            total_pages = (total_posts + page_size - 1) // page_size  # Ceiling division
+            offset = (page - 1) * page_size
+
+            # Get paginated surf posts with user and event information
+            posts = SurfPost.objects.select_related(
+                "user", "user__user_profile", "event"
+            ).order_by(sort_field)[offset : offset + page_size]
+
+            posts_data = []
+            for post in posts:
+                user_profile = (
+                    post.user.user_profile
+                    if hasattr(post.user, "user_profile")
+                    else None
+                )
+
+                posts_data.append(
+                    {
+                        "post_id": post.surfId,
+                        "event_id": post.event.eventId,
+                        "event_title": post.event.title,
+                        "content": post.content,
+                        "created_at": post.created_at,
+                        "tideup": post.tideup,
+                        "tidedown": post.tidedown,
+                        "score": post.score,
+                        "user": {
+                            "user_id": str(post.user.user_id),
+                            "username": post.user.username,
+                            "first_name": post.user.first_name,
+                            "last_name": post.user.last_name,
+                            "profile_photo": (
+                                user_profile.profile_photo.url
+                                if user_profile and user_profile.profile_photo
+                                else None
+                            ),
+                        },
+                        "event": {
+                            "event_id": str(post.event.eventId),
+                            "title": post.event.title,
+                            "date": post.event.date,
+                            "header_photo": (
+                                post.event.header_photo.url
+                                if post.event.header_photo
+                                else None
+                            ),
+                        },
+                    }
+                )
+
+            return {
+                "posts": posts_data,
+                "pagination": {
+                    "current_page": page,
+                    "page_size": page_size,
+                    "total_posts": total_posts,
+                    "total_pages": total_pages,
+                    "has_next": page < total_pages,
+                    "has_previous": page > 1,
+                },
+                "sorting": {
+                    "sort_by": sort_by,
+                    "order": order,
+                },
+            }, None
+        except Exception as e:
+            error_message = f"Error getting all surf posts: {str(e)}"
+            print(f"[get_all_surf_posts API] {error_message}")
+            return None, error_message
+
+    posts_data, error_message = await get_all_surf_posts_logic(
+        page, page_size, sort_by, order
+    )
+    if posts_data is None:
+        notification_sent = await notify_by_bot(
+            f"**[API: get_all_surf_posts API]** \n\n {error_message} \n\n Platform: {platform} \n\n Page: {page} \n\n Page Size: {page_size}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        if notification_sent is None:
+            print(
+                "[get_all_surf_posts API] Could not send notification: BOT_API_KEY not set"
+            )
+        raise HTTPException(status_code=500, detail=error_message)
+
+    print(f"[get_all_surf_posts API] Returning {len(posts_data['posts'])} surf posts")
+    return posts_data
+
+
+@router.get("/surf-post-form-fields")
+async def get_surf_post_form_fields(
+    request: Request,
+    platform: Optional[str] = None,
+):
+    """
+    API endpoint to get form fields for creating a surf post.
+    """
+    print(f"[get_surf_post_form_fields API] Function called")
+
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    FormClass = SurfPostForm
+    fields_info = get_form_fields(FormClass)
+
+    return JSONResponse(content=fields_info, status_code=status.HTTP_200_OK)
