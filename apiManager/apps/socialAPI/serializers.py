@@ -121,3 +121,32 @@ class SurfPostResponse(BaseModel):
 class VoteRequest(BaseModel):
     post_id: UUID
     vote: int
+
+
+class SendMessageRequest(BaseModel):
+    receiver_id: UUID
+    message_id: UUID
+    event_id: Optional[UUID] = None
+
+
+class FixedMessageResponse(BaseModel):
+    id: UUID
+    text: str
+
+
+class MessageReactionRequest(BaseModel):
+    message_id: UUID
+    emoji: str
+
+
+class EventMessageResponse(BaseModel):
+    id: UUID
+    sender: str
+    receiver: str
+    fixed_message: str
+    event_id: Optional[UUID]
+    event_name: Optional[str]
+    created_at: datetime
+    seen: bool
+    seen_at: Optional[datetime]
+    reactions: List[dict]

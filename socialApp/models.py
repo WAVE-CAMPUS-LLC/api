@@ -1,5 +1,6 @@
 import re
 import uuid
+from django.utils import timezone
 from django.db import models
 from django.utils.translation import gettext as _
 from django.contrib.auth import get_user_model
@@ -316,3 +317,87 @@ class TideUpTideDown(models.Model):
 
     def __str__(self):
         return f"{self.user.username} -> {self.post.event.name} ({self.value})"
+
+
+class FixedMessage(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    text = models.CharField(max_length=255, unique=True)
+
+    class Meta:
+        default_permissions = ()
+
+    def __str__(self):
+        return self.text
+
+
+class EventMessage(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    sender = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="sent_messages",
+    )
+    receiver = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="received_messages",
+    )
+
+    fixed_message = models.ForeignKey(
+        FixedMessage, on_delete=models.CASCADE, related_name="used_in_messages"
+    )
+    event = models.ForeignKey(
+        "eventManagementApp.Event",
+        on_delete=models.CASCADE,
+        related_name="event_messages",
+        null=True,
+        blank=True,
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    seen = models.BooleanField(default=False)
+    seen_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        default_permissions = ()
+
+    def mark_as_seen(self):
+        self.seen = True
+        self.seen_at = timezone.now()
+        self.save(update_fields=["seen", "seen_at"])
+
+    def as_dict(self):
+        return {
+            "id": self.id,
+            "sender": self.sender.username,
+            "receiver": self.receiver.username,
+            "fixed_message": self.fixed_message.text,
+            "event": self.event.eventId,
+            "created_at": self.created_at,
+            "seen": self.seen,
+            "seen_at": self.seen_at,
+        }
+
+    def __str__(self):
+        return f"{self.sender.username} -> {self.receiver.username} ({self.fixed_message.text})"
+
+
+class MessageReaction(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    message = models.ForeignKey(
+        EventMessage, on_delete=models.CASCADE, related_name="reactions"
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="message_reactions",
+    )
+    emoji = models.CharField(max_length=255)
+    reacted_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        default_permissions = ()
+        unique_together = ("message", "user")
+
+    def __str__(self):
+        return f"{self.user.username} -> {self.message.event.name} ({self.emoji})"

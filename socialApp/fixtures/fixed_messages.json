@@ -1,0 +1,31 @@
+[
+	{
+		"model": "socialApp.Message",
+		"pk": "1",
+		"fields": {
+			"text": "Tryna go?"
+		}
+	},
+	{
+		"model": "socialApp.Message",
+		"pk": "2",
+		"fields": {
+			"text": "Sure, let's go!"
+		}
+	},
+
+	{
+		"model": "socialApp.Message",
+		"pk": "3",
+		"fields": {
+			"text": "I'm not sure if I can make it."
+		}
+	},
+	{
+		"model": "socialApp.Message",
+		"pk": "4",
+		"fields": {
+			"text": "This looks lit!"
+		}
+	}
+]

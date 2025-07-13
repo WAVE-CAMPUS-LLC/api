@@ -1,4 +1,5 @@
-from typing import Optional
+from typing import Optional, List
+from datetime import timedelta
 from channels.db import database_sync_to_async
 from fastapi import APIRouter, Depends, HTTPException, Request, status, Query
 from fastapi.responses import JSONResponse
@@ -10,7 +11,8 @@ from django.db.models import Q, Prefetch
 from django.db import transaction
 from django.utils import timezone
 import re
-
+from django.shortcuts import get_object_or_404
+from django.utils.timezone import now
 
 from apiManager.utilities.notify_by_bot import notify_by_bot
 from apiManager.utilities.device_info import get_device_info
@@ -26,6 +28,9 @@ from socialApp.models import (
     SocialActivity,
     SurfPost,
     TideUpTideDown,
+    FixedMessage,
+    EventMessage,
+    MessageReaction,
 )
 from socialApp.forms import SurfPostForm
 from eventTicketsApp.views import generateTicket
@@ -44,6 +49,10 @@ from .serializers import (
     SurfPostResponse,
     SurfPostCreate,
     VoteRequest,
+    SendMessageRequest,
+    FixedMessageResponse,
+    MessageReactionRequest,
+    EventMessageResponse,
 )
 
 
@@ -3882,3 +3891,119 @@ async def get_surf_post_details(
 
     print(f"[get_surf_post_details API] Post details retrieved successfully")
     return {"post_details": post_details}
+
+
+@router.get("/fixed-messages", response_model=List[FixedMessageResponse])
+def list_fixed_messages():
+    return [
+        {
+            "id": str(message.id),
+            "text": message.text,
+        }
+        for message in FixedMessage.objects.all().order_by("text")
+    ]
+
+
+@router.post("/messages/send", response_model=EventMessageResponse)
+async def send_message(
+    data: SendMessageRequest, current_user: CustomUser = Depends(get_current_user)
+):
+    receiver = get_object_or_404(CustomUser, id=data.receiver_id)
+    fixed_message = get_object_or_404(FixedMessage, id=data.fixed_message_id)
+
+    latest = (
+        EventMessage.objects.filter(sender=current_user).order_by("-created_at").first()
+    )
+    if latest and now() - latest.created_at < timedelta(seconds=5):
+        raise HTTPException(status_code=429, detail="You're sending messages too fast!")
+
+    event = None
+    if data.event_id:
+        event = get_object_or_404(Event, eventId=data.event_id)
+
+    message = EventMessage.objects.create(
+        sender=current_user,
+        receiver=receiver,
+        fixed_message=fixed_message,
+        event=event,
+    )
+
+    return _serialize_message(message)
+
+
+def _serialize_message(message: EventMessage):
+    return {
+        "id": message.id,
+        "sender": message.sender.username,
+        "receiver": message.receiver.username,
+        "fixed_message": message.fixed_message.text,
+        "event_id": message.event.eventId if message.event else None,
+        "event_name": message.event.title if message.event else None,
+        "created_at": message.created_at,
+        "seen": message.seen,
+        "seen_at": message.seen_at,
+        "reactions": [
+            {"emoji": r.emoji, "reacted_at": r.reacted_at}
+            for r in message.reactions.all()
+        ],
+    }
+
+
+@router.get("/messages/inbox", response_model=List[EventMessageResponse])
+async def inbox(current_user: CustomUser = Depends(get_current_user)):
+    messages = (
+        EventMessage.objects.filter(receiver=current_user)
+        .select_related("sender", "receiver", "fixed_message", "event")
+        .order_by("-created_at")
+    )
+    return [_serialize_message(m) for m in messages]
+
+
+@router.get("/messages/chat/{user_id}", response_model=List[EventMessageResponse])
+async def conversation(
+    user_id: UUID, current_user: CustomUser = Depends(get_current_user)
+):
+    target_user = get_object_or_404(CustomUser, id=user_id)
+    messages = (
+        EventMessage.objects.filter(
+            sender__in=[current_user, target_user],
+            receiver__in=[current_user, target_user],
+        )
+        .select_related("sender", "receiver", "fixed_message", "event")
+        .order_by("created_at")
+    )
+    return [_serialize_message(m) for m in messages]
+
+
+@router.post("/messages/mark-seen/{message_id}")
+async def mark_message_as_seen(
+    message_id: UUID, current_user: CustomUser = Depends(get_current_user)
+):
+    message = get_object_or_404(EventMessage, id=message_id)
+    if message.receiver != current_user:
+        raise HTTPException(
+            status_code=403, detail="You can't mark this message as seen"
+        )
+    message.mark_as_seen()
+    return {"message": "Message marked as seen"}
+
+
+@router.post("/messages/react", response_model=EventMessageResponse)
+async def react_to_message(
+    data: MessageReactionRequest, current_user: CustomUser = Depends(get_current_user)
+):
+    message = get_object_or_404(EventMessage, id=data.message_id)
+
+    existing = MessageReaction.objects.filter(
+        message=message, user=current_user
+    ).first()
+    if existing:
+        existing.emoji = data.emoji
+        existing.reacted_at = now()
+        existing.save()
+    else:
+        MessageReaction.objects.create(
+            message=message, user=current_user, emoji=data.emoji
+        )
+
+    return {"message": "Message reacted successfully"}
