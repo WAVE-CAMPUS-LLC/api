@@ -3217,17 +3217,21 @@ async def downvote_post(
             # Refresh the post to get updated vote counts
             post.refresh_from_db()
 
-            return {
-                "message": "Downvote recorded successfully",
-                "score": post.score,
-                "tideup": post.tideup,
-                "tidedown": post.tidedown,
-                "vote_value": -1,
-                "vote_changed": vote_changed,
-                "previous_vote": (
-                    old_vote_value if existing_vote and vote_changed else None
-                ),
-            }, None
+            return (
+                {
+                    "message": "Downvote recorded successfully",
+                    "score": post.score,
+                    "tideup": post.tideup,
+                    "tidedown": post.tidedown,
+                    "vote_value": -1,
+                    "vote_changed": vote_changed,
+                    "previous_vote": (
+                        old_vote_value if existing_vote and vote_changed else None
+                    ),
+                },
+                "Downvote recorded successfully",
+                None,
+            )
         except CustomUser.DoesNotExist:
             error_message = f"User not found with ID: {caller_user_id}"
             print(f"[downvote_post API] {error_message}")
