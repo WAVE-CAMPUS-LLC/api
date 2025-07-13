@@ -3838,28 +3838,8 @@ async def get_surf_post_details(
                 "event": {
                     "event_id": str(post.event.eventId),
                     "title": post.event.title,
-                    "description": post.event.description,
-                    "date": post.event.date,
-                    "venue": f"{post.event.city}, {post.event.state}",
                     "header_photo": (
                         post.event.header_photo.url if post.event.header_photo else None
-                    ),
-                    "host": {
-                        "user_id": str(post.event.host.user_id),
-                        "username": post.event.host.username,
-                        "first_name": post.event.host.first_name,
-                        "last_name": post.event.host.last_name,
-                        "profile_photo": (
-                            event_host_profile.profile_photo.url
-                            if event_host_profile and event_host_profile.profile_photo
-                            else None
-                        ),
-                        "is_verified": getattr(post.event.host, "is_verified", False),
-                    },
-                    "formatted_date": (
-                        post.event.date.strftime("%B %d, %Y at %I:%M %p")
-                        if post.event.date
-                        else None
                     ),
                 },
                 "current_user_vote": current_user_vote,
