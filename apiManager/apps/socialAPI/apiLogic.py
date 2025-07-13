@@ -3455,6 +3455,7 @@ async def get_surf_post_form_fields(
 ):
     """
     API endpoint to get form fields for creating a surf post.
+    Uses dynamic field discovery without hardcoding any field information.
     """
     print(f"[get_surf_post_form_fields API] Function called")
 
@@ -3462,7 +3463,151 @@ async def get_surf_post_form_fields(
     device_data = get_device_info(user_agent_str)
     device_info = device_data["device_info"]
 
-    FormClass = SurfPostForm
-    fields_info = get_form_fields(FormClass)
+    @database_sync_to_async
+    def get_surf_post_form_fields_logic():
+        try:
+            # Get form fields for SurfPost model dynamically
+            FormClass = SurfPostForm
+            fields_info = get_form_fields(FormClass)
 
-    return JSONResponse(content=fields_info, status_code=status.HTTP_200_OK)
+            return {
+                "form_fields": fields_info,
+                "model_name": "SurfPost",
+                "description": "Form fields for creating a new surf post",
+                "related_endpoints": {
+                    "active_events": "/active-events-for-surf-post",
+                    "description": "Get list of active events for selection",
+                },
+            }, None
+        except Exception as e:
+            error_message = f"Error getting surf post form fields: {str(e)}"
+            print(f"[get_surf_post_form_fields API] {error_message}")
+            return None, error_message
+
+    form_fields_data, error_message = await get_surf_post_form_fields_logic()
+    if form_fields_data is None:
+        notification_sent = await notify_by_bot(
+            f"**[API: get_surf_post_form_fields API]** \n\n {error_message} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        if notification_sent is None:
+            print(
+                "[get_surf_post_form_fields API] Could not send notification: BOT_API_KEY not set"
+            )
+        raise HTTPException(status_code=500, detail=error_message)
+
+    print(f"[get_surf_post_form_fields API] Returning surf post form fields")
+    return form_fields_data
+
+
+@router.get("/active-events-for-surf-post")
+async def get_active_events_for_surf_post(
+    request: Request,
+    platform: Optional[str] = None,
+    limit: int = Query(
+        50, ge=1, le=200, description="Maximum number of events to return"
+    ),
+):
+    """
+    API endpoint to get active events that can be selected for creating a surf post.
+    Returns events that are currently active (not past) and available for surf posts.
+    """
+    print(f"[get_active_events_for_surf_post API] Function called with limit: {limit}")
+
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    @database_sync_to_async
+    def get_active_events_logic(limit):
+        try:
+            from django.utils import timezone
+
+            # Get current time
+            now = timezone.now()
+
+            # Get active events (events that haven't passed yet)
+            # You can customize this query based on your Event model fields
+            active_events = (
+                Event.objects.filter(date__gte=now)  # Events with date >= current time
+                .select_related("host", "host__user_profile")
+                .order_by("date")  # Order by date (earliest first)
+                .only(
+                    "eventId",
+                    "title",
+                    "date",
+                    "venue",
+                    "header_photo",
+                    "host__username",
+                    "host__first_name",
+                    "host__last_name",
+                    "host__user_profile__profile_photo",
+                )[:limit]
+            )
+
+            events_data = []
+            for event in active_events:
+                host_profile = (
+                    event.host.user_profile
+                    if hasattr(event.host, "user_profile")
+                    else None
+                )
+
+                events_data.append(
+                    {
+                        "event_id": str(event.eventId),
+                        "title": event.title,
+                        "date": event.date,
+                        "header_photo": (
+                            event.header_photo.url if event.header_photo else None
+                        ),
+                        "host": {
+                            "user_id": str(event.host.user_id),
+                            "username": event.host.username,
+                            "first_name": event.host.first_name,
+                            "last_name": event.host.last_name,
+                            "profile_photo": (
+                                host_profile.profile_photo.url
+                                if host_profile and host_profile.profile_photo
+                                else None
+                            ),
+                        },
+                        "formatted_date": (
+                            event.date.strftime("%B %d, %Y at %I:%M %p")
+                            if event.date
+                            else None
+                        ),
+                    }
+                )
+
+            return {
+                "active_events": events_data,
+                "total_count": len(events_data),
+                "description": "Active events available for surf post creation",
+                "note": "Events are ordered by date (earliest first)",
+            }, None
+        except Exception as e:
+            error_message = f"Error getting active events: {str(e)}"
+            print(f"[get_active_events_for_surf_post API] {error_message}")
+            return None, error_message
+
+    events_data, error_message = await get_active_events_logic(limit)
+    if events_data is None:
+        notification_sent = await notify_by_bot(
+            f"**[API: get_active_events_for_surf_post API]** \n\n {error_message} \n\n Platform: {platform} \n\n Limit: {limit}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        if notification_sent is None:
+            print(
+                "[get_active_events_for_surf_post API] Could not send notification: BOT_API_KEY not set"
+            )
+        raise HTTPException(status_code=500, detail=error_message)
+
+    print(
+        f"[get_active_events_for_surf_post API] Returning {len(events_data['active_events'])} active events"
+    )
+    return events_data
