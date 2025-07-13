@@ -181,14 +181,13 @@ async def get_college_events(
                         "eventId": str(event.eventId),
                         "title": event.title,
                         "date": event.date,
-                        "location": f"{event.city}, {event.state}",
-                        "description": event.description,
                         "header_photo": (
                             event.header_photo.url if event.header_photo else None
                         ),
                         "event_type": event.event_type,
                         "state": event.state,
                         "city": event.city,
+                        "ticketing": event.ticketing,
                     }
                     for event in events
                 ]
