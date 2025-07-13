@@ -26,9 +26,14 @@ class createCrewForm(forms.ModelForm):
 class SurfPostForm(forms.ModelForm):
     class Meta:
         model = SurfPost
-        fields = ["content", "event"]
+        fields = ["event", "content"]
 
         widgets = {
+            "event": forms.Select(
+                attrs={
+                    "required": True,
+                }
+            ),
             "content": forms.Textarea(
                 attrs={
                     "rows": 5,
@@ -36,14 +41,9 @@ class SurfPostForm(forms.ModelForm):
                     "required": True,
                 }
             ),
-            "event": forms.Select(
-                attrs={
-                    "required": True,
-                }
-            ),
         }
 
         labels = {
             "event": "Experience",
-            "content": "What's on your mind?",
+            "content": "How you feelin'?",
         }
