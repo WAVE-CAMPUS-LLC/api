@@ -71,6 +71,7 @@ from eventTicketsApp.models import Ticket, RSVPTicket
 from accountManagementApp.models import UserProfile
 from adminDashboardApp.models import College, LoginHistoryModel
 from socialApp.models import FixedMessage
+from socialApp.forms import FixedMessageForm, FixedMessageEditForm
 
 from adminDashboardApp.models import College
 from collegeManagementApp.models import Membership, CollegeEventLink
@@ -3390,6 +3391,61 @@ async def edit_ambassador_program_details(
         )
 
 
+# FIXED MESSAGES FORM FIELDS
+@router.get("/fixedMessages/form/create")
+async def get_fixed_message_create_form(
+    request: Request,
+    current_user: CustomUser = Depends(require_admin_role),
+    platform: Optional[str] = None,
+):
+    """
+    Get form fields for creating fixed messages - requires Admin or Super Admin role.
+    """
+    print(f"[get_fixed_message_create_form] API called with user_id: {current_user.pk}")
+
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    from socialApp.forms import FixedMessageForm
+    from apiManager.utilities.form_fields import get_form_fields
+
+    FormClass = FixedMessageForm
+    fields_info = get_form_fields(FormClass)
+    print(
+        f"[get_fixed_message_create_form] Returning form fields, field count: {len(fields_info)}"
+    )
+    return JSONResponse(content=fields_info, status_code=status.HTTP_200_OK)
+
+
+@router.get("/fixedMessages/form/edit")
+async def get_fixed_message_edit_form(
+    request: Request,
+    current_user: CustomUser = Depends(require_admin_role),
+    platform: Optional[str] = None,
+):
+    """
+    Get form fields for editing fixed messages - requires Admin or Super Admin role.
+    """
+    print(f"[get_fixed_message_edit_form] API called with user_id: {current_user.pk}")
+
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    from socialApp.forms import FixedMessageEditForm
+    from apiManager.utilities.form_fields import get_form_fields
+
+    FormClass = FixedMessageEditForm
+    fields_info = get_form_fields(FormClass)
+    print(
+        f"[get_fixed_message_edit_form] Returning form fields, field count: {len(fields_info)}"
+    )
+    return JSONResponse(content=fields_info, status_code=status.HTTP_200_OK)
+
+
 # FIXED MESSAGES MANAGEMENT
 @router.get("/fixedMessages/getAll")
 async def get_fixed_messages(
@@ -3469,28 +3525,31 @@ async def create_fixed_message(
             raise HTTPException(status_code=400, detail="Text is required")
 
         @database_sync_to_async
-        def validate_and_create_fixed_message(text):
+        def validate_and_create_fixed_message(form_data):
             try:
-                # Check if message with same text already exists
-                if FixedMessage.objects.filter(text=text).exists():
+                # Create and validate the form
+                form = FixedMessageForm(form_data)
+
+                if form.is_valid():
+                    # Save the fixed message
+                    fixed_message = form.save()
+
+                    return {
+                        "success": True,
+                        "message": "Fixed message created successfully!",
+                        "fixed_message": {
+                            "id": str(fixed_message.id),
+                            "text": fixed_message.text,
+                        },
+                        "status_code": status.HTTP_201_CREATED,
+                    }
+                else:
+                    # Return form errors
                     return {
                         "success": False,
-                        "error": f"Fixed message with text '{text}' already exists",
+                        "errors": form.errors,
                         "status_code": status.HTTP_400_BAD_REQUEST,
                     }
-
-                # Create the fixed message
-                fixed_message = FixedMessage.objects.create(text=text)
-
-                return {
-                    "success": True,
-                    "message": "Fixed message created successfully!",
-                    "fixed_message": {
-                        "id": str(fixed_message.id),
-                        "text": fixed_message.text,
-                    },
-                    "status_code": status.HTTP_201_CREATED,
-                }
 
             except Exception as e:
                 return {
@@ -3500,7 +3559,7 @@ async def create_fixed_message(
                 }
 
         # Execute creation
-        result = await validate_and_create_fixed_message(text)
+        result = await validate_and_create_fixed_message(form_data)
         status_code = result.pop("status_code", status.HTTP_200_OK)
 
         if not result.get("success", True):
@@ -3627,38 +3686,36 @@ async def edit_fixed_message(
             raise HTTPException(status_code=400, detail="Text is required")
 
         @database_sync_to_async
-        def validate_and_update_fixed_message(message_id, new_text):
+        def validate_and_update_fixed_message(message_id, form_data):
             try:
                 # Get the existing fixed message
                 fixed_message = get_object_or_404(FixedMessage, id=message_id)
                 old_text = fixed_message.text
 
-                # Check if another message with the same text already exists
-                if (
-                    FixedMessage.objects.filter(text=new_text)
-                    .exclude(id=message_id)
-                    .exists()
-                ):
+                # Create and validate the form with the existing instance
+                form = FixedMessageEditForm(form_data, instance=fixed_message)
+
+                if form.is_valid():
+                    # Save the updated fixed message
+                    updated_fixed_message = form.save()
+
+                    return {
+                        "success": True,
+                        "message": "Fixed message updated successfully!",
+                        "fixed_message": {
+                            "id": str(updated_fixed_message.id),
+                            "text": updated_fixed_message.text,
+                            "old_text": old_text,
+                        },
+                        "status_code": status.HTTP_200_OK,
+                    }
+                else:
+                    # Return form errors
                     return {
                         "success": False,
-                        "error": f"Another fixed message with text '{new_text}' already exists",
+                        "errors": form.errors,
                         "status_code": status.HTTP_400_BAD_REQUEST,
                     }
-
-                # Update the message
-                fixed_message.text = new_text
-                fixed_message.save()
-
-                return {
-                    "success": True,
-                    "message": "Fixed message updated successfully!",
-                    "fixed_message": {
-                        "id": str(fixed_message.id),
-                        "text": fixed_message.text,
-                        "old_text": old_text,
-                    },
-                    "status_code": status.HTTP_200_OK,
-                }
 
             except FixedMessage.DoesNotExist:
                 return {
@@ -3674,7 +3731,7 @@ async def edit_fixed_message(
                 }
 
         # Execute update
-        result = await validate_and_update_fixed_message(message_id, new_text)
+        result = await validate_and_update_fixed_message(message_id, form_data)
         status_code = result.pop("status_code", status.HTTP_200_OK)
 
         if not result.get("success", True):
