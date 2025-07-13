@@ -3910,10 +3910,11 @@ async def list_fixed_messages():
 
 @router.post("/messages/send", response_model=EventMessageResponse)
 async def send_message(
-    data: SendMessageRequest, current_user: CustomUser = Depends(get_current_user)
+    data: SendMessageRequest, current_user_id: int = Depends(get_current_user)
 ):
     @database_sync_to_async
-    def send_message_logic(data, current_user):
+    def send_message_logic(data, current_user_id):
+        current_user = get_object_or_404(CustomUser, id=current_user_id)
         receiver = get_object_or_404(CustomUser, username=data.receiver_username)
         fixed_message = get_object_or_404(FixedMessage, id=data.fixed_message_id)
 
@@ -3940,7 +3941,7 @@ async def send_message(
 
         return _serialize_message(message)
 
-    return await send_message_logic(data, current_user)
+    return await send_message_logic(data, current_user_id)
 
 
 def _serialize_message(message: EventMessage):
@@ -3962,9 +3963,10 @@ def _serialize_message(message: EventMessage):
 
 
 @router.get("/messages/inbox", response_model=List[EventMessageResponse])
-async def inbox(current_user: CustomUser = Depends(get_current_user)):
+async def inbox(current_user_id: int = Depends(get_current_user)):
     @database_sync_to_async
-    def get_inbox_messages(current_user):
+    def get_inbox_messages(current_user_id):
+        current_user = get_object_or_404(CustomUser, id=current_user_id)
         messages = (
             EventMessage.objects.filter(receiver=current_user)
             .select_related("sender", "receiver", "fixed_message", "event")
@@ -3972,15 +3974,14 @@ async def inbox(current_user: CustomUser = Depends(get_current_user)):
         )
         return [_serialize_message(m) for m in messages]
 
-    return await get_inbox_messages(current_user)
+    return await get_inbox_messages(current_user_id)
 
 
 @router.get("/messages/chat/{username}", response_model=List[EventMessageResponse])
-async def conversation(
-    username: str, current_user: CustomUser = Depends(get_current_user)
-):
+async def conversation(username: str, current_user_id: int = Depends(get_current_user)):
     @database_sync_to_async
-    def get_conversation_messages(username, current_user):
+    def get_conversation_messages(username, current_user_id):
+        current_user = get_object_or_404(CustomUser, id=current_user_id)
         target_user = get_object_or_404(CustomUser, username=username)
         messages = (
             EventMessage.objects.filter(
@@ -3992,15 +3993,16 @@ async def conversation(
         )
         return [_serialize_message(m) for m in messages]
 
-    return await get_conversation_messages(username, current_user)
+    return await get_conversation_messages(username, current_user_id)
 
 
 @router.post("/messages/mark-seen/{message_id}")
 async def mark_message_as_seen(
-    message_id: UUID, current_user: CustomUser = Depends(get_current_user)
+    message_id: UUID, current_user_id: int = Depends(get_current_user)
 ):
     @database_sync_to_async
-    def mark_message_as_seen_logic(message_id, current_user):
+    def mark_message_as_seen_logic(message_id, current_user_id):
+        current_user = get_object_or_404(CustomUser, id=current_user_id)
         message = get_object_or_404(EventMessage, id=message_id)
         if message.receiver != current_user:
             raise HTTPException(
@@ -4009,15 +4011,16 @@ async def mark_message_as_seen(
         message.mark_as_seen()
         return {"message": "Message marked as seen"}
 
-    return await mark_message_as_seen_logic(message_id, current_user)
+    return await mark_message_as_seen_logic(message_id, current_user_id)
 
 
 @router.post("/messages/react", response_model=EventMessageResponse)
 async def react_to_message(
-    data: MessageReactionRequest, current_user: CustomUser = Depends(get_current_user)
+    data: MessageReactionRequest, current_user_id: int = Depends(get_current_user)
 ):
     @database_sync_to_async
-    def react_to_message_logic(data, current_user):
+    def react_to_message_logic(data, current_user_id):
+        current_user = get_object_or_404(CustomUser, id=current_user_id)
         message = get_object_or_404(EventMessage, id=data.message_id)
 
         existing = MessageReaction.objects.filter(
@@ -4034,4 +4037,4 @@ async def react_to_message(
 
         return {"message": "Message reacted successfully"}
 
-    return await react_to_message_logic(data, current_user)
+    return await react_to_message_logic(data, current_user_id)
