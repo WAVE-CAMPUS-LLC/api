@@ -4054,3 +4054,527 @@ async def react_to_message(
         return {"message": "Message reacted successfully"}
 
     return await react_to_message_logic(data, current_user_id)
+
+
+@router.get("/messages/contacts")
+async def get_message_contacts(
+    request: Request,
+    current_user_id: int = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
+    """
+    API endpoint to get all users who have exchanged messages with the current user.
+    Returns a list of unique users with whom the current user has sent or received messages.
+    """
+    print(f"[get_message_contacts API] Function called for user ID: {current_user_id}")
+
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    @database_sync_to_async
+    def get_message_contacts_logic(current_user_id):
+        try:
+            current_user = get_object_or_404(CustomUser, id=current_user_id)
+
+            # Get all unique users who have exchanged messages with the current user
+            # This includes both sent and received messages
+            sent_messages = EventMessage.objects.filter(
+                sender=current_user
+            ).values_list("receiver", flat=True)
+            received_messages = EventMessage.objects.filter(
+                receiver=current_user
+            ).values_list("sender", flat=True)
+
+            # Combine and get unique user IDs
+            all_contact_ids = set(list(sent_messages) + list(received_messages))
+
+            # Get user details for all contacts
+            contacts = []
+            for contact_id in all_contact_ids:
+                try:
+                    contact_user = CustomUser.objects.select_related(
+                        "user_profile"
+                    ).get(id=contact_id)
+                    contact_profile = (
+                        contact_user.user_profile
+                        if hasattr(contact_user, "user_profile")
+                        else None
+                    )
+
+                    # Get the latest message between these users
+                    latest_message = (
+                        EventMessage.objects.filter(
+                            (
+                                models.Q(sender=current_user, receiver=contact_user)
+                                | models.Q(sender=contact_user, receiver=current_user)
+                            )
+                        )
+                        .order_by("-created_at")
+                        .first()
+                    )
+
+                    # Get message count between these users
+                    message_count = EventMessage.objects.filter(
+                        (
+                            models.Q(sender=current_user, receiver=contact_user)
+                            | models.Q(sender=contact_user, receiver=current_user)
+                        )
+                    ).count()
+
+                    # Get unread message count
+                    unread_count = EventMessage.objects.filter(
+                        sender=contact_user, receiver=current_user, seen=False
+                    ).count()
+
+                    contacts.append(
+                        {
+                            "user_id": str(contact_user.user_id),
+                            "username": contact_user.username,
+                            "first_name": contact_user.first_name,
+                            "last_name": contact_user.last_name,
+                            "profile_photo": (
+                                contact_profile.profile_photo.url
+                                if contact_profile and contact_profile.profile_photo
+                                else None
+                            ),
+                            "latest_message": {
+                                "content": (
+                                    latest_message.fixed_message.text
+                                    if latest_message
+                                    else None
+                                ),
+                                "created_at": (
+                                    latest_message.created_at
+                                    if latest_message
+                                    else None
+                                ),
+                                "is_from_me": (
+                                    latest_message.sender == current_user
+                                    if latest_message
+                                    else None
+                                ),
+                                "seen": latest_message.seen if latest_message else None,
+                            },
+                            "message_count": message_count,
+                            "unread_count": unread_count,
+                            "last_interaction": (
+                                latest_message.created_at if latest_message else None
+                            ),
+                        }
+                    )
+                except CustomUser.DoesNotExist:
+                    # Skip if contact user doesn't exist (data inconsistency)
+                    continue
+
+            # Sort contacts by last interaction (most recent first)
+            contacts.sort(
+                key=lambda x: x["last_interaction"]
+                or timezone.now().replace(tzinfo=None),
+                reverse=True,
+            )
+
+            return {
+                "contacts": contacts,
+                "total_contacts": len(contacts),
+                "total_unread": sum(contact["unread_count"] for contact in contacts),
+            }, None
+
+        except CustomUser.DoesNotExist:
+            error_message = f"User not found with ID: {current_user_id}"
+            print(f"[get_message_contacts API] {error_message}")
+            return None, error_message
+        except Exception as e:
+            error_message = f"Error getting message contacts: {str(e)}"
+            print(f"[get_message_contacts API] {error_message}")
+            return None, error_message
+
+    contacts_data, error_message = await get_message_contacts_logic(current_user_id)
+    if contacts_data is None:
+        notification_sent = await notify_by_bot(
+            f"**[API: get_message_contacts API]** \n\n {error_message} \n\n Platform: {platform} \n\n User ID: {current_user_id}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        if notification_sent is None:
+            print(
+                "[get_message_contacts API] Could not send notification: BOT_API_KEY not set"
+            )
+        raise HTTPException(status_code=500, detail=error_message)
+
+    print(
+        f"[get_message_contacts API] Returning {contacts_data['total_contacts']} message contacts"
+    )
+    return contacts_data
+
+
+@router.get("/messages/contacts/{username}")
+async def get_message_contact_details(
+    request: Request,
+    username: str,
+    current_user_id: int = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
+    """
+    API endpoint to get detailed information about a specific message contact.
+    Returns conversation summary and user details for a specific contact.
+    """
+    print(f"[get_message_contact_details API] Function called for username: {username}")
+
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    @database_sync_to_async
+    def get_message_contact_details_logic(current_user_id, username):
+        try:
+            current_user = get_object_or_404(CustomUser, id=current_user_id)
+
+            # Get the contact user
+            try:
+                contact_user = CustomUser.objects.select_related("user_profile").get(
+                    username=username
+                )
+            except CustomUser.DoesNotExist:
+                return None, f"Contact user '{username}' not found", None
+
+            contact_profile = (
+                contact_user.user_profile
+                if hasattr(contact_user, "user_profile")
+                else None
+            )
+
+            # Get all messages between these users
+            messages = (
+                EventMessage.objects.filter(
+                    (
+                        models.Q(sender=current_user, receiver=contact_user)
+                        | models.Q(sender=contact_user, receiver=current_user)
+                    )
+                )
+                .select_related("sender", "receiver", "fixed_message", "event")
+                .order_by("-created_at")
+            )
+
+            # Get conversation statistics
+            total_messages = messages.count()
+            sent_messages = messages.filter(sender=current_user).count()
+            received_messages = messages.filter(receiver=current_user).count()
+            unread_messages = messages.filter(
+                sender=contact_user, receiver=current_user, seen=False
+            ).count()
+
+            # Get latest message
+            latest_message = messages.first()
+
+            # Get message frequency (messages per day in the last 30 days)
+            thirty_days_ago = timezone.now() - timedelta(days=30)
+            recent_messages = messages.filter(created_at__gte=thirty_days_ago).count()
+            messages_per_day = (
+                round(recent_messages / 30, 2) if recent_messages > 0 else 0
+            )
+
+            # Get conversation topics (most common fixed messages)
+            from django.db.models import Count
+
+            common_messages = (
+                messages.values("fixed_message__text")
+                .annotate(count=Count("fixed_message"))
+                .order_by("-count")[:5]
+            )
+
+            contact_details = {
+                "user": {
+                    "user_id": str(contact_user.user_id),
+                    "username": contact_user.username,
+                    "first_name": contact_user.first_name,
+                    "last_name": contact_user.last_name,
+                    "profile_photo": (
+                        contact_profile.profile_photo.url
+                        if contact_profile and contact_profile.profile_photo
+                        else None
+                    ),
+                },
+                "conversation_stats": {
+                    "total_messages": total_messages,
+                    "sent_messages": sent_messages,
+                    "received_messages": received_messages,
+                    "unread_messages": unread_messages,
+                    "messages_per_day": messages_per_day,
+                    "conversation_ratio": (
+                        round(sent_messages / total_messages * 100, 1)
+                        if total_messages > 0
+                        else 0
+                    ),
+                },
+                "latest_message": {
+                    "content": (
+                        latest_message.fixed_message.text if latest_message else None
+                    ),
+                    "created_at": latest_message.created_at if latest_message else None,
+                    "is_from_me": (
+                        latest_message.sender == current_user
+                        if latest_message
+                        else None
+                    ),
+                    "seen": latest_message.seen if latest_message else None,
+                },
+                "common_topics": [
+                    {"message": item["fixed_message__text"], "count": item["count"]}
+                    for item in common_messages
+                ],
+                "last_interaction": (
+                    latest_message.created_at if latest_message else None
+                ),
+            }
+
+            return contact_details, None
+
+        except CustomUser.DoesNotExist:
+            error_message = f"User not found with ID: {current_user_id}"
+            print(f"[get_message_contact_details API] {error_message}")
+            return None, error_message, None
+        except Exception as e:
+            error_message = f"Error getting message contact details: {str(e)}"
+            print(f"[get_message_contact_details API] {error_message}")
+            return None, error_message, None
+
+    contact_details, error_message = await get_message_contact_details_logic(
+        current_user_id, username
+    )
+    if contact_details is None:
+        notification_sent = await notify_by_bot(
+            f"**[API: get_message_contact_details API]** \n\n {error_message} \n\n Platform: {platform} \n\n User ID: {current_user_id} \n\n Username: {username}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        if notification_sent is None:
+            print(
+                "[get_message_contact_details API] Could not send notification: BOT_API_KEY not set"
+            )
+        raise HTTPException(status_code=404, detail=error_message)
+
+    print(f"[get_message_contact_details API] Returning contact details for {username}")
+    return {"contact_details": contact_details}
+
+
+@router.get("/messages/contacts/{username}/conversation")
+async def get_message_conversation_with_contact(
+    request: Request,
+    username: str,
+    current_user_id: int = Depends(get_current_user),
+    page: int = Query(1, ge=1, description="Page number (starts from 1)"),
+    page_size: int = Query(
+        20, ge=1, le=100, description="Number of messages per page (max 100)"
+    ),
+    platform: Optional[str] = None,
+):
+    """
+    API endpoint to get paginated conversation messages with a specific contact.
+    Returns messages in chronological order with pagination support.
+    """
+    print(
+        f"[get_message_conversation_with_contact API] Function called for username: {username}"
+    )
+
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    @database_sync_to_async
+    def get_message_conversation_logic(current_user_id, username, page, page_size):
+        try:
+            current_user = get_object_or_404(CustomUser, id=current_user_id)
+
+            # Get the contact user
+            try:
+                contact_user = CustomUser.objects.get(username=username)
+            except CustomUser.DoesNotExist:
+                return None, f"Contact user '{username}' not found", None
+
+            # Get all messages between these users
+            messages = (
+                EventMessage.objects.filter(
+                    (
+                        models.Q(sender=current_user, receiver=contact_user)
+                        | models.Q(sender=contact_user, receiver=current_user)
+                    )
+                )
+                .select_related("sender", "receiver", "fixed_message", "event")
+                .order_by("-created_at")
+            )
+
+            # Calculate pagination
+            total_messages = messages.count()
+            total_pages = (
+                total_messages + page_size - 1
+            ) // page_size  # Ceiling division
+            offset = (page - 1) * page_size
+
+            # Get paginated messages
+            paginated_messages = messages[offset : offset + page_size]
+
+            # Mark messages as seen if they're from the contact to the current user
+            unread_messages = paginated_messages.filter(
+                sender=contact_user, receiver=current_user, seen=False
+            )
+            for message in unread_messages:
+                message.mark_as_seen()
+
+            # Serialize messages
+            messages_data = []
+            for message in paginated_messages:
+                messages_data.append(
+                    {
+                        "id": str(message.id),
+                        "content": message.fixed_message.text,
+                        "created_at": message.created_at,
+                        "is_from_me": message.sender == current_user,
+                        "seen": message.seen,
+                        "seen_at": message.seen_at,
+                        "event": (
+                            {
+                                "event_id": str(message.event.eventId),
+                                "title": message.event.title,
+                            }
+                            if message.event
+                            else None
+                        ),
+                        "reactions": [
+                            {
+                                "emoji": reaction.emoji,
+                                "reacted_at": reaction.reacted_at,
+                                "reacted_by": reaction.user.username,
+                            }
+                            for reaction in message.reactions.all()
+                        ],
+                    }
+                )
+
+            return {
+                "messages": messages_data,
+                "pagination": {
+                    "current_page": page,
+                    "page_size": page_size,
+                    "total_messages": total_messages,
+                    "total_pages": total_pages,
+                    "has_next": page < total_pages,
+                    "has_previous": page > 1,
+                },
+                "contact": {
+                    "username": contact_user.username,
+                    "first_name": contact_user.first_name,
+                    "last_name": contact_user.last_name,
+                },
+            }, None
+
+        except CustomUser.DoesNotExist:
+            error_message = f"User not found with ID: {current_user_id}"
+            print(f"[get_message_conversation_with_contact API] {error_message}")
+            return None, error_message, None
+        except Exception as e:
+            error_message = f"Error getting message conversation: {str(e)}"
+            print(f"[get_message_conversation_with_contact API] {error_message}")
+            return None, error_message, None
+
+    conversation_data, error_message = await get_message_conversation_logic(
+        current_user_id, username, page, page_size
+    )
+    if conversation_data is None:
+        notification_sent = await notify_by_bot(
+            f"**[API: get_message_conversation_with_contact API]** \n\n {error_message} \n\n Platform: {platform} \n\n User ID: {current_user_id} \n\n Username: {username}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        if notification_sent is None:
+            print(
+                "[get_message_conversation_with_contact API] Could not send notification: BOT_API_KEY not set"
+            )
+        raise HTTPException(status_code=404, detail=error_message)
+
+    print(
+        f"[get_message_conversation_with_contact API] Returning {len(conversation_data['messages'])} messages for conversation with {username}"
+    )
+    return conversation_data
+
+
+@router.post("/messages/contacts/{username}/mark-read")
+async def mark_conversation_as_read(
+    request: Request,
+    username: str,
+    current_user_id: int = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
+    """
+    API endpoint to mark all messages from a specific contact as read.
+    Useful for bulk marking conversations as read.
+    """
+    print(f"[mark_conversation_as_read API] Function called for username: {username}")
+
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    @database_sync_to_async
+    def mark_conversation_as_read_logic(current_user_id, username):
+        try:
+            current_user = get_object_or_404(CustomUser, id=current_user_id)
+
+            # Get the contact user
+            try:
+                contact_user = CustomUser.objects.get(username=username)
+            except CustomUser.DoesNotExist:
+                return None, f"Contact user '{username}' not found", None
+
+            # Mark all unread messages from this contact as read
+            unread_messages = EventMessage.objects.filter(
+                sender=contact_user, receiver=current_user, seen=False
+            )
+
+            marked_count = unread_messages.count()
+
+            # Mark messages as seen
+            for message in unread_messages:
+                message.mark_as_seen()
+
+            return {
+                "marked_count": marked_count,
+                "contact_username": username,
+                "marked_at": timezone.now(),
+            }, None
+
+        except CustomUser.DoesNotExist:
+            error_message = f"User not found with ID: {current_user_id}"
+            print(f"[mark_conversation_as_read API] {error_message}")
+            return None, error_message, None
+        except Exception as e:
+            error_message = f"Error marking conversation as read: {str(e)}"
+            print(f"[mark_conversation_as_read API] {error_message}")
+            return None, error_message, None
+
+    mark_data, error_message = await mark_conversation_as_read_logic(
+        current_user_id, username
+    )
+    if mark_data is None:
+        notification_sent = await notify_by_bot(
+            f"**[API: mark_conversation_as_read API]** \n\n {error_message} \n\n Platform: {platform} \n\n User ID: {current_user_id} \n\n Username: {username}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        if notification_sent is None:
+            print(
+                "[mark_conversation_as_read API] Could not send notification: BOT_API_KEY not set"
+            )
+        raise HTTPException(status_code=404, detail=error_message)
+
+    print(
+        f"[mark_conversation_as_read API] Marked {mark_data['marked_count']} messages as read for {username}"
+    )
+    return {
+        "message": f"Marked {mark_data['marked_count']} messages as read",
+        "mark_data": mark_data,
+    }
