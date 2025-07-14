@@ -4393,7 +4393,7 @@ async def get_message_conversation_with_contact(
             try:
                 contact_user = CustomUser.objects.get(username=username)
             except CustomUser.DoesNotExist:
-                return None, f"Contact user '{username}' not found", None
+                return None, f"Contact user '{username}' not found"
 
             # Get all messages between these users
             messages = (
@@ -4415,14 +4415,16 @@ async def get_message_conversation_with_contact(
             offset = (page - 1) * page_size
 
             # Get paginated messages
-            paginated_messages = messages[offset : offset + page_size]
+            paginated_messages = list(messages[offset : offset + page_size])
 
             # Mark messages as seen if they're from the contact to the current user
-            unread_messages = paginated_messages.filter(
-                sender=contact_user, receiver=current_user, seen=False
-            )
-            for message in unread_messages:
-                message.mark_as_seen()
+            for message in paginated_messages:
+                if (
+                    message.sender == contact_user
+                    and message.receiver == current_user
+                    and not message.seen
+                ):
+                    message.mark_as_seen()
 
             # Serialize messages
             messages_data = []
@@ -4470,15 +4472,14 @@ async def get_message_conversation_with_contact(
                     "last_name": contact_user.last_name,
                 },
             }, None
-
         except CustomUser.DoesNotExist:
             error_message = f"User not found with ID: {current_user_id}"
             print(f"[get_message_conversation_with_contact API] {error_message}")
-            return None, error_message, None
+            return None, error_message
         except Exception as e:
             error_message = f"Error getting message conversation: {str(e)}"
             print(f"[get_message_conversation_with_contact API] {error_message}")
-            return None, error_message, None
+            return None, error_message
 
     conversation_data, error_message = await get_message_conversation_logic(
         current_user_id, username, page, page_size
