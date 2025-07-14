@@ -48,9 +48,6 @@ class FriendRequest(models.Model):
         default_permissions = ()
         app_label = "socialApp"
 
-    def __str__(self):
-        return f"{self.sender.username} -> {self.receiver.username} ({self.status})"
-
     def accept_request(self):
         self.status = "accepted"
         self.save()
@@ -60,6 +57,17 @@ class FriendRequest(models.Model):
         self.status = "declined"
         self.save()
         return self
+
+    def __str__(self):
+        sender_name = (
+            getattr(self.sender, "username", "Unknown") if self.sender else "Unknown"
+        )
+        receiver_name = (
+            getattr(self.receiver, "username", "Unknown")
+            if self.receiver
+            else "Unknown"
+        )
+        return f"{sender_name} -> {receiver_name} ({self.status})"
 
 
 class Crew(models.Model):
@@ -157,7 +165,15 @@ class CrewRequest(models.Model):
         app_label = "socialApp"
 
     def __str__(self):
-        return f"{self.sender.username} -> {self.receiver.username} ({self.status})"
+        sender_name = (
+            getattr(self.sender, "username", "Unknown") if self.sender else "Unknown"
+        )
+        receiver_name = (
+            getattr(self.receiver, "username", "Unknown")
+            if self.receiver
+            else "Unknown"
+        )
+        return f"{sender_name} -> {receiver_name} ({self.status})"
 
     def accept_request(self):
         self.status = "accepted"
@@ -280,6 +296,7 @@ class SurfPost(models.Model):
     class Meta:
         default_permissions = ()
 
+    # The 'votes' related_name is provided by TideUpTideDown.post ForeignKey
     @property
     def tideup(self):
         return self.votes.filter(value=1).count()
@@ -334,16 +351,16 @@ class EventMessage(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     sender = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        to_field="user_id",  # <-- use the UUID field
         on_delete=models.CASCADE,
         related_name="sent_messages",
     )
+    sender_user_id = models.UUIDField(null=True, blank=True)
     receiver = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        to_field="user_id",  # <-- use the UUID field
         on_delete=models.CASCADE,
         related_name="received_messages",
     )
+    receiver_user_id = models.UUIDField(null=True, blank=True)
     fixed_message = models.ForeignKey(
         FixedMessage, on_delete=models.CASCADE, related_name="used_in_messages"
     )
@@ -370,17 +387,34 @@ class EventMessage(models.Model):
     def as_dict(self):
         return {
             "id": self.id,
-            "sender": self.sender.username,
-            "receiver": self.receiver.username,
-            "fixed_message": self.fixed_message.text,
-            "event": self.event.eventId,
+            "sender": getattr(self.sender, "username", None) if self.sender else None,
+            "receiver": (
+                getattr(self.receiver, "username", None) if self.receiver else None
+            ),
+            "fixed_message": (
+                getattr(self.fixed_message, "text", None)
+                if self.fixed_message
+                else None
+            ),
+            "event": getattr(self.event, "eventId", None) if self.event else None,
             "created_at": self.created_at,
             "seen": self.seen,
             "seen_at": self.seen_at,
         }
 
     def __str__(self):
-        return f"{self.sender.username} -> {self.receiver.username} ({self.fixed_message.text})"
+        sender_name = (
+            getattr(self.sender, "username", "Unknown") if self.sender else "Unknown"
+        )
+        receiver_name = (
+            getattr(self.receiver, "username", "Unknown")
+            if self.receiver
+            else "Unknown"
+        )
+        fixed_message_text = (
+            getattr(self.fixed_message, "text", "?") if self.fixed_message else "?"
+        )
+        return f"{sender_name} -> {receiver_name} ({fixed_message_text})"
 
 
 class MessageReaction(models.Model):
@@ -401,4 +435,12 @@ class MessageReaction(models.Model):
         unique_together = ("message", "user")
 
     def __str__(self):
-        return f"{self.user.username} -> {self.message.event.name} ({self.emoji})"
+        user_name = (
+            getattr(self.user, "username", "Unknown") if self.user else "Unknown"
+        )
+        event_name = (
+            getattr(self.message.event, "name", "?")
+            if self.message and self.message.event
+            else "?"
+        )
+        return f"{user_name} -> {event_name} ({self.emoji})"
