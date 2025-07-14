@@ -9,6 +9,7 @@ import os
 from user_agents import parse as parse_user_agent
 from django.db.models import Q, Prefetch
 from django.db import transaction
+from django.db import models
 from django.utils import timezone
 import re
 from django.shortcuts import get_object_or_404
