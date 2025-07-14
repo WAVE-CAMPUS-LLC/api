@@ -3915,7 +3915,15 @@ async def send_message(
     @database_sync_to_async
     def send_message_logic(data, current_user_id):
         current_user = get_object_or_404(CustomUser, id=current_user_id)
-        receiver = get_object_or_404(CustomUser, username=data.receiver_username)
+
+        try:
+            receiver = CustomUser.objects.get(username=data.receiver_username)
+        except CustomUser.DoesNotExist:
+            raise HTTPException(
+                status_code=404,
+                detail=f"User with username '{data.receiver_username}' not found",
+            )
+
         fixed_message = get_object_or_404(FixedMessage, id=data.fixed_message_id)
 
         latest = (
@@ -3982,7 +3990,15 @@ async def conversation(username: str, current_user_id: int = Depends(get_current
     @database_sync_to_async
     def get_conversation_messages(username, current_user_id):
         current_user = get_object_or_404(CustomUser, id=current_user_id)
-        target_user = get_object_or_404(CustomUser, username=username)
+
+        # Try to find the target user by username
+        try:
+            target_user = CustomUser.objects.get(username=username)
+        except CustomUser.DoesNotExist:
+            # Return empty list if target user doesn't exist
+            # This is better than throwing a 404 for a conversation endpoint
+            return []
+
         messages = (
             EventMessage.objects.filter(
                 sender__in=[current_user, target_user],
