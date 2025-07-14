@@ -334,15 +334,16 @@ class EventMessage(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     sender = models.ForeignKey(
         settings.AUTH_USER_MODEL,
+        to_field="user_id",  # <-- use the UUID field
         on_delete=models.CASCADE,
         related_name="sent_messages",
     )
     receiver = models.ForeignKey(
         settings.AUTH_USER_MODEL,
+        to_field="user_id",  # <-- use the UUID field
         on_delete=models.CASCADE,
         related_name="received_messages",
     )
-
     fixed_message = models.ForeignKey(
         FixedMessage, on_delete=models.CASCADE, related_name="used_in_messages"
     )
