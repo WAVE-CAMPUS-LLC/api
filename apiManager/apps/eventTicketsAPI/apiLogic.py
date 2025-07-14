@@ -114,7 +114,6 @@ class CheckoutResponse(BaseModel):
     amount: float
     fee_amount: float
     discount_percentage: float
-    events: List[str]  # List of event IDs in the checkout
 
 
 @router.post(
@@ -225,32 +224,23 @@ async def process_checkout(
                 )
             event_ids.add(event_id)
 
-        # Log the events found in the cart
-        print(f"[DEBUG] Found {len(event_ids)} unique event(s) in cart: {event_ids}")
-        
-        # Validate that all events exist and hosts have payment processing configured
-        events_data = {}
-        for event_id in event_ids:
-            try:
-                event = await database_sync_to_async(Event.objects.get)(eventId=event_id)
-                host = await database_sync_to_async(lambda: event.host)()
-                
-                # For multi-event checkouts, we'll collect to platform account and distribute later
-                # So we don't require each host to have connectAccountID configured
-                events_data[event_id] = {
-                    "event": event,
-                    "host": host,
-                    "has_connect_account": bool(host.connectAccountID),
-                }
-                print(f"[DEBUG] Event {event_id} validated: {event.title}")
-            except Event.DoesNotExist:
-                print(f"[DEBUG] ERROR: Event {event_id} not found")
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail=f"Event {event_id} not found",
-                )
-        
-        print(f"[DEBUG] All events validated successfully")
+        # Ensure all tickets are from the same event
+        if len(event_ids) > 1:
+            print(f"[DEBUG] ERROR: Multiple events found: {event_ids}")
+            await notify_by_bot(
+                f"**[API: process_checkout]** \n\n Multiple events found in cart: {event_ids} \n\n Platform: {platform} \n\n User ID: {current_user.id if current_user else 'None'}",
+                platform or "Unknown",
+                "ERROR",
+                device_info,
+            )
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="All tickets must be from the same event",
+            )
+
+        print(
+            f"[DEBUG] Ticket validation passed - all tickets are from event: {list(event_ids)[0]}"
+        )
 
         # Calculate the total amount for tickets (without discount)
         total_amount = sum(
@@ -291,20 +281,28 @@ async def process_checkout(
             coupon_code_value = cart["coupon_code"]
             if coupon_code_value:
                 print(f"[DEBUG] Processing coupon code: {coupon_code_value}")
-                
-                # For multi-event checkouts, coupon codes are not supported
-                if len(event_ids) > 1:
-                    print(f"[DEBUG] ERROR: Coupon codes not supported for multi-event checkouts")
-                    raise HTTPException(
-                        status_code=status.HTTP_400_BAD_REQUEST,
-                        detail="Coupon codes are not supported for multi-event checkouts. Please use individual checkouts for each event to apply coupons.",
-                    )
-                
                 try:
-                    # Get the single event
-                    event = events_data[list(event_ids)[0]]["event"]
+                    # Get the event
+                    event = await database_sync_to_async(Event.objects.get)(eventId=list(event_ids)[0])
 
-                    # For single event checkouts, validate the coupon
+                    # Check if event has payment processing configured
+                    host = await database_sync_to_async(lambda: event.host)()
+                    if not host.connectAccountID:
+                        print(
+                            f"[DEBUG] ERROR: Event host has not configured payment processing"
+                        )
+                        await notify_by_bot(
+                            f"**[API: process_checkout]** \n\n Event host has not configured payment processing: eventId={event.eventId} \n\n Platform: {platform} \n\n User ID: {current_user.id if current_user else 'None'}",
+                            platform or "Unknown",
+                            "ERROR",
+                            device_info,
+                        )
+                        raise HTTPException(
+                            status_code=status.HTTP_400_BAD_REQUEST,
+                            detail="Event host has not configured payment processing",
+                        )
+
+                    # Find the coupon
                     coupon = await database_sync_to_async(CouponCode.objects.get)(
                         coupon_code=coupon_code_value, event=event, is_active=True
                     )
@@ -322,6 +320,12 @@ async def process_checkout(
                     raise HTTPException(
                         status_code=status.HTTP_400_BAD_REQUEST,
                         detail="Invalid coupon code",
+                    )
+                except Event.DoesNotExist:
+                    print(f"[DEBUG] ERROR: Event not found for coupon validation")
+                    raise HTTPException(
+                        status_code=status.HTTP_404_NOT_FOUND,
+                        detail="Event not found",
                     )
                 except Exception as e:
                     print(f"[DEBUG] ERROR: Unexpected error processing coupon: {e}")
@@ -471,28 +475,24 @@ async def process_checkout(
             user_id = current_user.id if current_user else None
             print(f"[DEBUG] User ID for session: {user_id}")
 
-            # Determine payment processing strategy
-            is_multi_event = len(event_ids) > 1
-            connect_account_id = None
-            
-            if is_multi_event:
-                print(f"[DEBUG] Multi-event checkout detected - collecting to platform account")
-                # For multi-event checkouts, collect to platform account
-                connect_account_id = None
-            else:
-                # For single event checkouts, try to use the event's connect account
-                event = events_data[list(event_ids)[0]]["event"]
-                host = events_data[list(event_ids)[0]]["host"]
-                connect_account_id = host.connectAccountID
-                
-                if not connect_account_id:
-                    print(f"[DEBUG] No connect account found for single event - using platform account")
-                    # Fall back to platform account if no connect account
-                    connect_account_id = None
-                else:
-                    print(f"[DEBUG] Using event host's connect account: {connect_account_id}")
-                    
-            print(f"[DEBUG] Payment processing strategy: {'Platform account' if not connect_account_id else 'Connect account'}")
+            # Get the event and connect account
+            event = await database_sync_to_async(Event.objects.get)(eventId=list(event_ids)[0])
+            # Get the connect account ID from the event's host
+            host = await database_sync_to_async(lambda: event.host)()
+            connect_account_id = host.connectAccountID
+
+            if not connect_account_id:
+                print(f"[DEBUG] ERROR: No connect account found for event")
+                await notify_by_bot(
+                    f"**[API: process_checkout]** \n\n No connect account found for event: eventId={event.eventId} \n\n Platform: {platform} \n\n User ID: {current_user.id if current_user else 'None'}",
+                    platform or "Unknown",
+                    "ERROR",
+                    device_info,
+                )
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="Payment URLs not configured properly",
+                )
 
             # Common session parameters
             print(f"[DEBUG] Building session parameters...")
@@ -510,10 +510,9 @@ async def process_checkout(
                 "cancel_url": f"https://waveoncampus.com/checkout/paymentFailed",
                 "metadata": {
                     "user_id": str(user_id) if user_id else "guest",
-                    "event_ids": json.dumps(list(event_ids)),  # Support multiple events
+                    "event_id": str(event.eventId),
                     "cart_data": json.dumps(cart),
                     "platform": platform or "unknown",
-                    "is_multi_event": str(is_multi_event),
                 },
             }
 
@@ -532,10 +531,9 @@ async def process_checkout(
                 session_params["payment_intent_data"] = {
                     "metadata": {
                         "user_id": str(user_id) if user_id else "guest",
-                        "event_ids": json.dumps(list(event_ids)),  # Support multiple events
+                        "event_id": str(event.eventId),
                         "cart_data": json.dumps(cart),
                         "platform": platform or "unknown",
-                        "is_multi_event": str(is_multi_event),
                     },
                 }
                 
@@ -543,17 +541,18 @@ async def process_checkout(
                 if fee_amount > 0:
                     session_params["payment_intent_data"]["application_fee_amount"] = fee_amount
                     
-                # For single event with connect account, set up transfer
-                if amount_in_cents > 0 and connect_account_id and not is_multi_event:
+                if amount_in_cents > 0:
                     session_params["payment_intent_data"]["transfer_data"] = {
                         "destination": connect_account_id,
                     }
-                    print(f"[DEBUG] Payment intent configured for direct transfer to {connect_account_id}")
-                elif amount_in_cents > 0:
-                    print(f"[DEBUG] Payment intent configured for platform collection {'(multi-event)' if is_multi_event else '(no connect account)'}")
                 
+                print(f"[DEBUG] Payment intent configured for transfer")
             else:
                 # For completely free checkouts, we still need metadata but no transfers
+                session_params["metadata"]["user_id"] = str(user_id) if user_id else "guest"
+                session_params["metadata"]["event_id"] = str(event.eventId)
+                session_params["metadata"]["cart_data"] = json.dumps(cart)
+                session_params["metadata"]["platform"] = platform or "unknown"
                 session_params["metadata"]["is_free_checkout"] = "true"
                 print(f"[DEBUG] Completely free checkout - no payment intent data needed")
             
@@ -576,7 +575,6 @@ async def process_checkout(
                 amount=total_amount,
                 fee_amount=fee_amount / 100,
                 discount_percentage=discount_percentage,
-                events=list(event_ids),
             )
 
         except stripe.error.StripeError as e:
@@ -1719,27 +1717,15 @@ def _extract_cart_from_metadata_sync(session, payment_intent, line_items):
                     f"[_extract_cart_from_metadata_sync] No cart_data found in payment intent metadata"
                 )
 
-            # If we still don't have cart data, try to reconstruct from event IDs
+            # If we still don't have cart data, try to reconstruct from event ID
             if not cart:
                 print(
-                    f"[_extract_cart_from_metadata_sync] Attempting reconstruction from event IDs"
+                    f"[_extract_cart_from_metadata_sync] Attempting reconstruction from event ID"
                 )
-                # Try new multi-event format first
-                event_ids_str = payment_intent.metadata.get("event_ids")
-                if event_ids_str:
-                    try:
-                        event_ids = json.loads(event_ids_str)
-                        print(f"[_extract_cart_from_metadata_sync] Event IDs from payment intent: {event_ids}")
-                        # For multi-event, we'll just use the first event for fallback reconstruction
-                        event_id = event_ids[0] if event_ids else None
-                    except (json.JSONDecodeError, IndexError) as e:
-                        print(f"[_extract_cart_from_metadata_sync] Error parsing event_ids: {e}")
-                        event_id = None
-                else:
-                    # Fall back to old single event format
-                    event_id = payment_intent.metadata.get("event_id")
-                    print(f"[_extract_cart_from_metadata_sync] Event ID from payment intent (legacy): {event_id}")
-                
+                event_id = payment_intent.metadata.get("event_id")
+                print(
+                    f"[_extract_cart_from_metadata_sync] Event ID from payment intent: {event_id}"
+                )
                 if event_id:
                     try:
                         print(
@@ -1957,26 +1943,6 @@ def _generate_tickets_from_cart_sync(user_id, cart, session_id, session):
             )
 
     print(f"[_generate_tickets_from_cart_sync] Total tickets generated: {ticket_count}")
-    
-    # Log summary for multi-event scenarios
-    if cart:
-        event_summary = {}
-        for cart_key, ticket_info in cart.items():
-            if cart_key not in ["coupon_code", "discount_percentage", "event_id", "coupon_id"] and isinstance(ticket_info, dict):
-                event_id = ticket_info.get("eventId")
-                if event_id:
-                    if event_id not in event_summary:
-                        event_summary[event_id] = 0
-                    event_summary[event_id] += int(ticket_info.get("quantity", 1))
-        
-        if len(event_summary) > 1:
-            print(f"[_generate_tickets_from_cart_sync] Multi-event ticket generation summary:")
-            for event_id, count in event_summary.items():
-                print(f"[_generate_tickets_from_cart_sync]   - Event {event_id}: {count} tickets")
-        elif len(event_summary) == 1:
-            event_id, count = next(iter(event_summary.items()))
-            print(f"[_generate_tickets_from_cart_sync] Single-event ticket generation: Event {event_id}: {count} tickets")
-    
     print(
         f"[_generate_tickets_from_cart_sync] ========== TICKET GENERATION COMPLETE =========="
     )
@@ -2448,46 +2414,26 @@ def _generate_tickets_from_stripe_session_sync(user_id, session_id, session):
             f"[_generate_tickets_from_stripe_session_sync] Customer: {first_name} {last_name} ({email})"
         )
 
-        # Get events from payment intent metadata (supporting both single and multi-event)
-        events = []
+        # Get event from payment intent metadata
+        event = None
         if session.payment_intent:
             print(
-                f"[_generate_tickets_from_stripe_session_sync] Getting events from payment intent: {session.payment_intent}"
+                f"[_generate_tickets_from_stripe_session_sync] Getting event from payment intent: {session.payment_intent}"
             )
             try:
                 payment_intent = stripe.PaymentIntent.retrieve(session.payment_intent)
                 print(
                     f"[_generate_tickets_from_stripe_session_sync] Payment intent metadata: {payment_intent.metadata}"
                 )
-                
-                # Try new multi-event format first
-                event_ids_str = payment_intent.metadata.get("event_ids")
-                if event_ids_str:
-                    try:
-                        event_ids = json.loads(event_ids_str)
-                        print(f"[_generate_tickets_from_stripe_session_sync] Event IDs from metadata: {event_ids}")
-                        
-                        # Look up all events
-                        for event_id in event_ids:
-                            try:
-                                event = Event.objects.get(eventId=event_id)
-                                events.append(event)
-                                print(f"[_generate_tickets_from_stripe_session_sync] Event found: {event.title}")
-                            except Event.DoesNotExist:
-                                print(f"[_generate_tickets_from_stripe_session_sync] Event {event_id} not found")
-                    except (json.JSONDecodeError, TypeError) as e:
-                        print(f"[_generate_tickets_from_stripe_session_sync] Error parsing event_ids: {e}")
-                else:
-                    # Fall back to old single event format
-                    event_id = payment_intent.metadata.get("event_id")
-                    print(f"[_generate_tickets_from_stripe_session_sync] Event ID from metadata (legacy): {event_id}")
-                    if event_id:
-                        try:
-                            event = Event.objects.get(eventId=event_id)
-                            events.append(event)
-                            print(f"[_generate_tickets_from_stripe_session_sync] Event found: {event.title}")
-                        except Event.DoesNotExist:
-                            print(f"[_generate_tickets_from_stripe_session_sync] Event {event_id} not found")
+                event_id = payment_intent.metadata.get("event_id")
+                print(
+                    f"[_generate_tickets_from_stripe_session_sync] Event ID from metadata: {event_id}"
+                )
+                if event_id:
+                    event = Event.objects.get(eventId=event_id)
+                    print(
+                        f"[_generate_tickets_from_stripe_session_sync] Event found: {event.title}"
+                    )
             except Exception as e:
                 print(
                     f"[_generate_tickets_from_stripe_session_sync] Error getting event from payment intent: {e}"
@@ -2501,13 +2447,11 @@ def _generate_tickets_from_stripe_session_sync(user_id, session_id, session):
                 f"[_generate_tickets_from_stripe_session_sync] No payment intent found in session"
             )
 
-        if not events:
+        if not event:
             print(
-                f"[_generate_tickets_from_stripe_session_sync] Could not determine events for ticket generation"
+                f"[_generate_tickets_from_stripe_session_sync] Could not determine event for ticket generation"
             )
             return 0
-
-        print(f"[_generate_tickets_from_stripe_session_sync] Found {len(events)} events for ticket generation")
 
         # Generate tickets based on line items (excluding service fees)
         print(
@@ -2518,43 +2462,15 @@ def _generate_tickets_from_stripe_session_sync(user_id, session_id, session):
                 print(
                     f"[_generate_tickets_from_stripe_session_sync] Processing ticket line item {i}: {item.description}"
                 )
-                
-                # Determine which event this line item belongs to
-                target_event = None
-                
-                if len(events) == 1:
-                    # Single event - use it
-                    target_event = events[0]
-                    print(f"[_generate_tickets_from_stripe_session_sync] Using single event: {target_event.title}")
-                else:
-                    # Multi-event - try to match line item to event
-                    # Check if line item has metadata with event_id
-                    try:
-                        if hasattr(item, 'price') and hasattr(item.price, 'product') and hasattr(item.price.product, 'metadata'):
-                            line_item_event_id = item.price.product.metadata.get('event_id')
-                            if line_item_event_id:
-                                for event in events:
-                                    if str(event.eventId) == str(line_item_event_id):
-                                        target_event = event
-                                        print(f"[_generate_tickets_from_stripe_session_sync] Matched line item to event: {target_event.title}")
-                                        break
-                    except Exception as e:
-                        print(f"[_generate_tickets_from_stripe_session_sync] Error matching line item to event: {e}")
-                    
-                    # If we couldn't match, use the first event as fallback
-                    if not target_event:
-                        target_event = events[0]
-                        print(f"[_generate_tickets_from_stripe_session_sync] Using first event as fallback: {target_event.title}")
-
                 # Generate tickets for this line item
                 quantity = item.quantity
                 print(
-                    f"[_generate_tickets_from_stripe_session_sync] Generating {quantity} tickets for event: {target_event.title}"
+                    f"[_generate_tickets_from_stripe_session_sync] Generating {quantity} tickets for this line item"
                 )
 
                 for j in range(quantity):
                     print(
-                        f"[_generate_tickets_from_stripe_session_sync] Generating ticket {j+1}/{quantity} for event: {target_event.title}"
+                        f"[_generate_tickets_from_stripe_session_sync] Generating ticket {j+1}/{quantity}"
                     )
                     try:
                         # Create a comprehensive mock request object for email functionality
@@ -2576,7 +2492,7 @@ def _generate_tickets_from_stripe_session_sync(user_id, session_id, session):
                         
                         ticket = generateTicket(
                             request=mock_request,
-                            event=target_event,
+                            event=event,
                             user=user if user else None,
                             guestFirstName=validated_first,
                             guestLastName=validated_last,
@@ -2586,7 +2502,7 @@ def _generate_tickets_from_stripe_session_sync(user_id, session_id, session):
                         )
                         ticket_count += 1
                         print(
-                            f"[_generate_tickets_from_stripe_session_sync] Ticket {j+1} generated: {ticket.ticketId} for event: {target_event.title}"
+                            f"[_generate_tickets_from_stripe_session_sync] Ticket {j+1} generated: {ticket.ticketId}"
                         )
                         
                         # Enhanced logging for email tracking with validation
