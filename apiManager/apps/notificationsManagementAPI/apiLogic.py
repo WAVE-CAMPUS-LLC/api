@@ -1,6 +1,16 @@
 from typing import Optional
 from channels.db import database_sync_to_async
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import (
+    APIRouter,
+    Depends,
+    HTTPException,
+    Request,
+    status,
+    WebSocket,
+    WebSocketDisconnect,
+    WebSocketException,
+)
+from apiManager.notifications.websocket import manager
 from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordRequestForm
 import bleach
@@ -14,6 +24,7 @@ from typing import List
 from notificationManagement.models import Notification
 from apiManager.utilities.socialFeed.feed import get_friendship_feed_from_graph
 from django.utils import timezone
+from authenticationApp.models import UserPushToken
 
 
 router = APIRouter()
@@ -114,3 +125,37 @@ async def get_feed(
             device_info,
         )
         raise HTTPException(status_code=500, detail="Error getting feed")
+
+
+@router.websocket("/ws/{user_id}")
+async def websocket_endpoint(
+    websocket: WebSocket,
+    user_id: int,
+    current_user: CustomUser = Depends(get_current_user),
+):
+    await manager.connect(user_id, websocket)
+
+    try:
+        while True:
+            data = await websocket.receive_text()
+    except WebSocketDisconnect:
+        manager.disconnect(user_id)
+
+
+@router.post("/push/token")
+async def update_push_token(
+    user_id: int,
+    token: str,
+    current_user: CustomUser = Depends(get_current_user),
+):
+    try:
+        user_push_token, created = UserPushToken.objects.get_or_create(
+            user_id=user_id, defaults={"token": token}
+        )
+        user_push_token.token = token
+        user_push_token.save()
+        logger.info(f"Push token updated successfully for user {user_id}")
+        return {"status": "success", "message": "Push token updated successfully"}
+    except Exception as e:
+        logger.error(f"Error updating push token: {e}")
+        return {"status": "error", "message": "Failed to update push token"}

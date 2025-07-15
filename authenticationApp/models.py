@@ -273,3 +273,8 @@ class EmailVerification(models.Model):
 
     def __str__(self):
         return self.verification_code
+
+
+class UserPushToken(models.Model):
+    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
+    token = models.TextField()
