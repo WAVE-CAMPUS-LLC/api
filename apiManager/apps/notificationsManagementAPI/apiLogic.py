@@ -24,7 +24,7 @@ from typing import List
 from notificationManagement.models import Notification
 from apiManager.utilities.socialFeed.feed import get_friendship_feed_from_graph
 from django.utils import timezone
-from authenticationApp.models import UserPushToken
+from notificationManagement.models import UserPushyTokeny
 
 
 router = APIRouter()
@@ -149,7 +149,7 @@ async def update_push_token(
     current_user: CustomUser = Depends(get_current_user),
 ):
     try:
-        user_push_token, created = UserPushToken.objects.get_or_create(
+        user_push_token, created = UserPushyTokeny.objects.get_or_create(
             user_id=user_id, defaults={"token": token}
         )
         logger.info(f"Push token updated successfully for user {user_id}")
