@@ -276,5 +276,18 @@ class EmailVerification(models.Model):
 
 
 class UserPushToken(models.Model):
-    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
+    user = models.OneToOneField(
+        CustomUser, on_delete=models.CASCADE, to_field="user_id"
+    )
     token = models.TextField()
+
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.user.email} - {self.token}"
+
+    class Meta:
+        default_permissions = ()
+        ordering = ["-updated_at"]
+        verbose_name = "User Push Token"
+        verbose_name_plural = "User Push Tokens"

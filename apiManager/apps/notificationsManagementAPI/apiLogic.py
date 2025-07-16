@@ -152,10 +152,8 @@ async def update_push_token(
         user_push_token, created = UserPushToken.objects.get_or_create(
             user_id=user_id, defaults={"token": token}
         )
-        user_push_token.token = token
-        user_push_token.save()
         logger.info(f"Push token updated successfully for user {user_id}")
         return {"status": "success", "message": "Push token updated successfully"}
     except Exception as e:
         logger.error(f"Error updating push token: {e}")
-        return {"status": "error", "message": "Failed to update push token"}
+        raise HTTPException(status_code=500, detail="Error updating push token")
