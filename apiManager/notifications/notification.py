@@ -10,9 +10,8 @@ logger = logging.getLogger(__name__)
 async def send_notification(user_id: uuid.UUID, message: str, title: str = "WAVE."):
     try:
         PushNotification.objects.create(user_id=user_id, message=message)
-        await manager.send_personal_message(message, user_id)
 
-        if user_id not in manager.active_connections:
+        if user_id in manager.active_connections:
             await manager.send_personal_message(message, user_id)
         else:
             send_push_notification(user_id, message, title)
