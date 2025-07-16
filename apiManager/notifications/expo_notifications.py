@@ -1,5 +1,7 @@
 import requests
 from notificationManagement.models import UserPushyTokeny
+from authenticationApp.models import CustomUser
+from channels.db import database_sync_to_async
 import logging
 import uuid
 
@@ -8,9 +10,17 @@ logger = logging.getLogger(__name__)
 EXPO_API_URL = "https://exp.host/--/api/v2/push/send"
 
 
-def send_push_notification(user_id: uuid.UUID, message: str, title: str = "WAVE."):
+async def send_push_notification(
+    user_id: uuid.UUID, message: str, title: str = "WAVE."
+):
     try:
-        token_obj = UserPushyTokeny.objects.get(user_id=user_id)
+        # Use sync_to_async for ORM call
+        @database_sync_to_async
+        def get_push_token(user_uuid):
+            user = CustomUser.objects.get(user_id=user_uuid)
+            return UserPushyTokeny.objects.get(user=user)  # type: ignore[attr-defined]
+
+        token_obj = await get_push_token(user_id)
         expo_token = token_obj.token
 
         payload = {
