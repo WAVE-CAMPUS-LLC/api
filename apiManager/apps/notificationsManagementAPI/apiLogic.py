@@ -9,6 +9,7 @@ from fastapi import (
     WebSocket,
     WebSocketDisconnect,
     WebSocketException,
+    Form,
 )
 from apiManager.notifications.websocket import manager
 from fastapi.responses import JSONResponse
@@ -145,7 +146,7 @@ async def websocket_endpoint(
 @router.post("/push/token")
 async def update_push_token(
     request: Request,
-    token: str,
+    token: str = Form(...),
     user_id: int = Depends(get_current_user),
     platform: Optional[str] = None,
 ):
