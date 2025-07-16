@@ -1,6 +1,7 @@
 import uuid
 from django.db import models
 from django.conf import settings
+from authenticationApp.models import CustomUser
 
 # Create your models here.
 
@@ -47,6 +48,23 @@ class Notification(models.Model):
 
     def __str__(self):
         return f"{self.recipient.username} - {self.type}"
+
+
+class UserPushyTokeny(models.Model):
+    user = models.OneToOneField(
+        CustomUser, on_delete=models.CASCADE, to_field="user_id", db_column="user_id"
+    )
+    token = models.TextField()
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.user.username} - {self.token}"
+
+    class Meta:
+        default_permissions = ()
+        ordering = ["-updated_at"]
+        verbose_name = "User Push Token"
+        verbose_name_plural = "User Push Tokens"
 
 
 class PushNotification(models.Model):

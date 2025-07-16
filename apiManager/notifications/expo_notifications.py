@@ -1,5 +1,5 @@
 import requests
-from authenticationApp.models import UserPushToken
+from notificationManagement.models import UserPushyTokeny
 import logging
 import uuid
 
@@ -10,7 +10,7 @@ EXPO_API_URL = "https://exp.host/--/api/v2/push/send"
 
 def send_push_notification(user_id: uuid.UUID, message: str, title: str = "WAVE."):
     try:
-        token_obj = UserPushToken.objects.get(user_id=user_id)
+        token_obj = UserPushyTokeny.objects.get(user_id=user_id)
         expo_token = token_obj.token
 
         payload = {
