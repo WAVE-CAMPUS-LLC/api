@@ -36,6 +36,7 @@ async def send_push_notification(
         }
 
         response = requests.post(EXPO_API_URL, json=payload, headers=headers)
+        print(response.json())
         response.raise_for_status()
         logger.info("Push notification sent successfully to user %s", user_id)
         return True

@@ -23,7 +23,7 @@ async def send_notification(user_id: uuid.UUID, message: str, title: str = "WAVE
         if user_id_str in manager.active_connections:
             await manager.send_personal_message(message, user_id_str)
         else:
-            send_push_notification(user_id, message, title)
+            await send_push_notification(user_id, message, title)
 
     except Exception as e:
         print(f"Error sending notification: {e}")
