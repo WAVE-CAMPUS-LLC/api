@@ -130,30 +130,52 @@ async def get_feed(
 @router.websocket("/ws/{user_id}")
 async def websocket_endpoint(
     websocket: WebSocket,
-    user_id: int,
+    user_id: uuid.UUID,
     current_user: CustomUser = Depends(get_current_user),
 ):
-    await manager.connect(user_id, websocket)
+    await manager.connect(str(user_id), websocket)
 
     try:
         while True:
             data = await websocket.receive_text()
     except WebSocketDisconnect:
-        manager.disconnect(user_id)
+        manager.disconnect(str(user_id))
 
 
 @router.post("/push/token")
 async def update_push_token(
-    user_id: int,
+    request: Request,
     token: str,
-    current_user: CustomUser = Depends(get_current_user),
+    user_id: int = Depends(get_current_user),
+    platform: Optional[str] = None,
 ):
     try:
-        user_push_token, created = UserPushyTokeny.objects.get_or_create(
-            user_id=user_id, defaults={"token": token}
-        )
-        logger.info(f"Push token updated successfully for user {user_id}")
+
+        @database_sync_to_async
+        def update_push_token_logic(user_id, token):
+            try:
+                user = CustomUser.objects.get(id=user_id)
+                user_push_token, created = UserPushyTokeny.objects.get_or_create(
+                    user_id=user.user_id, defaults={"token": token}
+                )
+                if not created:
+                    user_push_token.token = token
+                    user_push_token.save()
+                return True, None
+            except CustomUser.DoesNotExist:
+                return False, "User not found"
+            except Exception as e:
+                return False, str(e)
+
+        success, error = await update_push_token_logic(user_id, token)
+        if not success:
+            logger.error("Error updating push token: %s", error)
+            raise HTTPException(
+                status_code=500, detail=f"Error updating push token: {error}"
+            )
+
+        logger.info("Push token updated successfully for user %s", user_id)
         return {"status": "success", "message": "Push token updated successfully"}
     except Exception as e:
-        logger.error(f"Error updating push token: {e}")
+        logger.error("Error updating push token: %s", e)
         raise HTTPException(status_code=500, detail="Error updating push token")

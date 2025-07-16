@@ -27,8 +27,8 @@ def send_push_notification(user_id: uuid.UUID, message: str, title: str = "WAVE.
 
         response = requests.post(EXPO_API_URL, json=payload, headers=headers)
         response.raise_for_status()
-        logger.info(f"Push notification sent successfully to user {user_id}")
+        logger.info("Push notification sent successfully to user %s", user_id)
         return True
     except Exception as e:
-        logger.error(f"Error sending push notification: {e}")
+        logger.error("Error sending push notification: %s", e)
         return False
