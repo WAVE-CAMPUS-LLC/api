@@ -56,6 +56,8 @@ from .serializers import (
     EventMessageResponse,
 )
 
+from apiManager.notifications.notification import send_notification
+
 
 router = APIRouter()
 
@@ -913,6 +915,17 @@ async def send_friend_request(
                     )
                     print(f"[send_friend_request API] {error_message}")
                     return None, error_message, None
+
+            # --- Send notification to the receiver ---
+            from asgiref.sync import async_to_sync
+
+            notification_message = (
+                f"You have a new friend request from {sender_user.username}"
+            )
+            async_to_sync(send_notification)(
+                receiver_user.user_id, notification_message, "Friend Request"
+            )
+            # --- End notification ---
 
             return (
                 {
