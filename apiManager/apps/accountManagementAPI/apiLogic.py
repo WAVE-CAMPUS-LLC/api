@@ -124,6 +124,8 @@ async def profileOverview(
                 ),
                 "is_campus_manager": user_profile.is_campus_manager,
                 "was_host": user_profile.was_host,
+                "date_joined": user.date_joined,
+                "is_active": user.is_active,
             }
 
             # Log what we're returning for debugging
