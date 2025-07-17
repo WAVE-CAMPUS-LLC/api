@@ -963,9 +963,26 @@ async def send_friend_request(
 
     # Send notification if friend request was successful
     if friend_request_data is not None and receiver_user_id and sender_username:
-        notification_message = f"You have a new friend request from {sender_username}"
+        # Get sender's first name for the notification message
+        sender_first_name = None
+        try:
+            sender_first_name = CustomUser.objects.get(
+                username=sender_username
+            ).first_name
+        except Exception:
+            sender_first_name = sender_username  # fallback
+        notification_message = f"You have a new friend request from {sender_first_name}"
         await send_notification(
-            receiver_user_id, notification_message, "Friend Request"
+            receiver_user_id,
+            notification_message,
+            "Friend Request",
+            navigate_to="friend_requests",
+            params={
+                "request_id": str(friend_request_data.get("request_id", "")),
+                "sender_username": sender_username,
+                "request_type": "friend_request",
+                "status": "pending",
+            },
         )
 
     if friend_request_data is None:

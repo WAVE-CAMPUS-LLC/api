@@ -4,6 +4,7 @@ from authenticationApp.models import CustomUser
 from channels.db import database_sync_to_async
 import logging
 import uuid
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -11,7 +12,7 @@ EXPO_API_URL = "https://exp.host/--/api/v2/push/send"
 
 
 async def send_push_notification(
-    user_id: uuid.UUID, message: str, title: str = "WAVE."
+    user_id: uuid.UUID, message: str, title: str = "WAVE.", data: Optional[dict] = None
 ):
     try:
         # Use sync_to_async for ORM call
@@ -28,7 +29,7 @@ async def send_push_notification(
             "sound": "default",
             "title": title,
             "body": message,
-            "data": {"message": message},
+            "data": data or {"message": message},
         }
 
         headers = {
