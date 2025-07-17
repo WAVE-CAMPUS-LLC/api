@@ -69,6 +69,10 @@ class UserPushyTokeny(models.Model):
 
 class PushNotification(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    title = models.CharField(max_length=255, default="WAVE.")
     message = models.TextField()
     read = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    navigate_to = models.CharField(max_length=255, null=True, blank=True)
+    params = models.JSONField(default=dict, blank=True, null=True)

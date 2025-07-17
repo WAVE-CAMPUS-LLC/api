@@ -20,11 +20,19 @@ async def send_notification(
     try:
         # Get user by UUID and use their primary key ID for PushNotification
         @database_sync_to_async
-        def create_push_notification(user_uuid, message_text):
+        def create_push_notification(
+            user_uuid, message_text, title, navigate_to, params
+        ):
             user = CustomUser.objects.get(user_id=user_uuid)
-            return PushNotification.objects.create(user=user, message=message_text)  # type: ignore[attr-defined]
+            return PushNotification.objects.create(  # type: ignore[attr-defined]
+                user=user,
+                message=message_text,
+                title=title,
+                navigate_to=navigate_to,
+                params=params,
+            )
 
-        await create_push_notification(user_id, message)
+        await create_push_notification(user_id, message, title, navigate_to, params)
 
         payload: dict[str, Any] = {
             "type": "notification",
