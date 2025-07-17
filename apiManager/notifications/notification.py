@@ -18,6 +18,21 @@ async def send_notification(
     params: Optional[dict] = None,
 ):
     try:
+        # Log the notification data being sent
+        logger.info(
+            "Sending notification - user_id: %s, message: %s, title: %s, navigate_to: %s, params: %s",
+            user_id,
+            message,
+            title,
+            navigate_to,
+            params,
+        )
+
+        # Also print to terminal for immediate visibility
+        print(
+            f"[NOTIFICATION] Sending notification - user_id: {user_id}, message: {message}, title: {title}, navigate_to: {navigate_to}, params: {params}"
+        )
+
         # Get user by UUID and use their primary key ID for PushNotification
         @database_sync_to_async
         def create_push_notification(
@@ -46,10 +61,22 @@ async def send_notification(
         if params:
             payload["params"] = params
 
+        # Log the final payload being sent
+        logger.info("Notification payload: %s", payload)
+
+        # Also print payload to terminal
+        print(f"[NOTIFICATION] Payload: {payload}")
+
         user_id_str = str(user_id)
         if user_id_str in manager.active_connections:
+            logger.info("Sending via websocket to user: %s", user_id_str)
+            print(f"[NOTIFICATION] Sending via websocket to user: {user_id_str}")
             await manager.send_personal_message(payload, user_id_str)
         else:
+            logger.info("Sending via push notification to user: %s", user_id_str)
+            print(
+                f"[NOTIFICATION] Sending via push notification to user: {user_id_str}"
+            )
             await send_push_notification(user_id, message, title, data=payload)
 
     except Exception as e:
