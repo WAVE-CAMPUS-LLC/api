@@ -1369,7 +1369,7 @@ async def accept_friend_request(
                     "accepter_username": sender_username,
                     "request_type": "friend_request_accepted",
                     "status": "accepted",
-                    "receiver_user_id": receiver_user_id if receiver_user_id else None,
+                    "receiver_user_id": str(receiver_user_id) if receiver_user_id else None,
                 },
             )
 
