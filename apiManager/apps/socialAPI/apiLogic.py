@@ -792,6 +792,87 @@ async def get_user_crews(
     return {"user_crews": crews_data}
 
 
+@router.get("/get_all_user_crews")
+async def get_all_user_crews(
+    request: Request,
+    caller_user_id: Optional[int] = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
+    """
+    API endpoint to retrieve all crews a user is in with crew ID, name, and member count.
+    """
+    print(f"[get_all_user_crews API] Function called for user ID: {caller_user_id}")
+
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    @database_sync_to_async
+    def get_all_user_crews_data(caller_user_id):
+        try:
+            user = CustomUser.objects.get(id=caller_user_id)
+
+            # Get all crews the user is a member of
+            crew_memberships = CrewMember.objects.filter(user=user).select_related(
+                "crew", "crew__created_by"
+            )
+
+            crews_data = []
+            for membership in crew_memberships:
+                crew = membership.crew
+
+                # Get member count for this crew
+                member_count = CrewMember.objects.filter(crew=crew).count()
+
+                crews_data.append(
+                    {
+                        "crewId": str(crew.crewId),
+                        "name": crew.name,
+                        "member_count": member_count,
+                    }
+                )
+
+            return crews_data, None
+        except CustomUser.DoesNotExist:
+            error_message = f"User not found with ID: {caller_user_id}"
+            print(f"[get_all_user_crews API] {error_message}")
+            return None, error_message
+        except Exception as e:
+            error_message = f"Error retrieving user crews: {str(e)}"
+            print(f"[get_all_user_crews API] {error_message}")
+            return None, error_message
+
+    try:
+        crews_data, error_message = await get_all_user_crews_data(caller_user_id)
+        if crews_data is None:
+            notification_sent = await notify_by_bot(
+                f"**[API: get_all_user_crews API]** \n\n {error_message} \n\n Platform: {platform} \n\n User ID: {caller_user_id}",
+                platform or "Unknown",
+                "ERROR",
+                device_info,
+            )
+            if notification_sent is None:
+                print(
+                    "[get_all_user_crews API] Could not send notification: BOT_API_KEY not set"
+                )
+            raise HTTPException(status_code=500, detail=error_message)
+
+        print(f"[get_all_user_crews API] Returning {len(crews_data)} crews for user_id: {caller_user_id}")
+        return {"crews": crews_data}
+    except Exception as e:
+        if not isinstance(e, HTTPException):
+            error_trace = traceback.format_exc()
+            print(f"[get_all_user_crews API] Unhandled exception: {str(e)}\n{error_trace}")
+            await notify_by_bot(
+                f"**[API: get_all_user_crews API]** \n\n Unhandled exception: user_id={caller_user_id}, error={str(e)} \n\n Platform: {platform}",
+                platform or "Unknown",
+                "ERROR",
+                device_info,
+            )
+            raise HTTPException(status_code=500, detail="Internal server error")
+        raise e
+
+
 @router.post("/send-friend-request/{receiver_username}")
 async def send_friend_request(
     request: Request,
