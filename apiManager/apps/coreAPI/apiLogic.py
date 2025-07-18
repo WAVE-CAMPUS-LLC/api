@@ -440,7 +440,7 @@ async def get_event_details(
                 
             crew_buy_info = {
                 "crew_discount_enabled": True,
-                "minimum_crew_size": event.minimum_crew_size,
+                "minimum_crew_size": event.minimum_crew_size if event.minimum_crew_size else 1,
                 "crew_discount_percentage": (
                     float(event.crew_discount_percentage) 
                     if event.crew_discount_percentage 
