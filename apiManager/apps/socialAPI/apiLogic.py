@@ -1364,12 +1364,12 @@ async def accept_friend_request(
                 sender_user_id,
                 notification_message,
                 "Friend Request Accepted",
-                navigate_to="friend_requests",
+                navigate_to="other_user_profile",
                 params={
                     "accepter_username": sender_username,
                     "request_type": "friend_request_accepted",
                     "status": "accepted",
-                    "receiver_user_id": receiver_user_id,
+                    "receiver_user_id": receiver_user_id if receiver_user_id else None,
                 },
             )
 
