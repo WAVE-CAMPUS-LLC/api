@@ -1332,6 +1332,46 @@ async def accept_friend_request(
         await accept_friend_request_logic(caller_user_id, sender_username)
     )
 
+    # Send notification if friend request was accepted successfully
+    if friend_request_data is not None and sender_username:
+        # Get receiver's (current user's) first name for the notification message
+        receiver_first_name = None
+        try:
+            @database_sync_to_async
+            def get_receiver_info(user_id):
+                receiver_user = CustomUser.objects.get(id=user_id)
+                return receiver_user.first_name, receiver_user.user_id
+            
+            receiver_first_name, receiver_user_id = await get_receiver_info(caller_user_id)
+        except Exception:
+            receiver_first_name = "Someone"  # fallback
+        
+        # Get sender's user_id for notification
+        sender_user_id = None
+        try:
+            @database_sync_to_async
+            def get_sender_user_id(username):
+                sender_user = CustomUser.objects.get(username=username)
+                return sender_user.user_id
+            
+            sender_user_id = await get_sender_user_id(sender_username)
+        except Exception:
+            print(f"[accept_friend_request API] Could not get sender user_id for {sender_username}")
+        
+        if sender_user_id:
+            notification_message = f"{receiver_first_name} accepted your friend request"
+            await send_notification(
+                sender_user_id,
+                notification_message,
+                "Friend Request Accepted",
+                navigate_to="friend_requests",
+                params={
+                    "accepter_username": sender_username,
+                    "request_type": "friend_request_accepted",
+                    "status": "accepted",
+                },
+            )
+
     if friend_request_data is None:
         notification_sent = await notify_by_bot(
             f"**[API: accept_friend_request API]** \n\n {success_message or error_message} \n\n Platform: {platform} \n\n User ID: {caller_user_id} \n\n Sender Username: {sender_username}",
