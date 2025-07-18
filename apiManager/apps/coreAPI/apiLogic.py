@@ -425,6 +425,39 @@ async def get_event_details(
             print(f"[get_event_coupons_data API] Error retrieving coupons: {str(e)}")
             return []
 
+    @database_sync_to_async
+    def get_event_crew_buy_data(eventId):
+        """
+        Retrieve crew buy information for an event if crew discount feature is enabled.
+        """
+        try:
+            event = Event.objects.get(eventId=eventId)
+            
+            # Check if crew discount feature is enabled for this event
+            if not event.crew_discount:
+                print(f"[get_event_crew_buy_data API] Crew discount not enabled for event, returning null")
+                return None
+                
+            crew_buy_info = {
+                "crew_discount_enabled": True,
+                "minimum_crew_size": event.minimum_crew_size,
+                "crew_discount_percentage": (
+                    float(event.crew_discount_percentage) 
+                    if event.crew_discount_percentage 
+                    else 0.0
+                ),
+            }
+            
+            print(f"[get_event_crew_buy_data API] Retrieved crew buy info with discounted ticket types")
+            return crew_buy_info
+            
+        except Event.DoesNotExist:
+            print(f"[get_event_crew_buy_data API] Event not found with ID: {eventId}")
+            return None
+        except Exception as e:
+            print(f"[get_event_crew_buy_data API] Error retrieving crew buy data: {str(e)}")
+            return None
+
     event_data = await get_event_data(eventId)
     if event_data is None:
         await notify_by_bot(
@@ -442,6 +475,10 @@ async def get_event_details(
     # Get coupon information for the event
     coupons_data = await get_event_coupons_data(eventId)
     event_data["coupons"] = coupons_data
+
+    # Get crew buy information if crew discount feature is enabled
+    crew_buy_data = await get_event_crew_buy_data(eventId)
+    event_data["crew_buy_info"] = crew_buy_data
 
     print(
         f"[get_event_details API] Returning details for event: {event_data.get('title')}"
