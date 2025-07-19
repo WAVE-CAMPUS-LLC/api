@@ -146,6 +146,7 @@ class EventMessageResponse(BaseModel):
     fixed_message: str
     event_id: Optional[UUID]
     event_name: Optional[str]
+    event_header_image: Optional[str] = None
     created_at: datetime
     seen: bool
     seen_at: Optional[datetime]

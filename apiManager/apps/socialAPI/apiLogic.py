@@ -4243,6 +4243,11 @@ def _serialize_message(message: EventMessage):
         "fixed_message": message.fixed_message.text,
         "event_id": message.event.eventId if message.event else None,
         "event_name": message.event.title if message.event else None,
+        "event_header_image": (
+            message.event.header_photo.url
+            if message.event and message.event.header_photo
+            else None
+        ),
         "created_at": message.created_at,
         "seen": message.seen,
         "seen_at": message.seen_at,
@@ -4723,6 +4728,11 @@ async def get_message_conversation_with_contact(
                             {
                                 "event_id": str(message.event.eventId),
                                 "title": message.event.title,
+                                "header_image": (
+                                    message.event.header_photo.url
+                                    if message.event.header_photo
+                                    else None
+                                ),
                             }
                             if message.event
                             else None
