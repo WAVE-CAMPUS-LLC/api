@@ -4938,7 +4938,7 @@ async def get_top_surf_posts_for_event(
                         },
                         "event": {
                             "event_id": str(post.event.eventId),
-                            "name": post.event.name,
+                            "title": post.event.title,
                             "date": post.event.date,
                         },
                         "votes": {
