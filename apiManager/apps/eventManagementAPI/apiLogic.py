@@ -67,8 +67,51 @@ async def send_event_creation_notifications(event, host_user):
     Send push notifications to campus members and friends when an event is created.
     """
     try:
-        # Get the host's profile
-        host_profile = host_user.user_profile
+        @database_sync_to_async
+        def get_notification_recipients(event, host_user):
+            """Get all users who should receive notifications for this event creation."""
+            # Get the host's profile
+            host_profile = host_user.user_profile
+            
+            # Set to track users who should receive notifications (to avoid duplicates)
+            notification_recipients = []
+            notified_user_ids = set()
+            
+            # Send notifications to campus members if host is in a campus
+            if host_profile.college:
+                print(f"[send_event_creation_notifications] Host is in campus: {host_profile.college.name}")
+                
+                # Get all campus members
+                campus_members = UserProfile.objects.filter(
+                    college=host_profile.college
+                ).exclude(user=host_user).select_related('user')
+                
+                for member_profile in campus_members:
+                    if member_profile.user and member_profile.user.user_id not in notified_user_ids:
+                        notification_recipients.append({
+                            'user_id': member_profile.user.user_id,
+                            'username': member_profile.user.username,
+                            'type': 'campus'
+                        })
+                        notified_user_ids.add(member_profile.user.user_id)
+            
+            # Send notifications to friends
+            friends = host_profile.friends.all().select_related('user')
+            print(f"[send_event_creation_notifications] Host has {friends.count()} friends")
+            
+            for friend_profile in friends:
+                if friend_profile.user and friend_profile.user.user_id not in notified_user_ids:
+                    notification_recipients.append({
+                        'user_id': friend_profile.user.user_id,
+                        'username': friend_profile.user.username,
+                        'type': 'friend'
+                    })
+                    notified_user_ids.add(friend_profile.user.user_id)
+            
+            return notification_recipients
+        
+        # Get all recipients
+        recipients = await get_notification_recipients(event, host_user)
         
         # Prepare notification data
         notification_title = "New Event Created!"
@@ -80,53 +123,21 @@ async def send_event_creation_notifications(event, host_user):
             "host_name": f"{host_user.first_name} {host_user.last_name}",
         }
         
-        # Set to track users who have already received notifications (to avoid duplicates)
-        notified_users = set()
+        # Send notifications to all recipients
+        for recipient in recipients:
+            try:
+                await send_notification(
+                    recipient['user_id'],
+                    notification_message,
+                    notification_title,
+                    navigate_to=navigate_to,
+                    params=params,
+                )
+                print(f"[send_event_creation_notifications] Sent {recipient['type']} notification to {recipient['username']}")
+            except Exception as e:
+                print(f"[send_event_creation_notifications] Error sending {recipient['type']} notification to {recipient['username']}: {str(e)}")
         
-        # Send notifications to campus members if host is in a campus
-        if host_profile.college:
-            print(f"[send_event_creation_notifications] Host is in campus: {host_profile.college.name}")
-            
-            # Get all campus members
-            campus_members = UserProfile.objects.filter(
-                college=host_profile.college
-            ).exclude(user=host_user).select_related('user')
-            
-            for member_profile in campus_members:
-                if member_profile.user and member_profile.user.user_id not in notified_users:
-                    try:
-                        await send_notification(
-                            member_profile.user.user_id,
-                            notification_message,
-                            notification_title,
-                            navigate_to=navigate_to,
-                            params=params,
-                        )
-                        notified_users.add(member_profile.user.user_id)
-                        print(f"[send_event_creation_notifications] Sent campus notification to {member_profile.user.username}")
-                    except Exception as e:
-                        print(f"[send_event_creation_notifications] Error sending campus notification to {member_profile.user.username}: {str(e)}")
-        
-        # Send notifications to friends
-        friends = host_profile.friends.all().select_related('user')
-        print(f"[send_event_creation_notifications] Host has {friends.count()} friends")
-        
-        for friend_profile in friends:
-            if friend_profile.user and friend_profile.user.user_id not in notified_users:
-                try:
-                    await send_notification(
-                        friend_profile.user.user_id,
-                        notification_message,
-                        notification_title,
-                        navigate_to=navigate_to,
-                        params=params,
-                    )
-                    notified_users.add(friend_profile.user.user_id)
-                    print(f"[send_event_creation_notifications] Sent friend notification to {friend_profile.user.username}")
-                except Exception as e:
-                    print(f"[send_event_creation_notifications] Error sending friend notification to {friend_profile.user.username}: {str(e)}")
-        
-        print(f"[send_event_creation_notifications] Total notifications sent: {len(notified_users)}")
+        print(f"[send_event_creation_notifications] Total notifications sent: {len(recipients)}")
         
     except Exception as e:
         print(f"[send_event_creation_notifications] Error in notification process: {str(e)}")
@@ -726,10 +737,6 @@ async def create_free_event(
         }
         return JSONResponse(content=result, status_code=status.HTTP_200_OK)
 
-        # Execute the create event function
-        result = await process_create_event()
-        return JSONResponse(content=result, status_code=status.HTTP_200_OK)
-
     except ValueError as ve:
         print(f"[DEBUG - create_free_event] ValueError: {str(ve)}")
         # Return any form validation errors
@@ -983,12 +990,6 @@ async def create_paid_event(
             "message": "Paid event created successfully.",
             "event": serialized_event_data,
         }
-        return JSONResponse(content=result, status_code=status.HTTP_200_OK)
-
-        # Execute the create event function
-        result = await process_create_event()
-        if isinstance(result, JSONResponse):
-            return result
         return JSONResponse(content=result, status_code=status.HTTP_200_OK)
 
     except ValueError as ve:
