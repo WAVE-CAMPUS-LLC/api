@@ -3203,67 +3203,78 @@ async def send_surf_post_notifications(post_data, user_id, event_title):
     Send push notifications to all friends when a surf post is created.
     """
     try:
+
         @database_sync_to_async
         def get_friends_for_notification(user_id):
             """Get all friends who should receive notifications for this surf post."""
             try:
                 user = CustomUser.objects.get(id=user_id)
                 user_profile = user.user_profile
-                
+
                 # Get all friends
-                friends = user_profile.friends.all().select_related('user')
-                
+                friends = user_profile.friends.all().select_related("user")
+
                 friend_list = []
                 for friend_profile in friends:
                     if friend_profile.user:
-                        friend_list.append({
-                            'user_id': friend_profile.user.user_id,
-                            'username': friend_profile.user.username,
-                        })
-                
+                        friend_list.append(
+                            {
+                                "user_id": friend_profile.user.user_id,
+                                "username": friend_profile.user.username,
+                            }
+                        )
+
                 return friend_list
             except Exception as e:
                 print(f"[send_surf_post_notifications] Error getting friends: {str(e)}")
                 return []
-        
+
         # Get all friends
         friends = await get_friends_for_notification(user_id)
-        
+
         if not friends:
             print(f"[send_surf_post_notifications] User has no friends to notify")
             return
-        
+
         # Prepare notification data
         # Truncate content to include only first 50 characters for notification
-        content_preview = post_data['content'][:50]
-        if len(post_data['content']) > 50:
+        content_preview = post_data["content"][:50]
+        if len(post_data["content"]) > 50:
             content_preview += "..."
-            
-        notification_title = f"{await get_user_first_name(user_id)} posted about {event_title}"
+
+        notification_title = (
+            f"{await get_user_first_name(user_id)} posted about {event_title}"
+        )
         notification_message = f"{content_preview}"
         navigate_to = "surf_post_details"
         params = {
-            "post_id": str(post_data['post_id']),
-            "event_id": str(post_data['event_id']),
+            "post_id": str(post_data["post_id"]),
+            "event_id": str(post_data["event_id"]),
             "content_preview": content_preview,
         }
-        
+
         # Send notifications to all friends
         for friend in friends:
             try:
                 await send_notification(
-                    friend['user_id'],
+                    friend["user_id"],
                     notification_message,
                     notification_title,
                     navigate_to=navigate_to,
                     params=params,
                 )
-                print(f"[send_surf_post_notifications] Sent notification to {friend['username']}")
+                print(
+                    f"[send_surf_post_notifications] Sent notification to {friend['username']}"
+                )
             except Exception as e:
-                print(f"[send_surf_post_notifications] Error sending notification to {friend['username']}: {str(e)}")
-        
-        print(f"[send_surf_post_notifications] Total notifications sent: {len(friends)}")
-        
+                print(
+                    f"[send_surf_post_notifications] Error sending notification to {friend['username']}: {str(e)}"
+                )
+
+        print(
+            f"[send_surf_post_notifications] Total notifications sent: {len(friends)}"
+        )
+
     except Exception as e:
         print(f"[send_surf_post_notifications] Error in notification process: {str(e)}")
         # Don't raise the exception as we don't want notification failures to prevent post creation
@@ -3347,7 +3358,9 @@ async def create_surf_post(
         raise HTTPException(status_code=400, detail=error_message)
 
     # Send notifications to friends after successful post creation
-    event_title = post_data.pop("event_title")  # Remove event_title from post_data before returning
+    event_title = post_data.pop(
+        "event_title"
+    )  # Remove event_title from post_data before returning
     await send_surf_post_notifications(post_data, caller_user_id, event_title)
 
     print(f"[create_surf_post API] Surf post created successfully")
@@ -4868,7 +4881,7 @@ async def get_top_surf_posts_for_event(
     device_data = get_device_info(user_agent_str)
     device_info = device_data["device_info"]
 
-        @database_sync_to_async
+    @database_sync_to_async
     def get_top_surf_posts_logic(event_id):
         try:
             # Get the event
@@ -4884,12 +4897,14 @@ async def get_top_surf_posts_for_event(
             # Calculate scores and sort by score (highest first)
             posts_with_scores = []
             for post in all_posts:
-                score = post.score  # This uses the property that calculates sum of votes
+                score = (
+                    post.score
+                )  # This uses the property that calculates sum of votes
                 posts_with_scores.append((post, score))
-            
+
             # Sort by score (highest first), then by creation date (newest first)
             posts_with_scores.sort(key=lambda x: (x[1], x[0].created_at), reverse=True)
-            
+
             # Take top 3 posts
             top_posts = posts_with_scores[:3]
             posts = [post for post, score in top_posts]
