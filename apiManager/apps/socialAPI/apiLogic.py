@@ -4868,39 +4868,31 @@ async def get_top_surf_posts_for_event(
     device_data = get_device_info(user_agent_str)
     device_info = device_data["device_info"]
 
-    @database_sync_to_async
+        @database_sync_to_async
     def get_top_surf_posts_logic(event_id):
         try:
             # Get the event
             event = Event.objects.get(eventId=event_id)
 
-            # First, try to get posts with votes (score > 0), ordered by score
-            posts_with_votes = (
-                SurfPost.objects.filter(event=event, score__gt=0)
+            # Get all posts for this event
+            all_posts = (
+                SurfPost.objects.filter(event=event)
                 .select_related("user", "user__user_profile")
-                .order_by("-score", "-created_at")[:3]
+                .prefetch_related("votes")
             )
 
-            posts_list = list(posts_with_votes)
-
-            # If we don't have 3 posts with votes, get additional posts to fill up to 3
-            if len(posts_list) < 3:
-                # Get posts that don't have positive scores (score <= 0)
-                additional_posts_needed = 3 - len(posts_list)
-
-                # Exclude posts we already have
-                existing_post_ids = [post.surfId for post in posts_list]
-
-                additional_posts = (
-                    SurfPost.objects.filter(event=event)
-                    .exclude(surfId__in=existing_post_ids)
-                    .select_related("user", "user__user_profile")
-                    .order_by("-created_at")[:additional_posts_needed]
-                )
-
-                posts_list.extend(list(additional_posts))
-
-            posts = posts_list
+            # Calculate scores and sort by score (highest first)
+            posts_with_scores = []
+            for post in all_posts:
+                score = post.score  # This uses the property that calculates sum of votes
+                posts_with_scores.append((post, score))
+            
+            # Sort by score (highest first), then by creation date (newest first)
+            posts_with_scores.sort(key=lambda x: (x[1], x[0].created_at), reverse=True)
+            
+            # Take top 3 posts
+            top_posts = posts_with_scores[:3]
+            posts = [post for post, score in top_posts]
 
             posts_data = []
             for post in posts:
