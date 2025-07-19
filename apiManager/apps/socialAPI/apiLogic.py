@@ -3239,8 +3239,8 @@ async def send_surf_post_notifications(post_data, user_id, event_title):
         if len(post_data['content']) > 50:
             content_preview += "..."
             
-        notification_title = "New Surf Post!"
-        notification_message = f"{await get_user_first_name(user_id)} posted: \"{content_preview}\" about {event_title}"
+        notification_title = f"{await get_user_first_name(user_id)} posted about {event_title}"
+        notification_message = f"{content_preview}"
         navigate_to = "surf_post_details"
         params = {
             "post_id": str(post_data['post_id']),
