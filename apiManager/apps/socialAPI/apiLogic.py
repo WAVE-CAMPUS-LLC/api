@@ -857,12 +857,16 @@ async def get_all_user_crews(
                 )
             raise HTTPException(status_code=500, detail=error_message)
 
-        print(f"[get_all_user_crews API] Returning {len(crews_data)} crews for user_id: {caller_user_id}")
+        print(
+            f"[get_all_user_crews API] Returning {len(crews_data)} crews for user_id: {caller_user_id}"
+        )
         return {"crews": crews_data}
     except Exception as e:
         if not isinstance(e, HTTPException):
             error_trace = traceback.format_exc()
-            print(f"[get_all_user_crews API] Unhandled exception: {str(e)}\n{error_trace}")
+            print(
+                f"[get_all_user_crews API] Unhandled exception: {str(e)}\n{error_trace}"
+            )
             await notify_by_bot(
                 f"**[API: get_all_user_crews API]** \n\n Unhandled exception: user_id={caller_user_id}, error={str(e)} \n\n Platform: {platform}",
                 platform or "Unknown",
@@ -1337,27 +1341,33 @@ async def accept_friend_request(
         # Get receiver's (current user's) first name for the notification message
         receiver_first_name = None
         try:
+
             @database_sync_to_async
             def get_receiver_info(user_id):
                 receiver_user = CustomUser.objects.get(id=user_id)
                 return receiver_user.first_name, receiver_user.user_id
-            
-            receiver_first_name, receiver_user_id = await get_receiver_info(caller_user_id)
+
+            receiver_first_name, receiver_user_id = await get_receiver_info(
+                caller_user_id
+            )
         except Exception:
             receiver_first_name = "Someone"  # fallback
-        
+
         # Get sender's user_id for notification
         sender_user_id = None
         try:
+
             @database_sync_to_async
             def get_sender_user_id(username):
                 sender_user = CustomUser.objects.get(username=username)
                 return sender_user.user_id
-            
+
             sender_user_id = await get_sender_user_id(sender_username)
         except Exception:
-            print(f"[accept_friend_request API] Could not get sender user_id for {sender_username}")
-        
+            print(
+                f"[accept_friend_request API] Could not get sender user_id for {sender_username}"
+            )
+
         if sender_user_id:
             notification_message = f"{receiver_first_name} accepted your friend request"
             await send_notification(
@@ -1369,7 +1379,9 @@ async def accept_friend_request(
                     "accepter_username": sender_username,
                     "request_type": "friend_request_accepted",
                     "status": "accepted",
-                    "receiver_user_id": str(receiver_user_id) if receiver_user_id else None,
+                    "receiver_user_id": (
+                        str(receiver_user_id) if receiver_user_id else None
+                    ),
                 },
             )
 
@@ -4837,3 +4849,139 @@ async def mark_conversation_as_read(
         "message": f"Marked {mark_data['marked_count']} messages as read",
         "mark_data": mark_data,
     }
+
+
+@router.get("/surf-posts/top/{event_id}")
+async def get_top_surf_posts_for_event(
+    request: Request,
+    event_id: UUID,
+    platform: Optional[str] = None,
+):
+    """
+    API endpoint to get the top 3 surf posts for a specific event, ordered by score.
+    """
+    print(
+        f"[get_top_surf_posts_for_event API] Function called for event_id: {event_id}"
+    )
+
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    @database_sync_to_async
+    def get_top_surf_posts_logic(event_id):
+        try:
+            # Get the event
+            event = Event.objects.get(eventId=event_id)
+
+            # First, try to get posts with votes (score > 0), ordered by score
+            posts_with_votes = (
+                SurfPost.objects.filter(event=event, score__gt=0)
+                .select_related("user", "user__user_profile")
+                .order_by("-score", "-created_at")[:3]
+            )
+
+            posts_list = list(posts_with_votes)
+
+            # If we don't have 3 posts with votes, get additional posts to fill up to 3
+            if len(posts_list) < 3:
+                # Get posts that don't have positive scores (score <= 0)
+                additional_posts_needed = 3 - len(posts_list)
+
+                # Exclude posts we already have
+                existing_post_ids = [post.surfId for post in posts_list]
+
+                additional_posts = (
+                    SurfPost.objects.filter(event=event)
+                    .exclude(surfId__in=existing_post_ids)
+                    .select_related("user", "user__user_profile")
+                    .order_by("-created_at")[:additional_posts_needed]
+                )
+
+                posts_list.extend(list(additional_posts))
+
+            posts = posts_list
+
+            posts_data = []
+            for post in posts:
+                # Get vote counts
+                tide_up_count = TideUpTideDown.objects.filter(
+                    post=post, value=1
+                ).count()
+                tide_down_count = TideUpTideDown.objects.filter(
+                    post=post, value=-1
+                ).count()
+
+                posts_data.append(
+                    {
+                        "post_id": str(post.surfId),
+                        "content": post.content,
+                        "score": post.score,
+                        "created_at": post.created_at,
+                        "user": {
+                            "user_id": str(post.user.user_id),
+                            "username": post.user.username,
+                            "first_name": post.user.first_name,
+                            "last_name": post.user.last_name,
+                            "profile_photo": (
+                                post.user.user_profile.profile_photo.url
+                                if post.user.user_profile.profile_photo
+                                else None
+                            ),
+                        },
+                        "event": {
+                            "event_id": str(post.event.eventId),
+                            "name": post.event.name,
+                            "date": post.event.date,
+                        },
+                        "votes": {
+                            "tide_up": tide_up_count,
+                            "tide_down": tide_down_count,
+                            "total": tide_up_count + tide_down_count,
+                        },
+                    }
+                )
+
+            return posts_data, None
+        except Event.DoesNotExist:
+            error_message = f"Event not found with ID: {event_id}"
+            print(f"[get_top_surf_posts_for_event API] {error_message}")
+            return None, error_message
+        except Exception as e:
+            error_message = f"Error retrieving top surf posts: {str(e)}"
+            print(f"[get_top_surf_posts_for_event API] {error_message}")
+            return None, error_message
+
+    try:
+        posts_data, error_message = await get_top_surf_posts_logic(event_id)
+        if posts_data is None:
+            notification_sent = await notify_by_bot(
+                f"**[API: get_top_surf_posts_for_event API]** \n\n {error_message} \n\n Platform: {platform} \n\n Event ID: {event_id}",
+                platform or "Unknown",
+                "ERROR",
+                device_info,
+            )
+            if notification_sent is None:
+                print(
+                    "[get_top_surf_posts_for_event API] Could not send notification: BOT_API_KEY not set"
+                )
+            raise HTTPException(status_code=404, detail=error_message)
+
+        print(
+            f"[get_top_surf_posts_for_event API] Returning {len(posts_data)} top posts for event_id: {event_id}"
+        )
+        return {"top_posts": posts_data}
+    except Exception as e:
+        if not isinstance(e, HTTPException):
+            error_trace = traceback.format_exc()
+            print(
+                f"[get_top_surf_posts_for_event API] Unhandled exception: {str(e)}\n{error_trace}"
+            )
+            await notify_by_bot(
+                f"**[API: get_top_surf_posts_for_event API]** \n\n Unhandled exception: event_id={event_id}, error={str(e)} \n\n Platform: {platform}",
+                platform or "Unknown",
+                "ERROR",
+                device_info,
+            )
+            raise HTTPException(status_code=500, detail="Internal server error")
+        raise e
