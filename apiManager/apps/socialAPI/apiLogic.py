@@ -3848,6 +3848,138 @@ async def downvote_post(
     return {"message": vote_data["message"], "vote_data": vote_data}
 
 
+@router.get("/surf-posts/my-posts")
+async def get_my_surf_posts(
+    request: Request,
+    caller_user_id: Optional[int] = Depends(get_current_user),
+    platform: Optional[str] = None,
+    page: int = Query(1, ge=1, description="Page number (starts from 1)"),
+    page_size: int = Query(
+        20, ge=1, le=100, description="Number of posts per page (max 100)"
+    ),
+    sort_by: str = Query(
+        "created_at", description="Sort by field: created_at, score, tideup, tidedown"
+    ),
+    order: str = Query("desc", description="Sort order: asc or desc"),
+):
+    """
+    API endpoint to get surf posts created by the current user with pagination and sorting support.
+    """
+    print(
+        f"[get_my_surf_posts API] Function called with page: {page}, page_size: {page_size}"
+    )
+
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    @database_sync_to_async
+    def get_my_surf_posts_logic(caller_user_id, page, page_size, sort_by, order):
+        try:
+            # Validate sort_by field
+            valid_sort_fields = ["created_at", "score", "tideup", "tidedown"]
+            if sort_by not in valid_sort_fields:
+                sort_by = "created_at"  # Default to created_at if invalid
+
+            # Validate order
+            if order not in ["asc", "desc"]:
+                order = "desc"  # Default to desc if invalid
+
+            # Build sort field
+            sort_field = f"{'-' if order == 'desc' else ''}{sort_by}"
+
+            # Get total count of surf posts by the current user
+            total_posts = SurfPost.objects.filter(user_id=caller_user_id).count()
+
+            # Calculate pagination
+            total_pages = (total_posts + page_size - 1) // page_size  # Ceiling division
+            offset = (page - 1) * page_size
+
+            # Get paginated surf posts by the current user with user and event information
+            posts = (
+                SurfPost.objects.filter(user_id=caller_user_id)
+                .select_related("user", "user__user_profile", "event")
+                .order_by(sort_field)[offset : offset + page_size]
+            )
+
+            posts_data = []
+            for post in posts:
+                user_profile = (
+                    post.user.user_profile
+                    if hasattr(post.user, "user_profile")
+                    else None
+                )
+
+                posts_data.append(
+                    {
+                        "post_id": post.surfId,
+                        "event_id": post.event.eventId,
+                        "event_title": post.event.title,
+                        "content": post.content,
+                        "created_at": post.created_at,
+                        "tideup": post.tideup,
+                        "tidedown": post.tidedown,
+                        "score": post.score,
+                        "user": {
+                            "user_id": str(post.user.user_id),
+                            "username": post.user.username,
+                            "first_name": post.user.first_name,
+                            "last_name": post.user.last_name,
+                            "profile_photo": (
+                                user_profile.profile_photo.url
+                                if user_profile and user_profile.profile_photo
+                                else None
+                            ),
+                        },
+                        "event": {
+                            "event_id": str(post.event.eventId),
+                            "title": post.event.title,
+                            "date": post.event.date,
+                            "header_photo": (
+                                post.event.header_photo.url
+                                if post.event.header_photo
+                                else None
+                            ),
+                        },
+                    }
+                )
+
+            return {
+                "posts": posts_data,
+                "pagination": {
+                    "current_page": page,
+                    "total_pages": total_pages,
+                    "total_posts": total_posts,
+                    "page_size": page_size,
+                    "has_next": page < total_pages,
+                    "has_previous": page > 1,
+                },
+            }, None
+        except Exception as e:
+            error_message = f"Error getting my surf posts: {str(e)}"
+            print(f"[get_my_surf_posts API] {error_message}")
+            return None, error_message
+
+    posts_data, error_message = await get_my_surf_posts_logic(
+        caller_user_id, page, page_size, sort_by, order
+    )
+    if posts_data is None:
+        notification_sent = await notify_by_bot(
+            f"**[API: get_my_surf_posts API]** \n\n {error_message} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        if notification_sent is None:
+            print(
+                "[get_my_surf_posts API] Could not send notification: BOT_API_KEY not set"
+            )
+        raise HTTPException(status_code=500, detail=error_message)
+
+    print(f"[get_my_surf_posts API] Returning {len(posts_data['posts'])} surf posts")
+    return posts_data
+
+
 @router.get("/surf-posts/{event_id}")
 async def get_surf_posts_for_event(
     request: Request,
@@ -5350,134 +5482,3 @@ async def get_top_surf_posts_for_event(
             )
             raise HTTPException(status_code=500, detail="Internal server error")
         raise e
-
-
-@router.get("/surf-posts/my-posts")
-async def get_my_surf_posts(
-    request: Request,
-    caller_user_id: Optional[int] = Depends(get_current_user),
-    platform: Optional[str] = None,
-    page: int = Query(1, ge=1, description="Page number (starts from 1)"),
-    page_size: int = Query(
-        20, ge=1, le=100, description="Number of posts per page (max 100)"
-    ),
-    sort_by: str = Query(
-        "created_at", description="Sort by field: created_at, score, tideup, tidedown"
-    ),
-    order: str = Query("desc", description="Sort order: asc or desc"),
-):
-    """
-    API endpoint to get surf posts created by the current user with pagination and sorting support.
-    """
-    print(
-        f"[get_my_surf_posts API] Function called with page: {page}, page_size: {page_size}"
-    )
-
-    user_agent_str = request.headers.get("user-agent", "")
-    device_data = get_device_info(user_agent_str)
-    device_info = device_data["device_info"]
-
-    @database_sync_to_async
-    def get_my_surf_posts_logic(caller_user_id, page, page_size, sort_by, order):
-        try:
-            # Validate sort_by field
-            valid_sort_fields = ["created_at", "score", "tideup", "tidedown"]
-            if sort_by not in valid_sort_fields:
-                sort_by = "created_at"  # Default to created_at if invalid
-
-            # Validate order
-            if order not in ["asc", "desc"]:
-                order = "desc"  # Default to desc if invalid
-
-            # Build sort field
-            sort_field = f"{'-' if order == 'desc' else ''}{sort_by}"
-
-            # Get total count of surf posts by the current user
-            total_posts = SurfPost.objects.filter(user_id=caller_user_id).count()
-
-            # Calculate pagination
-            total_pages = (total_posts + page_size - 1) // page_size  # Ceiling division
-            offset = (page - 1) * page_size
-
-            # Get paginated surf posts by the current user with user and event information
-            posts = (
-                SurfPost.objects.filter(user_id=caller_user_id)
-                .select_related("user", "user__user_profile", "event")
-                .order_by(sort_field)[offset : offset + page_size]
-            )
-
-            posts_data = []
-            for post in posts:
-                user_profile = (
-                    post.user.user_profile
-                    if hasattr(post.user, "user_profile")
-                    else None
-                )
-
-                posts_data.append(
-                    {
-                        "post_id": post.surfId,
-                        "event_id": post.event.eventId,
-                        "event_title": post.event.title,
-                        "content": post.content,
-                        "created_at": post.created_at,
-                        "tideup": post.tideup,
-                        "tidedown": post.tidedown,
-                        "score": post.score,
-                        "user": {
-                            "user_id": str(post.user.user_id),
-                            "username": post.user.username,
-                            "first_name": post.user.first_name,
-                            "last_name": post.user.last_name,
-                            "profile_photo": (
-                                user_profile.profile_photo.url
-                                if user_profile and user_profile.profile_photo
-                                else None
-                            ),
-                        },
-                        "event": {
-                            "event_id": str(post.event.eventId),
-                            "title": post.event.title,
-                            "date": post.event.date,
-                            "header_photo": (
-                                post.event.header_photo.url
-                                if post.event.header_photo
-                                else None
-                            ),
-                        },
-                    }
-                )
-
-            return {
-                "posts": posts_data,
-                "pagination": {
-                    "current_page": page,
-                    "total_pages": total_pages,
-                    "total_posts": total_posts,
-                    "has_next": page < total_pages,
-                    "has_previous": page > 1,
-                },
-            }, None
-        except Exception as e:
-            error_message = f"Error getting user's surf posts: {str(e)}"
-            print(f"[get_my_surf_posts API] {error_message}")
-            return None, error_message
-
-    posts_data, error_message = await get_my_surf_posts_logic(
-        caller_user_id, page, page_size, sort_by, order
-    )
-    if posts_data is None:
-        notification_sent = await notify_by_bot(
-            f"**[API: get_my_surf_posts API]** \n\n {error_message} \n\n Platform: {platform} \n\n User ID: {caller_user_id}",
-            platform or "Unknown",
-            "ERROR",
-            device_info,
-        )
-        if notification_sent is None:
-            print(
-                "[get_my_surf_posts API] Could not send notification: BOT_API_KEY not set"
-            )
-        raise HTTPException(status_code=500, detail=error_message)
-
-    print(f"[get_my_surf_posts API] Returning {len(posts_data['posts'])} surf posts")
-    return posts_data
