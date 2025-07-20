@@ -906,6 +906,7 @@ async def send_friend_request(
                     None,
                     None,
                     None,
+                    None,
                 )
             # Get sender user
             sender_user = CustomUser.objects.get(id=sender_user_id)
@@ -918,6 +919,7 @@ async def send_friend_request(
                     None,
                     None,
                     None,
+                    None,
                 )
 
             # Get receiver user profile - use full Discord-style username
@@ -927,11 +929,18 @@ async def send_friend_request(
                 )
                 receiver_user = receiver_user_profile.user
             except UserProfile.DoesNotExist:
-                return None, "User not found.", None, None, None
+                return None, "User not found.", None, None, None, None
 
             # Check if already friends
             if sender_user.user_profile.is_friends_with(receiver_user):
-                return None, "You are already friends with this user.", None, None, None
+                return (
+                    None,
+                    "You are already friends with this user.",
+                    None,
+                    None,
+                    None,
+                    None,
+                )
 
             # Check for any active (pending/accepted) requests
             active_request = FriendRequest.objects.filter(
@@ -949,11 +958,13 @@ async def send_friend_request(
                             None,
                             None,
                             None,
+                            None,
                         )
                     else:
                         return (
                             None,
                             f"{receiver_username} has already sent you a friend request. Check your notifications to respond.",
+                            None,
                             None,
                             None,
                             None,
@@ -964,6 +975,7 @@ async def send_friend_request(
                         return (
                             None,
                             "You are already friends with this user.",
+                            None,
                             None,
                             None,
                             None,
@@ -981,6 +993,7 @@ async def send_friend_request(
                             return (
                                 None,
                                 "You are already friends with this user.",
+                                None,
                                 None,
                                 None,
                                 None,
@@ -1015,7 +1028,7 @@ async def send_friend_request(
                         f"Error creating friend request: {str(create_error)}"
                     )
                     print(f"[send_friend_request API] {error_message}")
-                    return None, error_message, None, None, None
+                    return None, error_message, None, None, None, None
 
             # Return receiver info for notification
             return (
@@ -1027,16 +1040,17 @@ async def send_friend_request(
                 None,
                 receiver_user.user_id,
                 sender_user.username,
+                sender_user.first_name,  # Include sender's first name
             )
 
         except CustomUser.DoesNotExist:
             error_message = f"Sender user not found with ID: {sender_user_id}"
             print(f"[send_friend_request API] {error_message}")
-            return None, error_message, None, None, None
+            return None, error_message, None, None, None, None
         except Exception as e:
             error_message = f"Error sending friend request: {str(e)}"
             print(f"[send_friend_request API] {error_message}")
-            return None, error_message, None, None, None
+            return None, error_message, None, None, None, None
 
     (
         friend_request_data,
@@ -1044,19 +1058,25 @@ async def send_friend_request(
         error_message,
         receiver_user_id,
         sender_username,
+        sender_first_name,
     ) = await send_friend_request_logic(caller_user_id, receiver_username)
 
     # Send notification if friend request was successful
     if friend_request_data is not None and receiver_user_id and sender_username:
-        # Get sender's first name for the notification message
-        sender_first_name = None
-        try:
-            sender_first_name = CustomUser.objects.get(
-                username=sender_username
-            ).first_name
-        except Exception:
-            sender_first_name = sender_username  # fallback
-        notification_message = f"You have a new friend request from {sender_first_name}"
+        # Use the first name retrieved from the database function, with fallbacks
+        notification_first_name = (
+            sender_first_name
+            if sender_first_name and sender_first_name.strip()
+            else sender_username
+        )
+
+        # Ensure we have a valid name for the notification
+        if not notification_first_name or notification_first_name.strip() == "":
+            notification_first_name = "Someone"
+
+        notification_message = (
+            f"You have a new friend request from {notification_first_name}"
+        )
         await send_notification(
             receiver_user_id,
             notification_message,
