@@ -32,93 +32,6 @@ import logging
 
 router = APIRouter()
 
-
-async def send_rsvp_notification(rsvp_data):
-    """Send notification to event host when someone RSVPs."""
-    try:
-        notification_title = "New RSVP!"
-        notification_message = f"{rsvp_data['rsvp_name']} just RSVP'd to {rsvp_data['event_title']}"
-        navigate_to = "event_details"
-        params = {
-            "event_id": rsvp_data['event_id'],
-            "event_title": rsvp_data['event_title'],
-            "rsvp_name": rsvp_data['rsvp_name'],
-        }
-        
-        await send_notification(
-            rsvp_data['host_user_id'],
-            notification_message,
-            notification_title,
-            navigate_to=navigate_to,
-            params=params,
-        )
-        
-        print(f"[send_rsvp_notification] Sent RSVP notification to host")
-        
-    except Exception as e:
-        print(f"[send_rsvp_notification] Error sending notification: {str(e)}")
-        # Don't raise the exception as we don't want notification failures to prevent RSVP
-
-
-async def check_attendance_milestone(event_id, host_user_id):
-    """Check if event has reached attendance milestones and notify host."""
-    try:
-        @database_sync_to_async
-        def get_attendance_milestone_info(event_id):
-            try:
-                # Define attendance milestones
-                milestones = [10, 25, 50, 100, 200, 500]
-                
-                # Get current RSVP count for the event
-                current_count = RSVPTicket.objects.filter(event__eventId=event_id).count()
-                
-                # Check which milestone was just reached
-                milestone_reached = None
-                for milestone in milestones:
-                    if current_count == milestone:  # Exactly at milestone
-                        milestone_reached = milestone
-                        break
-                
-                if milestone_reached:
-                    event = Event.objects.get(eventId=event_id)
-                    return {
-                        'milestone': milestone_reached,
-                        'event_title': event.title,
-                        'event_id': str(event.eventId),
-                        'current_count': current_count,
-                    }
-                return None
-            except Exception as e:
-                print(f"[get_attendance_milestone_info] Error: {str(e)}")
-                return None
-        
-        milestone_info = await get_attendance_milestone_info(event_id)
-        if not milestone_info:
-            return
-        
-        notification_title = "🎉 Attendance Milestone!"
-        notification_message = f"Congratulations! {milestone_info['event_title']} just reached {milestone_info['milestone']} RSVPs!"
-        navigate_to = "event_details"
-        params = {
-            "event_id": milestone_info['event_id'],
-            "event_title": milestone_info['event_title'],
-            "milestone": milestone_info['milestone'],
-            "current_count": milestone_info['current_count'],
-        }
-        
-        await send_notification(
-            host_user_id,
-            notification_message,
-            notification_title,
-            navigate_to=navigate_to,
-            params=params,
-        )
-        
-        print(f"[check_attendance_milestone] Sent milestone notification for {milestone_info['milestone']} attendees")
-        
-    except Exception as e:
-        print(f"[check_attendance_milestone] Error: {str(e)}")
-
 logger = logging.getLogger("wave.api")
 tracer = trace.get_tracer(__name__)
 
@@ -205,14 +118,18 @@ async def get_events(
     def get_events_data(offset, limit):
         # Get total count of all events
         total_events = Event.objects.count()
-        
+
         # Get paginated events
-        events_queryset = Event.objects.order_by('date')[offset:offset + limit]
-        
+        events_queryset = Event.objects.order_by("date")[offset : offset + limit]
+
         print(f"[DEBUG] Total events in database: {Event.objects.count()}")
-        print(f"[DEBUG] Future events: {Event.objects.filter(date__gte=date.today()).count()}")
-        print(f"[DEBUG] Past events: {Event.objects.filter(date__lt=date.today()).count()}")
-        
+        print(
+            f"[DEBUG] Future events: {Event.objects.filter(date__gte=date.today()).count()}"
+        )
+        print(
+            f"[DEBUG] Past events: {Event.objects.filter(date__lt=date.today()).count()}"
+        )
+
         events_list = []
         for event in events_queryset:
             header_photo_url = event.header_photo.url if event.header_photo else None
@@ -232,8 +149,10 @@ async def get_events(
                     ),  # Ensure it's a boolean
                 }
             )
-        
-        print(f"[get_events API] Retrieved {len(events_list)} events from database (offset={offset}, limit={limit})")
+
+        print(
+            f"[get_events API] Retrieved {len(events_list)} events from database (offset={offset}, limit={limit})"
+        )
         return events_list, total_events
 
     try:
@@ -253,10 +172,12 @@ async def get_events(
                 "total_count": total_count,
                 "returned_count": len(events_data),
                 "has_more": has_more,
-                "next_offset": next_offset
-            }
+                "next_offset": next_offset,
+            },
         }
-        print(f"[get_events API] Returning {len(events)} events in response with pagination info")
+        print(
+            f"[get_events API] Returning {len(events)} events in response with pagination info"
+        )
         return response
     except Exception as e:
         await notify_by_bot(
@@ -439,41 +360,49 @@ async def get_event_details(
         """
         try:
             event = Event.objects.get(eventId=eventId)
-            
+
             # Check if event is paid ticketing
-            if str(event.ticketing).lower() != 'paid':
-                print(f"[get_event_ticket_data API] Event is not paid ticketing, returning empty list")
+            if str(event.ticketing).lower() != "paid":
+                print(
+                    f"[get_event_ticket_data API] Event is not paid ticketing, returning empty list"
+                )
                 return []
-                
+
             # Import PaidFreeTicket model
             from eventTicketsApp.models import PaidFreeTicket
-            
+
             # Get all ticket types for this event
             ticket_types = PaidFreeTicket.objects.filter(event=event)
-            
+
             tickets_data = []
             for ticket_type in ticket_types:
                 ticket_info = {
                     "id": str(ticket_type.ticket_id),
                     "ticket_name": ticket_type.ticket_name,
-                    "price": float(ticket_type.ticket_price) if ticket_type.ticket_price else 0.0,
+                    "price": (
+                        float(ticket_type.ticket_price)
+                        if ticket_type.ticket_price
+                        else 0.0
+                    ),
                     "description": ticket_type.ticket_description,
                     "available_quantity": ticket_type.ticket_quantity,
                     "sold_quantity": ticket_type.ticket_sold,
                     "available_tickets": ticket_type.available_tickets(),
                     "crew_discounted_price": (
-                        float(ticket_type.crew_discounted_price) 
-                        if ticket_type.crew_discounted_price 
+                        float(ticket_type.crew_discounted_price)
+                        if ticket_type.crew_discounted_price
                         else None
                     ),
                     "stripe_price_id": ticket_type.stripePriceId,
                     "deadline": ticket_type.deadline,
                 }
                 tickets_data.append(ticket_info)
-            
-            print(f"[get_event_ticket_data API] Retrieved {len(tickets_data)} ticket types for paid event")
+
+            print(
+                f"[get_event_ticket_data API] Retrieved {len(tickets_data)} ticket types for paid event"
+            )
             return tickets_data
-            
+
         except Event.DoesNotExist:
             print(f"[get_event_ticket_data API] Event not found with ID: {eventId}")
             return []
@@ -488,24 +417,30 @@ async def get_event_details(
         """
         try:
             event = Event.objects.get(eventId=eventId)
-            
+
             # Get all coupons for this event using the related_name
             coupons = event.event_coupons.all()
-            
+
             coupons_data = []
             for coupon in coupons:
                 coupon_info = {
                     "coupon_id": str(coupon.coupon_id),
                     "code": coupon.code,
                     "discount_percentage": coupon.discount_percentage,
-                    "created_at": coupon.created_at.isoformat() if coupon.created_at else None,
-                    "updated_at": coupon.updated_at.isoformat() if coupon.updated_at else None,
+                    "created_at": (
+                        coupon.created_at.isoformat() if coupon.created_at else None
+                    ),
+                    "updated_at": (
+                        coupon.updated_at.isoformat() if coupon.updated_at else None
+                    ),
                 }
                 coupons_data.append(coupon_info)
-            
-            print(f"[get_event_coupons_data API] Retrieved {len(coupons_data)} coupons for event")
+
+            print(
+                f"[get_event_coupons_data API] Retrieved {len(coupons_data)} coupons for event"
+            )
             return coupons_data
-            
+
         except Event.DoesNotExist:
             print(f"[get_event_coupons_data API] Event not found with ID: {eventId}")
             return []
@@ -520,30 +455,38 @@ async def get_event_details(
         """
         try:
             event = Event.objects.get(eventId=eventId)
-            
+
             # Check if crew discount feature is enabled for this event
             if not event.crew_discount:
-                print(f"[get_event_crew_buy_data API] Crew discount not enabled for event, returning null")
+                print(
+                    f"[get_event_crew_buy_data API] Crew discount not enabled for event, returning null"
+                )
                 return None
-                
+
             crew_buy_info = {
                 "crew_discount_enabled": True,
-                "minimum_crew_size": event.minimum_crew_size if event.minimum_crew_size else 1,
+                "minimum_crew_size": (
+                    event.minimum_crew_size if event.minimum_crew_size else 1
+                ),
                 "crew_discount_percentage": (
-                    float(event.crew_discount_percentage) 
-                    if event.crew_discount_percentage 
+                    float(event.crew_discount_percentage)
+                    if event.crew_discount_percentage
                     else 0.0
                 ),
             }
-            
-            print(f"[get_event_crew_buy_data API] Retrieved crew buy info with discounted ticket types")
+
+            print(
+                f"[get_event_crew_buy_data API] Retrieved crew buy info with discounted ticket types"
+            )
             return crew_buy_info
-            
+
         except Event.DoesNotExist:
             print(f"[get_event_crew_buy_data API] Event not found with ID: {eventId}")
             return None
         except Exception as e:
-            print(f"[get_event_crew_buy_data API] Error retrieving crew buy data: {str(e)}")
+            print(
+                f"[get_event_crew_buy_data API] Error retrieving crew buy data: {str(e)}"
+            )
             return None
 
     event_data = await get_event_data(eventId)
@@ -1120,7 +1063,7 @@ async def rsvp(
                 print(
                     f"Display on guest list: {form_data_final['display_on_guestlist']}"
                 )
-                
+
                 # Return RSVP data along with event info for notification
                 return {
                     "message": "RSVP successful!",
@@ -1130,21 +1073,23 @@ async def rsvp(
                         "event_id": str(event.eventId),
                         "event_title": event.title,
                         "host_user_id": event.host.user_id,
-                    }
+                    },
                 }
             else:
                 return {"errors": form.errors}
 
         result = await rsvp_for_event(request, eventId, user_id, form_data)
-        
+
         # Send notification to host if RSVP was successful
         if "rsvp_data" in result:
             await send_rsvp_notification(result["rsvp_data"])
             # Check for attendance milestones
-            await check_attendance_milestone(result["rsvp_data"]["event_id"], result["rsvp_data"]["host_user_id"])
+            await check_attendance_milestone(
+                result["rsvp_data"]["event_id"], result["rsvp_data"]["host_user_id"]
+            )
             # Remove rsvp_data from result before returning
             result.pop("rsvp_data", None)
-        
+
         print(f"[rsvp API] Returning result: {result}")
         return result
     except Exception as e:
@@ -1449,3 +1394,95 @@ async def check_event_guestlist_exists(
         raise HTTPException(status_code=404, detail="Event not found")
 
     return {"guestlist_exists": guestlist_exists, "event_id": eventId}
+
+
+async def send_rsvp_notification(rsvp_data):
+    """Send notification to event host when someone RSVPs."""
+    try:
+        notification_title = "New RSVP!"
+        notification_message = (
+            f"{rsvp_data['rsvp_name']} just RSVP'd to {rsvp_data['event_title']}"
+        )
+        navigate_to = "event_details"
+        params = {
+            "event_id": rsvp_data["event_id"],
+            "event_title": rsvp_data["event_title"],
+            "rsvp_name": rsvp_data["rsvp_name"],
+        }
+
+        await send_notification(
+            rsvp_data["host_user_id"],
+            notification_message,
+            notification_title,
+            navigate_to=navigate_to,
+            params=params,
+        )
+
+        print(f"[send_rsvp_notification] Sent RSVP notification to host")
+
+    except Exception as e:
+        print(f"[send_rsvp_notification] Error sending notification: {str(e)}")
+        # Don't raise the exception as we don't want notification failures to prevent RSVP
+
+
+async def check_attendance_milestone(event_id, host_user_id):
+    """Check if event has reached attendance milestones and notify host."""
+    try:
+
+        @database_sync_to_async
+        def get_attendance_milestone_info(event_id):
+            try:
+                # Define attendance milestones
+                milestones = [10, 25, 50, 100, 200, 500]
+
+                # Get current RSVP count for the event
+                current_count = Ticket.objects.filter(event__eventId=event_id).count()
+
+                # Check which milestone was just reached
+                milestone_reached = None
+                for milestone in milestones:
+                    if current_count == milestone:  # Exactly at milestone
+                        milestone_reached = milestone
+                        break
+
+                if milestone_reached:
+                    event = Event.objects.get(eventId=event_id)
+                    return {
+                        "milestone": milestone_reached,
+                        "event_title": event.title,
+                        "event_id": str(event.eventId),
+                        "current_count": current_count,
+                    }
+                return None
+            except Exception as e:
+                print(f"[get_attendance_milestone_info] Error: {str(e)}")
+                return None
+
+        milestone_info = await get_attendance_milestone_info(event_id)
+        if not milestone_info:
+            return
+
+        notification_title = "🎉 Attendance Milestone!"
+        notification_message = f"Congratulations! {milestone_info['event_title']} just reached {milestone_info['milestone']} attendees!"
+        navigate_to = "event_details"
+        params = {
+            "event_id": milestone_info["event_id"],
+            "event_title": milestone_info["event_title"],
+            "milestone": milestone_info["milestone"],
+            "current_count": milestone_info["current_count"],
+        }
+
+        await send_notification(
+            host_user_id,
+            notification_message,
+            notification_title,
+            navigate_to=navigate_to,
+            params=params,
+        )
+
+        print(
+            f"[check_attendance_milestone] Sent milestone notification for {milestone_info['milestone']} attendees"
+        )
+
+    except Exception as e:
+        print(f"[check_attendance_milestone] Error: {str(e)}")
