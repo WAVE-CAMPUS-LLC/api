@@ -2094,6 +2094,236 @@ async def get_received_crew_invites(
     return {"received_crew_invites": received_invites_data}
 
 
+async def send_crew_invite_accepted_notification(request_id, accepter_user_id):
+    """Send notification to crew invite sender when their invite is accepted."""
+    try:
+        @database_sync_to_async
+        def get_crew_invite_info(request_id, accepter_user_id):
+            try:
+                crew_request = CrewRequest.objects.select_related(
+                    'sender', 'receiver', 'crew'
+                ).get(requestId=request_id)
+                
+                accepter = CustomUser.objects.get(id=accepter_user_id)
+                
+                return {
+                    'sender_user_id': crew_request.sender.user_id,
+                    'accepter_name': accepter.first_name or accepter.username,
+                    'crew_name': crew_request.crew.name,
+                    'crew_id': str(crew_request.crew.crewId),
+                }
+            except Exception as e:
+                print(f"[send_crew_invite_accepted_notification] Error getting invite info: {str(e)}")
+                return None
+        
+        invite_info = await get_crew_invite_info(request_id, accepter_user_id)
+        if not invite_info:
+            return
+        
+        notification_title = "Crew Invite Accepted!"
+        notification_message = f"{invite_info['accepter_name']} joined your crew {invite_info['crew_name']}"
+        navigate_to = "crew_details"
+        params = {
+            "crew_id": invite_info['crew_id'],
+            "crew_name": invite_info['crew_name'],
+            "accepter_name": invite_info['accepter_name'],
+        }
+        
+        await send_notification(
+            invite_info['sender_user_id'],
+            notification_message,
+            notification_title,
+            navigate_to=navigate_to,
+            params=params,
+        )
+        
+        print(f"[send_crew_invite_accepted_notification] Sent notification to sender")
+        
+    except Exception as e:
+        print(f"[send_crew_invite_accepted_notification] Error: {str(e)}")
+
+
+async def send_vote_notification(post_id, voter_user_id, vote_value):
+    """Send notification to post creator when someone votes on their post."""
+    try:
+        @database_sync_to_async
+        def get_vote_notification_info(post_id, voter_user_id):
+            try:
+                post = SurfPost.objects.select_related(
+                    'user', 'event'
+                ).get(surfId=post_id)
+                
+                voter = CustomUser.objects.get(id=voter_user_id)
+                
+                # Don't notify if user voted on their own post
+                if post.user.id == voter_user_id:
+                    return None
+                
+                vote_type = "tide up" if vote_value == 1 else "tide down"
+                
+                return {
+                    'post_creator_user_id': post.user.user_id,
+                    'voter_name': voter.first_name or voter.username,
+                    'vote_type': vote_type,
+                    'post_content_preview': post.content[:30] + "..." if len(post.content) > 30 else post.content,
+                    'event_title': post.event.title,
+                    'post_id': str(post.surfId),
+                }
+            except Exception as e:
+                print(f"[get_vote_notification_info] Error: {str(e)}")
+                return None
+        
+        vote_info = await get_vote_notification_info(post_id, voter_user_id)
+        if not vote_info:
+            return
+        
+        notification_title = f"Someone voted on your post!"
+        notification_message = f"{vote_info['voter_name']} gave your post a {vote_info['vote_type']}"
+        navigate_to = "surf_post_details"
+        params = {
+            "post_id": vote_info['post_id'],
+            "voter_name": vote_info['voter_name'],
+            "vote_type": vote_info['vote_type'],
+            "post_preview": vote_info['post_content_preview'],
+        }
+        
+        await send_notification(
+            vote_info['post_creator_user_id'],
+            notification_message,
+            notification_title,
+            navigate_to=navigate_to,
+            params=params,
+        )
+        
+        print(f"[send_vote_notification] Sent vote notification to post creator")
+        
+    except Exception as e:
+        print(f"[send_vote_notification] Error: {str(e)}")
+
+
+async def check_trending_post_notification(post_id, current_score):
+    """Check if post has reached trending milestones and notify creator."""
+    try:
+        # Define trending milestones (you can adjust these values)
+        milestones = [5, 10, 25, 50, 100]
+        
+        @database_sync_to_async
+        def get_post_milestone_info(post_id, current_score):
+            try:
+                post = SurfPost.objects.select_related('user', 'event').get(surfId=post_id)
+                
+                # Check which milestone was just reached
+                milestone_reached = None
+                for milestone in milestones:
+                    if current_score >= milestone:
+                        milestone_reached = milestone
+                    else:
+                        break
+                
+                # Only notify at first time reaching milestone
+                # We'll use the exact score to determine if this is the first time
+                if milestone_reached and current_score == milestone_reached:
+                    return {
+                        'post_creator_user_id': post.user.user_id,
+                        'milestone': milestone_reached,
+                        'post_content_preview': post.content[:30] + "..." if len(post.content) > 30 else post.content,
+                        'event_title': post.event.title,
+                        'post_id': str(post.surfId),
+                    }
+                return None
+            except Exception as e:
+                print(f"[get_post_milestone_info] Error: {str(e)}")
+                return None
+        
+        milestone_info = await get_post_milestone_info(post_id, current_score)
+        if not milestone_info:
+            return
+        
+        notification_title = "🔥 Your post is trending!"
+        notification_message = f"Your post reached {milestone_info['milestone']} votes! Keep it up!"
+        navigate_to = "surf_post_details"
+        params = {
+            "post_id": milestone_info['post_id'],
+            "milestone": milestone_info['milestone'],
+            "post_preview": milestone_info['post_content_preview'],
+        }
+        
+        await send_notification(
+            milestone_info['post_creator_user_id'],
+            notification_message,
+            notification_title,
+            navigate_to=navigate_to,
+            params=params,
+        )
+        
+        print(f"[check_trending_post_notification] Sent trending notification for milestone {milestone_info['milestone']}")
+        
+    except Exception as e:
+        print(f"[check_trending_post_notification] Error: {str(e)}")
+
+
+async def send_crew_join_notification(crew_id, new_member_user_id):
+    """Send notification to crew creator/admins when someone joins."""
+    try:
+        @database_sync_to_async
+        def get_crew_notification_info(crew_id, new_member_user_id):
+            try:
+                crew = Crew.objects.select_related('created_by').get(crewId=crew_id)
+                new_member = CustomUser.objects.get(id=new_member_user_id)
+                
+                # Get crew admins (including creator)
+                admins = CrewMember.objects.filter(
+                    crew=crew, is_admin=True
+                ).select_related('user')
+                
+                admin_ids = [crew.created_by.user_id]  # Always include creator
+                admin_ids.extend([admin.user.user_id for admin in admins])
+                admin_ids = list(set(admin_ids))  # Remove duplicates
+                
+                # Don't notify the new member themselves
+                admin_ids = [uid for uid in admin_ids if uid != new_member.user_id]
+                
+                return {
+                    'admin_user_ids': admin_ids,
+                    'new_member_name': new_member.first_name or new_member.username,
+                    'crew_name': crew.name,
+                    'crew_id': str(crew.crewId),
+                }
+            except Exception as e:
+                print(f"[get_crew_notification_info] Error: {str(e)}")
+                return None
+        
+        crew_info = await get_crew_notification_info(crew_id, new_member_user_id)
+        if not crew_info:
+            return
+        
+        notification_title = "New Crew Member!"
+        notification_message = f"{crew_info['new_member_name']} joined {crew_info['crew_name']}"
+        navigate_to = "crew_details"
+        params = {
+            "crew_id": crew_info['crew_id'],
+            "crew_name": crew_info['crew_name'],
+            "new_member_name": crew_info['new_member_name'],
+        }
+        
+        # Send notification to all admins
+        for admin_user_id in crew_info['admin_user_ids']:
+            try:
+                await send_notification(
+                    admin_user_id,
+                    notification_message,
+                    notification_title,
+                    navigate_to=navigate_to,
+                    params=params,
+                )
+                print(f"[send_crew_join_notification] Sent notification to admin")
+            except Exception as e:
+                print(f"[send_crew_join_notification] Error sending to admin: {str(e)}")
+        
+    except Exception as e:
+        print(f"[send_crew_join_notification] Error: {str(e)}")
+
+
 @router.post("/accept-crew-invite/{request_id}")
 async def accept_crew_invite(
     request: Request,
@@ -2207,6 +2437,14 @@ async def accept_crew_invite(
                 "[accept_crew_invite API] Could not send notification: BOT_API_KEY not set"
             )
         raise HTTPException(status_code=400, detail=success_message or error_message)
+
+    # Send notifications for crew invite acceptance and new member joining
+    await send_crew_invite_accepted_notification(request_id, caller_user_id)
+    
+    # Also notify crew admins about the new member
+    if invite_data and "crew" in invite_data:
+        crew_id = invite_data["crew"]["crew_id"]
+        await send_crew_join_notification(crew_id, caller_user_id)
 
     print(f"[accept_crew_invite API] {success_message}")
     return {"message": success_message, "crew_invite": invite_data}
@@ -3460,6 +3698,14 @@ async def vote_on_post(
             print("[vote_on_post API] Could not send notification: BOT_API_KEY not set")
         raise HTTPException(status_code=400, detail=error_message)
 
+    # Send notification to post creator if it's a new vote (not changing existing vote)
+    if vote_data.get("created"):
+        await send_vote_notification(data.post_id, caller_user_id, data.vote)
+        
+        # Check if post is trending (reaches popularity milestones)
+        current_score = vote_data.get("score", 0)
+        await check_trending_post_notification(data.post_id, current_score)
+
     print(f"[vote_on_post API] Vote recorded successfully")
     return {"message": vote_data["message"], "vote_data": vote_data}
 
@@ -4191,6 +4437,52 @@ async def list_fixed_messages():
     return await get_fixed_messages()
 
 
+async def send_message_notification(receiver, sender, fixed_message, event):
+    """
+    Send push notification to receiver when they get a new message.
+    """
+    try:
+        # Prepare notification data
+        sender_name = sender.first_name or sender.username
+        
+        # Create message preview - limit to 50 characters
+        message_preview = fixed_message.text[:50]
+        if len(fixed_message.text) > 50:
+            message_preview += "..."
+        
+        # Create notification title and message
+        if event:
+            notification_title = f"New message from {sender_name} about {event.title}"
+            notification_message = f"{message_preview}"
+        else:
+            notification_title = f"New message from {sender_name}"
+            notification_message = f"{message_preview}"
+        
+        navigate_to = "message_conversation"
+        params = {
+            "sender_username": sender.username,
+            "sender_name": sender_name,
+            "message_preview": message_preview,
+            "event_id": str(event.eventId) if event else None,
+            "event_title": event.title if event else None,
+        }
+        
+        # Send notification to receiver
+        await send_notification(
+            receiver.user_id,
+            notification_message,
+            notification_title,
+            navigate_to=navigate_to,
+            params=params,
+        )
+        
+        print(f"[send_message_notification] Sent message notification to {receiver.username}")
+        
+    except Exception as e:
+        print(f"[send_message_notification] Error sending notification: {str(e)}")
+        # Don't raise the exception as we don't want notification failures to prevent message sending
+
+
 @router.post("/messages/send", response_model=EventMessageResponse)
 async def send_message(
     data: SendMessageRequest, current_user_id: int = Depends(get_current_user)
@@ -4230,9 +4522,16 @@ async def send_message(
             event=event,
         )
 
-        return _serialize_message(message)
+        # Return message data and receiver info for notification
+        return _serialize_message(message), receiver, current_user, fixed_message, event
 
-    return await send_message_logic(data, current_user_id)
+    # Execute the send message logic
+    message_data, receiver, sender, fixed_message, event = await send_message_logic(data, current_user_id)
+    
+    # Send notification to receiver after successful message creation
+    await send_message_notification(receiver, sender, fixed_message, event)
+    
+    return message_data
 
 
 def _serialize_message(message: EventMessage):

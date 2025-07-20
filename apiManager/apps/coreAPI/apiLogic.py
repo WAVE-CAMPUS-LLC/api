@@ -21,6 +21,7 @@ from .serializers import ExplorePageEvent, EventDetailsSerializer, RSVPInformati
 from apiManager.dependencies import get_current_user
 from apiManager.utilities.notify_by_bot import notify_by_bot
 from apiManager.utilities.device_info import get_device_info
+from apiManager.notifications.notification import send_notification
 from authenticationApp.models import CustomUser
 from uuid import UUID
 from .version_middleware import VersionCheckMiddleware
@@ -30,6 +31,93 @@ import logging
 
 
 router = APIRouter()
+
+
+async def send_rsvp_notification(rsvp_data):
+    """Send notification to event host when someone RSVPs."""
+    try:
+        notification_title = "New RSVP!"
+        notification_message = f"{rsvp_data['rsvp_name']} just RSVP'd to {rsvp_data['event_title']}"
+        navigate_to = "event_details"
+        params = {
+            "event_id": rsvp_data['event_id'],
+            "event_title": rsvp_data['event_title'],
+            "rsvp_name": rsvp_data['rsvp_name'],
+        }
+        
+        await send_notification(
+            rsvp_data['host_user_id'],
+            notification_message,
+            notification_title,
+            navigate_to=navigate_to,
+            params=params,
+        )
+        
+        print(f"[send_rsvp_notification] Sent RSVP notification to host")
+        
+    except Exception as e:
+        print(f"[send_rsvp_notification] Error sending notification: {str(e)}")
+        # Don't raise the exception as we don't want notification failures to prevent RSVP
+
+
+async def check_attendance_milestone(event_id, host_user_id):
+    """Check if event has reached attendance milestones and notify host."""
+    try:
+        @database_sync_to_async
+        def get_attendance_milestone_info(event_id):
+            try:
+                # Define attendance milestones
+                milestones = [10, 25, 50, 100, 200, 500]
+                
+                # Get current RSVP count for the event
+                current_count = RSVPTicket.objects.filter(event__eventId=event_id).count()
+                
+                # Check which milestone was just reached
+                milestone_reached = None
+                for milestone in milestones:
+                    if current_count == milestone:  # Exactly at milestone
+                        milestone_reached = milestone
+                        break
+                
+                if milestone_reached:
+                    event = Event.objects.get(eventId=event_id)
+                    return {
+                        'milestone': milestone_reached,
+                        'event_title': event.title,
+                        'event_id': str(event.eventId),
+                        'current_count': current_count,
+                    }
+                return None
+            except Exception as e:
+                print(f"[get_attendance_milestone_info] Error: {str(e)}")
+                return None
+        
+        milestone_info = await get_attendance_milestone_info(event_id)
+        if not milestone_info:
+            return
+        
+        notification_title = "🎉 Attendance Milestone!"
+        notification_message = f"Congratulations! {milestone_info['event_title']} just reached {milestone_info['milestone']} RSVPs!"
+        navigate_to = "event_details"
+        params = {
+            "event_id": milestone_info['event_id'],
+            "event_title": milestone_info['event_title'],
+            "milestone": milestone_info['milestone'],
+            "current_count": milestone_info['current_count'],
+        }
+        
+        await send_notification(
+            host_user_id,
+            notification_message,
+            notification_title,
+            navigate_to=navigate_to,
+            params=params,
+        )
+        
+        print(f"[check_attendance_milestone] Sent milestone notification for {milestone_info['milestone']} attendees")
+        
+    except Exception as e:
+        print(f"[check_attendance_milestone] Error: {str(e)}")
 
 logger = logging.getLogger("wave.api")
 tracer = trace.get_tracer(__name__)
@@ -1032,11 +1120,31 @@ async def rsvp(
                 print(
                     f"Display on guest list: {form_data_final['display_on_guestlist']}"
                 )
-                return {"message": "RSVP successful!"}
+                
+                # Return RSVP data along with event info for notification
+                return {
+                    "message": "RSVP successful!",
+                    "rsvp_data": {
+                        "rsvp_name": f"{rsvp_ticket.first_name} {rsvp_ticket.last_name}",
+                        "rsvp_email": rsvp_ticket.email,
+                        "event_id": str(event.eventId),
+                        "event_title": event.title,
+                        "host_user_id": event.host.user_id,
+                    }
+                }
             else:
                 return {"errors": form.errors}
 
         result = await rsvp_for_event(request, eventId, user_id, form_data)
+        
+        # Send notification to host if RSVP was successful
+        if "rsvp_data" in result:
+            await send_rsvp_notification(result["rsvp_data"])
+            # Check for attendance milestones
+            await check_attendance_milestone(result["rsvp_data"]["event_id"], result["rsvp_data"]["host_user_id"])
+            # Remove rsvp_data from result before returning
+            result.pop("rsvp_data", None)
+        
         print(f"[rsvp API] Returning result: {result}")
         return result
     except Exception as e:
