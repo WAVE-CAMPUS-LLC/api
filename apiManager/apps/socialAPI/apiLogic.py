@@ -3763,13 +3763,13 @@ async def vote_on_post(
             print("[vote_on_post API] Could not send notification: BOT_API_KEY not set")
         raise HTTPException(status_code=400, detail=error_message)
 
-    # Send notification to post creator if it's a new vote (not changing existing vote)
-    if vote_data.get("created"):
+    # Send notification to post creator for any vote (new or update)
+    if vote_data is not None:
         await send_vote_notification(data.post_id, caller_user_id, data.vote)
 
-        # Check if post is trending (reaches popularity milestones)
-        current_score = vote_data.get("score", 0)
-        await check_trending_post_notification(data.post_id, current_score)
+    # Check if post is trending (reaches popularity milestones)
+    current_score = vote_data.get("score", 0)
+    await check_trending_post_notification(data.post_id, current_score)
 
     print(f"[vote_on_post API] Vote recorded successfully")
     return {"message": vote_data["message"], "vote_data": vote_data}
