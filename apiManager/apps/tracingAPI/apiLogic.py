@@ -1,4 +1,4 @@
-from typing import Optional, Dict, List
+from typing import Optional, Dict, List, Any
 from channels.db import database_sync_to_async
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import JSONResponse
@@ -16,14 +16,14 @@ tracer = trace.get_tracer(__name__)
 
 
 class Trace(BaseModel):
-    timestamp: datetime
+    timestamp: str
     type: str
     name: str
-    user_id: Optional[uuid.UUID] = None
+    user_id: Optional[str] = None
     from_page: Optional[str] = None
     to_page: Optional[str] = None
     latency_ms: Optional[float] = None
-    attributes: Optional[Dict[str, str]] = None
+    attributes: Optional[Dict[str, Any]] = None
 
 
 class TraceBatch(BaseModel):
