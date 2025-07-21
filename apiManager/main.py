@@ -21,10 +21,12 @@ from apiManager.apps.notificationsManagementAPI.apiLogic import (
     router as notification_router,
 )
 from apiManager.apps.walleManagementAPI.apiLogic import router as walle_router
+from apiManager.apps.tracingAPI.apiLogic import router as tracing_router
 from apiManager.apps.coreAPI.version_middleware import VersionCheckMiddleware
 
+from apiManager.tracing.otel import configure_tracing
 
-from opentelemetry import trace
+
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from opentelemetry.instrumentation.requests import RequestsInstrumentor
 from opentelemetry.sdk.resources import Resource
@@ -32,10 +34,14 @@ from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
 
-from apiManager.utilities.otel import setup_otel
-
 
 app = FastAPI(title="WAVE. API", version="1.0.0")
+
+configure_tracing(
+    service_name="wave-api",
+    api_key=os.getenv("NEW_RELIC_API_KEY") or "",
+)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -57,8 +63,6 @@ app.add_middleware(
         "/openapi.json",
     ],
 )
-
-setup_otel(app)
 
 
 # now mount your routers
@@ -94,4 +98,7 @@ app.include_router(
 )
 app.include_router(
     walle_router, prefix="/waveYourCampusAPIFromOAK/walle", tags=["WALLE"]
+)
+app.include_router(
+    tracing_router, prefix="/waveYourCampusAPIFromOAK/tracing", tags=["Tracing"]
 )
