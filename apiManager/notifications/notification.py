@@ -55,6 +55,42 @@ async def send_notification(
             "message": message,
         }
 
+        # Add recipient's profile photo to the payload
+        @database_sync_to_async
+        def get_profile_photo_url(user_uuid):
+            try:
+                user = CustomUser.objects.get(user_id=user_uuid)
+                profile = getattr(user, "user_profile", None)
+                if profile and profile.profile_photo:
+                    return profile.profile_photo.url
+            except Exception:
+                pass
+            return None
+
+        recipient_profile_photo = await get_profile_photo_url(user_id)
+        if params is None:
+            params = {}
+        params = dict(params)  # ensure mutable
+        params["profile_photo"] = recipient_profile_photo
+
+        # If params contains a sender_username or username, try to add sender's profile photo
+        sender_username = params.get("sender_username") or params.get("username")
+        if sender_username:
+
+            @database_sync_to_async
+            def get_sender_profile_photo_url(sender_username):
+                try:
+                    user = CustomUser.objects.get(username=sender_username)
+                    profile = getattr(user, "user_profile", None)
+                    if profile and profile.profile_photo:
+                        return profile.profile_photo.url
+                except Exception:
+                    pass
+                return None
+
+            sender_profile_photo = await get_sender_profile_photo_url(sender_username)
+            params["sender_profile_photo"] = sender_profile_photo
+
         if navigate_to:
             payload["navigate_to"] = navigate_to
 
