@@ -9,6 +9,7 @@ from datetime import datetime
 from opentelemetry import trace
 from opentelemetry.trace import SpanKind
 from pydantic import BaseModel
+import json
 
 
 router = APIRouter()
@@ -44,5 +45,7 @@ async def receive_trace_batch(batch: TraceBatch, request: Request):
             span.set_attribute("trace.latency_ms", item.latency_ms or 0)
             if item.attributes:
                 for key, value in item.attributes.items():
+                    if isinstance(value, dict):
+                        value = json.dumps(value)
                     span.set_attribute(f"attr.{key}", value)
     return {"status": "ok"}
