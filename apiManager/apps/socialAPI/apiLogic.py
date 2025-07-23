@@ -509,6 +509,47 @@ async def get_crew_details(
     return {"crew_details": crew_data}
 
 
+@router.get("/crew/{crew_id}/info")
+async def get_crew_info(
+    crew_id: str,
+    caller_user_id: Optional[int] = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
+    """
+    Get basic info about a crew by crew_id.
+    """
+
+    @database_sync_to_async
+    def get_crew():
+        from uuid import UUID
+
+        try:
+            crew = Crew.objects.select_related("created_by").get(crewId=UUID(crew_id))
+            creator = crew.created_by
+            return {
+                "crewId": str(crew.crewId),
+                "name": crew.name,
+                "bio": crew.bio,
+                "created_at": crew.created_at,
+                "crew_image": crew.crew_image.url if crew.crew_image else None,
+                "created_by": {
+                    "user_id": str(creator.user_id),
+                    "username": creator.username,
+                    "first_name": creator.first_name,
+                    "last_name": creator.last_name,
+                },
+            }, None
+        except Crew.DoesNotExist:
+            return None, "Crew not found."
+        except Exception as e:
+            return None, str(e)
+
+    crew_data, error = await get_crew()
+    if crew_data is None:
+        raise HTTPException(status_code=404, detail=error or "Crew not found.")
+    return {"crew": crew_data}
+
+
 # My Pass Tab
 @router.get("/myPass")
 async def get_my_pass(
@@ -5697,3 +5738,106 @@ async def search_friends_not_in_crew(
 
     results = await search_friends()
     return {"friends": results}
+
+
+@router.post("/crew/{crew_id}/leave")
+async def leave_crew(
+    crew_id: str,
+    caller_user_id: Optional[int] = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
+    """
+    Allow a user to leave a crew.
+    """
+
+    @database_sync_to_async
+    def leave_logic():
+        from uuid import UUID
+
+        try:
+            crew = Crew.objects.get(crewId=UUID(crew_id))
+            user = CustomUser.objects.get(id=caller_user_id)
+            membership = CrewMember.objects.filter(crew=crew, user=user)
+            if not membership.exists():
+                return False, "You are not a member of this crew."
+            membership.delete()
+            return True, None
+        except Exception as e:
+            return False, str(e)
+
+    success, error = await leave_logic()
+    if not success:
+        raise HTTPException(status_code=400, detail=error or "Could not leave crew.")
+    return {"message": "Left crew successfully."}
+
+
+@router.post("/crew/{crew_id}/kick-member")
+async def kick_member_from_crew(
+    crew_id: str,
+    member_user_id: str = Body(..., embed=True),
+    caller_user_id: Optional[int] = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
+    """
+    Allow the host (creator) to kick a member from the crew.
+    """
+
+    @database_sync_to_async
+    def kick_logic():
+        from uuid import UUID
+
+        try:
+            crew = Crew.objects.get(crewId=UUID(crew_id))
+            host = CustomUser.objects.get(id=caller_user_id)
+            if crew.created_by != host:
+                return False, "Only the crew creator can kick members."
+            member = CustomUser.objects.get(user_id=member_user_id)
+            membership = CrewMember.objects.filter(crew=crew, user=member)
+            if not membership.exists():
+                return False, "User is not a member of this crew."
+            membership.delete()
+            return True, None
+        except Exception as e:
+            return False, str(e)
+
+    success, error = await kick_logic()
+    if not success:
+        raise HTTPException(status_code=400, detail=error or "Could not kick member.")
+    return {"message": "Member kicked from crew successfully."}
+
+
+@router.delete("/crew/{crew_id}/delete")
+async def delete_crew(
+    crew_id: str,
+    caller_user_id: Optional[int] = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
+    """
+    Allow the creator to delete the crew and all related data, including shared events.
+    """
+
+    @database_sync_to_async
+    def delete_logic():
+        from uuid import UUID
+
+        try:
+            crew = Crew.objects.get(crewId=UUID(crew_id))
+            creator = CustomUser.objects.get(id=caller_user_id)
+            if crew.created_by != creator:
+                return False, "Only the crew creator can delete the crew."
+            # Delete all related CrewMember, CrewRequest, and SharedEvent objects
+            CrewMember.objects.filter(crew=crew).delete()
+            CrewRequest.objects.filter(crew=crew).delete()
+            from eventManagementApp.models import SharedEvent
+
+            SharedEvent.objects.filter(crew=crew).delete()
+            # Optionally, delete related posts, etc. if needed
+            crew.delete()
+            return True, None
+        except Exception as e:
+            return False, str(e)
+
+    success, error = await delete_logic()
+    if not success:
+        raise HTTPException(status_code=400, detail=error or "Could not delete crew.")
+    return {"message": "Crew and all related data deleted successfully."}
