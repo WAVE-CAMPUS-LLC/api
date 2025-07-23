@@ -502,7 +502,7 @@ AWS_S3_CUSTOM_DOMAIN = os.getenv("R2_CUSTOM_DOMAIN")
 
 # AWS S3 Parameters
 AWS_S3_OBJECT_PARAMETERS = {
-    "CacheControl": "max-age=86400",
+    "CacheControl": "public, max-age=31536000, immutable",
 }
 AWS_QUERYSTRING_AUTH = False
 AWS_S3_VERIFY = True

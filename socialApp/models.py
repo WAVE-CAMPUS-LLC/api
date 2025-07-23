@@ -78,7 +78,20 @@ class Crew(models.Model):
         _("Name your crew"), max_length=100, null=False, blank=False, db_index=True
     )
     bio = models.TextField(
-        _("Describe your crew"), null=True, blank=True, max_length=150
+        _("Describe your crew"),
+        null=False,
+        blank=False,
+        max_length=150,
+        default="No bio",
+        db_index=True,
+    )
+    crew_image = models.ImageField(
+        _("Crew Image"),
+        upload_to="crew_images/",
+        null=True,
+        blank=True,
+        db_index=True,
+        default="socialApp/crews/crew.png",
     )
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
