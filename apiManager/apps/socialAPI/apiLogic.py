@@ -1,7 +1,18 @@
 from typing import Optional, List
 from datetime import timedelta
 from channels.db import database_sync_to_async
-from fastapi import APIRouter, Depends, HTTPException, Request, status, Query
+from fastapi import (
+    APIRouter,
+    Depends,
+    HTTPException,
+    Request,
+    status,
+    Query,
+    UploadFile,
+    File,
+    Form,
+    Body,
+)
 from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordRequestForm
 import bleach
@@ -33,7 +44,7 @@ from socialApp.models import (
     EventMessage,
     MessageReaction,
 )
-from socialApp.forms import SurfPostForm
+from socialApp.forms import SurfPostForm, createCrewForm
 from eventTicketsApp.views import generateTicket
 from apiManager.algorithms.suggested_friends import get_suggested_friends
 
@@ -3286,6 +3297,61 @@ async def get_user_crews_paginated(
         raise HTTPException(status_code=500, detail=error_message)
 
 
+@router.get("/create-crew/form-fields")
+async def get_create_crew_form_fields(request: Request, platform: Optional[str] = None):
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    is_mobile = request.headers.get("X-Platform") == "mobile"
+
+    FormClass = createCrewForm
+    fields_info = get_form_fields(FormClass)
+    return JSONResponse(content=fields_info, status_code=status.HTTP_200_OK)
+
+
+@router.post("/crew/create")
+async def create_crew(
+    request: Request,
+    name: str = Form(...),
+    bio: str = Form(...),
+    crew_image: Optional[UploadFile] = File(None),
+    caller_user_id: Optional[int] = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
+    """
+    API endpoint to create a new crew.
+    """
+    if not caller_user_id:
+        raise HTTPException(status_code=401, detail="Authentication required.")
+
+    @database_sync_to_async
+    def create_crew_sync():
+        try:
+            user = CustomUser.objects.get(id=caller_user_id)
+            crew = Crew(name=name, bio=bio, created_by=user)
+            if crew_image:
+                crew.crew_image.save(crew_image.filename, crew_image.file, save=False)
+            crew.save()
+            # Add creator as admin member
+            CrewMember.objects.create(crew=crew, user=user, is_admin=True)
+            return crew
+        except Exception as e:
+            return str(e)
+
+    result = await create_crew_sync()
+    if isinstance(result, str):
+        raise HTTPException(status_code=400, detail=f"Error creating crew: {result}")
+
+    return {
+        "crewId": str(result.crewId),
+        "name": result.name,
+        "bio": result.bio,
+        "created_at": result.created_at,
+        "crew_image": result.crew_image.url if result.crew_image else None,
+    }
+
+
 @router.get("/get_crew_details_with_members/{crew_id}")
 async def get_crew_details_with_members(
     request: Request,
@@ -5504,3 +5570,130 @@ async def get_top_surf_posts_for_event(
             )
             raise HTTPException(status_code=500, detail="Internal server error")
         raise e
+
+
+@router.post("/crew/{crew_id}/invite-friend")
+async def invite_friend_to_crew(
+    crew_id: str,
+    friend_user_id: str = Body(..., embed=True),
+    caller_user_id: Optional[int] = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
+    """
+    Invite a friend to a crew (creates a CrewRequest if not already a member or invited).
+    """
+
+    @database_sync_to_async
+    def invite_logic():
+        try:
+            from uuid import UUID
+
+            crew = Crew.objects.get(crewId=UUID(crew_id))
+            user = CustomUser.objects.get(id=caller_user_id)
+            friend = CustomUser.objects.get(user_id=friend_user_id)
+            # Check if already a member
+            if CrewMember.objects.filter(crew=crew, user=friend).exists():
+                return None, "User is already a member of the crew."
+            # Check if already invited
+            if CrewRequest.objects.filter(
+                crew=crew, receiver=friend, status="pending"
+            ).exists():
+                return None, "User has already been invited to the crew."
+            # Create invite
+            CrewRequest.objects.create(
+                crew=crew,
+                sender=user,
+                receiver=friend,
+                status="pending",
+            )
+            return True, None
+        except Exception as e:
+            return None, str(e)
+
+    result, error = await invite_logic()
+    if not result:
+        raise HTTPException(status_code=400, detail=error or "Could not invite friend.")
+    return {"message": "Friend invited successfully."}
+
+
+@router.get("/crew/{crew_id}/friends-not-in-crew")
+async def friends_not_in_crew(
+    crew_id: str,
+    caller_user_id: Optional[int] = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
+    """
+    List all friends of the user who are not already in the crew.
+    """
+
+    @database_sync_to_async
+    def get_friends():
+        from uuid import UUID
+
+        user = CustomUser.objects.get(id=caller_user_id)
+        user_profile = user.user_profile
+        crew = Crew.objects.get(crewId=UUID(crew_id))
+        member_ids = set(
+            CrewMember.objects.filter(crew=crew).values_list("user_id", flat=True)
+        )
+        friends = user_profile.friends.exclude(user__id__in=member_ids)
+        return [
+            {
+                "user_id": str(friend.user.user_id),
+                "username": friend.user.username,
+                "first_name": friend.user.first_name,
+                "last_name": friend.user.last_name,
+                "profile_photo": (
+                    friend.profile_photo.url if friend.profile_photo else None
+                ),
+            }
+            for friend in friends
+        ]
+
+    friends = await get_friends()
+    return {"friends": friends}
+
+
+@router.get("/crew/{crew_id}/search-friends")
+async def search_friends_not_in_crew(
+    crew_id: str,
+    query: str,
+    caller_user_id: Optional[int] = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
+    """
+    Search friends to invite to a crew, excluding those already in the crew.
+    """
+
+    @database_sync_to_async
+    def search_friends():
+        from uuid import UUID
+
+        user = CustomUser.objects.get(id=caller_user_id)
+        user_profile = user.user_profile
+        crew = Crew.objects.get(crewId=UUID(crew_id))
+        member_ids = set(
+            CrewMember.objects.filter(crew=crew).values_list("user_id", flat=True)
+        )
+        friends = user_profile.friends.exclude(user__id__in=member_ids)
+        # Simple search by username, first_name, or last_name
+        filtered = friends.filter(
+            models.Q(user__username__icontains=query)
+            | models.Q(user__first_name__icontains=query)
+            | models.Q(user__last_name__icontains=query)
+        )
+        return [
+            {
+                "user_id": str(friend.user.user_id),
+                "username": friend.user.username,
+                "first_name": friend.user.first_name,
+                "last_name": friend.user.last_name,
+                "profile_photo": (
+                    friend.profile_photo.url if friend.profile_photo else None
+                ),
+            }
+            for friend in filtered
+        ]
+
+    results = await search_friends()
+    return {"friends": results}

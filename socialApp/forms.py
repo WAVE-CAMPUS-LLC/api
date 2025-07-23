@@ -8,6 +8,7 @@ class createCrewForm(forms.ModelForm):
         fields = [
             "name",
             "bio",
+            "crew_image",
         ]
 
         widgets = {
@@ -19,7 +20,13 @@ class createCrewForm(forms.ModelForm):
                     "autocomplete": "off",
                     "required": True,
                 }
-            )
+            ),
+            "crew_image": forms.ClearableFileInput(
+                attrs={
+                    "class": "form-control-file",
+                    "accept": "image/*",
+                }
+            ),
         }
 
 
