@@ -91,7 +91,6 @@ class Crew(models.Model):
         null=True,
         blank=True,
         db_index=True,
-        default="socialApp/crews/crew.png",
     )
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
