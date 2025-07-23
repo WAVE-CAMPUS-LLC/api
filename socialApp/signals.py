@@ -451,4 +451,5 @@ def record_crew_invite_activity(sender, instance, created, **kwargs):
 @receiver(post_save, sender=Crew)
 def crew_created_signal(sender, instance, created, **kwargs):
     if created:
-        generate_crew_image(instance.crewId)
+        if not instance.crew_image:
+            generate_crew_image(instance.crewId)

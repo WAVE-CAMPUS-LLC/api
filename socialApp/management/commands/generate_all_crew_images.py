@@ -9,15 +9,13 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         crews = Crew.objects.all()
         for crew in crews:
-            self.stdout.write(
-                f"Generating image for crew: {crew.name} (ID: {crew.crewId})"
-            )
-            result = generate_crew_image(crew.crewId)
-            if result is None:
+            if not crew.crew_image:
                 self.stdout.write(
-                    self.style.ERROR(f"Failed to generate image for {crew.name}")
+                    f"Generating image for crew: {crew.name} (ID: {crew.crewId})"
                 )
-            else:
+                generate_crew_image(crew.crewId)
                 self.stdout.write(
                     self.style.SUCCESS(f"Image generated for {crew.name}")
                 )
+            else:
+                self.stdout.write(f"Skipping {crew.name}, image already exists.")
