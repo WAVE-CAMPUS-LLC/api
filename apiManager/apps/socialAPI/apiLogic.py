@@ -3233,6 +3233,7 @@ async def get_user_crews_paginated(
                         "crewId": str(crew.crewId),
                         "name": crew.name,
                         "member_count": member_count,
+                        "crew_image": crew.crew_image.url if crew.crew_image else None,
                     }
                 )
 
@@ -3458,6 +3459,7 @@ async def get_crew_details_with_members(
                 "name": crew.name,
                 "bio": crew.bio,
                 "created_at": crew.created_at,
+                "crew_image": (crew.crew_image.url if crew.crew_image else None),
                 "created_by": creator_data,
                 "members": crew_members,
                 "member_count": len(crew_members),
