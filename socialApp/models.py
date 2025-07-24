@@ -456,3 +456,45 @@ class MessageReaction(models.Model):
             else "?"
         )
         return f"{user_name} -> {event_name} ({self.emoji})"
+
+
+class CrewMessage(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    crew = models.ForeignKey(Crew, on_delete=models.CASCADE, related_name="messages")
+    sender = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="crew_messages"
+    )
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["created_at"]
+        app_label = "socialApp"
+
+    def __str__(self):
+        return f"{self.sender.username} in {self.crew.name}: {self.content[:30]}"
+
+
+class CrewSharedEvent(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    crew = models.ForeignKey(
+        Crew, on_delete=models.CASCADE, related_name="shared_events"
+    )
+    sender = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="shared_events_sent",
+    )
+    event = models.ForeignKey(
+        "eventManagementApp.Event",
+        on_delete=models.CASCADE,
+        related_name="shared_with_crews",
+    )
+    shared_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-shared_at"]
+        app_label = "socialApp"
+
+    def __str__(self):
+        return f"{self.sender.username} shared {self.event.title} to {self.crew.name}"

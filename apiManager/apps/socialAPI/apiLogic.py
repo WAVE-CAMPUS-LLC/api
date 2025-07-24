@@ -12,6 +12,8 @@ from fastapi import (
     File,
     Form,
     Body,
+    WebSocket,
+    WebSocketDisconnect,
 )
 from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordRequestForm
@@ -43,6 +45,8 @@ from socialApp.models import (
     FixedMessage,
     EventMessage,
     MessageReaction,
+    CrewMessage,
+    CrewSharedEvent,
 )
 from socialApp.forms import (
     SurfPostForm,
@@ -74,6 +78,7 @@ from .serializers import (
 )
 
 from apiManager.notifications.notification import send_notification
+from apiManager.notifications.crew_ws import crew_manager
 
 
 router = APIRouter()
@@ -6020,3 +6025,242 @@ async def delete_crew(
     if not success:
         raise HTTPException(status_code=400, detail=error or "Could not delete crew.")
     return {"message": "Crew and all related data deleted successfully."}
+
+
+@router.post("/crew/{crew_id}/message")
+async def send_crew_message(
+    crew_id: str,
+    content: str = Form(...),
+    caller_user_id: Optional[int] = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
+    """
+    Send a text message to the crew chat (only if member).
+    """
+
+    @database_sync_to_async
+    def send_message():
+        from uuid import UUID
+
+        try:
+            crew = Crew.objects.get(crewId=UUID(crew_id))
+            user = CustomUser.objects.get(id=caller_user_id)
+            if not CrewMember.objects.filter(crew=crew, user=user).exists():
+                return None, None, "You are not a member of this crew."
+            msg = CrewMessage.objects.create(crew=crew, sender=user, content=content)
+            # Get all member user_ids except sender
+            member_ids = list(
+                crew.members.exclude(id=user.id).values_list("user_id", flat=True)
+            )
+            return msg, member_ids, None
+        except Exception as e:
+            return None, None, str(e)
+
+    msg, member_ids, error = await send_message()
+    if not msg:
+        raise HTTPException(status_code=400, detail=error or "Could not send message.")
+    # Broadcast via WebSocket
+    await crew_manager.broadcast(
+        crew_id,
+        {
+            "type": "crew_message",
+            "id": str(msg.id),
+            "content": msg.content,
+            "created_at": str(msg.created_at),
+            "sender": msg.sender.username,
+        },
+        exclude_user_id=str(caller_user_id),
+    )
+    # Send notification to all members except sender
+    for member_user_id in member_ids:
+        await send_notification(
+            member_user_id,
+            f"New message in crew {msg.crew.name}: {msg.content[:50]}",
+            title=f"New Crew Message",
+            navigate_to=f"crew_chat/{crew_id}",
+            params={"crew_id": crew_id, "sender_username": msg.sender.username},
+        )
+    return {
+        "message": "Message sent",
+        "id": str(msg.id),
+        "content": msg.content,
+        "created_at": msg.created_at,
+        "sender": msg.sender.username,
+    }
+
+
+@router.get("/crew/{crew_id}/messages")
+async def get_crew_messages(
+    crew_id: str,
+    page: int = 1,
+    page_size: int = 20,
+    caller_user_id: Optional[int] = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
+    """
+    Get recent messages for the crew (paginated, only if member).
+    """
+
+    @database_sync_to_async
+    def get_messages():
+        from uuid import UUID
+
+        try:
+            crew = Crew.objects.get(crewId=UUID(crew_id))
+            user = CustomUser.objects.get(id=caller_user_id)
+            if not CrewMember.objects.filter(crew=crew, user=user).exists():
+                return None, "You are not a member of this crew."
+            qs = CrewMessage.objects.filter(crew=crew).order_by("-created_at")
+            total = qs.count()
+            start = (page - 1) * page_size
+            end = start + page_size
+            messages = list(qs[start:end])
+            data = [
+                {
+                    "id": str(m.id),
+                    "content": m.content,
+                    "created_at": m.created_at,
+                    "sender": m.sender.username,
+                }
+                for m in messages
+            ]
+            return {
+                "messages": data,
+                "total": total,
+                "page": page,
+                "page_size": page_size,
+            }, None
+        except Exception as e:
+            return None, str(e)
+
+    result, error = await get_messages()
+    if not result:
+        raise HTTPException(status_code=400, detail=error or "Could not get messages.")
+    return result
+
+
+@router.post("/crew/{crew_id}/share-event")
+async def share_event_to_crew(
+    crew_id: str,
+    event_id: str = Form(...),
+    caller_user_id: Optional[int] = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
+    """
+    Share an event to the crew (only if member).
+    """
+
+    @database_sync_to_async
+    def share_event():
+        from uuid import UUID
+
+        try:
+            crew = Crew.objects.get(crewId=UUID(crew_id))
+            user = CustomUser.objects.get(id=caller_user_id)
+            if not CrewMember.objects.filter(crew=crew, user=user).exists():
+                return None, None, "You are not a member of this crew."
+            from eventManagementApp.models import Event
+
+            event = Event.objects.get(eventId=UUID(event_id))
+            shared = CrewSharedEvent.objects.create(crew=crew, sender=user, event=event)
+            member_ids = list(
+                crew.members.exclude(id=user.id).values_list("user_id", flat=True)
+            )
+            return shared, member_ids, None
+        except Exception as e:
+            return None, None, str(e)
+
+    shared, member_ids, error = await share_event()
+    if not shared:
+        raise HTTPException(status_code=400, detail=error or "Could not share event.")
+    # Broadcast via WebSocket
+    await crew_manager.broadcast(
+        crew_id,
+        {
+            "type": "crew_event_shared",
+            "id": str(shared.id),
+            "event_id": str(shared.event.eventId),
+            "shared_at": str(shared.shared_at),
+            "sender": shared.sender.username,
+        },
+        exclude_user_id=str(caller_user_id),
+    )
+    # Send notification to all members except sender
+    for member_user_id in member_ids:
+        await send_notification(
+            member_user_id,
+            f"{shared.sender.username} shared an event in crew {shared.crew.name}",
+            title=f"Event Shared to Crew",
+            navigate_to=f"crew_events/{crew_id}",
+            params={"crew_id": crew_id, "sender_username": shared.sender.username},
+        )
+    return {
+        "message": "Event shared",
+        "id": str(shared.id),
+        "event_id": str(shared.event.eventId),
+        "shared_at": shared.shared_at,
+        "sender": shared.sender.username,
+    }
+
+
+@router.get("/crew/{crew_id}/shared-events")
+async def get_crew_shared_events(
+    crew_id: str,
+    page: int = 1,
+    page_size: int = 20,
+    caller_user_id: Optional[int] = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
+    """
+    Get events shared to the crew (paginated, only if member).
+    """
+
+    @database_sync_to_async
+    def get_shared():
+        from uuid import UUID
+
+        try:
+            crew = Crew.objects.get(crewId=UUID(crew_id))
+            user = CustomUser.objects.get(id=caller_user_id)
+            if not CrewMember.objects.filter(crew=crew, user=user).exists():
+                return None, "You are not a member of this crew."
+            qs = CrewSharedEvent.objects.filter(crew=crew).order_by("-shared_at")
+            total = qs.count()
+            start = (page - 1) * page_size
+            end = start + page_size
+            shared = list(qs[start:end])
+            data = [
+                {
+                    "id": str(s.id),
+                    "event_id": str(s.event.eventId),
+                    "shared_at": s.shared_at,
+                    "sender": s.sender.username,
+                }
+                for s in shared
+            ]
+            return {
+                "shared_events": data,
+                "total": total,
+                "page": page,
+                "page_size": page_size,
+            }, None
+        except Exception as e:
+            return None, str(e)
+
+    result, error = await get_shared()
+    if not result:
+        raise HTTPException(
+            status_code=400, detail=error or "Could not get shared events."
+        )
+    return result
+
+
+@router.websocket("/ws/crew/{crew_id}")
+async def crew_chat_ws(websocket: WebSocket, crew_id: str, user_id: str):
+    await crew_manager.connect(crew_id, user_id, websocket)
+    try:
+        while True:
+            data = await websocket.receive_json()
+            # Optionally handle incoming messages from client if needed
+    except WebSocketDisconnect:
+        crew_manager.disconnect(crew_id, user_id)
