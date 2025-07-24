@@ -38,16 +38,32 @@ async def send_notification(
         def create_push_notification(
             user_uuid, message_text, title, navigate_to, params
         ):
-            user = CustomUser.objects.get(user_id=user_uuid)
-            return PushNotification.objects.create(  # type: ignore[attr-defined]
-                user=user,
-                message=message_text,
-                title=title,
-                navigate_to=navigate_to,
-                params=params,
-            )
+            try:
+                user = CustomUser.objects.get(user_id=user_uuid)
+                return PushNotification.objects.create(  # type: ignore[attr-defined]
+                    user=user,
+                    message=message_text,
+                    title=title,
+                    navigate_to=navigate_to,
+                    params=params,
+                )
+            except CustomUser.DoesNotExist:
+                logger.error(
+                    "Cannot create push notification - User with user_id %s does not exist",
+                    user_uuid,
+                )
+                return None
+            except Exception as e:
+                logger.error("Error creating push notification record: %s", e)
+                return None
 
-        await create_push_notification(user_id, message, title, navigate_to, params)
+        notification_record = await create_push_notification(
+            user_id, message, title, navigate_to, params
+        )
+
+        if notification_record is None:
+            logger.error("Failed to create notification record for user %s", user_id)
+            return False
 
         payload: dict[str, Any] = {
             "type": "notification",
@@ -104,17 +120,51 @@ async def send_notification(
         print(f"[NOTIFICATION] Payload: {payload}")
 
         user_id_str = str(user_id)
+        notification_sent = False
+
+        # Try websocket first
         if user_id_str in manager.active_connections:
-            logger.info("Sending via websocket to user: %s", user_id_str)
-            print(f"[NOTIFICATION] Sending via websocket to user: {user_id_str}")
-            await manager.send_personal_message(payload, user_id_str)
-        else:
+            try:
+                logger.info("Sending via websocket to user: %s", user_id_str)
+                print(f"[NOTIFICATION] Sending via websocket to user: {user_id_str}")
+                await manager.send_personal_message(payload, user_id_str)
+                notification_sent = True
+                logger.info(
+                    "Websocket notification sent successfully to user: %s", user_id_str
+                )
+            except Exception as ws_error:
+                logger.error(
+                    "Failed to send websocket notification to user %s: %s",
+                    user_id_str,
+                    ws_error,
+                )
+                # Continue to try push notification as fallback
+
+        # If websocket failed or user not connected, try push notification
+        if not notification_sent:
             logger.info("Sending via push notification to user: %s", user_id_str)
             print(
                 f"[NOTIFICATION] Sending via push notification to user: {user_id_str}"
             )
-            await send_push_notification(user_id, message, title, data=payload)
+
+            push_success = await send_push_notification(
+                user_id, message, title, data=payload
+            )
+            if push_success:
+                notification_sent = True
+                logger.info(
+                    "Push notification sent successfully to user: %s", user_id_str
+                )
+            else:
+                logger.warning("Push notification failed for user: %s", user_id_str)
+
+        if not notification_sent:
+            logger.warning("All notification methods failed for user: %s", user_id_str)
+            return False
+
+        return True
 
     except Exception as e:
         print(f"Error sending notification: {e}")
-        logger.error("Error sending notification: %s", e)
+        logger.error("Error sending notification to user %s: %s", user_id, e)
+        return False

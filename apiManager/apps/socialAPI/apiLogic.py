@@ -62,6 +62,9 @@ from apiManager.algorithms.suggested_friends import get_suggested_friends
 from apiManager.dependencies import get_current_user
 from authenticationApp.models import CustomUser
 from uuid import UUID
+import logging
+
+logger = logging.getLogger(__name__)
 
 from .serializers import (
     MyPassSerializer,
@@ -6057,25 +6060,25 @@ async def send_crew_message(
             )
             if not CrewMember.objects.filter(crew=crew, user=user).exists():
                 return None, None, "You are not a member of this crew."
-            
+
             # Validate that either content or event_id is provided
             if not content and not event_id:
                 return None, None, "Either content or event_id must be provided."
-            
+
             event = None
             if event_id:
                 try:
                     event = Event.objects.get(eventId=UUID(event_id))
                 except Event.DoesNotExist:
                     return None, None, f"Event with ID {event_id} not found."
-            
+
             msg = CrewMessage.objects.create(
-                crew=crew, 
-                sender=user, 
+                crew=crew,
+                sender=user,
                 content=content if content is not None else "",
-                event=event
+                event=event,
             )
-            
+
             # Get all member user_ids except sender
             member_ids = list(
                 crew.members.exclude(id=user.id).values_list("user_id", flat=True)
@@ -6101,7 +6104,7 @@ async def send_crew_message(
     msg, member_ids, sender_data, error = await send_message()
     if not msg:
         raise HTTPException(status_code=400, detail=error or "Could not send message.")
-    
+
     # Prepare WebSocket data based on message type
     ws_data = {
         "type": "crew_message",
@@ -6110,32 +6113,30 @@ async def send_crew_message(
         "created_at": str(msg.created_at),
         "sender": sender_data,
     }
-    
+
     # Add event data if present
     if msg.event:
         ws_data["event"] = {
             "event_id": str(msg.event.eventId),
             "title": msg.event.title,
             "header_image": (
-                msg.event.header_photo.url
-                if msg.event.header_photo
-                else None
+                msg.event.header_photo.url if msg.event.header_photo else None
             ),
         }
         ws_data["type"] = "crew_event_message"
-    
+
     # Broadcast via WebSocket
     await crew_manager.broadcast(
         crew_id,
         ws_data,
         exclude_user_id=str(caller_user_id),
     )
-    
+
     # Send notification to all members except sender
     sender_display_name = (
         msg.sender.first_name if msg.sender.first_name else msg.sender.username
     )
-    
+
     # Prepare notification based on message type
     if msg.event:
         notification_message = f"{sender_display_name} shared {msg.event.title}"
@@ -6155,7 +6156,9 @@ async def send_crew_message(
             "target_screen": f"crew_chat/{crew_id}",
         }
     else:
-        message_preview = msg.content[:50] + "..." if len(msg.content) > 50 else msg.content
+        message_preview = (
+            msg.content[:50] + "..." if len(msg.content) > 50 else msg.content
+        )
         notification_message = f"{sender_display_name}: {message_preview}"
         notification_title = f"New message in {msg.crew.name}"
         navigate_to = "crew_chat"
@@ -6178,7 +6181,7 @@ async def send_crew_message(
             navigate_to=navigate_to,
             params=params,
         )
-    
+
     # Prepare response
     response_data = {
         "message": "Message sent",
@@ -6187,18 +6190,16 @@ async def send_crew_message(
         "created_at": msg.created_at,
         "sender": sender_data,
     }
-    
+
     if msg.event:
         response_data["event"] = {
             "event_id": str(msg.event.eventId),
             "title": msg.event.title,
             "header_image": (
-                msg.event.header_photo.url
-                if msg.event.header_photo
-                else None
+                msg.event.header_photo.url if msg.event.header_photo else None
             ),
         }
-    
+
     return response_data
 
 
@@ -6252,19 +6253,17 @@ async def get_crew_messages(
                         ),
                     },
                 }
-                
+
                 # Add event data if present
                 if m.event:
                     message_data["event"] = {
                         "event_id": str(m.event.eventId),
                         "title": m.event.title,
                         "header_image": (
-                            m.event.header_photo.url
-                            if m.event.header_photo
-                            else None
+                            m.event.header_photo.url if m.event.header_photo else None
                         ),
                     }
-                
+
                 data.append(message_data)
             return {
                 "messages": data,
@@ -6424,3 +6423,102 @@ async def crew_chat_ws(websocket: WebSocket, crew_id: str, user_id: str):
             # Optionally handle incoming messages from client if needed
     except WebSocketDisconnect:
         crew_manager.disconnect(crew_id, user_id)
+
+
+@router.get("/crew/{crew_id}/invite-status/{target_username}")
+async def check_crew_invite_status(
+    request: Request,
+    crew_id: str,
+    target_username: str,
+    caller_user_id: Optional[int] = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
+    """
+    Check if a crew invite has already been sent to a specific user for a specific crew.
+    Returns the status of any existing invite or indicates no invite exists.
+    """
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    @database_sync_to_async
+    def check_invite_status():
+        try:
+            # Get the calling user
+            caller = CustomUser.objects.get(id=caller_user_id)
+
+            # Get the target user
+            target_user = CustomUser.objects.get(username=target_username)
+
+            # Get the crew
+            crew = Crew.objects.get(crewId=crew_id)
+
+            # Check if target user is already a member of the crew
+            is_member = CrewMember.objects.filter(crew=crew, user=target_user).exists()
+
+            if is_member:
+                return {
+                    "invite_exists": False,
+                    "is_member": True,
+                    "status": "already_member",
+                    "message": f"{target_username} is already a member of this crew",
+                }, None
+
+            # Check for existing crew invite
+            existing_invite = CrewRequest.objects.filter(
+                sender=caller, receiver=target_user, crew=crew
+            ).first()
+
+            if existing_invite:
+                return {
+                    "invite_exists": True,
+                    "is_member": False,
+                    "status": existing_invite.status,
+                    "invite_id": str(existing_invite.requestId),
+                    "created_at": existing_invite.created_at,
+                    "updated_at": existing_invite.updated_at,
+                    "message": f"Crew invite {existing_invite.status}",
+                }, None
+            else:
+                return {
+                    "invite_exists": False,
+                    "is_member": False,
+                    "status": "no_invite",
+                    "message": f"No crew invite sent to {target_username} for this crew",
+                }, None
+
+        except CustomUser.DoesNotExist:
+            if not CustomUser.objects.filter(id=caller_user_id).exists():
+                return None, "Caller user not found"
+            else:
+                return None, f"Target user '{target_username}' not found"
+        except Crew.DoesNotExist:
+            return None, f"Crew with ID '{crew_id}' not found"
+        except Exception as e:
+            logger.error(f"Error checking crew invite status: {e}")
+            return None, f"Error checking crew invite status: {str(e)}"
+
+    try:
+        result, error = await check_invite_status()
+
+        if error:
+            await notify_by_bot(
+                f"**[API: check_crew_invite_status]** \n\n Error: {error} \n\n crew_id={crew_id}, target_username={target_username}, caller_user_id={caller_user_id} \n\n Platform: {platform}",
+                platform or "Unknown",
+                "ERROR",
+                device_info,
+            )
+            raise HTTPException(status_code=404, detail=error)
+
+        return JSONResponse(status_code=200, content={"success": True, "data": result})
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        await notify_by_bot(
+            f"**[API: check_crew_invite_status]** \n\n Unexpected error: {str(e)} \n\n crew_id={crew_id}, target_username={target_username}, caller_user_id={caller_user_id} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        raise HTTPException(status_code=500, detail="Internal server error")
