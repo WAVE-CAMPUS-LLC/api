@@ -2227,6 +2227,9 @@ async def send_crew_invite_accepted_notification(request_id, accepter_user_id):
             "crew_id": invite_info["crew_id"],
             "crew_name": invite_info["crew_name"],
             "accepter_name": invite_info["accepter_name"],
+            "page": "crew_details",
+            "target_screen": f"crew_details/{invite_info['crew_id']}",
+            "notification_type": "crew_invite_accepted",
         }
 
         # Send notification to all crew members
@@ -2432,6 +2435,9 @@ async def send_crew_join_notification(crew_id, new_member_user_id):
             "crew_id": crew_info["crew_id"],
             "crew_name": crew_info["crew_name"],
             "new_member_name": crew_info["new_member_name"],
+            "page": "crew_details",
+            "target_screen": f"crew_details/{crew_info['crew_id']}",
+            "notification_type": "crew_member_joined",
         }
 
         # Send notification to all admins
@@ -6044,7 +6050,9 @@ async def send_crew_message(
 
         try:
             crew = Crew.objects.get(crewId=UUID(crew_id))
-            user = CustomUser.objects.get(id=caller_user_id)
+            user = CustomUser.objects.select_related("user_profile").get(
+                id=caller_user_id
+            )
             if not CrewMember.objects.filter(crew=crew, user=user).exists():
                 return None, None, "You are not a member of this crew."
             msg = CrewMessage.objects.create(crew=crew, sender=user, content=content)
@@ -6052,11 +6060,25 @@ async def send_crew_message(
             member_ids = list(
                 crew.members.exclude(id=user.id).values_list("user_id", flat=True)
             )
-            return msg, member_ids, None
+            # Get sender profile info
+            sender_profile = (
+                user.user_profile if hasattr(user, "user_profile") else None
+            )
+            sender_data = {
+                "username": user.username,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "profile_photo": (
+                    sender_profile.profile_photo.url
+                    if sender_profile and sender_profile.profile_photo
+                    else None
+                ),
+            }
+            return msg, member_ids, sender_data, None
         except Exception as e:
-            return None, None, str(e)
+            return None, None, None, str(e)
 
-    msg, member_ids, error = await send_message()
+    msg, member_ids, sender_data, error = await send_message()
     if not msg:
         raise HTTPException(status_code=400, detail=error or "Could not send message.")
     # Broadcast via WebSocket
@@ -6067,25 +6089,39 @@ async def send_crew_message(
             "id": str(msg.id),
             "content": msg.content,
             "created_at": str(msg.created_at),
-            "sender": msg.sender.username,
+            "sender": sender_data,
         },
         exclude_user_id=str(caller_user_id),
     )
     # Send notification to all members except sender
+    sender_display_name = (
+        msg.sender.first_name if msg.sender.first_name else msg.sender.username
+    )
+    message_preview = msg.content[:50] + "..." if len(msg.content) > 50 else msg.content
+
     for member_user_id in member_ids:
         await send_notification(
             member_user_id,
-            f"New message in crew {msg.crew.name}: {msg.content[:50]}",
-            title=f"New Crew Message",
-            navigate_to=f"crew_chat/{crew_id}",
-            params={"crew_id": crew_id, "sender_username": msg.sender.username},
+            f"{sender_display_name}: {message_preview}",
+            title=f"New message in {msg.crew.name}",
+            navigate_to="crew_chat",
+            params={
+                "crew_id": crew_id,
+                "crew_name": msg.crew.name,
+                "sender_username": msg.sender.username,
+                "sender_name": sender_display_name,
+                "message_preview": message_preview,
+                "message_id": str(msg.id),
+                "page": "crew_chat",
+                "target_screen": f"crew_chat/{crew_id}",
+            },
         )
     return {
         "message": "Message sent",
         "id": str(msg.id),
         "content": msg.content,
         "created_at": msg.created_at,
-        "sender": msg.sender.username,
+        "sender": sender_data,
     }
 
 
@@ -6110,20 +6146,37 @@ async def get_crew_messages(
             user = CustomUser.objects.get(id=caller_user_id)
             if not CrewMember.objects.filter(crew=crew, user=user).exists():
                 return None, "You are not a member of this crew."
-            qs = CrewMessage.objects.filter(crew=crew).order_by("-created_at")
+            qs = (
+                CrewMessage.objects.filter(crew=crew)
+                .select_related("sender", "sender__user_profile")
+                .order_by("-created_at")
+            )
             total = qs.count()
             start = (page - 1) * page_size
             end = start + page_size
             messages = list(qs[start:end])
-            data = [
-                {
-                    "id": str(m.id),
-                    "content": m.content,
-                    "created_at": m.created_at,
-                    "sender": m.sender.username,
-                }
-                for m in messages
-            ]
+            data = []
+            for m in messages:
+                sender_profile = (
+                    m.sender.user_profile if hasattr(m.sender, "user_profile") else None
+                )
+                data.append(
+                    {
+                        "id": str(m.id),
+                        "content": m.content,
+                        "created_at": m.created_at,
+                        "sender": {
+                            "username": m.sender.username,
+                            "first_name": m.sender.first_name,
+                            "last_name": m.sender.last_name,
+                            "profile_photo": (
+                                sender_profile.profile_photo.url
+                                if sender_profile and sender_profile.profile_photo
+                                else None
+                            ),
+                        },
+                    }
+                )
             return {
                 "messages": data,
                 "total": total,
@@ -6186,13 +6239,27 @@ async def share_event_to_crew(
         exclude_user_id=str(caller_user_id),
     )
     # Send notification to all members except sender
+    sender_display_name = (
+        shared.sender.first_name if shared.sender.first_name else shared.sender.username
+    )
+
     for member_user_id in member_ids:
         await send_notification(
             member_user_id,
-            f"{shared.sender.username} shared an event in crew {shared.crew.name}",
-            title=f"Event Shared to Crew",
-            navigate_to=f"crew_events/{crew_id}",
-            params={"crew_id": crew_id, "sender_username": shared.sender.username},
+            f"{sender_display_name} shared {shared.event.title} in {shared.crew.name}",
+            title=f"Event shared in {shared.crew.name}",
+            navigate_to="crew_events",
+            params={
+                "crew_id": crew_id,
+                "crew_name": shared.crew.name,
+                "sender_username": shared.sender.username,
+                "sender_name": sender_display_name,
+                "event_id": str(shared.event.eventId),
+                "event_title": shared.event.title,
+                "shared_event_id": str(shared.id),
+                "page": "crew_events",
+                "target_screen": f"crew_events/{crew_id}",
+            },
         )
     return {
         "message": "Event shared",
