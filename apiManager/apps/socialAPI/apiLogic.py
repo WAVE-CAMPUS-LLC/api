@@ -44,7 +44,13 @@ from socialApp.models import (
     EventMessage,
     MessageReaction,
 )
-from socialApp.forms import SurfPostForm, createCrewForm
+from socialApp.forms import (
+    SurfPostForm,
+    createCrewForm,
+    EditCrewImageForm,
+    EditCrewNameForm,
+    EditCrewBioForm,
+)
 from eventTicketsApp.views import generateTicket
 from apiManager.algorithms.suggested_friends import get_suggested_friends
 
@@ -3349,6 +3355,179 @@ async def get_create_crew_form_fields(request: Request, platform: Optional[str] 
     FormClass = createCrewForm
     fields_info = get_form_fields(FormClass)
     return JSONResponse(content=fields_info, status_code=status.HTTP_200_OK)
+
+
+@router.get("/edit-crew-image/form-fields")
+async def get_edit_crew_image_form_fields(
+    request: Request, platform: Optional[str] = None
+):
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    is_mobile = request.headers.get("X-Platform") == "mobile"
+
+    FormClass = EditCrewImageForm
+    fields_info = get_form_fields(FormClass)
+    return JSONResponse(content=fields_info, status_code=status.HTTP_200_OK)
+
+
+@router.get("/edit-crew-name/form-fields")
+async def get_edit_crew_name_form_fields(
+    request: Request, platform: Optional[str] = None
+):
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    is_mobile = request.headers.get("X-Platform") == "mobile"
+
+    FormClass = EditCrewNameForm
+    fields_info = get_form_fields(FormClass)
+    return JSONResponse(content=fields_info, status_code=status.HTTP_200_OK)
+
+
+@router.get("/edit-crew-bio/form-fields")
+async def get_edit_crew_bio_form_fields(
+    request: Request, platform: Optional[str] = None
+):
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    is_mobile = request.headers.get("X-Platform") == "mobile"
+
+    FormClass = EditCrewBioForm
+    fields_info = get_form_fields(FormClass)
+    return JSONResponse(content=fields_info, status_code=status.HTTP_200_OK)
+
+
+@router.post("/crew/{crew_id}/edit-image")
+async def edit_crew_image(
+    request: Request,
+    crew_id: str,
+    crew_image: UploadFile = File(...),
+    caller_user_id: Optional[int] = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
+    """
+    Edit crew image.
+    """
+
+    @database_sync_to_async
+    def edit_crew_image_sync():
+        from uuid import UUID
+
+        try:
+            crew = Crew.objects.get(crewId=UUID(crew_id))
+            user = CustomUser.objects.get(id=caller_user_id)
+
+            # Check if user is the crew creator
+            if crew.created_by != user:
+                return False, "Only the crew creator can edit the crew image."
+
+            # Save the new image
+            crew.crew_image.save(crew_image.filename, crew_image.file, save=True)
+            return True, None
+        except Crew.DoesNotExist:
+            return False, "Crew not found."
+        except CustomUser.DoesNotExist:
+            return False, "User not found."
+        except Exception as e:
+            return False, f"Error updating crew image: {str(e)}"
+
+    success, error_message = await edit_crew_image_sync()
+
+    if not success:
+        raise HTTPException(status_code=400, detail=error_message)
+
+    return {"message": "Crew image updated successfully"}
+
+
+@router.post("/crew/{crew_id}/edit-name")
+async def edit_crew_name(
+    request: Request,
+    crew_id: str,
+    name: str = Form(...),
+    caller_user_id: Optional[int] = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
+    """
+    Edit crew name.
+    """
+
+    @database_sync_to_async
+    def edit_crew_name_sync():
+        from uuid import UUID
+
+        try:
+            crew = Crew.objects.get(crewId=UUID(crew_id))
+            user = CustomUser.objects.get(id=caller_user_id)
+
+            # Check if user is the crew creator
+            if crew.created_by != user:
+                return False, "Only the crew creator can edit the crew name."
+
+            # Validate and update the name
+            crew.name = name.strip()
+            crew.save()
+            return True, None
+        except Crew.DoesNotExist:
+            return False, "Crew not found."
+        except CustomUser.DoesNotExist:
+            return False, "User not found."
+        except Exception as e:
+            return False, f"Error updating crew name: {str(e)}"
+
+    success, error_message = await edit_crew_name_sync()
+
+    if not success:
+        raise HTTPException(status_code=400, detail=error_message)
+
+    return {"message": "Crew name updated successfully"}
+
+
+@router.post("/crew/{crew_id}/edit-bio")
+async def edit_crew_bio(
+    request: Request,
+    crew_id: str,
+    bio: str = Form(...),
+    caller_user_id: Optional[int] = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
+    """
+    Edit crew bio.
+    """
+
+    @database_sync_to_async
+    def edit_crew_bio_sync():
+        from uuid import UUID
+
+        try:
+            crew = Crew.objects.get(crewId=UUID(crew_id))
+            user = CustomUser.objects.get(id=caller_user_id)
+
+            # Check if user is the crew creator
+            if crew.created_by != user:
+                return False, "Only the crew creator can edit the crew bio."
+
+            # Validate and update the bio
+            crew.bio = bio.strip()
+            crew.save()
+            return True, None
+        except Crew.DoesNotExist:
+            return False, "Crew not found."
+        except CustomUser.DoesNotExist:
+            return False, "User not found."
+        except Exception as e:
+            return False, f"Error updating crew bio: {str(e)}"
+
+    success, error_message = await edit_crew_bio_sync()
+
+    if not success:
+        raise HTTPException(status_code=400, detail=error_message)
+
+    return {"message": "Crew bio updated successfully"}
 
 
 @router.post("/crew/create")

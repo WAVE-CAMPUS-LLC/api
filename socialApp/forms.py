@@ -30,6 +30,73 @@ class createCrewForm(forms.ModelForm):
         }
 
 
+class EditCrewImageForm(forms.Form):
+    crew_image = forms.ImageField(
+        required=True,
+        widget=forms.ClearableFileInput(
+            attrs={
+                "class": "form-control-file",
+                "accept": "image/*",
+            }
+        ),
+        help_text="Upload a new crew image",
+    )
+
+
+class EditCrewNameForm(forms.Form):
+    name = forms.CharField(
+        max_length=100,
+        required=True,
+        widget=forms.TextInput(
+            attrs={
+                "class": "form-control",
+                "placeholder": "Enter crew name",
+                "maxlength": "100",
+                "required": True,
+                "autocomplete": "off",
+            }
+        ),
+        help_text="Enter the new crew name (max 100 characters)",
+    )
+
+    def clean_name(self):
+        name = self.cleaned_data.get("name")
+        if name:
+            name = name.strip()
+            if not name:
+                raise forms.ValidationError("Crew name cannot be empty")
+            self.cleaned_data["name"] = name
+        return name
+
+
+class EditCrewBioForm(forms.Form):
+    bio = forms.CharField(
+        max_length=500,
+        required=True,
+        widget=forms.Textarea(
+            attrs={
+                "class": "form-control",
+                "rows": 5,
+                "cols": 40,
+                "placeholder": "Enter crew bio",
+                "maxlength": "500",
+                "required": True,
+                "autocomplete": "off",
+            }
+        ),
+        help_text="Enter the new crew bio (max 500 characters)",
+    )
+
+    def clean_bio(self):
+        bio = self.cleaned_data.get("bio")
+        if bio:
+            bio = bio.strip()
+            if not bio:
+                raise forms.ValidationError("Crew bio cannot be empty")
+            self.cleaned_data["bio"] = bio
+        return bio
+
+
 class SurfPostForm(forms.ModelForm):
     class Meta:
         model = SurfPost
