@@ -6036,12 +6036,14 @@ async def delete_crew(
 @router.post("/crew/{crew_id}/message")
 async def send_crew_message(
     crew_id: str,
-    content: str = Form(...),
+    content: Optional[str] = Form(None),
+    event_id: Optional[str] = Form(None),
     caller_user_id: Optional[int] = Depends(get_current_user),
     platform: Optional[str] = None,
 ):
     """
-    Send a text message to the crew chat (only if member).
+    Send a message to the crew chat (only if member).
+    Can be a text message, event share, or both.
     """
 
     @database_sync_to_async
@@ -6055,7 +6057,25 @@ async def send_crew_message(
             )
             if not CrewMember.objects.filter(crew=crew, user=user).exists():
                 return None, None, "You are not a member of this crew."
-            msg = CrewMessage.objects.create(crew=crew, sender=user, content=content)
+            
+            # Validate that either content or event_id is provided
+            if not content and not event_id:
+                return None, None, "Either content or event_id must be provided."
+            
+            event = None
+            if event_id:
+                try:
+                    event = Event.objects.get(eventId=UUID(event_id))
+                except Event.DoesNotExist:
+                    return None, None, f"Event with ID {event_id} not found."
+            
+            msg = CrewMessage.objects.create(
+                crew=crew, 
+                sender=user, 
+                content=content if content is not None else "",
+                event=event
+            )
+            
             # Get all member user_ids except sender
             member_ids = list(
                 crew.members.exclude(id=user.id).values_list("user_id", flat=True)
@@ -6081,48 +6101,105 @@ async def send_crew_message(
     msg, member_ids, sender_data, error = await send_message()
     if not msg:
         raise HTTPException(status_code=400, detail=error or "Could not send message.")
+    
+    # Prepare WebSocket data based on message type
+    ws_data = {
+        "type": "crew_message",
+        "id": str(msg.id),
+        "content": msg.content,
+        "created_at": str(msg.created_at),
+        "sender": sender_data,
+    }
+    
+    # Add event data if present
+    if msg.event:
+        ws_data["event"] = {
+            "event_id": str(msg.event.eventId),
+            "title": msg.event.title,
+            "header_image": (
+                msg.event.header_photo.url
+                if msg.event.header_photo
+                else None
+            ),
+        }
+        ws_data["type"] = "crew_event_message"
+    
     # Broadcast via WebSocket
     await crew_manager.broadcast(
         crew_id,
-        {
-            "type": "crew_message",
-            "id": str(msg.id),
-            "content": msg.content,
-            "created_at": str(msg.created_at),
-            "sender": sender_data,
-        },
+        ws_data,
         exclude_user_id=str(caller_user_id),
     )
+    
     # Send notification to all members except sender
     sender_display_name = (
         msg.sender.first_name if msg.sender.first_name else msg.sender.username
     )
-    message_preview = msg.content[:50] + "..." if len(msg.content) > 50 else msg.content
+    
+    # Prepare notification based on message type
+    if msg.event:
+        notification_message = f"{sender_display_name} shared {msg.event.title}"
+        if msg.content:
+            notification_message += f": {msg.content[:30]}"
+        notification_title = f"Event shared in {msg.crew.name}"
+        navigate_to = "crew_chat"
+        params = {
+            "crew_id": crew_id,
+            "crew_name": msg.crew.name,
+            "sender_username": msg.sender.username,
+            "sender_name": sender_display_name,
+            "event_id": str(msg.event.eventId),
+            "event_title": msg.event.title,
+            "message_id": str(msg.id),
+            "page": "crew_chat",
+            "target_screen": f"crew_chat/{crew_id}",
+        }
+    else:
+        message_preview = msg.content[:50] + "..." if len(msg.content) > 50 else msg.content
+        notification_message = f"{sender_display_name}: {message_preview}"
+        notification_title = f"New message in {msg.crew.name}"
+        navigate_to = "crew_chat"
+        params = {
+            "crew_id": crew_id,
+            "crew_name": msg.crew.name,
+            "sender_username": msg.sender.username,
+            "sender_name": sender_display_name,
+            "message_preview": message_preview,
+            "message_id": str(msg.id),
+            "page": "crew_chat",
+            "target_screen": f"crew_chat/{crew_id}",
+        }
 
     for member_user_id in member_ids:
         await send_notification(
             member_user_id,
-            f"{sender_display_name}: {message_preview}",
-            title=f"New message in {msg.crew.name}",
-            navigate_to="crew_chat",
-            params={
-                "crew_id": crew_id,
-                "crew_name": msg.crew.name,
-                "sender_username": msg.sender.username,
-                "sender_name": sender_display_name,
-                "message_preview": message_preview,
-                "message_id": str(msg.id),
-                "page": "crew_chat",
-                "target_screen": f"crew_chat/{crew_id}",
-            },
+            notification_message,
+            title=notification_title,
+            navigate_to=navigate_to,
+            params=params,
         )
-    return {
+    
+    # Prepare response
+    response_data = {
         "message": "Message sent",
         "id": str(msg.id),
         "content": msg.content,
         "created_at": msg.created_at,
         "sender": sender_data,
     }
+    
+    if msg.event:
+        response_data["event"] = {
+            "event_id": str(msg.event.eventId),
+            "title": msg.event.title,
+            "header_image": (
+                msg.event.header_photo.url
+                if msg.event.header_photo
+                else None
+            ),
+        }
+    
+    return response_data
 
 
 @router.get("/crew/{crew_id}/messages")
@@ -6148,7 +6225,7 @@ async def get_crew_messages(
                 return None, "You are not a member of this crew."
             qs = (
                 CrewMessage.objects.filter(crew=crew)
-                .select_related("sender", "sender__user_profile")
+                .select_related("sender", "sender__user_profile", "event")
                 .order_by("-created_at")
             )
             total = qs.count()
@@ -6160,23 +6237,35 @@ async def get_crew_messages(
                 sender_profile = (
                     m.sender.user_profile if hasattr(m.sender, "user_profile") else None
                 )
-                data.append(
-                    {
-                        "id": str(m.id),
-                        "content": m.content,
-                        "created_at": m.created_at,
-                        "sender": {
-                            "username": m.sender.username,
-                            "first_name": m.sender.first_name,
-                            "last_name": m.sender.last_name,
-                            "profile_photo": (
-                                sender_profile.profile_photo.url
-                                if sender_profile and sender_profile.profile_photo
-                                else None
-                            ),
-                        },
+                message_data = {
+                    "id": str(m.id),
+                    "content": m.content,
+                    "created_at": m.created_at,
+                    "sender": {
+                        "username": m.sender.username,
+                        "first_name": m.sender.first_name,
+                        "last_name": m.sender.last_name,
+                        "profile_photo": (
+                            sender_profile.profile_photo.url
+                            if sender_profile and sender_profile.profile_photo
+                            else None
+                        ),
+                    },
+                }
+                
+                # Add event data if present
+                if m.event:
+                    message_data["event"] = {
+                        "event_id": str(m.event.eventId),
+                        "title": m.event.title,
+                        "header_image": (
+                            m.event.header_photo.url
+                            if m.event.header_photo
+                            else None
+                        ),
                     }
-                )
+                
+                data.append(message_data)
             return {
                 "messages": data,
                 "total": total,
@@ -6200,7 +6289,9 @@ async def share_event_to_crew(
     platform: Optional[str] = None,
 ):
     """
-    Share an event to the crew (only if member).
+    DEPRECATED: Share an event to the crew (only if member).
+    Use /crew/{crew_id}/message with event_id parameter instead.
+    This endpoint will be removed in a future version.
     """
 
     @database_sync_to_async
@@ -6279,7 +6370,9 @@ async def get_crew_shared_events(
     platform: Optional[str] = None,
 ):
     """
-    Get events shared to the crew (paginated, only if member).
+    DEPRECATED: Get events shared to the crew (paginated, only if member).
+    Use /crew/{crew_id}/messages to get all messages including shared events.
+    This endpoint will be removed in a future version.
     """
 
     @database_sync_to_async

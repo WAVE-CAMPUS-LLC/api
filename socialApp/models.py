@@ -6,6 +6,7 @@ from django.utils.translation import gettext as _
 from django.contrib.auth import get_user_model
 from django.contrib.postgres.indexes import GinIndex, OpClass
 from django.conf import settings
+from django.core.exceptions import ValidationError
 
 
 class FriendRequest(models.Model):
@@ -112,7 +113,7 @@ class Crew(models.Model):
         ]
 
     def __str__(self):
-        return self.name
+        return str(self.name)
 
 
 class CrewMember(models.Model):
@@ -133,7 +134,9 @@ class CrewMember(models.Model):
         app_label = "socialApp"
 
     def __str__(self):
-        return f"{self.user.username} in {self.crew.name}"
+        username = getattr(self.user, "username", "Unknown") if self.user else "Unknown"
+        crew_name = getattr(self.crew, "name", "Unknown") if self.crew else "Unknown"
+        return f"{username} in {crew_name}"
 
     def make_admin(self):
         self.is_admin = True
@@ -235,7 +238,15 @@ class GoWithRequest(models.Model):
         app_label = "socialApp"
 
     def __str__(self):
-        return f"{self.sender.username} -> {self.receiver.username}"
+        sender_username = (
+            getattr(self.sender, "username", "Unknown") if self.sender else "Unknown"
+        )
+        receiver_username = (
+            getattr(self.receiver, "username", "Unknown")
+            if self.receiver
+            else "Unknown"
+        )
+        return f"{sender_username} -> {receiver_username}"
 
     def accept_go_with(self):
         self.status = "accepted"
@@ -284,7 +295,8 @@ class SocialActivity(models.Model):
         app_label = "socialApp"
 
     def __str__(self):
-        return f"{self.user.username} - {self.activity_type} at {self.created_at}"
+        username = getattr(self.user, "username", "Unknown") if self.user else "Unknown"
+        return f"{username} - {self.activity_type} at {self.created_at}"
 
 
 class SurfPost(models.Model):
@@ -345,7 +357,13 @@ class TideUpTideDown(models.Model):
         app_label = "socialApp"
 
     def __str__(self):
-        return f"{self.user.username} -> {self.post.event.name} ({self.value})"
+        username = getattr(self.user, "username", "Unknown") if self.user else "Unknown"
+        event_name = (
+            getattr(self.post.event, "name", "Unknown")
+            if self.post and self.post.event
+            else "Unknown"
+        )
+        return f"{username} -> {event_name} ({self.value})"
 
 
 class FixedMessage(models.Model):
@@ -356,7 +374,7 @@ class FixedMessage(models.Model):
         default_permissions = ()
 
     def __str__(self):
-        return self.text
+        return str(self.text)
 
 
 class EventMessage(models.Model):
@@ -452,7 +470,7 @@ class MessageReaction(models.Model):
         )
         event_name = (
             getattr(self.message.event, "name", "?")
-            if self.message and self.message.event
+            if self.message and hasattr(self.message, "event") and self.message.event
             else "?"
         )
         return f"{user_name} -> {event_name} ({self.emoji})"
@@ -464,15 +482,47 @@ class CrewMessage(models.Model):
     sender = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="crew_messages"
     )
-    content = models.TextField()
+    content = models.TextField(
+        blank=True, null=True
+    )  # Made optional for event-only messages
+    event = models.ForeignKey(
+        "eventManagementApp.Event",
+        on_delete=models.CASCADE,
+        related_name="crew_messages",  # Changed from shared_with_crews to avoid conflict
+        null=True,
+        blank=True,
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ["created_at"]
         app_label = "socialApp"
 
+    def clean(self):
+        """Ensure that either content or event is provided."""
+        if not self.content and not self.event:
+            raise ValidationError("Either content or event must be provided.")
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
+
     def __str__(self):
-        return f"{self.sender.username} in {self.crew.name}: {self.content[:30]}"
+        sender_username = (
+            getattr(self.sender, "username", "Unknown") if self.sender else "Unknown"
+        )
+        crew_name = getattr(self.crew, "name", "Unknown") if self.crew else "Unknown"
+
+        if self.event:
+            event_title = (
+                getattr(self.event, "title", "Unknown Event")
+                if self.event
+                else "Unknown Event"
+            )
+            return f"{sender_username} shared {event_title} in {crew_name}"
+
+        content_preview = self.content[:50] if self.content else "[No content]"
+        return f"{sender_username} in {crew_name}: {content_preview}"
 
 
 class CrewSharedEvent(models.Model):
@@ -488,7 +538,7 @@ class CrewSharedEvent(models.Model):
     event = models.ForeignKey(
         "eventManagementApp.Event",
         on_delete=models.CASCADE,
-        related_name="shared_with_crews",
+        related_name="shared_with_crews",  # Keep this one as is
     )
     shared_at = models.DateTimeField(auto_now_add=True)
 
@@ -497,4 +547,13 @@ class CrewSharedEvent(models.Model):
         app_label = "socialApp"
 
     def __str__(self):
-        return f"{self.sender.username} shared {self.event.title} to {self.crew.name}"
+        sender_username = (
+            getattr(self.sender, "username", "Unknown") if self.sender else "Unknown"
+        )
+        event_title = (
+            getattr(self.event, "title", "Unknown Event")
+            if self.event
+            else "Unknown Event"
+        )
+        crew_name = getattr(self.crew, "name", "Unknown") if self.crew else "Unknown"
+        return f"{sender_username} shared {event_title} to {crew_name}"
