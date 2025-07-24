@@ -2041,6 +2041,11 @@ async def get_sent_crew_invites(
                         "crew": {
                             "crew_id": str(invite.crew.crewId),
                             "name": invite.crew.name,
+                            "crew_image": (
+                                invite.crew.crew_image.url
+                                if invite.crew.crew_image
+                                else None
+                            ),
                         },
                         "receiver": {
                             "user_id": str(invite.receiver.user_id),
@@ -2132,6 +2137,11 @@ async def get_received_crew_invites(
                         "crew": {
                             "crew_id": str(invite.crew.crewId),
                             "name": invite.crew.name,
+                            "crew_image": (
+                                invite.crew.crew_image.url
+                                if invite.crew.crew_image
+                                else None
+                            ),
                         },
                         "sender": {
                             "user_id": str(invite.sender.user_id),
@@ -2748,7 +2758,7 @@ async def cancel_crew_invite(
 
                 return None, "No pending crew invite found to cancel.", None
 
-            # Store invite info before updating
+            # Store invite info before deleting
             invite_info = {
                 "request_id": str(crew_invite.requestId),
                 "crew_id": str(crew_invite.crew.crewId),
@@ -2757,13 +2767,12 @@ async def cancel_crew_invite(
                 "canceled_at": timezone.now(),
             }
 
-            # Update the invite status to canceled
-            crew_invite.status = "canceled"
-            crew_invite.save()
+            # Delete the invite from database
+            crew_invite.delete()
 
             return (
                 {
-                    "status": crew_invite.status,
+                    "request_id": invite_info["request_id"],
                     "canceled_at": invite_info["canceled_at"],
                     "crew": {
                         "crew_id": invite_info["crew_id"],
@@ -2771,7 +2780,7 @@ async def cancel_crew_invite(
                     },
                     "receiver": {"username": invite_info["receiver_username"]},
                 },
-                "Crew invite canceled successfully.",
+                "Crew invite canceled and removed successfully.",
                 None,
             )
 
