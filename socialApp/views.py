@@ -97,9 +97,7 @@ def socialHomeView(request):
             if request_id:
                 try:
                     friend_request = FriendRequest.objects.get(
-                        requestId=request_id,
-                        sender=request.user,
-                        status="pending"
+                        requestId=request_id, sender=request.user, status="pending"
                     )
                     friend_request.status = "canceled"
                     friend_request.save()
@@ -131,7 +129,7 @@ def socialHomeView(request):
                 },
             )
             return redirect("social:home")
-        
+
         elif action == "acceptGoWithRequest":
             go_with_request_id = request.POST.get("go_with_request_id")
             go_with_request = GoWithRequest.objects.get(requestId=go_with_request_id)
@@ -261,7 +259,7 @@ def socialHomeView(request):
             "isActiveUser": isActiveUser,
             "my_shared_events": my_shared_events,
             "shared_with_me": shared_with_me,
-            "profileLink": profileLink,  
+            "profileLink": profileLink,
         },
     )
 
@@ -467,50 +465,54 @@ def publicProfileView(request, username):
 def send_friend_request(sender, receiver_username):
     try:
         receiver = get_object_or_404(UserProfile, user__username=receiver_username)
-        
+
         if sender.user_profile.is_friends_with(receiver.user):
             # This is the case where the sender and receiver are already friends
             return False, "You are already friends with this user.", None
-        
+
         # First check for any active (pending/accepted) requests
         active_request = FriendRequest.objects.filter(
-            Q(sender=sender, receiver=receiver.user) | 
-            Q(sender=receiver.user, receiver=sender),
-            status__in=['pending', 'accepted']
+            Q(sender=sender, receiver=receiver.user)
+            | Q(sender=receiver.user, receiver=sender),
+            status__in=["pending", "accepted"],
         ).first()
-        
+
         if active_request:
-            if active_request.status == 'pending':
+            if active_request.status == "pending":
                 if active_request.sender == sender:
                     # This is the case where the sender has already sent a request to the receiver
-                    return False, "You have already sent a friend request to this user.", active_request
+                    return (
+                        False,
+                        "You have already sent a friend request to this user.",
+                        active_request,
+                    )
                 else:
                     # This is the case where the receiver has already sent a request
-                    return False, f"{receiver.user.username} has already sent you a friend request. Check your notifications to respond.", active_request
+                    return (
+                        False,
+                        f"{receiver.user.username} has already sent you a friend request. Check your notifications to respond.",
+                        active_request,
+                    )
             else:  # status is 'accepted'
                 # This is the case where the sender and receiver are already friends
                 return False, "You are already friends with this user.", active_request
-        
+
         # If no active request exists, check for canceled/declined requests to reuse
         old_request = FriendRequest.objects.filter(
-            sender=sender,
-            receiver=receiver.user,
-            status__in=['canceled', 'declined']
+            sender=sender, receiver=receiver.user, status__in=["canceled", "declined"]
         ).first()
-        
+
         if old_request:
             # Reuse the old request
-            old_request.status = 'pending'
+            old_request.status = "pending"
             old_request.save()
             return True, "Friend request sent successfully.", old_request
-        
+
         # Create new friend request if none exists
         friend_request = FriendRequest.objects.create(
-            sender=sender,
-            receiver=receiver.user,
-            status="pending"
+            sender=sender, receiver=receiver.user, status="pending"
         )
-        
+
         return True, "Friend request sent successfully.", friend_request
     except Exception as e:
         print(f"Error in send_friend_request: {str(e)}")
@@ -523,42 +525,53 @@ def send_friend_request(sender, receiver_username):
 @verified
 def send_friend_request_view(request):
     try:
-        if request.method != 'POST':
-            return JsonResponse({'status': 'error', 'message': 'Only POST method is allowed'}, status=405)
-        
-        receiver_username = request.POST.get('receiver_username')
+        if request.method != "POST":
+            return JsonResponse(
+                {"status": "error", "message": "Only POST method is allowed"},
+                status=405,
+            )
+
+        receiver_username = request.POST.get("receiver_username")
         if not receiver_username:
-            return JsonResponse({'status': 'error', 'message': 'Receiver username is required'}, status=400)
-        
+            return JsonResponse(
+                {"status": "error", "message": "Receiver username is required"},
+                status=400,
+            )
+
         # Check if trying to send request to self
         if receiver_username == request.user.username:
-            return JsonResponse({'status': 'error', 'message': 'You cannot send a friend request to yourself'}, status=400)
-        
+            return JsonResponse(
+                {
+                    "status": "error",
+                    "message": "You cannot send a friend request to yourself",
+                },
+                status=400,
+            )
+
         try:
-            success, message, friend_request = send_friend_request(request.user, receiver_username)
-            
-            return JsonResponse({
-                'status': 'success' if success else 'error',
-                'message': message
-            })
+            success, message, friend_request = send_friend_request(
+                request.user, receiver_username
+            )
+
+            return JsonResponse(
+                {"status": "success" if success else "error", "message": message}
+            )
         except UserProfile.DoesNotExist:
-            return JsonResponse({
-                'status': 'error',
-                'message': 'User not found'
-            }, status=404)
+            return JsonResponse(
+                {"status": "error", "message": "User not found"}, status=404
+            )
         except FriendRequest.DoesNotExist:
-            return JsonResponse({
-                'status': 'error',
-                'message': 'Friend request not found'
-            }, status=404)
-        
+            return JsonResponse(
+                {"status": "error", "message": "Friend request not found"}, status=404
+            )
+
     except Exception as e:
         error_message = str(e)
         print(f"Error in send_friend_request_view: {error_message}")
-        return JsonResponse({
-            'status': 'error',
-            'message': f'An error occurred: {error_message}'
-        }, status=500)
+        return JsonResponse(
+            {"status": "error", "message": f"An error occurred: {error_message}"},
+            status=500,
+        )
 
 
 @login_required
@@ -567,25 +580,31 @@ def send_friend_request_view(request):
 @verified
 def cancel_friend_request(request):
     try:
-        if request.method != 'POST':
-            return JsonResponse({'status': 'error', 'message': 'Only POST method is allowed'}, status=405)
-        
-        receiver_username = request.POST.get('receiver_username')
+        if request.method != "POST":
+            return JsonResponse(
+                {"status": "error", "message": "Only POST method is allowed"},
+                status=405,
+            )
+
+        receiver_username = request.POST.get("receiver_username")
         if not receiver_username:
-            return JsonResponse({'status': 'error', 'message': 'Receiver username is required'}, status=400)
-        
+            return JsonResponse(
+                {"status": "error", "message": "Receiver username is required"},
+                status=400,
+            )
+
         # Find the pending friend request
         try:
             friend_request = FriendRequest.objects.get(
                 sender=request.user,
                 receiver__username=receiver_username,
-                status='pending'
+                status="pending",
             )
-            
+
             # Update the status to canceled
-            friend_request.status = 'canceled'
+            friend_request.status = "canceled"
             friend_request.save()
-            
+
             # Send notification through WebSocket if needed
             try:
                 channel_layer = get_channel_layer()
@@ -596,31 +615,29 @@ def cancel_friend_request(request):
                         "data": {
                             "message": "Friend request has been canceled.",
                             "action": "cancel",
-                            "requestId": str(friend_request.requestId)
+                            "requestId": str(friend_request.requestId),
                         },
                     },
                 )
             except Exception as e:
                 print(f"WebSocket notification failed: {str(e)}")
                 # Continue even if WebSocket fails
-            
-            return JsonResponse({
-                'status': 'success',
-                'message': 'Friend request canceled successfully'
-            })
-            
+
+            return JsonResponse(
+                {"status": "success", "message": "Friend request canceled successfully"}
+            )
+
         except FriendRequest.DoesNotExist:
-            return JsonResponse({
-                'status': 'error',
-                'message': 'No pending friend request found'
-            }, status=404)
-            
+            return JsonResponse(
+                {"status": "error", "message": "No pending friend request found"},
+                status=404,
+            )
+
     except Exception as e:
         print(f"Error in cancel_friend_request: {str(e)}")
-        return JsonResponse({
-            'status': 'error',
-            'message': f'An error occurred: {str(e)}'
-        }, status=500)
+        return JsonResponse(
+            {"status": "error", "message": f"An error occurred: {str(e)}"}, status=500
+        )
 
 
 @login_required
@@ -791,15 +808,20 @@ def send_crew_request(sender, receiver_username, crew_id):
     if CrewMember.objects.filter(crew=crew, user=receiver.user).exists():
         return False, "User is already a member of the crew.", None
 
-    crew_request, created = CrewRequest.objects.get_or_create(
+    # Delete any existing crew invites between these users for this crew
+    existing_requests = CrewRequest.objects.filter(
+        sender=sender.user, receiver=receiver.user, crew=crew
+    )
+    if existing_requests.exists():
+        existing_requests.delete()
+
+    # Create new crew invite
+    crew_request = CrewRequest.objects.create(
         sender=sender.user,
         receiver=receiver.user,
         crew=crew,
-        defaults={"status": "pending"},
+        status="pending",
     )
-
-    if not created:
-        return False, "Crew request has already been sent.", None
 
     return True, "Crew request sent successfully.", crew_request
 

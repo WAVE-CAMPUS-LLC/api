@@ -5837,12 +5837,15 @@ async def invite_friend_to_crew(
             # Check if already a member
             if CrewMember.objects.filter(crew=crew, user=friend).exists():
                 return None, "User is already a member of the crew."
-            # Check if already invited
-            if CrewRequest.objects.filter(
-                crew=crew, receiver=friend, status="pending"
-            ).exists():
-                return None, "User has already been invited to the crew."
-            # Create invite
+
+            # Delete any existing crew invites between these users for this crew
+            existing_requests = CrewRequest.objects.filter(
+                crew=crew, sender=user, receiver=friend
+            )
+            if existing_requests.exists():
+                existing_requests.delete()
+
+            # Create new invite
             CrewRequest.objects.create(
                 crew=crew,
                 sender=user,
@@ -6437,7 +6440,7 @@ async def crew_chat_ws(websocket: WebSocket, crew_id: str, user_id: str):
 @router.get("/crew/{crew_id}/invite-status/{target_username}")
 async def check_crew_invite_status(
     request: Request,
-    crew_id: str,
+    crew_id: UUID,
     target_username: str,
     caller_user_id: Optional[int] = Depends(get_current_user),
     platform: Optional[str] = None,
