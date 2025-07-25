@@ -198,9 +198,9 @@ async def suggest_friends_personalized(
         user_name = user.username or str(user.user_id)
 
         # Get paginated friend recommendations
-        paginated_data = get_paginated_friend_recommendations(
-            str(user.user_id), page, page_size
-        )
+        paginated_data = await database_sync_to_async(
+            get_paginated_friend_recommendations
+        )(str(user.user_id), page, page_size)
 
         # Get detailed user profiles for recommendations
         recommended_users = []
@@ -231,7 +231,7 @@ async def suggest_friends_personalized(
                 continue
 
         # Generate personalized friend suggestion message
-        personalized_message = suggest_friends_for_user(
+        personalized_message = await database_sync_to_async(suggest_friends_for_user)(
             str(user.user_id), user_name, len(paginated_data["recommendations"])
         )
 
