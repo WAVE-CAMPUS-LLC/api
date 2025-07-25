@@ -5836,7 +5836,7 @@ async def invite_friend_to_crew(
             friend = CustomUser.objects.get(user_id=friend_user_id)
             # Check if already a member
             if CrewMember.objects.filter(crew=crew, user=friend).exists():
-                return None, "User is already a member of the crew."
+                return None, "User is already a member of the crew.", None, None, None
 
             # Delete any existing crew invites between these users for this crew
             existing_requests = CrewRequest.objects.filter(
@@ -5846,19 +5846,54 @@ async def invite_friend_to_crew(
                 existing_requests.delete()
 
             # Create new invite
-            CrewRequest.objects.create(
+            crew_request = CrewRequest.objects.create(
                 crew=crew,
                 sender=user,
                 receiver=friend,
                 status="pending",
             )
-            return True, None
-        except Exception as e:
-            return None, str(e)
 
-    result, error = await invite_logic()
+            # Return notification data
+            return (
+                True,
+                None,
+                {
+                    "friend_user_id": friend.user_id,
+                    "sender_name": user.first_name or user.username,
+                    "crew_name": crew.name,
+                    "crew_id": str(crew.crewId),
+                    "request_id": str(crew_request.requestId),
+                },
+            )
+        except Exception as e:
+            return None, str(e), None
+
+    result, error, notification_data = await invite_logic()
     if not result:
         raise HTTPException(status_code=400, detail=error or "Could not invite friend.")
+
+    # Send notification to the friend being invited
+    if notification_data:
+        notification_title = "Crew Invite"
+        notification_message = f"{notification_data['sender_name']} invited you to join {notification_data['crew_name']}"
+        navigate_to = "crew_invites"
+        params = {
+            "crew_id": notification_data["crew_id"],
+            "crew_name": notification_data["crew_name"],
+            "sender_name": notification_data["sender_name"],
+            "request_id": notification_data["request_id"],
+            "notification_type": "crew_invite",
+            "status": "pending",
+        }
+
+        await send_notification(
+            notification_data["friend_user_id"],
+            notification_message,
+            notification_title,
+            navigate_to=navigate_to,
+            params=params,
+        )
+
     return {"message": "Friend invited successfully."}
 
 
