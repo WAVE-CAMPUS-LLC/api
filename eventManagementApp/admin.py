@@ -86,7 +86,7 @@ class TicketAdmin(admin.ModelAdmin):
         "event",
         "status",
         "created_at",
-        "qrCodeImage",
+        "has_universal_qr_access",
     )
 
 

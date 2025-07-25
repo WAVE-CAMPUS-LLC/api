@@ -32,7 +32,7 @@ class InvitationForm(forms.Form):
         widget=forms.Textarea(
             attrs={
                 "id": "inviteMessage",
-                "value": "You have been invited to {{ event.title }}! Please view the attached PDF file for your ticket in QR Code format.",
+                "value": "You have been invited to {{ event.title }}! Create an account to access your universal QR code for all events, or check your email for ticket details.",
             }
         ),
         label="Message",

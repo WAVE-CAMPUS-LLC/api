@@ -7,6 +7,7 @@ from .apiViews import (
     processCheckout,
     get_user_ticket_info,
     verify_ticket,
+    verify_universal_qr_code,
     get_event_coupons,
 )
 
@@ -21,5 +22,6 @@ urlpatterns = [
     path("get_user_ticket_info/<str:ticketId>/", get_user_ticket_info, name="get_user_ticket_info"),
     path('checkout/', processCheckout, name="processCheckout"),
     path('verify_ticket/', verify_ticket, name="verify_ticket"),
+    path('verify_universal_qr_code/', verify_universal_qr_code, name="verify_universal_qr_code"),
     path("<uuid:eventId>/coupons/", get_event_coupons, name="get_event_coupons"),
 ]

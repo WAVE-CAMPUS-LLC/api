@@ -77,7 +77,7 @@ hardcoded_questions = [
     },
     {
         "question": "How do QR codes work for event entry?",
-        "answer": "After purchasing a ticket, a QR code will be generated. Present this code at the event entrance for validation.",
+        "answer": "After purchasing a ticket, you can use your universal QR code for all events. Your QR code is available in your profile and will be sent with every ticket purchase. Present this code at any event entrance for validation.",
         "keywords": ["QR code", "event entry", "scan", "ticket"],
     },
     {

@@ -644,3 +644,81 @@ def get_ticket_data(ticket):
         "userLastName": ticket.user.last_name if ticket.user else None,
         "status": ticket.status,
     }
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])  # QR scanning might be done by event staff without authentication
+def verify_universal_qr_code(request):
+    """
+    Verify a universal QR code for event access.
+    This replaces individual ticket QR codes with a single universal code per user.
+    """
+    try:
+        # Extract QR code data and event ID from request
+        qr_code_data = request.data.get("qr_code_data")
+        event_id = request.data.get("event_id")
+        
+        if not qr_code_data or not event_id:
+            return Response({
+                "valid": False, 
+                "message": "Missing QR code data or event ID"
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Import UserProfile here to avoid circular imports
+        from accountManagementApp.models import UserProfile
+        
+        # Verify the universal QR code
+        user_profile, error = UserProfile.verify_universal_qr_code(qr_code_data)
+        
+        if error:
+            return Response({
+                "valid": False, 
+                "message": error
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Check if user has a valid ticket for this event
+        if not user_profile.has_valid_ticket_for_event(event_id):
+            return Response({
+                "valid": False, 
+                "message": f"No valid ticket found for {user_profile.user.username} for this event"
+            }, status=status.HTTP_403_FORBIDDEN)
+        
+        # Get user's tickets for this event
+        user_tickets = user_profile.get_user_tickets(event_id).filter(status="Valid")
+        
+        if not user_tickets.exists():
+            return Response({
+                "valid": False, 
+                "message": "All tickets for this event have already been scanned"
+            }, status=status.HTTP_403_FORBIDDEN)
+        
+        # Mark the first valid ticket as scanned
+        ticket = user_tickets.first()
+        ticket.status = "Scanned"
+        ticket.save()
+        
+        print(f"Universal QR code verified successfully for user {user_profile.user.username}")
+        
+        return Response({
+            "valid": True, 
+            "message": "Universal QR code verified successfully!",
+            "user": {
+                "username": user_profile.user.username,
+                "first_name": user_profile.user.first_name,
+                "last_name": user_profile.user.last_name,
+                "email": user_profile.user.email,
+            },
+            "ticket_id": str(ticket.ticketId),
+            "event_id": event_id,
+            "ticket_data": get_ticket_data(ticket)
+        }, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        print(f"Error verifying universal QR code: {e}")
+        import traceback
+        traceback.print_exc()
+        return Response({
+            "valid": False, 
+            "message": "Internal server error",
+            "error": str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

@@ -33,8 +33,6 @@ class Ticket(models.Model):
     guestLastName = models.CharField(max_length=50, blank=True, null=True)
     guestEmail = models.EmailField(max_length=254, blank=True, null=True)
     event = models.ForeignKey("eventManagementApp.Event", on_delete=models.CASCADE)
-    qrCodeData = models.TextField(blank=True, null=True)
-    qrCodeImage = models.FileField(upload_to="qr_codes/", blank=True, null=True)
     status = models.CharField(
         max_length=10, choices=TICKET_STATUS_CHOICES, default="Valid"
     )
@@ -52,28 +50,45 @@ class Ticket(models.Model):
             # Composite indexes for analytics queries
             Index(fields=["event", "created_at"], name="ticket_event_created_idx"),
             Index(fields=["created_at", "status"], name="ticket_created_status_idx"),
+            # Index for user ticket lookups
+            Index(fields=["user", "event"], name="ticket_user_event_idx"),
         ]
 
     def save(self, *args, **kwargs):
-        if not self.qrCodeData:
-            self.qrCodeData = self.generate_qr_code_data()
+        """
+        Save method no longer generates individual QR codes.
+        Access control is now handled via the user's universal QR code.
+        """
         super().save(*args, **kwargs)
 
-    def generate_qr_code_data(self):
+    def get_universal_qr_code(self):
         """
-        Generates JSON data to be embedded in the QR code.
+        Get the universal QR code for this ticket's user.
+        Returns None for guest tickets.
         """
-        qr_data = {
-            "ticketId": str(self.ticketId),
-            "eventId": str(self.event.eventId),
-            "guestFirstName": self.guestFirstName if self.guestFirstName else None,
-            "guestLastName": self.guestLastName if self.guestLastName else None,
-            "guestEmail": self.guestEmail if self.guestEmail else None,
-            "userFirstName": self.user.first_name if self.user else None,
-            "userLastName": self.user.last_name if self.user else None,
-            "userEmail": self.user.email if self.user else None,
-        }
-        return json.dumps(qr_data)
+        if self.user and hasattr(self.user, 'user_profile'):
+            return self.user.user_profile.universal_qr_code
+        return None
+
+    def get_universal_qr_code_image_url(self):
+        """
+        Get the universal QR code image URL for this ticket's user.
+        Returns None for guest tickets.
+        """
+        if self.user and hasattr(self.user, 'user_profile') and self.user.user_profile.universal_qr_code_image:
+            return self.user.user_profile.universal_qr_code_image.url
+        return None
+
+    def has_universal_qr_access(self):
+        """
+        Check if this ticket has universal QR code access.
+        Returns True for authenticated users with universal QR codes, False for guest tickets.
+        """
+        return bool(
+            self.user and 
+            hasattr(self.user, 'user_profile') and 
+            self.user.user_profile.universal_qr_code_image
+        )
 
 
 class InviteEventOption(models.Model):

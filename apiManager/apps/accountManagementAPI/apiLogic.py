@@ -64,7 +64,7 @@ ResetLinkExpiryTime = getattr(
     settings, "RESET_LINK_EXPIRY_TIME", timezone.timedelta(hours=24)
 )
 
-from .serializers import TicketSerializer
+from .serializers import TicketSerializer, UniversalQRResponse, UserTicketsResponse
 
 router = APIRouter()
 
@@ -408,6 +408,14 @@ async def get_user_tickets(
                     "location": location_data,
                 }
 
+                # Get universal QR code information from user profile
+                universal_qr_code = None
+                universal_qr_code_image_url = None
+                if ticket.user and hasattr(ticket.user, 'user_profile'):
+                    universal_qr_code = str(ticket.user.user_profile.universal_qr_code)
+                    if ticket.user.user_profile.universal_qr_code_image:
+                        universal_qr_code_image_url = ticket.user.user_profile.universal_qr_code_image.url
+
                 ticket_list.append(
                     {
                         "ticketId": str(ticket.ticketId),
@@ -423,9 +431,11 @@ async def get_user_tickets(
                             if ticket.event.header_photo
                             else None
                         ),
-                        "qrCodeImage": (
-                            ticket.qrCodeImage.url if ticket.qrCodeImage else None
-                        ),
+                        # Legacy field kept for backward compatibility (always null now)
+                        "qrCodeImage": None,
+                        # New universal QR code fields
+                        "universal_qr_code": universal_qr_code,
+                        "universal_qr_code_image_url": universal_qr_code_image_url,
                         "status": ticket.status,
                         "eventDate": ticket.event.date,
                         "eventStartTime": ticket.event.start_time,
@@ -485,6 +495,14 @@ async def get_user_ticket_details(
                 print(
                     f"[get_user_ticket_details_async] Found ticket with ID: {ticketId}"
                 )
+                # Get universal QR code information from user profile
+                universal_qr_code = None
+                universal_qr_code_image_url = None
+                if ticket.user and hasattr(ticket.user, 'user_profile'):
+                    universal_qr_code = str(ticket.user.user_profile.universal_qr_code)
+                    if ticket.user.user_profile.universal_qr_code_image:
+                        universal_qr_code_image_url = ticket.user.user_profile.universal_qr_code_image.url
+
                 return {
                     "ticketId": str(ticket.ticketId),
                     "guestFirstName": ticket.guestFirstName,
@@ -498,9 +516,11 @@ async def get_user_ticket_details(
                         if ticket.event.header_photo
                         else None
                     ),
-                    "qrCodeImage": (
-                        ticket.qrCodeImage.url if ticket.qrCodeImage else None
-                    ),
+                    # Legacy field kept for backward compatibility (always null now)
+                    "qrCodeImage": None,
+                    # New universal QR code fields
+                    "universal_qr_code": universal_qr_code,
+                    "universal_qr_code_image_url": universal_qr_code_image_url,
                     "status": ticket.status,
                 }
 
@@ -2746,6 +2766,255 @@ async def set_privacy_settings(
         print(f"[set_privacy_settings] Unhandled exception: {str(e)}\n{error_trace}")
         await notify_by_bot(
             f"**[API: set_privacy_settings]** \n\n Unhandled exception: user_id={user_id}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@router.get("/universal-qr", response_model=UniversalQRResponse)
+async def get_user_universal_qr(
+    request: Request,
+    user_id: int = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
+    """
+    API endpoint for retrieving user's universal QR code.
+    Returns the universal QR code image URL and metadata for the authenticated user.
+    """
+    print(f"[get_user_universal_qr] API called with user_id: {user_id}")
+
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    @database_sync_to_async
+    def get_universal_qr_data(user_id):
+        try:
+            print(f"[get_universal_qr_data] Retrieving universal QR for user_id: {user_id}")
+            
+            # Use select_related to optimize query
+            user = CustomUser.objects.select_related('user_profile').get(id=user_id)
+            
+            # Ensure user has a profile
+            if not hasattr(user, 'user_profile') or not user.user_profile:
+                # Create profile if it doesn't exist
+                from accountManagementApp.models import UserProfile
+                user_profile = UserProfile.objects.create(user=user)
+                print(f"[get_universal_qr_data] Created new profile for user: {user.username}")
+            else:
+                user_profile = user.user_profile
+
+            # Get QR code information
+            qr_data = {
+                "user_id": str(user.user_id),
+                "username": user.username,
+                "universal_qr_code": str(user_profile.universal_qr_code) if user_profile.universal_qr_code else None,
+                "universal_qr_code_image_url": user_profile.universal_qr_code_image.url if user_profile.universal_qr_code_image else None,
+                "has_qr_code": bool(user_profile.universal_qr_code_image),
+                "qr_generated_at": user_profile.universal_qr_code_image.url if user_profile.universal_qr_code_image else None,
+            }
+
+            # Generate QR code if it doesn't exist
+            if not user_profile.universal_qr_code_image:
+                print(f"[get_universal_qr_data] Generating missing universal QR for user: {user.username}")
+                success = user_profile.generate_universal_qr_code()
+                if success:
+                    user_profile.save(update_fields=['universal_qr_code_image'])
+                    qr_data["universal_qr_code_image_url"] = user_profile.universal_qr_code_image.url
+                    qr_data["has_qr_code"] = True
+                    qr_data["universal_qr_code"] = str(user_profile.universal_qr_code)
+                    print(f"[get_universal_qr_data] Successfully generated QR for user: {user.username}")
+                else:
+                    print(f"[get_universal_qr_data] Failed to generate QR for user: {user.username}")
+
+            print(f"[get_universal_qr_data] Returning QR data for user: {user.username}")
+            return qr_data
+
+        except CustomUser.DoesNotExist:
+            print(f"[get_universal_qr_data] Error: User with id {user_id} does not exist")
+            return None
+        except Exception as e:
+            error_trace = traceback.format_exc()
+            print(f"[get_universal_qr_data] Unexpected error: {str(e)}\n{error_trace}")
+            return None
+
+    try:
+        qr_data = await get_universal_qr_data(user_id)
+        
+        if qr_data is None:
+            await notify_by_bot(
+                f"**[API: get_user_universal_qr]** \n\n User not found: user_id={user_id} \n\n Platform: {platform}",
+                platform or "Unknown",
+                "ERROR",
+                device_info,
+            )
+            raise HTTPException(status_code=404, detail="User not found")
+
+        print(f"[get_user_universal_qr] Returning QR data for user_id: {user_id}")
+        return qr_data
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        error_trace = traceback.format_exc()
+        print(f"[get_user_universal_qr] Unhandled exception: {str(e)}\n{error_trace}")
+        await notify_by_bot(
+            f"**[API: get_user_universal_qr]** \n\n Unhandled exception: user_id={user_id}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@router.get("/tickets", response_model=UserTicketsResponse)
+async def get_user_tickets_detailed(
+    request: Request,
+    user_id: int = Depends(get_current_user),
+    platform: Optional[str] = None,
+    include_qr: bool = True,
+    status_filter: Optional[str] = None,
+):
+    """
+    API endpoint for retrieving all tickets associated with the user.
+    Returns comprehensive ticket information with universal QR code data.
+    
+    Args:
+        include_qr: Whether to include QR code information in response
+        status_filter: Filter tickets by status (Valid, Scanned, Invalid)
+    """
+    print(f"[get_user_tickets_detailed] API called with user_id: {user_id}, status_filter: {status_filter}")
+
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    @database_sync_to_async
+    def get_user_tickets_data(user_id, include_qr, status_filter):
+        try:
+            print(f"[get_user_tickets_data] Retrieving tickets for user_id: {user_id}")
+            
+            # Optimize query with select_related and prefetch_related
+            user = CustomUser.objects.select_related('user_profile').get(id=user_id)
+            
+            # Get tickets with optimized queries
+            tickets_query = Ticket.objects.select_related(
+                'event',
+                'user__user_profile'
+            ).filter(user=user)
+            
+            # Apply status filter if provided
+            if status_filter:
+                tickets_query = tickets_query.filter(status=status_filter)
+            
+            # Order by most recent first
+            tickets = tickets_query.order_by('-created_at')
+            
+            print(f"[get_user_tickets_data] Found {tickets.count()} tickets")
+            
+            tickets_data = []
+            for ticket in tickets:
+                # Build comprehensive ticket data
+                ticket_data = {
+                    "ticket_id": str(ticket.ticketId),
+                    "main_id": str(ticket.mainId),
+                    "status": ticket.status,
+                    "created_at": ticket.created_at.isoformat(),
+                    "stripe_session_id": ticket.stripe_session_id,
+                    
+                    # Event information
+                    "event": {
+                        "event_id": str(ticket.event.eventId),
+                        "title": ticket.event.title,
+                        "date": ticket.event.date.isoformat() if ticket.event.date else None,
+                        "start_time": ticket.event.start_time.isoformat() if ticket.event.start_time else None,
+                        "end_time": ticket.event.end_time.isoformat() if ticket.event.end_time else None,
+                        "header_photo": ticket.event.header_photo.url if ticket.event.header_photo else None,
+                        "description": getattr(ticket.event, 'description', None),
+                        "venue": getattr(ticket.event, 'venue', None),
+                        "ticketing": getattr(ticket.event, 'ticketing', None),
+                    },
+                    
+                    # Guest information (for guest tickets)
+                    "guest_info": {
+                        "first_name": ticket.guestFirstName,
+                        "last_name": ticket.guestLastName,
+                        "email": ticket.guestEmail,
+                    } if any([ticket.guestFirstName, ticket.guestLastName, ticket.guestEmail]) else None,
+                }
+                
+                # Add QR code information if requested
+                if include_qr and ticket.user and hasattr(ticket.user, 'user_profile'):
+                    user_profile = ticket.user.user_profile
+                    ticket_data["qr_code"] = {
+                        "universal_qr_code": str(user_profile.universal_qr_code) if user_profile.universal_qr_code else None,
+                        "universal_qr_code_image_url": user_profile.universal_qr_code_image.url if user_profile.universal_qr_code_image else None,
+                        "has_qr_code": bool(user_profile.universal_qr_code_image),
+                    }
+                else:
+                    ticket_data["qr_code"] = None
+                
+                tickets_data.append(ticket_data)
+            
+            # Get summary statistics
+            total_tickets = tickets.count()
+            valid_tickets = tickets.filter(status='Valid').count()
+            scanned_tickets = tickets.filter(status='Scanned').count()
+            
+            result = {
+                "user_id": str(user.user_id),
+                "username": user.username,
+                "total_tickets": total_tickets,
+                "statistics": {
+                    "valid": valid_tickets,
+                    "scanned": scanned_tickets,
+                    "invalid": total_tickets - valid_tickets - scanned_tickets,
+                },
+                "tickets": tickets_data,
+                "has_universal_qr": bool(
+                    hasattr(user, 'user_profile') and 
+                    user.user_profile and 
+                    user.user_profile.universal_qr_code_image
+                ) if include_qr else None,
+            }
+            
+            print(f"[get_user_tickets_data] Returning {total_tickets} tickets for user: {user.username}")
+            return result
+
+        except CustomUser.DoesNotExist:
+            print(f"[get_user_tickets_data] Error: User with id {user_id} does not exist")
+            return None
+        except Exception as e:
+            error_trace = traceback.format_exc()
+            print(f"[get_user_tickets_data] Unexpected error: {str(e)}\n{error_trace}")
+            return None
+
+    try:
+        tickets_data = await get_user_tickets_data(user_id, include_qr, status_filter)
+        
+        if tickets_data is None:
+            await notify_by_bot(
+                f"**[API: get_user_tickets_detailed]** \n\n User not found: user_id={user_id} \n\n Platform: {platform}",
+                platform or "Unknown",
+                "ERROR",
+                device_info,
+            )
+            raise HTTPException(status_code=404, detail="User not found")
+
+        print(f"[get_user_tickets_detailed] Returning {tickets_data['total_tickets']} tickets for user_id: {user_id}")
+        return tickets_data
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        error_trace = traceback.format_exc()
+        print(f"[get_user_tickets_detailed] Unhandled exception: {str(e)}\n{error_trace}")
+        await notify_by_bot(
+            f"**[API: get_user_tickets_detailed]** \n\n Unhandled exception: user_id={user_id}, error={str(e)} \n\n Platform: {platform}",
             platform or "Unknown",
             "ERROR",
             device_info,

@@ -298,19 +298,8 @@ def record_ticket_activity(sender, instance, created, **kwargs):
         if (
             created and instance.user
         ):  # Only create activity for authenticated users, not guests
-            # Try to extract ticket type from QR code data or use default
-            ticket_type = "General Admission"  # Default value
-            try:
-                if instance.qrCodeData:
-                    import json
-
-                    qr_data = json.loads(instance.qrCodeData)
-                    ticket_type = qr_data.get("ticketType", "General Admission")
-            except (json.JSONDecodeError, KeyError, AttributeError):
-                print(
-                    f"[record_ticket_activity] Could not parse ticket type from QR data, using default"
-                )
-                pass
+            # Default ticket type since we no longer store it in individual QR codes
+            ticket_type = "General Admission"
 
             # Safely get event details
             event_id = None

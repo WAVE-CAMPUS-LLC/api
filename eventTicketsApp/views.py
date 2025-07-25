@@ -17,8 +17,9 @@ import json
 import os
 from dotenv import load_dotenv
 import time
-from qr_code.qrcode import maker
-from qr_code.qrcode.utils import QRCodeOptions
+# QR code generation is now handled via universal QR codes in user profiles
+# from qr_code.qrcode import maker  # No longer needed  
+# from qr_code.qrcode.utils import QRCodeOptions  # No longer needed
 import stripe
 from stripeManagementApp.customerSetup import CustomerAccount
 from rest_framework.response import Response
@@ -852,7 +853,27 @@ def generateTicket(
     crewTicket=False,
     stripe_session_id=None,
     from_api=False
-): 
+):
+    """
+    Generate a ticket for an event and associate it with the user's universal QR code.
+    
+    This function creates a ticket record and ensures the user has a universal QR code
+    for accessing all their tickets. Individual QR codes are no longer generated per ticket.
+    
+    Args:
+        request: HTTP request object (or None for API calls)
+        event: Event object to create ticket for
+        user: User object (None for guest tickets)
+        guestFirstName: First name for guest tickets
+        guestLastName: Last name for guest tickets  
+        guestEmail: Email for guest tickets
+        crewTicket: Whether this is a crew ticket purchase
+        stripe_session_id: Stripe session ID for payment tracking
+        from_api: Whether called from API (affects URL generation)
+        
+    Returns:
+        Ticket: Created ticket object linked to user's universal QR identity
+    """ 
     ticket = Ticket(
         user=user if user and user.is_authenticated else None,
         event=event,
@@ -874,41 +895,14 @@ def generateTicket(
         if from_api else
         request.build_absolute_uri(reverse("eventTickets:viewTicket", kwargs={"mainId": ticketMainId}))
     )
-    # Use JSON data for the QR code with comprehensive ticket information
-    qr_data = json.dumps(
-        {
-            "ticketId": str(ticket.ticketId),
-            "eventId": str(event.eventId),
-            "status": ticket.status,
-            "guestFirstName": guestFirstName if guestFirstName else None,
-            "guestLastName": guestLastName if guestLastName else None,
-            "guestEmail": guestEmail if guestEmail else None,
-            "userFirstName": user.first_name if user else None,
-            "userLastName": user.last_name if user else None,
-            "userEmail": user.email if user else None,
-            "activationLink": activationLink,
-        }
-    )
-
-    qr_code_options = QRCodeOptions(
-        size=200,
-        border=4,
-        error_correction="M",
-        image_format="png",
-        dark_color="#000000",
-        light_color="#ffffff",
-    )
+    # Ensure user has a universal QR code if this is not a guest ticket
+    if user and user.is_authenticated and hasattr(user, 'user_profile'):
+        # Generate universal QR code if it doesn't exist
+        if not user.user_profile.universal_qr_code_image:
+            user.user_profile.generate_universal_qr_code()
+            user.user_profile.save()
 
     try:
-        # Generate the QR code with the activation URL.
-        qr_code_image = maker.make_qr_code_image(
-            data=qr_data, qr_code_options=qr_code_options, force_text=True
-        )
-
-        image_io = BytesIO(qr_code_image)
-        ticket.qrCodeImage.save(f"{ticket.ticketId}.png", File(image_io), save=True)
-
-        ticket.save()
 
         # Prepare email
         if guestEmail or (user and user.email):
@@ -1054,14 +1048,14 @@ def generateTicket(
                 
                 print(f"Sending ticket email to: {recipient_list} from {from_email}")
                 
-                # Create a file attachment with the QR code.
+                # Get universal QR code if user is authenticated
                 qr_attachment = None
-                if ticket.qrCodeImage:
+                if user and user.is_authenticated and hasattr(user, 'user_profile') and user.user_profile.universal_qr_code_image:
                     try:
-                        qr_attachment = ticket.qrCodeImage.path
-                        print(f"QR code attachment path: {qr_attachment}")
+                        qr_attachment = user.user_profile.universal_qr_code_image.path
+                        print(f"Universal QR code attachment path: {qr_attachment}")
                     except Exception as e:
-                        print(f"Error getting QR code attachment: {e}")
+                        print(f"Error getting universal QR code attachment: {e}")
                 
                 # Send the email with inline QR code image.
                 try:
@@ -1076,19 +1070,25 @@ def generateTicket(
                     )
                     email.attach_alternative(qrCodeHtml, "text/html")
                     
-                    # Attach QR code image inline for email display
+                    # Attach universal QR code image inline for email display (only for authenticated users)
                     if qr_attachment and os.path.exists(qr_attachment):
                         with open(qr_attachment, 'rb') as f:
                             qr_image_data = f.read()
                             # Create inline image attachment with cid:qr_code
                             qr_image = MIMEImage(qr_image_data)
                             qr_image.add_header('Content-ID', '<qr_code>')
-                            qr_image.add_header('Content-Disposition', 'inline', filename=f"ticket-{ticket.ticketId}.png")
+                            qr_image.add_header('Content-Disposition', 'inline', filename=f"universal-qr-{user.username}.png")
                             email.attach(qr_image)
-                            print(f"QR code image attached inline with CID: qr_code")
+                            print(f"Universal QR code image attached inline with CID: qr_code")
+                    elif not user or not user.is_authenticated:
+                        # For guest tickets, modify email template to note QR code will be available after account creation
+                        qrCodeHtml = qrCodeHtml.replace(
+                            '<img src="cid:qr_code" alt="Ticket QR Code" style="width: 200px; height: 200px; display: block; margin: 0 auto;" />',
+                            '<div style="background-color: #fefce8; border: 2px solid #eab308; border-radius: 12px; padding: 20px; text-align: center;"><p style="color: #a16207; margin: 0; font-size: 16px; font-weight: 600;">📱 Create an account to get your QR code</p><p style="color: #a16207; margin: 10px 0 0 0; font-size: 14px;">Join WaveOnCampus.com to access your universal QR code for all events!</p></div>'
+                        )
                     
                     email.send(fail_silently=False)
-                    print(f"Email sent successfully with inline QR code to {recipient_list}")
+                    print(f"Email sent successfully with universal QR code to {recipient_list}")
                     
                 except Exception as e:
                     print(f"Error sending email with inline QR code: {e}")
@@ -1176,161 +1176,116 @@ def verifyTicket(request):
                 return JsonResponse(
                     {
                         "valid": False,
-                        "message": "Ticket already scanned.",
-                        "ticketData": {
-                            "guestFirstName": (
-                                ticket.guestFirstName
-                                if ticket.guestFirstName
-                                else ticket.user.first_name
-                            ),
-                            "guestLastName": (
-                                ticket.guestLastName
-                                if ticket.guestLastName
-                                else ticket.user.last_name
-                            ),
-                            "userFirstName": (
-                                ticket.user.first_name if ticket.user else None
-                            ),
-                            "userLastName": (
-                                ticket.user.last_name if ticket.user else None
-                            ),
-                            "status": (ticket.status),
-                        },
+                        "message": "Ticket has already been scanned.",
                     },
                     status=400,
                 )
 
-            elif ticket.status == "Invalid":
-                return JsonResponse(
-                    {
-                        "valid": False,
-                        "message": "Ticket already scanned.",
-                        "ticketData": {
-                            "guestFirstName": (
-                                ticket.guestFirstName
-                                if ticket.guestFirstName
-                                else ticket.user.first_name
-                            ),
-                            "guestLastName": (
-                                ticket.guestLastName
-                                if ticket.guestLastName
-                                else ticket.user.last_name
-                            ),
-                            "userFirstName": (
-                                ticket.user.first_name if ticket.user else None
-                            ),
-                            "userLastName": (
-                                ticket.user.last_name if ticket.user else None
-                            ),
-                            "status": (ticket.status),
-                        },
-                    },
-                    status=400,
-                )
-
+            # If the ticket is valid, mark it as scanned and return success.
             ticket.status = "Scanned"
             ticket.save()
-            return JsonResponse(
-                {
-                    "valid": True,
-                    "message": f"{ticket.guestFirstName} {ticket.guestLastName}: Valid",
-                    "ticketData": {
-                        "guestFirstName": (
-                            ticket.guestFirstName
-                            if ticket.guestFirstName
-                            else ticket.user.first_name
-                        ),
-                        "guestLastName": (
-                            ticket.guestLastName
-                            if ticket.guestLastName
-                            else ticket.user.last_name
-                        ),
-                        "userFirstName": (
-                            ticket.user.first_name if ticket.user else None
-                        ),
-                        "userLastName": (
-                            ticket.user.last_name if ticket.user else None
-                        ),
-                        "status": (ticket.status),
-                    },
-                }
-            )
+            print("Ticket scanned successfully!")
+            return JsonResponse({"valid": True, "message": "Ticket is valid!"})
 
         except json.JSONDecodeError:
             return JsonResponse(
-                {
-                    "valid": False,
-                    "message": "Invalid JSON format",
-                    "ticketData": {
-                        "guestFirstName": (
-                            ticket.guestFirstName
-                            if ticket.guestFirstName
-                            else ticket.user.first_name
-                        ),
-                        "guestLastName": (
-                            ticket.guestLastName
-                            if ticket.guestLastName
-                            else ticket.user.last_name
-                        ),
-                        "userFirstName": (
-                            ticket.user.first_name if ticket.user else None
-                        ),
-                        "userLastName": (
-                            ticket.user.last_name if ticket.user else None
-                        ),
-                        "status": (ticket.status),
-                    },
-                },
-                status=400,
-            )
-        except Exception as e:
-            print(f"Error verifying ticket: {e}")
-            return JsonResponse(
-                {
-                    "valid": False,
-                    "message": f"An error occurred: {e}",
-                    "ticketData": {
-                        "guestFirstName": (
-                            ticket.guestFirstName
-                            if ticket.guestFirstName
-                            else ticket.user.first_name
-                        ),
-                        "guestLastName": (
-                            ticket.guestLastName
-                            if ticket.guestLastName
-                            else ticket.user.last_name
-                        ),
-                        "userFirstName": (
-                            ticket.user.first_name if ticket.user else None
-                        ),
-                        "userLastName": (
-                            ticket.user.last_name if ticket.user else None
-                        ),
-                        "status": (ticket.status),
-                    },
-                },
-                status=500,
+                {"valid": False, "message": "Invalid JSON data"}, status=400
             )
 
     return JsonResponse(
-        {
-            "valid": False,
-            "message": "Invalid request method",
-            "ticketData": {
-                "guestFirstName": (
-                    ticket.guestFirstName
-                    if ticket.guestFirstName
-                    else ticket.user.first_name
-                ),
-                "guestLastName": (
-                    ticket.guestLastName
-                    if ticket.guestLastName
-                    else ticket.user.last_name
-                ),
-                "userFirstName": (ticket.user.first_name if ticket.user else None),
-                "userLastName": (ticket.user.last_name if ticket.user else None),
-                "status": (ticket.status),
-            },
-        },
-        status=405,
+        {"valid": False, "message": "Method not allowed"}, status=405
+    )
+
+
+def verifyUniversalQRCode(request):
+    """
+    Verify a universal QR code for event access.
+    This replaces individual ticket QR codes with a single universal code per user.
+    """
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            print(f"Universal QR verification request: {request.body}")
+            
+            # Extract QR code data and event ID
+            qr_code_data = data.get("qr_code_data")
+            event_id = data.get("event_id")
+            
+            if not qr_code_data or not event_id:
+                return JsonResponse(
+                    {"valid": False, "message": "Missing QR code data or event ID"}, 
+                    status=400
+                )
+            
+            # Import UserProfile here to avoid circular imports
+            from accountManagementApp.models import UserProfile
+            
+            # Verify the universal QR code
+            user_profile, error = UserProfile.verify_universal_qr_code(qr_code_data)
+            
+            if error:
+                return JsonResponse(
+                    {"valid": False, "message": error}, 
+                    status=400
+                )
+            
+            # Check if user has a valid ticket for this event
+            if not user_profile.has_valid_ticket_for_event(event_id):
+                return JsonResponse(
+                    {
+                        "valid": False, 
+                        "message": f"No valid ticket found for {user_profile.user.username} for this event"
+                    }, 
+                    status=403
+                )
+            
+            # Get user's tickets for this event
+            user_tickets = user_profile.get_user_tickets(event_id).filter(status="Valid")
+            
+            if not user_tickets.exists():
+                return JsonResponse(
+                    {
+                        "valid": False, 
+                        "message": "All tickets for this event have already been scanned"
+                    }, 
+                    status=403
+                )
+            
+            # Mark the first valid ticket as scanned
+            ticket = user_tickets.first()
+            ticket.status = "Scanned"
+            ticket.save()
+            
+            print(f"Universal QR code verified successfully for user {user_profile.user.username}")
+            
+            return JsonResponse({
+                "valid": True, 
+                "message": "Universal QR code verified successfully!",
+                "user": {
+                    "username": user_profile.user.username,
+                    "first_name": user_profile.user.first_name,
+                    "last_name": user_profile.user.last_name,
+                    "email": user_profile.user.email,
+                },
+                "ticket_id": str(ticket.ticketId),
+                "event_id": event_id
+            })
+            
+        except json.JSONDecodeError:
+            return JsonResponse(
+                {"valid": False, "message": "Invalid JSON data"}, 
+                status=400
+            )
+        except Exception as e:
+            print(f"Error verifying universal QR code: {e}")
+            import traceback
+            traceback.print_exc()
+            return JsonResponse(
+                {"valid": False, "message": "Internal server error"}, 
+                status=500
+            )
+    
+    return JsonResponse(
+        {"valid": False, "message": "Method not allowed"}, 
+        status=405
     )

@@ -927,17 +927,8 @@ async def get_event_attendees(request: Request):
             # Format the response
             attendees_data = []
             for ticket in tickets:
-                # Get the ticket type name if available
+                # Get the ticket type name - using default since we no longer store in individual QR codes
                 ticket_type_name = "General Admission"  # Default value
-
-                # Try to find the ticket type from the QR code data
-                if ticket.qrCodeData:
-                    try:
-                        qr_data = json.loads(ticket.qrCodeData)
-                        if "ticketType" in qr_data:
-                            ticket_type_name = qr_data["ticketType"]
-                    except json.JSONDecodeError:
-                        pass
 
                 attendees_data.append(
                     {
@@ -2866,19 +2857,21 @@ async def get_ticket_details(
             
             print(f"[get_ticket_comprehensive_details] Generated URLs - Activation: {activation_link}, View: {view_link}")
             
-            # Get QR code information
+            # Get universal QR code information from user profile
             qr_code_image_url = None
-            if ticket.qrCodeImage:
+            has_qr_code = False
+            if ticket.user and hasattr(ticket.user, 'user_profile') and ticket.user.user_profile.universal_qr_code_image:
                 try:
-                    qr_code_image_url = ticket.qrCodeImage.url
-                    print(f"[get_ticket_comprehensive_details] QR code image URL: {qr_code_image_url}")
+                    qr_code_image_url = ticket.user.user_profile.universal_qr_code_image.url
+                    has_qr_code = True
+                    print(f"[get_ticket_comprehensive_details] Universal QR code image URL: {qr_code_image_url}")
                 except Exception as e:
-                    print(f"[get_ticket_comprehensive_details] Error getting QR code URL: {e}")
+                    print(f"[get_ticket_comprehensive_details] Error getting universal QR code URL: {e}")
             
             # Build metadata
             metadata = {
                 "ticket_generated_via_api": True,
-                "has_qr_code": bool(ticket.qrCodeImage),
+                "has_qr_code": has_qr_code,
                 "is_guest_ticket": bool(guest_info),
                 "event_ticketing_type": event.ticketing,
                 "ticket_main_id": ticket.mainId,
