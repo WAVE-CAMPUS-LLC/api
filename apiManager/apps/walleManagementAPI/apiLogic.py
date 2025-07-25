@@ -655,9 +655,25 @@ async def suggest_crews(
         suggestions = await database_sync_to_async(suggest_crews_for_user)(
             str(user.user_id), limit
         )
+        # If suggestions are a list of dicts with crewId, enrich with image and num_members
+        enriched_suggestions = []
+        for suggestion in suggestions:
+            crew_id = (
+                suggestion.get("crewId")
+                or suggestion.get("crew_id")
+                or suggestion.get("id")
+            )
+            crew = await database_sync_to_async(
+                lambda: Crew.objects.filter(crewId=crew_id).first()
+            )()
+            suggestion["crew_image"] = (
+                crew.crew_image.url if crew and crew.crew_image else None
+            )
+            suggestion["num_members"] = crew.crew_members.count() if crew else 0
+            enriched_suggestions.append(suggestion)
         return {
             "user_id": str(user.user_id),
-            "suggested_crews": suggestions,
+            "suggested_crews": enriched_suggestions,
             "platform": platform,
         }
     except Exception as e:
