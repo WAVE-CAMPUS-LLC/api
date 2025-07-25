@@ -13,6 +13,11 @@ from .models import (
 )
 from eventTicketsApp.models import Ticket
 from socialApp.utilities.crew_tasks import generate_crew_image
+from socialGraphManagement.graph.crew_graph import (
+    sync_crew_node,
+    sync_crew_membership,
+    aggregate_crew_interests,
+)
 
 
 @receiver(post_save, sender=FriendRequest)
@@ -290,6 +295,9 @@ def record_crew_activity(sender, instance, created, **kwargs):
                 ),
             },
         )
+        # --- Graph sync ---
+        sync_crew_membership(str(instance.user.user_id), str(instance.crew.crewId))
+        aggregate_crew_interests(str(instance.crew.crewId))
 
 
 @receiver(post_save, sender=Ticket)
@@ -442,3 +450,10 @@ def crew_created_signal(sender, instance, created, **kwargs):
     if created:
         if not instance.crew_image:
             generate_crew_image(instance.crewId)
+        # --- Graph sync ---
+        sync_crew_node(
+            str(instance.crewId),
+            instance.name,
+            instance.bio,
+            instance.crew_image.url if instance.crew_image else "",
+        )
