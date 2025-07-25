@@ -10,9 +10,16 @@ from .utils import generate_profile_picture
 def create_profile_picture(sender, instance, created, **kwargs):
     if created and not instance.profile_photo:
         user = instance.user
-        initials = (user.first_name[:1] + user.last_name[:1]).upper()
-        profile_photo = generate_profile_picture(initials)
-        instance.profile_photo.save(f"{initials}_profile.png", profile_photo, save=True)
+        # Safely handle missing user information
+        if not user or not user.first_name or not user.last_name:
+            return  # Skip profile picture generation if user info is incomplete
+        
+        try:
+            profile_photo = generate_profile_picture(user.first_name, user.last_name)
+            initials = (user.first_name[:1] + user.last_name[:1]).upper()
+            instance.profile_photo.save(f"{initials}_profile.png", profile_photo, save=True)
+        except Exception as e:
+            print(f"Error generating profile picture for {user.username if user else 'unknown'}: {e}")
 
 
 @receiver(post_save, sender=UserProfile)

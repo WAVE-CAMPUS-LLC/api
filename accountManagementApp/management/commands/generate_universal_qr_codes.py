@@ -1,5 +1,6 @@
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
+from django.db.models.signals import post_save
 from accountManagementApp.models import UserProfile
 from authenticationApp.models import CustomUser
 import sys
@@ -174,42 +175,61 @@ class Command(BaseCommand):
         success = 0
         errors = 0
         
-        with transaction.atomic():
-            for profile in batch:
-                try:
-                    has_qr = bool(profile.universal_qr_code_image)
-                    action = "Regenerate" if (has_qr and options['force']) else "Generate"
-                    
-                    # Generate the QR code
-                    success_result = profile.generate_universal_qr_code()
-                    
-                    if success_result:
-                        # Save both UUID and image
-                        profile.save(update_fields=['universal_qr_code', 'universal_qr_code_image'])
-                        success += 1
-                        self.stdout.write(
-                            self.style.SUCCESS(
-                                f'  ✓ Generated QR code for: {profile.user.username}'
-                            ),
-                            ending=''
-                        )
-                    else:
+        # Temporarily disconnect the profile picture signal to avoid conflicts
+        from accountManagementApp.signals import create_profile_picture
+        post_save.disconnect(create_profile_picture, sender=UserProfile)
+        
+        try:
+            with transaction.atomic():
+                for profile in batch:
+                    try:
+                        # Skip users with incomplete information
+                        if not profile.user or not profile.user.username:
+                            errors += 1
+                            self.stdout.write(
+                                self.style.ERROR(
+                                    f'  ✗ Skipping profile with incomplete user info'
+                                )
+                            )
+                            processed += 1
+                            continue
+                        
+                        has_qr = bool(profile.universal_qr_code_image)
+                        action = "Regenerate" if (has_qr and options['force']) else "Generate"
+                        
+                        # Generate the QR code
+                        success_result = profile.generate_universal_qr_code()
+                        
+                        if success_result:
+                            # Save only the QR code fields to avoid triggering other signals
+                            profile.save(update_fields=['universal_qr_code', 'universal_qr_code_image'])
+                            success += 1
+                            self.stdout.write(
+                                self.style.SUCCESS(
+                                    f'  ✓ Generated QR code for: {profile.user.username}'
+                                )
+                            )
+                        else:
+                            errors += 1
+                            self.stdout.write(
+                                self.style.ERROR(
+                                    f'  ✗ Failed to generate QR code for: {profile.user.username}'
+                                )
+                            )
+                        
+                    except Exception as e:
                         errors += 1
                         self.stdout.write(
                             self.style.ERROR(
-                                f'  ✗ Failed to generate QR code for: {profile.user.username}'
+                                f'  ✗ Error processing {profile.user.username}: {str(e)}'
                             )
                         )
                     
-                except Exception as e:
-                    errors += 1
-                    self.stdout.write(
-                        self.style.ERROR(
-                            f'  ✗ Error processing {profile.user.username}: {str(e)}'
-                        )
-                    )
-                
-                processed += 1
+                    processed += 1
+        
+        finally:
+            # Reconnect the signal
+            post_save.connect(create_profile_picture, sender=UserProfile)
         
         return {
             'processed': processed,

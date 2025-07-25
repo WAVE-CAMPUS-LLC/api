@@ -4,7 +4,7 @@ from PIL import Image
 from django.conf import settings
 
 
-def generate_profile_picture(first_name, last_name, width=200, height=200):
+def generate_profile_picture(first_name=None, last_name=None, width=200, height=200):
     """
     Generate a simple profile picture with initials.
     """
@@ -19,15 +19,15 @@ def generate_profile_picture(first_name, last_name, width=200, height=200):
         img = Image.new('RGB', (width, height), bg_color)
         draw = ImageDraw.Draw(img)
         
-        # Get initials
+        # Get initials with safe defaults
         initials = ""
-        if first_name:
+        if first_name and len(first_name) > 0:
             initials += first_name[0].upper()
-        if last_name:
+        if last_name and len(last_name) > 0:
             initials += last_name[0].upper()
         
         if not initials:
-            initials = "U"  # Default
+            initials = "U"  # Default for users with no name info
         
         # Try to use a font, fall back to default if not available
         try:
