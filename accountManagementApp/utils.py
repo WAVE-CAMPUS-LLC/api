@@ -66,21 +66,21 @@ def generate_universal_qr_code_for_user(user_profile):
     """
     try:
         if not user_profile or not user_profile.user:
+            print("Invalid user profile provided")
             return False
         
         success = user_profile.generate_universal_qr_code()
         
         if success:
             user_profile.save(update_fields=['universal_qr_code_image'])
+            print(f"Successfully generated universal QR code for user: {user_profile.user.username}")
             return True
         else:
+            print(f"Failed to generate QR code for user: {user_profile.user.username}")
             return False
         
     except Exception as e:
-        # Log error for production monitoring
-        import logging
-        logger = logging.getLogger(__name__)
-        logger.error(f"Error generating QR code for user {user_profile.user.username if user_profile.user else 'unknown'}: {e}")
+        print(f"Error generating QR code for user {user_profile.user.username if user_profile.user else 'unknown'}: {e}")
         return False
 
 
@@ -100,6 +100,8 @@ def bulk_generate_universal_qr_codes(user_profiles_queryset, batch_size=50):
     error_count = 0
     skipped_count = 0
     
+    print(f"Starting bulk QR code generation for {total_count} users...")
+    
     for i in range(0, total_count, batch_size):
         batch = user_profiles_queryset[i:i + batch_size]
         
@@ -118,12 +120,11 @@ def bulk_generate_universal_qr_codes(user_profiles_queryset, batch_size=50):
                     
             except Exception as e:
                 error_count += 1
-                # Log error for production monitoring
-                import logging
-                logger = logging.getLogger(__name__)
-                logger.error(f"Error processing {profile.user.username}: {e}")
+                print(f"Error processing {profile.user.username}: {e}")
         
+        # Progress update
         processed = min(i + batch_size, total_count)
+        print(f"Processed {processed}/{total_count} users (Success: {success_count}, Errors: {error_count}, Skipped: {skipped_count})")
     
     return {
         'total': total_count,

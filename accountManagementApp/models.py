@@ -251,13 +251,11 @@ class UserProfile(models.Model):
                 save=False,
             )
             
+            print(f"Generated universal QR code for user: {self.user.username}")
             return True
             
         except Exception as e:
-            # Log error for production monitoring
-            import logging
-            logger = logging.getLogger(__name__)
-            logger.error(f"Error generating universal QR code for user {self.user.username}: {e}")
+            print(f"Error generating universal QR code for user {self.user.username}: {e}")
             return False
 
     def save(self, *args, event_types=None, **kwargs):
@@ -569,17 +567,11 @@ def generate_universal_qr_on_profile_creation(sender, instance, created, **kwarg
                         universal_qr_code=instance.universal_qr_code,
                         universal_qr_code_image=instance.universal_qr_code_image
                     )
-                    pass  # QR code generated successfully
+                    print(f"Auto-generated universal QR code for new user: {instance.user.username}")
                 else:
-                    # Log failure for production monitoring
-                    import logging
-                    logger = logging.getLogger(__name__)
-                    logger.warning(f"Failed to auto-generate QR code for user: {instance.user.username}")
+                    print(f"Failed to auto-generate QR code for user: {instance.user.username}")
         except Exception as e:
-            # Log error for production monitoring
-            import logging
-            logger = logging.getLogger(__name__)
-            logger.error(f"Error auto-generating QR code for user {instance.user.username}: {e}")
+            print(f"Error auto-generating QR code for user {instance.user.username}: {e}")
 
 
 @receiver(post_save, sender='authenticationApp.CustomUser')
@@ -598,7 +590,9 @@ def ensure_user_profile_exists(sender, instance, created, **kwargs):
             
             # If profile was just created, the post_save signal for UserProfile
             # will handle QR code generation
-            if not profile_created:
+            if profile_created:
+                print(f"Created user profile for new user: {instance.username}")
+            else:
                 # Profile already existed, make sure it has a QR code
                 if not profile.universal_qr_code_image:
                     # Ensure UUID is set
@@ -608,9 +602,7 @@ def ensure_user_profile_exists(sender, instance, created, **kwargs):
                     success = profile.generate_universal_qr_code()
                     if success:
                         profile.save(update_fields=['universal_qr_code', 'universal_qr_code_image'])
+                        print(f"Generated missing QR code for existing profile: {instance.username}")
                         
         except Exception as e:
-            # Log error for production monitoring
-            import logging
-            logger = logging.getLogger(__name__)
-            logger.error(f"Error creating profile/QR code for user {instance.username}: {e}")
+            print(f"Error creating profile/QR code for user {instance.username}: {e}")
