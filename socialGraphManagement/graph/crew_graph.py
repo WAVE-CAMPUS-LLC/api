@@ -59,3 +59,42 @@ def aggregate_crew_interests(crew_id: str):
     graph_client = GraphClient()
     graph_client.run_query(query, parameters)
     graph_client.close()
+
+
+def suggest_crews_for_user(user_id: str, limit: int = 10):
+    """
+    Suggest relevant crews for a user to join, prioritizing shared interests, college, and mutual members.
+    Returns a list of crew IDs and scores.
+    """
+    query = """
+    MATCH (u:User {user_id: $user_id})
+    // Find crews the user is not a member of
+    MATCH (c:Crew)
+    WHERE NOT (u)-[:MEMBER_OF]->(c)
+    
+    // Shared interests
+    OPTIONAL MATCH (u)-[:INTERESTED_IN]->(i:Interest)<-[:RELATES_TO_INTEREST]-(c)
+    WITH u, c, count(i) AS shared_interests
+    
+    // Shared college (if Crew has a college property)
+    OPTIONAL MATCH (u)-[:ATTENDS]->(col:College)<-[:ASSOCIATED_WITH]-(c)
+    WITH u, c, shared_interests, count(col) AS shared_college
+    
+    // Mutual members
+    OPTIONAL MATCH (u)-[:FRIEND]-(f:User)-[:MEMBER_OF]->(c)
+    WITH c, shared_interests, shared_college, count(DISTINCT f) AS mutual_members
+    
+    // Score crews
+    WITH c, (shared_interests * 3 + shared_college * 2 + mutual_members * 2) AS score
+    ORDER BY score DESC
+    RETURN c.crewId AS crew_id, c.name AS name, score
+    LIMIT $limit
+    """
+    parameters = {"user_id": str(user_id), "limit": limit}
+    graph_client = GraphClient()
+    results = graph_client.run_query(query, parameters)
+    graph_client.close()
+    return [
+        {"crew_id": record["crew_id"], "name": record["name"], "score": record["score"]}
+        for record in results
+    ]

@@ -10,6 +10,7 @@ from .models import (
     SocialActivity,
     CrewMember,
     Crew,
+    CrewJoinRequest,
 )
 from eventTicketsApp.models import Ticket
 from socialApp.utilities.crew_tasks import generate_crew_image
@@ -18,6 +19,8 @@ from socialGraphManagement.graph.crew_graph import (
     sync_crew_membership,
     aggregate_crew_interests,
 )
+from apiManager.utilities.notify_by_bot import notify_by_bot
+import asyncio
 
 
 @receiver(post_save, sender=FriendRequest)

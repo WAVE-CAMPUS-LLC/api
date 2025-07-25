@@ -557,3 +557,56 @@ class CrewSharedEvent(models.Model):
         )
         crew_name = getattr(self.crew, "name", "Unknown") if self.crew else "Unknown"
         return f"{sender_username} shared {event_title} to {crew_name}"
+
+
+class CrewJoinRequest(models.Model):
+    STATUS_CHOICES = [
+        ("pending", "Pending"),
+        ("declined", "Declined"),
+        ("accepted", "Accepted"),
+        ("canceled", "Canceled"),
+    ]
+
+    requestId = models.UUIDField(
+        primary_key=True, default=uuid.uuid4, editable=False, unique=True
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name="crew_join_requests",
+        on_delete=models.CASCADE,
+    )
+    crew = models.ForeignKey(
+        Crew, related_name="join_requests", on_delete=models.CASCADE
+    )
+    status = models.CharField(
+        max_length=10,
+        choices=STATUS_CHOICES,
+        default="pending",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ("user", "crew")
+        verbose_name = "Crew Join Request"
+        verbose_name_plural = "Crew Join Requests"
+        default_permissions = ()
+        app_label = "socialApp"
+
+    def accept_request(self):
+        self.status = "accepted"
+        self.save()
+        return self
+
+    def decline_request(self):
+        self.status = "declined"
+        self.save()
+        return self
+
+    def cancel_request(self):
+        self.status = "canceled"
+        self.save()
+        return self
+
+    def __str__(self):
+        return f"{self.user.username} -> {self.crew.name} ({self.status})"
