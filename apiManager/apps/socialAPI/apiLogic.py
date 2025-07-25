@@ -1071,19 +1071,8 @@ async def send_friend_request(
                             # If fixing fails, allow new request (treat as if no accepted request exists)
                             pass
 
-            # Check for canceled requests to reuse (declined requests are deleted)
-            old_request = FriendRequest.objects.filter(
-                sender=sender_user,
-                receiver=receiver_user,
-                status="canceled",
-            ).first()
-
-            if old_request:
-                # Reuse the old request
-                old_request.status = "pending"
-                old_request.save()
-                friend_request = old_request
-            else:
+                # Note: Previously we tried to reuse canceled requests, but now they are deleted
+                # so we always create a new friend request
                 # Create new friend request
                 try:
                     friend_request = FriendRequest.objects.create(
@@ -1253,14 +1242,20 @@ async def cancel_friend_request(
 
                 return None, "No pending friend request found to cancel.", None
 
-            # Update the request status to canceled
-            friend_request.status = "canceled"
-            friend_request.save()
+            # Store info before deletion
+            request_info = {
+                "request_id": str(friend_request.requestId),
+                "canceled_at": timezone.now(),
+            }
+
+            # Delete the friend request (no need to keep it after cancellation)
+            friend_request.delete()
 
             return (
                 {
-                    "status": friend_request.status,
-                    "canceled_at": friend_request.updated_at,
+                    "status": "canceled_and_deleted",
+                    "canceled_at": request_info["canceled_at"],
+                    "request_id": request_info["request_id"],
                 },
                 "Friend request canceled successfully.",
                 None,
@@ -1383,27 +1378,25 @@ async def accept_friend_request(
                 if receiver_user.user_profile.is_friends_with(sender_user):
                     return None, "You are already friends with this user.", None
 
-                # Update the request status to accepted
-                friend_request.status = "accepted"
-                friend_request.save()
+                # Store info before deletion
+                request_info = {
+                    "request_id": str(friend_request.requestId),
+                    "accepted_at": timezone.now(),
+                }
 
                 # Add both users to each other's friends list
                 receiver_user.user_profile.friends.add(sender_user_profile)  # type: ignore[attr-defined]
                 sender_user_profile.friends.add(receiver_user.user_profile)  # type: ignore[attr-defined]
 
-            # Defensive type check
-            from socialApp.models import FriendRequest as FriendRequestModel
-
-            if not isinstance(friend_request, FriendRequestModel):
-                raise Exception(
-                    f"Internal error: friend_request is not a FriendRequest instance, got {type(friend_request)}"
-                )
+                # Delete the friend request (no need to keep it after acceptance)
+                friend_request.delete()
 
             return (
                 {
-                    "status": friend_request.status,
-                    "accepted_at": friend_request.updated_at,
+                    "status": "accepted_and_deleted",
+                    "accepted_at": request_info["accepted_at"],
                     "friendship_established": True,
+                    "request_id": request_info["request_id"],
                 },
                 "Friend request accepted successfully.",
                 None,
@@ -1668,7 +1661,8 @@ async def remove_friend(
                 caller_user.user_profile.friends.remove(friend_user_profile)
                 friend_user_profile.friends.remove(caller_user.user_profile)
 
-                # Find and delete any accepted friend request
+                # Note: Previously we would find and delete accepted friend requests,
+                # but now they are deleted immediately when accepted, so this will not find any
                 friend_request = FriendRequest.objects.filter(
                     Q(sender=caller_user, receiver=friend_user)
                     | Q(sender=friend_user, receiver=caller_user),
@@ -1677,7 +1671,7 @@ async def remove_friend(
 
                 request_info = None
                 if friend_request:
-                    # Store request info before deletion
+                    # Store request info before deletion (unlikely to be found)
                     request_info = {
                         "request_id": str(friend_request.requestId),
                         "original_sender": friend_request.sender.username,
@@ -1828,7 +1822,7 @@ async def get_sent_friend_requests(
 ):
     """
     API endpoint to get all friend requests sent by the current user.
-    Returns friend requests with status pending or canceled (declined requests are deleted).
+    Returns friend requests with status pending only (accepted, declined, and canceled requests are deleted).
     """
     print(
         f"[get_sent_friend_requests API] Function called for user ID: {caller_user_id}"
@@ -1843,11 +1837,9 @@ async def get_sent_friend_requests(
         try:
             user = CustomUser.objects.get(id=caller_user_id)
 
-            # Get sent friend requests (declined requests are deleted, so only pending and canceled)
+            # Get sent friend requests (only pending remain, others are deleted)
             sent_requests = (
-                FriendRequest.objects.filter(
-                    sender=user, status__in=["pending", "canceled"]
-                )
+                FriendRequest.objects.filter(sender=user, status="pending")
                 .select_related("receiver", "receiver__user_profile")
                 .order_by("-created_at")
             )
@@ -1917,7 +1909,7 @@ async def get_received_friend_requests(
 ):
     """
     API endpoint to get all friend requests received by the current user.
-    Returns friend requests with status pending or canceled (declined requests are deleted).
+    Returns friend requests with status pending only (accepted, declined, and canceled requests are deleted).
     """
     print(
         f"[get_received_friend_requests API] Function called for user ID: {caller_user_id}"
@@ -1932,11 +1924,9 @@ async def get_received_friend_requests(
         try:
             user = CustomUser.objects.get(id=caller_user_id)
 
-            # Get received friend requests (declined requests are deleted, so only pending and canceled)
+            # Get received friend requests (only pending remain, others are deleted)
             received_requests = (
-                FriendRequest.objects.filter(
-                    receiver=user, status__in=["pending", "canceled"]
-                )
+                FriendRequest.objects.filter(receiver=user, status="pending")
                 .select_related("sender", "sender__user_profile")
                 .order_by("-created_at")
             )
@@ -2006,7 +1996,7 @@ async def get_sent_crew_invites(
 ):
     """
     API endpoint to get all crew invites sent by the current user.
-    Returns crew invites with status pending or declined (accepted invites are converted to crew memberships).
+    Returns crew invites with status pending only (accepted, declined, and canceled invites are deleted).
     """
     print(f"[get_sent_crew_invites API] Function called for user ID: {caller_user_id}")
 
@@ -2019,11 +2009,9 @@ async def get_sent_crew_invites(
         try:
             user = CustomUser.objects.get(id=caller_user_id)
 
-            # Get sent crew invites (accepted invites are converted to crew memberships, so only pending and declined)
+            # Get sent crew invites (only pending remain, others are deleted)
             sent_invites = (
-                CrewRequest.objects.filter(
-                    sender=user, status__in=["pending", "declined"]
-                )
+                CrewRequest.objects.filter(sender=user, status="pending")
                 .select_related("receiver", "receiver__user_profile", "crew")
                 .order_by("-created_at")
             )
@@ -2100,7 +2088,7 @@ async def get_received_crew_invites(
 ):
     """
     API endpoint to get all crew invites received by the current user.
-    Returns crew invites with status pending or declined (accepted invites are converted to crew memberships).
+    Returns crew invites with status pending only (accepted, declined, and canceled invites are deleted).
     """
     print(
         f"[get_received_crew_invites API] Function called for user ID: {caller_user_id}"
@@ -2115,11 +2103,9 @@ async def get_received_crew_invites(
         try:
             user = CustomUser.objects.get(id=caller_user_id)
 
-            # Get received crew invites (accepted invites are converted to crew memberships, so only pending and declined)
+            # Get received crew invites (only pending remain, others are deleted)
             received_invites = (
-                CrewRequest.objects.filter(
-                    receiver=user, status__in=["pending", "declined"]
-                )
+                CrewRequest.objects.filter(receiver=user, status="pending")
                 .select_related("sender", "sender__user_profile", "crew")
                 .order_by("-created_at")
             )
@@ -2534,9 +2520,15 @@ async def accept_crew_invite(
                 ).exists():
                     return None, "You are already a member of this crew.", None
 
-                # Update the invite status to accepted
-                crew_invite.status = "accepted"
-                crew_invite.save()
+                # Store info before deletion
+                invite_info = {
+                    "request_id": str(crew_invite.requestId),
+                    "accepted_at": timezone.now(),
+                    "crew": {
+                        "crew_id": str(crew_invite.crew.crewId),
+                        "name": crew_invite.crew.name,
+                    },
+                }
 
                 # Create crew membership
                 CrewMember.objects.create(
@@ -2545,15 +2537,16 @@ async def accept_crew_invite(
                     is_admin=False,  # New members are not admins by default
                 )
 
+                # Delete the crew invite (no need to keep it after acceptance)
+                crew_invite.delete()
+
             return (
                 {
-                    "status": crew_invite.status,
-                    "accepted_at": crew_invite.updated_at,
-                    "crew": {
-                        "crew_id": str(crew_invite.crew.crewId),
-                        "name": crew_invite.crew.name,
-                    },
+                    "status": "accepted_and_deleted",
+                    "accepted_at": invite_info["accepted_at"],
+                    "crew": invite_info["crew"],
                     "membership_established": True,
+                    "request_id": invite_info["request_id"],
                 },
                 "Crew invite accepted successfully.",
                 None,
@@ -2652,7 +2645,7 @@ async def decline_crew_invite(
 
                 return None, "No pending crew invite found to decline.", None
 
-            # Store invite info before updating
+            # Store invite info before deletion
             invite_info = {
                 "request_id": str(crew_invite.requestId),
                 "crew_id": str(crew_invite.crew.crewId),
@@ -2661,19 +2654,19 @@ async def decline_crew_invite(
                 "declined_at": timezone.now(),
             }
 
-            # Update the invite status to declined
-            crew_invite.status = "declined"
-            crew_invite.save()
+            # Delete the crew invite (no need to keep it after declining)
+            crew_invite.delete()
 
             return (
                 {
-                    "status": crew_invite.status,
+                    "status": "declined_and_deleted",
                     "declined_at": invite_info["declined_at"],
                     "crew": {
                         "crew_id": invite_info["crew_id"],
                         "name": invite_info["crew_name"],
                     },
                     "sender": {"username": invite_info["sender_username"]},
+                    "request_id": invite_info["request_id"],
                 },
                 "Crew invite declined successfully.",
                 None,
