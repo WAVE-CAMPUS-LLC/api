@@ -634,17 +634,23 @@ async def suggest_crews(
                 lambda: list(Crew.objects.order_by("?")[:limit])
             )()
             # Serialize minimal info for random crews
-            random_crews_data = [
-                {
-                    "crewId": str(crew.crewId),
-                    "name": crew.name,
-                    "bio": crew.bio,
-                    "crew_image": crew.crew_image.url if crew.crew_image else None,
-                    "created_by": crew.created_by.username if crew.created_by else None,
-                    "num_members": crew.crew_members.count(),
-                }
-                for crew in random_crews
-            ]
+            random_crews_data = []
+            for crew in random_crews:
+                num_members = await database_sync_to_async(
+                    lambda: crew.crew_members.count()
+                )()
+                random_crews_data.append(
+                    {
+                        "crewId": str(crew.crewId),
+                        "name": crew.name,
+                        "bio": crew.bio,
+                        "crew_image": crew.crew_image.url if crew.crew_image else None,
+                        "created_by": (
+                            crew.created_by.username if crew.created_by else None
+                        ),
+                        "num_members": num_members,
+                    }
+                )
             return {
                 "user_id": str(user.user_id),
                 "random_crews": random_crews_data,
@@ -666,10 +672,15 @@ async def suggest_crews(
             crew = await database_sync_to_async(
                 lambda: Crew.objects.filter(crewId=crew_id).first()
             )()
+            num_members = (
+                await database_sync_to_async(lambda: crew.crew_members.count())()
+                if crew
+                else 0
+            )
             suggestion["crew_image"] = (
                 crew.crew_image.url if crew and crew.crew_image else None
             )
-            suggestion["num_members"] = crew.crew_members.count() if crew else 0
+            suggestion["num_members"] = num_members
             enriched_suggestions.append(suggestion)
         return {
             "user_id": str(user.user_id),
