@@ -41,6 +41,7 @@ from django.db import IntegrityError
 from apiManager.utilities.notify_by_bot import notify_by_bot
 from apiManager.utilities.device_info import get_device_info
 from apiManager.dependencies import get_current_user
+import random
 
 config.set_config(
     NEO4J_URI=settings.NEO4J_URI,
@@ -616,13 +617,41 @@ async def suggest_crews(
     platform: Optional[str] = None,
 ):
     """
-    Suggest relevant crews for a user to join, using the graph system.
+    Suggest relevant crews for a user to join, using the graph system. If the user is not in any crew, suggest up to 10 random crews.
     """
     user_agent_str = request.headers.get("user-agent", "")
     device_data = get_device_info(user_agent_str)
     device_info = device_data["device_info"]
     try:
         user = await database_sync_to_async(CustomUser.objects.get)(id=current_user_id)
+        # Check if user is in any crew
+        user_crews_count = await database_sync_to_async(
+            lambda: Crew.objects.filter(crew_members__user=user).count()
+        )()
+        if user_crews_count == 0:
+            # Suggest up to 10 random crews
+            random_crews = await database_sync_to_async(
+                lambda: list(Crew.objects.order_by("?")[:limit])
+            )()
+            # Serialize minimal info for random crews
+            random_crews_data = [
+                {
+                    "crewId": str(crew.crewId),
+                    "name": crew.name,
+                    "bio": crew.bio,
+                    "crew_image": crew.crew_image.url if crew.crew_image else None,
+                    "created_by": crew.created_by.username if crew.created_by else None,
+                    "num_members": crew.crew_members.count(),
+                }
+                for crew in random_crews
+            ]
+            return {
+                "user_id": str(user.user_id),
+                "random_crews": random_crews_data,
+                "platform": platform,
+                "message": "User is not in any crew. Showing random crews.",
+            }
+        # Otherwise, use the graph suggestion system
         suggestions = await database_sync_to_async(suggest_crews_for_user)(
             str(user.user_id), limit
         )
