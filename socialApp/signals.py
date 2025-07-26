@@ -18,6 +18,7 @@ from socialGraphManagement.graph.crew_graph import (
     sync_crew_node,
     sync_crew_membership,
     aggregate_crew_interests,
+    sync_crew_college_relationships,
 )
 from apiManager.utilities.notify_by_bot import notify_by_bot
 import asyncio
@@ -301,6 +302,18 @@ def record_crew_activity(sender, instance, created, **kwargs):
         # --- Graph sync ---
         sync_crew_membership(str(instance.user.user_id), str(instance.crew.crewId))
         aggregate_crew_interests(str(instance.crew.crewId))
+        sync_crew_college_relationships(str(instance.crew.crewId))
+
+
+@receiver(post_delete, sender=CrewMember)
+def handle_crew_member_removal(sender, instance, **kwargs):
+    """Handle cleanup when a crew member is removed."""
+    # --- Graph sync ---
+    # Note: We don't remove the crew-college relationship immediately
+    # as other members might still be from the same college
+    # The relationship will be updated on the next member addition/removal
+    aggregate_crew_interests(str(instance.crew.crewId))
+    sync_crew_college_relationships(str(instance.crew.crewId))
 
 
 @receiver(post_save, sender=Ticket)

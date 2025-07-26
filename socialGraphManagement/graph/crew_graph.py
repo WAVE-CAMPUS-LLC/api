@@ -61,6 +61,48 @@ def aggregate_crew_interests(crew_id: str):
     graph_client.close()
 
 
+def sync_crew_college_relationships(crew_id: str):
+    """
+    Sync crew-college relationships through crew members.
+    This creates relationships between crews and colleges based on where crew members attend.
+    """
+    # Get all crew members with their college information
+    crew_members = CrewMember.objects.filter(crew__crewId=crew_id).select_related(
+        "user", "user__user_profile", "user__user_profile__college"
+    )
+
+    colleges = set()
+    for member in crew_members:
+        if member.user.user_profile and member.user.user_profile.college:
+            colleges.add(member.user.user_profile.college)
+
+    if not colleges:
+        return
+
+    # Create relationships between crew and colleges
+    query = """
+        MATCH (c:Crew {crewId: $crew_id})
+        WITH c
+        UNWIND $colleges as college
+        MERGE (col:College {collegeId: college.collegeId, name: college.name})
+        MERGE (c)-[:ASSOCIATED_WITH]->(col)
+    """
+
+    college_data = [
+        {"collegeId": str(college.collegeId), "name": college.name}
+        for college in colleges
+    ]
+
+    parameters = {
+        "crew_id": str(crew_id),
+        "colleges": college_data,
+    }
+
+    graph_client = GraphClient()
+    graph_client.run_query(query, parameters)
+    graph_client.close()
+
+
 def suggest_crews_for_user(user_id: str, limit: int = 10):
     """
     Suggest relevant crews for a user to join, prioritizing shared interests, college, and mutual members.
@@ -76,9 +118,9 @@ def suggest_crews_for_user(user_id: str, limit: int = 10):
     OPTIONAL MATCH (u)-[:INTERESTED_IN]->(i:Interest)<-[:RELATES_TO_INTEREST]-(c)
     WITH u, c, count(i) AS shared_interests
     
-    // Shared college (if Crew has a college property)
+    // Shared college through crew-college relationships
     OPTIONAL MATCH (u)-[:ATTENDS]->(col:College)<-[:ASSOCIATED_WITH]-(c)
-    WITH u, c, shared_interests, count(col) AS shared_college
+    WITH u, c, shared_interests, count(DISTINCT col) AS shared_college
     
     // Mutual members
     OPTIONAL MATCH (u)-[:FRIEND]-(f:User)-[:MEMBER_OF]->(c)

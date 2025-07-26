@@ -6733,3 +6733,78 @@ async def decline_crew_join_request(
         raise HTTPException(
             status_code=500, detail=f"Error declining crew join request: {str(e)}"
         )
+
+
+@router.get("/crews/{crew_id}/check-join-request")
+async def check_crew_join_request_status(
+    request: Request,
+    crew_id: str,
+    current_user_id: int = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
+    """
+    Check if the current user has already sent a request to join the specified crew.
+    Returns the status of the join request if it exists.
+    """
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    try:
+
+        @database_sync_to_async
+        def check_join_request_status():
+            try:
+                user = CustomUser.objects.get(id=current_user_id)
+                crew = Crew.objects.get(crewId=crew_id)
+
+                # Check if user is already a member of the crew
+                is_member = CrewMember.objects.filter(user=user, crew=crew).exists()
+                if is_member:
+                    return {
+                        "has_request": False,
+                        "status": "member",
+                        "message": "User is already a member of this crew",
+                    }
+
+                # Check if there's an existing join request
+                try:
+                    join_request = CrewJoinRequest.objects.get(user=user, crew=crew)
+                    return {
+                        "has_request": True,
+                        "status": join_request.status,
+                        "request_id": str(join_request.requestId),
+                        "created_at": (
+                            join_request.created_at.isoformat()
+                            if hasattr(join_request, "created_at")
+                            else None
+                        ),
+                        "message": f"Join request is {join_request.status}",
+                    }
+                except CrewJoinRequest.DoesNotExist:
+                    return {
+                        "has_request": False,
+                        "status": "none",
+                        "message": "No join request found",
+                    }
+
+            except CustomUser.DoesNotExist:
+                raise HTTPException(status_code=404, detail="User not found")
+            except Crew.DoesNotExist:
+                raise HTTPException(status_code=404, detail="Crew not found")
+
+        result = await check_join_request_status()
+        return result
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        await notify_by_bot(
+            f"**[API: check_crew_join_request_status]** \n\n Error: {str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        raise HTTPException(
+            status_code=500, detail=f"Error checking crew join request status: {str(e)}"
+        )

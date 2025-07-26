@@ -4,6 +4,7 @@ from socialGraphManagement.graph.crew_graph import (
     sync_crew_node,
     sync_crew_membership,
     aggregate_crew_interests,
+    sync_crew_college_relationships,
 )
 
 
@@ -27,6 +28,7 @@ class Command(BaseCommand):
                 sync_crew_membership(str(member.user.user_id), str(crew.crewId))
                 member_count += 1
             aggregate_crew_interests(str(crew.crewId))
+            sync_crew_college_relationships(str(crew.crewId))
         self.stdout.write(
             self.style.SUCCESS(
                 f"✅ Migrated {crew_count} crews and {member_count} memberships to the graph."
