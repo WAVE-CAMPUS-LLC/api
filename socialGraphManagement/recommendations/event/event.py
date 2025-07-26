@@ -9,66 +9,55 @@ def get_event_recommendations_for_user(
     query = """
     MATCH (u:User {user_id: $user_id})
 
-    // Get user's preferences from UserPreferences model
-    OPTIONAL MATCH (u)-[:HAS_PREFERENCES]->(prefs:UserPreferences)
-    
     // 1. Friends who have attended similar events (weight: 4)
     OPTIONAL MATCH (u)-[:FRIEND]->(f:User)-[:ATTENDED_EVENT]->(e1:Event)
-    WITH u, prefs, collect(DISTINCT e1) as friend_attended_events
+    WITH u, collect(DISTINCT e1) as friend_attended_events
 
     // 2. Friends who are going to current events (weight: 5)
     OPTIONAL MATCH (u)-[:FRIEND]->(f2:User)-[:RSVP]->(e2:Event)
-    WHERE e2.eventDate >= datetime()
-    WITH u, prefs, friend_attended_events, collect(DISTINCT e2) as friend_rsvp_events
+    WHERE e2.date >= datetime()
+    WITH u, friend_attended_events, collect(DISTINCT e2) as friend_rsvp_events
     
     // 3. Mutual friends who are going to events (weight: 3)
     OPTIONAL MATCH (u)-[:FRIEND]->(mf:User)-[:FRIEND]->(other:User)-[:RSVP]->(e3:Event)
-    WHERE e3.eventDate >= datetime()
-    WITH u, prefs, friend_attended_events, friend_rsvp_events, collect(DISTINCT e3) as mutual_events
+    WHERE e3.date >= datetime()
+    WITH u, friend_attended_events, friend_rsvp_events, collect(DISTINCT e3) as mutual_events
     
     // 4. Events hosted by users from same college (weight: 3) - only if college is specified
     OPTIONAL MATCH (e4:Event)<-[:HOSTED]-(host:User)
     WHERE $college_name IS NOT NULL AND host.college = $college_name
-    WITH u, prefs, friend_attended_events, friend_rsvp_events, mutual_events, collect(DISTINCT e4) as college_host_events
+    WITH u, friend_attended_events, friend_rsvp_events, mutual_events, collect(DISTINCT e4) as college_host_events
     
     // 5. Events where other college members are going (weight: 2) - only if college is specified
     OPTIONAL MATCH (e5:Event)<-[:RSVP]-(college_user:User)
     WHERE $college_name IS NOT NULL AND college_user.college = $college_name AND college_user.user_id <> $user_id
-    WITH u, prefs, friend_attended_events, friend_rsvp_events, mutual_events, college_host_events, collect(DISTINCT e5) as college_rsvp_events
+    WITH u, friend_attended_events, friend_rsvp_events, mutual_events, college_host_events, collect(DISTINCT e5) as college_rsvp_events
     
-    // 6. Events matching user preferences (weight: 4)
-    OPTIONAL MATCH (e6:Event)
-    WHERE (prefs.preferred_times IS NOT NULL AND e6.best_time IN prefs.preferred_times)
-       OR (prefs.people_to_meet IS NOT NULL AND ANY(person IN e6.attracts_people WHERE person IN prefs.people_to_meet))
-       OR (prefs.interests IS NOT NULL AND ANY(interest IN e6.interests WHERE interest IN prefs.interests))
-    WITH u, prefs, friend_attended_events, friend_rsvp_events, mutual_events, college_host_events, college_rsvp_events, collect(DISTINCT e6) as preference_events
-    
-    // 7. Events related to user's interests (weight: 3)
-    OPTIONAL MATCH (u)-[:INTERESTED_IN]->(i:Interest)<-[:RELATES_TO_INTEREST]-(e7:Event)
-    WITH u, prefs, friend_attended_events, friend_rsvp_events, mutual_events, college_host_events, college_rsvp_events, preference_events, collect(DISTINCT e7) as interest_events
+    // 6. Events related to user's interests (weight: 3)
+    OPTIONAL MATCH (u)-[:INTERESTED_IN]->(i:Interest)<-[:RELATES_TO_INTEREST]-(e6:Event)
+    WITH u, friend_attended_events, friend_rsvp_events, mutual_events, college_host_events, college_rsvp_events, collect(DISTINCT e6) as interest_events
 
-    // 8. Events at preferred times (weight: 2)
-    OPTIONAL MATCH (u)-[:PREFERRED_TIME]->(t:Time)<-[:BEST_TIME]-(e8:Event)
-    WITH u, prefs, friend_attended_events, friend_rsvp_events, mutual_events, college_host_events, college_rsvp_events, preference_events, interest_events, collect(DISTINCT e8) as time_events
+    // 7. Events at preferred times (weight: 2)
+    OPTIONAL MATCH (u)-[:PREFERRED_TIME]->(t:Time)<-[:BEST_TIME]-(e7:Event)
+    WITH u, friend_attended_events, friend_rsvp_events, mutual_events, college_host_events, college_rsvp_events, interest_events, collect(DISTINCT e7) as time_events
 
-    // 9. Events that attract people user wants to meet (weight: 3)
-    OPTIONAL MATCH (u)-[:WANTS_TO_MEET]->(p:Person)<-[:ATTRACTS_PEOPLE]-(e9:Event)
-    WITH u, prefs, friend_attended_events, friend_rsvp_events, mutual_events, college_host_events, college_rsvp_events, preference_events, interest_events, time_events, collect(DISTINCT e9) as people_events
+    // 8. Events that attract people user wants to meet (weight: 3)
+    OPTIONAL MATCH (u)-[:WANTS_TO_MEET]->(p:Person)<-[:ATTRACTS_PEOPLE]-(e8:Event)
+    WITH u, friend_attended_events, friend_rsvp_events, mutual_events, college_host_events, college_rsvp_events, interest_events, time_events, collect(DISTINCT e8) as people_events
     
     // Combine all events and calculate weighted scores
     WITH u, friend_attended_events, friend_rsvp_events, mutual_events, college_host_events, 
-         college_rsvp_events, preference_events, interest_events, time_events, people_events,
+         college_rsvp_events, interest_events, time_events, people_events,
          friend_attended_events + friend_rsvp_events + mutual_events + college_host_events + 
-         college_rsvp_events + preference_events + interest_events + time_events + people_events as all_events
+         college_rsvp_events + interest_events + time_events + people_events as all_events
 
     UNWIND all_events as event
     WITH event, friend_attended_events, friend_rsvp_events, mutual_events, college_host_events,
-         college_rsvp_events, preference_events, interest_events, people_events, time_events,
+         college_rsvp_events, interest_events, people_events, time_events,
          // Calculate weighted score based on which list the event appears in
          CASE 
              WHEN event IN friend_rsvp_events THEN 5
              WHEN event IN friend_attended_events THEN 4
-             WHEN event IN preference_events THEN 4
              WHEN event IN mutual_events THEN 3
              WHEN event IN college_host_events THEN 3
              WHEN event IN interest_events THEN 3
@@ -81,8 +70,8 @@ def get_event_recommendations_for_user(
     // Add bonus for events happening soon
     WITH event, base_score,
          CASE 
-             WHEN event.eventDate <= datetime() + duration('P7D') THEN 2  // Next 7 days
-             WHEN event.eventDate <= datetime() + duration('P14D') THEN 1  // Next 14 days
+             WHEN event.date <= datetime() + duration('P7D') THEN 2  // Next 7 days
+             WHEN event.date <= datetime() + duration('P14D') THEN 1  // Next 14 days
              ELSE 0
          END as time_bonus
     
@@ -321,8 +310,8 @@ def get_similar_events(event_id: str, limit: int = 5):
     // Add bonus for events happening soon
     WITH similar_event, e, base_score,
          CASE 
-             WHEN similar_event.eventDate <= datetime() + duration('P30D') THEN 2  // Next 30 days
-             WHEN similar_event.eventDate <= datetime() + duration('P60D') THEN 1  // Next 60 days
+             WHEN similar_event.date <= datetime() + duration('P30D') THEN 2  // Next 30 days
+             WHEN similar_event.date <= datetime() + duration('P60D') THEN 1  // Next 60 days
              ELSE 0
          END as time_bonus
     

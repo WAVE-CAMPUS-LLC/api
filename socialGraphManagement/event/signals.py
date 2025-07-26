@@ -12,6 +12,7 @@ from socialGraphManagement.event.event_favorited import (
     remove_event_favorited,
 )
 from socialGraphManagement.event.event_based_preferences import sync_event_preferences
+from socialGraphManagement.event.event_host import sync_event_host
 
 import logging
 
@@ -21,7 +22,7 @@ logger = logging.getLogger(__name__)
 @receiver(post_save, sender=Event)
 def handle_event_preferences_sync(sender, instance, created, **kwargs):
     """
-    Sync event preferences to the graph when an event is created or updated.
+    Sync event preferences and host relationship to the graph when an event is created or updated.
     """
     logger.info(
         "Syncing event preferences for event %s: %s",
@@ -37,6 +38,7 @@ def handle_event_preferences_sync(sender, instance, created, **kwargs):
         instance, "event_description", ""
     )
 
+    # Sync event preferences
     sync_event_preferences(
         event_id=str(instance.eventId),
         event_title=instance.title,
@@ -44,8 +46,21 @@ def handle_event_preferences_sync(sender, instance, created, **kwargs):
         event_description=event_description,
     )
 
+    # Sync event-host relationship
+    if instance.host:
+        logger.info(
+            "Syncing event-host relationship for event %s and host %s",
+            instance.eventId,
+            instance.host.user_id,
+        )
+        sync_event_host(
+            event_id=str(instance.eventId),
+            event_title=instance.title,
+            host_id=str(instance.host.user_id),
+        )
+
     logger.info(
-        "Successfully synced event preferences for event %s",
+        "Successfully synced event preferences and host relationship for event %s",
         instance.eventId,
     )
 

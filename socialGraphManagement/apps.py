@@ -64,6 +64,7 @@ class SocialgraphmanagementConfig(AppConfig):
                 call_command("migrate_preferences")
                 call_command("migrate_colleges")
                 call_command("migrate_events_relations")
+                call_command("migrate_event_hosts")
                 call_command("migrate_crews_to_graph")
                 logger.info("Data migrations completed successfully")
 
