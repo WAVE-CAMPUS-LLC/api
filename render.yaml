@@ -14,7 +14,7 @@ services:
     - type: worker
       name: wave-celery-worker
       env: python
-      plan: free
+      plan: starter
       buildCommand: pip install -r requirements.txt
       startCommand: celery -A apiManager.celery.app.celery_app worker --loglevel=info
       envVars:
@@ -26,7 +26,7 @@ services:
     - type: worker
       name: wave-celery-beat
       env: python
-      plan: free
+      plan: starter
       buildCommand: pip install -r requirements.txt
       startCommand: celery -A apiManager.celery.app.celery_app beat --loglevel=info
       envVars:
