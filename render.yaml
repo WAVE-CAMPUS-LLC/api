@@ -3,8 +3,6 @@ services:
       name: wave_api
       env: docker
       plan: starter
-      build:
-          pythonVersion: 3.11
       dockerfilePath: ./Dockerfile
       envVars:
           - key: OTEL_EXPORTER_OTLP_ENDPOINT
