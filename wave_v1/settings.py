@@ -327,10 +327,7 @@ INSTALLED_APPS = [
 
 # Redis and Channels configuration
 # Use the external Redis URL with proper authentication
-REDIS_URL = os.getenv(
-    "REDIS_URL",
-    "rediss://red-cvhpb0aqgecs73d362ag:TNJQNjiXBUOuEJYV0npy4GJb0bsgJsPf@oregon-keyvalue.render.com:6379",
-)
+REDIS_URL = os.getenv("REDIS_URL")
 use_redis = False
 
 if REDIS_URL:

@@ -54,7 +54,9 @@ def profile_picture_path(instance, filename):
 def universal_qr_code_path(instance, filename):
     # Generate a consistent path for universal QR codes (same pattern as ticket QR codes)
     # Use same storage structure as original ticket QR codes for consistency
-    return f"qr_codes/universal/{instance.user.username}_{instance.universal_qr_code}.png"
+    return (
+        f"qr_codes/universal/{instance.user.username}_{instance.universal_qr_code}.png"
+    )
 
 
 def get_college_choices():
@@ -138,7 +140,7 @@ class UserProfile(models.Model):
         help_text="Universal QR code identifier for all user tickets",
         db_index=True,
     )
-    
+
     universal_qr_code_image = models.FileField(
         upload_to=universal_qr_code_path,
         null=True,
@@ -211,24 +213,24 @@ class UserProfile(models.Model):
         # UUID should already be set by save() method
         if not self.universal_qr_code:
             self.universal_qr_code = uuid.uuid4()
-        
+
         # Simple QR code data - just the UUID string
         qr_code_content = str(self.universal_qr_code)
-        
+
         try:
             # Create QR code with optimal settings for ticket scanning
             qr = qrcode.QRCode(
                 version=1,  # Smallest version that can fit the UUID
                 error_correction=qrcode.constants.ERROR_CORRECT_M,  # Medium error correction for better scanning
                 box_size=8,  # Good balance between size and scannability
-                border=4,   # Standard border
+                border=4,  # Standard border
             )
             qr.add_data(qr_code_content)
             qr.make(fit=True)
 
             # Create QR code image with high contrast
             qr_image = qr.make_image(fill_color="black", back_color="white")
-            
+
             # Save to BytesIO buffer
             img_io = BytesIO()
             qr_image.save(img_io, format="PNG", optimize=True)
@@ -236,7 +238,7 @@ class UserProfile(models.Model):
 
             # Generate consistent filename (matches upload_to path function)
             filename = f"{self.user.username}_{self.universal_qr_code}.png"
-            
+
             # Save the image to the model field using same pattern as existing file operations
             self.universal_qr_code_image.save(
                 filename,
@@ -250,37 +252,39 @@ class UserProfile(models.Model):
                 ),
                 save=False,
             )
-            
+
             print(f"Generated universal QR code for user: {self.user.username}")
             return True
-            
+
         except Exception as e:
-            print(f"Error generating universal QR code for user {self.user.username}: {e}")
+            print(
+                f"Error generating universal QR code for user {self.user.username}: {e}"
+            )
             return False
 
     def save(self, *args, event_types=None, **kwargs):
         # Generate universal QR code UUID if it doesn't exist
         if not self.universal_qr_code:
             self.universal_qr_code = uuid.uuid4()
-        
+
         # Check if we need to generate QR image (before saving to avoid recursion)
         generate_qr = not self.universal_qr_code_image and self.user_id
-        
+
         # Call parent save first
         super(UserProfile, self).save(*args, **kwargs)
-        
+
         # Generate QR image after saving to avoid recursion issues
         if generate_qr:
             self.generate_universal_qr_code()
             # Save again only if QR code was generated successfully
             if self.universal_qr_code_image:
-                super(UserProfile, self).save(update_fields=['universal_qr_code_image'])
-        
+                super(UserProfile, self).save(update_fields=["universal_qr_code_image"])
+
         # Generate legacy profile QR code if not exists
         if not self.profile_qr_code and self.user_id:
             self.generate_qr_code()
             if self.profile_qr_code:
-                super(UserProfile, self).save(update_fields=['profile_qr_code'])
+                super(UserProfile, self).save(update_fields=["profile_qr_code"])
 
     def get_user_tickets(self, event_id=None):
         """
@@ -288,7 +292,7 @@ class UserProfile(models.Model):
         Returns QuerySet of Ticket objects.
         """
         from eventTicketsApp.models import Ticket
-        
+
         tickets = Ticket.objects.filter(user=self.user)
         if event_id:
             tickets = tickets.filter(event__eventId=event_id)
@@ -305,17 +309,17 @@ class UserProfile(models.Model):
     def verify_universal_qr_code(cls, qr_code_data):
         """
         Verify a universal QR code and return the associated user profile.
-        
+
         Args:
             qr_code_data (str): UUID string from scanned QR code
-            
+
         Returns:
             tuple: (UserProfile instance or None, error_message or None)
         """
         try:
             # Clean the input data
             qr_code_data = qr_code_data.strip()
-            
+
             # Try to parse as UUID directly (new simple format)
             try:
                 universal_qr_code = uuid.UUID(qr_code_data)
@@ -323,11 +327,11 @@ class UserProfile(models.Model):
                 return user_profile, None
             except (ValueError, cls.DoesNotExist):
                 pass
-            
+
             # Fallback: Try to parse as JSON (legacy format)
             try:
                 data = json.loads(qr_code_data)
-                
+
                 # Extract universal QR code identifier from JSON
                 universal_qr_code = data.get("universal_qr_code")
                 if universal_qr_code:
@@ -335,12 +339,12 @@ class UserProfile(models.Model):
                     return user_profile, None
                 else:
                     return None, "Missing universal QR code identifier"
-                    
+
             except (json.JSONDecodeError, cls.DoesNotExist):
                 pass
-            
+
             return None, "Invalid or expired QR code"
-                
+
         except Exception as e:
             return None, f"QR code verification error: {str(e)}"
 
@@ -546,6 +550,7 @@ class AccountDeletionReason(models.Model):
 
 # Signal handlers for automatic QR code generation
 
+
 @receiver(post_save, sender=UserProfile)
 def generate_universal_qr_on_profile_creation(sender, instance, created, **kwargs):
     """
@@ -559,22 +564,28 @@ def generate_universal_qr_on_profile_creation(sender, instance, created, **kwarg
                 # Ensure UUID is set
                 if not instance.universal_qr_code:
                     instance.universal_qr_code = uuid.uuid4()
-                
+
                 success = instance.generate_universal_qr_code()
                 if success:
                     # Save both UUID and QR code field to avoid triggering the signal again
                     UserProfile.objects.filter(id=instance.id).update(
                         universal_qr_code=instance.universal_qr_code,
-                        universal_qr_code_image=instance.universal_qr_code_image
+                        universal_qr_code_image=instance.universal_qr_code_image,
                     )
-                    print(f"Auto-generated universal QR code for new user: {instance.user.username}")
+                    print(
+                        f"Auto-generated universal QR code for new user: {instance.user.username}"
+                    )
                 else:
-                    print(f"Failed to auto-generate QR code for user: {instance.user.username}")
+                    print(
+                        f"Failed to auto-generate QR code for user: {instance.user.username}"
+                    )
         except Exception as e:
-            print(f"Error auto-generating QR code for user {instance.user.username}: {e}")
+            print(
+                f"Error auto-generating QR code for user {instance.user.username}: {e}"
+            )
 
 
-@receiver(post_save, sender='authenticationApp.CustomUser')
+@receiver(post_save, sender="authenticationApp.CustomUser")
 def ensure_user_profile_exists(sender, instance, created, **kwargs):
     """
     Ensure every user has a UserProfile and universal QR code.
@@ -584,10 +595,9 @@ def ensure_user_profile_exists(sender, instance, created, **kwargs):
         try:
             # Create or get the user profile
             profile, profile_created = UserProfile.objects.get_or_create(
-                user=instance,
-                defaults={}
+                user=instance, defaults={}
             )
-            
+
             # If profile was just created, the post_save signal for UserProfile
             # will handle QR code generation
             if profile_created:
@@ -598,11 +608,30 @@ def ensure_user_profile_exists(sender, instance, created, **kwargs):
                     # Ensure UUID is set
                     if not profile.universal_qr_code:
                         profile.universal_qr_code = uuid.uuid4()
-                    
+
                     success = profile.generate_universal_qr_code()
                     if success:
-                        profile.save(update_fields=['universal_qr_code', 'universal_qr_code_image'])
-                        print(f"Generated missing QR code for existing profile: {instance.username}")
-                        
+                        profile.save(
+                            update_fields=[
+                                "universal_qr_code",
+                                "universal_qr_code_image",
+                            ]
+                        )
+                        print(
+                            f"Generated missing QR code for existing profile: {instance.username}"
+                        )
+
         except Exception as e:
             print(f"Error creating profile/QR code for user {instance.username}: {e}")
+
+
+class MoodEntry(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="mood_entries",
+        null=True,
+        blank=True,
+    )
+    mood_text = models.TextField()
+    date = models.DateField(default=timezone.now)
