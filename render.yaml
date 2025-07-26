@@ -14,27 +14,11 @@ services:
           - key: RESOURCE_ENVIRONMENT
             value: "apiProduction"
     - type: worker
-      name: wave-celery-worker
+      name: wave-celery
       env: docker
       plan: starter
       dockerfilePath: ./Dockerfile
-      startCommand: celery -A apiManager.celery.app.celery_app worker --loglevel=info
-      envVars:
-          - key: REDIS_URL
-            value: redis://red-d22i09p5pdvs73912opg:T4vA1VD5ntHvzep1Ym1P3YsKMPFY8dWK@red-d22i09p5pdvs73912opg:6379
-          - key: DJANGO_SETTINGS_MODULE
-            value: wave_v1.settings
-          - key: SUPABASE_URL
-            sync: false
-          - key: SUPABASE_API_KEY
-            sync: false
-
-    - type: worker
-      name: wave-celery-beat
-      env: docker
-      plan: starter
-      dockerfilePath: ./Dockerfile
-      startCommand: celery -A apiManager.celery.app.celery_app beat --loglevel=info
+      startCommand: ./start-celery.sh
       envVars:
           - key: REDIS_URL
             value: redis://red-d22i09p5pdvs73912opg:T4vA1VD5ntHvzep1Ym1P3YsKMPFY8dWK@red-d22i09p5pdvs73912opg:6379
