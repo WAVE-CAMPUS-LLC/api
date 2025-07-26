@@ -11,3 +11,37 @@ services:
             value: "glc_eyJvIjoiMTMwOTA4MSIsIm4iOiJ3YXZlX2FwaSIsImsiOiJJMnNoNDIyWTZzcFpZb2VKNWUzVXIyODgiLCJtIjp7InIiOiJwcm9kLXVzLWVhc3QtMCJ9fQ=="
           - key: RESOURCE_ENVIRONMENT
             value: "apiProduction"
+    - type: worker
+      name: wave-celery-worker
+      env: python
+      plan: free
+      buildCommand: pip install -r requirements.txt
+      startCommand: celery -A apiManager.celery.app.celery_app worker --loglevel=info
+      envVars:
+          - key: REDIS_URL
+            fromService:
+                type: redis
+                name: wave-redis
+                property: connectionString
+          - key: DJANGO_SETTINGS_MODULE
+            value: config.settings
+
+    - type: worker
+      name: wave-celery-beat
+      env: python
+      plan: free
+      buildCommand: pip install -r requirements.txt
+      startCommand: celery -A apiManager.celery.app.celery_app beat --loglevel=info
+      envVars:
+          - key: REDIS_URL
+            fromService:
+                type: redis
+                name: wave-redis
+                property: connectionString
+          - key: DJANGO_SETTINGS_MODULE
+            value: config.settings
+
+databases:
+    - name: wave-redis
+      type: redis
+      plan: free
