@@ -12,6 +12,8 @@ celery_app.conf.update(
     task_serializer="json",
     accept_content=["json"],
     result_serializer="json",
+    task_events=True,
+    worker_send_task_events=True,
 )
 
 
@@ -36,6 +38,6 @@ celery_app.autodiscover_tasks(
 celery_app.conf.beat_schedule = {
     "send-daily-mood-prompts": {
         "task": "apiManager.apps.coreAPI.tasks.send_daily_mood_prompts",
-        "schedule": crontab(hour=19, minute=30),  # Every day at 7:30 PM EST
+        "schedule": crontab(hour=19, minute=40),  # Every day at 7:30 PM EST
     },
 }
