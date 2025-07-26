@@ -16,8 +16,9 @@ services:
       env: docker
       plan: starter
       dockerfilePath: ./Dockerfile
-      startCommand: ./start-celery.sh
       envVars:
+          - key: RUN_MODE
+            value: "celery"
           - key: REDIS_URL
             value: redis://red-d22i09p5pdvs73912opg:T4vA1VD5ntHvzep1Ym1P3YsKMPFY8dWK@red-d22i09p5pdvs73912opg:6379
           - key: DJANGO_SETTINGS_MODULE
