@@ -1,7 +1,8 @@
 from celery import shared_task
 from django.utils import timezone
+import asyncio
 from authenticationApp.models import CustomUser
-from notifications.notification import send_notification
+from apiManager.notifications.notification import send_notification
 
 
 @shared_task
@@ -21,10 +22,12 @@ def send_daily_mood_prompts():
             params = {"date": timezone.now().date().isoformat()}
 
             # Send notification to the user
-            send_notification(
-                user.user_id,
-                message,
-                title=title,
-                navigate_to=navigate_to,
-                params=params,
+            asyncio.run(
+                send_notification(
+                    user.user_id,
+                    message,
+                    title=title,
+                    navigate_to=navigate_to,
+                    params=params,
+                )
             )
