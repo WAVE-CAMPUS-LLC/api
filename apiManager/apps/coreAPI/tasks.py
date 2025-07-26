@@ -2,6 +2,7 @@ from celery import shared_task
 from django.utils import timezone
 import asyncio
 from authenticationApp.models import CustomUser
+from accountManagementApp.models import MoodEntry
 from apiManager.notifications.notification import send_notification
 
 
@@ -14,7 +15,7 @@ def send_daily_mood_prompts():
     users = CustomUser.objects.all()
 
     for user in users:
-        has_filled_today = user.mood_entries.filter(date=timezone.now().date()).exists()
+        has_filled_today = user.mood_entries.filter(date=timezone.now().date()).exists()  # type: ignore
         if not has_filled_today:
             message = "Tell us how you're feeling! Let's see what the move is!"
             title = "What's the move today?!"
