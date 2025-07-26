@@ -19,10 +19,7 @@ services:
       startCommand: celery -A apiManager.celery.app.celery_app worker --loglevel=info
       envVars:
           - key: REDIS_URL
-            fromService:
-                type: redis
-                name: wave-redis
-                property: connectionString
+            value: redis://red-d22i09p5pdvs73912opg:T4vA1VD5ntHvzep1Ym1P3YsKMPFY8dWK@red-d22i09p5pdvs73912opg:6379
           - key: DJANGO_SETTINGS_MODULE
             value: config.settings
 
@@ -34,14 +31,6 @@ services:
       startCommand: celery -A apiManager.celery.app.celery_app beat --loglevel=info
       envVars:
           - key: REDIS_URL
-            fromService:
-                type: redis
-                name: wave-redis
-                property: connectionString
+            value: redis://red-d22i09p5pdvs73912opg:T4vA1VD5ntHvzep1Ym1P3YsKMPFY8dWK@red-d22i09p5pdvs73912opg:6379
           - key: DJANGO_SETTINGS_MODULE
             value: config.settings
-
-databases:
-    - name: wave-redis
-      type: redis
-      plan: free
