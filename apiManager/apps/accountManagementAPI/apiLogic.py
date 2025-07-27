@@ -431,9 +431,7 @@ async def get_user_tickets(
                             if ticket.event.header_photo
                             else None
                         ),
-                        # Legacy field kept for backward compatibility (always null now)
-                        "qrCodeImage": None,
-                        # New universal QR code fields
+                        # Universal QR code fields - one QR code per user for all events
                         "universal_qr_code": universal_qr_code,
                         "universal_qr_code_image_url": universal_qr_code_image_url,
                         "status": ticket.status,
@@ -516,9 +514,7 @@ async def get_user_ticket_details(
                         if ticket.event.header_photo
                         else None
                     ),
-                    # Legacy field kept for backward compatibility (always null now)
-                    "qrCodeImage": None,
-                    # New universal QR code fields
+                    # Universal QR code fields - one QR code per user for all events
                     "universal_qr_code": universal_qr_code,
                     "universal_qr_code_image_url": universal_qr_code_image_url,
                     "status": ticket.status,

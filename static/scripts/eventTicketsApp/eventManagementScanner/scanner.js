@@ -34,8 +34,7 @@ function startQrScan() {
       { facingMode: "environment" },
       config,
       (decodedText, decodedResult) => {
-        // alert("QR Code Content: " + decodedText);
-        verifyTicket(decodedText);
+        verifyUniversalQRCode(decodedText, qrReader);
       },
       (errorMessage) => {
         console.log(errorMessage);
@@ -46,32 +45,22 @@ function startQrScan() {
     });
 }
 
-function verifyTicket(qrCodeData, qrReader) {
-  // Universal QR codes contain only the UUID string, not JSON
-  // Try parsing as JSON first for backward compatibility, then as UUID
-  let universalQRCode = qrCodeData.trim();
-  let eventId = getEventIdFromPage(); // This function needs to be implemented to get current event ID
+function verifyUniversalQRCode(qrCodeData, qrReader) {
+  // Universal QR codes contain only the UUID string
+  const universalQRCode = qrCodeData.trim();
+  const eventId = getEventIdFromPage();
 
-  // Check if it's old JSON format (backward compatibility)
-  try {
-    const ticketObject = JSON.parse(qrCodeData);
-    if (ticketObject.ticketId && ticketObject.eventId && ticketObject.status) {
-      // Old format - use existing verification
-      verifyLegacyTicket(ticketObject, qrReader);
-      return;
-    }
-  } catch (e) {
-    // Not JSON, treat as universal QR code UUID
-  }
+  console.log(
+    `Verifying universal QR code: ${universalQRCode} for event: ${eventId}`
+  );
 
-  // New universal QR code format
   if (!universalQRCode || !eventId) {
     console.error("QR code data or event ID is missing.");
-    alert("Invalid QR code or event not specified.");
+    showError("Invalid QR code or event not specified.");
     return;
   }
 
-  // Use the new universal QR verification endpoint
+  // Use the universal QR verification endpoint
   fetch("/api/ticketing/verify_universal_qr_code/", {
     method: "POST",
     headers: {
@@ -85,71 +74,72 @@ function verifyTicket(qrCodeData, qrReader) {
   })
     .then((response) => response.json())
     .then((data) => {
-      let name = "";
+      let name = "Unknown";
 
-      // Handle universal QR response format
+      // Extract user name from response
       if (data.user) {
         name =
           `${data.user.first_name || ""} ${data.user.last_name || ""}`.trim() ||
           data.user.username;
-      } else if (data.ticketData) {
-        // Fallback to legacy format
-        if (data.ticketData.guestFirstName && data.ticketData.guestLastName) {
-          name = `${data.ticketData.guestFirstName} ${data.ticketData.guestLastName}`;
-        } else if (
-          data.ticketData.userFirstName &&
-          data.ticketData.userLastName
-        ) {
-          name = `${data.ticketData.userFirstName} ${data.ticketData.userLastName}`;
-        }
       }
 
       if (data.valid) {
-        const ticketStatus = document.querySelector(".ticket-status-valid");
-        ticketStatus.textContent = `${name}: Valid ✅`;
-        ticketStatus.style.display = "block";
+        showSuccess(`${name}: Valid ✅`);
+        console.log(`Successfully verified QR code for user: ${name}`);
       } else {
-        const ticketStatus = document.querySelector(".ticket-status-invalid");
-        ticketStatus.textContent = `${name || "Unknown"}: ${
-          data.message || "Invalid"
-        } ❌`;
-        ticketStatus.style.display = "block";
+        showError(`${name}: ${data.message || "Invalid"} ❌`);
+        console.log(`QR code verification failed: ${data.message}`);
       }
 
-      // Hide status after a delay, restart scan for next ticket
-      setTimeout(() => {
-        document.querySelector(".ticket-status-valid").style.display = "none";
-        document.querySelector(".ticket-status-invalid").style.display = "none";
-
-        // Stop and restart the scanner
-        if (qrReader && qrReader.stop) {
-          qrReader
-            .stop()
-            .then(() => {
-              startQrScan(); // Restart the scanner for the next ticket
-            })
-            .catch(() => {
-              startQrScan(); // Restart even if stop fails
-            });
-        } else {
-          startQrScan(); // Restart the scanner for the next ticket
-        }
-      }, 3000); // Adjust delay as needed
+      // Restart scanner after delay
+      restartScannerAfterDelay(qrReader);
     })
     .catch((error) => {
       console.error("Error verifying universal QR code:", error);
-
-      // Show error message
-      const ticketStatus = document.querySelector(".ticket-status-invalid");
-      ticketStatus.textContent = "Error scanning QR code ❌";
-      ticketStatus.style.display = "block";
-
-      // Hide error and restart after delay
-      setTimeout(() => {
-        ticketStatus.style.display = "none";
-        startQrScan(); // Restart the scanner
-      }, 3000);
+      showError("Error scanning QR code ❌");
+      restartScannerAfterDelay(qrReader);
     });
+}
+
+function showSuccess(message) {
+  const ticketStatus = document.querySelector(".ticket-status-valid");
+  if (ticketStatus) {
+    ticketStatus.textContent = message;
+    ticketStatus.style.display = "block";
+  }
+}
+
+function showError(message) {
+  const ticketStatus = document.querySelector(".ticket-status-invalid");
+  if (ticketStatus) {
+    ticketStatus.textContent = message;
+    ticketStatus.style.display = "block";
+  }
+}
+
+function restartScannerAfterDelay(qrReader) {
+  setTimeout(() => {
+    // Hide status messages
+    const validStatus = document.querySelector(".ticket-status-valid");
+    const invalidStatus = document.querySelector(".ticket-status-invalid");
+
+    if (validStatus) validStatus.style.display = "none";
+    if (invalidStatus) invalidStatus.style.display = "none";
+
+    // Stop and restart the scanner
+    if (qrReader && qrReader.stop) {
+      qrReader
+        .stop()
+        .then(() => {
+          startQrScan(); // Restart the scanner for the next ticket
+        })
+        .catch(() => {
+          startQrScan(); // Restart even if stop fails
+        });
+    } else {
+      startQrScan(); // Restart the scanner for the next ticket
+    }
+  }, 3000); // Adjust delay as needed
 }
 
 function getCookie(name) {
@@ -175,105 +165,55 @@ function getEventIdFromPage() {
   let eventId = urlParams.get("eventId") || urlParams.get("event_id");
 
   if (eventId) {
+    console.log(`Found event ID in URL parameters: ${eventId}`);
     return eventId;
   }
 
   // Try to get from page data attributes
   const eventElement = document.querySelector("[data-event-id]");
   if (eventElement) {
-    return eventElement.getAttribute("data-event-id");
+    eventId = eventElement.getAttribute("data-event-id");
+    console.log(`Found event ID in data attribute: ${eventId}`);
+    return eventId;
   }
 
   // Try to get from form or hidden input
   const hiddenInput = document.querySelector(
     'input[name="eventId"], input[name="event_id"]'
   );
-  if (hiddenInput) {
-    return hiddenInput.value;
-  }
-
-  // Try to get from global JavaScript variable (if set by backend)
-  if (typeof eventId !== "undefined" && eventId) {
+  if (hiddenInput && hiddenInput.value) {
+    eventId = hiddenInput.value;
+    console.log(`Found event ID in hidden input: ${eventId}`);
     return eventId;
   }
 
+  // Try to get from global JavaScript variables
   if (typeof window.eventId !== "undefined" && window.eventId) {
+    console.log(`Found event ID in window.eventId: ${window.eventId}`);
     return window.eventId;
+  }
+
+  // Try to extract from current URL path (e.g., /events/scan/EVENT_ID/)
+  const pathParts = window.location.pathname.split("/");
+  for (let i = 0; i < pathParts.length; i++) {
+    if (pathParts[i] === "scan" && i + 1 < pathParts.length) {
+      eventId = pathParts[i + 1];
+      if (eventId && eventId !== "") {
+        console.log(`Found event ID in URL path: ${eventId}`);
+        return eventId;
+      }
+    }
   }
 
   // Fallback: prompt user for event ID
   console.warn("Event ID not found on page. Prompting user.");
-  return prompt("Please enter the Event ID for this scanning session:");
-}
+  eventId = prompt("Please enter the Event ID for this scanning session:");
 
-// Legacy ticket verification for backward compatibility
-function verifyLegacyTicket(ticketObject, qrReader) {
-  console.log("Using legacy ticket verification for:", ticketObject);
+  if (eventId) {
+    console.log(`User provided event ID: ${eventId}`);
+    return eventId;
+  }
 
-  fetch(saveUrl, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-CSRFToken": getCookie("csrftoken"),
-    },
-    body: JSON.stringify(ticketObject),
-  })
-    .then((response) => response.json())
-    .then((data) => {
-      let name = "";
-      if (data.ticketData) {
-        if (data.ticketData.guestFirstName && data.ticketData.guestLastName) {
-          name = `${data.ticketData.guestFirstName} ${data.ticketData.guestLastName}`;
-        } else if (
-          data.ticketData.userFirstName &&
-          data.ticketData.userLastName
-        ) {
-          name = `${data.ticketData.userFirstName} ${data.ticketData.userLastName}`;
-        }
-      }
-
-      if (data.valid) {
-        const ticketStatus = document.querySelector(".ticket-status-valid");
-        ticketStatus.textContent = `${name}: Valid (Legacy) ✅`;
-        ticketStatus.style.display = "block";
-      } else {
-        const ticketStatus = document.querySelector(".ticket-status-invalid");
-        ticketStatus.textContent = `${name || "Unknown"}: Invalid (Legacy) ❌`;
-        ticketStatus.style.display = "block";
-      }
-
-      // Hide status after a delay, restart scan for next ticket
-      setTimeout(() => {
-        document.querySelector(".ticket-status-valid").style.display = "none";
-        document.querySelector(".ticket-status-invalid").style.display = "none";
-
-        // Stop and restart the scanner
-        if (qrReader && qrReader.stop) {
-          qrReader
-            .stop()
-            .then(() => {
-              startQrScan(); // Restart the scanner for the next ticket
-            })
-            .catch(() => {
-              startQrScan(); // Restart even if stop fails
-            });
-        } else {
-          startQrScan(); // Restart the scanner for the next ticket
-        }
-      }, 3000); // Adjust delay as needed
-    })
-    .catch((error) => {
-      console.error("Error verifying legacy ticket:", error);
-
-      // Show error message
-      const ticketStatus = document.querySelector(".ticket-status-invalid");
-      ticketStatus.textContent = "Error scanning legacy ticket ❌";
-      ticketStatus.style.display = "block";
-
-      // Hide error and restart after delay
-      setTimeout(() => {
-        ticketStatus.style.display = "none";
-        startQrScan(); // Restart the scanner
-      }, 3000);
-    });
+  console.error("No event ID could be determined");
+  return null;
 }

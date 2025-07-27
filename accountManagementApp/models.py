@@ -180,7 +180,15 @@ class UserProfile(models.Model):
         return self.user.username
 
     def generate_qr_code(self):
-        """Generate legacy profile QR code for backward compatibility"""
+        """
+        DEPRECATED: Generate legacy profile QR code for backward compatibility.
+        
+        This method generates a QR code that links to the user's public profile page.
+        For ticket access and event entry, use generate_universal_qr_code() instead.
+        
+        This method is maintained only for backward compatibility and may be removed
+        in future versions.
+        """
         part_url = reverse(
             "social:publicProfile", kwargs={"username": self.user.username}
         )
@@ -207,8 +215,14 @@ class UserProfile(models.Model):
 
     def generate_universal_qr_code(self):
         """
-        Generate universal QR code for ticket access.
+        Generate universal QR code for ticket access and event entry.
+        
+        This is the PRIMARY QR code method for all ticket-related functionality.
         The QR code contains only the UUID for simplicity and security.
+        One QR code per user provides access to all their event tickets.
+        
+        Returns:
+            bool: True if QR code was generated successfully, False otherwise.
         """
         # UUID should already be set by save() method
         if not self.universal_qr_code:
@@ -280,7 +294,8 @@ class UserProfile(models.Model):
             if self.universal_qr_code_image:
                 super(UserProfile, self).save(update_fields=["universal_qr_code_image"])
 
-        # Generate legacy profile QR code if not exists
+        # Generate legacy profile QR code if not exists (deprecated - use universal QR code instead)
+        # This is maintained for backward compatibility only
         if not self.profile_qr_code and self.user_id:
             self.generate_qr_code()
             if self.profile_qr_code:
