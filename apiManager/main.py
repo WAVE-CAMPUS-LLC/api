@@ -22,6 +22,7 @@ from apiManager.apps.notificationsManagementAPI.apiLogic import (
 )
 from apiManager.apps.walleManagementAPI.apiLogic import router as walle_router
 from apiManager.apps.tracingAPI.apiLogic import router as tracing_router
+from apiManager.apps.versionManagementAPI.apiLogic import router as version_router
 from apiManager.apps.coreAPI.version_middleware import VersionCheckMiddleware
 
 from apiManager.tracing.otel import configure_tracing
@@ -101,4 +102,7 @@ app.include_router(
 )
 app.include_router(
     tracing_router, prefix="/waveYourCampusAPIFromOAK/tracing", tags=["Tracing"]
+)
+app.include_router(
+    version_router, prefix="/waveYourCampusAPIFromOAK/version", tags=["Version"]
 )

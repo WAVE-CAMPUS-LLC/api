@@ -323,6 +323,7 @@ INSTALLED_APPS = [
     "hcaptcha",
     "ambassadorManagement",
     "notificationManagement",
+    "versionManagementApp",
 ]
 
 # Redis and Channels configuration
