@@ -38,6 +38,6 @@ celery_app.autodiscover_tasks(
 celery_app.conf.beat_schedule = {
     "send-daily-mood-prompts": {
         "task": "apiManager.apps.coreAPI.tasks.send_daily_mood_prompts",
-        "schedule": crontab(hour=19, minute=40),  # Every day at 7:30 PM EST
+        "schedule": crontab(hour=22, minute=30),  # Every day at 7:30 PM EST
     },
 }
