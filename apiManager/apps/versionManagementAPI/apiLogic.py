@@ -37,7 +37,7 @@ from apiManager.utilities.form_fields import get_form_fields
 from authenticationApp.models import CustomUser
 from versionManagementApp.models import AppVersion
 from versionManagementApp.forms import AppVersionForm
-from versionManagementAPI.serializers import VersionCheckResponse
+from apiManager.apps.versionManagementAPI.serializers import VersionCheckResponse
 
 import logging
 
