@@ -6894,7 +6894,7 @@ async def delete_surf_post(
 async def search_surf_posts(
     request: Request,
     query: str = Query(..., description="Search query", min_length=1),
-    caller_user_id: Optional[int] = Depends(get_current_user),
+    caller_user_id: Optional[int] = None,
     platform: Optional[str] = None,
     page: int = Query(1, ge=1, description="Page number (starts from 1)"),
     page_size: int = Query(
@@ -6905,11 +6905,18 @@ async def search_surf_posts(
     ),
     order: str = Query("desc", description="Sort order: asc or desc"),
 ):
+    # Try to get user ID from authentication, but don't require it
+    try:
+        caller_user_id = await get_current_user(request)
+    except:
+        caller_user_id = None
     """
     API endpoint to search surf posts by content, event title, or username.
     Supports pagination and sorting.
     """
-    print(f"[search_surf_posts API] Function called with query: {query}")
+    print(
+        f"[search_surf_posts API] Function called with query: {query}, user_id: {caller_user_id or 'Anonymous'}"
+    )
 
     user_agent_str = request.headers.get("user-agent", "")
     device_data = get_device_info(user_agent_str)
@@ -7024,7 +7031,7 @@ async def search_surf_posts(
     )
     if search_results is None:
         notification_sent = await notify_by_bot(
-            f"**[API: search_surf_posts API]** \n\n {error_message} \n\n Platform: {platform} \n\n User ID: {caller_user_id} \n\n Query: {query}",
+            f"**[API: search_surf_posts API]** \n\n {error_message} \n\n Platform: {platform} \n\n User ID: {caller_user_id or 'Anonymous'} \n\n Query: {query}",
             platform or "Unknown",
             "ERROR",
             device_info,
