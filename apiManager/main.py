@@ -1,4 +1,3 @@
-# /Users/owusunp/wave_v1-1/apiManager/main.py
 import os
 import django
 

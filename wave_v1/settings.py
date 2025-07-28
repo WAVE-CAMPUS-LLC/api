@@ -324,6 +324,7 @@ INSTALLED_APPS = [
     "ambassadorManagement",
     "notificationManagement",
     "versionManagementApp",
+    "otelManagementApp",
 ]
 
 # Redis and Channels configuration
