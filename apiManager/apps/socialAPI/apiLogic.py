@@ -6808,3 +6808,83 @@ async def check_crew_join_request_status(
         raise HTTPException(
             status_code=500, detail=f"Error checking crew join request status: {str(e)}"
         )
+
+
+@router.delete("/surf-posts/{post_id}")
+async def delete_surf_post(
+    request: Request,
+    post_id: UUID,
+    caller_user_id: Optional[int] = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
+    """
+    API endpoint to delete a surf post.
+    Users can only delete their own surf posts.
+    """
+    print(f"[delete_surf_post API] Function called with post_id: {post_id}")
+
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    @database_sync_to_async
+    def delete_surf_post_logic(caller_user_id, post_id):
+        try:
+            # Get the user
+            user = CustomUser.objects.get(id=caller_user_id)
+
+            # Get the post
+            post = SurfPost.objects.get(surfId=post_id)
+
+            # Check if the user owns this post
+            if post.user != user:
+                return None, "You can only delete your own surf posts"
+
+            # Store post info for logging before deletion
+            post_info = {
+                "post_id": str(post.surfId),
+                "event_title": post.event.title,
+                "content_preview": (
+                    post.content[:50] + "..."
+                    if len(post.content) > 50
+                    else post.content
+                ),
+                "created_at": post.created_at,
+                "tideup": post.tideup,
+                "tidedown": post.tidedown,
+                "score": post.score,
+            }
+
+            # Delete the post (this will cascade delete associated votes)
+            post.delete()
+
+            return post_info, None
+        except CustomUser.DoesNotExist:
+            error_message = f"User not found with ID: {caller_user_id}"
+            print(f"[delete_surf_post API] {error_message}")
+            return None, error_message
+        except SurfPost.DoesNotExist:
+            error_message = f"Surf post not found with ID: {post_id}"
+            print(f"[delete_surf_post API] {error_message}")
+            return None, error_message
+        except Exception as e:
+            error_message = f"Error deleting surf post: {str(e)}"
+            print(f"[delete_surf_post API] {error_message}")
+            return None, error_message
+
+    post_info, error_message = await delete_surf_post_logic(caller_user_id, post_id)
+    if post_info is None:
+        notification_sent = await notify_by_bot(
+            f"**[API: delete_surf_post API]** \n\n {error_message} \n\n Platform: {platform} \n\n User ID: {caller_user_id} \n\n Post ID: {post_id}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        if notification_sent is None:
+            print(
+                "[delete_surf_post API] Could not send notification: BOT_API_KEY not set"
+            )
+        raise HTTPException(status_code=400, detail=error_message)
+
+    print(f"[delete_surf_post API] Surf post deleted successfully")
+    return {"message": "Surf post deleted successfully", "deleted_post": post_info}
