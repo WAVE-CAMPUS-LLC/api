@@ -39,7 +39,7 @@ app = FastAPI(title="WAVE. API", version="1.0.0")
 
 configure_tracing(
     service_name="wave-api",
-    api_key=os.getenv("NEW_RELIC_API_KEY") or "",
+    api_key="d76869a8d0e3b4186f985c1546eaf7acFFFFNRAL",
 )
 
 app.add_middleware(

@@ -19,8 +19,8 @@ def configure_tracing(service_name: str, api_key: str):
 
     try:
         exporter = OTLPSpanExporter(
-            endpoint="https://otlp.nr-data.net/v1/traces",
-            headers={"api-key": api_key},
+            endpoint="https://otlp.nr-data.net:4318/v1/traces",
+            headers={"api-key": "d76869a8d0e3b4186f985c1546eaf7acFFFFNRAL"},
         )
         provider.add_span_processor(BatchSpanProcessor(exporter))
         trace.set_tracer_provider(provider)
