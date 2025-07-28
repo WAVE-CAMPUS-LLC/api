@@ -6888,3 +6888,152 @@ async def delete_surf_post(
 
     print(f"[delete_surf_post API] Surf post deleted successfully")
     return {"message": "Surf post deleted successfully", "deleted_post": post_info}
+
+
+@router.get("/surf-posts/search")
+async def search_surf_posts(
+    request: Request,
+    query: str = Query(..., description="Search query", min_length=1),
+    caller_user_id: Optional[int] = Depends(get_current_user),
+    platform: Optional[str] = None,
+    page: int = Query(1, ge=1, description="Page number (starts from 1)"),
+    page_size: int = Query(
+        20, ge=1, le=100, description="Number of posts per page (max 100)"
+    ),
+    sort_by: str = Query(
+        "created_at", description="Sort by field: created_at, score, tideup, tidedown"
+    ),
+    order: str = Query("desc", description="Sort order: asc or desc"),
+):
+    """
+    API endpoint to search surf posts by content, event title, or username.
+    Supports pagination and sorting.
+    """
+    print(f"[search_surf_posts API] Function called with query: {query}")
+
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    @database_sync_to_async
+    def search_surf_posts_logic(query, page, page_size, sort_by, order):
+        try:
+            # Validate sort_by field
+            valid_sort_fields = ["created_at", "score", "tideup", "tidedown"]
+            if sort_by not in valid_sort_fields:
+                sort_by = "created_at"  # Default to created_at if invalid
+
+            # Validate order
+            if order not in ["asc", "desc"]:
+                order = "desc"  # Default to desc if invalid
+
+            # Build sort field
+            sort_field = f"{'-' if order == 'desc' else ''}{sort_by}"
+
+            # Create search query using Q objects for complex lookups
+            search_query = Q(
+                Q(content__icontains=query)
+                | Q(event__title__icontains=query)
+                | Q(user__username__icontains=query)
+                | Q(user__first_name__icontains=query)
+                | Q(user__last_name__icontains=query)
+            )
+
+            # Get total count of matching surf posts
+            total_posts = SurfPost.objects.filter(search_query).count()
+
+            # Calculate pagination
+            total_pages = (total_posts + page_size - 1) // page_size  # Ceiling division
+            offset = (page - 1) * page_size
+
+            # Get paginated surf posts with user and event information
+            posts = (
+                SurfPost.objects.filter(search_query)
+                .select_related("user", "user__user_profile", "event")
+                .order_by(sort_field)[offset : offset + page_size]
+            )
+
+            posts_data = []
+            for post in posts:
+                user_profile = (
+                    post.user.user_profile
+                    if hasattr(post.user, "user_profile")
+                    else None
+                )
+
+                posts_data.append(
+                    {
+                        "post_id": str(post.surfId),
+                        "event_id": str(post.event.eventId),
+                        "event_title": post.event.title,
+                        "content": post.content,
+                        "created_at": post.created_at,
+                        "tideup": post.tideup,
+                        "tidedown": post.tidedown,
+                        "score": post.score,
+                        "user": {
+                            "user_id": str(post.user.user_id),
+                            "username": post.user.username,
+                            "first_name": post.user.first_name,
+                            "last_name": post.user.last_name,
+                            "profile_photo": (
+                                user_profile.profile_photo.url
+                                if user_profile and user_profile.profile_photo
+                                else None
+                            ),
+                        },
+                        "event": {
+                            "event_id": str(post.event.eventId),
+                            "title": post.event.title,
+                            "date": post.event.date,
+                            "header_photo": (
+                                post.event.header_photo.url
+                                if post.event.header_photo
+                                else None
+                            ),
+                        },
+                    }
+                )
+
+            return {
+                "posts": posts_data,
+                "pagination": {
+                    "current_page": page,
+                    "page_size": page_size,
+                    "total_posts": total_posts,
+                    "total_pages": total_pages,
+                    "has_next": page < total_pages,
+                    "has_previous": page > 1,
+                },
+                "sorting": {
+                    "sort_by": sort_by,
+                    "order": order,
+                },
+                "search": {
+                    "query": query,
+                    "results_count": len(posts_data),
+                },
+            }, None
+        except Exception as e:
+            error_message = f"Error searching surf posts: {str(e)}"
+            print(f"[search_surf_posts API] {error_message}")
+            return None, error_message
+
+    search_results, error_message = await search_surf_posts_logic(
+        query, page, page_size, sort_by, order
+    )
+    if search_results is None:
+        notification_sent = await notify_by_bot(
+            f"**[API: search_surf_posts API]** \n\n {error_message} \n\n Platform: {platform} \n\n User ID: {caller_user_id} \n\n Query: {query}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        if notification_sent is None:
+            print(
+                "[search_surf_posts API] Could not send notification: BOT_API_KEY not set"
+            )
+        raise HTTPException(status_code=500, detail=error_message)
+
+    print(f"[search_surf_posts API] Found {len(search_results['posts'])} surf posts")
+    return search_results
