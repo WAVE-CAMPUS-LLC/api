@@ -50,3 +50,27 @@ class EventDetailsSerializer(BaseModel):
     
     class Config:
         from_attributes = True
+
+
+class WavePassTicketInfo(BaseModel):
+    """
+    Pydantic model for individual ticket information in wavepass response.
+    """
+    ticketId: str
+    event_name: str
+    event_date: date
+    
+    class Config:
+        from_attributes = True
+
+
+class WavePassInfo(BaseModel):
+    """
+    Pydantic model for wavepass information response.
+    """
+    wavePassId: str
+    universal_qr_code_url: Optional[str] = None
+    tickets: List[WavePassTicketInfo] = []
+    
+    class Config:
+        from_attributes = True

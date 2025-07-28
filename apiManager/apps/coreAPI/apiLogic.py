@@ -5,7 +5,7 @@ from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordRequestForm
 import bleach
 import uuid
-from datetime import date
+from datetime import date, datetime, timedelta
 
 # Django imports
 from django.utils import timezone
@@ -17,7 +17,7 @@ from eventTicketsApp.views import generateTicket
 from socialApp.models import Crew, CrewMember
 
 # API Manager imports
-from .serializers import ExplorePageEvent, EventDetailsSerializer, RSVPInformation
+from .serializers import ExplorePageEvent, EventDetailsSerializer, RSVPInformation, WavePassInfo, WavePassTicketInfo
 from apiManager.dependencies import get_current_user
 from apiManager.utilities.notify_by_bot import notify_by_bot
 from apiManager.utilities.device_info import get_device_info
@@ -1486,3 +1486,117 @@ async def check_attendance_milestone(event_id, host_user_id):
 
     except Exception as e:
         print(f"[check_attendance_milestone] Error: {str(e)}")
+
+
+@router.get("/wavepass/{wavePassId}/info", response_model=WavePassInfo)
+async def get_wavepass_information(
+    wavePassId: str,
+    request: Request,
+    platform: Optional[str] = None,
+):
+    """
+    API endpoint to retrieve wavepass information including user tickets for events
+    that are not in the past by more than 24 hours.
+    
+    Args:
+        wavePassId: The universal QR code UUID for the user
+        request: FastAPI Request object
+        platform: Optional platform identifier
+        
+    Returns:
+        WavePassInfo: Contains wavePassId, universal QR code URL, and valid tickets
+    """
+    print(f"[get_wavepass_information] Called with wavePassId: {wavePassId}")
+    
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    @database_sync_to_async
+    def get_wavepass_data(wavepass_id):
+        try:
+            # Parse UUID to validate format
+            uuid_obj = uuid.UUID(wavepass_id)
+            
+            # Find user profile with this universal QR code
+            user_profile = UserProfile.objects.select_related('user').get(
+                universal_qr_code=uuid_obj
+            )
+            
+            # Calculate cutoff time (24 hours ago from now)
+            cutoff_datetime = timezone.now() - timedelta(hours=24)
+            cutoff_date = cutoff_datetime.date()
+            
+            # Get all tickets for this user for events that are not in the past by more than 24 hours
+            # An event is considered "not in past by more than 24 hours" if:
+            # - Event date is today or future, OR
+            # - Event date is yesterday but we're within 24 hours of when it happened
+            tickets = Ticket.objects.select_related('event').filter(
+                user=user_profile.user,
+                status='Valid'  # Only valid tickets
+            ).filter(
+                event__date__gte=cutoff_date  # Event date is >= 24 hours ago
+            ).order_by('event__date', 'event__start_time')
+            
+            # Format ticket data
+            ticket_info_list = []
+            for ticket in tickets:
+                ticket_info = {
+                    'ticketId': str(ticket.ticketId),
+                    'event_name': ticket.event.title,
+                    'event_date': ticket.event.date
+                }
+                ticket_info_list.append(ticket_info)
+            
+            # Get universal QR code image URL
+            qr_code_url = None
+            if user_profile.universal_qr_code_image:
+                # Get the full URL for the QR code image
+                qr_code_url = user_profile.universal_qr_code_image.url
+            
+            response_data = {
+                'wavePassId': str(user_profile.universal_qr_code),
+                'universal_qr_code_url': qr_code_url,
+                'tickets': ticket_info_list
+            }
+            
+            print(f"[get_wavepass_information] Found {len(ticket_info_list)} tickets for user: {user_profile.user.username}")
+            return response_data
+            
+        except ValueError:
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid wavePassId format. Must be a valid UUID."
+            )
+        except UserProfile.DoesNotExist:
+            raise HTTPException(
+                status_code=404,
+                detail="WavePass not found. Please check the wavePassId."
+            )
+        except Exception as e:
+            print(f"[get_wavepass_information] Unexpected error: {str(e)}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Error retrieving wavepass information: {str(e)}"
+            )
+
+    try:
+        wavepass_data = await get_wavepass_data(wavePassId)
+        print(f"[get_wavepass_information] Successfully retrieved wavepass data")
+        return WavePassInfo(**wavepass_data)
+        
+    except HTTPException:
+        # Re-raise HTTP exceptions as-is
+        raise
+    except Exception as e:
+        await notify_by_bot(
+            f"**[API: get_wavepass_information]** \n\n Error retrieving wavepass info: error={str(e)} \n\n wavePassId={wavePassId} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Error retrieving wavepass information: {str(e)}"
+        )

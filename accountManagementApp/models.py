@@ -218,7 +218,7 @@ class UserProfile(models.Model):
         Generate universal QR code for ticket access and event entry.
         
         This is the PRIMARY QR code method for all ticket-related functionality.
-        The QR code contains only the UUID for simplicity and security.
+        The QR code contains a URL that points to the wavepass page with the UUID.
         One QR code per user provides access to all their event tickets.
         
         Returns:
@@ -228,13 +228,13 @@ class UserProfile(models.Model):
         if not self.universal_qr_code:
             self.universal_qr_code = uuid.uuid4()
 
-        # Simple QR code data - just the UUID string
-        qr_code_content = str(self.universal_qr_code)
+        # Create URL for QR code - points to wavepass page with the UUID
+        qr_code_content = f"https://www.wave.buzz/wavepass/{self.universal_qr_code}"
 
         try:
             # Create QR code with optimal settings for ticket scanning
             qr = qrcode.QRCode(
-                version=1,  # Smallest version that can fit the UUID
+                version=1,  # Start with smallest version, will auto-expand if needed
                 error_correction=qrcode.constants.ERROR_CORRECT_M,  # Medium error correction for better scanning
                 box_size=8,  # Good balance between size and scannability
                 border=4,  # Standard border
@@ -326,7 +326,7 @@ class UserProfile(models.Model):
         Verify a universal QR code and return the associated user profile.
 
         Args:
-            qr_code_data (str): UUID string from scanned QR code
+            qr_code_data (str): UUID string or URL from scanned QR code
 
         Returns:
             tuple: (UserProfile instance or None, error_message or None)
@@ -335,7 +335,21 @@ class UserProfile(models.Model):
             # Clean the input data
             qr_code_data = qr_code_data.strip()
 
-            # Try to parse as UUID directly (new simple format)
+            # Try to parse as URL (new format) - extract UUID from wavepass URL
+            if qr_code_data.startswith(('http://', 'https://')):
+                try:
+                    # Extract UUID from URL path like: https://www.wave.buzz/wavepass/12345678-1234-5678-9012-123456789abc
+                    if '/wavepass/' in qr_code_data:
+                        wavepass_id = qr_code_data.split('/wavepass/')[-1]
+                        # Remove any query parameters or fragments
+                        wavepass_id = wavepass_id.split('?')[0].split('#')[0]
+                        universal_qr_code = uuid.UUID(wavepass_id)
+                        user_profile = cls.objects.get(universal_qr_code=universal_qr_code)
+                        return user_profile, None
+                except (ValueError, cls.DoesNotExist, IndexError):
+                    pass
+
+            # Try to parse as UUID directly (legacy format)
             try:
                 universal_qr_code = uuid.UUID(qr_code_data)
                 user_profile = cls.objects.get(universal_qr_code=universal_qr_code)
