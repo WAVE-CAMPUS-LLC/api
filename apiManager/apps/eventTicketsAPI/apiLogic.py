@@ -2910,7 +2910,7 @@ async def get_ticket_details(
         
         if "error" in result:
             error_message = result["error"]
-            print(create_enhanced_log_message("get_ticket_details API", f"Error retrieving ticket: {error_message}", request_info))
+            print(create_enhanced_log_message("get_tickt_details API", f"Error retrieving ticket: {error_message}", request_info))
             
             if error_message == "Ticket not found":
                 status_code = status.HTTP_404_NOT_FOUND
