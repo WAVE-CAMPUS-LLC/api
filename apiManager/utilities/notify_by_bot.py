@@ -33,7 +33,15 @@ async def notify_by_bot(
         return False
 
     try:
-        async with httpx.AsyncClient() as client:
+        # Use shorter timeout and better connection settings for reliability
+        timeout_config = httpx.Timeout(
+            connect=2.0,  # Connection timeout
+            read=3.0,     # Read timeout
+            write=2.0,    # Write timeout
+            pool=5.0      # Pool timeout
+        )
+        
+        async with httpx.AsyncClient(timeout=timeout_config) as client:
             response = await client.post(
                 f"{api_url}/log/error",
                 json={
@@ -43,15 +51,18 @@ async def notify_by_bot(
                     "device_info": device_info,
                 },
                 headers={"X-API-Key": DISCORD_BOT_API_KEY},
-                timeout=5,  # Increased timeout for better reliability
             )
             response.raise_for_status()
+            print(f"[notify_by_bot] Successfully sent notification: {level}")
             return True
     except httpx.TimeoutException:
-        print("[notify_by_bot] Error: Request timed out")
+        print(f"[notify_by_bot] Error: Request timed out after 3 seconds")
         return False
     except httpx.HTTPError as e:
         print(f"[notify_by_bot] Error: HTTP error occurred: {str(e)}")
+        return False
+    except httpx.ConnectError as e:
+        print(f"[notify_by_bot] Error: Could not connect to notification service: {str(e)}")
         return False
     except Exception as e:
         print(f"[notify_by_bot] Error sending message: {str(e)}")

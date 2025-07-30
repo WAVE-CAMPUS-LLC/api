@@ -48,23 +48,28 @@ from accountManagementApp.forms import (
     UpdateContactInfo,
 )
 from apiManager.utilities.form_fields import get_form_fields
-from accountManagementApp.forms import UserPreferencesForm
-from fastapi import Depends
 from apiManager.dependencies import get_current_user
-from django.shortcuts import get_object_or_404
-from apiManager.utilities.notify_by_bot import notify_by_bot
 from apiManager.utilities.device_info import get_device_info
-
-stripeKey = settings.STRIPE_PUBLISHABLE_KEY
-
-# Import the ResetLinkExpiryTime setting
-from django.conf import settings
-
-ResetLinkExpiryTime = getattr(
-    settings, "RESET_LINK_EXPIRY_TIME", timezone.timedelta(hours=24)
+from apiManager.utilities.notify_by_bot import notify_by_bot
+from .serializers import (
+    ProfileOverview,
+    ProfileDetailed,
+    TicketSerializer,
+    UniversalQRResponse,
+    UserTicketsResponse,
 )
 
-from .serializers import TicketSerializer, UniversalQRResponse, UserTicketsResponse
+# Safe notification wrapper to prevent notification failures from breaking APIs
+async def safe_notify_by_bot(message: str, platform: str, level: str = "ERROR", device_info: str = None) -> None:
+    """
+    Safely send notification via bot with error handling to prevent API failures.
+    If notification fails, it logs the error but doesn't throw an exception.
+    """
+    try:
+        await notify_by_bot(message, platform, level, device_info)
+    except Exception as notification_error:
+        print(f"[safe_notify_by_bot] Failed to send notification: {notification_error}")
+        # Don't re-raise the exception - just log and continue
 
 router = APIRouter()
 
@@ -150,7 +155,7 @@ async def profileOverview(
     try:
         profile_data = await get_profile_overview(user_id)
         if profile_data is None:
-            await notify_by_bot(
+            await safe_notify_by_bot(
                 f"**[API: profileOverview]** \n\n User not found: user_id={user_id} \n\n Platform: {platform}",
                 platform or "Unknown",
                 "ERROR",
@@ -164,7 +169,7 @@ async def profileOverview(
         if not isinstance(e, HTTPException):
             error_trace = traceback.format_exc()
             print(f"[profileOverview] Unhandled exception: {str(e)}\n{error_trace}")
-            await notify_by_bot(
+            await safe_notify_by_bot(
                 f"**[API: profileOverview]** \n\n Unhandled exception: user_id={user_id}, error={str(e)} \n\n Platform: {platform}",
                 platform or "Unknown",
                 "ERROR",
@@ -255,7 +260,7 @@ async def profile_detailed(
     try:
         profile_data = await get_profile_detailed(user_id)
         if profile_data is None:
-            await notify_by_bot(
+            await safe_notify_by_bot(
                 f"**[API: profile_detailed]** \n\n User not found: user_id={user_id} \n\n Platform: {platform}",
                 platform or "Unknown",
                 "ERROR",
@@ -268,7 +273,7 @@ async def profile_detailed(
         if not isinstance(e, HTTPException):
             error_trace = traceback.format_exc()
             print(f"[profile_detailed] Unhandled exception: {str(e)}\n{error_trace}")
-            await notify_by_bot(
+            await safe_notify_by_bot(
                 f"**[API: profile_detailed]** \n\n Unhandled exception: user_id={user_id}, error={str(e)} \n\n Platform: {platform}",
                 platform or "Unknown",
                 "ERROR",
@@ -333,7 +338,7 @@ async def update_profile_detailed(
         user_id, first_name, last_name, email, profile_photo
     )
     if not success:
-        await notify_by_bot(
+        await safe_notify_by_bot(
             f"**[API: update_profile_detailed]** \n\n User not found: user_id={user_id} \n\n Platform: {platform}",
             platform or "Unknown",
             "ERROR",
@@ -453,7 +458,7 @@ async def get_user_tickets(
         print(f"[get_user_tickets] Returning {len(tickets)} serialized tickets")
         return {"tickets": tickets}
     except Exception as e:
-        await notify_by_bot(
+        await safe_notify_by_bot(
             f"**[API: get_user_tickets]** \n\n Error fetching user tickets: user_id={user_id}, error={str(e)} \n\n Platform: {platform}",
             platform or "Unknown",
             "ERROR",
@@ -568,7 +573,7 @@ async def get_user_ticket_details(
         )
         return ticket_data
     except Exception as e:
-        await notify_by_bot(
+        await safe_notify_by_bot(
             f"**[API: get_user_ticket_details]** \n\n Error fetching ticket details: ticketId={ticketId}, user_id={user_id}, error={str(e)} \n\n Platform: {platform}",
             platform or "Unknown",
             "ERROR",
@@ -632,7 +637,7 @@ async def favoriteEvents(
         )
         return events_data
     except Exception as e:
-        await notify_by_bot(
+        await safe_notify_by_bot(
             f"**[API: favoriteEvents]** \n\n Error fetching favorite events: user_id={user_id}, error={str(e)} \n\n Platform: {platform}",
             platform or "Unknown",
             "ERROR",
@@ -681,7 +686,7 @@ async def delete_profile(
         print(f"[delete_profile] Profile deleted successfully for user_id: {user_id}")
         return {"message": "Profile deleted successfully"}
     except Exception as e:
-        await notify_by_bot(
+        await safe_notify_by_bot(
             f"**[API: delete_profile]** \n\n Error deleting profile: user_id={user_id}, error={str(e)} \n\n Platform: {platform}",
             platform or "Unknown",
             "ERROR",
@@ -789,7 +794,7 @@ async def delete_account_with_reason(
             if "User not found" in result.get("error", ""):
                 raise HTTPException(status_code=404, detail="User not found")
             else:
-                await notify_by_bot(
+                await safe_notify_by_bot(
                     f"**[API: delete_account_with_reason]** \n\n Error deleting account: user_id={user_id}, error={result.get('error')} \n\n Platform: {platform}",
                     platform or "Unknown",
                     "ERROR",
@@ -805,7 +810,7 @@ async def delete_account_with_reason(
         )
 
         # Notify about account deletion (optional - you may want to track this)
-        await notify_by_bot(
+        await safe_notify_by_bot(
             f"**[Account Deletion]** \n\n User account deleted: user_id={user_id}, reason: {reason[:100]}{'...' if len(reason) > 100 else ''} \n\n Platform: {platform}",
             platform or "Unknown",
             "INFO",
@@ -827,7 +832,7 @@ async def delete_account_with_reason(
         print(
             f"[delete_account_with_reason] Unhandled exception: {str(e)}\n{error_trace}"
         )
-        await notify_by_bot(
+        await safe_notify_by_bot(
             f"**[API: delete_account_with_reason]** \n\n Unhandled exception: user_id={user_id}, error={str(e)} \n\n Platform: {platform}",
             platform or "Unknown",
             "ERROR",
@@ -918,7 +923,7 @@ async def get_user_transactions(
         )
         return transactions_data
     except Exception as e:
-        await notify_by_bot(
+        await safe_notify_by_bot(
             f"**[API: get_user_transactions]** \n\n Error fetching user transactions: user_id={user_id}, error={str(e)} \n\n Platform: {platform}",
             platform or "Unknown",
             "ERROR",
@@ -1008,7 +1013,7 @@ async def get_user_payment_methods(
         )
         return payment_methods_data
     except Exception as e:
-        await notify_by_bot(
+        await safe_notify_by_bot(
             f"**[API: get_user_payment_methods]** \n\n Error fetching payment methods: user_id={user_id}, error={str(e)} \n\n Platform: {platform}",
             platform or "Unknown",
             "ERROR",
@@ -1046,7 +1051,7 @@ async def delete_payment_method(
         else:
             raise HTTPException(status_code=400, detail="Invalid payment method ID.")
     except Exception as e:
-        await notify_by_bot(
+        await safe_notify_by_bot(
             f"**[API: delete_payment_method]** \n\n Error deleting payment method: user_id={user_id}, paymentMethodId={paymentMethodId}, error={str(e)} \n\n Platform: {platform}",
             platform or "Unknown",
             "ERROR",
@@ -1094,7 +1099,7 @@ async def set_default_payment_method(
         else:
             raise HTTPException(status_code=400, detail="Invalid payment method ID.")
     except Exception as e:
-        await notify_by_bot(
+        await safe_notify_by_bot(
             f"**[API: set_default_payment_method]** \n\n Error setting default payment method: user_id={user_id}, paymentMethodId={paymentMethodId}, error={str(e)} \n\n Platform: {platform}",
             platform or "Unknown",
             "ERROR",
@@ -1131,7 +1136,7 @@ async def add_payout_method_to_profile(
         else:
             raise HTTPException(status_code=400, detail="Failed to add bank account.")
     except Exception as e:
-        await notify_by_bot(
+        await safe_notify_by_bot(
             f"**[API: add_payout_method_to_profile]** \n\n Error adding payout method: user_id={user_id}, error={str(e)} \n\n Platform: {platform}",
             platform or "Unknown",
             "ERROR",
@@ -1182,7 +1187,7 @@ async def request_instant_payout(
         else:
             raise HTTPException(status_code=400, detail="Failed to process payout.")
     except Exception as e:
-        await notify_by_bot(
+        await safe_notify_by_bot(
             f"**[API: request_instant_payout]** \n\n Error requesting instant payout: user_id={user_id}, error={str(e)} \n\n Platform: {platform}",
             platform or "Unknown",
             "ERROR",
@@ -1226,7 +1231,7 @@ async def check_host(
         print(f"[check_host] Returning host status for user_id: {user_id}: {result}")
         return result
     except Exception as e:
-        await notify_by_bot(
+        await safe_notify_by_bot(
             f"**[API: check_host]** \n\n Error checking host status: user_id={user_id}, error={str(e)} \n\n Platform: {platform}",
             platform or "Unknown",
             "ERROR",
@@ -1312,7 +1317,7 @@ async def get_host_dashboard_link(
         )
         return result
     except Exception as e:
-        await notify_by_bot(
+        await safe_notify_by_bot(
             f"**[API: get_host_dashboard_link]** \n\n Error getting host dashboard link: user_id={user_id}, error={str(e)} \n\n Platform: {platform}",
             platform or "Unknown",
             "ERROR",
@@ -1373,7 +1378,7 @@ async def get_user_college(
         )
         return college_data
     except Exception as e:
-        await notify_by_bot(
+        await safe_notify_by_bot(
             f"**[API: get_user_college]** \n\n Error fetching user college: user_id={user_id}, error={str(e)} \n\n Platform: {platform}",
             platform or "Unknown",
             "ERROR",
@@ -1455,7 +1460,7 @@ async def get_edit_fields(
     try:
         profile_data = await get_edit_profile_data(user_id)
         if profile_data is None:
-            await notify_by_bot(
+            await safe_notify_by_bot(
                 f"**[API: get_edit_fields]** \n\n User not found: user_id={user_id} \n\n Platform: {platform}",
                 platform or "Unknown",
                 "ERROR",
@@ -1469,7 +1474,7 @@ async def get_edit_fields(
         if not isinstance(e, HTTPException):
             error_trace = traceback.format_exc()
             print(f"[get_edit_fields] Unhandled exception: {str(e)}\n{error_trace}")
-            await notify_by_bot(
+            await safe_notify_by_bot(
                 f"**[API: get_edit_fields]** \n\n Unhandled exception: user_id={user_id}, error={str(e)} \n\n Platform: {platform}",
                 platform or "Unknown",
                 "ERROR",
@@ -1586,7 +1591,7 @@ async def update_edit_fields(
         )
 
         if profile_data is None:
-            await notify_by_bot(
+            await safe_notify_by_bot(
                 f"**[API: update_edit_fields]** \n\n User not found: user_id={user_id} \n\n Platform: {platform}",
                 platform or "Unknown",
                 "ERROR",
@@ -1599,7 +1604,7 @@ async def update_edit_fields(
         )
 
         # Notify about profile update (optional)
-        await notify_by_bot(
+        await safe_notify_by_bot(
             f"**[Profile Update]** \n\n User profile updated: user_id={user_id}, email={email} \n\n Platform: {platform}",
             platform or "Unknown",
             "INFO",
@@ -1614,7 +1619,7 @@ async def update_edit_fields(
     except Exception as e:
         error_trace = traceback.format_exc()
         print(f"[update_edit_fields] Unhandled exception: {str(e)}\n{error_trace}")
-        await notify_by_bot(
+        await safe_notify_by_bot(
             f"**[API: update_edit_fields]** \n\n Unhandled exception: user_id={user_id}, error={str(e)} \n\n Platform: {platform}",
             platform or "Unknown",
             "ERROR",
@@ -1669,7 +1674,7 @@ async def get_user_settings(
     try:
         settings_data = await get_settings_async(user_id)
         if settings_data is None:
-            await notify_by_bot(
+            await safe_notify_by_bot(
                 f"**[API: get_user_settings]** \n\n User not found: user_id={user_id} \n\n Platform: {platform}",
                 platform or "Unknown",
                 "ERROR",
@@ -1681,7 +1686,7 @@ async def get_user_settings(
         if not isinstance(e, HTTPException):
             error_trace = traceback.format_exc()
             print(f"[get_user_settings] Unhandled exception: {str(e)}\n{error_trace}")
-            await notify_by_bot(
+            await safe_notify_by_bot(
                 f"**[API: get_user_settings]** \n\n Error fetching user settings: user_id={user_id}, error={str(e)} \n\n Platform: {platform}",
                 platform or "Unknown",
                 "ERROR",
@@ -1957,7 +1962,7 @@ async def update_user_settings(
         if not isinstance(e, HTTPException):
             error_trace = traceback.format_exc()
             print("[update_user_settings] Exception:", str(e), error_trace)
-            await notify_by_bot(
+            await safe_notify_by_bot(
                 f"**[API: update_user_settings]** \n\n Error updating user settings: user_id={user_id}, error={str(e)} \n\n Platform: {platform}",
                 platform or "Unknown",
                 "ERROR",
@@ -2059,7 +2064,7 @@ async def password_reset(
 
         if not result["success"]:
             if "error" in result:
-                await notify_by_bot(
+                await safe_notify_by_bot(
                     f"**[API: password_reset]** \n\n Error processing password reset: email={email}, error={result['error']} \n\n Platform: {platform}",
                     platform or "Unknown",
                     "ERROR",
@@ -2067,7 +2072,7 @@ async def password_reset(
                 )
                 raise HTTPException(status_code=404, detail=result["error"])
             elif "errors" in result:
-                await notify_by_bot(
+                await safe_notify_by_bot(
                     f"**[API: password_reset]** \n\n Validation errors: email={email}, errors={result['errors']} \n\n Platform: {platform}",
                     platform or "Unknown",
                     "ERROR",
@@ -2075,7 +2080,7 @@ async def password_reset(
                 )
                 raise HTTPException(status_code=400, detail=result["errors"])
             else:
-                await notify_by_bot(
+                await safe_notify_by_bot(
                     f"**[API: password_reset]** \n\n Internal error: email={email} \n\n Platform: {platform}",
                     platform or "Unknown",
                     "ERROR",
@@ -2088,7 +2093,7 @@ async def password_reset(
         )
         return result
     except Exception as e:
-        await notify_by_bot(
+        await safe_notify_by_bot(
             f"**[API: password_reset]** \n\n Error processing password reset: email={email}, error={str(e)} \n\n Platform: {platform}",
             platform or "Unknown",
             "ERROR",
@@ -2179,7 +2184,7 @@ async def password_reset_confirm(
 
         if not result["success"]:
             if "error" in result:
-                await notify_by_bot(
+                await safe_notify_by_bot(
                     f"**[API: password_reset_confirm]** \n\n Error confirming password reset: uid={uid}, error={result['error']} \n\n Platform: {platform}",
                     platform or "Unknown",
                     "ERROR",
@@ -2187,7 +2192,7 @@ async def password_reset_confirm(
                 )
                 raise HTTPException(status_code=400, detail=result["error"])
             else:
-                await notify_by_bot(
+                await safe_notify_by_bot(
                     f"**[API: password_reset_confirm]** \n\n Internal error: uid={uid} \n\n Platform: {platform}",
                     platform or "Unknown",
                     "ERROR",
@@ -2200,7 +2205,7 @@ async def password_reset_confirm(
         )
         return result
     except Exception as e:
-        await notify_by_bot(
+        await safe_notify_by_bot(
             f"**[API: password_reset_confirm]** \n\n Error confirming password reset: uid={uid}, error={str(e)} \n\n Platform: {platform}",
             platform or "Unknown",
             "ERROR",
@@ -2347,7 +2352,7 @@ async def set_user_preferences(
         result = await set_user_preferences_async(user_id, form_dict)
 
         if not result["success"]:
-            await notify_by_bot(
+            await safe_notify_by_bot(
                 f"**[API: set_user_preferences]** \n\n Error saving preferences: user_id={user_id}, error={result['error']} \n\n Platform: {platform}",
                 platform or "Unknown",
                 "ERROR",
@@ -2358,7 +2363,7 @@ async def set_user_preferences(
         return result
 
     except Exception as e:
-        await notify_by_bot(
+        await safe_notify_by_bot(
             f"**[API: set_user_preferences]** \n\n Internal server error: user_id={user_id}, error={str(e)} \n\n Platform: {platform}",
             platform or "Unknown",
             "ERROR",
@@ -2445,7 +2450,7 @@ async def get_user_preferences(
 
         preferences_data = await get_user_preferences_async(user_id)
         if preferences_data is None:
-            await notify_by_bot(
+            await safe_notify_by_bot(
                 f"**[API: get_user_preferences]** \n\n User not found: user_id={user_id} \n\n Platform: {platform}",
                 platform or "Unknown",
                 "ERROR",
@@ -2461,7 +2466,7 @@ async def get_user_preferences(
             print(
                 f"[get_user_preferences] Unhandled exception: {str(e)}\n{error_trace}"
             )
-            await notify_by_bot(
+            await safe_notify_by_bot(
                 f"**[API: get_user_preferences]** \n\n Unhandled exception: user_id={user_id}, error={str(e)} \n\n Platform: {platform}",
                 platform or "Unknown",
                 "ERROR",
@@ -2540,7 +2545,7 @@ async def check_user_college(
 
         result = await check_user_has_college(user_id)
         if result is None:
-            await notify_by_bot(
+            await safe_notify_by_bot(
                 f"**[API: check_user_college]** \n\n User not found: user_id={user_id} \n\n Platform: {platform}",
                 platform or "Unknown",
                 "ERROR",
@@ -2556,7 +2561,7 @@ async def check_user_college(
         if not isinstance(e, HTTPException):
             error_trace = traceback.format_exc()
             print(f"[check_user_college] Unhandled exception: {str(e)}\n{error_trace}")
-            await notify_by_bot(
+            await safe_notify_by_bot(
                 f"**[API: check_user_college]** \n\n Unhandled exception: user_id={user_id}, error={str(e)} \n\n Platform: {platform}",
                 platform or "Unknown",
                 "ERROR",
@@ -2620,7 +2625,7 @@ async def get_privacy_settings(
     try:
         privacy_settings = await get_privacy_settings_async(user_id)
         if privacy_settings is None:
-            await notify_by_bot(
+            await safe_notify_by_bot(
                 f"**[API: get_privacy_settings]** \n\n User not found: user_id={user_id} \n\n Platform: {platform}",
                 platform or "Unknown",
                 "ERROR",
@@ -2634,7 +2639,7 @@ async def get_privacy_settings(
         if not isinstance(e, HTTPException):
             error_trace = traceback.format_exc()
             print(f"[get_privacy_settings] Unhandled exception: {str(e)}\n{error_trace}")
-            await notify_by_bot(
+            await safe_notify_by_bot(
                 f"**[API: get_privacy_settings]** \n\n Unhandled exception: user_id={user_id}, error={str(e)} \n\n Platform: {platform}",
                 platform or "Unknown",
                 "ERROR",
@@ -2759,7 +2764,7 @@ async def set_privacy_settings(
 
         if not result["success"]:
             if "User not found" in result.get("error", ""):
-                await notify_by_bot(
+                await safe_notify_by_bot(
                     f"**[API: set_privacy_settings]** \n\n User not found: user_id={user_id} \n\n Platform: {platform}",
                     platform or "Unknown",
                     "ERROR",
@@ -2767,7 +2772,7 @@ async def set_privacy_settings(
                 )
                 raise HTTPException(status_code=404, detail="User not found")
             else:
-                await notify_by_bot(
+                await safe_notify_by_bot(
                     f"**[API: set_privacy_settings]** \n\n Error updating privacy settings: user_id={user_id}, error={result.get('error')} \n\n Platform: {platform}",
                     platform or "Unknown",
                     "ERROR",
@@ -2778,7 +2783,7 @@ async def set_privacy_settings(
         print(f"[set_privacy_settings] Privacy settings updated successfully for user_id: {user_id}")
 
         # Notify about privacy settings update
-        await notify_by_bot(
+        await safe_notify_by_bot(
             f"**[Privacy Settings Update]** \n\n User privacy settings updated: user_id={user_id}, settings={settings} \n\n Platform: {platform}",
             platform or "Unknown",
             "INFO",
@@ -2793,7 +2798,7 @@ async def set_privacy_settings(
     except Exception as e:
         error_trace = traceback.format_exc()
         print(f"[set_privacy_settings] Unhandled exception: {str(e)}\n{error_trace}")
-        await notify_by_bot(
+        await safe_notify_by_bot(
             f"**[API: set_privacy_settings]** \n\n Unhandled exception: user_id={user_id}, error={str(e)} \n\n Platform: {platform}",
             platform or "Unknown",
             "ERROR",
@@ -2874,7 +2879,7 @@ async def get_user_universal_qr(
         qr_data = await get_universal_qr_data(user_id)
         
         if qr_data is None:
-            await notify_by_bot(
+            await safe_notify_by_bot(
                 f"**[API: get_user_universal_qr]** \n\n User not found: user_id={user_id} \n\n Platform: {platform}",
                 platform or "Unknown",
                 "ERROR",
@@ -2890,7 +2895,7 @@ async def get_user_universal_qr(
     except Exception as e:
         error_trace = traceback.format_exc()
         print(f"[get_user_universal_qr] Unhandled exception: {str(e)}\n{error_trace}")
-        await notify_by_bot(
+        await safe_notify_by_bot(
             f"**[API: get_user_universal_qr]** \n\n Unhandled exception: user_id={user_id}, error={str(e)} \n\n Platform: {platform}",
             platform or "Unknown",
             "ERROR",
@@ -3013,7 +3018,7 @@ async def get_user_tickets_detailed(
         tickets_data = await get_user_tickets_data(user_id)
         
         if tickets_data is None:
-            await notify_by_bot(
+            await safe_notify_by_bot(
                 f"**[API: get_user_tickets_detailed]** \n\n User not found: user_id={user_id} \n\n Platform: {platform}",
                 platform or "Unknown",
                 "ERROR",
@@ -3029,7 +3034,7 @@ async def get_user_tickets_detailed(
     except Exception as e:
         error_trace = traceback.format_exc()
         print(f"[get_user_tickets_detailed] Unhandled exception: {str(e)}\n{error_trace}")
-        await notify_by_bot(
+        await safe_notify_by_bot(
             f"**[API: get_user_tickets_detailed]** \n\n Unhandled exception: user_id={user_id}, error={str(e)} \n\n Platform: {platform}",
             platform or "Unknown",
             "ERROR",
