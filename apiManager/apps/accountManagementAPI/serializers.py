@@ -44,13 +44,17 @@ class TicketSerializer(BaseModel):
     event: Optional[EventSerializer] = None
     eventId: str
     eventTitle: str
-    # Individual ticket QR code fields (restored from legacy system)
+    # Individual ticket QR code fields (separate ticket system)
     qrCodeImage: Optional[str] = None
     qrCodeData: Optional[str] = None
     status: str
     eventDate: date
     eventStartTime: time
     eventEndTime: time
+    created_at: Optional[datetime] = None
+    stripe_session_id: Optional[str] = None
+    date: Optional[date] = None
+    header_photo: Optional[str] = None
     
     
     class Config:

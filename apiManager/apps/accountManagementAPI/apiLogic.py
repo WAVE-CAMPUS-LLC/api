@@ -366,11 +366,14 @@ async def get_user_tickets(
         def get_user_tickets_async(user_id):
             print(f"[get_user_tickets_async] Retrieving tickets for user_id: {user_id}")
             user = CustomUser.objects.get(id=user_id)
-            tickets = Ticket.objects.filter(user=user)
+            
+            # Optimize query with select_related for event data
+            tickets = Ticket.objects.select_related('event').filter(user=user).order_by('-created_at')
             print(f"[get_user_tickets_async] Found {tickets.count()} tickets")
+            
             ticket_list = []
             for ticket in tickets:
-                # Create serializable event object            # Default location dictionary with all required fields
+                # Default location dictionary with all required fields
                 default_location = {
                     "address": "",
                     "city": "",
@@ -389,6 +392,7 @@ async def get_user_tickets(
                     elif ticket.event.location:
                         location_data["address"] = str(ticket.event.location)
 
+                # Create serializable event object
                 event_obj = {
                     "eventId": str(ticket.event.eventId),
                     "title": ticket.event.title,
@@ -401,9 +405,7 @@ async def get_user_tickets(
                         else None
                     ),
                     "description": (
-                        ticket.event.description
-                        if hasattr(ticket.event, "description")
-                        else None
+                        getattr(ticket.event, "description", None)
                     ),
                     "location": location_data,
                 }
@@ -431,13 +433,15 @@ async def get_user_tickets(
                             if ticket.event.header_photo
                             else None
                         ),
-                        # Individual ticket QR code fields
+                        # Individual ticket QR code fields (separate ticket system)
                         "qrCodeImage": qr_code_image_url,
                         "qrCodeData": qr_code_data,
                         "status": ticket.status,
                         "eventDate": ticket.event.date,
                         "eventStartTime": ticket.event.start_time,
                         "eventEndTime": ticket.event.end_time,
+                        "created_at": ticket.created_at,
+                        "stripe_session_id": ticket.stripe_session_id,
                     }
                 )
 
@@ -470,6 +474,7 @@ async def get_user_ticket_details(
     """
     API endpoint for getting user ticket details.
     Returns details of a specific ticket belonging to the authenticated user.
+    Uses individual ticket QR code system.
     """
     print(
         f"[get_user_ticket_details] API called with ticketId: {ticketId}, user_id: {user_id}"
@@ -489,17 +494,38 @@ async def get_user_ticket_details(
             )
             user = CustomUser.objects.get(id=user_id)
             try:
-                ticket = Ticket.objects.get(ticketId=ticketId, user=user)
+                # Optimize query with select_related for event data
+                ticket = Ticket.objects.select_related('event').get(ticketId=ticketId, user=user)
                 print(
                     f"[get_user_ticket_details_async] Found ticket with ID: {ticketId}"
                 )
-                # Get individual ticket QR code information
+                
+                # Get individual ticket QR code information (separate ticket system)
                 qr_code_image_url = None
                 qr_code_data = None
                 if ticket.qrCodeImage:
                     qr_code_image_url = ticket.qrCodeImage.url
                 if ticket.qrCodeData:
                     qr_code_data = ticket.qrCodeData
+
+                # Default location dictionary with all required fields
+                default_location = {
+                    "address": "",
+                    "city": "",
+                    "state": "",
+                    "zip_code": "",
+                    "country": "",
+                }
+
+                # Get event location if available, otherwise use default
+                location_data = default_location
+                if hasattr(ticket.event, "location") and ticket.event.location:
+                    # If location is a dictionary, update default values with available ones
+                    if isinstance(ticket.event.location, dict):
+                        location_data = {**default_location, **ticket.event.location}
+                    # If location is a string or other object, put it in the address field
+                    elif ticket.event.location:
+                        location_data["address"] = str(ticket.event.location)
 
                 return {
                     "ticketId": str(ticket.ticketId),
@@ -514,10 +540,17 @@ async def get_user_ticket_details(
                         if ticket.event.header_photo
                         else None
                     ),
-                    # Individual ticket QR code fields
+                    "description": getattr(ticket.event, "description", None),
+                    "location": location_data,
+                    "start_time": ticket.event.start_time,
+                    "end_time": ticket.event.end_time,
+                    # Individual ticket QR code fields (separate ticket system)
                     "qrCodeImage": qr_code_image_url,
                     "qrCodeData": qr_code_data,
                     "status": ticket.status,
+                    "created_at": ticket.created_at,
+                    "stripe_session_id": ticket.stripe_session_id,
+                    "mainId": str(ticket.mainId),
                 }
 
             except Ticket.DoesNotExist:
@@ -2871,18 +2904,12 @@ async def get_user_tickets_detailed(
     request: Request,
     user_id: int = Depends(get_current_user),
     platform: Optional[str] = None,
-    include_qr: bool = True,
-    status_filter: Optional[str] = None,
 ):
     """
     API endpoint for retrieving all tickets associated with the user.
-    Returns comprehensive ticket information with universal QR code data.
-    
-    Args:
-        include_qr: Whether to include QR code information in response
-        status_filter: Filter tickets by status (Valid, Scanned, Invalid)
+    Returns comprehensive ticket information with individual QR code data.
     """
-    print(f"[get_user_tickets_detailed] API called with user_id: {user_id}, status_filter: {status_filter}")
+    print(f"[get_user_tickets_detailed] API called with user_id: {user_id}")
 
     # Get device info
     user_agent_str = request.headers.get("user-agent", "")
@@ -2890,25 +2917,18 @@ async def get_user_tickets_detailed(
     device_info = device_data["device_info"]
 
     @database_sync_to_async
-    def get_user_tickets_data(user_id, include_qr, status_filter):
+    def get_user_tickets_data(user_id):
         try:
             print(f"[get_user_tickets_data] Retrieving tickets for user_id: {user_id}")
             
             # Optimize query with select_related and prefetch_related
             user = CustomUser.objects.select_related('user_profile').get(id=user_id)
             
-            # Get tickets with optimized queries
-            tickets_query = Ticket.objects.select_related(
+            # Get all tickets with optimized queries
+            tickets = Ticket.objects.select_related(
                 'event',
                 'user__user_profile'
-            ).filter(user=user)
-            
-            # Apply status filter if provided
-            if status_filter:
-                tickets_query = tickets_query.filter(status=status_filter)
-            
-            # Order by most recent first
-            tickets = tickets_query.order_by('-created_at')
+            ).filter(user=user).order_by('-created_at')
             
             print(f"[get_user_tickets_data] Found {tickets.count()} tickets")
             
@@ -2943,16 +2963,20 @@ async def get_user_tickets_detailed(
                     } if any([ticket.guestFirstName, ticket.guestLastName, ticket.guestEmail]) else None,
                 }
                 
-                # Add QR code information if requested
-                if include_qr and ticket.user and hasattr(ticket.user, 'user_profile'):
-                    user_profile = ticket.user.user_profile
-                    ticket_data["qr_code"] = {
-                        "universal_qr_code": str(user_profile.universal_qr_code) if user_profile.universal_qr_code else None,
-                        "universal_qr_code_image_url": user_profile.universal_qr_code_image.url if user_profile.universal_qr_code_image else None,
-                        "has_qr_code": bool(user_profile.universal_qr_code_image),
-                    }
-                else:
-                    ticket_data["qr_code"] = None
+                # Add individual ticket QR code information (separate ticket system)
+                qr_code_image_url = None
+                qr_code_data = None
+                
+                if ticket.qrCodeImage:
+                    qr_code_image_url = ticket.qrCodeImage.url
+                if ticket.qrCodeData:
+                    qr_code_data = ticket.qrCodeData
+                
+                ticket_data["qr_code"] = {
+                    "qr_code_data": qr_code_data,
+                    "qr_code_image_url": qr_code_image_url,
+                    "has_qr_code": bool(qr_code_image_url and qr_code_data),
+                }
                 
                 tickets_data.append(ticket_data)
             
@@ -2971,7 +2995,7 @@ async def get_user_tickets_detailed(
                     "invalid": total_tickets - valid_tickets - scanned_tickets,
                 },
                 "tickets": tickets_data,
-                "has_qr_codes": True if include_qr else None,  # Individual tickets now have their own QR codes
+                "has_qr_codes": True,  # Using individual ticket QR codes (separate ticket system)
             }
             
             print(f"[get_user_tickets_data] Returning {total_tickets} tickets for user: {user.username}")
@@ -2986,7 +3010,7 @@ async def get_user_tickets_detailed(
             return None
 
     try:
-        tickets_data = await get_user_tickets_data(user_id, include_qr, status_filter)
+        tickets_data = await get_user_tickets_data(user_id)
         
         if tickets_data is None:
             await notify_by_bot(
