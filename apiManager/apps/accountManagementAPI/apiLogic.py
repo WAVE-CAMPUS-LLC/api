@@ -53,7 +53,6 @@ from apiManager.utilities.device_info import get_device_info
 from apiManager.utilities.notify_by_bot import notify_by_bot
 from .serializers import (
     ProfileOverview,
-    ProfileDetailed,
     TicketSerializer,
     UniversalQRResponse,
     UserTicketsResponse,
