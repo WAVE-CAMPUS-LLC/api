@@ -625,8 +625,10 @@ async def suggest_crews(
     try:
         user = await database_sync_to_async(CustomUser.objects.get)(id=current_user_id)
         # Check if user is in any crew
+        from socialApp.models import CrewMember
+
         user_crews_count = await database_sync_to_async(
-            lambda: Crew.objects.filter(crew_members__user=user).count()
+            lambda: CrewMember.objects.filter(user=user).count()
         )()
         if user_crews_count == 0:
             # Suggest up to 10 random crews
@@ -636,14 +638,22 @@ async def suggest_crews(
             # Serialize minimal info for random crews
             random_crews_data = []
             for crew in random_crews:
-                num_members = await database_sync_to_async(
-                    lambda: crew.crew_members.count()
-                )()
+                # Fix closure capture issue by creating a proper function
+                async def get_member_count(crew_instance):
+                    return await database_sync_to_async(
+                        lambda: CrewMember.objects.filter(crew=crew_instance).count()
+                    )()
+
+                try:
+                    num_members = await get_member_count(crew)
+                except:
+                    num_members = 0  # Fallback if relationship doesn't exist
+
                 random_crews_data.append(
                     {
                         "crewId": str(crew.crewId),
-                        "name": crew.name,
-                        "bio": crew.bio,
+                        "name": crew.name or "",
+                        "bio": crew.bio or "",
                         "crew_image": crew.crew_image.url if crew.crew_image else None,
                         "created_by": (
                             crew.created_by.username if crew.created_by else None
@@ -661,6 +671,64 @@ async def suggest_crews(
         suggestions = await database_sync_to_async(suggest_crews_for_user)(
             str(user.user_id), limit
         )
+
+        # If no suggestions from graph system (no connections through friends/interests),
+        # suggest random crews instead
+        if not suggestions or len(suggestions) == 0:
+            print(
+                f"No graph-based suggestions found for user {user.user_id}, suggesting random crews"
+            )
+
+            # Get user's current crews to exclude them
+            user_crew_ids = await database_sync_to_async(
+                lambda: list(
+                    CrewMember.objects.filter(user=user).values_list(
+                        "crew_id", flat=True
+                    )
+                )
+            )()
+
+            # Get random crews excluding ones user is already in
+            random_crews = await database_sync_to_async(
+                lambda: list(
+                    Crew.objects.exclude(crewId__in=user_crew_ids).order_by("?")[:limit]
+                )
+            )()
+
+            random_crews_data = []
+            for crew in random_crews:
+                # Fix closure capture issue by creating a proper function
+                async def get_member_count(crew_instance):
+                    return await database_sync_to_async(
+                        lambda: CrewMember.objects.filter(crew=crew_instance).count()
+                    )()
+
+                try:
+                    num_members = await get_member_count(crew)
+                except:
+                    num_members = 0  # Fallback if relationship doesn't exist
+
+                random_crews_data.append(
+                    {
+                        "crewId": str(crew.crewId),
+                        "name": crew.name or "",
+                        "bio": crew.bio or "",
+                        "crew_image": crew.crew_image.url if crew.crew_image else None,
+                        "created_by": (
+                            crew.created_by.username if crew.created_by else None
+                        ),
+                        "num_members": num_members,
+                    }
+                )
+
+            return {
+                "user_id": str(user.user_id),
+                "suggested_crews": random_crews_data,
+                "platform": platform,
+                "suggestion_type": "random",
+                "message": "No recommendations through friends or interests. Showing random crews.",
+            }
+
         # If suggestions are a list of dicts with crewId, enrich with image and num_members
         enriched_suggestions = []
         for suggestion in suggestions:
@@ -669,23 +737,36 @@ async def suggest_crews(
                 or suggestion.get("crew_id")
                 or suggestion.get("id")
             )
-            crew = await database_sync_to_async(
-                lambda: Crew.objects.filter(crewId=crew_id).first()
-            )()
-            num_members = (
-                await database_sync_to_async(lambda: crew.crew_members.count())()
-                if crew
-                else 0
-            )
+
+            # Fix closure capture issue by creating a proper function
+            async def get_crew_and_count(crew_uuid):
+                crew = await database_sync_to_async(
+                    lambda: Crew.objects.filter(crewId=crew_uuid).first()
+                )()
+                if crew:
+                    try:
+                        num_members = await database_sync_to_async(
+                            lambda: CrewMember.objects.filter(crew=crew).count()
+                        )()
+                    except:
+                        num_members = 0
+                    return crew, num_members
+                return None, 0
+
+            crew, num_members = await get_crew_and_count(crew_id)
+
             suggestion["crew_image"] = (
                 crew.crew_image.url if crew and crew.crew_image else None
             )
             suggestion["num_members"] = num_members
             enriched_suggestions.append(suggestion)
+
         return {
             "user_id": str(user.user_id),
             "suggested_crews": enriched_suggestions,
             "platform": platform,
+            "suggestion_type": "graph_based",
+            "message": "Recommendations based on your friends and interests.",
         }
     except Exception as e:
         await notify_by_bot(
