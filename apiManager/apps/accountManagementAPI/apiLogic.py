@@ -452,7 +452,15 @@ async def get_user_tickets(
             return ticket_list
 
         ticket_data = await get_user_tickets_async(user_id)
-        tickets = [TicketSerializer(**ticket) for ticket in ticket_data]
+        
+        # Serialize tickets with better error handling
+        try:
+            tickets = [TicketSerializer(**ticket) for ticket in ticket_data]
+            print(f"[get_user_tickets] Successfully serialized {len(tickets)} tickets")
+        except Exception as serialization_error:
+            print(f"[get_user_tickets] Serialization error: {serialization_error}")
+            print(f"[get_user_tickets] Sample ticket data: {ticket_data[0] if ticket_data else 'No tickets'}")
+            raise Exception(f"Ticket serialization failed: {serialization_error}")
 
         print(f"[get_user_tickets] Returning {len(tickets)} serialized tickets")
         return {"tickets": tickets}

@@ -38,9 +38,9 @@ class EventSerializer(BaseModel):
 
 class TicketSerializer(BaseModel):
     ticketId: str
-    guestFirstName: str
-    guestLastName: str
-    guestEmail: str
+    guestFirstName: Optional[str] = None
+    guestLastName: Optional[str] = None
+    guestEmail: Optional[str] = None
     event: Optional[EventSerializer] = None
     eventId: str
     eventTitle: str
