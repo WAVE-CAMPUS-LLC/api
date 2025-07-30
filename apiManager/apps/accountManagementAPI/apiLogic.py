@@ -408,13 +408,13 @@ async def get_user_tickets(
                     "location": location_data,
                 }
 
-                # Get universal QR code information from user profile
-                universal_qr_code = None
-                universal_qr_code_image_url = None
-                if ticket.user and hasattr(ticket.user, 'user_profile'):
-                    universal_qr_code = str(ticket.user.user_profile.universal_qr_code)
-                    if ticket.user.user_profile.universal_qr_code_image:
-                        universal_qr_code_image_url = ticket.user.user_profile.universal_qr_code_image.url
+                # Get individual ticket QR code information
+                qr_code_image_url = None
+                qr_code_data = None
+                if ticket.qrCodeImage:
+                    qr_code_image_url = ticket.qrCodeImage.url
+                if ticket.qrCodeData:
+                    qr_code_data = ticket.qrCodeData
 
                 ticket_list.append(
                     {
@@ -431,9 +431,9 @@ async def get_user_tickets(
                             if ticket.event.header_photo
                             else None
                         ),
-                        # Universal QR code fields - one QR code per user for all events
-                        "universal_qr_code": universal_qr_code,
-                        "universal_qr_code_image_url": universal_qr_code_image_url,
+                        # Individual ticket QR code fields
+                        "qrCodeImage": qr_code_image_url,
+                        "qrCodeData": qr_code_data,
                         "status": ticket.status,
                         "eventDate": ticket.event.date,
                         "eventStartTime": ticket.event.start_time,
@@ -493,13 +493,13 @@ async def get_user_ticket_details(
                 print(
                     f"[get_user_ticket_details_async] Found ticket with ID: {ticketId}"
                 )
-                # Get universal QR code information from user profile
-                universal_qr_code = None
-                universal_qr_code_image_url = None
-                if ticket.user and hasattr(ticket.user, 'user_profile'):
-                    universal_qr_code = str(ticket.user.user_profile.universal_qr_code)
-                    if ticket.user.user_profile.universal_qr_code_image:
-                        universal_qr_code_image_url = ticket.user.user_profile.universal_qr_code_image.url
+                # Get individual ticket QR code information
+                qr_code_image_url = None
+                qr_code_data = None
+                if ticket.qrCodeImage:
+                    qr_code_image_url = ticket.qrCodeImage.url
+                if ticket.qrCodeData:
+                    qr_code_data = ticket.qrCodeData
 
                 return {
                     "ticketId": str(ticket.ticketId),
@@ -514,9 +514,9 @@ async def get_user_ticket_details(
                         if ticket.event.header_photo
                         else None
                     ),
-                    # Universal QR code fields - one QR code per user for all events
-                    "universal_qr_code": universal_qr_code,
-                    "universal_qr_code_image_url": universal_qr_code_image_url,
+                    # Individual ticket QR code fields
+                    "qrCodeImage": qr_code_image_url,
+                    "qrCodeData": qr_code_data,
                     "status": ticket.status,
                 }
 
@@ -2971,11 +2971,7 @@ async def get_user_tickets_detailed(
                     "invalid": total_tickets - valid_tickets - scanned_tickets,
                 },
                 "tickets": tickets_data,
-                "has_universal_qr": bool(
-                    hasattr(user, 'user_profile') and 
-                    user.user_profile and 
-                    user.user_profile.universal_qr_code_image
-                ) if include_qr else None,
+                "has_qr_codes": True if include_qr else None,  # Individual tickets now have their own QR codes
             }
             
             print(f"[get_user_tickets_data] Returning {total_tickets} tickets for user: {user.username}")

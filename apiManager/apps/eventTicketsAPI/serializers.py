@@ -30,9 +30,9 @@ class TicketModel(BaseModel):
     guestFirstName: Optional[str] = None
     guestLastName: Optional[str] = None
     guestEmail: Optional[str] = None
-    # Note: qrCodeData removed - tickets now use universal QR codes via user profile
-    universal_qr_code: Optional[str] = None  # From user profile
-    universal_qr_code_image_url: Optional[str] = None  # From user profile
+    # Individual ticket QR code fields (restored from legacy system)
+    qrCodeData: Optional[str] = None
+    qrCodeImage: Optional[str] = None
     status: Optional[str] = None
     created_at: Optional[datetime] = None
     event: Optional[Dict[str, Any]] = None

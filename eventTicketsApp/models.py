@@ -9,6 +9,9 @@ from django.conf import settings
 from django.db.models import Index
 from decimal import Decimal
 import json
+import qrcode
+from io import BytesIO
+from django.core.files.uploadedfile import InMemoryUploadedFile
 
 
 # from eventManagementApp.models import Event
@@ -38,6 +41,10 @@ class Ticket(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     stripe_session_id = models.CharField(max_length=100, blank=True, null=True)
+    
+    # Individual QR code fields (restored from legacy system)
+    qrCodeData = models.TextField(blank=True, null=True)
+    qrCodeImage = models.FileField(upload_to='qr_codes/', blank=True, null=True)
 
     def __str__(self):
         if self.user:
@@ -56,39 +63,76 @@ class Ticket(models.Model):
 
     def save(self, *args, **kwargs):
         """
-        Save method no longer generates individual QR codes.
-        Access control is now handled via the user's universal QR code.
+        Generate individual QR code for this specific ticket.
         """
+        # Generate QR code data if not exists
+        if not self.qrCodeData:
+            # Create QR code data containing ticket and event information
+            qr_data = {
+                "ticketId": str(self.ticketId),
+                "eventId": str(self.event.eventId) if self.event else None,
+                "status": self.status
+            }
+            self.qrCodeData = json.dumps(qr_data)
+        
+        # Call parent save first
         super().save(*args, **kwargs)
+        
+        # Generate QR code image if not exists
+        if not self.qrCodeImage and self.qrCodeData:
+            self.generate_qr_code_image()
 
-    def get_universal_qr_code(self):
+    def generate_qr_code_image(self):
         """
-        Get the universal QR code for this ticket's user.
-        Returns None for guest tickets.
+        Generate QR code image for this specific ticket.
         """
-        if self.user and hasattr(self.user, 'user_profile'):
-            return self.user.user_profile.universal_qr_code
-        return None
+        try:
+            # Create QR code with optimal settings for ticket scanning
+            qr = qrcode.QRCode(
+                version=1,
+                error_correction=qrcode.constants.ERROR_CORRECT_M,
+                box_size=8,
+                border=4,
+            )
+            qr.add_data(self.qrCodeData)
+            qr.make(fit=True)
 
-    def get_universal_qr_code_image_url(self):
-        """
-        Get the universal QR code image URL for this ticket's user.
-        Returns None for guest tickets.
-        """
-        if self.user and hasattr(self.user, 'user_profile') and self.user.user_profile.universal_qr_code_image:
-            return self.user.user_profile.universal_qr_code_image.url
-        return None
+            # Create QR code image
+            qr_image = qr.make_image(fill_color="black", back_color="white")
 
-    def has_universal_qr_access(self):
-        """
-        Check if this ticket has universal QR code access.
-        Returns True for authenticated users with universal QR codes, False for guest tickets.
-        """
-        return bool(
-            self.user and 
-            hasattr(self.user, 'user_profile') and 
-            self.user.user_profile.universal_qr_code_image
-        )
+            # Save to BytesIO buffer
+            img_io = BytesIO()
+            qr_image.save(img_io, format="PNG", optimize=True)
+            img_io.seek(0)
+
+            # Generate filename
+            filename = f"ticket_{self.ticketId}.png"
+
+            # Save the image to the model field
+            self.qrCodeImage.save(
+                filename,
+                InMemoryUploadedFile(
+                    img_io,
+                    None,
+                    filename,
+                    "image/png",
+                    img_io.tell(),
+                    None,
+                ),
+                save=True,
+            )
+
+            print(f"Generated QR code for ticket: {self.ticketId}")
+            return True
+
+        except Exception as e:
+            print(f"Error generating QR code for ticket {self.ticketId}: {e}")
+            return False
+
+    # Remove universal QR code methods (these are no longer needed)
+    # def get_universal_qr_code(self):
+    # def get_universal_qr_code_image_url(self):
+    # def has_universal_qr_access(self):
 
 
 class InviteEventOption(models.Model):

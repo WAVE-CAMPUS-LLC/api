@@ -2857,16 +2857,21 @@ async def get_ticket_details(
             
             print(f"[get_ticket_comprehensive_details] Generated URLs - Activation: {activation_link}, View: {view_link}")
             
-            # Get universal QR code information from user profile
+            # Get individual ticket QR code information
             qr_code_image_url = None
+            qr_code_data = None
             has_qr_code = False
-            if ticket.user and hasattr(ticket.user, 'user_profile') and ticket.user.user_profile.universal_qr_code_image:
+            if ticket.qrCodeImage:
                 try:
-                    qr_code_image_url = ticket.user.user_profile.universal_qr_code_image.url
+                    qr_code_image_url = ticket.qrCodeImage.url
                     has_qr_code = True
-                    print(f"[get_ticket_comprehensive_details] Universal QR code image URL: {qr_code_image_url}")
+                    print(f"[get_ticket_comprehensive_details] Individual ticket QR code image URL: {qr_code_image_url}")
                 except Exception as e:
-                    print(f"[get_ticket_comprehensive_details] Error getting universal QR code URL: {e}")
+                    print(f"[get_ticket_comprehensive_details] Error getting individual ticket QR code URL: {e}")
+            
+            if ticket.qrCodeData:
+                qr_code_data = ticket.qrCodeData
+                print(f"[get_ticket_comprehensive_details] Individual ticket QR code data retrieved")
             
             # Build metadata
             metadata = {

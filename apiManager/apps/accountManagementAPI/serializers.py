@@ -44,9 +44,9 @@ class TicketSerializer(BaseModel):
     event: Optional[EventSerializer] = None
     eventId: str
     eventTitle: str
-    # Universal QR code fields - one QR code per user for all events
-    universal_qr_code: Optional[str] = None
-    universal_qr_code_image_url: Optional[str] = None
+    # Individual ticket QR code fields (restored from legacy system)
+    qrCodeImage: Optional[str] = None
+    qrCodeData: Optional[str] = None
     status: str
     eventDate: date
     eventStartTime: time
@@ -59,7 +59,7 @@ class TicketSerializer(BaseModel):
 
 
 class UniversalQRResponse(BaseModel):
-    """Pydantic model for universal QR code response"""
+    """DEPRECATED: Pydantic model for universal QR code response - tickets now use individual QR codes"""
     
     user_id: str
     username: str
@@ -74,10 +74,10 @@ class UniversalQRResponse(BaseModel):
 
 
 class QRCodeInfo(BaseModel):
-    """Pydantic model for QR code information"""
+    """Pydantic model for individual ticket QR code information"""
     
-    universal_qr_code: Optional[str] = None
-    universal_qr_code_image_url: Optional[str] = None
+    qrCodeData: Optional[str] = None
+    qrCodeImage: Optional[str] = None
     has_qr_code: bool
     
     class Config:
@@ -152,7 +152,7 @@ class UserTicketsResponse(BaseModel):
     total_tickets: int
     statistics: TicketStatistics
     tickets: List[DetailedTicketInfo]
-    has_universal_qr: Optional[bool] = None
+    has_qr_codes: Optional[bool] = None
     
     class Config:
         from_attributes = True

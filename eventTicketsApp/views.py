@@ -1,5 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse, HttpResponse
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
 from django.contrib.auth.decorators import login_required
 from django.conf import settings
 from django.urls import reverse
@@ -8,13 +10,16 @@ from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_protect
 import uuid
 from django.contrib import messages
+from io import BytesIO
 from decimal import Decimal
+from django.core.files import File
 import json
 import os
 from dotenv import load_dotenv
 import time
 # QR code generation is now handled via universal QR codes in user profiles
-# Individual QR code generation imports removed as no longer needed
+# from qr_code.qrcode import maker  # No longer needed  
+# from qr_code.qrcode.utils import QRCodeOptions  # No longer needed
 import stripe
 from stripeManagementApp.customerSetup import CustomerAccount
 from rest_framework.response import Response
@@ -810,18 +815,10 @@ def viewTicket(request, mainId):
     event = ticket.event
 
     if ticket:
-        # Prepare context with universal QR code information
-        context = {
-            "ticket": ticket, 
-            "event": event,
-            "has_universal_qr": ticket.has_universal_qr_access(),
-            "universal_qr_code_url": ticket.get_universal_qr_code_image_url(),
-            "universal_qr_code": ticket.get_universal_qr_code(),
-        }
         return render(
             request,
             "eventTicketsApp/ticket/viewTicket.html",
-            context,
+            {"ticket": ticket, "event": event},
         )
     else:
         return redirect("core:explore")
@@ -839,18 +836,10 @@ def activateTicket(request, mainId):
         ticket.save()
         messages.success(request, "Ticket activated successfully")
         return redirect("eventTickets:activateTicket", mainId=mainId)
-    # Prepare context with universal QR code information
-    context = {
-        "ticket": ticket, 
-        "event": event,
-        "has_universal_qr": ticket.has_universal_qr_access(),
-        "universal_qr_code_url": ticket.get_universal_qr_code_image_url(),
-        "universal_qr_code": ticket.get_universal_qr_code(),
-    }
     return render(
         request,
         "eventTicketsApp/ticket/activateTicket.html",
-        context,
+        {"ticket": ticket, "event": event},
     )
 
 
@@ -866,10 +855,10 @@ def generateTicket(
     from_api=False
 ):
     """
-    Generate a ticket for an event and associate it with the user's universal QR code.
+    Generate a ticket for an event with its own individual QR code.
     
-    This function creates a ticket record and ensures the user has a universal QR code
-    for accessing all their tickets. Individual QR codes are no longer generated per ticket.
+    This function creates a ticket record and generates a unique QR code for this specific ticket.
+    Each ticket has its own QR code containing the ticket ID and event information.
     
     Args:
         request: HTTP request object (or None for API calls)
@@ -883,9 +872,8 @@ def generateTicket(
         from_api: Whether called from API (affects URL generation)
         
     Returns:
-        Ticket: Created ticket object linked to user's universal QR identity
+        Ticket: Created ticket object with individual QR code
     """ 
-    # Create the ticket record
     ticket = Ticket(
         user=user if user and user.is_authenticated else None,
         event=event,
@@ -895,297 +883,255 @@ def generateTicket(
         stripe_session_id=stripe_session_id,
     )
     ticket.save()
+      # Get the ticket's main ID and build the activation URL.
+    ticketMainId = ticket.mainId
+    activationLink = (
+        (str(os.getenv("WEBSITE_DOMAIN")) + reverse("eventTickets:activateTicket", kwargs={"mainId": ticketMainId}))
+        if from_api else 
+        request.build_absolute_uri(reverse("eventTickets:activateTicket", kwargs={"mainId": ticketMainId})) 
+    )
+    viewLink = (
+        (str(os.getenv("WEBSITE_DOMAIN")) + reverse("eventTickets:viewTicket", kwargs={"mainId": ticketMainId}))
+        if from_api else
+        request.build_absolute_uri(reverse("eventTickets:viewTicket", kwargs={"mainId": ticketMainId}))
+    )
+    # Individual QR code is now generated automatically in Ticket.save()
+    # No need for universal QR code generation
 
-    # Ensure authenticated user has a universal QR code
-    if user and user.is_authenticated and hasattr(user, 'user_profile'):
-        if not user.user_profile.universal_qr_code_image:
-            user.user_profile.generate_universal_qr_code()
-            user.user_profile.save()
-            print(f"Generated universal QR code for user {user.username}")
-
-    # Send email confirmation
-    recipient_email = guestEmail if guestEmail else (user.email if user else None)
-    if recipient_email:
-        _send_ticket_confirmation_email(
-            ticket=ticket,
-            event=event,
-            recipient_email=recipient_email,
-            user=user,
-            crew_ticket=crewTicket,
-            from_api=from_api
-        )
-
-    # Add event to user's purchased events if authenticated
-    if user and user.is_authenticated and hasattr(user, 'user_profile'):
-        try:
-            user.user_profile.purchased_events.add(event)
-            print(f"Added event {event.title} to user's purchased events")
-        except Exception as e:
-            print(f"Error adding event to user's purchased events: {e}")
-
-    return ticket
-
-
-def _send_ticket_confirmation_email(ticket, event, recipient_email, user, crew_ticket, from_api):
-    """
-    Send a simplified ticket confirmation email with universal QR code for authenticated users.
-    """
     try:
-        # Determine buyer name for email subject
-        buyer_name = "Someone"
-        if user and user.is_authenticated:
-            buyer_name = user.first_name or "Someone"
-        elif ticket.guestFirstName:
-            buyer_name = ticket.guestFirstName
 
-        # Email subject and basic message
-        subject = (
-            f"{buyer_name} bought a ticket for you for {event.title}"
-            if crew_ticket
-            else f"Your Ticket for {event.title}"
-        )
-        
-        # Create email content based on user authentication status
-        if user and user.is_authenticated:
-            # Authenticated user - reference universal QR code
-            html_content = _create_authenticated_user_email_html(event, ticket, user)
-            fallback_message = (
-                "Your purchase has been confirmed! "
-                "Please use the WaveOnCampus app or website to access your universal QR code for event entry. "
-                f"Your ticket ID is: {ticket.ticketId}"
-            )
-        else:
-            # Guest user - encourage account creation
-            html_content = _create_guest_user_email_html(event, ticket)
-            fallback_message = (
-                "Your purchase has been confirmed! "
-                "Create an account at WaveOnCampus.com to get your universal QR code for easy event access. "
-                f"Your ticket ID is: {ticket.ticketId}"
-            )
-
-        # Send the email
-        from django.core.mail import EmailMultiAlternatives
-        from email.mime.image import MIMEImage
-
-        email = EmailMultiAlternatives(
-            subject=subject,
-            body=fallback_message,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            to=[recipient_email]
-        )
-        email.attach_alternative(html_content, "text/html")
-
-        # Attach universal QR code for authenticated users
-        if user and user.is_authenticated and hasattr(user, 'user_profile') and user.user_profile.universal_qr_code_image:
+        # Prepare email
+        if guestEmail or (user and user.email):
             try:
-                qr_path = user.user_profile.universal_qr_code_image.path
-                if os.path.exists(qr_path):
-                    with open(qr_path, 'rb') as f:
-                        qr_image_data = f.read()
-                        qr_image = MIMEImage(qr_image_data)
-                        qr_image.add_header('Content-ID', '<universal_qr_code>')
-                        qr_image.add_header('Content-Disposition', 'inline', filename=f"universal-qr-{user.username}.png")
-                        email.attach(qr_image)
-                        print(f"Universal QR code attached to email for user {user.username}")
+                # Get the buyer's name for the subject.
+                buyer_name = "Someone"
+                if not from_api:
+                    if request.user and request.user.is_authenticated:
+                        buyer_name = request.user.first_name or "Someone"
+                else:
+                    buyer_name = guestFirstName
+                
+                subject = (
+                    f"{buyer_name} bought a ticket for you for {event.title}"
+                    if crewTicket
+                    else f"Your Ticket for {event.title}"
+                )
+                message = (
+                    "This ticket was bought by a crew member for you!\nYour QR code is attached."
+                    if crewTicket
+                    else "Thank you for your purchase!\nYour QR code is attached."
+                )
+                
+                # Ensure we have a valid recipient email.
+                recipient_email = guestEmail if guestEmail else user.email if user else None
+                if not recipient_email:
+                    print("No recipient email available, cannot send ticket email")
+                    return ticket
+                    
+                recipient_list = [recipient_email]
+                
+                print(f"Email settings: DEFAULT_FROM_EMAIL={settings.DEFAULT_FROM_EMAIL}, EMAIL_HOST={settings.EMAIL_HOST}")
+                
+                # Use inline HTML email template as the primary and only method
+                profile_link = "https://www.waveoncampus.com/profile"
+                qrCodeHtml = f"""
+                <!DOCTYPE html>
+                <html lang="en">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>Your Event Ticket</title>
+                </head>
+                <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0fdfa;">
+                    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f0fdfa; padding: 40px 0;">
+                        <tr>
+                            <td align="center">
+                                <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 16px; box-shadow: 0 10px 25px rgba(20, 184, 166, 0.15); overflow: hidden; max-width: 600px; border: 1px solid #5eead4;">
+                                    <!-- Header Section -->
+                                    <tr>
+                                        <td style="background: linear-gradient(135deg, #0d9488 0%, #14b8a6 50%, #2dd4bf 100%); padding: 40px 30px; text-align: center;">
+                                            <h1 style="color: #ffffff; margin: 0; font-size: 32px; font-weight: 800; text-shadow: 0 2px 4px rgba(0,0,0,0.3); letter-spacing: -0.5px;">
+                                                🎟️ Your Ticket is Ready!
+                                            </h1>
+                                            <p style="color: #ccfbf1; margin: 15px 0 0 0; font-size: 18px; font-weight: 500;">
+                                                Successfully purchased and confirmed
+                                            </p>
+                                        </td>
+                                    </tr>
+                                    
+                                    <!-- Event Details Section -->
+                                    <tr>
+                                        <td style="padding: 40px 30px; text-align: center;">
+                                            <div style="background: linear-gradient(135deg, #0891b2 0%, #0284c7 100%); color: white; padding: 25px; border-radius: 12px; margin-bottom: 35px; box-shadow: 0 4px 15px rgba(8, 145, 178, 0.3);">
+                                                <h2 style="margin: 0; font-size: 26px; font-weight: 700; text-shadow: 0 1px 3px rgba(0,0,0,0.3); line-height: 1.3;">
+                                                    {event.title}
+                                                </h2>
+                                            </div>
+                                            
+                                            <p style="color: #0f766e; font-size: 20px; line-height: 1.6; margin: 0 0 35px 0; font-weight: 600;">
+                                                🎉 <strong>Congratulations!</strong> Your ticket has been confirmed and is ready to use.
+                                            </p>
+                                            
+                                            <!-- QR Code Section -->
+                                            <div style="background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%); border: 3px solid #5eead4; border-radius: 16px; padding: 30px; margin: 30px 0; box-shadow: 0 4px 15px rgba(94, 234, 212, 0.2);">
+                                                <h3 style="color: #0f766e; margin: 0 0 20px 0; font-size: 20px; font-weight: 700;">
+                                                    📱 Your QR Code Ticket
+                                                </h3>
+                                                <p style="color: #134e4a; margin: 0 0 20px 0; font-size: 16px; line-height: 1.5;">
+                                                    <strong>Scan this QR code at the event entrance</strong><br>
+                                                    Save this email or screenshot the QR code below
+                                                </p>
+                                                <div style="background-color: #ffffff; padding: 20px; border-radius: 12px; display: inline-block; border: 2px solid #2dd4bf;">
+                                                    <img src="cid:qr_code" alt="Ticket QR Code" style="width: 200px; height: 200px; display: block; margin: 0 auto;" />
+                                                </div>
+                                                <p style="color: #0f766e; margin: 15px 0 0 0; font-size: 14px; font-weight: 600;">
+                                                    Ticket ID: {ticket.ticketId}
+                                                </p>
+                                            </div>
+                                            
+                                            <div style="background-color: #ecfeff; border: 3px solid #22d3ee; border-radius: 12px; padding: 25px; margin: 25px 0;">
+                                                <p style="color: #0e7490; margin: 0; font-size: 16px; font-weight: 600;">
+                                                    💡 <strong>Important:</strong> Present this QR code at the event entrance for quick and easy check-in.
+                                                </p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    
+                                    <!-- CTA Button Section -->
+                                    <tr>
+                                        <td style="padding: 0 30px 40px 30px; text-align: center;">
+                                            <a href="{profile_link}" style="display: inline-block; background: linear-gradient(135deg, #0d9488 0%, #14b8a6 50%, #2dd4bf 100%); color: #ffffff; text-decoration: none; padding: 18px 40px; border-radius: 12px; font-size: 18px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 6px 20px rgba(20, 184, 166, 0.4); transition: all 0.3s ease; border: 2px solid transparent;">
+                                                🎫 View All My Tickets
+                                            </a>
+                                            
+                                            <p style="color: #0f766e; font-size: 16px; margin: 25px 0 0 0; line-height: 1.6; font-weight: 600;">
+                                                Click the button above to go to your profile, then click <strong>"My Tickets"</strong> to see all your event tickets.
+                                            </p>
+                                            
+                                            <div style="background-color: #fefce8; border: 2px solid #eab308; border-radius: 12px; padding: 20px; margin: 25px 0; text-align: left;">
+                                                <p style="color: #a16207; margin: 0; font-size: 15px; font-weight: 600;">
+                                                    📱 <strong>Alternative Access:</strong>
+                                                </p>
+                                                <p style="color: #a16207; margin: 8px 0 0 0; font-size: 14px; line-height: 1.5;">
+                                                    Can't click the button? Go to <strong>waveoncampus.com/profile</strong> and click "My Tickets" to access all your event tickets.
+                                                </p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    
+                                    <!-- Footer Section -->
+                                    <tr>
+                                        <td style="background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%); padding: 35px 30px; text-align: center; border-top: 2px solid #5eead4;">
+                                            <p style="color: #0f766e; font-size: 16px; margin: 0 0 15px 0; font-weight: 600;">
+                                                Need help? Contact our support team
+                                            </p>
+                                            <p style="color: #134e4a; font-size: 13px; margin: 0; line-height: 1.5; opacity: 0.8;">
+                                                This is an automated message. Please do not reply to this email.<br>
+                                                Make sure to arrive at the event with your QR code ready to scan.
+                                            </p>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+                </body>
+                </html>
+                """
+                print("Using inline HTML email template")
+                
+                from_email = settings.DEFAULT_FROM_EMAIL
+                
+                print(f"Sending ticket email to: {recipient_list} from {from_email}")
+                
+                # Get individual ticket QR code
+                qr_attachment = None
+                if ticket.qrCodeImage:
+                    try:
+                        qr_attachment = ticket.qrCodeImage.path
+                        print(f"Individual ticket QR code attachment path: {qr_attachment}")
+                    except Exception as e:
+                        print(f"Error getting ticket QR code attachment: {e}")
+                
+                # Send the email with inline QR code image.
+                try:
+                    from django.core.mail import EmailMultiAlternatives
+                    from email.mime.image import MIMEImage
+                    
+                    email = EmailMultiAlternatives(
+                        subject=subject,
+                        body=message,
+                        from_email=from_email,
+                        to=recipient_list
+                    )
+                    email.attach_alternative(qrCodeHtml, "text/html")
+                    
+                    # Attach individual ticket QR code image inline for email display
+                    if qr_attachment and os.path.exists(qr_attachment):
+                        with open(qr_attachment, 'rb') as f:
+                            qr_image_data = f.read()
+                            # Create inline image attachment with cid:qr_code
+                            qr_image = MIMEImage(qr_image_data)
+                            qr_image.add_header('Content-ID', '<qr_code>')
+                            qr_image.add_header('Content-Disposition', 'inline', filename=f"ticket-qr-{ticket.ticketId}.png")
+                            email.attach(qr_image)
+                            print(f"Individual ticket QR code image attached inline with CID: qr_code")
+                    else:
+                        # For tickets without QR codes, show a message
+                        qrCodeHtml = qrCodeHtml.replace(
+                            '<img src="cid:qr_code" alt="Ticket QR Code" style="width: 200px; height: 200px; display: block; margin: 0 auto;" />',
+                            '<div style="background-color: #fefce8; border: 2px solid #eab308; border-radius: 12px; padding: 20px; text-align: center;"><p style="color: #a16207; margin: 0; font-size: 16px; font-weight: 600;">📱 QR Code Processing</p><p style="color: #a16207; margin: 10px 0 0 0; font-size: 14px;">Your ticket QR code is being generated and will be available shortly.</p></div>'
+                        )
+                    
+                    email.send(fail_silently=False)
+                    print(f"Email sent successfully with individual ticket QR code to {recipient_list}")
+                    
+                except Exception as e:
+                    print(f"Error sending email with inline QR code: {e}")
+                    import traceback
+                    traceback.print_exc()
+                    
+                    # Fallback: try basic send_mail without inline image
+                    try:
+                        send_mail(
+                            subject,
+                            message,
+                            from_email,
+                            recipient_list,
+                            fail_silently=False,
+                            html_message=qrCodeHtml,
+                        )
+                        print(f"Fallback email sent successfully to {recipient_list} (without inline QR code)")
+                    except Exception as e2:
+                        print(f"Fallback email sending also failed: {e2}")
+                        traceback.print_exc()
+                
+                # Add event to the user's purchased events if authenticated.
+                if not from_api:
+                    if request.user and request.user.is_authenticated and hasattr(request.user, 'user_profile'):
+                        try:
+                            request.user.user_profile.purchased_events.add(event)
+                            print(f"Added event {event.title} to user's purchased events")
+                        except Exception as e:
+                            print(f"Error adding event to user's purchased events: {e}")
+                elif user and user.user_profile:
+                    try:
+                        user.user_profile.purchased_events.add(event)
+                        print(f"Added event {event.title} to user's purchased events")
+                    except Exception as e:
+                        print(f"Error adding event to user's purchased events: {e}")
+            
             except Exception as e:
-                print(f"Error attaching universal QR code: {e}")
-
-        email.send(fail_silently=False)
-        print(f"Ticket confirmation email sent successfully to {recipient_email}")
+                print(f"Error sending ticket email: {e}")
+                import traceback
+                traceback.print_exc()
 
     except Exception as e:
-        print(f"Error sending ticket confirmation email: {e}")
+        print(f"Error generating QR code: {e}")
         import traceback
         traceback.print_exc()
-
-
-def _create_authenticated_user_email_html(event, ticket, user):
-    """Create HTML email content for authenticated users with universal QR code."""
-    import html
-    profile_link = "https://www.waveoncampus.com/profile"
-    # HTML escape event title for security
-    safe_event_title = html.escape(event.title)
     
-    return f"""
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Your Event Ticket Confirmation</title>
-        <style>
-            @import url('https://fonts.googleapis.com/css2?family=Wanted:wght@300;400;500;600;700;800&display=swap');
-        </style>
-    </head>
-    <body style="margin: 0; padding: 0; font-family: 'Wanted', Arial, sans-serif; background-color: #f8fafb; color: #008d95;">
-        <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f8fafb; padding: 40px 0;">
-            <tr>
-                <td align="center">
-                    <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 16px; box-shadow: 0 10px 25px rgba(0, 141, 149, 0.15); overflow: hidden; max-width: 600px; border: 1px solid #008d95;">
-                        <!-- Header -->
-                        <tr>
-                            <td style="background: linear-gradient(135deg, #008d95 0%, #00a3b3 50%, #00b8d1 100%); padding: 40px 30px; text-align: center;">
-                                <h1 style="color: #ffffff; margin: 0; font-size: 32px; font-weight: 800; font-family: 'Wanted', Arial, sans-serif;">
-                                    🎟️ Ticket Confirmed!
-                                </h1>
-                                <p style="color: #ffffff; margin: 15px 0 0 0; font-size: 18px; font-weight: 500; font-family: 'Wanted', Arial, sans-serif; opacity: 0.9;">
-                                    Your purchase has been confirmed
-                                </p>
-                            </td>
-                        </tr>
-                        
-                        <!-- Event Details -->
-                        <tr>
-                            <td style="padding: 40px 30px; text-align: center;">
-                                <div style="background: linear-gradient(135deg, #008d95 0%, #00a3b3 100%); color: white; padding: 25px; border-radius: 12px; margin-bottom: 35px;">
-                                    <h2 style="margin: 0; font-size: 26px; font-weight: 700; font-family: 'Wanted', Arial, sans-serif;">
-                                        {safe_event_title}
-                                    </h2>
-                                </div>
-                                
-                                <p style="color: #008d95; font-size: 20px; margin: 0 0 35px 0; font-weight: 600; font-family: 'Wanted', Arial, sans-serif;">
-                                    ✅ Your ticket has been confirmed!
-                                </p>
-                                
-                                <!-- QR Code Section -->
-                                <div style="background: linear-gradient(135deg, #f0f9f9 0%, #e6f6f7 100%); border: 3px solid #008d95; border-radius: 16px; padding: 30px; margin: 30px 0;">
-                                    <h3 style="color: #008d95; margin: 0 0 20px 0; font-size: 20px; font-weight: 700; font-family: 'Wanted', Arial, sans-serif;">
-                                        📱 Your Universal QR Code
-                                    </h3>
-                                    <p style="color: #008d95; margin: 0 0 20px 0; font-size: 16px; font-family: 'Wanted', Arial, sans-serif; opacity: 0.8;">
-                                        Use this QR code for all your WaveOnCampus events!
-                                    </p>
-                                    <div style="background-color: #ffffff; padding: 20px; border-radius: 12px; display: inline-block; border: 2px solid #008d95;">
-                                        <img src="cid:universal_qr_code" alt="Universal QR Code" style="width: 200px; height: 200px; display: block; margin: 0 auto;" />
-                                    </div>
-                                    <p style="color: #008d95; margin: 15px 0 0 0; font-size: 14px; font-weight: 600; font-family: 'Wanted', Arial, sans-serif;">
-                                        Ticket ID: {ticket.ticketId}
-                                    </p>
-                                </div>
-                            </td>
-                        </tr>
-                        
-                        <!-- CTA Button -->
-                        <tr>
-                            <td style="padding: 0 30px 40px 30px; text-align: center;">
-                                <a href="{profile_link}" style="display: inline-block; background: linear-gradient(135deg, #008d95 0%, #00a3b3 50%, #00b8d1 100%); color: #ffffff; text-decoration: none; padding: 18px 40px; border-radius: 12px; font-size: 18px; font-weight: 700; font-family: 'Wanted', Arial, sans-serif;">
-                                    🎫 View All My Tickets
-                                </a>
-                                
-                                <p style="color: #008d95; font-size: 16px; margin: 25px 0 0 0; font-family: 'Wanted', Arial, sans-serif;">
-                                    Access your universal QR code anytime from your profile!
-                                </p>
-                            </td>
-                        </tr>
-                        
-                        <!-- Footer -->
-                        <tr>
-                            <td style="background: linear-gradient(135deg, #f0f9f9 0%, #e6f6f7 100%); padding: 35px 30px; text-align: center; border-top: 2px solid #008d95;">
-                                <p style="color: #008d95; font-size: 16px; margin: 0; font-family: 'Wanted', Arial, sans-serif; font-weight: 500;">
-                                    One QR code for all your events! 🎉
-                                </p>
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-            </tr>
-        </table>
-    </body>
-    </html>
-    """
-
-
-def _create_guest_user_email_html(event, ticket):
-    """Create HTML email content for guest users encouraging account creation."""
-    import html
-    signup_link = "https://www.waveoncampus.com/authentication/signup"
-    # HTML escape event title for security
-    safe_event_title = html.escape(event.title)
-    
-    return f"""
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Your Event Ticket Confirmation</title>
-        <style>
-            @import url('https://fonts.googleapis.com/css2?family=Wanted:wght@300;400;500;600;700;800&display=swap');
-        </style>
-    </head>
-    <body style="margin: 0; padding: 0; font-family: 'Wanted', Arial, sans-serif; background-color: #f8fafb; color: #008d95;">
-        <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f8fafb; padding: 40px 0;">
-            <tr>
-                <td align="center">
-                    <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 16px; box-shadow: 0 10px 25px rgba(0, 141, 149, 0.15); overflow: hidden; max-width: 600px; border: 1px solid #008d95;">
-                        <!-- Header -->
-                        <tr>
-                            <td style="background: linear-gradient(135deg, #008d95 0%, #00a3b3 50%, #00b8d1 100%); padding: 40px 30px; text-align: center;">
-                                <h1 style="color: #ffffff; margin: 0; font-size: 32px; font-weight: 800; font-family: 'Wanted', Arial, sans-serif;">
-                                    🎟️ Ticket Confirmed!
-                                </h1>
-                                <p style="color: #ffffff; margin: 15px 0 0 0; font-size: 18px; font-weight: 500; font-family: 'Wanted', Arial, sans-serif; opacity: 0.9;">
-                                    Your purchase has been confirmed
-                                </p>
-                            </td>
-                        </tr>
-                        
-                        <!-- Event Details -->
-                        <tr>
-                            <td style="padding: 40px 30px; text-align: center;">
-                                <div style="background: linear-gradient(135deg, #008d95 0%, #00a3b3 100%); color: white; padding: 25px; border-radius: 12px; margin-bottom: 35px;">
-                                    <h2 style="margin: 0; font-size: 26px; font-weight: 700; font-family: 'Wanted', Arial, sans-serif;">
-                                        {safe_event_title}
-                                    </h2>
-                                </div>
-                                
-                                <p style="color: #008d95; font-size: 20px; margin: 0 0 35px 0; font-weight: 600; font-family: 'Wanted', Arial, sans-serif;">
-                                    ✅ Your ticket has been confirmed!
-                                </p>
-                                
-                                <!-- Account Creation CTA -->
-                                <div style="background: linear-gradient(135deg, #e8f7f8 0%, #d1f0f2 100%); border: 3px solid #008d95; border-radius: 16px; padding: 30px; margin: 30px 0;">
-                                    <h3 style="color: #008d95; margin: 0 0 20px 0; font-size: 20px; font-weight: 700; font-family: 'Wanted', Arial, sans-serif;">
-                                        🚀 Get Your Universal QR Code!
-                                    </h3>
-                                    <p style="color: #008d95; margin: 0 0 20px 0; font-size: 16px; font-family: 'Wanted', Arial, sans-serif; opacity: 0.8;">
-                                        Create a free account to get your universal QR code for easy event access!
-                                    </p>
-                                    <p style="color: #008d95; margin: 0; font-size: 14px; font-weight: 600; font-family: 'Wanted', Arial, sans-serif;">
-                                        Ticket ID: {ticket.ticketId}
-                                    </p>
-                                </div>
-                            </td>
-                        </tr>
-                        
-                        <!-- CTA Button -->
-                        <tr>
-                            <td style="padding: 0 30px 40px 30px; text-align: center;">
-                                <a href="{signup_link}" style="display: inline-block; background: linear-gradient(135deg, #008d95 0%, #00a3b3 50%, #00b8d1 100%); color: #ffffff; text-decoration: none; padding: 18px 40px; border-radius: 12px; font-size: 18px; font-weight: 700; font-family: 'Wanted', Arial, sans-serif;">
-                                    🎫 Create Free Account
-                                </a>
-                                
-                                <p style="color: #008d95; font-size: 16px; margin: 25px 0 0 0; font-family: 'Wanted', Arial, sans-serif;">
-                                    Join thousands of students using WaveOnCampus!
-                                </p>
-                            </td>
-                        </tr>
-                        
-                        <!-- Footer -->
-                        <tr>
-                            <td style="background: linear-gradient(135deg, #f0f9f9 0%, #e6f6f7 100%); padding: 35px 30px; text-align: center; border-top: 2px solid #008d95;">
-                                <p style="color: #008d95; font-size: 16px; margin: 0; font-family: 'Wanted', Arial, sans-serif; font-weight: 500;">
-                                    One account, one QR code, all events! 🎉
-                                </p>
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-            </tr>
-        </table>
-    </body>
-    </html>
-    """
+    return ticket
 
 def verifyTicket(request):
     if request.method == "POST":
@@ -1244,6 +1190,125 @@ def verifyTicket(request):
 
     return JsonResponse(
         {"valid": False, "message": "Method not allowed"}, status=405
+    )
+
+
+def verifyIndividualTicketQRCode(request):
+    """
+    Verify an individual ticket QR code for event access.
+    This replaces the universal QR code system with ticket-specific verification.
+    """
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            print(f"Individual ticket QR verification request: {request.body}")
+            
+            # Extract QR code data
+            qr_code_data = data.get("qr_code_data")
+            
+            if not qr_code_data:
+                return JsonResponse(
+                    {"valid": False, "message": "Missing QR code data"}, 
+                    status=400
+                )
+            
+            # Parse QR code data (should be JSON)
+            try:
+                qr_data = json.loads(qr_code_data)
+                ticket_id = qr_data.get("ticketId")
+                event_id = qr_data.get("eventId")
+                
+                if not ticket_id or not event_id:
+                    return JsonResponse(
+                        {"valid": False, "message": "Invalid QR code format"}, 
+                        status=400
+                    )
+                    
+            except json.JSONDecodeError:
+                return JsonResponse(
+                    {"valid": False, "message": "Invalid QR code data format"}, 
+                    status=400
+                )
+            
+            # Find the ticket
+            try:
+                ticket = Ticket.objects.get(ticketId=ticket_id, event__eventId=event_id)
+            except Ticket.DoesNotExist:
+                return JsonResponse(
+                    {"valid": False, "message": "Ticket not found"}, 
+                    status=404
+                )
+            
+            # Check if ticket is already scanned
+            if ticket.status == "Scanned":
+                return JsonResponse(
+                    {
+                        "valid": False, 
+                        "message": "Ticket has already been scanned"
+                    }, 
+                    status=403
+                )
+            
+            # Check if ticket is valid
+            if ticket.status != "Valid":
+                return JsonResponse(
+                    {
+                        "valid": False, 
+                        "message": f"Ticket status is {ticket.status}"
+                    }, 
+                    status=403
+                )
+            
+            # Mark ticket as scanned
+            ticket.status = "Scanned"
+            ticket.save()
+            
+            print(f"Individual ticket QR code verified successfully for ticket {ticket.ticketId}")
+            
+            # Build response data
+            response_data = {
+                "valid": True, 
+                "message": "Ticket verified successfully!",
+                "ticket_id": str(ticket.ticketId),
+                "event_id": event_id,
+                "event_title": ticket.event.title
+            }
+            
+            # Add user info if available
+            if ticket.user:
+                response_data["user"] = {
+                    "username": ticket.user.username,
+                    "first_name": ticket.user.first_name,
+                    "last_name": ticket.user.last_name,
+                    "email": ticket.user.email,
+                }
+            else:
+                # Guest ticket
+                response_data["guest"] = {
+                    "first_name": ticket.guestFirstName,
+                    "last_name": ticket.guestLastName,
+                    "email": ticket.guestEmail,
+                }
+            
+            return JsonResponse(response_data)
+            
+        except json.JSONDecodeError:
+            return JsonResponse(
+                {"valid": False, "message": "Invalid JSON data"}, 
+                status=400
+            )
+        except Exception as e:
+            print(f"Error verifying individual ticket QR code: {e}")
+            import traceback
+            traceback.print_exc()
+            return JsonResponse(
+                {"valid": False, "message": "Internal server error"}, 
+                status=500
+            )
+    
+    return JsonResponse(
+        {"valid": False, "message": "Method not allowed"}, 
+        status=405
     )
 
 

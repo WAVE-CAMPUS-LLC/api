@@ -86,8 +86,14 @@ class TicketAdmin(admin.ModelAdmin):
         "event",
         "status",
         "created_at",
-        "has_universal_qr_access",
+        "has_qr_code",
     )
+    
+    def has_qr_code(self, obj):
+        """Display whether this ticket has a QR code generated."""
+        return bool(obj.qrCodeImage)
+    has_qr_code.short_description = 'Has QR Code'
+    has_qr_code.boolean = True
 
 
 class HostProfileAdmin(admin.ModelAdmin):

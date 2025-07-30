@@ -180,15 +180,7 @@ class UserProfile(models.Model):
         return self.user.username
 
     def generate_qr_code(self):
-        """
-        DEPRECATED: Generate legacy profile QR code for backward compatibility.
-        
-        This method generates a QR code that links to the user's public profile page.
-        For ticket access and event entry, use generate_universal_qr_code() instead.
-        
-        This method is maintained only for backward compatibility and may be removed
-        in future versions.
-        """
+        """Generate legacy profile QR code for backward compatibility"""
         part_url = reverse(
             "social:publicProfile", kwargs={"username": self.user.username}
         )
@@ -215,26 +207,20 @@ class UserProfile(models.Model):
 
     def generate_universal_qr_code(self):
         """
-        Generate universal QR code for ticket access and event entry.
-        
-        This is the PRIMARY QR code method for all ticket-related functionality.
-        The QR code contains a URL that points to the wavepass page with the UUID.
-        One QR code per user provides access to all their event tickets.
-        
-        Returns:
-            bool: True if QR code was generated successfully, False otherwise.
+        Generate universal QR code for ticket access.
+        The QR code contains only the UUID for simplicity and security.
         """
         # UUID should already be set by save() method
         if not self.universal_qr_code:
             self.universal_qr_code = uuid.uuid4()
 
-        # Create URL for QR code - points to wavepass page with the UUID
-        qr_code_content = f"https://www.wave.buzz/wavepass/{self.universal_qr_code}"
+        # Simple QR code data - just the UUID string
+        qr_code_content = str(self.universal_qr_code)
 
         try:
             # Create QR code with optimal settings for ticket scanning
             qr = qrcode.QRCode(
-                version=1,  # Start with smallest version, will auto-expand if needed
+                version=1,  # Smallest version that can fit the UUID
                 error_correction=qrcode.constants.ERROR_CORRECT_M,  # Medium error correction for better scanning
                 box_size=8,  # Good balance between size and scannability
                 border=4,  # Standard border
@@ -294,8 +280,7 @@ class UserProfile(models.Model):
             if self.universal_qr_code_image:
                 super(UserProfile, self).save(update_fields=["universal_qr_code_image"])
 
-        # Generate legacy profile QR code if not exists (deprecated - use universal QR code instead)
-        # This is maintained for backward compatibility only
+        # Generate legacy profile QR code if not exists
         if not self.profile_qr_code and self.user_id:
             self.generate_qr_code()
             if self.profile_qr_code:

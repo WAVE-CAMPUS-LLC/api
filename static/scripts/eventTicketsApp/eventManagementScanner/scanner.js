@@ -34,7 +34,7 @@ function startQrScan() {
       { facingMode: "environment" },
       config,
       (decodedText, decodedResult) => {
-        verifyUniversalQRCode(decodedText, qrReader);
+        verifyIndividualTicketQRCode(decodedText, qrReader);
       },
       (errorMessage) => {
         console.log(errorMessage);
@@ -45,57 +45,81 @@ function startQrScan() {
     });
 }
 
-function verifyUniversalQRCode(qrCodeData, qrReader) {
-  // Universal QR codes contain only the UUID string
-  const universalQRCode = qrCodeData.trim();
-  const eventId = getEventIdFromPage();
+function verifyIndividualTicketQRCode(qrCodeData, qrReader) {
+  // Individual ticket QR codes contain JSON data with ticketId and eventId
+  const trimmedQRData = qrCodeData.trim();
 
-  console.log(
-    `Verifying universal QR code: ${universalQRCode} for event: ${eventId}`
-  );
+  console.log(`Verifying individual ticket QR code: ${trimmedQRData}`);
 
-  if (!universalQRCode || !eventId) {
-    console.error("QR code data or event ID is missing.");
-    showError("Invalid QR code or event not specified.");
+  if (!trimmedQRData) {
+    console.error("QR code data is empty.");
+    showError("Invalid QR code data.");
     return;
   }
 
-  // Use the universal QR verification endpoint
-  fetch("/api/ticketing/verify_universal_qr_code/", {
+  // Try to parse the QR code data as JSON
+  let ticketData;
+  try {
+    ticketData = JSON.parse(trimmedQRData);
+  } catch (e) {
+    console.error("QR code data is not valid JSON:", e);
+    showError("Invalid QR code format ❌");
+    restartScannerAfterDelay(qrReader);
+    return;
+  }
+
+  // Validate that we have the required fields
+  if (!ticketData.ticketId || !ticketData.eventId) {
+    console.error("QR code missing required fields:", ticketData);
+    showError("Invalid ticket QR code ❌");
+    restartScannerAfterDelay(qrReader);
+    return;
+  }
+
+  console.log(
+    `Verifying ticket: ${ticketData.ticketId} for event: ${ticketData.eventId}`
+  );
+
+  // Use the individual ticket verification endpoint
+  fetch("/api/ticketing/verify_individual_ticket_qr_code/", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       "X-CSRFToken": getCookie("csrftoken"),
     },
     body: JSON.stringify({
-      qr_code_data: universalQRCode,
-      event_id: eventId,
+      qr_code_data: trimmedQRData,
     }),
   })
     .then((response) => response.json())
     .then((data) => {
       let name = "Unknown";
 
-      // Extract user name from response
+      // Extract user or guest name from response
       if (data.user) {
         name =
           `${data.user.first_name || ""} ${data.user.last_name || ""}`.trim() ||
           data.user.username;
+      } else if (data.guest) {
+        name =
+          `${data.guest.first_name || ""} ${
+            data.guest.last_name || ""
+          }`.trim() || "Guest";
       }
 
       if (data.valid) {
         showSuccess(`${name}: Valid ✅`);
-        console.log(`Successfully verified QR code for user: ${name}`);
+        console.log(`Successfully verified ticket for: ${name}`);
       } else {
         showError(`${name}: ${data.message || "Invalid"} ❌`);
-        console.log(`QR code verification failed: ${data.message}`);
+        console.log(`Ticket verification failed: ${data.message}`);
       }
 
       // Restart scanner after delay
       restartScannerAfterDelay(qrReader);
     })
     .catch((error) => {
-      console.error("Error verifying universal QR code:", error);
+      console.error("Error verifying individual ticket QR code:", error);
       showError("Error scanning QR code ❌");
       restartScannerAfterDelay(qrReader);
     });

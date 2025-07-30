@@ -146,16 +146,9 @@ def socialHomeView(request):
 
         elif action == "generateProfileQRCode":
             profile = UserProfile.objects.get(user=request.user)
-            # Generate universal QR code for ticket access instead of legacy profile QR
-            if not profile.universal_qr_code_image:
-                success = profile.generate_universal_qr_code()
-                if success:
-                    profile.save()
-                    messages.success(request, "Universal QR code generated successfully! Use this for all your event access.")
-                else:
-                    messages.error(request, "Failed to generate QR code. Please try again.")
-            else:
-                messages.info(request, "You already have a universal QR code for event access!")
+            profile.generate_qr_code()
+            profile.save()
+            messages.success(request, "QR code generated successfully!")
             return redirect("social:home")
 
         else:

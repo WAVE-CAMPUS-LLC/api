@@ -1495,6 +1495,11 @@ async def get_wavepass_information(
     platform: Optional[str] = None,
 ):
     """
+    DEPRECATED: This endpoint was designed for universal QR codes.
+    
+    The system now uses individual QR codes per ticket instead of universal ones.
+    This endpoint is maintained for backward compatibility but may be removed in future versions.
+    
     API endpoint to retrieve wavepass information including user tickets for events
     that are not in the past by more than 24 hours.
     
@@ -1507,6 +1512,7 @@ async def get_wavepass_information(
         WavePassInfo: Contains wavePassId, universal QR code URL, and valid tickets
     """
     print(f"[get_wavepass_information] Called with wavePassId: {wavePassId}")
+    print(f"[get_wavepass_information] ⚠️  DEPRECATION WARNING: This endpoint uses universal QR codes, but the system now uses individual ticket QR codes")
     
     # Get device info
     user_agent_str = request.headers.get("user-agent", "")

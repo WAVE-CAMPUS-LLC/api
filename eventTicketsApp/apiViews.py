@@ -722,3 +722,104 @@ def verify_universal_qr_code(request):
             "message": "Internal server error",
             "error": str(e)
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])  # QR scanning might be done by event staff without authentication
+def verify_individual_ticket_qr_code(request):
+    """
+    Verify an individual ticket QR code for event access.
+    This replaces the universal QR code system with ticket-specific verification.
+    """
+    try:
+        # Extract QR code data
+        qr_code_data = request.data.get("qr_code_data")
+        
+        if not qr_code_data:
+            return Response({
+                "valid": False, 
+                "message": "Missing QR code data"
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Parse QR code data (should be JSON)
+        try:
+            qr_data = json.loads(qr_code_data)
+            ticket_id = qr_data.get("ticketId")
+            event_id = qr_data.get("eventId")
+            
+            if not ticket_id or not event_id:
+                return Response({
+                    "valid": False, 
+                    "message": "Invalid QR code format"
+                }, status=status.HTTP_400_BAD_REQUEST)
+                
+        except json.JSONDecodeError:
+            return Response({
+                "valid": False, 
+                "message": "Invalid QR code data format"
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Find the ticket
+        try:
+            ticket = Ticket.objects.get(ticketId=ticket_id, event__eventId=event_id)
+        except Ticket.DoesNotExist:
+            return Response({
+                "valid": False, 
+                "message": "Ticket not found"
+            }, status=status.HTTP_404_NOT_FOUND)
+        
+        # Check if ticket is already scanned
+        if ticket.status == "Scanned":
+            return Response({
+                "valid": False, 
+                "message": "Ticket has already been scanned"
+            }, status=status.HTTP_403_FORBIDDEN)
+        
+        # Check if ticket is valid
+        if ticket.status != "Valid":
+            return Response({
+                "valid": False, 
+                "message": f"Ticket status is {ticket.status}"
+            }, status=status.HTTP_403_FORBIDDEN)
+        
+        # Mark ticket as scanned
+        ticket.status = "Scanned"
+        ticket.save()
+        
+        print(f"Individual ticket QR code verified successfully for ticket {ticket.ticketId}")
+        
+        # Build response data
+        response_data = {
+            "valid": True, 
+            "message": "Ticket verified successfully!",
+            "ticket_id": str(ticket.ticketId),
+            "event_id": event_id,
+            "event_title": ticket.event.title
+        }
+        
+        # Add user info if available
+        if ticket.user:
+            response_data["user"] = {
+                "username": ticket.user.username,
+                "first_name": ticket.user.first_name,
+                "last_name": ticket.user.last_name,
+                "email": ticket.user.email,
+            }
+        else:
+            # Guest ticket
+            response_data["guest"] = {
+                "first_name": ticket.guestFirstName,
+                "last_name": ticket.guestLastName,
+                "email": ticket.guestEmail,
+            }
+        
+        return Response(response_data)
+        
+    except Exception as e:
+        print(f"Error verifying individual ticket QR code: {e}")
+        import traceback
+        traceback.print_exc()
+        return Response({
+            "valid": False, 
+            "message": "Internal server error"
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
