@@ -46,6 +46,7 @@ from accountManagementApp.forms import (
     UpdateProfilePhotoForm,
     UpdatePersonalInfo,
     UpdateContactInfo,
+    UserPreferencesForm,
 )
 from apiManager.utilities.form_fields import get_form_fields
 from apiManager.dependencies import get_current_user
@@ -58,8 +59,11 @@ from .serializers import (
     UserTicketsResponse,
 )
 
+
 # Safe notification wrapper to prevent notification failures from breaking APIs
-async def safe_notify_by_bot(message: str, platform: str, level: str = "ERROR", device_info: str = None) -> None:
+async def safe_notify_by_bot(
+    message: str, platform: str, level: str = "ERROR", device_info: str = None
+) -> None:
     """
     Safely send notification via bot with error handling to prevent API failures.
     If notification fails, it logs the error but doesn't throw an exception.
@@ -69,6 +73,7 @@ async def safe_notify_by_bot(message: str, platform: str, level: str = "ERROR", 
     except Exception as notification_error:
         print(f"[safe_notify_by_bot] Failed to send notification: {notification_error}")
         # Don't re-raise the exception - just log and continue
+
 
 router = APIRouter()
 
@@ -370,11 +375,15 @@ async def get_user_tickets(
         def get_user_tickets_async(user_id):
             print(f"[get_user_tickets_async] Retrieving tickets for user_id: {user_id}")
             user = CustomUser.objects.get(id=user_id)
-            
+
             # Optimize query with select_related for event data
-            tickets = Ticket.objects.select_related('event').filter(user=user).order_by('-created_at')
+            tickets = (
+                Ticket.objects.select_related("event")
+                .filter(user=user)
+                .order_by("-created_at")
+            )
             print(f"[get_user_tickets_async] Found {tickets.count()} tickets")
-            
+
             ticket_list = []
             for ticket in tickets:
                 # Default location dictionary with all required fields
@@ -408,9 +417,7 @@ async def get_user_tickets(
                         if ticket.event.header_photo
                         else None
                     ),
-                    "description": (
-                        getattr(ticket.event, "description", None)
-                    ),
+                    "description": (getattr(ticket.event, "description", None)),
                     "location": location_data,
                 }
 
@@ -431,6 +438,7 @@ async def get_user_tickets(
                         "guestEmail": ticket.guestEmail,
                         "eventId": str(ticket.event.eventId),
                         "eventTitle": ticket.event.title,
+                        "date": ticket.event.date,
                         "header_photo": (
                             ticket.event.header_photo.url
                             if ticket.event.header_photo
@@ -451,14 +459,16 @@ async def get_user_tickets(
             return ticket_list
 
         ticket_data = await get_user_tickets_async(user_id)
-        
+
         # Serialize tickets with better error handling
         try:
             tickets = [TicketSerializer(**ticket) for ticket in ticket_data]
             print(f"[get_user_tickets] Successfully serialized {len(tickets)} tickets")
         except Exception as serialization_error:
             print(f"[get_user_tickets] Serialization error: {serialization_error}")
-            print(f"[get_user_tickets] Sample ticket data: {ticket_data[0] if ticket_data else 'No tickets'}")
+            print(
+                f"[get_user_tickets] Sample ticket data: {ticket_data[0] if ticket_data else 'No tickets'}"
+            )
             raise Exception(f"Ticket serialization failed: {serialization_error}")
 
         print(f"[get_user_tickets] Returning {len(tickets)} serialized tickets")
@@ -506,11 +516,13 @@ async def get_user_ticket_details(
             user = CustomUser.objects.get(id=user_id)
             try:
                 # Optimize query with select_related for event data
-                ticket = Ticket.objects.select_related('event').get(ticketId=ticketId, user=user)
+                ticket = Ticket.objects.select_related("event").get(
+                    ticketId=ticketId, user=user
+                )
                 print(
                     f"[get_user_ticket_details_async] Found ticket with ID: {ticketId}"
                 )
-                
+
                 # Get individual ticket QR code information (separate ticket system)
                 qr_code_image_url = None
                 qr_code_data = None
@@ -2326,7 +2338,9 @@ async def set_user_preferences(
 
                 # Handle preferred_times field
                 if "preferred_times" in form_data:
-                    print(f"[set_user_preferences_async] Preferred times: {form_data.get('preferred_times')}")
+                    print(
+                        f"[set_user_preferences_async] Preferred times: {form_data.get('preferred_times')}"
+                    )
                     # Handle JSONField mismatch - database has JSONField but model shows CharField
                     preferred_time_value = form_data.get("preferred_times")
                     if preferred_time_value and str(preferred_time_value).strip():
@@ -2334,11 +2348,15 @@ async def set_user_preferences(
                         # Force JSONField to properly serialize this as JSON
                         import json
 
-                        print(f"[set_user_preferences_async] Clean value: {clean_value}")
+                        print(
+                            f"[set_user_preferences_async] Clean value: {clean_value}"
+                        )
                         user_preferences.preferred_times = json.dumps(clean_value)
                     else:
                         user_preferences.preferred_times = json.dumps("")
-                        print(f"[set_user_preferences_async] Preferred times set to empty string: {user_preferences.preferred_times}")
+                        print(
+                            f"[set_user_preferences_async] Preferred times set to empty string: {user_preferences.preferred_times}"
+                        )
 
                 user_preferences.preferences_completed = True
                 user_preferences.save()
@@ -2613,7 +2631,9 @@ async def get_privacy_settings(
                 "allow_notifications_from_mobile": user.allow_notifications_from_mobile,
             }
 
-            print(f"[get_privacy_settings_async] Privacy settings data prepared successfully")
+            print(
+                f"[get_privacy_settings_async] Privacy settings data prepared successfully"
+            )
             return privacy_settings
 
         except CustomUser.DoesNotExist:
@@ -2639,12 +2659,16 @@ async def get_privacy_settings(
             )
             raise HTTPException(status_code=404, detail="User not found")
 
-        print(f"[get_privacy_settings] Returning privacy settings data: {privacy_settings}")
+        print(
+            f"[get_privacy_settings] Returning privacy settings data: {privacy_settings}"
+        )
         return privacy_settings
     except Exception as e:
         if not isinstance(e, HTTPException):
             error_trace = traceback.format_exc()
-            print(f"[get_privacy_settings] Unhandled exception: {str(e)}\n{error_trace}")
+            print(
+                f"[get_privacy_settings] Unhandled exception: {str(e)}\n{error_trace}"
+            )
             await safe_notify_by_bot(
                 f"**[API: get_privacy_settings]** \n\n Unhandled exception: user_id={user_id}, error={str(e)} \n\n Platform: {platform}",
                 platform or "Unknown",
@@ -2692,29 +2716,47 @@ async def set_privacy_settings(
             # Update privacy settings only if they are provided (not None)
             if settings.get("show_on_guestlist") is not None:
                 user.show_on_guestlist = settings["show_on_guestlist"]
-                updated_fields.append(f"show_on_guestlist: {settings['show_on_guestlist']}")
+                updated_fields.append(
+                    f"show_on_guestlist: {settings['show_on_guestlist']}"
+                )
 
             if settings.get("show_others_your_name") is not None:
                 user.show_others_your_name = settings["show_others_your_name"]
-                updated_fields.append(f"show_others_your_name: {settings['show_others_your_name']}")
+                updated_fields.append(
+                    f"show_others_your_name: {settings['show_others_your_name']}"
+                )
 
             if settings.get("show_yourself_as_a_college_member") is not None:
-                user.show_yourself_as_a_college_member = settings["show_yourself_as_a_college_member"]
-                updated_fields.append(f"show_yourself_as_a_college_member: {settings['show_yourself_as_a_college_member']}")
+                user.show_yourself_as_a_college_member = settings[
+                    "show_yourself_as_a_college_member"
+                ]
+                updated_fields.append(
+                    f"show_yourself_as_a_college_member: {settings['show_yourself_as_a_college_member']}"
+                )
 
             if settings.get("allow_notifications_from_email") is not None:
-                user.allow_notifications_from_email = settings["allow_notifications_from_email"]
-                updated_fields.append(f"allow_notifications_from_email: {settings['allow_notifications_from_email']}")
+                user.allow_notifications_from_email = settings[
+                    "allow_notifications_from_email"
+                ]
+                updated_fields.append(
+                    f"allow_notifications_from_email: {settings['allow_notifications_from_email']}"
+                )
 
             if settings.get("allow_notifications_from_mobile") is not None:
-                user.allow_notifications_from_mobile = settings["allow_notifications_from_mobile"]
-                updated_fields.append(f"allow_notifications_from_mobile: {settings['allow_notifications_from_mobile']}")
+                user.allow_notifications_from_mobile = settings[
+                    "allow_notifications_from_mobile"
+                ]
+                updated_fields.append(
+                    f"allow_notifications_from_mobile: {settings['allow_notifications_from_mobile']}"
+                )
 
             # Only save if there were actual changes
             if updated_fields:
                 user.save()
-                print(f"[set_privacy_settings_async] Updated fields: {', '.join(updated_fields)}")
-                
+                print(
+                    f"[set_privacy_settings_async] Updated fields: {', '.join(updated_fields)}"
+                )
+
                 # Return updated privacy settings
                 updated_privacy_settings = {
                     "user_id": str(user.user_id),
@@ -2725,7 +2767,9 @@ async def set_privacy_settings(
                     "allow_notifications_from_mobile": user.allow_notifications_from_mobile,
                 }
 
-                print(f"[set_privacy_settings_async] Privacy settings updated successfully")
+                print(
+                    f"[set_privacy_settings_async] Privacy settings updated successfully"
+                )
                 return {
                     "success": True,
                     "message": "Privacy settings updated successfully",
@@ -2758,11 +2802,15 @@ async def set_privacy_settings(
         if show_others_your_name is not None:
             settings["show_others_your_name"] = show_others_your_name
         if show_yourself_as_a_college_member is not None:
-            settings["show_yourself_as_a_college_member"] = show_yourself_as_a_college_member
+            settings["show_yourself_as_a_college_member"] = (
+                show_yourself_as_a_college_member
+            )
         if allow_notifications_from_email is not None:
             settings["allow_notifications_from_email"] = allow_notifications_from_email
         if allow_notifications_from_mobile is not None:
-            settings["allow_notifications_from_mobile"] = allow_notifications_from_mobile
+            settings["allow_notifications_from_mobile"] = (
+                allow_notifications_from_mobile
+            )
 
         print(f"[set_privacy_settings] Settings to update: {settings}")
 
@@ -2786,7 +2834,9 @@ async def set_privacy_settings(
                 )
                 raise HTTPException(status_code=400, detail=result.get("error"))
 
-        print(f"[set_privacy_settings] Privacy settings updated successfully for user_id: {user_id}")
+        print(
+            f"[set_privacy_settings] Privacy settings updated successfully for user_id: {user_id}"
+        )
 
         # Notify about privacy settings update
         await safe_notify_by_bot(
@@ -2833,17 +2883,22 @@ async def get_user_universal_qr(
     @database_sync_to_async
     def get_universal_qr_data(user_id):
         try:
-            print(f"[get_universal_qr_data] Retrieving universal QR for user_id: {user_id}")
-            
+            print(
+                f"[get_universal_qr_data] Retrieving universal QR for user_id: {user_id}"
+            )
+
             # Use select_related to optimize query
-            user = CustomUser.objects.select_related('user_profile').get(id=user_id)
-            
+            user = CustomUser.objects.select_related("user_profile").get(id=user_id)
+
             # Ensure user has a profile
-            if not hasattr(user, 'user_profile') or not user.user_profile:
+            if not hasattr(user, "user_profile") or not user.user_profile:
                 # Create profile if it doesn't exist
                 from accountManagementApp.models import UserProfile
+
                 user_profile = UserProfile.objects.create(user=user)
-                print(f"[get_universal_qr_data] Created new profile for user: {user.username}")
+                print(
+                    f"[get_universal_qr_data] Created new profile for user: {user.username}"
+                )
             else:
                 user_profile = user.user_profile
 
@@ -2851,30 +2906,54 @@ async def get_user_universal_qr(
             qr_data = {
                 "user_id": str(user.user_id),
                 "username": user.username,
-                "universal_qr_code": str(user_profile.universal_qr_code) if user_profile.universal_qr_code else None,
-                "universal_qr_code_image_url": user_profile.universal_qr_code_image.url if user_profile.universal_qr_code_image else None,
+                "universal_qr_code": (
+                    str(user_profile.universal_qr_code)
+                    if user_profile.universal_qr_code
+                    else None
+                ),
+                "universal_qr_code_image_url": (
+                    user_profile.universal_qr_code_image.url
+                    if user_profile.universal_qr_code_image
+                    else None
+                ),
                 "has_qr_code": bool(user_profile.universal_qr_code_image),
-                "qr_generated_at": user_profile.universal_qr_code_image.url if user_profile.universal_qr_code_image else None,
+                "qr_generated_at": (
+                    user_profile.universal_qr_code_image.url
+                    if user_profile.universal_qr_code_image
+                    else None
+                ),
             }
 
             # Generate QR code if it doesn't exist
             if not user_profile.universal_qr_code_image:
-                print(f"[get_universal_qr_data] Generating missing universal QR for user: {user.username}")
+                print(
+                    f"[get_universal_qr_data] Generating missing universal QR for user: {user.username}"
+                )
                 success = user_profile.generate_universal_qr_code()
                 if success:
-                    user_profile.save(update_fields=['universal_qr_code_image'])
-                    qr_data["universal_qr_code_image_url"] = user_profile.universal_qr_code_image.url
+                    user_profile.save(update_fields=["universal_qr_code_image"])
+                    qr_data["universal_qr_code_image_url"] = (
+                        user_profile.universal_qr_code_image.url
+                    )
                     qr_data["has_qr_code"] = True
                     qr_data["universal_qr_code"] = str(user_profile.universal_qr_code)
-                    print(f"[get_universal_qr_data] Successfully generated QR for user: {user.username}")
+                    print(
+                        f"[get_universal_qr_data] Successfully generated QR for user: {user.username}"
+                    )
                 else:
-                    print(f"[get_universal_qr_data] Failed to generate QR for user: {user.username}")
+                    print(
+                        f"[get_universal_qr_data] Failed to generate QR for user: {user.username}"
+                    )
 
-            print(f"[get_universal_qr_data] Returning QR data for user: {user.username}")
+            print(
+                f"[get_universal_qr_data] Returning QR data for user: {user.username}"
+            )
             return qr_data
 
         except CustomUser.DoesNotExist:
-            print(f"[get_universal_qr_data] Error: User with id {user_id} does not exist")
+            print(
+                f"[get_universal_qr_data] Error: User with id {user_id} does not exist"
+            )
             return None
         except Exception as e:
             error_trace = traceback.format_exc()
@@ -2883,7 +2962,7 @@ async def get_user_universal_qr(
 
     try:
         qr_data = await get_universal_qr_data(user_id)
-        
+
         if qr_data is None:
             await safe_notify_by_bot(
                 f"**[API: get_user_universal_qr]** \n\n User not found: user_id={user_id} \n\n Platform: {platform}",
@@ -2931,18 +3010,19 @@ async def get_user_tickets_detailed(
     def get_user_tickets_data(user_id):
         try:
             print(f"[get_user_tickets_data] Retrieving tickets for user_id: {user_id}")
-            
+
             # Optimize query with select_related and prefetch_related
-            user = CustomUser.objects.select_related('user_profile').get(id=user_id)
-            
+            user = CustomUser.objects.select_related("user_profile").get(id=user_id)
+
             # Get all tickets with optimized queries
-            tickets = Ticket.objects.select_related(
-                'event',
-                'user__user_profile'
-            ).filter(user=user).order_by('-created_at')
-            
+            tickets = (
+                Ticket.objects.select_related("event", "user__user_profile")
+                .filter(user=user)
+                .order_by("-created_at")
+            )
+
             print(f"[get_user_tickets_data] Found {tickets.count()} tickets")
-            
+
             tickets_data = []
             for ticket in tickets:
                 # Build comprehensive ticket data
@@ -2952,50 +3032,72 @@ async def get_user_tickets_detailed(
                     "status": ticket.status,
                     "created_at": ticket.created_at.isoformat(),
                     "stripe_session_id": ticket.stripe_session_id,
-                    
                     # Event information
                     "event": {
                         "event_id": str(ticket.event.eventId),
                         "title": ticket.event.title,
-                        "date": ticket.event.date.isoformat() if ticket.event.date else None,
-                        "start_time": ticket.event.start_time.isoformat() if ticket.event.start_time else None,
-                        "end_time": ticket.event.end_time.isoformat() if ticket.event.end_time else None,
-                        "header_photo": ticket.event.header_photo.url if ticket.event.header_photo else None,
-                        "description": getattr(ticket.event, 'description', None),
-                        "venue": getattr(ticket.event, 'venue', None),
-                        "ticketing": getattr(ticket.event, 'ticketing', None),
+                        "date": (
+                            ticket.event.date.isoformat() if ticket.event.date else None
+                        ),
+                        "start_time": (
+                            ticket.event.start_time.isoformat()
+                            if ticket.event.start_time
+                            else None
+                        ),
+                        "end_time": (
+                            ticket.event.end_time.isoformat()
+                            if ticket.event.end_time
+                            else None
+                        ),
+                        "header_photo": (
+                            ticket.event.header_photo.url
+                            if ticket.event.header_photo
+                            else None
+                        ),
+                        "description": getattr(ticket.event, "description", None),
+                        "venue": getattr(ticket.event, "venue", None),
+                        "ticketing": getattr(ticket.event, "ticketing", None),
                     },
-                    
                     # Guest information (for guest tickets)
-                    "guest_info": {
-                        "first_name": ticket.guestFirstName,
-                        "last_name": ticket.guestLastName,
-                        "email": ticket.guestEmail,
-                    } if any([ticket.guestFirstName, ticket.guestLastName, ticket.guestEmail]) else None,
+                    "guest_info": (
+                        {
+                            "first_name": ticket.guestFirstName,
+                            "last_name": ticket.guestLastName,
+                            "email": ticket.guestEmail,
+                        }
+                        if any(
+                            [
+                                ticket.guestFirstName,
+                                ticket.guestLastName,
+                                ticket.guestEmail,
+                            ]
+                        )
+                        else None
+                    ),
                 }
-                
+
                 # Add individual ticket QR code information (separate ticket system)
                 qr_code_image_url = None
                 qr_code_data = None
-                
+
                 if ticket.qrCodeImage:
                     qr_code_image_url = ticket.qrCodeImage.url
                 if ticket.qrCodeData:
                     qr_code_data = ticket.qrCodeData
-                
+
                 ticket_data["qr_code"] = {
                     "qr_code_data": qr_code_data,
                     "qr_code_image_url": qr_code_image_url,
                     "has_qr_code": bool(qr_code_image_url and qr_code_data),
                 }
-                
+
                 tickets_data.append(ticket_data)
-            
+
             # Get summary statistics
             total_tickets = tickets.count()
-            valid_tickets = tickets.filter(status='Valid').count()
-            scanned_tickets = tickets.filter(status='Scanned').count()
-            
+            valid_tickets = tickets.filter(status="Valid").count()
+            scanned_tickets = tickets.filter(status="Scanned").count()
+
             result = {
                 "user_id": str(user.user_id),
                 "username": user.username,
@@ -3008,12 +3110,16 @@ async def get_user_tickets_detailed(
                 "tickets": tickets_data,
                 "has_qr_codes": True,  # Using individual ticket QR codes (separate ticket system)
             }
-            
-            print(f"[get_user_tickets_data] Returning {total_tickets} tickets for user: {user.username}")
+
+            print(
+                f"[get_user_tickets_data] Returning {total_tickets} tickets for user: {user.username}"
+            )
             return result
 
         except CustomUser.DoesNotExist:
-            print(f"[get_user_tickets_data] Error: User with id {user_id} does not exist")
+            print(
+                f"[get_user_tickets_data] Error: User with id {user_id} does not exist"
+            )
             return None
         except Exception as e:
             error_trace = traceback.format_exc()
@@ -3022,7 +3128,7 @@ async def get_user_tickets_detailed(
 
     try:
         tickets_data = await get_user_tickets_data(user_id)
-        
+
         if tickets_data is None:
             await safe_notify_by_bot(
                 f"**[API: get_user_tickets_detailed]** \n\n User not found: user_id={user_id} \n\n Platform: {platform}",
@@ -3032,14 +3138,18 @@ async def get_user_tickets_detailed(
             )
             raise HTTPException(status_code=404, detail="User not found")
 
-        print(f"[get_user_tickets_detailed] Returning {tickets_data['total_tickets']} tickets for user_id: {user_id}")
+        print(
+            f"[get_user_tickets_detailed] Returning {tickets_data['total_tickets']} tickets for user_id: {user_id}"
+        )
         return tickets_data
 
     except HTTPException:
         raise
     except Exception as e:
         error_trace = traceback.format_exc()
-        print(f"[get_user_tickets_detailed] Unhandled exception: {str(e)}\n{error_trace}")
+        print(
+            f"[get_user_tickets_detailed] Unhandled exception: {str(e)}\n{error_trace}"
+        )
         await safe_notify_by_bot(
             f"**[API: get_user_tickets_detailed]** \n\n Unhandled exception: user_id={user_id}, error={str(e)} \n\n Platform: {platform}",
             platform or "Unknown",
