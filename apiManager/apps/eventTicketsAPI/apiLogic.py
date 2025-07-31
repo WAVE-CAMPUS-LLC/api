@@ -506,8 +506,8 @@ async def process_checkout(
             session_params = {
                 "line_items": line_items,
                 "mode": "payment",
-                "success_url": f"https://waveoncampus.com/checkout/paymentSuccessful?session_id={{CHECKOUT_SESSION_ID}}",
-                "cancel_url": f"https://waveoncampus.com/checkout/paymentFailed",
+                "success_url": f"https://wave.buzz/checkout/paymentSuccessful?session_id={{CHECKOUT_SESSION_ID}}",
+                "cancel_url": f"https://wave.buzz/checkout/paymentFailed",
                 "metadata": {
                     "user_id": str(user_id) if user_id else "guest",
                     "event_id": str(event.eventId),
