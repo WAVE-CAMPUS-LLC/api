@@ -431,7 +431,6 @@ async def get_user_tickets(
                         "guestEmail": ticket.guestEmail,
                         "eventId": str(ticket.event.eventId),
                         "eventTitle": ticket.event.title,
-                        "date": ticket.event.date,
                         "header_photo": (
                             ticket.event.header_photo.url
                             if ticket.event.header_photo
