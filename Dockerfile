@@ -10,4 +10,13 @@ COPY . /app
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Default to web server
-CMD ["sh", "-c", "if [ \"$RUN_MODE\" = 'celery' ]; then celery -A apiManager.celery.app worker --loglevel=info --without-gossip -E; else uvicorn apiManager.main:app --host 0.0.0.0 --port 12024; fi"]
+CMD ["sh", "-c", "if [ \"$RUN_MODE\" = 'celery' ]; then \
+  celery -A apiManager.celery.app worker --loglevel=info --without-gossip -E; \
+  else \
+  gunicorn apiManager.main:app \
+    -k uvicorn.workers.UvicornWorker \
+    --bind 0.0.0.0:12024 \
+    --workers 4 \
+    --threads 2; \
+  fi"]
+
