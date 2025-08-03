@@ -615,7 +615,9 @@ async def join_as_student_api(request: Request, platform: Optional[str] = None):
                 # Step 5: Update user profile with college
                 from accountManagementApp.models import UserProfile
 
-                user_profile, created = UserProfile.objects.get_or_create(user=user)
+                # The UserProfile is automatically created by the signal when user is saved
+                # Just get the existing profile and update it
+                user_profile = UserProfile.objects.get(user=user)
                 user_profile.college = college
                 user_profile.save()
 
@@ -792,7 +794,9 @@ async def join_as_non_student_api(request: Request, platform: Optional[str] = No
                 # Create basic user profile (without college association)
                 from accountManagementApp.models import UserProfile
 
-                user_profile, created = UserProfile.objects.get_or_create(user=user)
+                # The UserProfile is automatically created by the signal when user is saved
+                # Just get the existing profile
+                user_profile = UserProfile.objects.get(user=user)
                 # No college assignment for non-students
                 user_profile.save()
 
@@ -939,7 +943,9 @@ async def join_as_tide_ambassador_api(request: Request, platform: Optional[str] 
                 # Create basic user profile
                 from accountManagementApp.models import UserProfile
 
-                user_profile, created = UserProfile.objects.get_or_create(user=user)
+                # The UserProfile is automatically created by the signal when user is saved
+                # Just get the existing profile
+                user_profile = UserProfile.objects.get(user=user)
                 user_profile.save()
 
                 print(
@@ -1084,9 +1090,7 @@ async def check_user_preferences_completed(
 
 
 @router.get("/get-user-preferences")
-async def get_user_preferences(
-    request: Request, platform: Optional[str] = None
-):
+async def get_user_preferences(request: Request, platform: Optional[str] = None):
     print("[get_user_preferences] Function called")
 
     user_agent_str = request.headers.get("user-agent", "")
@@ -1145,11 +1149,29 @@ async def get_user_preferences(
                         "email": user.email,
                         "preferences_completed": user_preferences.preferences_completed,
                         "college": college_info,
-                        "interests": user_preferences.interests if user_preferences.interests else None,
-                        "vibe": user_preferences.vibe if user_preferences.vibe else None,
-                        "people_to_meet": user_preferences.people_to_meet if user_preferences.people_to_meet else None,
-                        "preferred_times": user_preferences.preferred_times if user_preferences.preferred_times else None,
-                        "preference_created_at": user_preferences.preference_created_at.isoformat() if user_preferences.preference_created_at else None,
+                        "interests": (
+                            user_preferences.interests
+                            if user_preferences.interests
+                            else None
+                        ),
+                        "vibe": (
+                            user_preferences.vibe if user_preferences.vibe else None
+                        ),
+                        "people_to_meet": (
+                            user_preferences.people_to_meet
+                            if user_preferences.people_to_meet
+                            else None
+                        ),
+                        "preferred_times": (
+                            user_preferences.preferred_times
+                            if user_preferences.preferred_times
+                            else None
+                        ),
+                        "preference_created_at": (
+                            user_preferences.preference_created_at.isoformat()
+                            if user_preferences.preference_created_at
+                            else None
+                        ),
                     }
 
                     return preferences_data
@@ -1190,9 +1212,7 @@ async def get_user_preferences(
             )
 
         # Return the preferences data
-        return JSONResponse(
-            content=preferences_data, status_code=status.HTTP_200_OK
-        )
+        return JSONResponse(content=preferences_data, status_code=status.HTTP_200_OK)
 
     except Exception as e:
         traceback_str = traceback.format_exc()
