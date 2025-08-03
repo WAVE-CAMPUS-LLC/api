@@ -9,7 +9,7 @@ class ProfileOverview(BaseModel):
     last_name: str
     username: str
     email: str
-    
+
     class Config:
         from_attributes = True
         populate_by_name = True
@@ -28,13 +28,13 @@ class EventSerializer(BaseModel):
         "city": str,
         "state": str,
         "zip_code": str,
-        "country": str
+        "country": str,
     }
-    
+
     class Config:
         from_attributes = True
         populate_by_name = True
-        
+
 
 class TicketSerializer(BaseModel):
     ticketId: str
@@ -53,10 +53,8 @@ class TicketSerializer(BaseModel):
     eventEndTime: time
     created_at: Optional[datetime] = None
     stripe_session_id: Optional[str] = None
-    date: Optional[date] = None
     header_photo: Optional[str] = None
-    
-    
+
     class Config:
         from_attributes = True
         populate_by_name = True
@@ -64,14 +62,14 @@ class TicketSerializer(BaseModel):
 
 class UniversalQRResponse(BaseModel):
     """DEPRECATED: Pydantic model for universal QR code response - tickets now use individual QR codes"""
-    
+
     user_id: str
     username: str
     universal_qr_code: Optional[str] = None
     universal_qr_code_image_url: Optional[str] = None
     has_qr_code: bool
     qr_generated_at: Optional[str] = None
-    
+
     class Config:
         from_attributes = True
         populate_by_name = True
@@ -79,11 +77,11 @@ class UniversalQRResponse(BaseModel):
 
 class QRCodeInfo(BaseModel):
     """Pydantic model for individual ticket QR code information"""
-    
+
     qrCodeData: Optional[str] = None
     qrCodeImage: Optional[str] = None
     has_qr_code: bool
-    
+
     class Config:
         from_attributes = True
         populate_by_name = True
@@ -91,11 +89,11 @@ class QRCodeInfo(BaseModel):
 
 class GuestInfo(BaseModel):
     """Pydantic model for guest ticket information"""
-    
+
     first_name: Optional[str] = None
     last_name: Optional[str] = None
     email: Optional[str] = None
-    
+
     class Config:
         from_attributes = True
         populate_by_name = True
@@ -103,7 +101,7 @@ class GuestInfo(BaseModel):
 
 class DetailedEventInfo(BaseModel):
     """Pydantic model for detailed event information"""
-    
+
     event_id: str
     title: str
     date: Optional[str] = None
@@ -113,7 +111,7 @@ class DetailedEventInfo(BaseModel):
     description: Optional[str] = None
     venue: Optional[str] = None
     ticketing: Optional[str] = None
-    
+
     class Config:
         from_attributes = True
         populate_by_name = True
@@ -121,7 +119,7 @@ class DetailedEventInfo(BaseModel):
 
 class DetailedTicketInfo(BaseModel):
     """Pydantic model for detailed ticket information"""
-    
+
     ticket_id: str
     main_id: str
     status: str
@@ -130,7 +128,7 @@ class DetailedTicketInfo(BaseModel):
     event: DetailedEventInfo
     guest_info: Optional[GuestInfo] = None
     qr_code: Optional[QRCodeInfo] = None
-    
+
     class Config:
         from_attributes = True
         populate_by_name = True
@@ -138,11 +136,11 @@ class DetailedTicketInfo(BaseModel):
 
 class TicketStatistics(BaseModel):
     """Pydantic model for ticket statistics"""
-    
+
     valid: int
     scanned: int
     invalid: int
-    
+
     class Config:
         from_attributes = True
         populate_by_name = True
@@ -150,14 +148,14 @@ class TicketStatistics(BaseModel):
 
 class UserTicketsResponse(BaseModel):
     """Pydantic model for user tickets response"""
-    
+
     user_id: str
     username: str
     total_tickets: int
     statistics: TicketStatistics
     tickets: List[DetailedTicketInfo]
     has_qr_codes: Optional[bool] = None
-    
+
     class Config:
         from_attributes = True
         populate_by_name = True
