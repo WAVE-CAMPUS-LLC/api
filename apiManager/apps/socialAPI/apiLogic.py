@@ -970,8 +970,15 @@ async def send_friend_request(
     @database_sync_to_async
     def send_friend_request_logic(sender_user_id, receiver_username):
         try:
+            print(
+                f"[send_friend_request_logic] Validating username: {receiver_username}"
+            )
+
             # Validate Discord-style username
             if not is_valid_discord_username(receiver_username):
+                print(
+                    f"[send_friend_request_logic] Username validation failed for: {receiver_username}"
+                )
                 return (
                     None,
                     "Invalid username format. Please use the full Discord-style username (e.g., name#1234).",
@@ -980,11 +987,22 @@ async def send_friend_request(
                     None,
                     None,
                 )
+
+            print(
+                f"[send_friend_request_logic] Username validation passed for: {receiver_username}"
+            )
+
             # Get sender user
             sender_user = CustomUser.objects.get(id=sender_user_id)
+            print(
+                f"[send_friend_request_logic] Sender user found: {sender_user.username}"
+            )
 
             # Check if trying to send request to self
             if receiver_username == sender_user.username:
+                print(
+                    f"[send_friend_request_logic] User trying to send request to self"
+                )
                 return (
                     None,
                     "You cannot send a friend request to yourself.",
@@ -1000,8 +1018,21 @@ async def send_friend_request(
                     user__username=receiver_username
                 )
                 receiver_user = receiver_user_profile.user
+                print(
+                    f"[send_friend_request_logic] Receiver user found: {receiver_user.username}"
+                )
             except UserProfile.DoesNotExist:
-                return None, "User not found.", None, None, None, None
+                print(
+                    f"[send_friend_request_logic] User not found: {receiver_username}"
+                )
+                return (
+                    None,
+                    f"User '{receiver_username}' not found. Please check the username and try again.",
+                    None,
+                    None,
+                    None,
+                    None,
+                )
 
             # Check if already friends
             if sender_user.user_profile.is_friends_with(receiver_user):
@@ -1090,6 +1121,18 @@ async def send_friend_request(
                     )
                     print(f"[send_friend_request API] {error_message}")
                     return None, error_message, None, None, None, None
+            else:
+                # No active request exists, create a new one
+                try:
+                    friend_request = FriendRequest.objects.create(
+                        sender=sender_user, receiver=receiver_user, status="pending"
+                    )
+                except Exception as create_error:
+                    error_message = (
+                        f"Error creating friend request: {str(create_error)}"
+                    )
+                    print(f"[send_friend_request API] {error_message}")
+                    return None, error_message, None, None, None, None
 
             # Return receiver info for notification
             return (
@@ -1152,6 +1195,9 @@ async def send_friend_request(
         )
 
     if friend_request_data is None:
+        print(
+            f"[send_friend_request API] Friend request failed. Error message: {success_message}"
+        )
         notification_sent = await notify_by_bot(
             f"**[API: send_friend_request API]** \n\n {success_message} \n\n Platform: {platform} \n\n User ID: {caller_user_id} \n\n Receiver Username: {receiver_username}",
             platform or "Unknown",
