@@ -2020,7 +2020,7 @@ async def password_reset(
 
                         # Build the reset URL - using a placeholder since we don't have the full Django URL structure
                         # In a real implementation, you'd need to configure the proper URL
-                        reset_url = f"https://waveoncampus.com/forgot/new-password?uid={uid}&token={token}&expires={expiry_time.timestamp()}"
+                        reset_url = f"https://wave.buzz/forgot/new-password?uid={uid}&token={token}&expires={expiry_time.timestamp()}"
 
                         subject = "Request to reset password | WAVE."
 

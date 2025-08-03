@@ -1,5 +1,5 @@
 User-agent: *
 Disallow: /theadminportal/
 Disallow: /admin/
-Sitemap: https://waveoncampus.com/sitemap.xml
-Sitemap: https://waveoncampus.com/sitemap.xml.gz
+Sitemap: https://wave.buzz/sitemap.xml
+Sitemap: https://wave.buzz/sitemap.xml.gz

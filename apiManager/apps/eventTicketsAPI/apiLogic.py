@@ -1977,9 +1977,9 @@ def _generate_crew_tickets_sync(user, ticket_info, event, session_id):
                 from django.http import HttpRequest
                 from django.contrib.auth.models import AnonymousUser
                 mock_request = HttpRequest()
-                mock_request.META['HTTP_HOST'] = 'waveoncampus.com'
+                mock_request.META['HTTP_HOST'] = 'wave.buzz'
                 mock_request.META['wsgi.url_scheme'] = 'https'
-                mock_request.META['SERVER_NAME'] = 'waveoncampus.com'
+                mock_request.META['SERVER_NAME'] = 'wave.buzz'
                 mock_request.META['SERVER_PORT'] = '443'
                 mock_request.is_secure = lambda: True
                 mock_request.user = user if user else AnonymousUser()
@@ -2103,9 +2103,9 @@ def _generate_regular_tickets_sync(
                 from django.http import HttpRequest
                 from django.contrib.auth.models import AnonymousUser
                 mock_request = HttpRequest()
-                mock_request.META['HTTP_HOST'] = 'waveoncampus.com'
+                mock_request.META['HTTP_HOST'] = 'wave.buzz'
                 mock_request.META['wsgi.url_scheme'] = 'https'
-                mock_request.META['SERVER_NAME'] = 'waveoncampus.com'
+                mock_request.META['SERVER_NAME'] = 'wave.buzz'
                 mock_request.META['SERVER_PORT'] = '443'
                 mock_request.is_secure = lambda: True
                 mock_request.user = user if user else AnonymousUser()
@@ -2468,9 +2468,9 @@ def _generate_tickets_from_stripe_session_sync(user_id, session_id, session):
                         from django.http import HttpRequest
                         from django.contrib.auth.models import AnonymousUser
                         mock_request = HttpRequest()
-                        mock_request.META['HTTP_HOST'] = 'waveoncampus.com'
+                        mock_request.META['HTTP_HOST'] = 'wave.buzz'
                         mock_request.META['wsgi.url_scheme'] = 'https'
-                        mock_request.META['SERVER_NAME'] = 'waveoncampus.com'
+                        mock_request.META['SERVER_NAME'] = 'wave.buzz'
                         mock_request.META['SERVER_PORT'] = '443'
                         mock_request.is_secure = lambda: True
                         mock_request.user = user if user else AnonymousUser()
@@ -2851,7 +2851,7 @@ async def get_ticket_details(
             from django.urls import reverse
             import os
             
-            base_url = str(os.getenv("WEBSITE_DOMAIN", "https://waveoncampus.com"))
+            base_url = str(os.getenv("WEBSITE_DOMAIN", "https://wave.buzz"))
             activation_link = base_url + reverse("eventTickets:activateTicket", kwargs={"mainId": ticket.mainId})
             view_link = base_url + reverse("eventTickets:viewTicket", kwargs={"mainId": ticket.mainId})
             

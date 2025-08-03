@@ -933,7 +933,7 @@ def generateTicket(
                 print(f"Email settings: DEFAULT_FROM_EMAIL={settings.DEFAULT_FROM_EMAIL}, EMAIL_HOST={settings.EMAIL_HOST}")
                 
                 # Use inline HTML email template as the primary and only method
-                profile_link = "https://www.waveoncampus.com/profile"
+                profile_link = "https://www.wave.buzz/profile"
                 qrCodeHtml = f"""
                 <!DOCTYPE html>
                 <html lang="en">
@@ -1013,7 +1013,7 @@ def generateTicket(
                                                     📱 <strong>Alternative Access:</strong>
                                                 </p>
                                                 <p style="color: #a16207; margin: 8px 0 0 0; font-size: 14px; line-height: 1.5;">
-                                                    Can't click the button? Go to <strong>waveoncampus.com/profile</strong> and click "My Tickets" to access all your event tickets.
+                                                    Can't click the button? Go to <strong>wave.buzz/profile</strong> and click "My Tickets" to access all your event tickets.
                                                 </p>
                                             </div>
                                         </td>

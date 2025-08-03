@@ -1777,7 +1777,7 @@ async def become_host(
             user = get_object_or_404(CustomUser, id=user_id)
 
             # Set up common variables for Stripe redirect URLs
-            site_domain = "https://waveoncampus.com"
+            site_domain = "https://wave.buzz"
             redirect_link = f"{site_domain}/host/portal/"
 
             # Check if the user has a Stripe Connect account
