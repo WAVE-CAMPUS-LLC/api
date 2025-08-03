@@ -715,12 +715,13 @@ async def delete_profile(
 async def delete_account_with_reason(
     request: Request,
     user_id: int = Depends(get_current_user),
-    reason: str = Form(...),
+    reason: str = Form("other"),
     platform: Optional[str] = None,
 ):
     """
     API endpoint for deleting a user account with a reason.
     Saves the deletion reason and then deletes the user account.
+    If no reason is provided, defaults to "other".
     """
     print(f"[delete_account_with_reason] API called with user_id: {user_id}")
 
@@ -792,9 +793,12 @@ async def delete_account_with_reason(
                 )
                 return {"success": False, "error": f"Unexpected error: {str(e)}"}
 
-        # Validate reason input
+        # Validate and process reason input
+        # If reason is empty or just whitespace, default to "other"
         if not reason or len(reason.strip()) == 0:
-            raise HTTPException(status_code=400, detail="Deletion reason is required")
+            reason = "other"
+        else:
+            reason = reason.strip()
 
         if len(reason) > 1000:  # Reasonable limit for reason length
             raise HTTPException(
@@ -803,7 +807,7 @@ async def delete_account_with_reason(
             )
 
         result = await delete_account_with_reason_sync(
-            user_id, reason.strip(), platform, user_agent_str
+            user_id, reason, platform, user_agent_str
         )
 
         if not result["success"]:
