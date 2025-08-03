@@ -13,7 +13,7 @@ from django.dispatch import receiver
 from django.db.models.signals import pre_save, post_save, post_delete
 from django.utils.translation import gettext_lazy as _
 
-from accountManagementApp.models import UserProfile
+# UserProfile import removed - no longer needed in this file
 from eventManagementApp.models import SharedEvent
 from socialApp.models import CrewMember
 from stripeManagementApp.customerSetup import CustomerAccount
@@ -242,10 +242,7 @@ def generate_user_id(sender, instance, **kwargs):
         instance.user_id = uuid.uuid4()
 
 
-@receiver(post_save, sender=CustomUser)
-def create_user_profile(sender, instance, created, **kwargs):
-    if created:
-        UserProfile.objects.create(user=instance)
+# Removed duplicate signal handler - UserProfile creation is now handled by accountManagementApp signals
 
 
 @receiver(post_save, sender=CustomUser)

@@ -111,9 +111,9 @@ async def profileOverview(
                 print(
                     f"[get_profile_overview] UserProfile not found for user: {user.username}, creating one..."
                 )
-                user_profile = UserProfile.objects.create(user=user)
+                user_profile, created = UserProfile.objects.get_or_create(user=user)
                 print(
-                    f"[get_profile_overview] UserProfile created for user: {user.username}"
+                    f"[get_profile_overview] UserProfile {'created' if created else 'retrieved'} for user: {user.username}"
                 )
 
             # Build the response with detailed logging
@@ -216,9 +216,9 @@ async def profile_detailed(
                 print(
                     f"[get_profile_detailed] UserProfile not found for user: {user.username}, creating one..."
                 )
-                user_profile = UserProfile.objects.create(user=user)
+                user_profile, created = UserProfile.objects.get_or_create(user=user)
                 print(
-                    f"[get_profile_detailed] UserProfile created for user: {user.username}"
+                    f"[get_profile_detailed] UserProfile {'created' if created else 'retrieved'} for user: {user.username}"
                 )
 
             # Build the response with detailed logging

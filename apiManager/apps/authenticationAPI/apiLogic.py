@@ -616,8 +616,8 @@ async def join_as_student_api(request: Request, platform: Optional[str] = None):
                 from accountManagementApp.models import UserProfile
 
                 # The UserProfile is automatically created by the signal when user is saved
-                # Just get the existing profile and update it
-                user_profile = UserProfile.objects.get(user=user)
+                # Use get_or_create to handle potential race conditions
+                user_profile, created = UserProfile.objects.get_or_create(user=user)
                 user_profile.college = college
                 user_profile.save()
 
@@ -795,8 +795,8 @@ async def join_as_non_student_api(request: Request, platform: Optional[str] = No
                 from accountManagementApp.models import UserProfile
 
                 # The UserProfile is automatically created by the signal when user is saved
-                # Just get the existing profile
-                user_profile = UserProfile.objects.get(user=user)
+                # Use get_or_create to handle potential race conditions
+                user_profile, created = UserProfile.objects.get_or_create(user=user)
                 # No college assignment for non-students
                 user_profile.save()
 
@@ -944,8 +944,8 @@ async def join_as_tide_ambassador_api(request: Request, platform: Optional[str] 
                 from accountManagementApp.models import UserProfile
 
                 # The UserProfile is automatically created by the signal when user is saved
-                # Just get the existing profile
-                user_profile = UserProfile.objects.get(user=user)
+                # Use get_or_create to handle potential race conditions
+                user_profile, created = UserProfile.objects.get_or_create(user=user)
                 user_profile.save()
 
                 print(
