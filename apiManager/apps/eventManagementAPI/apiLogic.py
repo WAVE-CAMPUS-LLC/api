@@ -1020,19 +1020,35 @@ async def get_host_stripe_account_link(
     user_id: int = Depends(get_current_user),
     platform: Optional[str] = None,
 ):
+    print(
+        f"[DEBUG - get_host_stripe_account_link] Called with user_id={user_id}, platform={platform}"
+    )
+
     # Get device info
     user_agent_str = request.headers.get("user-agent", "")
     device_data = get_device_info(user_agent_str)
     device_info = device_data["device_info"]
+    print(
+        f"[DEBUG - get_host_stripe_account_link] user_agent='{user_agent_str}', device_info={device_info}"
+    )
 
     @database_sync_to_async
     def process_stripe_account_check():
         try:
+            print(
+                "[DEBUG - get_host_stripe_account_link] Beginning Stripe account check for user"
+            )
             # Get the user account with proper error handling
             user = get_object_or_404(CustomUser, id=user_id)
+            print(
+                f"[DEBUG - get_host_stripe_account_link] Loaded user id={user.id}, username={getattr(user, 'username', None)}, connectAccountID={getattr(user, 'connectAccountID', None)}"
+            )
 
             # Check if user has a Stripe Connect account ID
             if not user.connectAccountID:
+                print(
+                    "[DEBUG - get_host_stripe_account_link] Missing connectAccountID; returning setup redirect"
+                )
                 return JSONResponse(
                     content={
                         "error": "You need to set up your Stripe account first.",
@@ -1047,19 +1063,34 @@ async def get_host_stripe_account_link(
             # Check the Stripe account status
             try:
                 # Retrieve the Stripe account details
+                print(
+                    f"[DEBUG - get_host_stripe_account_link] Retrieving Stripe account {user.connectAccountID}"
+                )
                 stripe_account = stripe.Account.retrieve(user.connectAccountID)
                 is_fully_onboarded = stripe_account.get("payouts_enabled", False)
+                print(
+                    f"[DEBUG - get_host_stripe_account_link] Stripe account retrieved: payouts_enabled={is_fully_onboarded}, charges_enabled={stripe_account.get('charges_enabled')}, details_submitted={stripe_account.get('details_submitted')}, capabilities={stripe_account.get('capabilities')}"
+                )
 
                 # Create an account link for onboarding or updating account details
+                print(
+                    "[DEBUG - get_host_stripe_account_link] Creating Stripe AccountLink (account_onboarding)"
+                )
                 account_link = stripe.AccountLink.create(
                     account=user.connectAccountID,
                     refresh_url=f"{settings.SITE_URL}/refresh/{user.connectAccountID}",
                     return_url=f"{settings.SITE_URL}/host/portal/",
                     type="account_onboarding",
                 )
+                print(
+                    f"[DEBUG - get_host_stripe_account_link] AccountLink created: url={getattr(account_link, 'url', None)}"
+                )
 
                 # Return appropriate response based on account status
                 if not is_fully_onboarded:
+                    print(
+                        "[DEBUG - get_host_stripe_account_link] Not fully onboarded; returning onboarding link"
+                    )
                     return JSONResponse(
                         content={
                             "error": "Please complete your Stripe account setup.",
@@ -1068,6 +1099,9 @@ async def get_host_stripe_account_link(
                         status_code=status.HTTP_200_OK,  # Using 200 instead of 400 as this is an expected state
                     )
                 else:
+                    print(
+                        "[DEBUG - get_host_stripe_account_link] Fully onboarded; returning update link"
+                    )
                     return JSONResponse(
                         content={
                             "success": "Stripe account setup completed.",
@@ -1077,12 +1111,17 @@ async def get_host_stripe_account_link(
                     )
             except stripe.error.StripeError as e:
                 # Log the specific Stripe error for debugging
-                print(f"Stripe error in get_host_stripe_account_link: {str(e)}")
+                print(
+                    f"[DEBUG - get_host_stripe_account_link] Stripe error: {str(e)}, user_message={getattr(e, 'user_message', None)}, code={getattr(e, 'code', None)}"
+                )
                 return JSONResponse(
                     content={"error": f"Stripe error: {str(e)}"},
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 )
         except CustomUser.DoesNotExist:
+            print(
+                f"[DEBUG - get_host_stripe_account_link] User not found for id={user_id}"
+            )
             return JSONResponse(
                 content={"error": "User not found"},
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -1090,14 +1129,20 @@ async def get_host_stripe_account_link(
         except Exception as e:
             # Include traceback for unexpected errors
             traceback_str = traceback.format_exc()
-            print(f"Error in get_host_stripe_account_link: {str(e)}\n{traceback_str}")
+            print(
+                f"[DEBUG - get_host_stripe_account_link] Unexpected error: {str(e)}\n{traceback_str}\nplatform={platform}, device_info={device_info}"
+            )
             return JSONResponse(
                 content={"error": f"An unexpected error occurred: {str(e)}"},
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
     # Execute the function and return the result
-    return await process_stripe_account_check()
+    result = await process_stripe_account_check()
+    print(
+        f"[DEBUG - get_host_stripe_account_link] Completed with status_code={getattr(result, 'status_code', None)}"
+    )
+    return result
 
 
 @router.get("/event/paid/ticket/fields")
