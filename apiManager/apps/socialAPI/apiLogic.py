@@ -6433,8 +6433,8 @@ async def check_crew_invite_status(
                     "is_member": False,
                     "status": existing_invite.status,
                     "invite_id": str(existing_invite.requestId),
-                    "created_at": existing_invite.created_at,
-                    "updated_at": existing_invite.updated_at,
+                    "created_at": existing_invite.created_at.isoformat(),
+                    "updated_at": existing_invite.updated_at.isoformat(),
                     "message": f"Crew invite {existing_invite.status}",
                 }, None
             else:

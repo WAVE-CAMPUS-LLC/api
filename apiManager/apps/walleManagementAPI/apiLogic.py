@@ -668,9 +668,9 @@ async def suggest_crews(
                 "message": "User is not in any crew. Showing random crews.",
             }
         # Otherwise, use the graph suggestion system
-        suggestions = await database_sync_to_async(suggest_crews_for_user)(
-            str(user.user_id), limit
-        )
+        suggestions = await database_sync_to_async(
+            lambda: suggest_crews_for_user(str(user.user_id), limit)
+        )()
 
         # If no suggestions from graph system (no connections through friends/interests),
         # suggest random crews instead
