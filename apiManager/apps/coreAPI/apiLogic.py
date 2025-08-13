@@ -126,9 +126,9 @@ async def get_events(
         total_events = Event.objects.count()
 
         # Get paginated events
-        events_queryset = Event.objects.order_by("-date", "start_time")[
-            offset : offset + limit
-        ]
+        events_queryset = Event.objects.filter(admin_status="active").order_by(
+            "-date", "start_time"
+        )[offset : offset + limit]
 
         print(f"[DEBUG] Total events in database: {Event.objects.count()}")
         print(
