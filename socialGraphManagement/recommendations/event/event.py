@@ -9,44 +9,38 @@ def get_event_recommendations_for_user(
     query = """
     MATCH (u:User {user_id: $user_id})
 
-    // 1. Friends who have attended similar events (weight: 4) - only active events
+    // 1. Friends who have attended similar events (weight: 4)
     OPTIONAL MATCH (u)-[:FRIEND]->(f:User)-[:ATTENDED_EVENT]->(e1:Event)
-    WHERE e1.admin_status = "active"
     WITH u, collect(DISTINCT e1) as friend_attended_events
 
-    // 2. Friends who are going to current events (weight: 5) - only active events
+    // 2. Friends who are going to current events (weight: 5)
     OPTIONAL MATCH (u)-[:FRIEND]->(f2:User)-[:RSVP]->(e2:Event)
-    WHERE e2.date >= datetime() AND e2.admin_status = "active"
     WITH u, friend_attended_events, collect(DISTINCT e2) as friend_rsvp_events
     
-    // 3. Mutual friends who are going to events (weight: 3) - only active events
+    // 3. Mutual friends who are going to events (weight: 3)
     OPTIONAL MATCH (u)-[:FRIEND]->(mf:User)-[:FRIEND]->(other:User)-[:RSVP]->(e3:Event)
-    WHERE e3.date >= datetime() AND e3.admin_status = "active"
     WITH u, friend_attended_events, friend_rsvp_events, collect(DISTINCT e3) as mutual_events
     
-    // 4. Events hosted by users from same college (weight: 3) - only if college is specified, only active events
+    // 4. Events hosted by users from same college (weight: 3) - only if college is specified
     OPTIONAL MATCH (e4:Event)<-[:HOSTED]-(host:User)
-    WHERE $college_name IS NOT NULL AND host.college = $college_name AND e4.admin_status = "active"
+    WHERE $college_name IS NOT NULL
     WITH u, friend_attended_events, friend_rsvp_events, mutual_events, collect(DISTINCT e4) as college_host_events
     
-    // 5. Events where other college members are going (weight: 2) - only if college is specified, only active events
+    // 5. Events where other college members are going (weight: 2) - only if college is specified
     OPTIONAL MATCH (e5:Event)<-[:RSVP]-(college_user:User)
-    WHERE $college_name IS NOT NULL AND college_user.college = $college_name AND college_user.user_id <> $user_id AND e5.admin_status = "active"
+    WHERE $college_name IS NOT NULL AND college_user.user_id <> $user_id
     WITH u, friend_attended_events, friend_rsvp_events, mutual_events, college_host_events, collect(DISTINCT e5) as college_rsvp_events
     
-    // 6. Events related to user's interests (weight: 3) - only active events
+    // 6. Events related to user's interests (weight: 3)
     OPTIONAL MATCH (u)-[:INTERESTED_IN]->(i:Interest)<-[:RELATES_TO_INTEREST]-(e6:Event)
-    WHERE e6.admin_status = "active"
     WITH u, friend_attended_events, friend_rsvp_events, mutual_events, college_host_events, college_rsvp_events, collect(DISTINCT e6) as interest_events
 
-    // 7. Events at preferred times (weight: 2) - only active events
+    // 7. Events at preferred times (weight: 2)
     OPTIONAL MATCH (u)-[:PREFERRED_TIME]->(t:Time)<-[:BEST_TIME]-(e7:Event)
-    WHERE e7.admin_status = "active"
     WITH u, friend_attended_events, friend_rsvp_events, mutual_events, college_host_events, college_rsvp_events, interest_events, collect(DISTINCT e7) as time_events
 
-    // 8. Events that attract people user wants to meet (weight: 3) - only active events
+    // 8. Events that attract people user wants to meet (weight: 3)
     OPTIONAL MATCH (u)-[:WANTS_TO_MEET]->(p:Person)<-[:ATTRACTS_PEOPLE]-(e8:Event)
-    WHERE e8.admin_status = "active"
     WITH u, friend_attended_events, friend_rsvp_events, mutual_events, college_host_events, college_rsvp_events, interest_events, time_events, collect(DISTINCT e8) as people_events
     
     // Combine all events and calculate weighted scores
@@ -71,11 +65,11 @@ def get_event_recommendations_for_user(
              ELSE 1
          END as base_score
     
-    // Add bonus for events happening soon
+    // Add bonus for events happening soon (if date property exists)
     WITH event, base_score,
          CASE 
-             WHEN event.date <= datetime() + duration('P7D') THEN 2  // Next 7 days
-             WHEN event.date <= datetime() + duration('P14D') THEN 1  // Next 14 days
+             WHEN event.date IS NOT NULL AND event.date <= datetime() + duration('P7D') THEN 2  // Next 7 days
+             WHEN event.date IS NOT NULL AND event.date <= datetime() + duration('P14D') THEN 1  // Next 14 days
              ELSE 0
          END as time_bonus
     
@@ -257,39 +251,39 @@ def get_similar_events(event_id: str, limit: int = 5):
     query = """
     MATCH (e:Event {eventId: $event_id})
     
-    // 1. Events with same category (weight: 5) - only active events
+    // 1. Events with same category (weight: 5)
     OPTIONAL MATCH (e1:Event)
-    WHERE e1.category = e.category AND e1.eventId <> e.eventId AND e1.admin_status = "active"
+    WHERE e1.category = e.category AND e1.eventId <> e.eventId
     WITH e, collect(DISTINCT e1) as category_events
     
-    // 2. Events with same host (weight: 4) - only active events
+    // 2. Events with same host (weight: 4)
     OPTIONAL MATCH (e)-[:HOSTED]->(host:User)-[:HOSTED]->(e2:Event)
-    WHERE e2.eventId <> e.eventId AND e2.admin_status = "active"
+    WHERE e2.eventId <> e.eventId
     WITH e, category_events, collect(DISTINCT e2) as host_events
     
-    // 3. Events with same interests (weight: 4) - only active events
+    // 3. Events with same interests (weight: 4)
     OPTIONAL MATCH (e)-[:RELATES_TO_INTEREST]->(i:Interest)<-[:RELATES_TO_INTEREST]-(e3:Event)
-    WHERE e3.eventId <> e.eventId AND e3.admin_status = "active"
+    WHERE e3.eventId <> e.eventId
     WITH e, category_events, host_events, collect(DISTINCT e3) as interest_events
     
-    // 4. Events that attract same people (weight: 3) - only active events
+    // 4. Events that attract same people (weight: 3)
     OPTIONAL MATCH (e)-[:ATTRACTS_PEOPLE]->(p:Person)<-[:ATTRACTS_PEOPLE]-(e4:Event)
-    WHERE e4.eventId <> e.eventId AND e4.admin_status = "active"
+    WHERE e4.eventId <> e.eventId
     WITH e, category_events, host_events, interest_events, collect(DISTINCT e4) as people_events
     
-    // 5. Events at same location (weight: 3) - only active events
+    // 5. Events at same location (weight: 3)
     OPTIONAL MATCH (e5:Event)
-    WHERE e5.location = e.location AND e5.eventId <> e.eventId AND e5.admin_status = "active"
+    WHERE e5.location = e.location AND e5.eventId <> e.eventId
     WITH e, category_events, host_events, interest_events, people_events, collect(DISTINCT e5) as location_events
     
-    // 6. Events attended by same people (weight: 3) - only active events
+    // 6. Events attended by same people (weight: 3)
     OPTIONAL MATCH (e)-[:ATTENDED_EVENT]-(attendee:User)-[:ATTENDED_EVENT]->(e6:Event)
-    WHERE e6.eventId <> e.eventId AND e6.admin_status = "active"
+    WHERE e6.eventId <> e.eventId
     WITH e, category_events, host_events, interest_events, people_events, location_events, collect(DISTINCT e6) as attendee_events
     
-    // 7. Events at same time of day (weight: 2) - only active events
+    // 7. Events at same time of day (weight: 2)
     OPTIONAL MATCH (e)-[:BEST_TIME]->(t:Time)<-[:BEST_TIME]-(e7:Event)
-    WHERE e7.eventId <> e.eventId AND e7.admin_status = "active"
+    WHERE e7.eventId <> e.eventId
     WITH e, category_events, host_events, interest_events, people_events, location_events, attendee_events, collect(DISTINCT e7) as time_events
     
     // Combine all events and calculate scores
@@ -311,11 +305,11 @@ def get_similar_events(event_id: str, limit: int = 5):
              ELSE 1
          END as base_score
     
-    // Add bonus for events happening soon
+    // Add bonus for events happening soon (if date property exists)
     WITH similar_event, e, base_score,
          CASE 
-             WHEN similar_event.date <= datetime() + duration('P30D') THEN 2  // Next 30 days
-             WHEN similar_event.date <= datetime() + duration('P60D') THEN 1  // Next 60 days
+             WHEN similar_event.date IS NOT NULL AND similar_event.date <= datetime() + duration('P30D') THEN 2  // Next 30 days
+             WHEN similar_event.date IS NOT NULL AND similar_event.date <= datetime() + duration('P60D') THEN 1  // Next 60 days
              ELSE 0
          END as time_bonus
     
@@ -356,7 +350,6 @@ def get_personalized_event_discovery(
     
     // Get all events on the platform
     MATCH (e:Event)
-    WHERE e.admin_status = "active"
     
     // Calculate similarity scores based on multiple factors
     
@@ -434,7 +427,7 @@ def get_college_events(
     
     // Get events hosted by users from the same college
     MATCH (e:Event)<-[:HOSTED]-(host:User)
-    WHERE host.college = $college_name AND e.admin_status = "active"
+    WHERE host.college = $college_name
     
     // Calculate similarity scores based on multiple factors
     
