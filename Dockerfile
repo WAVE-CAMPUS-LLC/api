@@ -3,6 +3,10 @@ FROM python:3.11-slim
 # Create working directory
 WORKDIR /app
 
+# Create and activate venv
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
 # Copy source code
 COPY . /app
 
