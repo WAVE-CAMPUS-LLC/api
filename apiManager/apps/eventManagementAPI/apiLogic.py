@@ -671,21 +671,15 @@ async def create_free_event(
         def process_create_event():
             # Get the current user's profile.
             user = CustomUser.objects.get(id=user_id)
-
+            
             # Handle UserProfile that might not exist yet
             try:
                 user_profile = UserProfile.objects.get(user=user)
-                print(
-                    f"[DEBUG - create_free_event] UserProfile found for user: {user.username}"
-                )
+                print(f"[DEBUG - create_free_event] UserProfile found for user: {user.username}")
             except UserProfile.DoesNotExist:
-                print(
-                    f"[DEBUG - create_free_event] UserProfile not found for user: {user.username}, creating one..."
-                )
+                print(f"[DEBUG - create_free_event] UserProfile not found for user: {user.username}, creating one...")
                 user_profile, created = UserProfile.objects.get_or_create(user=user)
-                print(
-                    f"[DEBUG - create_free_event] UserProfile {'created' if created else 'retrieved'} for user: {user.username}"
-                )
+                print(f"[DEBUG - create_free_event] UserProfile {'created' if created else 'retrieved'} for user: {user.username}")
 
             # Determine whether the user is associated with a college
             is_in_college = (
@@ -705,87 +699,88 @@ async def create_free_event(
                 new_event.status = "live"  # Set status to live
                 new_event.save()
 
-                # Send notifications to campus members and friends
-                return new_event, user  # Return both event and user for notification
+                # Create location serializer instance (now in sync context)
+                location = LocationSerializer(
+                    building_name=new_event.building_name,
+                    street=new_event.street,
+                    apt_suite_unit=new_event.apt_suite_unit,
+                    city=new_event.city,
+                    state=new_event.state,
+                    zip_code=new_event.zip_code,
+                    country=new_event.country,
+                    hide_address=new_event.hide_address,
+                )
+
+                # Create host serializer instance (now in sync context)
+                host = HostSerializer(
+                    id=str(host_profile.hostProfileId),
+                    name=f"{user.first_name} {user.last_name}",
+                )
+
+                # Process image URLs (now in sync context)
+                header_photo_url = (
+                    new_event.header_photo.url if new_event.header_photo else None
+                )
+                body_photo_one_url = (
+                    new_event.body_photo_one.url if new_event.body_photo_one else None
+                )
+                body_photo_two_url = (
+                    new_event.body_photo_two.url if new_event.body_photo_two else None
+                )
+                body_photo_three_url = (
+                    new_event.body_photo_three.url if new_event.body_photo_three else None
+                )
+                body_photo_four_url = (
+                    new_event.body_photo_four.url if new_event.body_photo_four else None
+                )
+                body_photo_five_url = (
+                    new_event.body_photo_five.url if new_event.body_photo_five else None
+                )
+
+                # Create event response serializer instance (now in sync context)
+                event_data = EventDetailSerializer(
+                    eventId=str(new_event.eventId),
+                    status=new_event.status,
+                    title=new_event.title,
+                    event_type=new_event.event_type,
+                    date=new_event.date,
+                    start_time=new_event.start_time,
+                    end_time=new_event.end_time,
+                    description=new_event.description,
+                    ticketing=new_event.ticketing,
+                    location=location,
+                    header_photo=header_photo_url,
+                    body_photo_one=body_photo_one_url,
+                    body_photo_two=body_photo_two_url,
+                    body_photo_three=body_photo_three_url,
+                    body_photo_four=body_photo_four_url,
+                    body_photo_five=body_photo_five_url,
+                    crew_discount=new_event.crew_discount,
+                    minimum_crew_size=new_event.minimum_crew_size,
+                    crew_discount_percentage=new_event.crew_discount_percentage,
+                    couponsActivated=new_event.couponsActivated,
+                    show_guest_list=new_event.show_guest_list,
+                    forAllDisplay=new_event.forAllDisplay,
+                    forCollegesDisplay=new_event.forCollegesDisplay,
+                )
+
+                # Properly serialize the event_data to make it JSON serializable (now in sync context)
+                serialized_event_data = event_data.model_dump(mode="json")
+
+                # Return both event/user for notifications AND the serialized data
+                return new_event, user, serialized_event_data
 
             else:
                 # Here we raise an error with the form errors so that we can return a 400 response.
                 raise ValueError(event_form.errors)
 
         # Execute the create event function
-        new_event, user = await process_create_event()
+        new_event, user, serialized_event_data = await process_create_event()
 
         # Send notifications after event creation
         await send_event_creation_notifications(new_event, user)
 
-        # Create location serializer instance
-        location = LocationSerializer(
-            building_name=new_event.building_name,
-            street=new_event.street,
-            apt_suite_unit=new_event.apt_suite_unit,
-            city=new_event.city,
-            state=new_event.state,
-            zip_code=new_event.zip_code,
-            country=new_event.country,
-            hide_address=new_event.hide_address,
-        )
-
-        # Create host serializer instance
-        host_profile, created = HostProfile.objects.get_or_create(user=user)
-        host = HostSerializer(
-            id=str(host_profile.hostProfileId),
-            name=f"{user.first_name} {user.last_name}",
-        )
-
-        # Process image URLs
-        header_photo_url = (
-            new_event.header_photo.url if new_event.header_photo else None
-        )
-        body_photo_one_url = (
-            new_event.body_photo_one.url if new_event.body_photo_one else None
-        )
-        body_photo_two_url = (
-            new_event.body_photo_two.url if new_event.body_photo_two else None
-        )
-        body_photo_three_url = (
-            new_event.body_photo_three.url if new_event.body_photo_three else None
-        )
-        body_photo_four_url = (
-            new_event.body_photo_four.url if new_event.body_photo_four else None
-        )
-        body_photo_five_url = (
-            new_event.body_photo_five.url if new_event.body_photo_five else None
-        )
-
-        # Create event response serializer instance
-        event_data = EventDetailSerializer(
-            eventId=str(new_event.eventId),
-            status=new_event.status,
-            title=new_event.title,
-            event_type=new_event.event_type,
-            date=new_event.date,
-            start_time=new_event.start_time,
-            end_time=new_event.end_time,
-            description=new_event.description,
-            ticketing=new_event.ticketing,
-            location=location,
-            header_photo=header_photo_url,
-            body_photo_one=body_photo_one_url,
-            body_photo_two=body_photo_two_url,
-            body_photo_three=body_photo_three_url,
-            body_photo_four=body_photo_four_url,
-            body_photo_five=body_photo_five_url,
-            crew_discount=new_event.crew_discount,
-            minimum_crew_size=new_event.minimum_crew_size,
-            crew_discount_percentage=new_event.crew_discount_percentage,
-            couponsActivated=new_event.couponsActivated,
-            show_guest_list=new_event.show_guest_list,
-            forAllDisplay=new_event.forAllDisplay,
-            forCollegesDisplay=new_event.forCollegesDisplay,
-        )
-
-        # Properly serialize the event_data to make it JSON serializable
-        serialized_event_data = event_data.model_dump(mode="json")
+        # Use the pre-serialized data (no more Django model access in async context)
         result = {
             "message": "Event created successfully.",
             "event": serialized_event_data,
@@ -943,11 +938,85 @@ async def create_paid_event(
                     new_event.save()
                     print(f"[DEBUG - create_paid_event] Event created: {new_event}")
 
-                    # Send notifications to campus members and friends
+                    # Get or create a host profile for the user (now in sync context)
+                    host_profile, created = HostProfile.objects.get_or_create(user=user)
+
+                    # Create location serializer instance (now in sync context)
+                    location = LocationSerializer(
+                        building_name=new_event.building_name,
+                        street=new_event.street,
+                        apt_suite_unit=new_event.apt_suite_unit,
+                        city=new_event.city,
+                        state=new_event.state,
+                        zip_code=new_event.zip_code,
+                        country=new_event.country,
+                        hide_address=new_event.hide_address,
+                    )
+
+                    # Create host serializer instance (now in sync context)
+                    host = HostSerializer(
+                        id=str(host_profile.hostProfileId),
+                        name=f"{user.first_name} {user.last_name}",
+                    )
+
+                    # Process image URLs (now in sync context)
+                    header_photo_url = (
+                        new_event.header_photo.url if new_event.header_photo else None
+                    )
+                    body_photo_one_url = (
+                        new_event.body_photo_one.url if new_event.body_photo_one else None
+                    )
+                    body_photo_two_url = (
+                        new_event.body_photo_two.url if new_event.body_photo_two else None
+                    )
+                    body_photo_three_url = (
+                        new_event.body_photo_three.url if new_event.body_photo_three else None
+                    )
+                    body_photo_four_url = (
+                        new_event.body_photo_four.url if new_event.body_photo_four else None
+                    )
+                    body_photo_five_url = (
+                        new_event.body_photo_five.url if new_event.body_photo_five else None
+                    )
+
+                    # Create event response serializer instance (now in sync context)
+                    event_data = EventDetailSerializer(
+                        eventId=str(new_event.eventId),
+                        status=new_event.status,
+                        title=new_event.title,
+                        event_type=new_event.event_type,
+                        date=new_event.date,
+                        start_time=new_event.start_time,
+                        end_time=new_event.end_time,
+                        description=new_event.description,
+                        ticketing=new_event.ticketing,
+                        location=location,
+                        header_photo=header_photo_url,
+                        body_photo_one=body_photo_one_url,
+                        body_photo_two=body_photo_two_url,
+                        body_photo_three=body_photo_three_url,
+                        body_photo_four=body_photo_four_url,
+                        body_photo_five=body_photo_five_url,
+                        crew_discount=new_event.crew_discount,
+                        minimum_crew_size=new_event.minimum_crew_size,
+                        crew_discount_percentage=new_event.crew_discount_percentage,
+                        couponsActivated=new_event.couponsActivated,
+                        show_guest_list=new_event.show_guest_list,
+                        forAllDisplay=new_event.forAllDisplay,
+                        forCollegesDisplay=new_event.forCollegesDisplay,
+                        stripeProductId=new_event.stripeProductId,
+                    )
+
+                    # Properly serialize the event_data to make it JSON serializable (now in sync context)
+                    serialized_event_data = event_data.model_dump(mode="json")
+                    print(f"[DEBUG - create_paid_event] Serialized event data: {serialized_event_data}")
+
+                    # Return event, user, and pre-serialized data
                     return (
                         new_event,
                         user,
-                    )  # Return both event and user for notification
+                        serialized_event_data,
+                    )  # Return event, user and serialized data for notification
 
                 else:
                     # Here we raise an error with the form errors so that we can return a 400 response
@@ -970,84 +1039,13 @@ async def create_paid_event(
         if isinstance(result, JSONResponse):
             return result
 
-        # If successful, result is a tuple of (event, user)
-        new_event, user = result
+        # If successful, result is a tuple of (event, user, serialized_event_data)
+        new_event, user, serialized_event_data = result
 
         # Send notifications after event creation
         await send_event_creation_notifications(new_event, user)
 
-        # Create location serializer instance
-        location = LocationSerializer(
-            building_name=new_event.building_name,
-            street=new_event.street,
-            apt_suite_unit=new_event.apt_suite_unit,
-            city=new_event.city,
-            state=new_event.state,
-            zip_code=new_event.zip_code,
-            country=new_event.country,
-            hide_address=new_event.hide_address,
-        )
-
-        # Create host serializer instance
-        host_profile, created = HostProfile.objects.get_or_create(user=user)
-        host = HostSerializer(
-            id=str(host_profile.hostProfileId),
-            name=f"{user.first_name} {user.last_name}",
-        )
-
-        # Process image URLs
-        header_photo_url = (
-            new_event.header_photo.url if new_event.header_photo else None
-        )
-        body_photo_one_url = (
-            new_event.body_photo_one.url if new_event.body_photo_one else None
-        )
-        body_photo_two_url = (
-            new_event.body_photo_two.url if new_event.body_photo_two else None
-        )
-        body_photo_three_url = (
-            new_event.body_photo_three.url if new_event.body_photo_three else None
-        )
-        body_photo_four_url = (
-            new_event.body_photo_four.url if new_event.body_photo_four else None
-        )
-        body_photo_five_url = (
-            new_event.body_photo_five.url if new_event.body_photo_five else None
-        )
-
-        # Create event response serializer instance
-        event_data = EventDetailSerializer(
-            eventId=str(new_event.eventId),
-            status=new_event.status,
-            title=new_event.title,
-            event_type=new_event.event_type,
-            date=new_event.date,
-            start_time=new_event.start_time,
-            end_time=new_event.end_time,
-            description=new_event.description,
-            ticketing=new_event.ticketing,
-            location=location,
-            header_photo=header_photo_url,
-            body_photo_one=body_photo_one_url,
-            body_photo_two=body_photo_two_url,
-            body_photo_three=body_photo_three_url,
-            body_photo_four=body_photo_four_url,
-            body_photo_five=body_photo_five_url,
-            crew_discount=new_event.crew_discount,
-            minimum_crew_size=new_event.minimum_crew_size,
-            crew_discount_percentage=new_event.crew_discount_percentage,
-            couponsActivated=new_event.couponsActivated,
-            show_guest_list=new_event.show_guest_list,
-            forAllDisplay=new_event.forAllDisplay,
-            forCollegesDisplay=new_event.forCollegesDisplay,
-            stripeProductId=new_event.stripeProductId,
-        )
-
-        # Properly serialize the event_data to make it JSON serializable
-        serialized_event_data = event_data.model_dump(mode="json")
-        print(
-            f"[DEBUG - create_paid_event] Serialized event data: {serialized_event_data}"
-        )
+        # Use the pre-serialized data (no more Django model access in async context)
         result = {
             "message": "Paid event created successfully.",
             "event": serialized_event_data,
