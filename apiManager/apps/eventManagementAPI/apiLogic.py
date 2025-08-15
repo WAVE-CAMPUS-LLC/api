@@ -2741,6 +2741,67 @@ async def toggle_event_status(
         )
 
 
+@router.get("/event/{eventId}/headerPhoto")
+async def get_event_header_photo(
+    eventId: str,
+    request: Request,
+    user_id: int = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
+    """
+    Get the header photo URL of an event
+    """
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    @database_sync_to_async
+    def get_header_photo():
+        try:
+            event = Event.objects.get(eventId=eventId)
+
+            # Check if user is the host of this event
+            if event.host.id != user_id:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="You don't have permission to view this event data. Only the event host can access this information.",
+                )
+
+            # Get header photo URL
+            header_photo_url = event.header_photo.url if event.header_photo else None
+
+            return {
+                "eventId": str(event.eventId),
+                "title": event.title,
+                "header_photo_url": header_photo_url,
+            }
+
+        except Event.DoesNotExist:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Event not found"
+            )
+
+    try:
+        result = await get_header_photo()
+        return JSONResponse(content=result, status_code=status.HTTP_200_OK)
+    except HTTPException as http_ex:
+        return JSONResponse(
+            content={"error": str(http_ex.detail)},
+            status_code=http_ex.status_code,
+        )
+    except Exception as e:
+        await notify_by_bot(
+            f"**[API: get_event_header_photo]** \n\n Error getting event header photo: eventId={eventId}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        return JSONResponse(
+            content={"error": f"An unexpected error occurred: {str(e)}"},
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
 @router.get("/event/{eventId}/basic")
 async def get_event_basic_info(
     eventId: str,
