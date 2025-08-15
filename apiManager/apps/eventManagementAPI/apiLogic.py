@@ -225,15 +225,21 @@ async def edit_event_endpoint(
 
             # Get the current user's profile
             user = CustomUser.objects.get(id=user_id)
-            
+
             # Handle UserProfile that might not exist yet
             try:
                 user_profile = UserProfile.objects.get(user=user)
-                print(f"[DEBUG - edit_event] UserProfile found for user: {user.username}")
+                print(
+                    f"[DEBUG - edit_event] UserProfile found for user: {user.username}"
+                )
             except UserProfile.DoesNotExist:
-                print(f"[DEBUG - edit_event] UserProfile not found for user: {user.username}, creating one...")
+                print(
+                    f"[DEBUG - edit_event] UserProfile not found for user: {user.username}, creating one..."
+                )
                 user_profile, created = UserProfile.objects.get_or_create(user=user)
-                print(f"[DEBUG - edit_event] UserProfile {'created' if created else 'retrieved'} for user: {user.username}")
+                print(
+                    f"[DEBUG - edit_event] UserProfile {'created' if created else 'retrieved'} for user: {user.username}"
+                )
 
             # Get the host profile for the event host
             host_profile = HostProfile.objects.get(user=event.host)
@@ -665,15 +671,21 @@ async def create_free_event(
         def process_create_event():
             # Get the current user's profile.
             user = CustomUser.objects.get(id=user_id)
-            
+
             # Handle UserProfile that might not exist yet
             try:
                 user_profile = UserProfile.objects.get(user=user)
-                print(f"[DEBUG - create_free_event] UserProfile found for user: {user.username}")
+                print(
+                    f"[DEBUG - create_free_event] UserProfile found for user: {user.username}"
+                )
             except UserProfile.DoesNotExist:
-                print(f"[DEBUG - create_free_event] UserProfile not found for user: {user.username}, creating one...")
+                print(
+                    f"[DEBUG - create_free_event] UserProfile not found for user: {user.username}, creating one..."
+                )
                 user_profile, created = UserProfile.objects.get_or_create(user=user)
-                print(f"[DEBUG - create_free_event] UserProfile {'created' if created else 'retrieved'} for user: {user.username}")
+                print(
+                    f"[DEBUG - create_free_event] UserProfile {'created' if created else 'retrieved'} for user: {user.username}"
+                )
 
             # Determine whether the user is associated with a college
             is_in_college = (
@@ -835,15 +847,21 @@ async def create_paid_event(
             try:
                 # Get the current user's profile
                 user = CustomUser.objects.get(id=user_id)
-                
+
                 # Handle UserProfile that might not exist yet
                 try:
                     user_profile = UserProfile.objects.get(user=user)
-                    print(f"[DEBUG - create_paid_event] UserProfile found for user: {user.username}")
+                    print(
+                        f"[DEBUG - create_paid_event] UserProfile found for user: {user.username}"
+                    )
                 except UserProfile.DoesNotExist:
-                    print(f"[DEBUG - create_paid_event] UserProfile not found for user: {user.username}, creating one...")
+                    print(
+                        f"[DEBUG - create_paid_event] UserProfile not found for user: {user.username}, creating one..."
+                    )
                     user_profile, created = UserProfile.objects.get_or_create(user=user)
-                    print(f"[DEBUG - create_paid_event] UserProfile {'created' if created else 'retrieved'} for user: {user.username}")
+                    print(
+                        f"[DEBUG - create_paid_event] UserProfile {'created' if created else 'retrieved'} for user: {user.username}"
+                    )
 
                 # Verify the host has a Stripe Connect account set up
                 if not hasattr(user, "connectAccountID") or not user.connectAccountID:
@@ -3172,6 +3190,649 @@ async def toggle_for_colleges_display(
     except Exception as e:
         await notify_by_bot(
             f"**[API: toggle_for_colleges_display]** \n\n Error toggling for colleges display: eventId={eventId}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        return JSONResponse(
+            content={"error": f"An unexpected error occurred: {str(e)}"},
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@router.patch("/event/{eventId}/editTitle")
+async def edit_event_title(
+    eventId: str,
+    request: Request,
+    user_id: int = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
+    """
+    Edit the title of an event
+    """
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    try:
+        form_data = await request.form()
+        new_title = form_data.get("title")
+
+        if not new_title:
+            return JSONResponse(
+                content={"error": "Title is required"},
+                status_code=status.HTTP_400_BAD_REQUEST,
+            )
+
+        @database_sync_to_async
+        def update_title():
+            try:
+                event = Event.objects.get(eventId=eventId)
+
+                # Check if user is the host of this event
+                if event.host.id != user_id:
+                    raise HTTPException(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        detail="You don't have permission to modify this event. Only the event host can edit the title.",
+                    )
+
+                event.title = new_title
+                event.save()
+
+                return {
+                    "message": "Event title updated successfully",
+                    "eventId": str(event.eventId),
+                    "title": event.title,
+                }
+
+            except Event.DoesNotExist:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND, detail="Event not found"
+                )
+
+        result = await update_title()
+        return JSONResponse(content=result, status_code=status.HTTP_200_OK)
+    except HTTPException as http_ex:
+        return JSONResponse(
+            content={"error": str(http_ex.detail)},
+            status_code=http_ex.status_code,
+        )
+    except Exception as e:
+        await notify_by_bot(
+            f"**[API: edit_event_title]** \n\n Error editing event title: eventId={eventId}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        return JSONResponse(
+            content={"error": f"An unexpected error occurred: {str(e)}"},
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@router.patch("/event/{eventId}/editDescription")
+async def edit_event_description(
+    eventId: str,
+    request: Request,
+    user_id: int = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
+    """
+    Edit the description of an event
+    """
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    try:
+        form_data = await request.form()
+        new_description = form_data.get("description")
+
+        if not new_description:
+            return JSONResponse(
+                content={"error": "Description is required"},
+                status_code=status.HTTP_400_BAD_REQUEST,
+            )
+
+        @database_sync_to_async
+        def update_description():
+            try:
+                event = Event.objects.get(eventId=eventId)
+
+                # Check if user is the host of this event
+                if event.host.id != user_id:
+                    raise HTTPException(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        detail="You don't have permission to modify this event. Only the event host can edit the description.",
+                    )
+
+                event.description = new_description
+                event.save()
+
+                return {
+                    "message": "Event description updated successfully",
+                    "eventId": str(event.eventId),
+                    "description": event.description,
+                }
+
+            except Event.DoesNotExist:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND, detail="Event not found"
+                )
+
+        result = await update_description()
+        return JSONResponse(content=result, status_code=status.HTTP_200_OK)
+    except HTTPException as http_ex:
+        return JSONResponse(
+            content={"error": str(http_ex.detail)},
+            status_code=http_ex.status_code,
+        )
+    except Exception as e:
+        await notify_by_bot(
+            f"**[API: edit_event_description]** \n\n Error editing event description: eventId={eventId}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        return JSONResponse(
+            content={"error": f"An unexpected error occurred: {str(e)}"},
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@router.patch("/event/{eventId}/editDate")
+async def edit_event_date(
+    eventId: str,
+    request: Request,
+    user_id: int = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
+    """
+    Edit the date of an event
+    """
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    try:
+        form_data = await request.form()
+        new_date_str = form_data.get("date")
+
+        if not new_date_str:
+            return JSONResponse(
+                content={"error": "Date is required"},
+                status_code=status.HTTP_400_BAD_REQUEST,
+            )
+
+        @database_sync_to_async
+        def update_date():
+            try:
+                event = Event.objects.get(eventId=eventId)
+
+                # Check if user is the host of this event
+                if event.host.id != user_id:
+                    raise HTTPException(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        detail="You don't have permission to modify this event. Only the event host can edit the date.",
+                    )
+
+                # Parse the date string
+                try:
+                    from datetime import datetime
+
+                    new_date = datetime.strptime(new_date_str, "%Y-%m-%d").date()
+                except ValueError:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="Invalid date format. Use YYYY-MM-DD format.",
+                    )
+
+                event.date = new_date
+                event.save()
+
+                return {
+                    "message": "Event date updated successfully",
+                    "eventId": str(event.eventId),
+                    "date": event.date.isoformat(),
+                }
+
+            except Event.DoesNotExist:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND, detail="Event not found"
+                )
+
+        result = await update_date()
+        return JSONResponse(content=result, status_code=status.HTTP_200_OK)
+    except HTTPException as http_ex:
+        return JSONResponse(
+            content={"error": str(http_ex.detail)},
+            status_code=http_ex.status_code,
+        )
+    except Exception as e:
+        await notify_by_bot(
+            f"**[API: edit_event_date]** \n\n Error editing event date: eventId={eventId}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        return JSONResponse(
+            content={"error": f"An unexpected error occurred: {str(e)}"},
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@router.patch("/event/{eventId}/editStartTime")
+async def edit_event_start_time(
+    eventId: str,
+    request: Request,
+    user_id: int = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
+    """
+    Edit the start time of an event
+    """
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    try:
+        form_data = await request.form()
+        new_start_time_str = form_data.get("start_time")
+
+        if not new_start_time_str:
+            return JSONResponse(
+                content={"error": "Start time is required"},
+                status_code=status.HTTP_400_BAD_REQUEST,
+            )
+
+        @database_sync_to_async
+        def update_start_time():
+            try:
+                event = Event.objects.get(eventId=eventId)
+
+                # Check if user is the host of this event
+                if event.host.id != user_id:
+                    raise HTTPException(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        detail="You don't have permission to modify this event. Only the event host can edit the start time.",
+                    )
+
+                # Parse the time string
+                try:
+                    from datetime import datetime
+
+                    new_start_time = datetime.strptime(
+                        new_start_time_str, "%H:%M"
+                    ).time()
+                except ValueError:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="Invalid time format. Use HH:MM format.",
+                    )
+
+                event.start_time = new_start_time
+                event.save()
+
+                return {
+                    "message": "Event start time updated successfully",
+                    "eventId": str(event.eventId),
+                    "start_time": event.start_time.isoformat(),
+                }
+
+            except Event.DoesNotExist:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND, detail="Event not found"
+                )
+
+        result = await update_start_time()
+        return JSONResponse(content=result, status_code=status.HTTP_200_OK)
+    except HTTPException as http_ex:
+        return JSONResponse(
+            content={"error": str(http_ex.detail)},
+            status_code=http_ex.status_code,
+        )
+    except Exception as e:
+        await notify_by_bot(
+            f"**[API: edit_event_start_time]** \n\n Error editing event start time: eventId={eventId}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        return JSONResponse(
+            content={"error": f"An unexpected error occurred: {str(e)}"},
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@router.patch("/event/{eventId}/editEndTime")
+async def edit_event_end_time(
+    eventId: str,
+    request: Request,
+    user_id: int = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
+    """
+    Edit the end time of an event
+    """
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    try:
+        form_data = await request.form()
+        new_end_time_str = form_data.get("end_time")
+
+        if not new_end_time_str:
+            return JSONResponse(
+                content={"error": "End time is required"},
+                status_code=status.HTTP_400_BAD_REQUEST,
+            )
+
+        @database_sync_to_async
+        def update_end_time():
+            try:
+                event = Event.objects.get(eventId=eventId)
+
+                # Check if user is the host of this event
+                if event.host.id != user_id:
+                    raise HTTPException(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        detail="You don't have permission to modify this event. Only the event host can edit the end time.",
+                    )
+
+                # Parse the time string
+                try:
+                    from datetime import datetime
+
+                    new_end_time = datetime.strptime(new_end_time_str, "%H:%M").time()
+                except ValueError:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="Invalid time format. Use HH:MM format.",
+                    )
+
+                event.end_time = new_end_time
+                event.save()
+
+                return {
+                    "message": "Event end time updated successfully",
+                    "eventId": str(event.eventId),
+                    "end_time": event.end_time.isoformat(),
+                }
+
+            except Event.DoesNotExist:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND, detail="Event not found"
+                )
+
+        result = await update_end_time()
+        return JSONResponse(content=result, status_code=status.HTTP_200_OK)
+    except HTTPException as http_ex:
+        return JSONResponse(
+            content={"error": str(http_ex.detail)},
+            status_code=http_ex.status_code,
+        )
+    except Exception as e:
+        await notify_by_bot(
+            f"**[API: edit_event_end_time]** \n\n Error editing event end time: eventId={eventId}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        return JSONResponse(
+            content={"error": f"An unexpected error occurred: {str(e)}"},
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@router.patch("/event/{eventId}/editEventType")
+async def edit_event_type(
+    eventId: str,
+    request: Request,
+    user_id: int = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
+    """
+    Edit the event type of an event
+    """
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    try:
+        form_data = await request.form()
+        new_event_type = form_data.get("event_type")
+
+        if not new_event_type:
+            return JSONResponse(
+                content={"error": "Event type is required"},
+                status_code=status.HTTP_400_BAD_REQUEST,
+            )
+
+        @database_sync_to_async
+        def update_event_type():
+            try:
+                event = Event.objects.get(eventId=eventId)
+
+                # Check if user is the host of this event
+                if event.host.id != user_id:
+                    raise HTTPException(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        detail="You don't have permission to modify this event. Only the event host can edit the event type.",
+                    )
+
+                event.event_type = new_event_type
+                event.save()
+
+                return {
+                    "message": "Event type updated successfully",
+                    "eventId": str(event.eventId),
+                    "event_type": event.event_type,
+                }
+
+            except Event.DoesNotExist:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND, detail="Event not found"
+                )
+
+        result = await update_event_type()
+        return JSONResponse(content=result, status_code=status.HTTP_200_OK)
+    except HTTPException as http_ex:
+        return JSONResponse(
+            content={"error": str(http_ex.detail)},
+            status_code=http_ex.status_code,
+        )
+    except Exception as e:
+        await notify_by_bot(
+            f"**[API: edit_event_type]** \n\n Error editing event type: eventId={eventId}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        return JSONResponse(
+            content={"error": f"An unexpected error occurred: {str(e)}"},
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@router.patch("/event/{eventId}/editLocation")
+async def edit_event_location(
+    eventId: str,
+    request: Request,
+    user_id: int = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
+    """
+    Edit the location fields of an event
+    """
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    try:
+        form_data = await request.form()
+
+        # Get location fields from form data
+        building_name = form_data.get("building_name")
+        street = form_data.get("street")
+        apt_suite_unit = form_data.get("apt_suite_unit")
+        city = form_data.get("city")
+        state = form_data.get("state")
+        zip_code = form_data.get("zip_code")
+        country = form_data.get("country")
+        hide_address = form_data.get("hide_address", "false").lower() == "true"
+
+        @database_sync_to_async
+        def update_location():
+            try:
+                event = Event.objects.get(eventId=eventId)
+
+                # Check if user is the host of this event
+                if event.host.id != user_id:
+                    raise HTTPException(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        detail="You don't have permission to modify this event. Only the event host can edit the location.",
+                    )
+
+                # Update location fields if provided
+                if building_name is not None:
+                    event.building_name = building_name
+                if street is not None:
+                    event.street = street
+                if apt_suite_unit is not None:
+                    event.apt_suite_unit = apt_suite_unit
+                if city is not None:
+                    event.city = city
+                if state is not None:
+                    event.state = state
+                if zip_code is not None:
+                    event.zip_code = zip_code
+                if country is not None:
+                    event.country = country
+
+                event.hide_address = hide_address
+                event.save()
+
+                return {
+                    "message": "Event location updated successfully",
+                    "eventId": str(event.eventId),
+                    "location": {
+                        "building_name": event.building_name,
+                        "street": event.street,
+                        "apt_suite_unit": event.apt_suite_unit,
+                        "city": event.city,
+                        "state": event.state,
+                        "zip_code": event.zip_code,
+                        "country": event.country,
+                        "hide_address": event.hide_address,
+                    },
+                }
+
+            except Event.DoesNotExist:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND, detail="Event not found"
+                )
+
+        result = await update_location()
+        return JSONResponse(content=result, status_code=status.HTTP_200_OK)
+    except HTTPException as http_ex:
+        return JSONResponse(
+            content={"error": str(http_ex.detail)},
+            status_code=http_ex.status_code,
+        )
+    except Exception as e:
+        await notify_by_bot(
+            f"**[API: edit_event_location]** \n\n Error editing event location: eventId={eventId}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        return JSONResponse(
+            content={"error": f"An unexpected error occurred: {str(e)}"},
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@router.patch("/event/{eventId}/editCrewInfo")
+async def edit_event_crew_info(
+    eventId: str,
+    request: Request,
+    user_id: int = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
+    """
+    Edit the crew discount information of an event
+    """
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    try:
+        form_data = await request.form()
+
+        crew_discount = form_data.get("crew_discount", "false").lower() == "true"
+        minimum_crew_size = form_data.get("minimum_crew_size")
+        crew_discount_percentage = form_data.get("crew_discount_percentage")
+
+        @database_sync_to_async
+        def update_crew_info():
+            try:
+                event = Event.objects.get(eventId=eventId)
+
+                # Check if user is the host of this event
+                if event.host.id != user_id:
+                    raise HTTPException(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        detail="You don't have permission to modify this event. Only the event host can edit crew information.",
+                    )
+
+                event.crew_discount = crew_discount
+
+                if minimum_crew_size is not None:
+                    try:
+                        event.minimum_crew_size = int(minimum_crew_size)
+                    except ValueError:
+                        raise HTTPException(
+                            status_code=status.HTTP_400_BAD_REQUEST,
+                            detail="Minimum crew size must be a valid integer.",
+                        )
+
+                if crew_discount_percentage is not None:
+                    try:
+                        event.crew_discount_percentage = int(crew_discount_percentage)
+                    except ValueError:
+                        raise HTTPException(
+                            status_code=status.HTTP_400_BAD_REQUEST,
+                            detail="Crew discount percentage must be a valid integer.",
+                        )
+
+                event.save()
+
+                return {
+                    "message": "Event crew information updated successfully",
+                    "eventId": str(event.eventId),
+                    "crew_info": {
+                        "crew_discount_enabled": event.crew_discount,
+                        "minimum_crew_size": event.minimum_crew_size,
+                        "crew_discount_percentage": event.crew_discount_percentage,
+                    },
+                }
+
+            except Event.DoesNotExist:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND, detail="Event not found"
+                )
+
+        result = await update_crew_info()
+        return JSONResponse(content=result, status_code=status.HTTP_200_OK)
+    except HTTPException as http_ex:
+        return JSONResponse(
+            content={"error": str(http_ex.detail)},
+            status_code=http_ex.status_code,
+        )
+    except Exception as e:
+        await notify_by_bot(
+            f"**[API: edit_event_crew_info]** \n\n Error editing event crew info: eventId={eventId}, error={str(e)} \n\n Platform: {platform}",
             platform or "Unknown",
             "ERROR",
             device_info,
