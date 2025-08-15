@@ -67,80 +67,107 @@ async def send_event_creation_notifications(event, host_user):
     Send push notifications to campus members and friends when an event is created.
     """
     try:
+
         @database_sync_to_async
         def get_notification_recipients(event, host_user):
             """Get all users who should receive notifications for this event creation."""
             # Get the host's profile
             host_profile = host_user.user_profile
-            
+
             # Set to track users who should receive notifications (to avoid duplicates)
             notification_recipients = []
             notified_user_ids = set()
-            
+
             # Send notifications to campus members if host is in a campus
             if host_profile.college:
-                print(f"[send_event_creation_notifications] Host is in campus: {host_profile.college.name}")
-                
+                print(
+                    f"[send_event_creation_notifications] Host is in campus: {host_profile.college.name}"
+                )
+
                 # Get all campus members
-                campus_members = UserProfile.objects.filter(
-                    college=host_profile.college
-                ).exclude(user=host_user).select_related('user')
-                
+                campus_members = (
+                    UserProfile.objects.filter(college=host_profile.college)
+                    .exclude(user=host_user)
+                    .select_related("user")
+                )
+
                 for member_profile in campus_members:
-                    if member_profile.user and member_profile.user.user_id not in notified_user_ids:
-                        notification_recipients.append({
-                            'user_id': member_profile.user.user_id,
-                            'username': member_profile.user.username,
-                            'type': 'campus'
-                        })
+                    if (
+                        member_profile.user
+                        and member_profile.user.user_id not in notified_user_ids
+                    ):
+                        notification_recipients.append(
+                            {
+                                "user_id": member_profile.user.user_id,
+                                "username": member_profile.user.username,
+                                "type": "campus",
+                            }
+                        )
                         notified_user_ids.add(member_profile.user.user_id)
-            
+
             # Send notifications to friends
-            friends = host_profile.friends.all().select_related('user')
-            print(f"[send_event_creation_notifications] Host has {friends.count()} friends")
-            
+            friends = host_profile.friends.all().select_related("user")
+            print(
+                f"[send_event_creation_notifications] Host has {friends.count()} friends"
+            )
+
             for friend_profile in friends:
-                if friend_profile.user and friend_profile.user.user_id not in notified_user_ids:
-                    notification_recipients.append({
-                        'user_id': friend_profile.user.user_id,
-                        'username': friend_profile.user.username,
-                        'type': 'friend'
-                    })
+                if (
+                    friend_profile.user
+                    and friend_profile.user.user_id not in notified_user_ids
+                ):
+                    notification_recipients.append(
+                        {
+                            "user_id": friend_profile.user.user_id,
+                            "username": friend_profile.user.username,
+                            "type": "friend",
+                        }
+                    )
                     notified_user_ids.add(friend_profile.user.user_id)
-            
+
             return notification_recipients
-        
+
         # Get all recipients
         recipients = await get_notification_recipients(event, host_user)
-        
+
         # Prepare notification data
         notification_title = "New Event Created!"
-        notification_message = f"{host_user.first_name} created a new event: {event.title}"
+        notification_message = (
+            f"{host_user.first_name} created a new event: {event.title}"
+        )
         navigate_to = "event_details"
         params = {
             "event_id": str(event.eventId),
             "event_title": event.title,
             "host_name": f"{host_user.first_name} {host_user.last_name}",
         }
-        
+
         # Send notifications to all recipients
         for recipient in recipients:
             try:
                 await send_notification(
-                    recipient['user_id'],
+                    recipient["user_id"],
                     notification_message,
                     notification_title,
                     navigate_to=navigate_to,
                     params=params,
                 )
-                print(f"[send_event_creation_notifications] Sent {recipient['type']} notification to {recipient['username']}")
+                print(
+                    f"[send_event_creation_notifications] Sent {recipient['type']} notification to {recipient['username']}"
+                )
             except Exception as e:
-                print(f"[send_event_creation_notifications] Error sending {recipient['type']} notification to {recipient['username']}: {str(e)}")
-        
-        print(f"[send_event_creation_notifications] Total notifications sent: {len(recipients)}")
-        
+                print(
+                    f"[send_event_creation_notifications] Error sending {recipient['type']} notification to {recipient['username']}: {str(e)}"
+                )
+
+        print(
+            f"[send_event_creation_notifications] Total notifications sent: {len(recipients)}"
+        )
+
     except Exception as e:
-        print(f"[send_event_creation_notifications] Error in notification process: {str(e)}")
+        print(
+            f"[send_event_creation_notifications] Error in notification process: {str(e)}"
+        )
         # Don't raise the exception as we don't want notification failures to prevent event creation
 
 
@@ -188,8 +215,10 @@ async def edit_event_endpoint(
             try:
                 event = Event.objects.get(eventId=eventId)
             except Event.DoesNotExist:
-                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event not found")
-                
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND, detail="Event not found"
+                )
+
             print(f"[DEBUG - process_edit_event] Event fields: {event.__dict__}")
             print(f"[DEBUG - process_edit_event] Incoming data: {data}")
             print(f"[DEBUG - process_edit_event] Incoming files: {files}")
@@ -657,10 +686,10 @@ async def create_free_event(
 
         # Execute the create event function
         new_event, user = await process_create_event()
-        
+
         # Send notifications after event creation
         await send_event_creation_notifications(new_event, user)
-        
+
         # Create location serializer instance
         location = LocationSerializer(
             building_name=new_event.building_name,
@@ -691,9 +720,7 @@ async def create_free_event(
             new_event.body_photo_two.url if new_event.body_photo_two else None
         )
         body_photo_three_url = (
-            new_event.body_photo_three.url
-            if new_event.body_photo_three
-            else None
+            new_event.body_photo_three.url if new_event.body_photo_three else None
         )
         body_photo_four_url = (
             new_event.body_photo_four.url if new_event.body_photo_four else None
@@ -875,7 +902,10 @@ async def create_paid_event(
                     print(f"[DEBUG - create_paid_event] Event created: {new_event}")
 
                     # Send notifications to campus members and friends
-                    return new_event, user  # Return both event and user for notification
+                    return (
+                        new_event,
+                        user,
+                    )  # Return both event and user for notification
 
                 else:
                     # Here we raise an error with the form errors so that we can return a 400 response
@@ -897,13 +927,13 @@ async def create_paid_event(
         result = await process_create_event()
         if isinstance(result, JSONResponse):
             return result
-        
+
         # If successful, result is a tuple of (event, user)
         new_event, user = result
-        
+
         # Send notifications after event creation
         await send_event_creation_notifications(new_event, user)
-        
+
         # Create location serializer instance
         location = LocationSerializer(
             building_name=new_event.building_name,
@@ -928,29 +958,19 @@ async def create_paid_event(
             new_event.header_photo.url if new_event.header_photo else None
         )
         body_photo_one_url = (
-            new_event.body_photo_one.url
-            if new_event.body_photo_one
-            else None
+            new_event.body_photo_one.url if new_event.body_photo_one else None
         )
         body_photo_two_url = (
-            new_event.body_photo_two.url
-            if new_event.body_photo_two
-            else None
+            new_event.body_photo_two.url if new_event.body_photo_two else None
         )
         body_photo_three_url = (
-            new_event.body_photo_three.url
-            if new_event.body_photo_three
-            else None
+            new_event.body_photo_three.url if new_event.body_photo_three else None
         )
         body_photo_four_url = (
-            new_event.body_photo_four.url
-            if new_event.body_photo_four
-            else None
+            new_event.body_photo_four.url if new_event.body_photo_four else None
         )
         body_photo_five_url = (
-            new_event.body_photo_five.url
-            if new_event.body_photo_five
-            else None
+            new_event.body_photo_five.url if new_event.body_photo_five else None
         )
 
         # Create event response serializer instance
@@ -1177,7 +1197,9 @@ async def create_paid_free_ticket(
             try:
                 event = Event.objects.get(eventId=eventId)
             except Event.DoesNotExist:
-                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event not found")
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND, detail="Event not found"
+                )
 
             # Map frontend field names to model field names if needed
             form_data = {}
@@ -1280,7 +1302,7 @@ async def get_event_coupons(
             event = Event.objects.get(eventId=event_id)
         except Event.DoesNotExist:
             return None
-            
+
         coupon_codes = CouponCode.objects.filter(event=event).values()
         coupons_list = []
         for coupon in coupon_codes:
@@ -1306,7 +1328,7 @@ async def get_event_coupons(
     try:
         # Execute synchronous function asynchronously
         coupons = await get_event_coupons_sync(eventId)
-        
+
         if coupons is None:
             await notify_by_bot(
                 f"**[API: get_event_coupons]** \n\n Event not found: eventId={eventId} \n\n Platform: {platform}",
@@ -1314,8 +1336,10 @@ async def get_event_coupons(
                 "ERROR",
                 device_info,
             )
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event not found")
-            
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Event not found"
+            )
+
         print(f"[DEBUG - get_event_coupons] Found {len(coupons)} coupons")
         return JSONResponse(content=coupons, status_code=status.HTTP_200_OK)
     except HTTPException:
@@ -1327,7 +1351,10 @@ async def get_event_coupons(
             "ERROR",
             device_info,
         )
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error fetching coupons: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error fetching coupons: {str(e)}",
+        )
 
 
 @router.get("/event/{eventId}/paid/tickets")
@@ -1351,7 +1378,7 @@ async def get_paid_event_tickets(
             event = Event.objects.get(eventId=event_id)
         except Event.DoesNotExist:
             return None
-            
+
         tickets = PaidFreeTicket.objects.filter(event=event).values()
         tickets_list = []
         for ticket in tickets:
@@ -1367,7 +1394,7 @@ async def get_paid_event_tickets(
     try:
         # Execute synchronous function asynchronously
         tickets = await get_paid_event_tickets_sync(eventId)
-        
+
         if tickets is None:
             await notify_by_bot(
                 f"**[API: get_paid_event_tickets]** \n\n Event not found: eventId={eventId} \n\n Platform: {platform}",
@@ -1375,8 +1402,10 @@ async def get_paid_event_tickets(
                 "ERROR",
                 device_info,
             )
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event not found")
-            
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Event not found"
+            )
+
         print(f"[DEBUG - get_paid_event_tickets] Found {len(tickets)} tickets")
         return JSONResponse(content=tickets, status_code=status.HTTP_200_OK)
     except HTTPException:
@@ -1388,7 +1417,10 @@ async def get_paid_event_tickets(
             "ERROR",
             device_info,
         )
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error fetching tickets: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error fetching tickets: {str(e)}",
+        )
 
 
 @router.post("/event/{eventId}/paid/ticket/delete")
@@ -1411,13 +1443,17 @@ async def delete_paid_event_ticket(
             try:
                 event = Event.objects.get(eventId=event_id)
             except Event.DoesNotExist:
-                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event not found")
-                
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND, detail="Event not found"
+                )
+
             try:
                 ticket = PaidFreeTicket.objects.get(ticket_id=ticket_id, event=event)
             except PaidFreeTicket.DoesNotExist:
-                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ticket not found")
-                
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND, detail="Ticket not found"
+                )
+
             ticket.delete()
             return {"message": "Ticket deleted successfully"}
 
@@ -1460,7 +1496,9 @@ async def create_event_coupon(
         try:
             event = Event.objects.get(eventId=eventId)
         except Event.DoesNotExist:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event not found")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Event not found"
+            )
 
         coupon_form = CouponCodeForm(payload)
 
@@ -1517,13 +1555,17 @@ async def delete_coupon(
         try:
             event = Event.objects.get(eventId=event_id)
         except Event.DoesNotExist:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event not found")
-            
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Event not found"
+            )
+
         try:
             coupon = CouponCode.objects.get(coupon_id=coupon_id)
         except CouponCode.DoesNotExist:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Coupon not found")
-            
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Coupon not found"
+            )
+
         if coupon.event != event:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -2623,4 +2665,433 @@ async def get_host_recent_events_analytics(
         print(f"[get_host_recent_events_analytics] Unexpected error: {str(e)}")
         raise HTTPException(
             status_code=500, detail=f"An unexpected error occurred: {str(e)}"
+        )
+
+
+# ===========================================
+# EVENT STATUS AND DISPLAY TOGGLE ENDPOINTS
+# ===========================================
+
+
+@router.post("/event/{eventId}/toggleStatus")
+async def toggle_event_status(
+    eventId: str,
+    request: Request,
+    user_id: int = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
+    """
+    Toggle event status between 'live' and 'inactive'
+    """
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    @database_sync_to_async
+    def toggle_status():
+        try:
+            event = Event.objects.get(eventId=eventId)
+
+            # Check if user is the host of this event
+            if event.host.id != user_id:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="You don't have permission to modify this event. Only the event host can toggle status.",
+                )
+
+            # Toggle status
+            if event.status == "live":
+                event.status = "inactive"
+                message = "Event status changed to inactive"
+            else:
+                event.status = "live"
+                message = "Event status changed to live"
+
+            event.save()
+
+            return {
+                "message": message,
+                "eventId": str(event.eventId),
+                "new_status": event.status,
+            }
+
+        except Event.DoesNotExist:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Event not found"
+            )
+
+    try:
+        result = await toggle_status()
+        return JSONResponse(content=result, status_code=status.HTTP_200_OK)
+    except HTTPException as http_ex:
+        return JSONResponse(
+            content={"error": str(http_ex.detail)},
+            status_code=http_ex.status_code,
+        )
+    except Exception as e:
+        await notify_by_bot(
+            f"**[API: toggle_event_status]** \n\n Error toggling event status: eventId={eventId}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        return JSONResponse(
+            content={"error": f"An unexpected error occurred: {str(e)}"},
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@router.get("/event/{eventId}/basic")
+async def get_event_basic_info(
+    eventId: str,
+    request: Request,
+    user_id: int = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
+    """
+    Get basic event information including title, type, date, times, description, location, images, and crew info
+    """
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    @database_sync_to_async
+    def get_basic_event_info():
+        try:
+            event = Event.objects.get(eventId=eventId)
+
+            # Check if user is the host of this event
+            if event.host.id != user_id:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="You don't have permission to view this event data. Only the event host can access this information.",
+                )
+
+            # Get crew information
+            crew_info = None
+            if event.crew_discount:
+                crew_info = {
+                    "crew_discount_enabled": event.crew_discount,
+                    "minimum_crew_size": event.minimum_crew_size,
+                    "crew_discount_percentage": event.crew_discount_percentage,
+                }
+
+            # Process image URLs
+            images = {
+                "header_photo": event.header_photo.url if event.header_photo else None,
+                "body_photo_one": (
+                    event.body_photo_one.url if event.body_photo_one else None
+                ),
+                "body_photo_two": (
+                    event.body_photo_two.url if event.body_photo_two else None
+                ),
+                "body_photo_three": (
+                    event.body_photo_three.url if event.body_photo_three else None
+                ),
+                "body_photo_four": (
+                    event.body_photo_four.url if event.body_photo_four else None
+                ),
+                "body_photo_five": (
+                    event.body_photo_five.url if event.body_photo_five else None
+                ),
+            }
+
+            # Create location data
+            location = {
+                "building_name": event.building_name,
+                "street": event.street,
+                "apt_suite_unit": event.apt_suite_unit,
+                "city": event.city,
+                "state": event.state,
+                "zip_code": event.zip_code,
+                "country": event.country,
+                "hide_address": event.hide_address,
+            }
+
+            return {
+                "eventId": str(event.eventId),
+                "title": event.title,
+                "event_type": event.event_type,
+                "date": event.date.isoformat() if event.date else None,
+                "start_time": (
+                    event.start_time.isoformat() if event.start_time else None
+                ),
+                "end_time": event.end_time.isoformat() if event.end_time else None,
+                "description": event.description,
+                "location": location,
+                "images": images,
+                "crew_info": crew_info,
+            }
+
+        except Event.DoesNotExist:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Event not found"
+            )
+
+    try:
+        result = await get_basic_event_info()
+        return JSONResponse(content=result, status_code=status.HTTP_200_OK)
+    except HTTPException as http_ex:
+        return JSONResponse(
+            content={"error": str(http_ex.detail)},
+            status_code=http_ex.status_code,
+        )
+    except Exception as e:
+        await notify_by_bot(
+            f"**[API: get_event_basic_info]** \n\n Error getting event basic info: eventId={eventId}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        return JSONResponse(
+            content={"error": f"An unexpected error occurred: {str(e)}"},
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@router.post("/event/{eventId}/toggleShowGuestList")
+async def toggle_show_guest_list(
+    eventId: str,
+    request: Request,
+    user_id: int = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
+    """
+    Toggle show_guest_list boolean field
+    """
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    @database_sync_to_async
+    def toggle_guest_list():
+        try:
+            event = Event.objects.get(eventId=eventId)
+
+            # Check if user is the host of this event
+            if event.host.id != user_id:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="You don't have permission to modify this event. Only the event host can toggle guest list visibility.",
+                )
+
+            # Toggle show_guest_list
+            event.show_guest_list = not event.show_guest_list
+            event.save()
+
+            return {
+                "message": f"Guest list visibility {'enabled' if event.show_guest_list else 'disabled'}",
+                "eventId": str(event.eventId),
+                "show_guest_list": event.show_guest_list,
+            }
+
+        except Event.DoesNotExist:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Event not found"
+            )
+
+    try:
+        result = await toggle_guest_list()
+        return JSONResponse(content=result, status_code=status.HTTP_200_OK)
+    except HTTPException as http_ex:
+        return JSONResponse(
+            content={"error": str(http_ex.detail)},
+            status_code=http_ex.status_code,
+        )
+    except Exception as e:
+        await notify_by_bot(
+            f"**[API: toggle_show_guest_list]** \n\n Error toggling guest list: eventId={eventId}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        return JSONResponse(
+            content={"error": f"An unexpected error occurred: {str(e)}"},
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@router.post("/event/{eventId}/toggleCouponsActivated")
+async def toggle_coupons_activated(
+    eventId: str,
+    request: Request,
+    user_id: int = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
+    """
+    Toggle couponsActivated boolean field
+    """
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    @database_sync_to_async
+    def toggle_coupons():
+        try:
+            event = Event.objects.get(eventId=eventId)
+
+            # Check if user is the host of this event
+            if event.host.id != user_id:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="You don't have permission to modify this event. Only the event host can toggle coupons.",
+                )
+
+            # Toggle couponsActivated
+            event.couponsActivated = not event.couponsActivated
+            event.save()
+
+            return {
+                "message": f"Coupons {'activated' if event.couponsActivated else 'deactivated'}",
+                "eventId": str(event.eventId),
+                "couponsActivated": event.couponsActivated,
+            }
+
+        except Event.DoesNotExist:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Event not found"
+            )
+
+    try:
+        result = await toggle_coupons()
+        return JSONResponse(content=result, status_code=status.HTTP_200_OK)
+    except HTTPException as http_ex:
+        return JSONResponse(
+            content={"error": str(http_ex.detail)},
+            status_code=http_ex.status_code,
+        )
+    except Exception as e:
+        await notify_by_bot(
+            f"**[API: toggle_coupons_activated]** \n\n Error toggling coupons: eventId={eventId}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        return JSONResponse(
+            content={"error": f"An unexpected error occurred: {str(e)}"},
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@router.post("/event/{eventId}/toggleForAllDisplay")
+async def toggle_for_all_display(
+    eventId: str,
+    request: Request,
+    user_id: int = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
+    """
+    Toggle forAllDisplay boolean field
+    """
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    @database_sync_to_async
+    def toggle_all_display():
+        try:
+            event = Event.objects.get(eventId=eventId)
+
+            # Check if user is the host of this event
+            if event.host.id != user_id:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="You don't have permission to modify this event. Only the event host can toggle display settings.",
+                )
+
+            # Toggle forAllDisplay
+            event.forAllDisplay = not event.forAllDisplay
+            event.save()
+
+            return {
+                "message": f"Event {'shown' if event.forAllDisplay else 'hidden'} from all users",
+                "eventId": str(event.eventId),
+                "forAllDisplay": event.forAllDisplay,
+            }
+
+        except Event.DoesNotExist:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Event not found"
+            )
+
+    try:
+        result = await toggle_all_display()
+        return JSONResponse(content=result, status_code=status.HTTP_200_OK)
+    except HTTPException as http_ex:
+        return JSONResponse(
+            content={"error": str(http_ex.detail)},
+            status_code=http_ex.status_code,
+        )
+    except Exception as e:
+        await notify_by_bot(
+            f"**[API: toggle_for_all_display]** \n\n Error toggling for all display: eventId={eventId}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        return JSONResponse(
+            content={"error": f"An unexpected error occurred: {str(e)}"},
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@router.post("/event/{eventId}/toggleForCollegesDisplay")
+async def toggle_for_colleges_display(
+    eventId: str,
+    request: Request,
+    user_id: int = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
+    """
+    Toggle forCollegesDisplay boolean field
+    """
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    @database_sync_to_async
+    def toggle_colleges_display():
+        try:
+            event = Event.objects.get(eventId=eventId)
+
+            # Check if user is the host of this event
+            if event.host.id != user_id:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="You don't have permission to modify this event. Only the event host can toggle display settings.",
+                )
+
+            # Toggle forCollegesDisplay
+            event.forCollegesDisplay = not event.forCollegesDisplay
+            event.save()
+
+            return {
+                "message": f"Event {'shown' if event.forCollegesDisplay else 'hidden'} from college users",
+                "eventId": str(event.eventId),
+                "forCollegesDisplay": event.forCollegesDisplay,
+            }
+
+        except Event.DoesNotExist:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Event not found"
+            )
+
+    try:
+        result = await toggle_colleges_display()
+        return JSONResponse(content=result, status_code=status.HTTP_200_OK)
+    except HTTPException as http_ex:
+        return JSONResponse(
+            content={"error": str(http_ex.detail)},
+            status_code=http_ex.status_code,
+        )
+    except Exception as e:
+        await notify_by_bot(
+            f"**[API: toggle_for_colleges_display]** \n\n Error toggling for colleges display: eventId={eventId}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        return JSONResponse(
+            content={"error": f"An unexpected error occurred: {str(e)}"},
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
