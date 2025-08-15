@@ -225,7 +225,15 @@ async def edit_event_endpoint(
 
             # Get the current user's profile
             user = CustomUser.objects.get(id=user_id)
-            user_profile = UserProfile.objects.get(user=user)
+            
+            # Handle UserProfile that might not exist yet
+            try:
+                user_profile = UserProfile.objects.get(user=user)
+                print(f"[DEBUG - edit_event] UserProfile found for user: {user.username}")
+            except UserProfile.DoesNotExist:
+                print(f"[DEBUG - edit_event] UserProfile not found for user: {user.username}, creating one...")
+                user_profile, created = UserProfile.objects.get_or_create(user=user)
+                print(f"[DEBUG - edit_event] UserProfile {'created' if created else 'retrieved'} for user: {user.username}")
 
             # Get the host profile for the event host
             host_profile = HostProfile.objects.get(user=event.host)
@@ -657,7 +665,15 @@ async def create_free_event(
         def process_create_event():
             # Get the current user's profile.
             user = CustomUser.objects.get(id=user_id)
-            user_profile = UserProfile.objects.get(user=user)
+            
+            # Handle UserProfile that might not exist yet
+            try:
+                user_profile = UserProfile.objects.get(user=user)
+                print(f"[DEBUG - create_free_event] UserProfile found for user: {user.username}")
+            except UserProfile.DoesNotExist:
+                print(f"[DEBUG - create_free_event] UserProfile not found for user: {user.username}, creating one...")
+                user_profile, created = UserProfile.objects.get_or_create(user=user)
+                print(f"[DEBUG - create_free_event] UserProfile {'created' if created else 'retrieved'} for user: {user.username}")
 
             # Determine whether the user is associated with a college
             is_in_college = (
@@ -819,7 +835,15 @@ async def create_paid_event(
             try:
                 # Get the current user's profile
                 user = CustomUser.objects.get(id=user_id)
-                user_profile = UserProfile.objects.get(user=user)
+                
+                # Handle UserProfile that might not exist yet
+                try:
+                    user_profile = UserProfile.objects.get(user=user)
+                    print(f"[DEBUG - create_paid_event] UserProfile found for user: {user.username}")
+                except UserProfile.DoesNotExist:
+                    print(f"[DEBUG - create_paid_event] UserProfile not found for user: {user.username}, creating one...")
+                    user_profile, created = UserProfile.objects.get_or_create(user=user)
+                    print(f"[DEBUG - create_paid_event] UserProfile {'created' if created else 'retrieved'} for user: {user.username}")
 
                 # Verify the host has a Stripe Connect account set up
                 if not hasattr(user, "connectAccountID") or not user.connectAccountID:
