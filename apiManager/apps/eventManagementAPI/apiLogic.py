@@ -671,15 +671,21 @@ async def create_free_event(
         def process_create_event():
             # Get the current user's profile.
             user = CustomUser.objects.get(id=user_id)
-            
+
             # Handle UserProfile that might not exist yet
             try:
                 user_profile = UserProfile.objects.get(user=user)
-                print(f"[DEBUG - create_free_event] UserProfile found for user: {user.username}")
+                print(
+                    f"[DEBUG - create_free_event] UserProfile found for user: {user.username}"
+                )
             except UserProfile.DoesNotExist:
-                print(f"[DEBUG - create_free_event] UserProfile not found for user: {user.username}, creating one...")
+                print(
+                    f"[DEBUG - create_free_event] UserProfile not found for user: {user.username}, creating one..."
+                )
                 user_profile, created = UserProfile.objects.get_or_create(user=user)
-                print(f"[DEBUG - create_free_event] UserProfile {'created' if created else 'retrieved'} for user: {user.username}")
+                print(
+                    f"[DEBUG - create_free_event] UserProfile {'created' if created else 'retrieved'} for user: {user.username}"
+                )
 
             # Determine whether the user is associated with a college
             is_in_college = (
@@ -728,7 +734,9 @@ async def create_free_event(
                     new_event.body_photo_two.url if new_event.body_photo_two else None
                 )
                 body_photo_three_url = (
-                    new_event.body_photo_three.url if new_event.body_photo_three else None
+                    new_event.body_photo_three.url
+                    if new_event.body_photo_three
+                    else None
                 )
                 body_photo_four_url = (
                     new_event.body_photo_four.url if new_event.body_photo_four else None
@@ -964,19 +972,29 @@ async def create_paid_event(
                         new_event.header_photo.url if new_event.header_photo else None
                     )
                     body_photo_one_url = (
-                        new_event.body_photo_one.url if new_event.body_photo_one else None
+                        new_event.body_photo_one.url
+                        if new_event.body_photo_one
+                        else None
                     )
                     body_photo_two_url = (
-                        new_event.body_photo_two.url if new_event.body_photo_two else None
+                        new_event.body_photo_two.url
+                        if new_event.body_photo_two
+                        else None
                     )
                     body_photo_three_url = (
-                        new_event.body_photo_three.url if new_event.body_photo_three else None
+                        new_event.body_photo_three.url
+                        if new_event.body_photo_three
+                        else None
                     )
                     body_photo_four_url = (
-                        new_event.body_photo_four.url if new_event.body_photo_four else None
+                        new_event.body_photo_four.url
+                        if new_event.body_photo_four
+                        else None
                     )
                     body_photo_five_url = (
-                        new_event.body_photo_five.url if new_event.body_photo_five else None
+                        new_event.body_photo_five.url
+                        if new_event.body_photo_five
+                        else None
                     )
 
                     # Create event response serializer instance (now in sync context)
@@ -1009,7 +1027,9 @@ async def create_paid_event(
 
                     # Properly serialize the event_data to make it JSON serializable (now in sync context)
                     serialized_event_data = event_data.model_dump(mode="json")
-                    print(f"[DEBUG - create_paid_event] Serialized event data: {serialized_event_data}")
+                    print(
+                        f"[DEBUG - create_paid_event] Serialized event data: {serialized_event_data}"
+                    )
 
                     # Return event, user, and pre-serialized data
                     return (
@@ -3831,6 +3851,252 @@ async def edit_event_crew_info(
     except Exception as e:
         await notify_by_bot(
             f"**[API: edit_event_crew_info]** \n\n Error editing event crew info: eventId={eventId}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        return JSONResponse(
+            content={"error": f"An unexpected error occurred: {str(e)}"},
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@router.get("/event-types")
+async def get_event_types(
+    request: Request,
+    platform: Optional[str] = None,
+):
+    """
+    Get all possible event types
+    """
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    try:
+
+        @database_sync_to_async
+        def get_event_types():
+            """Get all possible event types from the Event model."""
+            from eventManagementApp.models import Event
+
+            # Get the event type choices from the Event model
+            event_types = Event.EVENT_TYPE_CHOICES
+
+            # Format the response as a list of dictionaries with value and label
+            formatted_types = [
+                {"value": choice[0], "label": choice[1]} for choice in event_types
+            ]
+
+            return {
+                "message": "Event types retrieved successfully",
+                "event_types": formatted_types,
+                "total_count": len(formatted_types),
+            }
+
+        result = await get_event_types()
+        return JSONResponse(content=result, status_code=status.HTTP_200_OK)
+
+    except Exception as e:
+        await notify_by_bot(
+            f"**[API: get_event_types]** \n\n Error retrieving event types: error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        return JSONResponse(
+            content={"error": f"An unexpected error occurred: {str(e)}"},
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@router.patch("/event/{eventId}/editHeaderPhoto")
+async def edit_event_header_photo(
+    eventId: str,
+    request: Request,
+    user_id: int = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
+    """
+    Edit the header photo of an event
+    """
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    try:
+        form_data = await request.form()
+        header_photo = form_data.get("header_photo")
+
+        if not header_photo:
+            return JSONResponse(
+                content={"error": "Header photo is required"},
+                status_code=status.HTTP_400_BAD_REQUEST,
+            )
+
+        @database_sync_to_async
+        def update_header_photo():
+            try:
+                event = Event.objects.get(eventId=eventId)
+
+                # Check if user is the host of this event
+                if event.host.id != user_id:
+                    raise HTTPException(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        detail="You don't have permission to modify this event. Only the event host can edit the header photo.",
+                    )
+
+                # Convert Starlette UploadFile to Django SimpleUploadedFile
+                header_photo_file = starlette_to_django(header_photo)
+
+                # Update the header photo
+                event.header_photo = header_photo_file
+                event.save()
+
+                return {
+                    "message": "Event header photo updated successfully",
+                    "eventId": str(event.eventId),
+                    "header_photo_url": (
+                        event.header_photo.url if event.header_photo else None
+                    ),
+                }
+
+            except Event.DoesNotExist:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND, detail="Event not found"
+                )
+
+        result = await update_header_photo()
+        return JSONResponse(content=result, status_code=status.HTTP_200_OK)
+    except HTTPException as http_ex:
+        return JSONResponse(
+            content={"error": str(http_ex.detail)},
+            status_code=http_ex.status_code,
+        )
+    except Exception as e:
+        await notify_by_bot(
+            f"**[API: edit_event_header_photo]** \n\n Error editing event header photo: eventId={eventId}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        return JSONResponse(
+            content={"error": f"An unexpected error occurred: {str(e)}"},
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@router.patch("/event/{eventId}/addBodyPhotos")
+async def add_event_body_photos(
+    eventId: str,
+    request: Request,
+    user_id: int = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
+    """
+    Add body photos to an event
+    """
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    try:
+        form_data = await request.form()
+
+        # Get body photos from form data
+        body_photo_one = form_data.get("body_photo_one")
+        body_photo_two = form_data.get("body_photo_two")
+        body_photo_three = form_data.get("body_photo_three")
+        body_photo_four = form_data.get("body_photo_four")
+        body_photo_five = form_data.get("body_photo_five")
+
+        # Check if at least one photo is provided
+        if not any(
+            [
+                body_photo_one,
+                body_photo_two,
+                body_photo_three,
+                body_photo_four,
+                body_photo_five,
+            ]
+        ):
+            return JSONResponse(
+                content={"error": "At least one body photo is required"},
+                status_code=status.HTTP_400_BAD_REQUEST,
+            )
+
+        @database_sync_to_async
+        def update_body_photos():
+            try:
+                event = Event.objects.get(eventId=eventId)
+
+                # Check if user is the host of this event
+                if event.host.id != user_id:
+                    raise HTTPException(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        detail="You don't have permission to modify this event. Only the event host can add body photos.",
+                    )
+
+                updated_photos = {}
+
+                # Update body photos if provided
+                if body_photo_one:
+                    event.body_photo_one = starlette_to_django(body_photo_one)
+                    updated_photos["body_photo_one"] = True
+
+                if body_photo_two:
+                    event.body_photo_two = starlette_to_django(body_photo_two)
+                    updated_photos["body_photo_two"] = True
+
+                if body_photo_three:
+                    event.body_photo_three = starlette_to_django(body_photo_three)
+                    updated_photos["body_photo_three"] = True
+
+                if body_photo_four:
+                    event.body_photo_four = starlette_to_django(body_photo_four)
+                    updated_photos["body_photo_four"] = True
+
+                if body_photo_five:
+                    event.body_photo_five = starlette_to_django(body_photo_five)
+                    updated_photos["body_photo_five"] = True
+
+                event.save()
+
+                # Get URLs for updated photos
+                photo_urls = {}
+                if event.body_photo_one:
+                    photo_urls["body_photo_one_url"] = event.body_photo_one.url
+                if event.body_photo_two:
+                    photo_urls["body_photo_two_url"] = event.body_photo_two.url
+                if event.body_photo_three:
+                    photo_urls["body_photo_three_url"] = event.body_photo_three.url
+                if event.body_photo_four:
+                    photo_urls["body_photo_four_url"] = event.body_photo_four.url
+                if event.body_photo_five:
+                    photo_urls["body_photo_five_url"] = event.body_photo_five.url
+
+                return {
+                    "message": "Event body photos updated successfully",
+                    "eventId": str(event.eventId),
+                    "updated_photos": updated_photos,
+                    "photo_urls": photo_urls,
+                }
+
+            except Event.DoesNotExist:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND, detail="Event not found"
+                )
+
+        result = await update_body_photos()
+        return JSONResponse(content=result, status_code=status.HTTP_200_OK)
+    except HTTPException as http_ex:
+        return JSONResponse(
+            content={"error": str(http_ex.detail)},
+            status_code=http_ex.status_code,
+        )
+    except Exception as e:
+        await notify_by_bot(
+            f"**[API: add_event_body_photos]** \n\n Error adding event body photos: eventId={eventId}, error={str(e)} \n\n Platform: {platform}",
             platform or "Unknown",
             "ERROR",
             device_info,
