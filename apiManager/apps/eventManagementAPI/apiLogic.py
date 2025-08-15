@@ -3934,6 +3934,9 @@ async def edit_event_header_photo(
                 status_code=status.HTTP_400_BAD_REQUEST,
             )
 
+        # Convert Starlette UploadFile to Django SimpleUploadedFile before database operation
+        header_photo_file = await starlette_to_django(header_photo)
+
         @database_sync_to_async
         def update_header_photo():
             try:
@@ -3945,9 +3948,6 @@ async def edit_event_header_photo(
                         status_code=status.HTTP_403_FORBIDDEN,
                         detail="You don't have permission to modify this event. Only the event host can edit the header photo.",
                     )
-
-                # Convert Starlette UploadFile to Django SimpleUploadedFile
-                header_photo_file = starlette_to_django(header_photo)
 
                 # Update the header photo
                 event.header_photo = header_photo_file
@@ -4025,6 +4025,21 @@ async def add_event_body_photos(
                 status_code=status.HTTP_400_BAD_REQUEST,
             )
 
+        # Convert Starlette UploadFiles to Django SimpleUploadedFiles before database operation
+        django_files = {}
+        if body_photo_one:
+            django_files["body_photo_one"] = await starlette_to_django(body_photo_one)
+        if body_photo_two:
+            django_files["body_photo_two"] = await starlette_to_django(body_photo_two)
+        if body_photo_three:
+            django_files["body_photo_three"] = await starlette_to_django(
+                body_photo_three
+            )
+        if body_photo_four:
+            django_files["body_photo_four"] = await starlette_to_django(body_photo_four)
+        if body_photo_five:
+            django_files["body_photo_five"] = await starlette_to_django(body_photo_five)
+
         @database_sync_to_async
         def update_body_photos():
             try:
@@ -4040,24 +4055,24 @@ async def add_event_body_photos(
                 updated_photos = {}
 
                 # Update body photos if provided
-                if body_photo_one:
-                    event.body_photo_one = starlette_to_django(body_photo_one)
+                if "body_photo_one" in django_files:
+                    event.body_photo_one = django_files["body_photo_one"]
                     updated_photos["body_photo_one"] = True
 
-                if body_photo_two:
-                    event.body_photo_two = starlette_to_django(body_photo_two)
+                if "body_photo_two" in django_files:
+                    event.body_photo_two = django_files["body_photo_two"]
                     updated_photos["body_photo_two"] = True
 
-                if body_photo_three:
-                    event.body_photo_three = starlette_to_django(body_photo_three)
+                if "body_photo_three" in django_files:
+                    event.body_photo_three = django_files["body_photo_three"]
                     updated_photos["body_photo_three"] = True
 
-                if body_photo_four:
-                    event.body_photo_four = starlette_to_django(body_photo_four)
+                if "body_photo_four" in django_files:
+                    event.body_photo_four = django_files["body_photo_four"]
                     updated_photos["body_photo_four"] = True
 
-                if body_photo_five:
-                    event.body_photo_five = starlette_to_django(body_photo_five)
+                if "body_photo_five" in django_files:
+                    event.body_photo_five = django_files["body_photo_five"]
                     updated_photos["body_photo_five"] = True
 
                 event.save()
