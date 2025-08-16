@@ -35,7 +35,12 @@ from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
 
 
-app = FastAPI(title="WAVE. API", version="1.0.0")
+app = FastAPI(
+    title="WAVE. API",
+    version="1.0.0",
+    # Configure file upload limits
+    max_request_size=50 * 1024 * 1024,  # 50MB max request size
+)
 
 configure_tracing(
     service_name="wave-api",

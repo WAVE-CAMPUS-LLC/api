@@ -21,6 +21,10 @@ CMD ["sh", "-c", "if [ \"$RUN_MODE\" = 'celery' ]; then \
     -k uvicorn.workers.UvicornWorker \
     --bind 0.0.0.0:12024 \
     --workers 4 \
-    --threads 2; \
+    --threads 2 \
+    --max-requests 1000 \
+    --max-requests-jitter 100 \
+    --timeout 120 \
+    --keep-alive 5; \
   fi"]
 

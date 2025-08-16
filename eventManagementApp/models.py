@@ -329,7 +329,7 @@ class Event(models.Model):
     )
 
     apt_suite_unit = models.CharField(
-        _("Appt, suite, unit (optional)"),
+        _("Unit # (optional)"),
         max_length=150,
         blank=True,
         null=True,

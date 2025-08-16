@@ -603,6 +603,12 @@ supabase = create_client(SUPABASE_URL, SUPABASE_API_KEY)
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # DEFAULT_FILE_STORAGE = "adminDashboardApp.storage.SupabaseStorage"
 
+# File upload settings
+FILE_UPLOAD_MAX_MEMORY_SIZE = 50 * 1024 * 1024  # 50MB
+DATA_UPLOAD_MAX_MEMORY_SIZE = 50 * 1024 * 1024  # 50MB
+FILE_UPLOAD_MAX_NUMBER_FIELDS = 1000
+FILE_UPLOAD_TEMP_DIR = None  # Use system default temp directory
+
 time.sleep(5)
 
 # REST Framework settings
