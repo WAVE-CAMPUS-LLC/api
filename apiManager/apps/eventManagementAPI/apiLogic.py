@@ -54,7 +54,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 async def starlette_to_django(u: UploadFile) -> SimpleUploadedFile:
     content = await u.read()  # get bytes from Starlette file
     return SimpleUploadedFile(  # Django-friendly object
-        name=u.filename,
+        name=u.filename or "uploaded_file",
         content=content,
         content_type=u.content_type or "application/octet-stream",
     )
@@ -3239,9 +3239,9 @@ async def edit_event_title(
         form_data = await request.form()
         new_title = form_data.get("title")
 
-        if not new_title:
+        if not new_title or not isinstance(new_title, str):
             return JSONResponse(
-                content={"error": "Title is required"},
+                content={"error": "Title is required and must be a string"},
                 status_code=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -3309,9 +3309,9 @@ async def edit_event_description(
         form_data = await request.form()
         new_description = form_data.get("description")
 
-        if not new_description:
+        if not new_description or not isinstance(new_description, str):
             return JSONResponse(
-                content={"error": "Description is required"},
+                content={"error": "Description is required and must be a string"},
                 status_code=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -3379,9 +3379,9 @@ async def edit_event_date(
         form_data = await request.form()
         new_date_str = form_data.get("date")
 
-        if not new_date_str:
+        if not new_date_str or not isinstance(new_date_str, str):
             return JSONResponse(
-                content={"error": "Date is required"},
+                content={"error": "Date is required and must be a string"},
                 status_code=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -3460,9 +3460,9 @@ async def edit_event_start_time(
         form_data = await request.form()
         new_start_time_str = form_data.get("start_time")
 
-        if not new_start_time_str:
+        if not new_start_time_str or not isinstance(new_start_time_str, str):
             return JSONResponse(
-                content={"error": "Start time is required"},
+                content={"error": "Start time is required and must be a string"},
                 status_code=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -3543,9 +3543,9 @@ async def edit_event_end_time(
         form_data = await request.form()
         new_end_time_str = form_data.get("end_time")
 
-        if not new_end_time_str:
+        if not new_end_time_str or not isinstance(new_end_time_str, str):
             return JSONResponse(
-                content={"error": "End time is required"},
+                content={"error": "End time is required and must be a string"},
                 status_code=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -3624,9 +3624,9 @@ async def edit_event_type(
         form_data = await request.form()
         new_event_type = form_data.get("event_type")
 
-        if not new_event_type:
+        if not new_event_type or not isinstance(new_event_type, str):
             return JSONResponse(
-                content={"error": "Event type is required"},
+                content={"error": "Event type is required and must be a string"},
                 status_code=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -3693,7 +3693,7 @@ async def edit_event_location(
     try:
         form_data = await request.form()
 
-        # Get location fields from form data
+        # Get location fields from form data and ensure they are strings
         building_name = form_data.get("building_name")
         street = form_data.get("street")
         apt_suite_unit = form_data.get("apt_suite_unit")
@@ -3701,7 +3701,12 @@ async def edit_event_location(
         state = form_data.get("state")
         zip_code = form_data.get("zip_code")
         country = form_data.get("country")
-        hide_address = form_data.get("hide_address", "false").lower() == "true"
+        hide_address_str = form_data.get("hide_address", "false")
+
+        # Convert to boolean safely
+        hide_address = False
+        if isinstance(hide_address_str, str) and hide_address_str.lower() == "true":
+            hide_address = True
 
         @database_sync_to_async
         def update_location():
@@ -3791,9 +3796,14 @@ async def edit_event_crew_info(
     try:
         form_data = await request.form()
 
-        crew_discount = form_data.get("crew_discount", "false").lower() == "true"
+        crew_discount_str = form_data.get("crew_discount", "false")
         minimum_crew_size = form_data.get("minimum_crew_size")
         crew_discount_percentage = form_data.get("crew_discount_percentage")
+
+        # Convert to boolean safely
+        crew_discount = False
+        if isinstance(crew_discount_str, str) and crew_discount_str.lower() == "true":
+            crew_discount = True
 
         @database_sync_to_async
         def update_crew_info():
@@ -3809,7 +3819,7 @@ async def edit_event_crew_info(
 
                 event.crew_discount = crew_discount
 
-                if minimum_crew_size is not None:
+                if minimum_crew_size is not None and isinstance(minimum_crew_size, str):
                     try:
                         event.minimum_crew_size = int(minimum_crew_size)
                     except ValueError:
@@ -3818,7 +3828,9 @@ async def edit_event_crew_info(
                             detail="Minimum crew size must be a valid integer.",
                         )
 
-                if crew_discount_percentage is not None:
+                if crew_discount_percentage is not None and isinstance(
+                    crew_discount_percentage, str
+                ):
                     try:
                         event.crew_discount_percentage = int(crew_discount_percentage)
                     except ValueError:
@@ -3931,14 +3943,24 @@ async def edit_event_header_photo(
         form_data = await request.form()
         header_photo = form_data.get("header_photo")
 
-        if not header_photo:
+        if (
+            not header_photo
+            or not hasattr(header_photo, "filename")
+            or not header_photo.filename
+        ):
             return JSONResponse(
                 content={"error": "Header photo is required"},
                 status_code=status.HTTP_400_BAD_REQUEST,
             )
 
         # Convert Starlette UploadFile to Django SimpleUploadedFile before database operation
-        header_photo_file = await starlette_to_django(header_photo)
+        try:
+            header_photo_file = await starlette_to_django(header_photo)
+        except Exception as e:
+            return JSONResponse(
+                content={"error": f"Error processing header photo: {str(e)}"},
+                status_code=status.HTTP_400_BAD_REQUEST,
+            )
 
         @database_sync_to_async
         def update_header_photo():
@@ -4006,42 +4028,41 @@ async def add_event_body_photos(
     try:
         form_data = await request.form()
 
-        # Get body photos from form data
+        # Get body photos from form data and filter out non-file entries
+        django_files = {}
+
+        # Helper function to process file uploads
+        async def process_file_upload(field_name, file_value):
+            if file_value and hasattr(file_value, "filename") and file_value.filename:
+                try:
+                    django_file = await starlette_to_django(file_value)
+                    django_files[field_name] = django_file
+                    return True
+                except Exception as e:
+                    print(f"Error processing {field_name}: {str(e)}")
+                    return False
+            return False
+
+        # Process each photo field
         body_photo_one = form_data.get("body_photo_one")
         body_photo_two = form_data.get("body_photo_two")
         body_photo_three = form_data.get("body_photo_three")
         body_photo_four = form_data.get("body_photo_four")
         body_photo_five = form_data.get("body_photo_five")
 
-        # Check if at least one photo is provided
-        if not any(
-            [
-                body_photo_one,
-                body_photo_two,
-                body_photo_three,
-                body_photo_four,
-                body_photo_five,
-            ]
-        ):
+        # Process each file upload
+        await process_file_upload("body_photo_one", body_photo_one)
+        await process_file_upload("body_photo_two", body_photo_two)
+        await process_file_upload("body_photo_three", body_photo_three)
+        await process_file_upload("body_photo_four", body_photo_four)
+        await process_file_upload("body_photo_five", body_photo_five)
+
+        # Check if at least one photo was successfully processed
+        if not django_files:
             return JSONResponse(
-                content={"error": "At least one body photo is required"},
+                content={"error": "At least one valid body photo is required"},
                 status_code=status.HTTP_400_BAD_REQUEST,
             )
-
-        # Convert Starlette UploadFiles to Django SimpleUploadedFiles before database operation
-        django_files = {}
-        if body_photo_one:
-            django_files["body_photo_one"] = await starlette_to_django(body_photo_one)
-        if body_photo_two:
-            django_files["body_photo_two"] = await starlette_to_django(body_photo_two)
-        if body_photo_three:
-            django_files["body_photo_three"] = await starlette_to_django(
-                body_photo_three
-            )
-        if body_photo_four:
-            django_files["body_photo_four"] = await starlette_to_django(body_photo_four)
-        if body_photo_five:
-            django_files["body_photo_five"] = await starlette_to_django(body_photo_five)
 
         @database_sync_to_async
         def update_body_photos():
