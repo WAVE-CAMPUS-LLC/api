@@ -63,17 +63,7 @@ def get_event_recommendations_for_user(
              WHEN event IN college_rsvp_events THEN 2
              WHEN event IN time_events THEN 2
              ELSE 1
-         END as base_score
-    
-    // Add bonus for events happening soon (if date property exists)
-    WITH event, base_score,
-         CASE 
-             WHEN event.date IS NOT NULL AND event.date <= datetime() + duration('P7D') THEN 2  // Next 7 days
-             WHEN event.date IS NOT NULL AND event.date <= datetime() + duration('P14D') THEN 1  // Next 14 days
-             ELSE 0
-         END as time_bonus
-    
-    WITH event, base_score + time_bonus as final_score
+         END as final_score
     
     RETURN event.eventId as event_id,
            final_score as score
@@ -105,34 +95,19 @@ def get_event_details_from_ids(
 ) -> List[Dict[str, Any]]:
     """
     Fetch event details from database using event IDs from Neo4j recommendations.
-    Returns events with title, header_photo, event_id, event_date, state, and city.
     """
     if not event_recommendations:
         return []
 
-    # Extract event IDs from recommendations
-    event_ids = []
-    for rec in event_recommendations:
-        try:
-            # Validate UUID format
-            import uuid
-
-            uuid.UUID(rec["event_id"])
-            event_ids.append(rec["event_id"])
-        except (ValueError, TypeError):
-            # Skip invalid UUIDs
-            continue
-
-    if not event_ids:
-        return []
-
-    # Fetch events from database - only active events
-    events = Event.objects.filter(eventId__in=event_ids, admin_status="active")
+    # Extract event IDs
+    event_ids = [rec["event_id"] for rec in event_recommendations]
 
     # Create a mapping of event_id to event object for efficient lookup
-    event_map = {str(event.eventId): event for event in events}
+    event_map = {}
+    for event in Event.objects.filter(eventId__in=event_ids).select_related("host"):
+        event_map[str(event.eventId)] = event
 
-    # Build response maintaining the original order and scores
+    # Build detailed recommendations
     detailed_recommendations = []
     for rec in event_recommendations:
         event_id = rec["event_id"]
@@ -247,73 +222,58 @@ def get_users_for_event_recommendation(event_id: str, limit: int = 20):
     ]
 
 
-def get_similar_events(event_id: str, limit: int = 5):
+def get_similar_events(event_id: str, limit: int = 5) -> List[Dict[str, Any]]:
+    """
+    Find events similar to a given event based on shared characteristics.
+    """
     query = """
     MATCH (e:Event {eventId: $event_id})
     
-    // 1. Events with same category (weight: 5)
-    OPTIONAL MATCH (e1:Event)
-    WHERE e1.category = e.category AND e1.eventId <> e.eventId
-    WITH e, collect(DISTINCT e1) as category_events
+    // 1. Events with same category/type (weight: 5)
+    OPTIONAL MATCH (e)-[:IS_TYPE]->(et:EventType)<-[:IS_TYPE]-(similar_event:Event)
+    WHERE similar_event.eventId <> e.eventId
+    WITH e, collect(DISTINCT similar_event) as type_events
     
-    // 2. Events with same host (weight: 4)
-    OPTIONAL MATCH (e)-[:HOSTED]->(host:User)-[:HOSTED]->(e2:Event)
-    WHERE e2.eventId <> e.eventId
-    WITH e, category_events, collect(DISTINCT e2) as host_events
+    // 2. Events with similar interests (weight: 4)
+    OPTIONAL MATCH (e)-[:RELATES_TO_INTEREST]->(i:Interest)<-[:RELATES_TO_INTEREST]-(similar_event:Event)
+    WHERE similar_event.eventId <> e.eventId
+    WITH e, type_events, collect(DISTINCT similar_event) as interest_events
     
-    // 3. Events with same interests (weight: 4)
-    OPTIONAL MATCH (e)-[:RELATES_TO_INTEREST]->(i:Interest)<-[:RELATES_TO_INTEREST]-(e3:Event)
-    WHERE e3.eventId <> e.eventId
-    WITH e, category_events, host_events, collect(DISTINCT e3) as interest_events
+    // 3. Events that attract similar people (weight: 3)
+    OPTIONAL MATCH (e)-[:ATTRACTS_PEOPLE]->(p:Person)<-[:ATTRACTS_PEOPLE]-(similar_event:Event)
+    WHERE similar_event.eventId <> e.eventId
+    WITH e, type_events, interest_events, collect(DISTINCT similar_event) as people_events
     
-    // 4. Events that attract same people (weight: 3)
-    OPTIONAL MATCH (e)-[:ATTRACTS_PEOPLE]->(p:Person)<-[:ATTRACTS_PEOPLE]-(e4:Event)
-    WHERE e4.eventId <> e.eventId
-    WITH e, category_events, host_events, interest_events, collect(DISTINCT e4) as people_events
+    // 4. Events in same location (weight: 3)
+    OPTIONAL MATCH (e)-[:LOCATED_IN]->(l:Location)<-[:LOCATED_IN]-(similar_event:Event)
+    WHERE similar_event.eventId <> e.eventId
+    WITH e, type_events, interest_events, people_events, collect(DISTINCT similar_event) as location_events
     
-    // 5. Events at same location (weight: 3)
-    OPTIONAL MATCH (e5:Event)
-    WHERE e5.location = e.location AND e5.eventId <> e.eventId
-    WITH e, category_events, host_events, interest_events, people_events, collect(DISTINCT e5) as location_events
+    // 5. Events attended by same people (weight: 3)
+    OPTIONAL MATCH (e)<-[:ATTENDED_EVENT]-(attendee:User)-[:ATTENDED_EVENT]->(similar_event:Event)
+    WHERE similar_event.eventId <> e.eventId
+    WITH e, type_events, interest_events, people_events, location_events, collect(DISTINCT similar_event) as attendee_events
     
-    // 6. Events attended by same people (weight: 3)
-    OPTIONAL MATCH (e)-[:ATTENDED_EVENT]-(attendee:User)-[:ATTENDED_EVENT]->(e6:Event)
-    WHERE e6.eventId <> e.eventId
-    WITH e, category_events, host_events, interest_events, people_events, location_events, collect(DISTINCT e6) as attendee_events
-    
-    // 7. Events at same time of day (weight: 2)
-    OPTIONAL MATCH (e)-[:BEST_TIME]->(t:Time)<-[:BEST_TIME]-(e7:Event)
-    WHERE e7.eventId <> e.eventId
-    WITH e, category_events, host_events, interest_events, people_events, location_events, attendee_events, collect(DISTINCT e7) as time_events
+    // 6. Events at same time preference (weight: 2)
+    OPTIONAL MATCH (e)-[:BEST_TIME]->(t:Time)<-[:BEST_TIME]-(similar_event:Event)
+    WHERE similar_event.eventId <> e.eventId
+    WITH e, type_events, interest_events, people_events, location_events, attendee_events, collect(DISTINCT similar_event) as time_events
     
     // Combine all events and calculate scores
-    WITH e, 
-         category_events + host_events + interest_events + people_events + 
-         location_events + attendee_events + time_events as all_events
+    WITH e, type_events + interest_events + people_events + location_events + attendee_events + time_events as all_events
     
     UNWIND all_events as similar_event
     WITH similar_event, e,
          // Calculate weighted score based on which list the event appears in
          CASE 
-             WHEN similar_event IN category_events THEN 5
-             WHEN similar_event IN host_events THEN 4
+             WHEN similar_event IN type_events THEN 5
              WHEN similar_event IN interest_events THEN 4
              WHEN similar_event IN people_events THEN 3
              WHEN similar_event IN location_events THEN 3
              WHEN similar_event IN attendee_events THEN 3
              WHEN similar_event IN time_events THEN 2
              ELSE 1
-         END as base_score
-    
-    // Add bonus for events happening soon (if date property exists)
-    WITH similar_event, e, base_score,
-         CASE 
-             WHEN similar_event.date IS NOT NULL AND similar_event.date <= datetime() + duration('P30D') THEN 2  // Next 30 days
-             WHEN similar_event.date IS NOT NULL AND similar_event.date <= datetime() + duration('P60D') THEN 1  // Next 60 days
-             ELSE 0
-         END as time_bonus
-    
-    WITH similar_event, e, base_score + time_bonus as final_score
+         END as final_score
     
     RETURN similar_event.eventId as event_id,
            final_score as score
@@ -377,18 +337,7 @@ def get_personalized_event_discovery(
          (friend_rsvp_count * 5) + 
          (friend_similar_count * 4) + 
          (interest_match * 3) + 
-         (time_match * 2) as base_score
-    
-    // Add time bonus for events happening soon (if event has date property)
-    WITH e, base_score,
-         CASE 
-             WHEN e.date IS NOT NULL AND e.date <= datetime() + duration('P7D') THEN 3  // Next 7 days
-             WHEN e.date IS NOT NULL AND e.date <= datetime() + duration('P14D') THEN 2  // Next 14 days
-             WHEN e.date IS NOT NULL AND e.date <= datetime() + duration('P30D') THEN 1  // Next 30 days
-             ELSE 0
-         END as time_bonus
-    
-    WITH e, base_score + time_bonus as final_score
+         (time_match * 2) as final_score
     
     RETURN e.eventId as event_id,
            final_score as score
@@ -462,18 +411,7 @@ def get_college_events(
          (friend_similar_count * 4) + 
          (college_rsvp_count * 3) + 
          (interest_match * 3) + 
-         (time_match * 2) as base_score
-    
-    // Add time bonus for events happening soon (if event has date property)
-    WITH e, base_score,
-         CASE 
-             WHEN e.date IS NOT NULL AND e.date <= datetime() + duration('P7D') THEN 3  // Next 7 days
-             WHEN e.date IS NOT NULL AND e.date <= datetime() + duration('P14D') THEN 2  // Next 14 days
-             WHEN e.date IS NOT NULL AND e.date <= datetime() + duration('P30D') THEN 1  // Next 30 days
-             ELSE 0
-         END as time_bonus
-    
-    WITH e, base_score + time_bonus as final_score
+         (time_match * 2) as final_score
     
     RETURN e.eventId as event_id,
            final_score as score
