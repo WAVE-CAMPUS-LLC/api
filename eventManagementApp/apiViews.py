@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from decimal import Decimal
 import time
 import json
 import stripe
@@ -346,6 +347,12 @@ def editEvent(request, eventId):
         # Get updated related data
         rsvp_list = RSVPTicket.objects.filter(event=updated_event).values()
         paid_free_tickets = PaidFreeTicket.objects.filter(event=updated_event).values()
+
+        # Convert Decimal fields to strings for JSON serialization
+        for ticket in paid_free_tickets:
+            for key, value in ticket.items():
+                if isinstance(value, Decimal):
+                    ticket[key] = str(value)
 
         # Format location data
         location = {
@@ -741,6 +748,7 @@ def createCouponForEvent(request, eventId):
         status=status.HTTP_200_OK,
     )
 
+
 @api_view(["GET", "POST"])
 @permission_classes([IsAuthenticated])
 def deleteEvent(request, eventId):
@@ -756,12 +764,14 @@ def deleteEvent(request, eventId):
     if request.method == "POST":
         event.delete()
         return Response(
-            {"message": "Event deleted successfully."}, status=status.HTTP_204_NO_CONTENT
+            {"message": "Event deleted successfully."},
+            status=status.HTTP_204_NO_CONTENT,
         )
 
     return Response(
         {"error": "Invalid request method."}, status=status.HTTP_400_BAD_REQUEST
     )
+
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
@@ -817,7 +827,6 @@ def getCouponsForEvent(request, eventId):
                 code=coupon_code,
                 discount_percentage=discount_percentage,  # Using the correct field name
             )
-
 
             return Response(
                 {

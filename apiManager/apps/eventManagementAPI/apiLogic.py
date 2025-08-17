@@ -32,6 +32,7 @@ from eventManagementApp.forms import CouponCodeForm
 
 from jose import jwt
 from datetime import datetime, timedelta
+from decimal import Decimal
 from authenticationApp.models import CustomUser
 from starlette.datastructures import UploadFile
 from django.shortcuts import get_object_or_404
@@ -1448,6 +1449,8 @@ async def get_paid_event_tickets(
                     ticket[key] = str(value)
                 elif isinstance(value, datetime):
                     ticket[key] = value.isoformat()
+                elif isinstance(value, Decimal):
+                    ticket[key] = str(value)
             tickets_list.append(ticket)
         return tickets_list
 
