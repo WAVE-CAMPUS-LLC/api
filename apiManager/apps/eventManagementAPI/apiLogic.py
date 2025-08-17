@@ -17,6 +17,7 @@ from apiManager.dependencies import get_current_user
 from apiManager.utilities.form_fields import get_form_fields
 from apiManager.utilities.notify_by_bot import notify_by_bot
 from apiManager.utilities.device_info import get_device_info
+from apiManager.utilities.image_service import EventImageHandler, ImageService
 from apiManager.notifications.notification import send_notification
 from .serializers import (
     HostEventExplore,
@@ -47,17 +48,8 @@ from eventManagementApp.serializers import EditEventModelSerializer
 from dotenv import load_dotenv
 import os
 
-# fastapi → django adapter
-from django.core.files.uploadedfile import SimpleUploadedFile
-
-
-async def starlette_to_django(u: UploadFile) -> SimpleUploadedFile:
-    content = await u.read()  # get bytes from Starlette file
-    return SimpleUploadedFile(  # Django-friendly object
-        name=u.filename or "uploaded_file",
-        content=content,
-        content_type=u.content_type or "application/octet-stream",
-    )
+# Django file handling
+from django.core.files.base import ContentFile
 
 
 router = APIRouter()
@@ -199,9 +191,13 @@ async def edit_event_endpoint(
         for key, value in form_data.multi_items():
             if isinstance(value, UploadFile):
                 print(f"[DEBUG - edit_event_endpoint] File uploaded: {key}")
-                # Convert FastAPI UploadFile to Django file object
-                django_file = await starlette_to_django(value)
-                files[key] = django_file
+                # Read file content directly like in profile photo approach
+                try:
+                    file_content = value.file.read()
+                    files[key] = {"filename": value.filename, "content": file_content}
+                except Exception as e:
+                    print(f"Error reading file {key}: {str(e)}")
+                    continue
             else:
                 print(f"[DEBUG - edit_event_endpoint] Text field: {key} = {value}")
                 data[key] = value
@@ -248,13 +244,23 @@ async def edit_event_endpoint(
             # Determine whether the user is associated with a college
             is_in_college = user_profile.college is not None
 
-            # Merge data and files for the serializer
-            combined_data = {**data}
-            combined_data.update(files)
+            # Handle file uploads using ContentFile approach
+            if files:
+                # Import ContentFile here to avoid circular imports
+                from django.core.files.base import ContentFile
 
-            # Use DRF ModelSerializer for proper partial update support
+                # Update event fields directly with ContentFile
+                for field_name, file_data in files.items():
+                    if hasattr(event, field_name):
+                        getattr(event, field_name).save(
+                            file_data["filename"],
+                            ContentFile(file_data["content"]),
+                            save=False,
+                        )
+
+            # Use DRF ModelSerializer for text fields only
             serializer = EditEventModelSerializer(
-                instance=event, data=combined_data, partial=partial
+                instance=event, data=data, partial=partial
             )
 
             if serializer.is_valid():
@@ -661,9 +667,13 @@ async def create_free_event(
         for key, value in form_data.multi_items():
             if isinstance(value, UploadFile):
                 print(f"[DEBUG - create_free_event] File uploaded: {key}")
-                # Convert FastAPI UploadFile to Django file object
-                django_file = await starlette_to_django(value)
-                files[key] = django_file
+                # Read file content directly like in profile photo approach
+                try:
+                    file_content = value.file.read()
+                    files[key] = {"filename": value.filename, "content": file_content}
+                except Exception as e:
+                    print(f"Error reading file {key}: {str(e)}")
+                    continue
             else:
                 print(f"[DEBUG - create_free_event] Text field: {key} = {value}")
                 data[key] = value
@@ -839,9 +849,13 @@ async def create_paid_event(
         for key, value in form_data.multi_items():
             if isinstance(value, UploadFile):
                 print(f"[DEBUG - create_paid_event] File uploaded: {key}")
-                # Convert FastAPI UploadFile to Django file object
-                django_file = await starlette_to_django(value)
-                files[key] = django_file
+                # Read file content directly like in profile photo approach
+                try:
+                    file_content = value.file.read()
+                    files[key] = {"filename": value.filename, "content": file_content}
+                except Exception as e:
+                    print(f"Error reading file {key}: {str(e)}")
+                    continue
             else:
                 print(f"[DEBUG - create_paid_event] Text field: {key} = {value}")
                 data[key] = value
@@ -3933,72 +3947,41 @@ async def edit_event_header_photo(
     platform: Optional[str] = None,
 ):
     """
-    Edit the header photo of an event
+    Edit the header photo of an event using the centralized image service.
     """
+    # Get device info for error reporting
     user_agent_str = request.headers.get("user-agent", "")
     device_data = get_device_info(user_agent_str)
     device_info = device_data["device_info"]
 
     try:
+        # Get form data
         form_data = await request.form()
-        header_photo = form_data.get("header_photo")
 
-        if (
-            not header_photo
-            or not hasattr(header_photo, "filename")
-            or not header_photo.filename
-        ):
-            return JSONResponse(
-                content={"error": "Header photo is required"},
-                status_code=status.HTTP_400_BAD_REQUEST,
-            )
-
-        # Convert Starlette UploadFile to Django SimpleUploadedFile before database operation
-        try:
-            header_photo_file = await starlette_to_django(header_photo)
-        except Exception as e:
-            return JSONResponse(
-                content={"error": f"Error processing header photo: {str(e)}"},
-                status_code=status.HTTP_400_BAD_REQUEST,
-            )
-
+        # Get event and validate ownership
         @database_sync_to_async
-        def update_header_photo():
+        def get_event_and_validate():
             try:
                 event = Event.objects.get(eventId=eventId)
-
-                # Check if user is the host of this event
-                if event.host.id != user_id:
-                    raise HTTPException(
-                        status_code=status.HTTP_403_FORBIDDEN,
-                        detail="You don't have permission to modify this event. Only the event host can edit the header photo.",
-                    )
-
-                # Update the header photo
-                event.header_photo = header_photo_file
-                event.save()
-
-                return {
-                    "message": "Event header photo updated successfully",
-                    "eventId": str(event.eventId),
-                    "header_photo_url": (
-                        event.header_photo.url if event.header_photo else None
-                    ),
-                }
-
+                EventImageHandler.validate_event_ownership(event, user_id)
+                return event
             except Event.DoesNotExist:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND, detail="Event not found"
                 )
 
-        result = await update_header_photo()
+        event = await get_event_and_validate()
+
+        # Handle the image update using the centralized service
+        result = await EventImageHandler.handle_header_photo_update(event, form_data)
+
         return JSONResponse(content=result, status_code=status.HTTP_200_OK)
-    except HTTPException as http_ex:
-        return JSONResponse(
-            content={"error": str(http_ex.detail)},
-            status_code=http_ex.status_code,
-        )
+
+    except HTTPException:
+        # Re-raise HTTP exceptions as-is
+        raise
     except Exception as e:
+        # Log unexpected errors
         await notify_by_bot(
             f"**[API: edit_event_header_photo]** \n\n Error editing event header photo: eventId={eventId}, error={str(e)} \n\n Platform: {platform}",
             platform or "Unknown",
@@ -4019,123 +4002,181 @@ async def add_event_body_photos(
     platform: Optional[str] = None,
 ):
     """
-    Add body photos to an event
+    Add body photos to an event using the centralized image service.
     """
+    # Get device info for error reporting
     user_agent_str = request.headers.get("user-agent", "")
     device_data = get_device_info(user_agent_str)
     device_info = device_data["device_info"]
 
     try:
+        # Get form data
         form_data = await request.form()
 
-        # Get body photos from form data and filter out non-file entries
-        django_files = {}
-
-        # Helper function to process file uploads
-        async def process_file_upload(field_name, file_value):
-            if file_value and hasattr(file_value, "filename") and file_value.filename:
-                try:
-                    django_file = await starlette_to_django(file_value)
-                    django_files[field_name] = django_file
-                    return True
-                except Exception as e:
-                    print(f"Error processing {field_name}: {str(e)}")
-                    return False
-            return False
-
-        # Process each photo field
-        body_photo_one = form_data.get("body_photo_one")
-        body_photo_two = form_data.get("body_photo_two")
-        body_photo_three = form_data.get("body_photo_three")
-        body_photo_four = form_data.get("body_photo_four")
-        body_photo_five = form_data.get("body_photo_five")
-
-        # Process each file upload
-        await process_file_upload("body_photo_one", body_photo_one)
-        await process_file_upload("body_photo_two", body_photo_two)
-        await process_file_upload("body_photo_three", body_photo_three)
-        await process_file_upload("body_photo_four", body_photo_four)
-        await process_file_upload("body_photo_five", body_photo_five)
-
-        # Check if at least one photo was successfully processed
-        if not django_files:
-            return JSONResponse(
-                content={"error": "At least one valid body photo is required"},
-                status_code=status.HTTP_400_BAD_REQUEST,
-            )
-
+        # Get event and validate ownership
         @database_sync_to_async
-        def update_body_photos():
+        def get_event_and_validate():
             try:
                 event = Event.objects.get(eventId=eventId)
-
-                # Check if user is the host of this event
-                if event.host.id != user_id:
-                    raise HTTPException(
-                        status_code=status.HTTP_403_FORBIDDEN,
-                        detail="You don't have permission to modify this event. Only the event host can add body photos.",
-                    )
-
-                updated_photos = {}
-
-                # Update body photos if provided
-                if "body_photo_one" in django_files:
-                    event.body_photo_one = django_files["body_photo_one"]
-                    updated_photos["body_photo_one"] = True
-
-                if "body_photo_two" in django_files:
-                    event.body_photo_two = django_files["body_photo_two"]
-                    updated_photos["body_photo_two"] = True
-
-                if "body_photo_three" in django_files:
-                    event.body_photo_three = django_files["body_photo_three"]
-                    updated_photos["body_photo_three"] = True
-
-                if "body_photo_four" in django_files:
-                    event.body_photo_four = django_files["body_photo_four"]
-                    updated_photos["body_photo_four"] = True
-
-                if "body_photo_five" in django_files:
-                    event.body_photo_five = django_files["body_photo_five"]
-                    updated_photos["body_photo_five"] = True
-
-                event.save()
-
-                # Get URLs for updated photos
-                photo_urls = {}
-                if event.body_photo_one:
-                    photo_urls["body_photo_one_url"] = event.body_photo_one.url
-                if event.body_photo_two:
-                    photo_urls["body_photo_two_url"] = event.body_photo_two.url
-                if event.body_photo_three:
-                    photo_urls["body_photo_three_url"] = event.body_photo_three.url
-                if event.body_photo_four:
-                    photo_urls["body_photo_four_url"] = event.body_photo_four.url
-                if event.body_photo_five:
-                    photo_urls["body_photo_five_url"] = event.body_photo_five.url
-
-                return {
-                    "message": "Event body photos updated successfully",
-                    "eventId": str(event.eventId),
-                    "updated_photos": updated_photos,
-                    "photo_urls": photo_urls,
-                }
-
+                EventImageHandler.validate_event_ownership(event, user_id)
+                return event
             except Event.DoesNotExist:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND, detail="Event not found"
                 )
 
-        result = await update_body_photos()
+        event = await get_event_and_validate()
+
+        # Handle the image update using the centralized service
+        result = await EventImageHandler.handle_body_photos_update(event, form_data)
+
         return JSONResponse(content=result, status_code=status.HTTP_200_OK)
-    except HTTPException as http_ex:
-        return JSONResponse(
-            content={"error": str(http_ex.detail)},
-            status_code=http_ex.status_code,
-        )
+
+    except HTTPException:
+        # Re-raise HTTP exceptions as-is
+        raise
     except Exception as e:
+        # Log unexpected errors
         await notify_by_bot(
             f"**[API: add_event_body_photos]** \n\n Error adding event body photos: eventId={eventId}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        return JSONResponse(
+            content={"error": f"An unexpected error occurred: {str(e)}"},
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@router.delete("/event/{eventId}/deleteImage/{imageField}")
+async def delete_event_image(
+    eventId: str,
+    imageField: str,
+    request: Request,
+    user_id: int = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
+    """
+    Delete a specific image from an event.
+
+    Args:
+        eventId: Event ID
+        imageField: Name of the image field to delete (e.g., 'header_photo', 'body_photo_one')
+    """
+    # Get device info for error reporting
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    try:
+        # Validate image field
+        if imageField not in ImageService.EVENT_IMAGE_FIELDS:
+            return JSONResponse(
+                content={"error": f"Invalid image field: {imageField}"},
+                status_code=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Get event and validate ownership
+        @database_sync_to_async
+        def get_event_and_validate():
+            try:
+                event = Event.objects.get(eventId=eventId)
+                EventImageHandler.validate_event_ownership(event, user_id)
+                return event
+            except Event.DoesNotExist:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND, detail="Event not found"
+                )
+
+        event = await get_event_and_validate()
+
+        # Delete the image
+        @database_sync_to_async
+        def delete_image():
+            return ImageService.delete_event_image(event, imageField)
+
+        deleted = await delete_image()
+
+        if deleted:
+            return JSONResponse(
+                content={
+                    "message": f"Event {imageField} deleted successfully",
+                    "eventId": str(event.eventId),
+                    "deleted_field": imageField,
+                },
+                status_code=status.HTTP_200_OK,
+            )
+        else:
+            return JSONResponse(
+                content={"error": f"No {imageField} found to delete"},
+                status_code=status.HTTP_404_NOT_FOUND,
+            )
+
+    except HTTPException:
+        # Re-raise HTTP exceptions as-is
+        raise
+    except Exception as e:
+        # Log unexpected errors
+        await notify_by_bot(
+            f"**[API: delete_event_image]** \n\n Error deleting event image: eventId={eventId}, field={imageField}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        return JSONResponse(
+            content={"error": f"An unexpected error occurred: {str(e)}"},
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@router.get("/event/{eventId}/images")
+async def get_event_images(
+    eventId: str,
+    request: Request,
+    user_id: int = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
+    """
+    Get all image URLs for an event.
+    """
+    # Get device info for error reporting
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    try:
+        # Get event
+        @database_sync_to_async
+        def get_event():
+            try:
+                return Event.objects.get(eventId=eventId)
+            except Event.DoesNotExist:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND, detail="Event not found"
+                )
+
+        event = await get_event()
+
+        # Get image URLs
+        @database_sync_to_async
+        def get_image_urls():
+            return ImageService.get_event_image_urls(event)
+
+        urls = await get_image_urls()
+
+        return JSONResponse(
+            content={"eventId": str(event.eventId), "images": urls},
+            status_code=status.HTTP_200_OK,
+        )
+
+    except HTTPException:
+        # Re-raise HTTP exceptions as-is
+        raise
+    except Exception as e:
+        # Log unexpected errors
+        await notify_by_bot(
+            f"**[API: get_event_images]** \n\n Error getting event images: eventId={eventId}, error={str(e)} \n\n Platform: {platform}",
             platform or "Unknown",
             "ERROR",
             device_info,
