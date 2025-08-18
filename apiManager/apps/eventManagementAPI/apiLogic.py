@@ -658,7 +658,10 @@ async def create_free_event(
         data = {}
         files = {}
         print(f"[DEBUG - create_free_event] Processing form data")
+        print(f"[DEBUG - create_free_event] Form data keys: {list(form_data.keys())}")
+        
         for key, value in form_data.multi_items():
+            print(f"[DEBUG - create_free_event] Processing key: {key}, value type: {type(value)}, value: {value}")
             if isinstance(value, UploadFile):
                 print(f"[DEBUG - create_free_event] File uploaded: {key}")
                 # Convert FastAPI UploadFile to Django file object
@@ -667,6 +670,27 @@ async def create_free_event(
             else:
                 print(f"[DEBUG - create_free_event] Text field: {key} = {value}")
                 data[key] = value
+        
+        print(f"[DEBUG - create_free_event] Final data dict: {data}")
+        print(f"[DEBUG - create_free_event] Final files dict: {list(files.keys())}")
+
+        # Clean up data - remove empty strings for optional fields, keep them for required fields
+        cleaned_data = {}
+        for key, value in data.items():
+            if value == "":
+                # Check if this is a boolean field that should be False instead of empty string
+                if key in ["hide_address", "couponsActivated", "crew_discount", "show_guest_list", "forAllDisplay", "forCollegesDisplay"]:
+                    cleaned_data[key] = False
+                elif key in ["age_restriction"]:  # Optional select field
+                    # Skip empty age_restriction to use the default
+                    continue
+                else:
+                    # Keep empty string for other fields (Django form will handle validation)
+                    cleaned_data[key] = value
+            else:
+                cleaned_data[key] = value
+        
+        print(f"[DEBUG - create_free_event] Cleaned data dict: {cleaned_data}")
 
         @database_sync_to_async
         def process_create_event():
@@ -692,8 +716,9 @@ async def create_free_event(
             is_in_college = (
                 user_profile.college is not None
             )  # Instantiate the Django form with submitted data, file uploads, instance and partial flag.
-            event_form = EventForm(data, files)
+            event_form = EventForm(cleaned_data, files)
             print(f"[DEBUG - create_free_event] Event form: {event_form}")
+            print(f"[DEBUG - create_free_event] Event form errors: {event_form.errors}")
 
             if event_form.is_valid():
                 print(f"[DEBUG - create_free_event] Form is valid")
