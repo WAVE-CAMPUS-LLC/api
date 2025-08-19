@@ -3948,60 +3948,112 @@ async def edit_event_header_photo(
     """
     Edit the header photo of an event
     """
+    print(f"[DEBUG - edit_event_header_photo] Function called with eventId: {eventId}, user_id: {user_id}, platform: {platform}")
+    
     user_agent_str = request.headers.get("user-agent", "")
     device_data = get_device_info(user_agent_str)
     device_info = device_data["device_info"]
+    print(f"[DEBUG - edit_event_header_photo] Device info extracted: {device_info}")
 
     try:
+        print(f"[DEBUG - edit_event_header_photo] Starting to process form data...")
         form_data = await request.form()
+        print(f"[DEBUG - edit_event_header_photo] Form data received with keys: {list(form_data.keys())}")
+        
         header_photo = form_data.get("header_photo")
+        print(f"[DEBUG - edit_event_header_photo] Header photo field: {header_photo}")
+        print(f"[DEBUG - edit_event_header_photo] Header photo type: {type(header_photo)}")
+        
+        if header_photo:
+            print(f"[DEBUG - edit_event_header_photo] Header photo filename: {getattr(header_photo, 'filename', 'N/A')}")
+            print(f"[DEBUG - edit_event_header_photo] Header photo content_type: {getattr(header_photo, 'content_type', 'N/A')}")
+            print(f"[DEBUG - edit_event_header_photo] Header photo size: {getattr(header_photo, 'size', 'N/A')}")
 
         if not header_photo:
+            print(f"[DEBUG - edit_event_header_photo] No header photo provided in form data")
             return JSONResponse(
                 content={"error": "Header photo is required"},
                 status_code=status.HTTP_400_BAD_REQUEST,
             )
 
+        print(f"[DEBUG - edit_event_header_photo] Converting Starlette UploadFile to Django SimpleUploadedFile...")
         # Convert Starlette UploadFile to Django SimpleUploadedFile before database operation
         header_photo_file = await starlette_to_django(header_photo)
+        print(f"[DEBUG - edit_event_header_photo] File conversion completed successfully")
+        print(f"[DEBUG - edit_event_header_photo] Django file name: {header_photo_file.name}")
+        print(f"[DEBUG - edit_event_header_photo] Django file size: {header_photo_file.size}")
+        print(f"[DEBUG - edit_event_header_photo] Django file content_type: {header_photo_file.content_type}")
 
         @database_sync_to_async
         def update_header_photo():
+            print(f"[DEBUG - edit_event_header_photo - update_header_photo] Starting database operation...")
             try:
+                print(f"[DEBUG - edit_event_header_photo - update_header_photo] Fetching event with eventId: {eventId}")
                 event = Event.objects.get(eventId=eventId)
+                print(f"[DEBUG - edit_event_header_photo - update_header_photo] Event found: {event.title}")
+                print(f"[DEBUG - edit_event_header_photo - update_header_photo] Event host: {event.host.id}")
+                print(f"[DEBUG - edit_event_header_photo - update_header_photo] Requesting user: {user_id}")
 
                 # Check if user is the host of this event
                 if event.host.id != user_id:
+                    print(f"[DEBUG - edit_event_header_photo - update_header_photo] Permission denied - user {user_id} is not the host {event.host.id}")
                     raise HTTPException(
                         status_code=status.HTTP_403_FORBIDDEN,
                         detail="You don't have permission to modify this event. Only the event host can edit the header photo.",
                     )
 
+                print(f"[DEBUG - edit_event_header_photo - update_header_photo] Permission check passed")
+                print(f"[DEBUG - edit_event_header_photo - update_header_photo] Current header photo: {event.header_photo}")
+                
                 # Update the header photo
+                print(f"[DEBUG - edit_event_header_photo - update_header_photo] Updating header photo...")
                 event.header_photo = header_photo_file
+                print(f"[DEBUG - edit_event_header_photo - update_header_photo] Header photo field updated, saving event...")
                 event.save()
+                print(f"[DEBUG - edit_event_header_photo - update_header_photo] Event saved successfully")
+                
+                print(f"[DEBUG - edit_event_header_photo - update_header_photo] New header photo: {event.header_photo}")
+                header_photo_url = event.header_photo.url if event.header_photo else None
+                print(f"[DEBUG - edit_event_header_photo - update_header_photo] New header photo URL: {header_photo_url}")
 
-                return {
+                response_data = {
                     "message": "Event header photo updated successfully",
                     "eventId": str(event.eventId),
-                    "header_photo_url": (
-                        event.header_photo.url if event.header_photo else None
-                    ),
+                    "header_photo_url": header_photo_url,
                 }
+                print(f"[DEBUG - edit_event_header_photo - update_header_photo] Response data prepared: {response_data}")
+                return response_data
 
             except Event.DoesNotExist:
+                print(f"[DEBUG - edit_event_header_photo - update_header_photo] Event not found with eventId: {eventId}")
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND, detail="Event not found"
                 )
+            except Exception as e:
+                print(f"[DEBUG - edit_event_header_photo - update_header_photo] Unexpected error in database operation: {str(e)}")
+                print(f"[DEBUG - edit_event_header_photo - update_header_photo] Error type: {type(e)}")
+                raise
 
+        print(f"[DEBUG - edit_event_header_photo] Calling database update function...")
         result = await update_header_photo()
+        print(f"[DEBUG - edit_event_header_photo] Database update completed successfully")
+        print(f"[DEBUG - edit_event_header_photo] Final result: {result}")
         return JSONResponse(content=result, status_code=status.HTTP_200_OK)
+        
     except HTTPException as http_ex:
+        print(f"[DEBUG - edit_event_header_photo] HTTPException caught: {http_ex.detail}")
+        print(f"[DEBUG - edit_event_header_photo] HTTPException status code: {http_ex.status_code}")
         return JSONResponse(
             content={"error": str(http_ex.detail)},
             status_code=http_ex.status_code,
         )
     except Exception as e:
+        print(f"[DEBUG - edit_event_header_photo] Unexpected exception caught: {str(e)}")
+        print(f"[DEBUG - edit_event_header_photo] Exception type: {type(e)}")
+        import traceback
+        traceback_str = traceback.format_exc()
+        print(f"[DEBUG - edit_event_header_photo] Full traceback: {traceback_str}")
+        
         await notify_by_bot(
             f"**[API: edit_event_header_photo]** \n\n Error editing event header photo: eventId={eventId}, error={str(e)} \n\n Platform: {platform}",
             platform or "Unknown",
@@ -4024,12 +4076,17 @@ async def add_event_body_photos(
     """
     Add body photos to an event
     """
+    print(f"[DEBUG - add_event_body_photos] Function called with eventId: {eventId}, user_id: {user_id}, platform: {platform}")
+    
     user_agent_str = request.headers.get("user-agent", "")
     device_data = get_device_info(user_agent_str)
     device_info = device_data["device_info"]
+    print(f"[DEBUG - add_event_body_photos] Device info extracted: {device_info}")
 
     try:
+        print(f"[DEBUG - add_event_body_photos] Starting to process form data...")
         form_data = await request.form()
+        print(f"[DEBUG - add_event_body_photos] Form data received with keys: {list(form_data.keys())}")
 
         # Get body photos from form data
         body_photo_one = form_data.get("body_photo_one")
@@ -4038,106 +4095,198 @@ async def add_event_body_photos(
         body_photo_four = form_data.get("body_photo_four")
         body_photo_five = form_data.get("body_photo_five")
 
+        print(f"[DEBUG - add_event_body_photos] Body photo one: {body_photo_one} (type: {type(body_photo_one)})")
+        print(f"[DEBUG - add_event_body_photos] Body photo two: {body_photo_two} (type: {type(body_photo_two)})")
+        print(f"[DEBUG - add_event_body_photos] Body photo three: {body_photo_three} (type: {type(body_photo_three)})")
+        print(f"[DEBUG - add_event_body_photos] Body photo four: {body_photo_four} (type: {type(body_photo_four)})")
+        print(f"[DEBUG - add_event_body_photos] Body photo five: {body_photo_five} (type: {type(body_photo_five)})")
+
+        # Log details of each provided photo
+        photos_info = {
+            "body_photo_one": body_photo_one,
+            "body_photo_two": body_photo_two,
+            "body_photo_three": body_photo_three,
+            "body_photo_four": body_photo_four,
+            "body_photo_five": body_photo_five,
+        }
+        
+        for photo_name, photo in photos_info.items():
+            if photo:
+                print(f"[DEBUG - add_event_body_photos] {photo_name} filename: {getattr(photo, 'filename', 'N/A')}")
+                print(f"[DEBUG - add_event_body_photos] {photo_name} content_type: {getattr(photo, 'content_type', 'N/A')}")
+                print(f"[DEBUG - add_event_body_photos] {photo_name} size: {getattr(photo, 'size', 'N/A')}")
+
         # Check if at least one photo is provided
-        if not any(
-            [
-                body_photo_one,
-                body_photo_two,
-                body_photo_three,
-                body_photo_four,
-                body_photo_five,
-            ]
-        ):
+        provided_photos = [photo for photo in photos_info.values() if photo]
+        print(f"[DEBUG - add_event_body_photos] Number of photos provided: {len(provided_photos)}")
+        
+        if not any([body_photo_one, body_photo_two, body_photo_three, body_photo_four, body_photo_five]):
+            print(f"[DEBUG - add_event_body_photos] No body photos provided in form data")
             return JSONResponse(
                 content={"error": "At least one body photo is required"},
                 status_code=status.HTTP_400_BAD_REQUEST,
             )
 
+        print(f"[DEBUG - add_event_body_photos] Converting Starlette UploadFiles to Django SimpleUploadedFiles...")
+        
         # Convert Starlette UploadFiles to Django SimpleUploadedFiles before database operation
         django_files = {}
+        
         if body_photo_one:
+            print(f"[DEBUG - add_event_body_photos] Converting body_photo_one...")
             django_files["body_photo_one"] = await starlette_to_django(body_photo_one)
+            print(f"[DEBUG - add_event_body_photos] body_photo_one converted successfully")
+            
         if body_photo_two:
+            print(f"[DEBUG - add_event_body_photos] Converting body_photo_two...")
             django_files["body_photo_two"] = await starlette_to_django(body_photo_two)
+            print(f"[DEBUG - add_event_body_photos] body_photo_two converted successfully")
+            
         if body_photo_three:
-            django_files["body_photo_three"] = await starlette_to_django(
-                body_photo_three
-            )
+            print(f"[DEBUG - add_event_body_photos] Converting body_photo_three...")
+            django_files["body_photo_three"] = await starlette_to_django(body_photo_three)
+            print(f"[DEBUG - add_event_body_photos] body_photo_three converted successfully")
+            
         if body_photo_four:
+            print(f"[DEBUG - add_event_body_photos] Converting body_photo_four...")
             django_files["body_photo_four"] = await starlette_to_django(body_photo_four)
+            print(f"[DEBUG - add_event_body_photos] body_photo_four converted successfully")
+            
         if body_photo_five:
+            print(f"[DEBUG - add_event_body_photos] Converting body_photo_five...")
             django_files["body_photo_five"] = await starlette_to_django(body_photo_five)
+            print(f"[DEBUG - add_event_body_photos] body_photo_five converted successfully")
+
+        print(f"[DEBUG - add_event_body_photos] File conversions completed. Django files keys: {list(django_files.keys())}")
+        
+        # Log details of converted Django files
+        for file_key, django_file in django_files.items():
+            print(f"[DEBUG - add_event_body_photos] {file_key} Django file name: {django_file.name}")
+            print(f"[DEBUG - add_event_body_photos] {file_key} Django file size: {django_file.size}")
+            print(f"[DEBUG - add_event_body_photos] {file_key} Django file content_type: {django_file.content_type}")
 
         @database_sync_to_async
         def update_body_photos():
+            print(f"[DEBUG - add_event_body_photos - update_body_photos] Starting database operation...")
             try:
+                print(f"[DEBUG - add_event_body_photos - update_body_photos] Fetching event with eventId: {eventId}")
                 event = Event.objects.get(eventId=eventId)
+                print(f"[DEBUG - add_event_body_photos - update_body_photos] Event found: {event.title}")
+                print(f"[DEBUG - add_event_body_photos - update_body_photos] Event host: {event.host.id}")
+                print(f"[DEBUG - add_event_body_photos - update_body_photos] Requesting user: {user_id}")
 
                 # Check if user is the host of this event
                 if event.host.id != user_id:
+                    print(f"[DEBUG - add_event_body_photos - update_body_photos] Permission denied - user {user_id} is not the host {event.host.id}")
                     raise HTTPException(
                         status_code=status.HTTP_403_FORBIDDEN,
                         detail="You don't have permission to modify this event. Only the event host can add body photos.",
                     )
 
+                print(f"[DEBUG - add_event_body_photos - update_body_photos] Permission check passed")
+                print(f"[DEBUG - add_event_body_photos - update_body_photos] Current body photos:")
+                print(f"[DEBUG - add_event_body_photos - update_body_photos] - body_photo_one: {event.body_photo_one}")
+                print(f"[DEBUG - add_event_body_photos - update_body_photos] - body_photo_two: {event.body_photo_two}")
+                print(f"[DEBUG - add_event_body_photos - update_body_photos] - body_photo_three: {event.body_photo_three}")
+                print(f"[DEBUG - add_event_body_photos - update_body_photos] - body_photo_four: {event.body_photo_four}")
+                print(f"[DEBUG - add_event_body_photos - update_body_photos] - body_photo_five: {event.body_photo_five}")
+
                 updated_photos = {}
 
                 # Update body photos if provided
                 if "body_photo_one" in django_files:
+                    print(f"[DEBUG - add_event_body_photos - update_body_photos] Updating body_photo_one...")
                     event.body_photo_one = django_files["body_photo_one"]
                     updated_photos["body_photo_one"] = True
+                    print(f"[DEBUG - add_event_body_photos - update_body_photos] body_photo_one updated")
 
                 if "body_photo_two" in django_files:
+                    print(f"[DEBUG - add_event_body_photos - update_body_photos] Updating body_photo_two...")
                     event.body_photo_two = django_files["body_photo_two"]
                     updated_photos["body_photo_two"] = True
+                    print(f"[DEBUG - add_event_body_photos - update_body_photos] body_photo_two updated")
 
                 if "body_photo_three" in django_files:
+                    print(f"[DEBUG - add_event_body_photos - update_body_photos] Updating body_photo_three...")
                     event.body_photo_three = django_files["body_photo_three"]
                     updated_photos["body_photo_three"] = True
+                    print(f"[DEBUG - add_event_body_photos - update_body_photos] body_photo_three updated")
 
                 if "body_photo_four" in django_files:
+                    print(f"[DEBUG - add_event_body_photos - update_body_photos] Updating body_photo_four...")
                     event.body_photo_four = django_files["body_photo_four"]
                     updated_photos["body_photo_four"] = True
+                    print(f"[DEBUG - add_event_body_photos - update_body_photos] body_photo_four updated")
 
                 if "body_photo_five" in django_files:
+                    print(f"[DEBUG - add_event_body_photos - update_body_photos] Updating body_photo_five...")
                     event.body_photo_five = django_files["body_photo_five"]
                     updated_photos["body_photo_five"] = True
+                    print(f"[DEBUG - add_event_body_photos - update_body_photos] body_photo_five updated")
 
+                print(f"[DEBUG - add_event_body_photos - update_body_photos] Updated photos: {updated_photos}")
+                print(f"[DEBUG - add_event_body_photos - update_body_photos] Saving event...")
                 event.save()
+                print(f"[DEBUG - add_event_body_photos - update_body_photos] Event saved successfully")
 
+                print(f"[DEBUG - add_event_body_photos - update_body_photos] Getting photo URLs...")
                 # Get URLs for updated photos
                 photo_urls = {}
                 if event.body_photo_one:
                     photo_urls["body_photo_one_url"] = event.body_photo_one.url
+                    print(f"[DEBUG - add_event_body_photos - update_body_photos] body_photo_one_url: {photo_urls['body_photo_one_url']}")
                 if event.body_photo_two:
                     photo_urls["body_photo_two_url"] = event.body_photo_two.url
+                    print(f"[DEBUG - add_event_body_photos - update_body_photos] body_photo_two_url: {photo_urls['body_photo_two_url']}")
                 if event.body_photo_three:
                     photo_urls["body_photo_three_url"] = event.body_photo_three.url
+                    print(f"[DEBUG - add_event_body_photos - update_body_photos] body_photo_three_url: {photo_urls['body_photo_three_url']}")
                 if event.body_photo_four:
                     photo_urls["body_photo_four_url"] = event.body_photo_four.url
+                    print(f"[DEBUG - add_event_body_photos - update_body_photos] body_photo_four_url: {photo_urls['body_photo_four_url']}")
                 if event.body_photo_five:
                     photo_urls["body_photo_five_url"] = event.body_photo_five.url
+                    print(f"[DEBUG - add_event_body_photos - update_body_photos] body_photo_five_url: {photo_urls['body_photo_five_url']}")
 
-                return {
+                response_data = {
                     "message": "Event body photos updated successfully",
                     "eventId": str(event.eventId),
                     "updated_photos": updated_photos,
                     "photo_urls": photo_urls,
                 }
+                print(f"[DEBUG - add_event_body_photos - update_body_photos] Response data prepared: {response_data}")
+                return response_data
 
             except Event.DoesNotExist:
+                print(f"[DEBUG - add_event_body_photos - update_body_photos] Event not found with eventId: {eventId}")
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND, detail="Event not found"
                 )
+            except Exception as e:
+                print(f"[DEBUG - add_event_body_photos - update_body_photos] Unexpected error in database operation: {str(e)}")
+                print(f"[DEBUG - add_event_body_photos - update_body_photos] Error type: {type(e)}")
+                raise
 
+        print(f"[DEBUG - add_event_body_photos] Calling database update function...")
         result = await update_body_photos()
+        print(f"[DEBUG - add_event_body_photos] Database update completed successfully")
+        print(f"[DEBUG - add_event_body_photos] Final result: {result}")
         return JSONResponse(content=result, status_code=status.HTTP_200_OK)
+        
     except HTTPException as http_ex:
+        print(f"[DEBUG - add_event_body_photos] HTTPException caught: {http_ex.detail}")
+        print(f"[DEBUG - add_event_body_photos] HTTPException status code: {http_ex.status_code}")
         return JSONResponse(
             content={"error": str(http_ex.detail)},
             status_code=http_ex.status_code,
         )
     except Exception as e:
+        print(f"[DEBUG - add_event_body_photos] Unexpected exception caught: {str(e)}")
+        print(f"[DEBUG - add_event_body_photos] Exception type: {type(e)}")
+        import traceback
+        traceback_str = traceback.format_exc()
+        print(f"[DEBUG - add_event_body_photos] Full traceback: {traceback_str}")
+        
         await notify_by_bot(
             f"**[API: add_event_body_photos]** \n\n Error adding event body photos: eventId={eventId}, error={str(e)} \n\n Platform: {platform}",
             platform or "Unknown",
