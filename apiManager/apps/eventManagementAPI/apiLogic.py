@@ -4066,40 +4066,53 @@ async def edit_event_header_photo(
         )
 
 
-@router.patch("/event/{eventId}/addBodyPhotos")
-async def add_event_body_photos(
+@router.patch("/event/{eventId}/manageBodyPhotos")
+async def manage_event_body_photos(
     eventId: str,
     request: Request,
     user_id: int = Depends(get_current_user),
     platform: Optional[str] = None,
 ):
     """
-    Add body photos to an event
+    Add and/or remove body photos to/from an event
+    Supports:
+    - Adding new photos by providing photo files
+    - Removing existing photos by setting delete flags
+    - Both operations in a single request
     """
-    print(f"[DEBUG - add_event_body_photos] Function called with eventId: {eventId}, user_id: {user_id}, platform: {platform}")
+    print(f"[DEBUG - manage_event_body_photos] Function called with eventId: {eventId}, user_id: {user_id}, platform: {platform}")
     
     user_agent_str = request.headers.get("user-agent", "")
     device_data = get_device_info(user_agent_str)
     device_info = device_data["device_info"]
-    print(f"[DEBUG - add_event_body_photos] Device info extracted: {device_info}")
+    print(f"[DEBUG - manage_event_body_photos] Device info extracted: {device_info}")
 
     try:
-        print(f"[DEBUG - add_event_body_photos] Starting to process form data...")
+        print(f"[DEBUG - manage_event_body_photos] Starting to process form data...")
         form_data = await request.form()
-        print(f"[DEBUG - add_event_body_photos] Form data received with keys: {list(form_data.keys())}")
+        print(f"[DEBUG - manage_event_body_photos] Form data received with keys: {list(form_data.keys())}")
 
-        # Get body photos from form data
+        # Get body photos from form data (for adding)
         body_photo_one = form_data.get("body_photo_one")
         body_photo_two = form_data.get("body_photo_two")
         body_photo_three = form_data.get("body_photo_three")
         body_photo_four = form_data.get("body_photo_four")
         body_photo_five = form_data.get("body_photo_five")
 
-        print(f"[DEBUG - add_event_body_photos] Body photo one: {body_photo_one} (type: {type(body_photo_one)})")
-        print(f"[DEBUG - add_event_body_photos] Body photo two: {body_photo_two} (type: {type(body_photo_two)})")
-        print(f"[DEBUG - add_event_body_photos] Body photo three: {body_photo_three} (type: {type(body_photo_three)})")
-        print(f"[DEBUG - add_event_body_photos] Body photo four: {body_photo_four} (type: {type(body_photo_four)})")
-        print(f"[DEBUG - add_event_body_photos] Body photo five: {body_photo_five} (type: {type(body_photo_five)})")
+        # Get deletion flags from form data
+        delete_body_photo_one = form_data.get("delete_body_photo_one", "false").lower() == "true"
+        delete_body_photo_two = form_data.get("delete_body_photo_two", "false").lower() == "true"
+        delete_body_photo_three = form_data.get("delete_body_photo_three", "false").lower() == "true"
+        delete_body_photo_four = form_data.get("delete_body_photo_four", "false").lower() == "true"
+        delete_body_photo_five = form_data.get("delete_body_photo_five", "false").lower() == "true"
+
+        print(f"[DEBUG - manage_event_body_photos] Body photo one: {body_photo_one} (type: {type(body_photo_one)})")
+        print(f"[DEBUG - manage_event_body_photos] Body photo two: {body_photo_two} (type: {type(body_photo_two)})")
+        print(f"[DEBUG - manage_event_body_photos] Body photo three: {body_photo_three} (type: {type(body_photo_three)})")
+        print(f"[DEBUG - manage_event_body_photos] Body photo four: {body_photo_four} (type: {type(body_photo_four)})")
+        print(f"[DEBUG - manage_event_body_photos] Body photo five: {body_photo_five} (type: {type(body_photo_five)})")
+
+        print(f"[DEBUG - manage_event_body_photos] Delete flags - One: {delete_body_photo_one}, Two: {delete_body_photo_two}, Three: {delete_body_photo_three}, Four: {delete_body_photo_four}, Five: {delete_body_photo_five}")
 
         # Log details of each provided photo
         photos_info = {
@@ -4110,185 +4123,251 @@ async def add_event_body_photos(
             "body_photo_five": body_photo_five,
         }
         
+        deletion_flags = {
+            "delete_body_photo_one": delete_body_photo_one,
+            "delete_body_photo_two": delete_body_photo_two,
+            "delete_body_photo_three": delete_body_photo_three,
+            "delete_body_photo_four": delete_body_photo_four,
+            "delete_body_photo_five": delete_body_photo_five,
+        }
+        
         for photo_name, photo in photos_info.items():
             if photo:
-                print(f"[DEBUG - add_event_body_photos] {photo_name} filename: {getattr(photo, 'filename', 'N/A')}")
-                print(f"[DEBUG - add_event_body_photos] {photo_name} content_type: {getattr(photo, 'content_type', 'N/A')}")
-                print(f"[DEBUG - add_event_body_photos] {photo_name} size: {getattr(photo, 'size', 'N/A')}")
+                print(f"[DEBUG - manage_event_body_photos] {photo_name} filename: {getattr(photo, 'filename', 'N/A')}")
+                print(f"[DEBUG - manage_event_body_photos] {photo_name} content_type: {getattr(photo, 'content_type', 'N/A')}")
+                print(f"[DEBUG - manage_event_body_photos] {photo_name} size: {getattr(photo, 'size', 'N/A')}")
 
-        # Check if at least one photo is provided
+        # Check if at least one operation is requested (add or delete)
         provided_photos = [photo for photo in photos_info.values() if photo]
-        print(f"[DEBUG - add_event_body_photos] Number of photos provided: {len(provided_photos)}")
+        deletion_requested = any(deletion_flags.values())
         
-        if not any([body_photo_one, body_photo_two, body_photo_three, body_photo_four, body_photo_five]):
-            print(f"[DEBUG - add_event_body_photos] No body photos provided in form data")
+        print(f"[DEBUG - manage_event_body_photos] Number of photos provided for addition: {len(provided_photos)}")
+        print(f"[DEBUG - manage_event_body_photos] Number of deletion flags set: {sum(deletion_flags.values())}")
+        print(f"[DEBUG - manage_event_body_photos] Any deletion requested: {deletion_requested}")
+        
+        if not provided_photos and not deletion_requested:
+            print(f"[DEBUG - manage_event_body_photos] No operations requested - no photos to add or delete")
             return JSONResponse(
-                content={"error": "At least one body photo is required"},
+                content={"error": "At least one operation is required (add photos or delete photos)"},
                 status_code=status.HTTP_400_BAD_REQUEST,
             )
 
-        print(f"[DEBUG - add_event_body_photos] Converting Starlette UploadFiles to Django SimpleUploadedFiles...")
-        
-        # Convert Starlette UploadFiles to Django SimpleUploadedFiles before database operation
+        # Convert Starlette UploadFiles to Django SimpleUploadedFiles for additions (only if photos provided)
         django_files = {}
         
-        if body_photo_one:
-            print(f"[DEBUG - add_event_body_photos] Converting body_photo_one...")
-            django_files["body_photo_one"] = await starlette_to_django(body_photo_one)
-            print(f"[DEBUG - add_event_body_photos] body_photo_one converted successfully")
+        if provided_photos:
+            print(f"[DEBUG - manage_event_body_photos] Converting Starlette UploadFiles to Django SimpleUploadedFiles...")
             
-        if body_photo_two:
-            print(f"[DEBUG - add_event_body_photos] Converting body_photo_two...")
-            django_files["body_photo_two"] = await starlette_to_django(body_photo_two)
-            print(f"[DEBUG - add_event_body_photos] body_photo_two converted successfully")
-            
-        if body_photo_three:
-            print(f"[DEBUG - add_event_body_photos] Converting body_photo_three...")
-            django_files["body_photo_three"] = await starlette_to_django(body_photo_three)
-            print(f"[DEBUG - add_event_body_photos] body_photo_three converted successfully")
-            
-        if body_photo_four:
-            print(f"[DEBUG - add_event_body_photos] Converting body_photo_four...")
-            django_files["body_photo_four"] = await starlette_to_django(body_photo_four)
-            print(f"[DEBUG - add_event_body_photos] body_photo_four converted successfully")
-            
-        if body_photo_five:
-            print(f"[DEBUG - add_event_body_photos] Converting body_photo_five...")
-            django_files["body_photo_five"] = await starlette_to_django(body_photo_five)
-            print(f"[DEBUG - add_event_body_photos] body_photo_five converted successfully")
+            if body_photo_one:
+                print(f"[DEBUG - manage_event_body_photos] Converting body_photo_one...")
+                django_files["body_photo_one"] = await starlette_to_django(body_photo_one)
+                print(f"[DEBUG - manage_event_body_photos] body_photo_one converted successfully")
+                
+            if body_photo_two:
+                print(f"[DEBUG - manage_event_body_photos] Converting body_photo_two...")
+                django_files["body_photo_two"] = await starlette_to_django(body_photo_two)
+                print(f"[DEBUG - manage_event_body_photos] body_photo_two converted successfully")
+                
+            if body_photo_three:
+                print(f"[DEBUG - manage_event_body_photos] Converting body_photo_three...")
+                django_files["body_photo_three"] = await starlette_to_django(body_photo_three)
+                print(f"[DEBUG - manage_event_body_photos] body_photo_three converted successfully")
+                
+            if body_photo_four:
+                print(f"[DEBUG - manage_event_body_photos] Converting body_photo_four...")
+                django_files["body_photo_four"] = await starlette_to_django(body_photo_four)
+                print(f"[DEBUG - manage_event_body_photos] body_photo_four converted successfully")
+                
+            if body_photo_five:
+                print(f"[DEBUG - manage_event_body_photos] Converting body_photo_five...")
+                django_files["body_photo_five"] = await starlette_to_django(body_photo_five)
+                print(f"[DEBUG - manage_event_body_photos] body_photo_five converted successfully")
 
-        print(f"[DEBUG - add_event_body_photos] File conversions completed. Django files keys: {list(django_files.keys())}")
-        
-        # Log details of converted Django files
-        for file_key, django_file in django_files.items():
-            print(f"[DEBUG - add_event_body_photos] {file_key} Django file name: {django_file.name}")
-            print(f"[DEBUG - add_event_body_photos] {file_key} Django file size: {django_file.size}")
-            print(f"[DEBUG - add_event_body_photos] {file_key} Django file content_type: {django_file.content_type}")
+            print(f"[DEBUG - manage_event_body_photos] File conversions completed. Django files keys: {list(django_files.keys())}")
+            
+            # Log details of converted Django files
+            for file_key, django_file in django_files.items():
+                print(f"[DEBUG - manage_event_body_photos] {file_key} Django file name: {django_file.name}")
+                print(f"[DEBUG - manage_event_body_photos] {file_key} Django file size: {django_file.size}")
+                print(f"[DEBUG - manage_event_body_photos] {file_key} Django file content_type: {django_file.content_type}")
+        else:
+            print(f"[DEBUG - manage_event_body_photos] No photos to convert - only performing deletions")
 
         @database_sync_to_async
-        def update_body_photos():
-            print(f"[DEBUG - add_event_body_photos - update_body_photos] Starting database operation...")
+        def manage_body_photos():
+            print(f"[DEBUG - manage_event_body_photos - manage_body_photos] Starting database operation...")
             try:
-                print(f"[DEBUG - add_event_body_photos - update_body_photos] Fetching event with eventId: {eventId}")
+                print(f"[DEBUG - manage_event_body_photos - manage_body_photos] Fetching event with eventId: {eventId}")
                 event = Event.objects.get(eventId=eventId)
-                print(f"[DEBUG - add_event_body_photos - update_body_photos] Event found: {event.title}")
-                print(f"[DEBUG - add_event_body_photos - update_body_photos] Event host: {event.host.id}")
-                print(f"[DEBUG - add_event_body_photos - update_body_photos] Requesting user: {user_id}")
+                print(f"[DEBUG - manage_event_body_photos - manage_body_photos] Event found: {event.title}")
+                print(f"[DEBUG - manage_event_body_photos - manage_body_photos] Event host: {event.host.id}")
+                print(f"[DEBUG - manage_event_body_photos - manage_body_photos] Requesting user: {user_id}")
 
                 # Check if user is the host of this event
                 if event.host.id != user_id:
-                    print(f"[DEBUG - add_event_body_photos - update_body_photos] Permission denied - user {user_id} is not the host {event.host.id}")
+                    print(f"[DEBUG - manage_event_body_photos - manage_body_photos] Permission denied - user {user_id} is not the host {event.host.id}")
                     raise HTTPException(
                         status_code=status.HTTP_403_FORBIDDEN,
-                        detail="You don't have permission to modify this event. Only the event host can add body photos.",
+                        detail="You don't have permission to modify this event. Only the event host can manage body photos.",
                     )
 
-                print(f"[DEBUG - add_event_body_photos - update_body_photos] Permission check passed")
-                print(f"[DEBUG - add_event_body_photos - update_body_photos] Current body photos:")
-                print(f"[DEBUG - add_event_body_photos - update_body_photos] - body_photo_one: {event.body_photo_one}")
-                print(f"[DEBUG - add_event_body_photos - update_body_photos] - body_photo_two: {event.body_photo_two}")
-                print(f"[DEBUG - add_event_body_photos - update_body_photos] - body_photo_three: {event.body_photo_three}")
-                print(f"[DEBUG - add_event_body_photos - update_body_photos] - body_photo_four: {event.body_photo_four}")
-                print(f"[DEBUG - add_event_body_photos - update_body_photos] - body_photo_five: {event.body_photo_five}")
+                print(f"[DEBUG - manage_event_body_photos - manage_body_photos] Permission check passed")
+                print(f"[DEBUG - manage_event_body_photos - manage_body_photos] Current body photos:")
+                print(f"[DEBUG - manage_event_body_photos - manage_body_photos] - body_photo_one: {event.body_photo_one}")
+                print(f"[DEBUG - manage_event_body_photos - manage_body_photos] - body_photo_two: {event.body_photo_two}")
+                print(f"[DEBUG - manage_event_body_photos - manage_body_photos] - body_photo_three: {event.body_photo_three}")
+                print(f"[DEBUG - manage_event_body_photos - manage_body_photos] - body_photo_four: {event.body_photo_four}")
+                print(f"[DEBUG - manage_event_body_photos - manage_body_photos] - body_photo_five: {event.body_photo_five}")
 
                 updated_photos = {}
+                deleted_photos = {}
 
-                # Update body photos if provided
-                if "body_photo_one" in django_files:
-                    print(f"[DEBUG - add_event_body_photos - update_body_photos] Updating body_photo_one...")
-                    event.body_photo_one = django_files["body_photo_one"]
-                    updated_photos["body_photo_one"] = True
-                    print(f"[DEBUG - add_event_body_photos - update_body_photos] body_photo_one updated")
+                # First, handle deletions
+                if deletion_requested:
+                    print(f"[DEBUG - manage_event_body_photos - manage_body_photos] Processing photo deletions...")
+                    
+                    if delete_body_photo_one:
+                        print(f"[DEBUG - manage_event_body_photos - manage_body_photos] Deleting body_photo_one...")
+                        event.body_photo_one = None
+                        deleted_photos["body_photo_one"] = True
+                        print(f"[DEBUG - manage_event_body_photos - manage_body_photos] body_photo_one deleted")
 
-                if "body_photo_two" in django_files:
-                    print(f"[DEBUG - add_event_body_photos - update_body_photos] Updating body_photo_two...")
-                    event.body_photo_two = django_files["body_photo_two"]
-                    updated_photos["body_photo_two"] = True
-                    print(f"[DEBUG - add_event_body_photos - update_body_photos] body_photo_two updated")
+                    if delete_body_photo_two:
+                        print(f"[DEBUG - manage_event_body_photos - manage_body_photos] Deleting body_photo_two...")
+                        event.body_photo_two = None
+                        deleted_photos["body_photo_two"] = True
+                        print(f"[DEBUG - manage_event_body_photos - manage_body_photos] body_photo_two deleted")
 
-                if "body_photo_three" in django_files:
-                    print(f"[DEBUG - add_event_body_photos - update_body_photos] Updating body_photo_three...")
-                    event.body_photo_three = django_files["body_photo_three"]
-                    updated_photos["body_photo_three"] = True
-                    print(f"[DEBUG - add_event_body_photos - update_body_photos] body_photo_three updated")
+                    if delete_body_photo_three:
+                        print(f"[DEBUG - manage_event_body_photos - manage_body_photos] Deleting body_photo_three...")
+                        event.body_photo_three = None
+                        deleted_photos["body_photo_three"] = True
+                        print(f"[DEBUG - manage_event_body_photos - manage_body_photos] body_photo_three deleted")
 
-                if "body_photo_four" in django_files:
-                    print(f"[DEBUG - add_event_body_photos - update_body_photos] Updating body_photo_four...")
-                    event.body_photo_four = django_files["body_photo_four"]
-                    updated_photos["body_photo_four"] = True
-                    print(f"[DEBUG - add_event_body_photos - update_body_photos] body_photo_four updated")
+                    if delete_body_photo_four:
+                        print(f"[DEBUG - manage_event_body_photos - manage_body_photos] Deleting body_photo_four...")
+                        event.body_photo_four = None
+                        deleted_photos["body_photo_four"] = True
+                        print(f"[DEBUG - manage_event_body_photos - manage_body_photos] body_photo_four deleted")
 
-                if "body_photo_five" in django_files:
-                    print(f"[DEBUG - add_event_body_photos - update_body_photos] Updating body_photo_five...")
-                    event.body_photo_five = django_files["body_photo_five"]
-                    updated_photos["body_photo_five"] = True
-                    print(f"[DEBUG - add_event_body_photos - update_body_photos] body_photo_five updated")
+                    if delete_body_photo_five:
+                        print(f"[DEBUG - manage_event_body_photos - manage_body_photos] Deleting body_photo_five...")
+                        event.body_photo_five = None
+                        deleted_photos["body_photo_five"] = True
+                        print(f"[DEBUG - manage_event_body_photos - manage_body_photos] body_photo_five deleted")
 
-                print(f"[DEBUG - add_event_body_photos - update_body_photos] Updated photos: {updated_photos}")
-                print(f"[DEBUG - add_event_body_photos - update_body_photos] Saving event...")
+                    print(f"[DEBUG - manage_event_body_photos - manage_body_photos] Deleted photos: {deleted_photos}")
+
+                # Then, handle additions
+                if django_files:
+                    print(f"[DEBUG - manage_event_body_photos - manage_body_photos] Processing photo additions...")
+                    
+                    if "body_photo_one" in django_files:
+                        print(f"[DEBUG - manage_event_body_photos - manage_body_photos] Adding body_photo_one...")
+                        event.body_photo_one = django_files["body_photo_one"]
+                        updated_photos["body_photo_one"] = True
+                        print(f"[DEBUG - manage_event_body_photos - manage_body_photos] body_photo_one added")
+
+                    if "body_photo_two" in django_files:
+                        print(f"[DEBUG - manage_event_body_photos - manage_body_photos] Adding body_photo_two...")
+                        event.body_photo_two = django_files["body_photo_two"]
+                        updated_photos["body_photo_two"] = True
+                        print(f"[DEBUG - manage_event_body_photos - manage_body_photos] body_photo_two added")
+
+                    if "body_photo_three" in django_files:
+                        print(f"[DEBUG - manage_event_body_photos - manage_body_photos] Adding body_photo_three...")
+                        event.body_photo_three = django_files["body_photo_three"]
+                        updated_photos["body_photo_three"] = True
+                        print(f"[DEBUG - manage_event_body_photos - manage_body_photos] body_photo_three added")
+
+                    if "body_photo_four" in django_files:
+                        print(f"[DEBUG - manage_event_body_photos - manage_body_photos] Adding body_photo_four...")
+                        event.body_photo_four = django_files["body_photo_four"]
+                        updated_photos["body_photo_four"] = True
+                        print(f"[DEBUG - manage_event_body_photos - manage_body_photos] body_photo_four added")
+
+                    if "body_photo_five" in django_files:
+                        print(f"[DEBUG - manage_event_body_photos - manage_body_photos] Adding body_photo_five...")
+                        event.body_photo_five = django_files["body_photo_five"]
+                        updated_photos["body_photo_five"] = True
+                        print(f"[DEBUG - manage_event_body_photos - manage_body_photos] body_photo_five added")
+
+                    print(f"[DEBUG - manage_event_body_photos - manage_body_photos] Added photos: {updated_photos}")
+
+                print(f"[DEBUG - manage_event_body_photos - manage_body_photos] Saving event...")
                 event.save()
-                print(f"[DEBUG - add_event_body_photos - update_body_photos] Event saved successfully")
+                print(f"[DEBUG - manage_event_body_photos - manage_body_photos] Event saved successfully")
 
-                print(f"[DEBUG - add_event_body_photos - update_body_photos] Getting photo URLs...")
-                # Get URLs for updated photos
+                print(f"[DEBUG - manage_event_body_photos - manage_body_photos] Getting photo URLs...")
+                # Get URLs for all current photos
                 photo_urls = {}
                 if event.body_photo_one:
                     photo_urls["body_photo_one_url"] = event.body_photo_one.url
-                    print(f"[DEBUG - add_event_body_photos - update_body_photos] body_photo_one_url: {photo_urls['body_photo_one_url']}")
+                    print(f"[DEBUG - manage_event_body_photos - manage_body_photos] body_photo_one_url: {photo_urls['body_photo_one_url']}")
                 if event.body_photo_two:
                     photo_urls["body_photo_two_url"] = event.body_photo_two.url
-                    print(f"[DEBUG - add_event_body_photos - update_body_photos] body_photo_two_url: {photo_urls['body_photo_two_url']}")
+                    print(f"[DEBUG - manage_event_body_photos - manage_body_photos] body_photo_two_url: {photo_urls['body_photo_two_url']}")
                 if event.body_photo_three:
                     photo_urls["body_photo_three_url"] = event.body_photo_three.url
-                    print(f"[DEBUG - add_event_body_photos - update_body_photos] body_photo_three_url: {photo_urls['body_photo_three_url']}")
+                    print(f"[DEBUG - manage_event_body_photos - manage_body_photos] body_photo_three_url: {photo_urls['body_photo_three_url']}")
                 if event.body_photo_four:
                     photo_urls["body_photo_four_url"] = event.body_photo_four.url
-                    print(f"[DEBUG - add_event_body_photos - update_body_photos] body_photo_four_url: {photo_urls['body_photo_four_url']}")
+                    print(f"[DEBUG - manage_event_body_photos - manage_body_photos] body_photo_four_url: {photo_urls['body_photo_four_url']}")
                 if event.body_photo_five:
                     photo_urls["body_photo_five_url"] = event.body_photo_five.url
-                    print(f"[DEBUG - add_event_body_photos - update_body_photos] body_photo_five_url: {photo_urls['body_photo_five_url']}")
+                    print(f"[DEBUG - manage_event_body_photos - manage_body_photos] body_photo_five_url: {photo_urls['body_photo_five_url']}")
+
+                # Build operation summary
+                operations_performed = []
+                if deleted_photos:
+                    operations_performed.append(f"Deleted {len(deleted_photos)} photo(s)")
+                if updated_photos:
+                    operations_performed.append(f"Added {len(updated_photos)} photo(s)")
+                
+                operation_summary = " and ".join(operations_performed)
 
                 response_data = {
-                    "message": "Event body photos updated successfully",
+                    "message": f"Event body photos managed successfully. {operation_summary}.",
                     "eventId": str(event.eventId),
-                    "updated_photos": updated_photos,
+                    "added_photos": updated_photos,
+                    "deleted_photos": deleted_photos,
                     "photo_urls": photo_urls,
                 }
-                print(f"[DEBUG - add_event_body_photos - update_body_photos] Response data prepared: {response_data}")
+                print(f"[DEBUG - manage_event_body_photos - manage_body_photos] Response data prepared: {response_data}")
                 return response_data
 
             except Event.DoesNotExist:
-                print(f"[DEBUG - add_event_body_photos - update_body_photos] Event not found with eventId: {eventId}")
+                print(f"[DEBUG - manage_event_body_photos - manage_body_photos] Event not found with eventId: {eventId}")
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND, detail="Event not found"
                 )
             except Exception as e:
-                print(f"[DEBUG - add_event_body_photos - update_body_photos] Unexpected error in database operation: {str(e)}")
-                print(f"[DEBUG - add_event_body_photos - update_body_photos] Error type: {type(e)}")
+                print(f"[DEBUG - manage_event_body_photos - manage_body_photos] Unexpected error in database operation: {str(e)}")
+                print(f"[DEBUG - manage_event_body_photos - manage_body_photos] Error type: {type(e)}")
                 raise
 
-        print(f"[DEBUG - add_event_body_photos] Calling database update function...")
-        result = await update_body_photos()
-        print(f"[DEBUG - add_event_body_photos] Database update completed successfully")
-        print(f"[DEBUG - add_event_body_photos] Final result: {result}")
+        print(f"[DEBUG - manage_event_body_photos] Calling database management function...")
+        result = await manage_body_photos()
+        print(f"[DEBUG - manage_event_body_photos] Database operations completed successfully")
+        print(f"[DEBUG - manage_event_body_photos] Final result: {result}")
         return JSONResponse(content=result, status_code=status.HTTP_200_OK)
         
     except HTTPException as http_ex:
-        print(f"[DEBUG - add_event_body_photos] HTTPException caught: {http_ex.detail}")
-        print(f"[DEBUG - add_event_body_photos] HTTPException status code: {http_ex.status_code}")
+        print(f"[DEBUG - manage_event_body_photos] HTTPException caught: {http_ex.detail}")
+        print(f"[DEBUG - manage_event_body_photos] HTTPException status code: {http_ex.status_code}")
         return JSONResponse(
             content={"error": str(http_ex.detail)},
             status_code=http_ex.status_code,
         )
     except Exception as e:
-        print(f"[DEBUG - add_event_body_photos] Unexpected exception caught: {str(e)}")
-        print(f"[DEBUG - add_event_body_photos] Exception type: {type(e)}")
+        print(f"[DEBUG - manage_event_body_photos] Unexpected exception caught: {str(e)}")
+        print(f"[DEBUG - manage_event_body_photos] Exception type: {type(e)}")
         import traceback
         traceback_str = traceback.format_exc()
-        print(f"[DEBUG - add_event_body_photos] Full traceback: {traceback_str}")
+        print(f"[DEBUG - manage_event_body_photos] Full traceback: {traceback_str}")
         
         await notify_by_bot(
-            f"**[API: add_event_body_photos]** \n\n Error adding event body photos: eventId={eventId}, error={str(e)} \n\n Platform: {platform}",
+            f"**[API: manage_event_body_photos]** \n\n Error managing event body photos: eventId={eventId}, error={str(e)} \n\n Platform: {platform}",
             platform or "Unknown",
             "ERROR",
             device_info,
