@@ -37,7 +37,13 @@ from decimal import Decimal
 from authenticationApp.models import CustomUser
 from starlette.datastructures import UploadFile
 from django.shortcuts import get_object_or_404
-from eventManagementApp.models import Event, HostProfile, CouponCode, SharedEvent
+from eventManagementApp.models import (
+    Event,
+    HostProfile,
+    CouponCode,
+    SharedEvent,
+    TrendingEvent,
+)
 from accountManagementApp.models import UserProfile
 from eventTicketsApp.models import RSVPTicket, PaidFreeTicket, Ticket
 from socialApp.models import GoWithRequest
@@ -4709,3 +4715,114 @@ async def manage_event_body_photos(
             content={"error": f"An unexpected error occurred: {str(e)}"},
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
+
+
+# Endpoints to set trending events, get trending events, and get trending events by rank as well as remove trending events
+@router.post("/trending-events/{eventId}/set-as-trending")
+async def set_as_trending(
+    eventId: str,
+    request: Request,
+    rank: int = None,
+    user_id: int = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
+    try:
+        event = Event.objects.get(eventId=eventId)
+    except Event.DoesNotExist:
+        raise HTTPException(status_code=404, detail="Event not found")
+
+    if hasattr(event, "trending_event"):
+        raise HTTPException(status_code=400, detail="Event already trending")
+
+    # Ensure limit of 5
+    current_count = TrendingEvent.objects.count()
+    if current_count >= 5:
+        raise HTTPException(status_code=400, detail="Maximum 5 trending events allowed")
+
+    # Auto-rank if not provided
+    if rank is None:
+        rank = current_count + 1
+    else:
+        # Validate rank is within valid range
+        if rank < 1 or rank > 5:
+            raise HTTPException(status_code=400, detail="Rank must be between 1 and 5")
+
+        # If rank is occupied, shift existing events down
+        existing_at_rank = TrendingEvent.objects.filter(rank=rank).first()
+        if existing_at_rank:
+            # Shift all events with rank >= target_rank up by 1
+            TrendingEvent.objects.filter(rank__gte=rank).update(
+                rank=models.F("rank") + 1
+            )
+
+    trending = TrendingEvent.objects.create(event=event, rank=rank)
+    return {
+        "message": "Event set as trending",
+        "event_id": str(event.eventId),
+        "rank": rank,
+    }
+
+
+@router.get("/trending-events")
+async def get_trending_events(
+    request: Request,
+    user_id: int = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
+    try:
+        trending_events = TrendingEvent.objects.select_related("event").order_by("rank")
+        return {
+            "trending_events": [
+                {"event_id": str(event.event.eventId), "rank": event.rank}
+                for event in trending_events
+            ]
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/trending-events/{rank}")
+async def get_trending_event_by_rank(
+    rank: int,
+    request: Request,
+    user_id: int = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
+    try:
+        # Validate rank
+        if rank < 1 or rank > 5:
+            raise HTTPException(status_code=400, detail="Rank must be between 1 and 5")
+
+        trending_event = TrendingEvent.objects.select_related("event").get(rank=rank)
+        return {
+            "event_id": str(trending_event.event.eventId),
+            "rank": trending_event.rank,
+        }
+    except TrendingEvent.DoesNotExist:
+        raise HTTPException(status_code=404, detail="Trending event not found")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.delete("/trending-events/{eventId}/remove-from-trending")
+async def remove_from_trending(
+    eventId: str,
+    request: Request,
+    user_id: int = Depends(get_current_user),
+    platform: Optional[str] = None,
+):
+    try:
+        trending_event = TrendingEvent.objects.get(event__eventId=eventId)
+        removed_rank = trending_event.rank
+        trending_event.delete()
+
+        # Reorder remaining events to fill the gap
+        TrendingEvent.objects.filter(rank__gt=removed_rank).update(
+            rank=models.F("rank") - 1
+        )
+
+        return {"message": "Event removed from trending"}
+    except TrendingEvent.DoesNotExist:
+        raise HTTPException(status_code=404, detail="Event not found in trending")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

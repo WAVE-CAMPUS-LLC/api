@@ -520,6 +520,22 @@ class Event(models.Model):
         super().save(*args, **kwargs)
 
 
+class TrendingEvent(models.Model):
+    event = models.OneToOneField(
+        Event, on_delete=models.CASCADE, related_name="trending_event"
+    )
+    rank = models.PositiveIntegerField(default=1, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        default_permissions = ()
+        ordering = ["rank"]
+
+    def __str__(self):
+        return self.event.title
+
+
 class HostProfile(models.Model):
     hostProfileId = models.UUIDField(
         primary_key=True, default=uuid.uuid4, editable=False, unique=True
