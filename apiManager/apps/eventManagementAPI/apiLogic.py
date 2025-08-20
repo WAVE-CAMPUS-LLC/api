@@ -59,6 +59,19 @@ from django.core.files.base import ContentFile
 from django.db import models
 
 
+# Add missing file conversion utility function
+async def starlette_to_django(upload_file: UploadFile) -> "SimpleUploadedFile":
+    """Convert Starlette UploadFile to Django SimpleUploadedFile."""
+    from django.core.files.uploadedfile import SimpleUploadedFile
+    
+    content = await upload_file.read()
+    return SimpleUploadedFile(
+        name=upload_file.filename or "uploaded_file",
+        content=content,
+        content_type=upload_file.content_type or "application/octet-stream",
+    )
+
+
 router = APIRouter()
 
 
@@ -679,12 +692,13 @@ async def create_free_event(
             )
             if isinstance(value, UploadFile):
                 print(f"[DEBUG - create_free_event] File uploaded: {key}")
-                # Read file content directly like in profile photo approach
+                # Convert to Django SimpleUploadedFile for proper form handling
                 try:
-                    file_content = value.file.read()
-                    files[key] = {"filename": value.filename, "content": file_content}
+                    django_file = await starlette_to_django(value)
+                    files[key] = django_file
+                    print(f"[DEBUG - create_free_event] File {key} converted to Django format successfully")
                 except Exception as e:
-                    print(f"Error reading file {key}: {str(e)}")
+                    print(f"Error converting file {key}: {str(e)}")
                     continue
             else:
                 print(f"[DEBUG - create_free_event] Text field: {key} = {value}")
@@ -717,34 +731,7 @@ async def create_free_event(
                 cleaned_data[key] = value
 
         print(f"[DEBUG - create_free_event] Cleaned data dict: {cleaned_data}")
-
-        print(f"[DEBUG - create_free_event] Final data dict: {data}")
         print(f"[DEBUG - create_free_event] Final files dict: {list(files.keys())}")
-
-        # Clean up data - remove empty strings for optional fields, keep them for required fields
-        cleaned_data = {}
-        for key, value in data.items():
-            if value == "":
-                # Check if this is a boolean field that should be False instead of empty string
-                if key in [
-                    "hide_address",
-                    "couponsActivated",
-                    "crew_discount",
-                    "show_guest_list",
-                    "forAllDisplay",
-                    "forCollegesDisplay",
-                ]:
-                    cleaned_data[key] = False
-                elif key in ["age_restriction"]:  # Optional select field
-                    # Skip empty age_restriction to use the default
-                    continue
-                else:
-                    # Keep empty string for other fields (Django form will handle validation)
-                    cleaned_data[key] = value
-            else:
-                cleaned_data[key] = value
-
-        print(f"[DEBUG - create_free_event] Cleaned data dict: {cleaned_data}")
 
         @database_sync_to_async
         def process_create_event():
