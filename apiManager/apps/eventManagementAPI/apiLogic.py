@@ -56,6 +56,7 @@ import os
 
 # Django file handling
 from django.core.files.base import ContentFile
+from django.db import models
 
 
 router = APIRouter()
@@ -4722,45 +4723,59 @@ async def manage_event_body_photos(
 async def set_as_trending(
     eventId: str,
     request: Request,
-    rank: int = None,
+    rank: Optional[int] = None,
     user_id: int = Depends(get_current_user),
     platform: Optional[str] = None,
 ):
     try:
-        event = Event.objects.get(eventId=eventId)
+
+        @database_sync_to_async
+        def process_set_as_trending():
+            event = Event.objects.get(eventId=eventId)
+
+            if hasattr(event, "trending_event"):
+                raise HTTPException(status_code=400, detail="Event already trending")
+
+            # Ensure limit of 5
+            current_count = TrendingEvent.objects.count()
+            if current_count >= 5:
+                raise HTTPException(
+                    status_code=400, detail="Maximum 5 trending events allowed"
+                )
+
+            # Auto-rank if not provided
+            _rank = rank
+            if _rank is None:
+                _rank = current_count + 1
+            else:
+                # Validate rank is within valid range
+                if _rank < 1 or _rank > 5:
+                    raise HTTPException(
+                        status_code=400, detail="Rank must be between 1 and 5"
+                    )
+
+                # If rank is occupied, shift existing events down
+                existing_at_rank = TrendingEvent.objects.filter(rank=_rank).first()
+                if existing_at_rank:
+                    # Shift all events with rank >= target_rank up by 1
+                    TrendingEvent.objects.filter(rank__gte=_rank).update(
+                        rank=models.F("rank") + 1
+                    )
+
+            TrendingEvent.objects.create(event=event, rank=_rank)
+            return {
+                "message": "Event set as trending",
+                "event_id": str(event.eventId),
+                "rank": _rank,
+            }
+
+        return await process_set_as_trending()
     except Event.DoesNotExist:
         raise HTTPException(status_code=404, detail="Event not found")
-
-    if hasattr(event, "trending_event"):
-        raise HTTPException(status_code=400, detail="Event already trending")
-
-    # Ensure limit of 5
-    current_count = TrendingEvent.objects.count()
-    if current_count >= 5:
-        raise HTTPException(status_code=400, detail="Maximum 5 trending events allowed")
-
-    # Auto-rank if not provided
-    if rank is None:
-        rank = current_count + 1
-    else:
-        # Validate rank is within valid range
-        if rank < 1 or rank > 5:
-            raise HTTPException(status_code=400, detail="Rank must be between 1 and 5")
-
-        # If rank is occupied, shift existing events down
-        existing_at_rank = TrendingEvent.objects.filter(rank=rank).first()
-        if existing_at_rank:
-            # Shift all events with rank >= target_rank up by 1
-            TrendingEvent.objects.filter(rank__gte=rank).update(
-                rank=models.F("rank") + 1
-            )
-
-    trending = TrendingEvent.objects.create(event=event, rank=rank)
-    return {
-        "message": "Event set as trending",
-        "event_id": str(event.eventId),
-        "rank": rank,
-    }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/trending-events")
@@ -4770,13 +4785,20 @@ async def get_trending_events(
     platform: Optional[str] = None,
 ):
     try:
-        trending_events = TrendingEvent.objects.select_related("event").order_by("rank")
-        return {
-            "trending_events": [
-                {"event_id": str(event.event.eventId), "rank": event.rank}
-                for event in trending_events
-            ]
-        }
+
+        @database_sync_to_async
+        def fetch_trending_events():
+            trending_events = TrendingEvent.objects.select_related("event").order_by(
+                "rank"
+            )
+            return {
+                "trending_events": [
+                    {"event_id": str(item.event.eventId), "rank": item.rank}
+                    for item in trending_events
+                ]
+            }
+
+        return await fetch_trending_events()
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -4793,11 +4815,17 @@ async def get_trending_event_by_rank(
         if rank < 1 or rank > 5:
             raise HTTPException(status_code=400, detail="Rank must be between 1 and 5")
 
-        trending_event = TrendingEvent.objects.select_related("event").get(rank=rank)
-        return {
-            "event_id": str(trending_event.event.eventId),
-            "rank": trending_event.rank,
-        }
+        @database_sync_to_async
+        def fetch_by_rank():
+            trending_event = TrendingEvent.objects.select_related("event").get(
+                rank=rank
+            )
+            return {
+                "event_id": str(trending_event.event.eventId),
+                "rank": trending_event.rank,
+            }
+
+        return await fetch_by_rank()
     except TrendingEvent.DoesNotExist:
         raise HTTPException(status_code=404, detail="Trending event not found")
     except Exception as e:
@@ -4812,16 +4840,21 @@ async def remove_from_trending(
     platform: Optional[str] = None,
 ):
     try:
-        trending_event = TrendingEvent.objects.get(event__eventId=eventId)
-        removed_rank = trending_event.rank
-        trending_event.delete()
 
-        # Reorder remaining events to fill the gap
-        TrendingEvent.objects.filter(rank__gt=removed_rank).update(
-            rank=models.F("rank") - 1
-        )
+        @database_sync_to_async
+        def process_remove():
+            trending_event = TrendingEvent.objects.get(event__eventId=eventId)
+            removed_rank = trending_event.rank
+            trending_event.delete()
 
-        return {"message": "Event removed from trending"}
+            # Reorder remaining events to fill the gap
+            TrendingEvent.objects.filter(rank__gt=removed_rank).update(
+                rank=models.F("rank") - 1
+            )
+
+            return {"message": "Event removed from trending"}
+
+        return await process_remove()
     except TrendingEvent.DoesNotExist:
         raise HTTPException(status_code=404, detail="Event not found in trending")
     except Exception as e:
