@@ -622,28 +622,46 @@ async def suggest_crews(
     user_agent_str = request.headers.get("user-agent", "")
     device_data = get_device_info(user_agent_str)
     device_info = device_data["device_info"]
+
     try:
         user = await database_sync_to_async(CustomUser.objects.get)(id=current_user_id)
         # Check if user is in any crew
         from socialApp.models import CrewMember
 
+        # Helper function to get member count for a crew
+        async def get_member_count(crew_instance):
+            return await database_sync_to_async(
+                lambda: CrewMember.objects.filter(crew=crew_instance).count()
+            )()
+
+        # Helper function to get crew and member count
+        async def get_crew_and_count(crew_uuid):
+            crew = await database_sync_to_async(
+                lambda: Crew.objects.filter(crewId=crew_uuid).first()
+            )()
+            if crew:
+                try:
+                    num_members = await database_sync_to_async(
+                        lambda: CrewMember.objects.filter(crew=crew).count()
+                    )()
+                except:
+                    num_members = 0
+                return crew, num_members
+            return None, 0
+
         user_crews_count = await database_sync_to_async(
             lambda: CrewMember.objects.filter(user=user).count()
         )()
+
         if user_crews_count == 0:
             # Suggest up to 10 random crews
             random_crews = await database_sync_to_async(
                 lambda: list(Crew.objects.order_by("?")[:limit])
             )()
+
             # Serialize minimal info for random crews
             random_crews_data = []
             for crew in random_crews:
-                # Fix closure capture issue by creating a proper function
-                async def get_member_count(crew_instance):
-                    return await database_sync_to_async(
-                        lambda: CrewMember.objects.filter(crew=crew_instance).count()
-                    )()
-
                 try:
                     num_members = await get_member_count(crew)
                 except:
@@ -667,6 +685,7 @@ async def suggest_crews(
                 "platform": platform,
                 "message": "User is not in any crew. Showing random crews.",
             }
+
         # Otherwise, use the graph suggestion system
         suggestions = await database_sync_to_async(
             lambda: suggest_crews_for_user(str(user.user_id), limit)
@@ -697,12 +716,6 @@ async def suggest_crews(
 
             random_crews_data = []
             for crew in random_crews:
-                # Fix closure capture issue by creating a proper function
-                async def get_member_count(crew_instance):
-                    return await database_sync_to_async(
-                        lambda: CrewMember.objects.filter(crew=crew_instance).count()
-                    )()
-
                 try:
                     num_members = await get_member_count(crew)
                 except:
@@ -737,21 +750,6 @@ async def suggest_crews(
                 or suggestion.get("crew_id")
                 or suggestion.get("id")
             )
-
-            # Fix closure capture issue by creating a proper function
-            async def get_crew_and_count(crew_uuid):
-                crew = await database_sync_to_async(
-                    lambda: Crew.objects.filter(crewId=crew_uuid).first()
-                )()
-                if crew:
-                    try:
-                        num_members = await database_sync_to_async(
-                            lambda: CrewMember.objects.filter(crew=crew).count()
-                        )()
-                    except:
-                        num_members = 0
-                    return crew, num_members
-                return None, 0
 
             crew, num_members = await get_crew_and_count(crew_id)
 
