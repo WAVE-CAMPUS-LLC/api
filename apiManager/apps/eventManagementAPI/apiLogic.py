@@ -4768,8 +4768,6 @@ async def set_as_trending(
 @router.get("/trending-events")
 async def get_trending_events(
     request: Request,
-    user_id: int = Depends(get_current_user),
-    platform: Optional[str] = None,
 ):
     try:
 
