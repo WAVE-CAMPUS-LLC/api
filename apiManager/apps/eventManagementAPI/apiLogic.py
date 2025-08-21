@@ -63,7 +63,7 @@ from django.db import models
 async def starlette_to_django(upload_file: UploadFile) -> "SimpleUploadedFile":
     """Convert Starlette UploadFile to Django SimpleUploadedFile."""
     from django.core.files.uploadedfile import SimpleUploadedFile
-    
+
     content = await upload_file.read()
     return SimpleUploadedFile(
         name=upload_file.filename or "uploaded_file",
@@ -696,7 +696,9 @@ async def create_free_event(
                 try:
                     django_file = await starlette_to_django(value)
                     files[key] = django_file
-                    print(f"[DEBUG - create_free_event] File {key} converted to Django format successfully")
+                    print(
+                        f"[DEBUG - create_free_event] File {key} converted to Django format successfully"
+                    )
                 except Exception as e:
                     print(f"Error converting file {key}: {str(e)}")
                     continue
@@ -914,7 +916,9 @@ async def create_paid_event(
                 try:
                     django_file = await starlette_to_django(value)
                     files[key] = django_file
-                    print(f"[DEBUG - create_paid_event] File {key} converted to Django format successfully")
+                    print(
+                        f"[DEBUG - create_paid_event] File {key} converted to Django format successfully"
+                    )
                 except Exception as e:
                     print(f"Error converting file {key}: {str(e)}")
                     continue
@@ -1019,7 +1023,9 @@ async def create_paid_event(
                 # Instantiate the Django form with submitted data, file uploads, instance and partial flag
                 event_form = EventForm(cleaned_data, files)
                 print(f"[DEBUG - create_paid_event] Event form: {event_form}")
-                print(f"[DEBUG - create_paid_event] Event form errors: {event_form.errors}")
+                print(
+                    f"[DEBUG - create_paid_event] Event form errors: {event_form.errors}"
+                )
 
                 if event_form.is_valid():
                     print(f"[DEBUG - create_paid_event] Form is valid")
@@ -4814,7 +4820,15 @@ async def get_trending_events(
             )
             return {
                 "trending_events": [
-                    {"event_id": str(item.event.eventId), "rank": item.rank}
+                    {
+                        "event_id": str(item.event.eventId),
+                        "rank": item.rank,
+                        "header_photo": (
+                            item.event.header_photo.url
+                            if item.event.header_photo
+                            else None
+                        ),
+                    }
                     for item in trending_events
                 ]
             }
