@@ -902,19 +902,54 @@ async def create_paid_event(
         data = {}
         files = {}
         print(f"[DEBUG - create_paid_event] Processing form data")
+        print(f"[DEBUG - create_paid_event] Form data keys: {list(form_data.keys())}")
+
         for key, value in form_data.multi_items():
+            print(
+                f"[DEBUG - create_paid_event] Processing key: {key}, value type: {type(value)}, value: {value}"
+            )
             if isinstance(value, UploadFile):
                 print(f"[DEBUG - create_paid_event] File uploaded: {key}")
-                # Read file content directly like in profile photo approach
+                # Convert to Django SimpleUploadedFile for proper form handling
                 try:
-                    file_content = value.file.read()
-                    files[key] = {"filename": value.filename, "content": file_content}
+                    django_file = await starlette_to_django(value)
+                    files[key] = django_file
+                    print(f"[DEBUG - create_paid_event] File {key} converted to Django format successfully")
                 except Exception as e:
-                    print(f"Error reading file {key}: {str(e)}")
+                    print(f"Error converting file {key}: {str(e)}")
                     continue
             else:
                 print(f"[DEBUG - create_paid_event] Text field: {key} = {value}")
                 data[key] = value
+
+        print(f"[DEBUG - create_paid_event] Final data dict: {data}")
+        print(f"[DEBUG - create_paid_event] Final files dict: {list(files.keys())}")
+
+        # Clean up data - remove empty strings for optional fields, keep them for required fields
+        cleaned_data = {}
+        for key, value in data.items():
+            if value == "":
+                # Check if this is a boolean field that should be False instead of empty string
+                if key in [
+                    "hide_address",
+                    "couponsActivated",
+                    "crew_discount",
+                    "show_guest_list",
+                    "forAllDisplay",
+                    "forCollegesDisplay",
+                ]:
+                    cleaned_data[key] = False
+                elif key in ["age_restriction"]:  # Optional select field
+                    # Skip empty age_restriction to use the default
+                    continue
+                else:
+                    # Keep empty string for other fields (Django form will handle validation)
+                    cleaned_data[key] = value
+            else:
+                cleaned_data[key] = value
+
+        print(f"[DEBUG - create_paid_event] Cleaned data dict: {cleaned_data}")
+        print(f"[DEBUG - create_paid_event] Final files dict: {list(files.keys())}")
 
         @database_sync_to_async
         def process_create_event():
@@ -982,8 +1017,9 @@ async def create_paid_event(
                 is_in_college = user_profile.college is not None
 
                 # Instantiate the Django form with submitted data, file uploads, instance and partial flag
-                event_form = EventForm(data, files)
+                event_form = EventForm(cleaned_data, files)
                 print(f"[DEBUG - create_paid_event] Event form: {event_form}")
+                print(f"[DEBUG - create_paid_event] Event form errors: {event_form.errors}")
 
                 if event_form.is_valid():
                     print(f"[DEBUG - create_paid_event] Form is valid")
