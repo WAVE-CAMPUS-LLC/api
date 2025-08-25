@@ -1602,6 +1602,7 @@ async def get_paid_event_tickets(
 async def delete_paid_event_ticket(
     eventId: str,
     request: Request,
+    user_id: int = Depends(get_current_user),
     platform: Optional[str] = None,
 ):
     # Get device info
@@ -1613,34 +1614,55 @@ async def delete_paid_event_ticket(
         form_data = await request.form()
         ticket_id = form_data.get("ticket_id")
 
+        if not ticket_id:
+            raise HTTPException(status_code=400, detail="ticket_id is required")
+
         @database_sync_to_async
         def delete_ticket_sync(event_id, ticket_id):
             try:
-                event = Event.objects.get(eventId=event_id)
+                # Get the event object or raise a 404 error if not found
+                event = get_object_or_404(Event, eventId=event_id)
+                
+                # Get the current user
+                user = CustomUser.objects.get(id=user_id)
+
+                # Check if the requesting user is the host of the event
+                if event.host != user:
+                    raise HTTPException(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        detail="You don't have permission to delete tickets. Only the event host can manage tickets.",
+                    )
+
+                # Find the ticket to delete
+                ticket = PaidFreeTicket.objects.get(ticket_id=ticket_id, event=event)
+                
+                # Delete the ticket
+                ticket.delete()
+                return {"message": "Ticket deleted successfully"}
+
             except Event.DoesNotExist:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND, detail="Event not found"
                 )
-
-            try:
-                ticket = PaidFreeTicket.objects.get(ticket_id=ticket_id, event=event)
+            except CustomUser.DoesNotExist:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+                )
             except PaidFreeTicket.DoesNotExist:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND, detail="Ticket not found"
                 )
-
-            ticket.delete()
-            return {"message": "Ticket deleted successfully"}
 
         # Execute the delete function
         result = await delete_ticket_sync(eventId, ticket_id)
         print(f"[DEBUG - delete_paid_event_ticket] Result: {result}")
         return JSONResponse(content=result, status_code=status.HTTP_200_OK)
 
-    except Event.DoesNotExist:
+    except HTTPException as http_ex:
+        # Handle HTTP exceptions separately if needed
         return JSONResponse(
-            content={"message": "Event not found."},
-            status_code=status.HTTP_404_NOT_FOUND,
+            content={"error": str(http_ex.detail)},
+            status_code=http_ex.status_code,
         )
     except Exception as e:
         traceback_str = traceback.format_exc()
@@ -1651,7 +1673,10 @@ async def delete_paid_event_ticket(
             "ERROR",
             device_info,
         )
-        raise HTTPException(status_code=500, detail=f"Error deleting ticket: {str(e)}")
+        return JSONResponse(
+            content={"error": f"An unexpected error occurred: {str(e)}"},
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
 
 
 @router.post("/event/{eventId}/createCoupon")
