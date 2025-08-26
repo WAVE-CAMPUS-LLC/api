@@ -2997,7 +2997,11 @@ async def get_tide_ambassador_applications(
                     "app_id": str(application.app_id),
                     "full_name": application.full_name,
                     "status": application.status,
-                    "application_date": application.application_date,
+                    "application_date": (
+                        application.application_date.isoformat()
+                        if application.application_date
+                        else None
+                    ),
                 }
                 for application in applications
             ]
@@ -3782,7 +3786,11 @@ async def get_ambassador_applications(
                     "id": str(application.app_id),
                     "full_name": application.full_name,
                     "status": application.status,
-                    "application_date": application.application_date,
+                    "application_date": (
+                        application.application_date.isoformat()
+                        if application.application_date
+                        else None
+                    ),
                 }
                 for application in applications
             ]
@@ -3902,7 +3910,11 @@ async def get_ambassador_application(
                 "tiktok_handle": application.tiktok_handle,
                 "graduation_year": application.graduation_year,
                 "status": application.status,
-                "application_date": application.application_date,
+                "application_date": (
+                    application.application_date.isoformat()
+                    if application.application_date
+                    else None
+                ),
             }
         except Exception as e:
             return {
@@ -3962,7 +3974,11 @@ async def delete_ambassador_application(
                     "tiktok_handle": application.tiktok_handle,
                     "graduation_year": application.graduation_year,
                     "status": application.status,
-                    "application_date": application.application_date,
+                    "application_date": (
+                        application.application_date.isoformat()
+                        if application.application_date
+                        else None
+                    ),
                 },
                 "status_code": status.HTTP_200_OK,
             }
