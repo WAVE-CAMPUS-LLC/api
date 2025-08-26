@@ -1,6 +1,8 @@
 from datetime import datetime, timedelta
 from uuid import UUID
 import time
+import secrets
+import string
 from django.http import Http404
 from fastapi import (
     APIRouter,
@@ -43,6 +45,7 @@ from django.core.cache import cache
 from authenticationApp.models import CustomUser
 from authenticationApp.serializers import CustomUserSerializer
 from django.contrib.auth import authenticate
+from django.contrib.auth.hashers import make_password
 
 from apiManager.dependencies import get_current_user
 from apiManager.middleware.adminAccess import (
@@ -3752,4 +3755,877 @@ async def edit_fixed_message(
         )
         raise HTTPException(
             status_code=500, detail=f"Error updating fixed message: {str(e)}"
+        )
+
+
+@router.get("/ambassador/application/getAll")
+async def get_ambassador_applications(
+    request: Request,
+    current_user: CustomUser = Depends(require_admin_role),
+    platform: Optional[str] = None,
+):
+    """
+    Get all ambassador applications - requires Admin or Super Admin role.
+    """
+    print(f"[get_ambassador_applications] API called with user_id: {current_user.pk}")
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    @database_sync_to_async
+    def get_ambassador_applications_data():
+        try:
+            applications = AmbassadorApplication.objects.all()
+            return [
+                {
+                    "id": str(application.app_id),
+                    "full_name": application.full_name,
+                    "status": application.status,
+                    "application_date": application.application_date,
+                }
+                for application in applications
+            ]
+        except Exception as e:
+            return {
+                "success": False,
+                "error": f"Database error: {str(e)}",
+                "status_code": status.HTTP_500_INTERNAL_SERVER_ERROR,
+            }
+
+    try:
+        result = await get_ambassador_applications_data()
+        return JSONResponse(content=result, status_code=status.HTTP_200_OK)
+    except Exception as e:
+        await notify_by_bot(
+            f"**[API: get_ambassador_applications]** \n\n Error getting ambassador applications: error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        raise HTTPException(
+            status_code=500, detail=f"Error getting ambassador applications: {str(e)}"
+        )
+
+
+@router.put("/ambassador/application/{app_id}/updateStatus")
+async def update_ambassador_application_status(
+    app_id: str,
+    request: Request,
+    current_user: CustomUser = Depends(require_admin_role),
+    platform: Optional[str] = None,
+):
+    """
+    Update the status of an ambassador application - requires Admin or Super Admin role.
+    """
+    print(
+        f"[update_ambassador_application_status] API called for app_id: {app_id} by {current_user.pk}"
+    )
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    @database_sync_to_async
+    def update_ambassador_application_status_data(app_id, form_data):
+        try:
+            # Get the application
+            application = get_object_or_404(AmbassadorApplication, app_id=app_id)
+            # Get the new status from form data
+            new_status = form_data.get("status", "pending")
+
+            # Update the status
+            application.status = new_status
+            application.save()
+
+            return {
+                "success": True,
+                "message": "Ambassador application status updated successfully!",
+                "application": {
+                    "id": str(application.app_id),
+                    "status": new_status,
+                },
+                "status_code": status.HTTP_200_OK,
+            }
+        except Exception as e:
+            return {
+                "success": False,
+                "error": f"Database error: {str(e)}",
+                "status_code": status.HTTP_500_INTERNAL_SERVER_ERROR,
+            }
+
+    try:
+        result = await update_ambassador_application_status_data(app_id, form_data)
+        return JSONResponse(content=result, status_code=status.HTTP_200_OK)
+    except Exception as e:
+        await notify_by_bot(
+            f"**[API: update_ambassador_application_status]** \n\n Error updating ambassador application status: app_id={app_id}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error updating ambassador application status: {str(e)}",
+        )
+
+
+@router.get("/ambassador/application/{app_id}/get")
+async def get_ambassador_application(
+    app_id: str,
+    request: Request,
+    current_user: CustomUser = Depends(require_admin_role),
+    platform: Optional[str] = None,
+):
+    """
+    Get an ambassador application - requires Admin or Super Admin role.
+    """
+    print(
+        f"[get_ambassador_application] API called for app_id: {app_id} by {current_user.pk}"
+    )
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    @database_sync_to_async
+    def get_ambassador_application_data(app_id):
+        try:
+            application = get_object_or_404(AmbassadorApplication, app_id=app_id)
+            return {
+                "id": str(application.app_id),
+                "full_name": application.full_name,
+                "college": application.college,
+                "email": application.email,
+                "instagram_handle": application.instagram_handle,
+                "major": application.major,
+                "tiktok_handle": application.tiktok_handle,
+                "graduation_year": application.graduation_year,
+                "status": application.status,
+                "application_date": application.application_date,
+            }
+        except Exception as e:
+            return {
+                "success": False,
+                "error": f"Database error: {str(e)}",
+                "status_code": status.HTTP_500_INTERNAL_SERVER_ERROR,
+            }
+
+    try:
+        result = await get_ambassador_application_data(app_id)
+        return JSONResponse(content=result, status_code=status.HTTP_200_OK)
+    except Exception as e:
+        await notify_by_bot(
+            f"**[API: get_ambassador_application]** \n\n Error getting ambassador application: app_id={app_id}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        raise HTTPException(
+            status_code=500, detail=f"Error getting ambassador application: {str(e)}"
+        )
+
+
+@router.delete("/ambassador/application/{app_id}/delete")
+async def delete_ambassador_application(
+    app_id: str,
+    request: Request,
+    current_user: CustomUser = Depends(require_admin_role),
+    platform: Optional[str] = None,
+):
+    """
+    Delete an ambassador application - requires Admin or Super Admin role.
+    """
+    print(
+        f"[delete_ambassador_application] API called for app_id: {app_id} by {current_user.pk}"
+    )
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    @database_sync_to_async
+    def delete_ambassador_application_data(app_id):
+        try:
+            application = get_object_or_404(AmbassadorApplication, app_id=app_id)
+            application.delete()
+            return {
+                "success": True,
+                "message": "Ambassador application deleted successfully!",
+                "application": {
+                    "id": str(application.app_id),
+                    "full_name": application.full_name,
+                    "college": application.college,
+                    "email": application.email,
+                    "instagram_handle": application.instagram_handle,
+                    "major": application.major,
+                    "tiktok_handle": application.tiktok_handle,
+                    "graduation_year": application.graduation_year,
+                    "status": application.status,
+                    "application_date": application.application_date,
+                },
+                "status_code": status.HTTP_200_OK,
+            }
+        except Exception as e:
+            return {
+                "success": False,
+                "error": f"Database error: {str(e)}",
+                "status_code": status.HTTP_500_INTERNAL_SERVER_ERROR,
+            }
+
+    try:
+        result = await delete_ambassador_application_data(app_id)
+        return JSONResponse(content=result, status_code=status.HTTP_200_OK)
+    except Exception as e:
+        await notify_by_bot(
+            f"**[API: delete_ambassador_application]** \n\n Error deleting ambassador application: app_id={app_id}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+
+
+@router.post("/ambassador/application/{app_id}/accept")
+async def accept_ambassador_application(
+    app_id: str,
+    request: Request,
+    current_user: CustomUser = Depends(require_admin_role),
+    platform: Optional[str] = None,
+):
+    """
+    Accept an ambassador application and send acceptance email - requires Admin or Super Admin role.
+    """
+    print(
+        f"[accept_ambassador_application] API called for app_id: {app_id} by {current_user.pk}"
+    )
+
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    @database_sync_to_async
+    def accept_application_and_send_email(app_id):
+        try:
+            # Get the application
+            application = get_object_or_404(AmbassadorApplication, app_id=app_id)
+
+            # Check if application is already accepted
+            if application.status == "accepted":
+                return {
+                    "success": False,
+                    "message": "Application is already accepted",
+                    "status_code": status.HTTP_400_BAD_REQUEST,
+                }
+
+            # Check if application is already rejected
+            if application.status == "rejected":
+                return {
+                    "success": False,
+                    "message": "Cannot accept a rejected application",
+                    "status_code": status.HTTP_400_BAD_REQUEST,
+                }
+
+                # Update status to accepted
+            application.status = "accepted"
+            application.save()
+
+            # Create or find user and set up ambassador profile
+            user = None
+            try:
+                # Try to find existing user by email
+                user = CustomUser.objects.get(email=application.email)
+                print(
+                    f"[accept_ambassador_application] Found existing user: {user.username}"
+                )
+
+                # Update user to be a tide ambassador
+                user.is_tide_ambassador = True
+                user.save()
+
+            except CustomUser.DoesNotExist:
+                # Create new user for the ambassador
+                print(
+                    f"[accept_ambassador_application] Creating new user for ambassador: {application.email}"
+                )
+
+                # Generate username from email
+                generated_username = CustomUser.generate_username_for_email(
+                    application.email
+                )
+
+                # Generate a secure random password
+                alphabet = string.ascii_letters + string.digits + "!@#$%^&*"
+                generated_password = "".join(
+                    secrets.choice(alphabet) for i in range(12)
+                )
+
+                # Split full name into first and last name
+                name_parts = application.full_name.strip().split(" ", 1)
+                first_name = name_parts[0] if name_parts else ""
+                last_name = name_parts[1] if len(name_parts) > 1 else ""
+
+                # Create user with tide ambassador flag and hashed password
+                user = CustomUser.objects.create(
+                    email=application.email,
+                    username=generated_username,
+                    first_name=first_name,
+                    last_name=last_name,
+                    password=make_password(generated_password),
+                    is_active=True,
+                    email_verified=True,
+                    is_staff=False,
+                    is_superuser=False,
+                    is_superadmin=False,
+                    is_tide_ambassador=True,  # This will trigger the signal to create ambassador profile
+                )
+
+                # Add user to required groups
+                from django.contrib.auth.models import Group
+
+                member_group, _ = Group.objects.get_or_create(name="Member")
+                verified_group, _ = Group.objects.get_or_create(name="Verified")
+                tide_ambassador_group, _ = Group.objects.get_or_create(
+                    name="TideAmbassador"
+                )
+
+                user.groups.add(member_group)
+                user.groups.add(verified_group)
+                user.groups.add(tide_ambassador_group)
+
+                print(
+                    f"[accept_ambassador_application] Created new user: {user.username} with generated password"
+                )
+
+            # Populate college field in UserProfile
+            try:
+                # Get or create the college
+                college, created = College.objects.get_or_create(
+                    name=application.college,
+                    defaults={
+                        "address": f"{application.college} Campus",
+                        "city": "",
+                        "state": "",
+                        "zip_code": "",
+                        "country": "USA",
+                        "motto": f"Empowering students at {application.college}",
+                        "created_by_walleai": True,
+                    },
+                )
+
+                # Update the user's profile with the college
+                user_profile = user.user_profile
+                user_profile.college = college
+                user_profile.save()
+
+                print(
+                    f"[accept_ambassador_application] Updated UserProfile college field to: {college.name}"
+                )
+
+            except Exception as college_error:
+                print(
+                    f"[accept_ambassador_application] Error updating college field: {str(college_error)}"
+                )
+
+            # The ambassador profile will be automatically created by the signal
+            # since we set is_tide_ambassador=True
+
+            # Verify ambassador profile was created
+            ambassador_profile = None
+            try:
+                from ambassadorManagement.models import AmbassadorProfile
+
+                ambassador_profile = AmbassadorProfile.objects.get(user=user)
+                print(
+                    f"[accept_ambassador_application] Ambassador profile created successfully with referral code: {ambassador_profile.referral_code}"
+                )
+            except AmbassadorProfile.DoesNotExist:
+                print(
+                    f"[accept_ambassador_application] Warning: Ambassador profile was not created automatically"
+                )
+
+            # Send acceptance email
+            try:
+                from django.core.mail import send_mail
+                from django.template.loader import render_to_string
+                from django.utils.html import strip_tags
+                from django.conf import settings
+
+                subject = "🎉 Congratulations! Your WAVE. Ambassador Application Has Been Accepted!"
+
+                # Determine if this is a new user (check if user was just created)
+                is_new_user = not hasattr(user, "_state") or user._state.adding is False
+
+                # Create account info section based on whether user is new or existing
+                account_info_section = ""
+                if "generated_password" in locals():
+                    # This is a new user with generated password
+                    account_info_section = f"""
+                                            <div style="background: linear-gradient(135deg, #059669 0%, #10b981 100%); color: white; padding: 25px; border-radius: 12px; margin: 30px 0; box-shadow: 0 4px 15px rgba(5, 150, 105, 0.3);">
+                                                <h3 style="margin: 0 0 15px 0; font-size: 20px; font-weight: 700;">
+                                                    🔐 Your WAVE. Account Details
+                                                </h3>
+                                                <p style="margin: 0 0 10px 0; font-size: 16px; line-height: 1.6;">
+                                                    <strong>Email:</strong> {user.email}<br>
+                                                    <strong>Username:</strong> {user.username}<br>
+                                                    <strong>Password:</strong> {generated_password}
+                                                </p>
+                                                <p style="margin: 15px 0 0 0; font-size: 14px; opacity: 0.9;">
+                                                    Please save these credentials securely. You can change your password after your first login.
+                                                </p>
+                                            </div>
+                                            """
+                else:
+                    # This is an existing user
+                    account_info_section = f"""
+                                            <p style="color: #475569; margin: 0 0 20px 0; font-size: 16px; line-height: 1.6;">
+                                                <strong>Your WAVE. Account:</strong> We've linked your existing WAVE. account ({user.email}) to your ambassador profile. You can continue using your current login credentials to access your ambassador dashboard.
+                                            </p>
+                                            """
+
+                # Create HTML email content
+                html_message = f"""
+                <!DOCTYPE html>
+                <html lang="en">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>Ambassador Application Accepted</title>
+                </head>
+                <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0fdfa;">
+                    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f0fdfa; padding: 40px 0;">
+                        <tr>
+                            <td align="center">
+                                <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 16px; box-shadow: 0 10px 25px rgba(20, 184, 166, 0.15); overflow: hidden; max-width: 600px; border: 1px solid #5eead4;">
+                                    <!-- Header Section -->
+                                    <tr>
+                                        <td style="background: linear-gradient(135deg, #0d9488 0%, #14b8a6 50%, #2dd4bf 100%); padding: 40px 30px; text-align: center;">
+                                            <h1 style="color: #ffffff; margin: 0; font-size: 32px; font-weight: 800; text-shadow: 0 2px 4px rgba(0,0,0,0.3); letter-spacing: -0.5px;">
+                                                🎉 Congratulations!
+                                            </h1>
+                                            <p style="color: #ccfbf1; margin: 15px 0 0 0; font-size: 18px; font-weight: 500;">
+                                                You're now a WAVE. Ambassador!
+                                            </p>
+                                        </td>
+                                    </tr>
+                                    
+                                    <!-- Content Section -->
+                                    <tr>
+                                        <td style="padding: 40px 30px;">
+                                            <h2 style="color: #0f172a; margin: 0 0 20px 0; font-size: 24px; font-weight: 700;">
+                                                Welcome to the WAVE. Ambassador Program!
+                                            </h2>
+                                            
+                                            <p style="color: #475569; margin: 0 0 20px 0; font-size: 16px; line-height: 1.6;">
+                                                Dear <strong>{application.full_name}</strong>,
+                                            </p>
+                                            
+                                            <p style="color: #475569; margin: 0 0 20px 0; font-size: 16px; line-height: 1.6;">
+                                                We're thrilled to inform you that your application to become a WAVE. Ambassador has been accepted! 🎊
+                                            </p>
+                                            
+                                            <p style="color: #475569; margin: 0 0 20px 0; font-size: 16px; line-height: 1.6;">
+                                                As a WAVE. Ambassador, you'll be representing our platform at <strong>{application.college}</strong> and helping to build the ultimate college event experience for your campus community.
+                                            </p>
+                                            
+                                            {account_info_section}
+                                            
+                                            <div style="background: linear-gradient(135deg, #0891b2 0%, #0284c7 100%); color: white; padding: 25px; border-radius: 12px; margin: 30px 0; box-shadow: 0 4px 15px rgba(8, 145, 178, 0.3);">
+                                                <h3 style="margin: 0 0 15px 0; font-size: 20px; font-weight: 700;">
+                                                    What's Next?
+                                                </h3>
+                                                <ul style="margin: 0; padding-left: 20px; font-size: 16px; line-height: 1.6;">
+                                                    <li style="margin-bottom: 10px;">You'll receive your ambassador welcome package</li>
+                                                    <li style="margin-bottom: 10px;">Access to exclusive ambassador resources and tools</li>
+                                                    <li style="margin-bottom: 10px;">Invitation to our ambassador onboarding session</li>
+                                                    <li style="margin-bottom: 10px;">Your unique referral code and tracking dashboard</li>
+                                                </ul>
+                                            </div>
+                                            
+                                            <p style="color: #475569; margin: 0 0 20px 0; font-size: 16px; line-height: 1.6;">
+                                                We'll be in touch within the next 48 hours with detailed next steps and your ambassador onboarding schedule.
+                                            </p>
+                                            
+                                            <p style="color: #475569; margin: 0 0 20px 0; font-size: 16px; line-height: 1.6;">
+                                                Thank you for your enthusiasm and commitment to making WAVE. the go-to platform for college events!
+                                            </p>
+                                            
+                                            <p style="color: #475569; margin: 0; font-size: 16px; line-height: 1.6;">
+                                                Best regards,<br>
+                                                <strong>The WAVE. Team</strong>
+                                            </p>
+                                        </td>
+                                    </tr>
+                                    
+                                    <!-- Footer Section -->
+                                    <tr>
+                                        <td style="background: #f8fafc; padding: 30px; text-align: center; border-top: 1px solid #e2e8f0;">
+                                            <p style="color: #64748b; margin: 0; font-size: 14px;">
+                                                Questions? Contact us at <a href="mailto:support@wavecampus.net" style="color: #0d9488; text-decoration: none;">support@wavecampus.net</a>
+                                            </p>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+                </body>
+                </html>
+                """
+
+                plain_message = strip_tags(html_message)
+
+                # Send the email
+                send_mail(
+                    subject=subject,
+                    message=plain_message,
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[application.email],
+                    fail_silently=False,
+                    html_message=html_message,
+                )
+
+                print(
+                    f"[accept_ambassador_application] Acceptance email sent successfully to {application.email}"
+                )
+
+            except Exception as email_error:
+                print(
+                    f"[accept_ambassador_application] Error sending acceptance email: {str(email_error)}"
+                )
+                # Don't fail the entire operation if email fails, but log it
+                return {
+                    "success": True,
+                    "message": "Application accepted successfully, but there was an issue sending the email notification",
+                    "application": {
+                        "id": str(application.app_id),
+                        "full_name": application.full_name,
+                        "email": application.email,
+                        "college": application.college,
+                        "status": application.status,
+                        "email_sent": False,
+                        "email_error": str(email_error),
+                    },
+                    "user_created": {
+                        "id": user.user_id,
+                        "username": user.username,
+                        "email": user.email,
+                        "first_name": user.first_name,
+                        "last_name": user.last_name,
+                        "is_tide_ambassador": user.is_tide_ambassador,
+                        "password_generated": "generated_password" in locals(),
+                    },
+                    "ambassador_profile_created": True,
+                    "ambassador_profile": {
+                        "referral_code": (
+                            ambassador_profile.referral_code
+                            if ambassador_profile
+                            else None
+                        ),
+                        "joined_date": (
+                            ambassador_profile.joined_date.isoformat()
+                            if ambassador_profile
+                            else None
+                        ),
+                    },
+                    "status_code": status.HTTP_200_OK,
+                }
+
+            return {
+                "success": True,
+                "message": "Application accepted successfully and acceptance email sent!",
+                "application": {
+                    "id": str(application.app_id),
+                    "full_name": application.full_name,
+                    "email": application.email,
+                    "college": application.college,
+                    "status": application.status,
+                    "email_sent": True,
+                },
+                "user_created": {
+                    "id": user.user_id,
+                    "username": user.username,
+                    "email": user.email,
+                    "first_name": user.first_name,
+                    "last_name": user.last_name,
+                    "is_tide_ambassador": user.is_tide_ambassador,
+                    "password_generated": "generated_password" in locals(),
+                },
+                "ambassador_profile_created": True,
+                "ambassador_profile": {
+                    "referral_code": (
+                        ambassador_profile.referral_code if ambassador_profile else None
+                    ),
+                    "joined_date": (
+                        ambassador_profile.joined_date.isoformat()
+                        if ambassador_profile
+                        else None
+                    ),
+                },
+                "status_code": status.HTTP_200_OK,
+            }
+
+        except AmbassadorApplication.DoesNotExist:
+            return {
+                "success": False,
+                "message": "Application not found",
+                "status_code": status.HTTP_404_NOT_FOUND,
+            }
+        except Exception as e:
+            return {
+                "success": False,
+                "error": f"Database error: {str(e)}",
+                "status_code": status.HTTP_500_INTERNAL_SERVER_ERROR,
+            }
+
+    try:
+        result = await accept_application_and_send_email(app_id)
+        status_code = result.pop("status_code", status.HTTP_200_OK)
+
+        if not result.get("success", True):
+            return JSONResponse(content=result, status_code=status_code)
+
+        print(
+            f"[accept_ambassador_application] Application accepted successfully: {result['message']}"
+        )
+        return JSONResponse(content=result, status_code=status_code)
+
+    except Exception as e:
+        await notify_by_bot(
+            f"**[API: accept_ambassador_application]** \n\n Error accepting ambassador application: app_id={app_id}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        raise HTTPException(
+            status_code=500, detail=f"Error accepting ambassador application: {str(e)}"
+        )
+
+
+@router.post("/ambassador/application/{app_id}/reject")
+async def reject_ambassador_application(
+    app_id: str,
+    request: Request,
+    current_user: CustomUser = Depends(require_admin_role),
+    platform: Optional[str] = None,
+):
+    """
+    Reject an ambassador application and send rejection email - requires Admin or Super Admin role.
+    """
+    print(
+        f"[reject_ambassador_application] API called for app_id: {app_id} by {current_user.pk}"
+    )
+
+    # Get device info
+    user_agent_str = request.headers.get("user-agent", "")
+    device_data = get_device_info(user_agent_str)
+    device_info = device_data["device_info"]
+
+    @database_sync_to_async
+    def reject_application_and_send_email(app_id):
+        try:
+            # Get the application
+            application = get_object_or_404(AmbassadorApplication, app_id=app_id)
+
+            # Check if application is already rejected
+            if application.status == "rejected":
+                return {
+                    "success": False,
+                    "message": "Application is already rejected",
+                    "status_code": status.HTTP_400_BAD_REQUEST,
+                }
+
+            # Check if application is already accepted
+            if application.status == "accepted":
+                return {
+                    "success": False,
+                    "message": "Cannot reject an accepted application",
+                    "status_code": status.HTTP_400_BAD_REQUEST,
+                }
+
+            # Update status to rejected
+            application.status = "rejected"
+            application.save()
+
+            # Send rejection email
+            try:
+                from django.core.mail import send_mail
+                from django.template.loader import render_to_string
+                from django.utils.html import strip_tags
+                from django.conf import settings
+
+                subject = "Update on your WAVE. Ambassador application"
+
+                # Create HTML email content
+                html_message = f"""
+                <!DOCTYPE html>
+                <html lang="en">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>Ambassador Application Update</title>
+                </head>
+                <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #fef2f2;">
+                    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #fef2f2; padding: 40px 0;">
+                        <tr>
+                            <td align="center">
+                                <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 16px; box-shadow: 0 10px 25px rgba(239, 68, 68, 0.15); overflow: hidden; max-width: 600px; border: 1px solid #fca5a5;">
+                                    <!-- Header Section -->
+                                    <tr>
+                                        <td style="background: linear-gradient(135deg, #dc2626 0%, #ef4444 50%, #f87171 100%); padding: 40px 30px; text-align: center;">
+                                            <h1 style="color: #ffffff; margin: 0; font-size: 32px; font-weight: 800; text-shadow: 0 2px 4px rgba(0,0,0,0.3); letter-spacing: -0.5px;">
+                                                Application Update
+                                            </h1>
+                                            <p style="color: #fecaca; margin: 15px 0 0 0; font-size: 18px; font-weight: 500;">
+                                                Thank you for your interest in WAVE.
+                                            </p>
+                                        </td>
+                                    </tr>
+                                    
+                                    <!-- Content Section -->
+                                    <tr>
+                                        <td style="padding: 40px 30px;">
+                                            <h2 style="color: #0f172a; margin: 0 0 20px 0; font-size: 24px; font-weight: 700;">
+                                                Application Status Update
+                                            </h2>
+                                            
+                                            <p style="color: #475569; margin: 0 0 20px 0; font-size: 16px; line-height: 1.6;">
+                                                Dear <strong>{application.full_name}</strong>,
+                                            </p>
+                                            
+                                            <p style="color: #475569; margin: 0 0 20px 0; font-size: 16px; line-height: 1.6;">
+                                                Thank you for your interest in becoming a WAVE. Ambassador and for taking the time to apply to represent our platform at <strong>{application.college}</strong>.
+                                            </p>
+                                            
+                                            <p style="color: #475569; margin: 0 0 20px 0; font-size: 16px; line-height: 1.6;">
+                                                After careful review of your application, we regret to inform you that we are unable to move forward with your ambassador application at this time.
+                                            </p>
+                                            
+                                            <div style="background: linear-gradient(135deg, #0891b2 0%, #0284c7 100%); color: white; padding: 25px; border-radius: 12px; margin: 30px 0; box-shadow: 0 4px 15px rgba(8, 145, 178, 0.3);">
+                                                <h3 style="margin: 0 0 15px 0; font-size: 20px; font-weight: 700;">
+                                                    What This Means
+                                                </h3>
+                                                <ul style="margin: 0; padding-left: 20px; font-size: 16px; line-height: 1.6;">
+                                                    <li style="margin-bottom: 10px;">You can still use WAVE. for all your event needs</li>
+                                                    <li style="margin-bottom: 10px;">You're welcome to reapply in the future</li>
+                                                    <li style="margin-bottom: 10px;">We encourage you to stay engaged with our platform</li>
+                                                    <li style="margin-bottom: 10px;">Future opportunities may become available</li>
+                                                </ul>
+                                            </div>
+                                            
+                                            <p style="color: #475569; margin: 0 0 20px 0; font-size: 16px; line-height: 1.6;">
+                                                We appreciate your enthusiasm for WAVE. and encourage you to continue using our platform for discovering and hosting amazing college events.
+                                            </p>
+                                            
+                                            <p style="color: #475569; margin: 0 0 20px 0; font-size: 16px; line-height: 1.6;">
+                                                If you have any questions about this decision or would like feedback on your application, please don't hesitate to reach out to us.
+                                            </p>
+                                            
+                                            <p style="color: #475569; margin: 0; font-size: 16px; line-height: 1.6;">
+                                                Best regards,<br>
+                                                <strong>The WAVE. Team</strong>
+                                            </p>
+                                        </td>
+                                    </tr>
+                                    
+                                    <!-- Footer Section -->
+                                    <tr>
+                                        <td style="background: #f8fafc; padding: 30px; text-align: center; border-top: 1px solid #e2e8f0;">
+                                            <p style="color: #64748b; margin: 0; font-size: 14px;">
+                                                Questions? Contact us at <a href="mailto:support@wavecampus.net" style="color: #0d9488; text-decoration: none;">support@wavecampus.net</a>
+                                            </p>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+                </body>
+                </html>
+                """
+
+                plain_message = strip_tags(html_message)
+
+                # Send the email
+                send_mail(
+                    subject=subject,
+                    message=plain_message,
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[application.email],
+                    fail_silently=False,
+                    html_message=html_message,
+                )
+
+                print(
+                    f"[reject_ambassador_application] Rejection email sent successfully to {application.email}"
+                )
+
+            except Exception as email_error:
+                print(
+                    f"[reject_ambassador_application] Error sending rejection email: {str(email_error)}"
+                )
+                # Don't fail the entire operation if email fails, but log it
+                return {
+                    "success": True,
+                    "message": "Application rejected successfully, but there was an issue sending the email notification",
+                    "application": {
+                        "id": str(application.app_id),
+                        "full_name": application.full_name,
+                        "email": application.email,
+                        "college": application.college,
+                        "status": application.status,
+                        "email_sent": False,
+                        "email_error": str(email_error),
+                    },
+                    "status_code": status.HTTP_200_OK,
+                }
+
+            return {
+                "success": True,
+                "message": "Application rejected successfully and rejection email sent!",
+                "application": {
+                    "id": str(application.app_id),
+                    "full_name": application.full_name,
+                    "email": application.email,
+                    "college": application.college,
+                    "status": application.status,
+                    "email_sent": True,
+                },
+                "status_code": status.HTTP_200_OK,
+            }
+
+        except AmbassadorApplication.DoesNotExist:
+            return {
+                "success": False,
+                "message": "Application not found",
+                "status_code": status.HTTP_404_NOT_FOUND,
+            }
+        except Exception as e:
+            return {
+                "success": False,
+                "error": f"Database error: {str(e)}",
+                "status_code": status.HTTP_500_INTERNAL_SERVER_ERROR,
+            }
+
+    try:
+        result = await reject_application_and_send_email(app_id)
+        status_code = result.pop("status_code", status.HTTP_200_OK)
+
+        if not result.get("success", True):
+            return JSONResponse(content=result, status_code=status_code)
+
+        print(
+            f"[reject_ambassador_application] Application rejected successfully: {result['message']}"
+        )
+        return JSONResponse(content=result, status_code=status_code)
+
+    except Exception as e:
+        await notify_by_bot(
+            f"**[API: reject_ambassador_application]** \n\n Error rejecting ambassador application: app_id={app_id}, error={str(e)} \n\n Platform: {platform}",
+            platform or "Unknown",
+            "ERROR",
+            device_info,
+        )
+        raise HTTPException(
+            status_code=500, detail=f"Error rejecting ambassador application: {str(e)}"
         )
