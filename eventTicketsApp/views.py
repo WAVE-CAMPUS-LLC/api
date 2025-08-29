@@ -883,7 +883,15 @@ def generateTicket(
         stripe_session_id=stripe_session_id,
     )
     ticket.save()
-      # Get the ticket's main ID and build the activation URL.
+    
+    # Ensure QR code image is generated before sending email
+    if not ticket.qrCodeImage:
+        print("QR code image not found, generating...")
+        ticket.generate_qr_code_image()
+        # Refresh the ticket object to get the updated qrCodeImage field
+        ticket.refresh_from_db()
+    
+    # Get the ticket's main ID and build the activation URL.
     ticketMainId = ticket.mainId
     activationLink = (
         (str(os.getenv("WEBSITE_DOMAIN")) + reverse("eventTickets:activateTicket", kwargs={"mainId": ticketMainId}))
@@ -1048,10 +1056,18 @@ def generateTicket(
                 qr_attachment = None
                 if ticket.qrCodeImage:
                     try:
-                        qr_attachment = ticket.qrCodeImage.path
-                        print(f"Individual ticket QR code attachment path: {qr_attachment}")
+                        # Check if the field has a file attached
+                        if hasattr(ticket.qrCodeImage, 'path') and ticket.qrCodeImage.name:
+                            qr_attachment = ticket.qrCodeImage.path
+                            print(f"Individual ticket QR code attachment path: {qr_attachment}")
+                            print(f"QR code file name: {ticket.qrCodeImage.name}")
+                            print(f"QR code file exists: {os.path.exists(qr_attachment)}")
+                        else:
+                            print("QR code image field exists but no file is attached")
                     except Exception as e:
                         print(f"Error getting ticket QR code attachment: {e}")
+                        import traceback
+                        traceback.print_exc()
                 
                 # Send the email with inline QR code image.
                 try:
@@ -1064,19 +1080,33 @@ def generateTicket(
                         from_email=from_email,
                         to=recipient_list
                     )
+                    # Use the potentially updated HTML (after QR code replacement)
                     email.attach_alternative(qrCodeHtml, "text/html")
                     
                     # Attach individual ticket QR code image inline for email display
                     if qr_attachment and os.path.exists(qr_attachment):
-                        with open(qr_attachment, 'rb') as f:
-                            qr_image_data = f.read()
-                            # Create inline image attachment with cid:qr_code
-                            qr_image = MIMEImage(qr_image_data)
-                            qr_image.add_header('Content-ID', '<qr_code>')
-                            qr_image.add_header('Content-Disposition', 'inline', filename=f"ticket-qr-{ticket.ticketId}.png")
-                            email.attach(qr_image)
-                            print(f"Individual ticket QR code image attached inline with CID: qr_code")
+                        try:
+                            with open(qr_attachment, 'rb') as f:
+                                qr_image_data = f.read()
+                                print(f"Successfully read QR code file, size: {len(qr_image_data)} bytes")
+                                
+                                # Create inline image attachment with cid:qr_code
+                                qr_image = MIMEImage(qr_image_data)
+                                qr_image.add_header('Content-ID', '<qr_code>')
+                                qr_image.add_header('Content-Disposition', 'inline', filename=f"ticket-qr-{ticket.ticketId}.png")
+                                email.attach(qr_image)
+                                print(f"Individual ticket QR code image attached inline with CID: qr_code")
+                        except Exception as e:
+                            print(f"Error reading/attaching QR code file: {e}")
+                            import traceback
+                            traceback.print_exc()
+                            # Fall back to message without QR code
+                            qrCodeHtml = qrCodeHtml.replace(
+                                '<img src="cid:qr_code" alt="Ticket QR Code" style="width: 200px; height: 200px; display: block; margin: 0 auto;" />',
+                                '<div style="background-color: #fefce8; border: 2px solid #eab308; border-radius: 12px; padding: 20px; text-align: center;"><p style="color: #a16207; margin: 0; font-size: 16px; font-weight: 600;">📱 QR Code Error</p><p style="color: #a16207; margin: 10px 0 0 0; font-size: 14px;">There was an error attaching your QR code. Please check your ticket in your profile.</p></div>'
+                            )
                     else:
+                        print(f"QR code attachment not available. Path: {qr_attachment}, Exists: {os.path.exists(qr_attachment) if qr_attachment else 'No path'}")
                         # For tickets without QR codes, show a message
                         qrCodeHtml = qrCodeHtml.replace(
                             '<img src="cid:qr_code" alt="Ticket QR Code" style="width: 200px; height: 200px; display: block; margin: 0 auto;" />',
